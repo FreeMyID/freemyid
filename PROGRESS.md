@@ -30,3 +30,12 @@ Integrate wave → qa review → GitHub repo + first CI exe build (user OK neede
 - Windows test VM: ~/VMs (quickemu; SSH via ~/VMs/vmssh; clean snapshot `clean-ssh-ready`, reset with ~/VMs/reset-clean.sh; GL off). Fixed installer copied to VM Downloads with MOTW; SmartScreen screen confirmed.
 - In progress: hands-on install through SmartScreen. Mouse via HMP is relative+accelerated; next: add QMP socket (extra_args) for absolute clicks, or keyboard focus.
 - Next: finish VM install + 6-screen wizard walkthrough with screenshots; D9/D10 "fill it in for me"; rename; mypy warnings (24).
+
+## Session 2026-11-06 afternoon (orchestrator)
+- Done: mypy 31 -> 9 (0d77063); D9 Fill it in for me engine (1255acd); contracts for D9/D10 + `vanish fill` (c8b8b80).
+- Windows VM walkthrough (fresh install of CI build 42233985711 on clean snapshot, QMP absolute clicks via scratchpad qmp.py; `extra_args` QMP socket added to ~/VMs/windows-11.conf):
+  - SmartScreen -> More info -> Run anyway works; installer appears ~10 s later with no feedback.
+  - **BLOCKER fixed (54ff105):** wizard step 1 POST -> "Bad origin". Referrer-Policy no-referrer makes Chromium send `Origin: null`. Reproduced + verified in headless Chromium. TestClient never sends Origin -> real-browser e2e test added (qa).
+  - Window larger than 1024x768 screen; dir/ready pages unnecessary; default Python icon; consent copy mentions mailbox as if required. -> wizard-packager.
+- Running: wizard-packager (window fit, friendly error pages, installer pages+icon, consent copy, D9 button), qa-security (browser e2e, adopt D9 tests, D9 security review), automation-engineer (D10 listing finder, engine mypy, wire new Broker fields).
+- Next: integrate -> push -> CI exe -> redo VM walkthrough through all 6 screens + dashboard + a fill-for-me on a fixture; broker-researcher: success_text/listing patterns for verified web-form brokers.
