@@ -37,6 +37,31 @@ We're allowed to show contempt. The rule is to aim it at **the industry and the 
 - Get out of the creep economy.
 - Every listing we remove is one less thing for the data dealers to sell.
 
+**Old-time names, for those who get it** (1800s–1900s slang; insults that are opinion, not accusations)
+
+| Term | Where it comes from | Use it like |
+|---|---|---|
+| **Paul Prys** | Nosy meddler from an 1825 stage comedy; "a regular Paul Pry" | "The internet's Paul Prys have your address on a shelf." |
+| **nosy parkers** | Early-1900s slang for a busybody | "Nosy parkers, selling you by the dozen." |
+| **rubberneckers** | 1890s American slang for gawkers | "Rubberneckers pay a dollar to look at your front door." |
+| **eavesdroppers** | Old English: one who stands under the eaves to listen | "Eavesdroppers built a business on your life." |
+| **keyhole peepers** | Old-fashioned snoops | "Keep the keyhole peepers out." |
+| **rag-and-bone men** | Victorian scrap collectors who resold whatever they picked up | "The rag-and-bone men of the internet pick up scraps of your life and sell them by the pound." |
+| **hucksters / hawkers** | Old words for pushy street sellers | "Hucksters hawking your home address." |
+| **gossipmongers / busybodies** | Classic | "The busybody business." |
+| **varmints** | Rural American for pests on your property | "Run the varmints off your property." |
+| **polecats / buzzards** | Southern and rural contempt | "Shoo the buzzards off." |
+| **scoundrels / rascals** | Old-fashioned, theatrical; reads as opinion | "Show the scoundrels the door." |
+
+Slogans in that voice:
+- Run the varmints off your property.
+- The internet's rag-and-bone men are hauling off your private life. Take it back.
+- Don't let Paul Pry peddle your porch.
+- Nosy parkers had their day. Shut the gate.
+- Shoo the buzzards. Keep your name.
+
+**Old-time words that sound fun but are trouble** (they accuse someone of fraud or a crime, or carry other baggage): *grifters, flimflam men, snake-oil salesmen, mountebanks, swindlers, pickpockets, body snatchers* (all imply fraud or crime); *carpetbaggers* and *scalawags* (Reconstruction-era political baggage, which matters with a Southern audience); *Pinkertons* (a real, trademarked company that still exists); *Peeping Tom* (sexual connotation).
+
 **Words to avoid about them** (they claim a crime or a fact we can't prove)
 - "thieves", "steal", "stolen", "illegal", "criminals", "scammers" (they *sell to* scammers; they aren't scammers), "hackers", "terrorists"
 - Any insult attached to a **named** broker. On per-site pages, stay factual: "Spokeo lists addresses and phone numbers. Here's how to opt out."
