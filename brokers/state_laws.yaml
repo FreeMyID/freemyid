@@ -1,0 +1,448 @@
+# State privacy-law registry for Vanish. Maintained by broker-researcher. Researched 2026-11-06.
+#
+# Template rule: `ccpa` = CA only; `state_privacy` = comprehensive law IN FORCE today;
+# `generic` = no applicable law today (voluntary request, NO legal citation in the letter).
+# States whose law is enacted but not yet effective stay `generic` until effective_date passes.
+#
+# Evidence levels (see each entry's notes):
+#  - effective dates / law names / "enacted" status: seen in fetched pages or search results (source_urls).
+#  - statutory citations and 45-day response windows for comprehensive-law states: NOT re-fetched from
+#    statute text in this pass (secondary trackers did not list them). They come from the researcher's
+#    background knowledge; last_verified is left null for those entries. Verify before quoting in a letter.
+#  - ag_complaint_url: only set where the page was fetched OK or is flagged UNVERIFIED in notes.
+# YAML anchors (&pt, &new, &ms) are defined at first use and reused below.
+version: "2026.11.1"
+updated: 2026-11-06
+
+states:
+  # ------------------------------------------------------------------ the family's states (checked first)
+  - state: NC
+    statute_name: "None in force. Consumer privacy bills (S 757 / S 1022 'North Carolina Consumer Privacy Act', H 462) not enacted."
+    rights: []
+    data_broker_law: "None found (no NC data-broker registry located)."
+    template: generic
+    notes: >-
+      As of 2026-11-06 North Carolina has NO comprehensive consumer privacy law, so no legal right to
+      delete data held by brokers. Official ncleg.gov page for S 1022 (Consumer Privacy Act, filed
+      2026-04-30): last action 2026-05-05 re-referred to Appropriations/Base Budget; no votes. Earlier S 757
+      (introduced 2025-03-25) was referred to Rules and no later action found. H 462 (NC Personal Data
+      Privacy Act) reported in committee, not enacted. Use the generic voluntary-request letter; do not
+      cite any NC statute. Re-check after the next session convenes.
+    source_urls:
+      - https://www.ncleg.gov/BillLookUp/2025/S1022
+      - https://www.ncleg.gov/Sessions/2025/Bills/Senate/HTML/S1022v1.html
+      - https://www.ncleg.gov/sessions/2025/bills/senate/html/s757v1.html
+      - https://www.multistate.us/insider/2026/10/28/twenty-four-states-now-have-comprehensive-consumer-privacy-laws
+    last_verified: 2026-11-06
+
+  - state: SC
+    statute_name: "None in force for general consumers. Age-Appropriate Code Design Act (minors only) signed Feb 2026."
+    rights: []
+    data_broker_law: "None found."
+    template: generic
+    notes: >-
+      As of 2026-11-06 South Carolina has NO comprehensive consumer privacy law and no right to delete.
+      H.3401 (Technology Transparency / consumer data privacy) was prefiled 2024-12-05 and referred to House
+      Judiciary 2025-01-14 (scstatehouse.gov); no later action. The only 2026 enactment found is the
+      Age-Appropriate Code Design Act (H 3431, signed early Feb 2026, AG-enforced), which covers minors'
+      data on online services, not adults' broker records; do not cite it against people-search sites.
+      Breach-notification law S.C. Code 39-1-90 exists but gives no deletion right. Use the generic
+      voluntary-request letter; do not cite a SC statute.
+    source_urls:
+      - https://www.scstatehouse.gov/billsearch.php?billnumbers=3401&session=126&summary=B
+      - https://www.privacyon.com/blog/privacy-laws-in-south-carolina
+      - https://webiis08.mondaq.com/unitedstates/data-protection/1750154/south-carolina-enacts-new-data-privacy-law-protecting-minors-what-companies-need-to-know-before-july-1
+      - https://www.multistate.us/insider/2026/10/28/twenty-four-states-now-have-comprehensive-consumer-privacy-laws
+    last_verified: 2026-11-06
+
+  - state: AZ
+    statute_name: "None in force. SB 1815 (consumer data rights) and SB 1790 (data-broker registration) not enacted."
+    rights: []
+    data_broker_law: "None in force. SB 1790 (2026) would have required data-broker registration with the Secretary of State; no sign it was enacted."
+    template: generic
+    notes: >-
+      As of 2026-11-06 Arizona has NO comprehensive consumer privacy law and no enforceable deletion right.
+      SB 1815 (access/correct/delete/opt-out; 45-day response; AG enforcement) was introduced Feb 2026 and
+      died when the session ended 2026-06-13. SB 1790 (data-broker notice + Secretary of State
+      registration, text at azleg.gov) was last seen read a second time in the Senate on 2026-02-10; no
+      later action or signature found and the Legislature adjourned sine die in June, so treat it as NOT
+      law. The azleg.gov bill-status page was not fetchable here (legiscan/legilist returned 403), so the
+      final status of SB 1790 is "no evidence of enactment", not confirmed dead. Existing narrow levers:
+      A.R.S. 18-552 (breach notice), Consumer Fraud Act (broker that misrepresents its opt-out), A.R.S.
+      11-483 (county recorder redaction for peace officers, judges, protective-order holders) and the
+      Secretary of State Address Confidentiality Program for abuse/stalking survivors; all narrow and
+      eligibility-based. Use the generic voluntary-request letter. Next window: session starting Jan 2027.
+    source_urls:
+      - https://www.azleg.gov/legtext/57leg/2R/bills/SB1815P.htm
+      - https://www.azleg.gov/legtext/57leg/2R/bills/SB1790P.htm
+      - https://www.privacyon.com/blog/how-to-opt-out-of-data-brokers-in-arizona
+      - https://www.multistate.us/insider/2026/10/28/twenty-four-states-now-have-comprehensive-consumer-privacy-laws
+    last_verified: 2026-11-06
+
+  # ------------------------------------------------------------------ comprehensive laws in force
+  - state: CA
+    statute_name: "California Consumer Privacy Act as amended by the CPRA; Delete Act (SB 362)"
+    citation: "Cal. Civ. Code 1798.100 et seq. (deletion: 1798.105); Delete Act: Cal. Civ. Code 1798.99.80 et seq."
+    effective_date: 2020-01-01
+    rights: [know, delete, correct, opt_out_sale, opt_out_sharing, limit_sensitive, non_discrimination]
+    response_days: 45
+    extension_days: 45
+    data_broker_law: "Delete Act: data brokers must register annually with the California Privacy Protection Agency (Jan 1-31) and, from 2026-08-01, process deletion requests submitted through the DROP platform."
+    government_portal_url: https://cppa.ca.gov/
+    ag_complaint_url: https://oag.ca.gov/contact/consumer-complaint-against-business-or-company
+    other_complaint_urls: [https://cppa.ca.gov/]
+    authorized_agent_allowed: true
+    template: ccpa
+    notes: >-
+      Verified on oag.ca.gov/privacy/ccpa: delete right; 45 calendar days to respond, +45 with notice;
+      authorized agent may be a person or a business registered with the CA Secretary of State; complaints
+      to the AG and (since 2023-07-01) the CPPA. DROP start date 2026-08-01 is from a secondary source
+      (privacylawmap.com); cppa.ca.gov/delete returned 404, so the exact DROP portal URL is left to the
+      registry entry ca_drop. government_portal_url is the CPPA home page only. Delete Act citation is
+      from background knowledge.
+    source_urls:
+      - https://oag.ca.gov/privacy/ccpa
+      - https://privacylawmap.com/blog/data-broker-registration-requirements-2026
+      - https://www.mondaq.com/unitedstates/privacy-protection/1732128/is-your-business-a-data-broker-californias-drop-goes-live-and-calprivacy-continues-to-enforce-delete-act
+    last_verified: 2026-11-06
+
+  - state: VA
+    statute_name: "Virginia Consumer Data Protection Act"
+    citation: "Va. Code 59.1-575 et seq. (deletion: 59.1-577)"
+    effective_date: 2023-01-01
+    rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
+    response_days: 45
+    extension_days: 45
+    ag_complaint_url: https://www.oag.state.va.us/consumer-protection/index.php/file-a-complaint
+    template: state_privacy
+    notes: >-
+      Citation and 45+45 windows from background knowledge, not re-fetched. VA AG complaint page fetched OK
+      (general consumer complaint form; page does not mention privacy). Agent rules not confirmed.
+      30-day cure period (privacyterms.io).
+    source_urls: &pt
+      - https://privacyterms.io/us-state-privacy-laws-2026
+      - https://www.clym.io/blog/us-privacy-law-comparison-map
+
+  - state: CO
+    statute_name: "Colorado Privacy Act"
+    citation: "C.R.S. 6-1-1301 et seq. (deletion: 6-1-1306)"
+    effective_date: 2023-07-01
+    rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
+    response_days: 45
+    extension_days: 45
+    ag_complaint_url: https://coag.gov/file-a-complaint/
+    template: state_privacy
+    notes: >-
+      Citation and windows from background knowledge, not re-fetched. The complaint URL fetch returned an
+      empty page, so it is UNVERIFIED. Cure period expired Jan 2025. Agent rules not confirmed.
+    source_urls: *pt
+
+  - state: CT
+    statute_name: "Connecticut Data Privacy Act"
+    citation: "Conn. Gen. Stat. 42-515 et seq. (deletion: 42-518)"
+    effective_date: 2023-07-01
+    rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
+    response_days: 45
+    extension_days: 45
+    data_broker_law: "Public Act 26-64 (SB 4): data-broker registration with the Dept. of Consumer Protection, framework effective 2026-10-01; sales restriction on unregistered brokers from 2027-01-01 (per privacylawmap.com; not verified against the Act)."
+    template: state_privacy
+    notes: >-
+      Citation and windows from background knowledge, not re-fetched. 2026 amendments to the CTDPA reported
+      (multistate.us) but not detailed. The AG privacy-complaint URL could not be fetched; left empty.
+      Cure period expired Dec 2024.
+    source_urls:
+      - https://privacyterms.io/us-state-privacy-laws-2026
+      - https://privacylawmap.com/blog/data-broker-registration-requirements-2026
+      - https://www.multistate.us/insider/2026/10/28/twenty-four-states-now-have-comprehensive-consumer-privacy-laws
+
+  - state: UT
+    statute_name: "Utah Consumer Privacy Act"
+    citation: "Utah Code 13-61-101 et seq."
+    effective_date: 2023-12-31
+    rights: [access, delete, portability, opt_out_sale, opt_out_targeting]
+    response_days: 45
+    extension_days: 45
+    template: state_privacy
+    notes: >-
+      Citation and windows from background knowledge, not re-fetched. Utah's right to delete applies to
+      data the consumer provided to the controller, which matters for broker records; a letter should not
+      overstate it. Complaint URL not verified; left empty.
+    source_urls: *pt
+
+  - state: TX
+    statute_name: "Texas Data Privacy and Security Act"
+    citation: "Tex. Bus. & Com. Code ch. 541 (data brokers: ch. 509)"
+    effective_date: 2024-07-01
+    rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
+    response_days: 45
+    extension_days: 45
+    data_broker_law: "Texas data-broker registry: brokers register annually with the Texas Secretary of State (per privacylawmap.com; the sos.texas.gov page was not found, so section and URL not verified)."
+    ag_complaint_url: https://www.texasattorneygeneral.gov/consumer-protection/file-consumer-complaint
+    template: state_privacy
+    notes: >-
+      Citation and windows from background knowledge, not re-fetched. Complaint URL returned HTTP 402 to the
+      fetcher (likely bot-gated), so UNVERIFIED. 30-day cure period (privacyterms.io).
+    source_urls:
+      - https://privacyterms.io/us-state-privacy-laws-2026
+      - https://privacylawmap.com/blog/data-broker-registration-requirements-2026
+      - https://www.clym.io/blog/us-privacy-law-comparison-map
+
+  - state: OR
+    statute_name: "Oregon Consumer Privacy Act"
+    citation: "ORS 646A.570 to 646A.589"
+    effective_date: 2024-07-01
+    rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling, list_of_third_parties]
+    response_days: 45
+    extension_days: 45
+    data_broker_law: "Oregon data-broker registration with the Dept. of Consumer and Business Services (per privacylawmap.com; no statute section or details verified)."
+    ag_complaint_url: https://justice.oregon.gov/consumercomplaints/
+    template: state_privacy
+    notes: >-
+      Citation and windows from background knowledge, not re-fetched. Complaint page fetched OK (Oregon DOJ
+      Consumer Protection complaint form).
+    source_urls:
+      - https://privacyterms.io/us-state-privacy-laws-2026
+      - https://privacylawmap.com/blog/data-broker-registration-requirements-2026
+      - https://www.clym.io/blog/us-privacy-law-comparison-map
+
+  - state: FL
+    statute_name: "Florida Digital Bill of Rights"
+    citation: "Fla. Stat. 501.701 et seq."
+    effective_date: 2024-07-01
+    rights: [access, correct, delete, opt_out_sale]
+    response_days: 45
+    extension_days: 15
+    template: generic
+    notes: >-
+      Applies only to very large companies (about USD 1 billion revenue threshold per privacyterms.io),
+      so it almost never reaches people-search sites; letter template stays generic. Citation and windows
+      from background knowledge, not re-fetched.
+    source_urls: *pt
+
+  - state: MT
+    statute_name: "Montana Consumer Data Privacy Act"
+    citation: "Mont. Code Ann. 30-14-2801 et seq."
+    effective_date: 2024-10-01
+    rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
+    response_days: 45
+    extension_days: 45
+    template: state_privacy
+    notes: "Citation and windows from background knowledge, not re-fetched. Complaint URL not verified; left empty."
+    source_urls: *pt
+
+  - state: DE
+    statute_name: "Delaware Personal Data Privacy Act"
+    citation: "6 Del. C. ch. 12D"
+    effective_date: 2025-01-01
+    rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling, list_of_third_parties]
+    response_days: 45
+    extension_days: 45
+    template: state_privacy
+    notes: >-
+      Citation and windows from background knowledge, not re-fetched. A 2026 amendment is reported
+      (multistate.us), not detailed. A Delaware data-broker registry was NOT confirmed. Complaint URL not verified.
+    source_urls:
+      - https://privacyterms.io/us-state-privacy-laws-2026
+      - https://www.multistate.us/insider/2026/10/28/twenty-four-states-now-have-comprehensive-consumer-privacy-laws
+
+  - state: IA
+    statute_name: "Iowa Consumer Data Protection Act"
+    citation: "Iowa Code ch. 715D"
+    effective_date: 2025-01-01
+    rights: [access, delete, portability, opt_out_sale]
+    response_days: 90
+    extension_days: 45
+    template: state_privacy
+    notes: >-
+      Iowa's response window is believed to be 90 days (+45), longer than most states, and the deletion
+      right limited to data the consumer provided (background knowledge, not re-fetched). Complaint URL
+      not verified.
+    source_urls: *pt
+
+  - state: NE
+    statute_name: "Nebraska Data Privacy Act"
+    citation: "Neb. Rev. Stat. 87-1101 et seq."
+    effective_date: 2025-01-01
+    rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
+    response_days: 45
+    extension_days: 45
+    template: state_privacy
+    notes: "Citation and windows from background knowledge, not re-fetched. Complaint URL not verified."
+    source_urls: *pt
+
+  - state: NH
+    statute_name: "New Hampshire Privacy Act"
+    citation: "N.H. RSA ch. 507-H"
+    effective_date: 2025-01-01
+    rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
+    response_days: 45
+    extension_days: 45
+    template: state_privacy
+    notes: >-
+      Citation and windows from background knowledge, not re-fetched. 2026 amendments reported
+      (multistate.us), not detailed; HB 1694 (2026) appeared in a data-broker search, content not checked.
+    source_urls:
+      - https://privacyterms.io/us-state-privacy-laws-2026
+      - https://www.multistate.us/insider/2026/10/28/twenty-four-states-now-have-comprehensive-consumer-privacy-laws
+      - https://bills.nhliberty.org/bills/2026/HB1694
+
+  - state: NJ
+    statute_name: "New Jersey Data Privacy Act"
+    citation: "N.J.S.A. 56:8-166.4 et seq."
+    effective_date: 2025-01-15
+    rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
+    response_days: 45
+    extension_days: 45
+    data_broker_law: "A3538 signed 2026-06-30; registration and enforcement operative 2027-03-27 (per search summary of a Greenberg/Mondaq article; not verified against the Act). Not yet usable."
+    template: state_privacy
+    notes: "Citation and windows from background knowledge, not re-fetched. Complaint URL not verified."
+    source_urls:
+      - https://privacyterms.io/us-state-privacy-laws-2026
+      - https://www.mondaq.com/unitedstates/privacy-protection/1816798/vermont-and-new-jersey-data-broker-laws-add-to-expanding-state-privacy-patchwork
+
+  - state: TN
+    statute_name: "Tennessee Information Protection Act"
+    citation: "Tenn. Code Ann. 47-18-3201 et seq."
+    effective_date: 2025-07-01
+    rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
+    response_days: 45
+    extension_days: 45
+    template: state_privacy
+    notes: "Citation and windows from background knowledge, not re-fetched. Complaint URL not verified."
+    source_urls: *pt
+
+  - state: MN
+    statute_name: "Minnesota Consumer Data Privacy Act"
+    citation: "Minn. Stat. ch. 325M"
+    effective_date: 2025-07-31
+    rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling, list_of_third_parties]
+    response_days: 45
+    extension_days: 45
+    template: state_privacy
+    notes: "Citation and windows from background knowledge, not re-fetched. Complaint URL not verified."
+    source_urls: *pt
+
+  - state: MD
+    statute_name: "Maryland Online Data Privacy Act"
+    citation: "Md. Code, Com. Law 14-4601 et seq."
+    effective_date: 2025-10-01
+    rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
+    response_days: 45
+    extension_days: 45
+    template: state_privacy
+    notes: >-
+      Citation and windows from background knowledge, not re-fetched. 2026 amendments reported
+      (multistate.us), and Maryland HB 1220 (2026) appeared in a data-broker search; content not checked.
+    source_urls:
+      - https://privacyterms.io/us-state-privacy-laws-2026
+      - https://www.multistate.us/insider/2026/10/28/twenty-four-states-now-have-comprehensive-consumer-privacy-laws
+
+  - state: IN
+    statute_name: "Indiana Consumer Data Protection Act"
+    citation: "Ind. Code 24-15"
+    effective_date: 2026-01-01
+    rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
+    response_days: 45
+    extension_days: 45
+    template: state_privacy
+    notes: "Citation and windows from background knowledge, not re-fetched. Complaint URL not verified."
+    source_urls: *pt
+
+  - state: KY
+    statute_name: "Kentucky Consumer Data Protection Act"
+    citation: "KRS 367.3611 et seq."
+    effective_date: 2026-01-01
+    rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
+    response_days: 45
+    extension_days: 45
+    template: state_privacy
+    notes: "Citation and windows from background knowledge, not re-fetched. 2026 amendment reported (multistate.us), not detailed."
+    source_urls:
+      - https://privacyterms.io/us-state-privacy-laws-2026
+      - https://www.multistate.us/insider/2026/10/28/twenty-four-states-now-have-comprehensive-consumer-privacy-laws
+
+  - state: RI
+    statute_name: "Rhode Island Data Transparency and Privacy Protection Act"
+    citation: "R.I. Gen. Laws 6-48.1-1 et seq."
+    effective_date: 2026-01-01
+    rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
+    response_days: 45
+    extension_days: 45
+    template: state_privacy
+    notes: "Delete right confirmed in clym.io comparison table. Citation and windows from background knowledge, not re-fetched."
+    source_urls: *pt
+
+  # ------------------------------------------------------------------ enacted in 2026, NOT yet in force (generic until effective)
+  - state: OK
+    statute_name: "Oklahoma Consumer Data Privacy Act (SB 546)"
+    citation: "2026 Okla. SB 546"
+    effective_date: 2027-01-01
+    rights: []
+    template: generic
+    notes: >-
+      Signed 2026-03-20 per a secondary guide; effective 2027-01-01 per a search summary (sources partly
+      conflict on Oklahoma's date). NOT in force on 2026-11-06, so do not cite. Switch template to
+      state_privacy and fill rights/windows once effective and the statute text is checked.
+    source_urls: &new
+      - https://www.multistate.us/insider/2026/10/28/twenty-four-states-now-have-comprehensive-consumer-privacy-laws
+
+  - state: LA
+    statute_name: "Louisiana Data Privacy Act (SB 386)"
+    citation: "2026 La. SB 386"
+    effective_date: 2027-01-01
+    rights: []
+    template: generic
+    notes: "Signed 2026-05-29 per a secondary guide; effective 2027-01-01. NOT in force today; do not cite. Fill details once effective."
+    source_urls: *new
+
+  - state: AL
+    statute_name: "Alabama Personal Data Protection Act (HB 351)"
+    citation: "2026 Ala. HB 351"
+    effective_date: 2027-05-01
+    rights: []
+    template: generic
+    notes: "Signed 2026-04-17 per a secondary guide; effective 2027-05-01. NOT in force today; do not cite."
+    source_urls: *new
+
+  - state: VT
+    statute_name: "Vermont Data Privacy and Online Surveillance Act (S.71, Act 145)"
+    citation: "2026 Vt. S.71 (Act 145)"
+    effective_date: 2028-01-01
+    rights: []
+    data_broker_law: "Vermont data-broker registry: annual registration with the Secretary of State, enforced by the AG (in effect since 2019). A 2026 law (signed 2026-06-16) reportedly raises the fee from USD 100 to USD 900 on 2027-01-01 (secondary source). Registry statute citation not verified."
+    template: generic
+    notes: >-
+      Comprehensive law signed 2026-06-16, effective 2028-01-01 per a secondary guide: NOT in force today.
+      The data-broker registry already exists. sos.vermont.gov data-broker page returned 404 to the
+      fetcher, so the registry URL is unverified.
+    source_urls:
+      - https://www.multistate.us/insider/2026/10/28/twenty-four-states-now-have-comprehensive-consumer-privacy-laws
+      - https://privacylawmap.com/blog/data-broker-registration-requirements-2026
+      - https://www.mondaq.com/unitedstates/privacy-protection/1816798/vermont-and-new-jersey-data-broker-laws-add-to-expanding-state-privacy-patchwork
+
+  # ------------------------------------------------------------------ no comprehensive law found (generic letter)
+  # Not individually researched beyond "not among the 24 states with comprehensive laws" (multistate.us, 2026-10-28).
+  - {state: AK, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). Not individually researched.", source_urls: &ms [https://www.multistate.us/insider/2026/10/28/twenty-four-states-now-have-comprehensive-consumer-privacy-laws]}
+  - {state: AR, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). Not individually researched.", source_urls: *ms}
+  - {state: DC, template: generic, notes: "No comprehensive consumer privacy law found (not among the 24 per multistate.us, 2026-10-28). Not individually researched.", source_urls: *ms}
+  - {state: GA, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). Not individually researched.", source_urls: *ms}
+  - {state: HI, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). Not individually researched.", source_urls: *ms}
+  - {state: ID, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). Not individually researched.", source_urls: *ms}
+  - {state: IL, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). A data-broker bill (104th GA SB 3219 / SB 47) surfaced in search; status not checked.", source_urls: *ms}
+  - {state: KS, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). Not individually researched.", source_urls: *ms}
+  - {state: MA, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). Not individually researched.", source_urls: *ms}
+  - {state: ME, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). Not individually researched.", source_urls: *ms}
+  - {state: MI, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). Not individually researched.", source_urls: *ms}
+  - {state: MO, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). Not individually researched.", source_urls: *ms}
+  - {state: MS, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). Not individually researched.", source_urls: *ms}
+  - {state: ND, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). Not individually researched.", source_urls: *ms}
+  - {state: NM, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). Not individually researched.", source_urls: *ms}
+  - {state: NV, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). No Nevada data-broker registry could be confirmed. Not individually researched.", source_urls: *ms}
+  - {state: NY, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). Not individually researched.", source_urls: *ms}
+  - {state: OH, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). Not individually researched.", source_urls: *ms}
+  - {state: PA, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). Not individually researched.", source_urls: *ms}
+  - {state: SD, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). Not individually researched.", source_urls: *ms}
+  - {state: WA, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). Not individually researched.", source_urls: *ms}
+  - {state: WI, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). Not individually researched.", source_urls: *ms}
+  - {state: WV, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). Not individually researched.", source_urls: *ms}
+  - {state: WY, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). Not individually researched.", source_urls: *ms}

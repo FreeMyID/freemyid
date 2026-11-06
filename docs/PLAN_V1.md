@@ -125,3 +125,7 @@ the human, but makes that human's part as small as possible.
   result. That gives the listing address the opt-out form needs.
 - Unchanged: no CAPTCHA solvers, no paying, no ID upload or accounts unless the permission flag
   is set.
+- **State-law citations (2026-11-06):** a letter cites a state statute only if that state's entry in
+  `brokers/state_laws.yaml` has `last_verified` set. Unverified citations from background knowledge
+  must never appear in a letter; those states get the generic letter. Today only CA is
+  verified. States without a verified privacy law get the generic letter.
