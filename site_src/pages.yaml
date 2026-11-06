@@ -25,6 +25,13 @@
   title: "Free opt-out guides for people-search sites"
   description: Step-by-step, plain-English guides to remove yourself from Spokeo, Whitepages, BeenVerified and other people-search sites. Free, no app needed.
   jsonld: [breadcrumbs]
+- id: families
+  out: families/
+  template: pages/families.html
+  label: Helping a parent
+  title: "Helping a parent or grandparent use Free My ID"
+  description: A plain-language guide for family members setting up Free My ID for someone else, with a printable card for the fridge.
+  jsonld: [breadcrumbs]
 - id: privacy
   out: privacy/
   template: pages/privacy.html

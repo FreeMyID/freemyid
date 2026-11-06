@@ -21,7 +21,7 @@
         <ul role="list">
           {% if 'guides' in pages %}<li><a href="{{ url('guides/') }}">Free opt-out guides</a></li>{% endif %}
           {% if 'i-do-not-consent' in pages %}<li><a href="{{ url('i-do-not-consent/') }}">The "I do not consent" post</a></li>{% endif %}
-          <li><a href="{{ url('') }}#helping">Helping a parent</a></li>
+          {% if 'families' in pages %}<li><a href="{{ url('families/') }}">Helping a parent</a></li>{% endif %}
           <li><a href="{{ site.repo_url }}">Source code on GitHub</a></li>
         </ul>
       </nav>

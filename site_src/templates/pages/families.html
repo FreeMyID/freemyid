@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block main %}
+<div class="wrap main-pad prose">
+  {% include "partials/crumbs.html" %}
+  <h1>Helping a parent or grandparent use Free My ID</h1>
+  <!-- Sources: docs/marketing/families-page.md (WR-11), which traces every line to docs/HELPER_GUIDE.md, docs/USER_GUIDE.md and docs/assets/fridge-card.html -->
+  <p class="lead mt-s">Free My ID was built so people who aren't comfortable with computers can use it. If you're setting it up for someone you love, this page is for you. Allow about half an hour the first time.</p>
+  <div class="btn-row mt-m">
+    <a class="btn btn--lg" href="{{ url('download/') }}">{{ icon('download') }}Download Free My ID (free, for Windows)</a>
+    <a class="btn btn--lg btn--secondary" href="{{ asset('assets/free-my-id-fridge-card.pdf') }}">Print the fridge card (PDF)</a>
+  </div>
+
+  <h2 class="mt-l">What you're setting up, in one sentence</h2>
+  <p>Free My ID asks people-search sites (websites that publish names, addresses and phone numbers, also called data brokers) to delete a person's details, using each site's own removal process, and then keeps checking. In states with a privacy law, sites must answer. Elsewhere, many honor the request but don't have to.</p>
+
+  <h2 class="mt-l">What it doesn't do</h2>
+  <ul>
+    <li>It doesn't change what Facebook itself does with their account.</li>
+    <li>It can't remove news stories or government records.</li>
+    <li>Some sites take weeks, and some list people again later. That's why it keeps checking.</li>
+  </ul>
+
+  <h2 class="mt-l">Before you sit down</h2>
+  <p>Have ready:</p>
+  <ul>
+    <li>Their full name, and any maiden or earlier names</li>
+    <li>The towns they've lived in over the last 10 years</li>
+    <li>Optional: year of birth, phone number, relatives' names. These only help Free My ID recognize the right listing. They are never sent to anyone.</li>
+  </ul>
+  <div class="callout callout--gold mt-m">
+    {{ icon('shield') }}
+    <div><p><strong>Permission comes first.</strong> Each adult gives their own permission. If you're helping an adult, they sign a short permission form, and Free My ID won't work on them without it. For a child under 18, a parent or guardian sets it up.</p></div>
+  </div>
+
+  <h2 class="mt-l">A separate email address for replies (optional)</h2>
+  <p>Sites reply by email, and some send a "click to confirm" link.</p>
+  <ul>
+    <li><strong>If you want Free My ID to send the emails and read the replies:</strong> make a new, free Gmail address just for this. It keeps removal mail out of their everyday inbox. Gmail needs an "app password"; the setup screen shows the steps. Outlook.com and Hotmail can't be used for this.</li>
+    <li><strong>If you'd rather keep it simple:</strong> choose "Skip, I'll do these by hand." Free My ID prepares each message and opens their email program, and they press Send.</li>
+  </ul>
+
+  <h2 class="mt-l" id="setup">Setting it up</h2>
+  <ol class="steps mt-m" role="list">
+    <li><h3>Download</h3><p>On their Windows 10 or 11 computer, use the Download button on this site. Only download from this site or our <a href="{{ site.releases_url }}">GitHub releases page</a>.</p></li>
+    <li><h3>Open FreeMyIDSetup.exe</h3><p>Windows may show a blue box that says "Windows protected your PC." That happens because Free My ID is free and hasn't bought a publisher certificate yet. Click the small words <strong>More info</strong>, check the name says FreeMyIDSetup.exe, then click <strong>Run anyway</strong>. <a href="{{ url('download/') }}#smartscreen">See it with pictures.</a></p></li>
+    <li><h3>Click Install</h3><p>No administrator password is needed. Free My ID opens by itself.</p></li>
+    <li><h3>Go through the six setup screens</h3>
+      <p>A row of dots at the top shows where you are.</p>
+      <ul>
+        <li>Welcome and permission</li>
+        <li>Their name</li>
+        <li>Where they live (city and state are enough)</li>
+        <li>A few optional details to recognize them</li>
+        <li>The optional reply email</li>
+        <li>Whether to keep checking automatically (leave it ticked: one small daily task, quiet unless they're needed)</li>
+      </ul></li>
+    <li><h3>Start in practice mode</h3><p>Free My ID first looks for listings but sends nothing. Look over what it found together. When you're ready, go to Settings and turn on real requests. Requests already sent can't be taken back.</p></li>
+  </ol>
+
+  <h2 class="mt-l">What they'll see afterward</h2>
+  <ul>
+    <li><strong>A status page in plain words:</strong> listed, asked, waiting for the site, site confirmed, or not listed now.</li>
+    <li><strong>"Needs you" cards.</strong> A few sites need a real person. A card appears with one big button.
+      <ul>
+        <li>"Fill it in for me" opens the site's removal page and fills in the boxes. If the site asks "I'm not a robot," the person ticks the box and presses Submit themselves. Free My ID never does that step.</li>
+        <li>"Do it with me" opens the site in their own browser with numbered steps and a Copy button for each box.</li>
+      </ul></li>
+    <li><strong>Emails waiting for approval,</strong> if a reply mailbox is set up. Nothing is sent until they press OK.</li>
+    <li><strong>Small desktop notices</strong> like "Mom: 2 sites need you." They never include personal details.</li>
+    <li><strong>Receipts:</strong> a printable list of every site, when it was asked, what it replied, and when it was checked again.</li>
+  </ul>
+
+  <h2 class="mt-l" id="tell-them">Tell them this</h2>
+  <blockquote class="callout callout--gold">
+    {{ icon('shield') }}
+    <div><p><strong>If it ever asks for your Social Security number, a bank card or a password for Facebook, it isn't Free My ID. Call me.</strong></p></div>
+  </blockquote>
+  <p class="mt-m">Free My ID never asks for: a Social Security number; bank, credit or debit card details; a photo of an ID card; their Facebook, Google or everyday email password; or money. It never creates accounts, uploads ID or gives out a phone number unless you've explicitly allowed it for that person. It never solves "are you a robot?" checks. We will never email you an installer, and we will never call you.</p>
+
+  <h2 class="mt-l" id="fridge-card">Printable card for the fridge</h2>
+  <p>A one-page card with the three things to remember, and a space to write your name and phone number as their helper.</p>
+  <p class="mt-s"><a class="btn btn--secondary" href="{{ asset('assets/free-my-id-fridge-card.pdf') }}">Print the fridge card (PDF)</a></p>
+
+  <h2 class="mt-l">Pausing, stopping, uninstalling</h2>
+  <ul>
+    <li><strong>Pause the daily checks:</strong> Settings, Run automatically, Turn off.</li>
+    <li><strong>Stop sending real requests:</strong> switch back to practice mode in Settings any time.</li>
+    <li><strong>Uninstall:</strong> Windows Settings, Apps, Free My ID, Uninstall. It asks whether to delete the saved records too. Answer Yes to remove everything Free My ID stored on that computer.</li>
+  </ul>
+
+  <h2 class="mt-l">Questions helpers ask</h2>
+  <h3>Is it really free?</h3>
+  <p>Yes. <a href="{{ url('faq/') }}">See the answer on our Questions page.</a></p>
+  <h3>Is it safe to put on their computer?</h3>
+  <p>It runs on their computer only. No account, nothing sent to us. It is free, open-source software. It isn't a government service and isn't connected to Facebook/Meta or any data broker.</p>
+  <h3>Can I set it up for several family members?</h3>
+  <p>Yes, from one computer. Each adult gives their own permission.</p>
+
+  <div class="btn-row mt-l">
+    <a class="btn btn--lg" href="{{ url('download/') }}">{{ icon('download') }}Download Free My ID (free, for Windows)</a>
+    <a class="btn btn--lg btn--secondary" href="{{ url('guides/') }}">Use the free guides instead</a>
+  </div>
+</div>
+{% endblock %}
