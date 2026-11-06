@@ -1,0 +1,10 @@
+{{ today }}
+
+{% if broker_postal %}{{ broker_postal }}
+{% else %}{{ broker_name }}
+Attn: Privacy / Opt-Out
+{% endif %}
+
+Re: Request to delete personal information and opt out of sale
+
+{% include "generic_removal.txt.j2" ignore missing %}

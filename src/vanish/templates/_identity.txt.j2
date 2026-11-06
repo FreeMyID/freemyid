@@ -1,0 +1,19 @@
+{# Shared identifying block. Only contains fields the listing already shows. #}
+Name: {{ name }}
+{% if city or state %}Location shown on your site: {{ [city, state] | select | join(", ") }}
+{% endif %}
+{% if age %}Approximate age shown: {{ age }}
+{% endif %}
+{% if street_address %}Street address shown: {{ street_address }}{% if zip %} {{ zip }}{% endif %}
+
+{% endif %}
+{% if phone %}Phone number shown: {{ phone }}
+{% endif %}
+{% if listing_urls %}
+Listing URL(s):
+{% for u in listing_urls %}
+  - {{ u }}
+{% endfor %}
+{% endif %}
+{% if mailbox %}Contact email for this request: {{ mailbox }}
+{% endif %}

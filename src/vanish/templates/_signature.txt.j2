@@ -1,0 +1,7 @@
+{% if is_agent and agent_name %}
+Submitted by {{ agent_name }} as authorized agent / guardian on behalf of {{ name }}.
+Proof of authorization is available on request.
+{% else %}
+Sincerely,
+{{ name }}
+{% endif %}

@@ -1,0 +1,20 @@
+Subject: Formal demand: unanswered personal data deletion request{% if reference %} (ref {{ reference }}){% endif %}
+
+To {{ broker_name or "the privacy team" }} (legal / privacy officer),
+
+This is a formal demand. On {{ original_request_date or "an earlier date" }} I requested deletion of my personal
+information{% if statute_name %} under the {{ statute_name }}{% if citation %} ({{ citation }}){% endif %}{% endif %}.
+{% if response_deadline %}Your response was due by {{ response_deadline }}. {% endif %}I have also sent a follow-up.
+The information remains published or unconfirmed.
+
+{% include "_identity.txt.j2" %}
+
+Unless the deletion is completed and confirmed in writing within 15 days, I intend to file
+a complaint with the appropriate regulator{% if complaint_urls %}:
+{% for u in complaint_urls %}
+  - {{ u }}
+{% endfor %}
+{% else %}, including my state Attorney General.
+{% endif %}
+
+{% include "_signature.txt.j2" %}

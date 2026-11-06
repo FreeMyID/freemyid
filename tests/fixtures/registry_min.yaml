@@ -1,0 +1,32 @@
+# Minimal fake registry for tests. All domains are reserved/fake; no real brokers.
+version: "2026.11.05-test"
+updated: 2026-11-05
+brokers:
+  - id: fakepeople
+    name: Fake People Search
+    url: https://fakepeople.example/
+    category: people_search
+    domains: [fakepeople.example]
+    search_url_pattern: "https://fakepeople.example/name/{first}-{last}/{state}"
+    opt_out_url: https://fakepeople.example/optout
+    method: web_form
+    required_fields: [full_name, email, listing_url]
+    confirmation_domains: [mail.fakepeople.example]
+    typical_processing_days: 10
+    recheck_interval_days: 30
+    form:
+      - {action: goto, url: "https://fakepeople.example/optout"}
+      - {action: fill, selector: "#email", value: "{{ mailbox.address }}"}
+      - {action: fill, selector: "input[name=url]", value: "{{ listing.url }}"}
+      - {action: submit, selector: "button.submit"}
+  - id: fakemail
+    name: Fake Mail Broker
+    url: https://fakemail.example/
+    category: data_broker
+    domains: [fakemail.example]
+    method: email
+    opt_out_email: privacy@fakemail.example
+    covered_by: fakepeople
+    verification_status: verified
+    source_urls: [https://fakemail.example/privacy]
+    last_verified: 2026-10-01

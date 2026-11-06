@@ -1,0 +1,17 @@
+Subject: Request to delete personal data{% if statute_name %} under the {{ statute_name }}{% endif %}
+
+To {{ broker_name or "the privacy team" }},
+
+I am a resident of {{ state_name or state or "the United States" }}.{% if statute_name %} Under the
+{{ statute_name }}{% if citation %} ({{ citation }}){% endif %}, I am exercising my right to have my personal data
+deleted and to opt out of its sale and use for targeted advertising.{% else %} I request that you
+delete my personal data and stop selling or sharing it.{% endif %}
+
+
+{% include "_identity.txt.j2" %}
+
+{% if response_days %}The law requires a response within {{ response_days }} days.
+{% endif %}
+Please confirm by email when the deletion is complete.
+
+{% include "_signature.txt.j2" %}

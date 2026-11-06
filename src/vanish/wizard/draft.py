@@ -1,0 +1,465 @@
+"""Wizard draft (in-memory, one person at a time) shared by the web wizard and CLI flows.
+
+The draft holds PII and the mailbox password only in process memory until `save_draft`.
+"""
+from __future__ import annotations
+
+import imaplib
+import logging
+import re
+import smtplib
+import ssl
+from dataclasses import dataclass, field
+from datetime import date, datetime
+from typing import Any, Protocol
+
+from ..models import (
+    Actor, Address, Consent, ConsentBasis, EmailMode, Event, Evidence, EvidenceKind,
+    MailboxConfig, Permissions, PersonName, Profile, ScheduleConfig, new_id, utcnow,
+)
+
+log = logging.getLogger(__name__)
+
+CONSENT_VERSION = "2026-11-a"
+CONSENT_TEXT = [
+    "Vanish will look for the information of the person named in this setup on "
+    "\"people-search\" and data-broker websites, and ask those sites to remove it.",
+    "Everything you type here stays on this computer, encrypted. Nothing is sent to us "
+    "or to any server we run. There is no account, no tracking and no cloud.",
+    "When Vanish contacts a broker it sends only what that broker already shows about the "
+    "person, plus the dedicated removal mailbox you set up. It never pays anyone.",
+    "Honest limits: some brokers need a manual step from a human, listings can come back "
+    "after they are removed, and \"removed\" only ever means removed from that one broker, "
+    "not from the whole internet.",
+    "You can pause, edit or delete everything at any time.",
+]
+BASIS_LABELS = {
+    ConsentBasis.SELF.value: "I am this person and I am allowing Vanish to act for me.",
+    ConsentBasis.GUARDIAN_OF_MINOR.value:
+        "I am the parent or legal guardian of this person, who is under 18.",
+    ConsentBasis.AUTHORIZED_AGENT.value:
+        "I am helping an adult who gave me signed written permission (an authorized agent).",
+}
+
+STEPS = ["consent", "names", "addresses", "details", "permissions", "mailbox", "email",
+         "schedule", "review"]
+STEP_TITLES = {
+    "consent": "Permission", "names": "Names", "addresses": "Addresses",
+    "details": "Other details", "permissions": "What Vanish may do",
+    "mailbox": "Removal mailbox", "email": "Email approval", "schedule": "Schedule",
+    "review": "Review and save",
+}
+
+PRESETS: dict[str, dict[str, Any]] = {
+    "gmail": dict(imap_host="imap.gmail.com", imap_port=993, imap_ssl=True,
+                  smtp_host="smtp.gmail.com", smtp_port=465, smtp_starttls=False),
+    "proton_bridge": dict(imap_host="127.0.0.1", imap_port=1143, imap_ssl=False,
+                          imap_starttls=True, smtp_host="127.0.0.1", smtp_port=1025, smtp_starttls=True),
+    "other": dict(imap_host="", imap_port=993, imap_ssl=True,
+                  smtp_host="", smtp_port=465, smtp_starttls=False),
+}
+
+MAX_AUTH_BYTES = 10 * 1024 * 1024
+_HOST_RE = re.compile(r"^[A-Za-z0-9]([A-Za-z0-9.\-]{0,251}[A-Za-z0-9])?$")
+
+
+class FormLike(Protocol):
+    def get(self, key: str, default: Any = None) -> Any: ...
+    def getlist(self, key: str) -> list[Any]: ...
+
+
+@dataclass
+class Draft:
+    id: str = field(default_factory=new_id)
+    editing: bool = False
+    imported: bool = False
+    # consent
+    basis: str = ConsentBasis.SELF.value
+    attested_by: str = ""
+    consent_ack: bool = False
+    consent_at: datetime | None = None
+    auth_bytes: bytes | None = None
+    auth_filename: str = ""
+    existing_consent: Consent | None = None
+    # names
+    label: str = ""
+    first: str = ""
+    middle: str = ""
+    last: str = ""
+    suffix: str = ""
+    nicknames: list[str] = field(default_factory=list)
+    previous_names: list[str] = field(default_factory=list)
+    # addresses
+    addresses: list[dict[str, Any]] = field(default_factory=list)
+    # details
+    dob: str = ""
+    age: str = ""
+    phones: list[str] = field(default_factory=list)
+    emails: list[str] = field(default_factory=list)
+    relatives: list[str] = field(default_factory=list)
+    # permissions
+    allow_id_upload: bool = False
+    allow_account_creation: bool = False
+    allow_phone_disclosure: bool = False
+    # mailbox
+    skip_mailbox: bool = False
+    mailbox: dict[str, Any] = field(default_factory=dict)
+    password: str = ""
+    # email
+    email_mode: str = EmailMode.APPROVE_EACH.value
+    # schedule
+    weekly_recheck: bool = True
+    weekday: int = 6
+    hour: int = 10
+
+
+class SaveError(RuntimeError):
+    pass
+
+
+# --------------------------------------------------------------------------- helpers
+
+
+def _lines(text: str | None) -> list[str]:
+    return [ln.strip() for ln in (text or "").replace(",", "\n").splitlines() if ln.strip()]
+
+
+def _name_lines(text: str | None) -> list[str]:
+    return [ln.strip() for ln in (text or "").splitlines() if ln.strip()]
+
+
+def parse_person_name(text: str) -> PersonName:
+    parts = text.split()
+    if len(parts) < 2:
+        raise ValueError(f"Please give a first and last name for \"{text}\".")
+    return PersonName(first=parts[0], last=parts[-1],
+                      middle=" ".join(parts[1:-1]) or None)
+
+
+def age_of(d: Draft, today: date | None = None) -> int | None:
+    today = today or date.today()
+    if d.dob:
+        b = date.fromisoformat(d.dob)
+        return today.year - b.year - ((today.month, today.day) < (b.month, b.day))
+    if d.age.strip():
+        return int(d.age)
+    return None
+
+
+def is_minor(d: Draft) -> bool:
+    try:
+        a = age_of(d)
+    except ValueError:
+        return False
+    return a is not None and a < 18
+
+
+# --------------------------------------------------------------------------- step parsing
+
+
+def apply_step(d: Draft, step: str, f: FormLike, files: dict[str, tuple[str, bytes]] | None = None
+               ) -> list[str]:
+    """Apply one wizard step's form to the draft. Returns a list of plain-language errors."""
+    files = files or {}
+    errs: list[str] = []
+    if step == "consent":
+        basis = f.get("basis", "")
+        if basis not in BASIS_LABELS:
+            errs.append("Please choose who is giving permission.")
+        else:
+            d.basis = basis
+        d.attested_by = (f.get("attested_by") or "").strip()
+        if not d.attested_by:
+            errs.append("Please type your full name to confirm.")
+        if not f.get("ack"):
+            errs.append("Please tick the box to confirm you have read and agree.")
+        if "authorization" in files and files["authorization"][1]:
+            name, data = files["authorization"]
+            if len(data) > MAX_AUTH_BYTES:
+                errs.append("That file is too large (10 MB maximum).")
+            else:
+                d.auth_filename, d.auth_bytes = name[:100], data
+        if not errs:
+            d.consent_ack = True
+            d.consent_at = utcnow()
+    elif step == "names":
+        d.first = (f.get("first") or "").strip()
+        d.middle = (f.get("middle") or "").strip()
+        d.last = (f.get("last") or "").strip()
+        d.suffix = (f.get("suffix") or "").strip()
+        d.nicknames = _lines(f.get("nicknames"))
+        d.previous_names = _name_lines(f.get("previous_names"))
+        d.label = (f.get("label") or "").strip() or d.first
+        if not d.first or not d.last:
+            errs.append("First and last name are required.")
+        for n in d.previous_names:
+            try:
+                parse_person_name(n)
+            except ValueError as e:
+                errs.append(str(e))
+    elif step == "addresses":
+        rows = []
+        cur = f.get("current", "0")
+        for i in range(4):
+            city = (f.get(f"city{i}") or "").strip()
+            st = (f.get(f"state{i}") or "").strip().upper()
+            if not city and not st:
+                continue
+            if not city or not re.fullmatch(r"[A-Z]{2}", st):
+                errs.append(f"Address {i + 1}: please give a city and a 2-letter state (like IL).")
+                continue
+            rows.append(dict(street=(f.get(f"street{i}") or "").strip(), city=city, state=st,
+                             zip=(f.get(f"zip{i}") or "").strip(), current=str(i) == cur))
+        if not rows and not errs:
+            errs.append("Please enter at least one city and state.")
+        if rows and not any(r["current"] for r in rows):
+            rows[0]["current"] = True
+        if not errs:
+            d.addresses = rows
+    elif step == "details":
+        d.dob = (f.get("dob") or "").strip()
+        d.age = (f.get("age") or "").strip()
+        d.phones = _lines(f.get("phones"))
+        d.emails = _lines(f.get("emails"))
+        d.relatives = _name_lines(f.get("relatives"))
+        if d.dob:
+            try:
+                if date.fromisoformat(d.dob) > date.today():
+                    errs.append("Date of birth is in the future.")
+            except ValueError:
+                errs.append("Date of birth should look like 1960-04-23.")
+        if d.age:
+            if not d.age.isdigit() or not 0 <= int(d.age) <= 130:
+                errs.append("Age should be a number.")
+        if not errs and is_minor(d) and d.basis != ConsentBasis.GUARDIAN_OF_MINOR.value:
+            errs.append("This person is under 18, so a parent or guardian must give "
+                        "permission. Go back to step 1 and choose the parent/guardian option.")
+    elif step == "permissions":
+        d.allow_id_upload = bool(f.get("allow_id_upload"))
+        d.allow_account_creation = bool(f.get("allow_account_creation"))
+        d.allow_phone_disclosure = bool(f.get("allow_phone_disclosure"))
+    elif step == "mailbox":
+        d.skip_mailbox = bool(f.get("skip_mailbox"))
+        if not d.skip_mailbox:
+            errs += _apply_mailbox(d, f)
+    elif step == "email":
+        mode = f.get("email_mode", EmailMode.APPROVE_EACH.value)
+        if mode not in (EmailMode.APPROVE_EACH.value, EmailMode.AUTO.value):
+            errs.append("Please choose an email option.")
+        else:
+            d.email_mode = mode
+    elif step == "schedule":
+        d.weekly_recheck = bool(f.get("weekly_recheck"))
+        try:
+            d.weekday = int(f.get("weekday", 6))
+            d.hour = int(f.get("hour", 10))
+            if not (0 <= d.weekday <= 6 and 0 <= d.hour <= 23):
+                raise ValueError
+        except ValueError:
+            errs.append("Please pick a valid day and hour.")
+    return errs
+
+
+def _apply_mailbox(d: Draft, f: FormLike) -> list[str]:
+    errs: list[str] = []
+    provider = f.get("provider", "other")
+    if provider == "outlook":
+        return ["Outlook/Hotmail is not supported yet (Microsoft requires OAuth sign-in). "
+                "Please use Gmail with an app password, Proton Bridge, or Other provider "
+                "(for example Fastmail with an app password)."]
+    if provider not in PRESETS:
+        provider = "other"
+    mb: dict[str, Any] = dict(PRESETS[provider])
+    mb["provider"] = provider
+    mb["address"] = (f.get("address") or "").strip()
+    mb["username"] = (f.get("username") or "").strip() or mb["address"]
+    if provider == "other" or f.get("custom_hosts"):
+        try:
+            mb.update(imap_host=(f.get("imap_host") or "").strip(),
+                      smtp_host=(f.get("smtp_host") or "").strip(),
+                      imap_port=int(f.get("imap_port") or 993),
+                      smtp_port=int(f.get("smtp_port") or 465),
+                      imap_ssl=bool(f.get("imap_ssl")),
+                      imap_starttls=bool(f.get("imap_starttls")),
+                      smtp_starttls=bool(f.get("smtp_starttls")))
+        except ValueError:
+            errs.append("Ports must be numbers.")
+    if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", mb["address"]):
+        errs.append("Please enter the removal mailbox's email address.")
+    for k in ("imap_host", "smtp_host"):
+        if not _HOST_RE.match(mb.get(k) or ""):
+            errs.append("Please enter valid mail server names.")
+            break
+    pw = f.get("password") or ""
+    if pw:
+        d.password = pw
+    elif not d.password and not (d.editing and d.mailbox):
+        errs.append("Please enter the mailbox password (for Gmail, an app password).")
+    if not errs:
+        d.mailbox = mb
+    return errs
+
+
+# --------------------------------------------------------------------------- connection test
+
+
+def test_mailbox_connection(mb: dict[str, Any], password: str, timeout: float = 10.0
+                            ) -> tuple[bool, str]:
+    """Log in to IMAP and SMTP on exactly the hosts given. Contacts nothing else.
+
+    Returns (ok, plain-language message). The password never appears in the message.
+    """
+    for k in ("imap_host", "smtp_host"):
+        if not _HOST_RE.match(str(mb.get(k) or "")):
+            return False, "Please fill in the mail server names first."
+    if not password:
+        return False, "Please enter the password first."
+
+    def ctx_for(host: str) -> ssl.SSLContext:
+        c = ssl.create_default_context()
+        if host in ("127.0.0.1", "localhost", "::1"):   # Proton Bridge: local, self-signed
+            c.check_hostname = False
+            c.verify_mode = ssl.CERT_NONE
+        return c
+
+    user = mb.get("username") or mb.get("address") or ""
+    try:
+        ih, ip = mb["imap_host"], int(mb["imap_port"])
+        if mb.get("imap_ssl", True):
+            im: imaplib.IMAP4 = imaplib.IMAP4_SSL(ih, ip, ssl_context=ctx_for(ih), timeout=timeout)
+        else:
+            im = imaplib.IMAP4(ih, ip, timeout=timeout)
+            if mb.get("imap_starttls"):
+                im.starttls(ctx_for(ih))
+        try:
+            im.login(user, password)
+        finally:
+            try:
+                im.logout()
+            except Exception:  # noqa: BLE001
+                pass
+    except (imaplib.IMAP4.error, OSError, ssl.SSLError) as e:
+        return False, f"Could not sign in to the incoming mail server ({type(e).__name__})."
+    try:
+        sh, sp = mb["smtp_host"], int(mb["smtp_port"])
+        if mb.get("smtp_starttls"):
+            sm: smtplib.SMTP = smtplib.SMTP(sh, sp, timeout=timeout)
+            sm.ehlo()
+            sm.starttls(context=ctx_for(sh))
+            sm.ehlo()
+        else:
+            sm = smtplib.SMTP_SSL(sh, sp, timeout=timeout, context=ctx_for(sh))
+        try:
+            sm.login(user, password)
+        finally:
+            try:
+                sm.quit()
+            except Exception:  # noqa: BLE001
+                pass
+    except (smtplib.SMTPException, OSError, ssl.SSLError) as e:
+        return False, f"Incoming mail works, but the outgoing server failed ({type(e).__name__})."
+    return True, "Connection works. Vanish can read and send from this mailbox."
+
+
+# --------------------------------------------------------------------------- build + save
+
+
+def build_profile(d: Draft) -> Profile:
+    if not d.consent_ack and d.existing_consent is None:
+        raise SaveError("Consent has not been given.")
+    minor = is_minor(d)
+    if d.existing_consent is not None and not d.consent_ack:
+        consent = d.existing_consent
+    else:
+        consent = Consent(basis=ConsentBasis(d.basis), attested_by=d.attested_by,
+                          attested_at=d.consent_at or utcnow(), text_version=CONSENT_VERSION,
+                          authorization_doc=(d.existing_consent.authorization_doc
+                                             if d.existing_consent else None))
+    if minor and consent.basis != ConsentBasis.GUARDIAN_OF_MINOR:
+        raise SaveError("A parent or guardian must give permission for someone under 18.")
+    mailbox = None
+    if d.mailbox and not d.skip_mailbox:
+        mailbox = MailboxConfig(**d.mailbox, keyring_service="vanish-mailbox")
+    try:
+        return Profile(
+            id=d.id, label=d.label or d.first, consent=consent,
+            name=PersonName(first=d.first, middle=d.middle or None, last=d.last,
+                            suffix=d.suffix or None),
+            nicknames=d.nicknames,
+            previous_names=[parse_person_name(n) for n in d.previous_names],
+            addresses=[Address(**{k: (v or None) if k in ("street", "zip") else v
+                                  for k, v in a.items()}) for a in d.addresses],
+            dob=date.fromisoformat(d.dob) if d.dob else None,
+            age=int(d.age) if d.age and not d.dob else None,
+            phones=d.phones, emails=d.emails, relatives=d.relatives, is_minor=minor,
+            mailbox=mailbox, email_mode=EmailMode(d.email_mode),
+            permissions=Permissions(allow_id_upload=d.allow_id_upload,
+                                    allow_account_creation=d.allow_account_creation,
+                                    allow_phone_disclosure=d.allow_phone_disclosure),
+            schedule=ScheduleConfig(weekly_recheck=d.weekly_recheck, weekday=d.weekday,
+                                    hour=d.hour),
+        )
+    except ValueError as e:   # pydantic ValidationError subclasses ValueError
+        raise SaveError("Some details are missing or invalid; please go back and check them."
+                        ) from e
+
+
+def save_authorization(store, pid: str, name: str, data: bytes) -> str:
+    """Encrypt the signed authorization form as evidence; return the evidence id."""
+    ev = Evidence(profile_id=pid, broker_id="_consent", kind=EvidenceKind.LETTER,
+                  relpath=f"{pid}/consent/authorization-{new_id()[:8]}.bin", sha256="",
+                  caption="Signed authorization (agent consent)")
+    ev = store.save_evidence(ev, data)
+    return ev.id
+
+
+def save_draft(store, d: Draft, actor: Actor = Actor.WIZARD) -> Profile:
+    """Validate, store the profile, put the mailbox password in the keychain."""
+    from ..secrets import set_mailbox_password
+
+    prof = build_profile(d)
+    if d.auth_bytes:
+        doc = save_authorization(store, prof.id, d.auth_filename, d.auth_bytes)
+        prof = prof.model_copy(update={
+            "consent": prof.consent.model_copy(update={"authorization_doc": doc})})
+    if prof.mailbox and d.password:
+        try:
+            set_mailbox_password(prof.id, prof.mailbox, d.password)
+        except Exception as e:  # noqa: BLE001  keyring backends raise assorted errors
+            raise SaveError("Could not store the mailbox password in this computer's "
+                            "keychain. Unlock the keychain and try again.") from e
+    prior = store.get_profile(prof.id)
+    if prior:
+        prof = prof.model_copy(update={"created_at": prior.created_at})
+    store.save_profile(prof)
+    store.log(Event(profile_id=prof.id, actor=actor,
+                    action="profile_updated" if d.editing else "profile_created",
+                    detail={"consent_basis": prof.consent.basis.value,
+                            "consent_text_version": prof.consent.text_version}))
+    d.password = ""
+    return prof
+
+
+def draft_from_profile(p: Profile, *, keep_consent: bool = True) -> Draft:
+    d = Draft(id=p.id, editing=True, label=p.label, first=p.name.first,
+              middle=p.name.middle or "", last=p.name.last, suffix=p.name.suffix or "",
+              nicknames=list(p.nicknames),
+              previous_names=[" ".join(x for x in (n.first, n.middle, n.last) if x)
+                              for n in p.previous_names],
+              addresses=[dict(street=a.street or "", city=a.city, state=a.state,
+                              zip=a.zip or "", current=a.current) for a in p.addresses],
+              dob=p.dob.isoformat() if p.dob else "", age=str(p.age) if p.age is not None else "",
+              phones=list(p.phones), emails=list(p.emails), relatives=list(p.relatives),
+              allow_id_upload=p.permissions.allow_id_upload,
+              allow_account_creation=p.permissions.allow_account_creation,
+              allow_phone_disclosure=p.permissions.allow_phone_disclosure,
+              email_mode=p.email_mode.value, weekly_recheck=p.schedule.weekly_recheck,
+              weekday=p.schedule.weekday, hour=p.schedule.hour,
+              basis=p.consent.basis.value, attested_by=p.consent.attested_by)
+    if keep_consent:
+        d.existing_consent = p.consent
+    if p.mailbox:
+        d.mailbox = p.mailbox.model_dump(exclude={"keyring_service"})
+    else:
+        d.skip_mailbox = True
+    return d

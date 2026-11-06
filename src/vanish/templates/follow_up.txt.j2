@@ -1,0 +1,15 @@
+Subject: Follow-up: deletion request{% if original_request_date %} of {{ original_request_date }}{% endif %}{% if reference %} (ref {{ reference }}){% endif %}
+
+To {{ broker_name or "the privacy team" }},
+
+On {{ original_request_date or "an earlier date" }} I asked you to remove my personal information.
+{% if response_deadline %}The response period ended on {{ response_deadline }}. {% endif %}My information still appears
+on your site, or I have not received confirmation that it was removed.
+
+{% include "_identity.txt.j2" %}
+
+{% if statute_name %}This request is made under the {{ statute_name }}{% if citation %} ({{ citation }}){% endif %}.
+{% endif %}
+Please complete the deletion and confirm in writing.
+
+{% include "_signature.txt.j2" %}

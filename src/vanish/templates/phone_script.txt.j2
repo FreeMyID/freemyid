@@ -1,0 +1,25 @@
+Phone call script: {{ broker_name }}
+{% if broker_phone %}Number: {{ broker_phone }}
+{% endif %}
+
+1. "Hello, I'm calling to have my personal information removed from your records and
+   to opt out of the sale or sharing of my information."
+2. If asked for identifying details, give ONLY what their listing already shows:
+   - Name: {{ name }}
+{% if city or state %}   - Location: {{ [city, state] | select | join(", ") }}
+{% endif %}
+{% if age %}   - Approximate age: {{ age }}
+{% endif %}
+{% for u in listing_urls %}   - Listing: {{ u }}
+{% endfor %}
+{% if mailbox %}   - Email for confirmation: {{ mailbox }}
+{% endif %}
+3. Do NOT give your date of birth, Social Security number, payment details or relatives.
+{% if not phone %}   Do not give a phone number (phone disclosure is turned off for this person).
+{% endif %}
+4. Ask for a reference / ticket number and write it down: ________________
+5. Ask how long removal takes and note the date: ________________
+6. Never agree to pay. Removal requests are free.
+{% if statute_name %}
+If they refuse: "I'm making this request under the {{ statute_name }}{% if citation %}, {{ citation }}{% endif %}."
+{% endif %}
