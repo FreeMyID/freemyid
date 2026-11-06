@@ -289,6 +289,12 @@ def wipe(yes: Annotated[bool, typer.Option("--yes")] = False):
         except Exception:  # noqa: BLE001  key may already be gone; still delete files
             log.warning("wipe: could not read profiles to remove mailbox passwords")
     crypto.delete_key()
+    # Close our own log files first: Windows refuses to delete a file that is still open.
+    for lg in (logging.getLogger(), logging.getLogger("vanish")):
+        for h in list(lg.handlers):
+            if isinstance(h, logging.FileHandler):
+                h.close()
+                lg.removeHandler(h)
     for name in paths.OWNED_ENTRIES:   # only what Vanish created; never rmtree the folder itself
         e = target / name
         if e.is_dir() and not e.is_symlink():
