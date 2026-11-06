@@ -65,6 +65,7 @@ jobs:
           & $iscc "/DAppVersion=${{ steps.ver.outputs.version }}" packaging\windows\vanish.iss
           if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed" }
       - name: Install test (silent install, run, schedule task, silent uninstall)
+        timeout-minutes: 10
         shell: pwsh
         run: |
           # CI runners are disposable, so installing a per-user scheduled task here is fine.

@@ -64,9 +64,11 @@ begin
   if CurUninstallStep = usUninstall then
   begin
     if IsVanishData then
-      if MsgBox('Do you also want to delete the information Vanish saved on this computer '
+      // SuppressibleMsgBox: a silent uninstall (/SUPPRESSMSGBOXES) answers IDNO = keep the data.
+      // A plain MsgBox is never suppressed and would hang a silent uninstall forever.
+      if SuppressibleMsgBox('Do you also want to delete the information Vanish saved on this computer '
                 + '(the people you added, reports and screenshots)?' + #13#10 + #13#10
-                + 'Choose No if you might use Vanish again.', mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDYES then
+                + 'Choose No if you might use Vanish again.', mbConfirmation, MB_YESNO or MB_DEFBUTTON2, IDNO) = IDYES then
       begin
         Exec(ExpandConstant('{app}\vanish-cli.exe'), 'wipe --yes', '', SW_HIDE, ewWaitUntilTerminated, RC);
         // Only remove what is verifiably Vanish's own folder.
