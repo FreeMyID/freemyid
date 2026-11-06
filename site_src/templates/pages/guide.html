@@ -8,7 +8,7 @@
   <p class="lead mt-s">
   {% if g.intro %}{{ g.intro }}
   {% elif g.group == 'people' %}{{ g.name }} is a people-search site. Sites like this build listings from public records and purchased data, often with your address, age, phone number and relatives.
-  {# source: cppa.ca.gov/data_brokers/ (2025 listing year) #}{% elif g.ca_registered %}{{ g.name }} is a data company listed on California's data broker registry.
+  {# source: cppa.ca.gov/data_brokers/ (2025 listing year); brokers/SOURCES.md "Website claims" (b): means listed in the 2025 registry, not a current-year guarantee #}{% elif g.ca_registered %}{{ g.name }} is a data company listed on California's data broker registry.
   {% else %}{{ g.name }} is a data company.
   {% endif %}
   Here's how to ask it to remove you, for free. You don't need Free My ID to do this.</p>

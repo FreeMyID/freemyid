@@ -14,6 +14,7 @@
     <p>No, and be wary of anyone who promises that. Free My ID asks people-search and data-broker sites to remove your listing, shows you which ones confirmed, and keeps checking. It can't remove news stories, social media posts or government records.</p>
 - id: have-to
   home: true
+  # source: docs/POSITIONING.md "Legal accuracy" (only some states require an answer); brokers/state_laws.yaml
   q: 'Do sites have to remove me?'
   a: |-
     <p>It depends on where you live. California and a growing number of states have privacy laws that require these sites to answer removal requests. In states without such a law, the request is a polite one. Many sites honor it anyway, but some don't. Free My ID tells you honestly which sites confirmed and which are still waiting.</p>
@@ -40,6 +41,7 @@
   a: |-
     <p>Anyone can: employers, marketers, curious neighbors, and also scammers and stalkers. A U.S. federal consumer agency <a href="https://www.consumerfinance.gov/archive/newsroom/cfpb-proposes-rule-to-stop-data-brokers-from-selling-sensitive-personal-data-to-scammers-stalkers-and-spies/">warned in 2024</a> about data brokers selling sensitive personal data to scammers and stalkers. That's why taking yourself off these sites matters.</p>
 - id: how-long
+  # source: brokers/SOURCES.md "Website claims" and registry typical_processing_days: varies by broker, no guaranteed timeline
   q: 'How long does it take?'
   a: |-
     <p>Setup is six short screens. Some sites remove you within days; others take weeks. Free My ID keeps track so you don't have to.</p>
