@@ -35,7 +35,7 @@ def _broker(bid: str, page: str, **kw) -> Broker:
     # safe_checkboxes / success_text are set WITHOUT model validation, so these tests keep
     # exercising the engine's own defence-in-depth against registry data that the model
     # validators (SEC-31/32) would normally refuse.
-    raw = {k: kw.pop(k) for k in ("safe_checkboxes", "success_text") if k in kw}
+    raw: dict[str, Any] = {k: kw.pop(k) for k in ("safe_checkboxes", "success_text") if k in kw}
     d.update(kw)
     return Broker(**d).model_copy(update=raw)
 
