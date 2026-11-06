@@ -41,6 +41,13 @@
   title: "Download Free My ID for Windows 10 and 11 (free)"
   description: Download Free My ID for Windows 10 and 11. Free. Includes a step-by-step guide, with pictures, for the blue Windows SmartScreen warning.
   jsonld: [software, breadcrumbs]
+- id: i-do-not-consent
+  out: i-do-not-consent/
+  template: pages/i-do-not-consent.html
+  label: The "I do not consent" post
+  title: "Does the \"I do not consent\" Facebook post work?"
+  description: Your instinct was right. Here is why the "I do not consent" post cannot reach the sites selling your details, and what can.
+  jsonld: [breadcrumbs]
 - id: "404"
   out: 404.html
   template: pages/404.html

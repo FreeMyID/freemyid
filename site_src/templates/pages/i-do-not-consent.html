@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block main %}
+{# Copy rules: docs/POSITIONING.md rule 1 (never mock), rule 6 (scope), legal-accuracy qualifier.
+   Facts reused from the approved site FAQ and docs/USER_GUIDE.md section 11. No new statistics. #}
+<div class="wrap main-pad prose">
+  {% include "partials/crumbs.html" %}
+  <h1>Does the "I do not consent" post work?</h1>
+  <p class="lead mt-s">Short answer: no, but your instinct was right. Here's why the post can't do the job, and what can.</p>
+
+  <div class="callout callout--fact">
+    {{ icon('check') }}
+    <div><p><strong>You were right to object.</strong> Your name, address and phone number are your information. Wanting a say in who sells them is reasonable.</p></div>
+  </div>
+
+  <h2 class="mt-l" id="the-post">The post you may have seen</h2>
+  <p class="mt-s">Lots of people have posted something like "I do not give permission to use my pictures or information…" on Facebook. It's often shared by caring people who want to protect their friends.</p>
+
+  <h2 class="mt-l" id="why-not">Why it can't reach the people selling your details</h2>
+  <ul class="checklist checklist--no mt-s" role="list">
+    <li>{{ icon('dash') }}<span>A post on your page goes to your friends' feeds. The companies that sell your details don't see it, and they aren't required to read it.</span></li>
+    <li>{{ icon('dash') }}<span>Those companies are mostly <strong>people-search sites</strong> (also called data brokers). Many of them list people who've never had a Facebook account at all, using public records and purchased data.</span></li>
+    <li>{{ icon('dash') }}<span>Each site has its own way of taking removal requests. A request only counts when it goes to that site, in the form it processes.</span></li>
+  </ul>
+
+  <h2 class="mt-l" id="what-works">What actually works</h2>
+  <ol class="steps mt-m" role="list">
+    <li><h3>Send your "I do not consent" to each site</h3><p>Ask each people-search site to remove your listing, through its own removal process. Our <a href="{{ url('guides/') }}">free opt-out guides</a> show you how for some of the best-known sites.</p></li>
+    <li><h3>Use the law where you have it</h3><p>California and a growing number of states have privacy laws that require these sites to answer removal requests. In other states the request is a polite one. Many sites honor it anyway, but some don't.</p></li>
+    <li><h3>Keep checking</h3><p>Sites buy fresh data and can list people again. Check back every few months.</p></li>
+    <li><h3>For Facebook itself, use Facebook's own settings</h3><p>Removing yourself from people-search sites doesn't change what Facebook does with your account. That's done in the privacy settings inside Facebook.</p></li>
+  </ol>
+
+  <section class="card mt-l" aria-labelledby="fmid">
+    <h2 id="fmid">{{ icon('shield', 'icon card__icon') }}Don't just post it. Send it.</h2>
+    <p class="mt-s">Free My ID sends your "I do not consent" to the companies that actually sell your name, address and phone number, through each site's own removal process (a formal legal request where a state privacy law applies), and keeps checking that they did. It's free, and it runs on your own computer.</p>
+    <div class="btn-row mt-m">
+      <a class="btn" href="{{ url('download/') }}">{{ icon('download') }}Get Free My ID for Windows, free</a>
+      <a class="btn btn--secondary" href="{{ url('how-it-works/') }}">See how it works</a>
+    </div>
+  </section>
+
+  <h2 class="mt-l" id="share">Pass it on</h2>
+  <p class="mt-s">If a friend shared the post, you could share this page instead. No need to correct anyone: they had the right idea. This page's address is <span class="hash">{{ page.canonical }}</span></p>
+  <p><a href="https://www.facebook.com/sharer/sharer.php?u={{ page.canonical | urlencode }}">Share this page on Facebook</a> (opens Facebook; nothing is sent until you click)</p>
+</div>
+{% endblock %}
