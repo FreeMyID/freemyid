@@ -59,7 +59,7 @@ Pick one of the providers below.
 
 ### Gmail
 
-1. Create a new Google account, e.g. `jane.removals@example.com`.
+1. Create a new Google account, e.g. `yourname.removals@gmail.com` (pick your own; this is only an example).
 2. Turn on **2-Step Verification**. App passwords require it. In Google Account: **Security** → **2-Step Verification**.
 3. Create an **app password**. In Google Account: search "App passwords", name it `Free My ID`, and copy the 16-character password it shows you. This is the password you give Free My ID, *not* your normal Google password.
 4. In the Free My ID setup wizard, choose **Gmail**. The server settings are filled in for you (`imap.gmail.com` and `smtp.gmail.com`). Paste the app password.
