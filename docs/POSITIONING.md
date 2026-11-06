@@ -48,7 +48,7 @@ Secondary market: anyone who doesn't want their personal details sold online.
 
 The instinct was right. The post went to the wrong place, in a form nobody is required to honour. Free My ID takes the same intent to the right place, in the form each site actually processes.
 
-**Legal accuracy:** only some states (California and a growing list) have broker privacy laws that *require* an answer. In the others we send a polite request that most sites honour but don't have to. Never write "they have to answer" or "the law makes them" without that qualifier.
+**Legal accuracy:** only some states (California and a growing list) have broker privacy laws that *require* an answer. In the others we send a polite request that many sites honor but don't have to. Never write "they have to answer" or "the law makes them" without that qualifier.
 
 ## Rules for every piece of copy
 
