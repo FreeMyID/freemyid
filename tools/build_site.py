@@ -17,6 +17,7 @@ import argparse
 import hashlib
 import html
 import json
+import os
 import posixpath
 import re
 import shutil
@@ -31,7 +32,8 @@ from markupsafe import Markup
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "site_src"
 OUT = ROOT / "site"
-SAMPLE_REGISTRY = ROOT / "brokers" / "registry.sample.yaml"  # public sample ONLY
+# public sample ONLY. FMID_SAMPLE_REGISTRY lets a builder pin a committed copy (never the full registry).
+SAMPLE_REGISTRY = Path(os.environ.get("FMID_SAMPLE_REGISTRY") or ROOT / "brokers" / "registry.sample.yaml")
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import site_check
