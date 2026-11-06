@@ -6,6 +6,41 @@ Draft bank, 2026-11-06. Follows docs/POSITIONING.md (accurate, calm, patriotic n
 
 The user's idea was "Free your information from cyber terrorists". The energy is right, but the claim is wrong. The sites we target are legal businesses, so calling them terrorists is false. It invites a defamation letter from a company with lawyers, and it reads like the scam ads this audience already distrusts. What's documented is that **scammers, stalkers and strangers** buy from these sites. That's just as alarming, and it's true. Keep the punch and lose the risk.
 
+## Calling them what they are (without getting sued)
+
+We're allowed to show contempt. The rule is to aim it at **the industry and the practice**, using **opinion and colourful language**, and never to make **false factual accusations** about a **named company**. Calling an industry "vultures" is rhetoric. Saying "Spokeo steals your data" is a factual claim of a crime, and it's false: they collect legally.
+
+**Safe names for the industry**
+
+| Term | Feel |
+|---|---|
+| **data dealers** | the headliner; it sounds like drug dealers and is literally accurate |
+| **people-sellers** / **the people-selling business** | blunt and true: the product is you |
+| **info peddlers** | old-fashioned contempt, good for the traditional audience |
+| **privacy profiteers** | they profit off your privacy; reads as opinion |
+| **data vultures** | hyperbole; fine for the industry, never next to one company's name |
+| **snoop shops** | folksy, sticks in the memory |
+| **address auctioneers** | concrete: your address goes to the highest (or any) bidder |
+| **data hoarders** | they collect everything about you and keep it |
+| **the creep economy** | the whole business of selling who you are |
+| **middlemen of your private life** | longer, good for explainer pages |
+
+**Slogans with an edge**
+- Take your name back from the data dealers.
+- The data dealers had a good run. It's over.
+- You're not a product. Stop letting info peddlers sell you.
+- Privacy profiteers made money off your address. Make them take it down.
+- Close the snoop shop on your family.
+- They auction your address to anyone with a dollar. Pull it off the block.
+- The people-selling business runs on your silence. Speak up. We'll write the letter.
+- Starve the data vultures.
+- Get out of the creep economy.
+- Every listing we remove is one less thing for the data dealers to sell.
+
+**Words to avoid about them** (they claim a crime or a fact we can't prove)
+- "thieves", "steal", "stolen", "illegal", "criminals", "scammers" (they *sell to* scammers; they aren't scammers), "hackers", "terrorists"
+- Any insult attached to a **named** broker. On per-site pages, stay factual: "Spokeo lists addresses and phone numbers. Here's how to opt out."
+
 ## Slogans
 
 **Core**
