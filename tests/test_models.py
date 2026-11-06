@@ -98,32 +98,27 @@ def test_real_state_laws_validate():
 
 # ---- findings (strict xfail: flip to normal tests once the orchestrator fixes them) ----
 
-@pytest.mark.xfail(strict=True, reason="SEC-07: broker domains not validated (TLD/'com' allowed)")
 @pytest.mark.parametrize("dom", ["com", "", "*.fakeb.example", "https://fakeb.example"])
 def test_broker_domains_must_be_hostnames(dom):
     with pytest.raises(ValidationError):
         Broker.model_validate(_broker(domains=[dom]))
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-07: opt_out_email may point outside broker domains")
 def test_opt_out_email_must_be_on_broker_domain():
     with pytest.raises(ValidationError):
         Broker.model_validate(_broker(method="email", opt_out_email="x@attacker.example"))
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-08: submitter accepts arbitrary module:Class")
 def test_submitter_restricted_to_vanish_namespace():
     with pytest.raises(ValidationError):
         Broker.model_validate(_broker(submitter="subprocess:Popen"))
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-02: ids are free-form (path traversal via id)")
 def test_profile_id_format_enforced():
     with pytest.raises(ValidationError):
         make_profile(id="../../..")
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-02: Evidence.relpath allows absolute/../ paths")
 def test_evidence_relpath_confined():
     from vanish.models import Evidence
     with pytest.raises(ValidationError):

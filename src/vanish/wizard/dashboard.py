@@ -2,7 +2,12 @@
 from __future__ import annotations
 
 from ..models import (
-    BrokerStatus, EvidenceKind, ListingState, Profile, Request, Todo,
+    BrokerStatus,
+    EvidenceKind,
+    ListingState,
+    Profile,
+    Request,
+    Todo,
 )
 from .ui import chip, csrf_field, esc, layout
 

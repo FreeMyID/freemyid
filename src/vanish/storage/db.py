@@ -30,7 +30,8 @@ from typing import TypeVar
 from pydantic import BaseModel
 
 from .. import paths
-from ..crypto import Cipher
+from ..crypto import Cipher, KeyUnavailable
+from ..logging_setup import register_profile
 from ..models import (
     BrokerStatus,
     Event,
@@ -130,10 +131,29 @@ class Store:
         self._conn.execute(
             "INSERT OR IGNORE INTO meta VALUES ('schema_version', ?)", (str(SCHEMA_VERSION),)
         )
+        self._check_key()
         try:
             self.path.chmod(0o600)
         except OSError:
             pass
+
+    def _check_key(self) -> None:
+        """SEC-10: refuse to run with a key that doesn't match this database."""
+        row = self._conn.execute("SELECT v FROM meta WHERE k='key_check'").fetchone()
+        if row is None:
+            old = self._conn.execute("SELECT id, data FROM profiles LIMIT 1").fetchone()
+            if old is not None:   # legacy DB without a check value: prove the key first
+                try:
+                    self._dec("profiles", old[0], old[1], Profile)
+                except Exception as e:
+                    self._conn.close()
+                    raise KeyUnavailable("encryption key does not match this database") from e
+            self._conn.execute("INSERT OR IGNORE INTO meta VALUES ('key_check', ?)",
+                               (self._cipher.key_check(),))
+            row = self._conn.execute("SELECT v FROM meta WHERE k='key_check'").fetchone()
+        if not self._cipher.verify_key_check(row[0]):
+            self._conn.close()
+            raise KeyUnavailable("encryption key does not match this database")
 
     # ------------------------------------------------------------------ plumbing
     def close(self) -> None:
@@ -163,6 +183,7 @@ class Store:
     # ------------------------------------------------------------------ profiles
     def save_profile(self, p: Profile) -> None:
         p = p.model_copy(update={"updated_at": utcnow()})
+        register_profile(p)
         self._x(
             "INSERT INTO profiles VALUES (?,?,?,?) ON CONFLICT(id) DO UPDATE SET "
             "updated_at=excluded.updated_at, data=excluded.data",
@@ -171,11 +192,18 @@ class Store:
 
     def get_profile(self, pid: str) -> Profile | None:
         r = self._x("SELECT data FROM profiles WHERE id=?", (pid,)).fetchone()
-        return self._dec("profiles", pid, r[0], Profile) if r else None
+        if not r:
+            return None
+        p = self._dec("profiles", pid, r[0], Profile)
+        register_profile(p)
+        return p
 
     def list_profiles(self) -> list[Profile]:
         rows = self._x("SELECT id, data FROM profiles ORDER BY created_at").fetchall()
-        return [self._dec("profiles", i, d, Profile) for i, d in rows]
+        out = [self._dec("profiles", i, d, Profile) for i, d in rows]
+        for p in out:
+            register_profile(p)
+        return out
 
     def delete_profile(self, pid: str) -> None:
         """Hard-delete a person's PII (SEC-03).

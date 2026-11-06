@@ -48,14 +48,14 @@ def test_full_wizard_creates_profile(env):
     f = authed(c)
     assert c.get("/wizard/consent?new=1").status_code == 200
     steps = [
-        ("consent", dict(basis="self", attested_by="Jane Q Testperson", ack="1")),
-        ("names", dict(first="Jane", middle="Q", last="Testperson", label="Jane")),
-        ("addresses", dict(city0="Springfield", state0="il", current="0")),
-        ("details", dict(age="44", phones="555-0100")),
+        ("consent", {"basis": "self", "attested_by": "Jane Q Testperson", "ack": "1"}),
+        ("names", {"first": "Jane", "middle": "Q", "last": "Testperson", "label": "Jane"}),
+        ("addresses", {"city0": "Springfield", "state0": "il", "current": "0"}),
+        ("details", {"age": "44", "phones": "555-0100"}),
         ("permissions", {}),
-        ("mailbox", dict(provider="gmail", address="jane.vanish@example.com", password="pw")),
-        ("email", dict(email_mode="approve_each")),
-        ("schedule", dict(weekly_recheck="1", weekday="6", hour="10")),
+        ("mailbox", {"provider": "gmail", "address": "jane.vanish@example.com", "password": "pw"}),
+        ("email", {"email_mode": "approve_each"}),
+        ("schedule", {"weekly_recheck": "1", "weekday": "6", "hour": "10"}),
     ]
     for step, data in steps:
         r = c.post(f"/wizard/{step}", data={**data, **f})

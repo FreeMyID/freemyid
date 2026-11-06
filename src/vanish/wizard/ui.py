@@ -1,12 +1,11 @@
 """HTML rendering helpers. Plain server-side HTML, no external assets."""
 from __future__ import annotations
 
-import json
 from html import escape as _e
 from typing import Any
 
 from ..models import ListingState
-from .draft import BASIS_LABELS, CONSENT_TEXT, CONSENT_VERSION, PRESETS, STEP_TITLES, STEPS, Draft
+from .draft import BASIS_LABELS, CONSENT_TEXT, CONSENT_VERSION, STEP_TITLES, STEPS, Draft
 
 HONESTY = ("Please know: some brokers need a manual step from you, listings can reappear "
            "later, and \"removed\" only means removed from that one broker, not from the "
@@ -72,170 +71,202 @@ def _check(name: str, text: str, on: bool, hint: str = "") -> str:
             f'{" checked" if on else ""}><span>{esc(text)}{h}</span></label>')
 
 
-def steps_bar(cur: str, editing: bool) -> str:
-    items = [s for s in STEPS if not (editing and s == "consent")]
-    li = "".join(f'<li class="{"cur" if s == cur else ""}">{esc(STEP_TITLES[s])}</li>'
-                 for s in items)
-    return f'<ol class="steps" aria-label="Setup steps">{li}</ol>'
+def visible_steps(d: Draft) -> list[str]:
+    out = []
+    for s in STEPS:
+        if d.editing and s in ("consent", "sign"):
+            continue
+        if s == "mailbox_login" and d.skip_mailbox:
+            continue
+        out.append(s)
+    return out
+
+
+def steps_bar(cur: str, d: Draft) -> str:
+    vs = visible_steps(d)
+    n = vs.index(cur) + 1 if cur in vs else 0
+    dots = "".join(f'<li class="{"cur" if s == cur else ("done" if vs.index(s) < n - 1 else "")}">'
+                   f'<span class="sr">{esc(STEP_TITLES[s])}</span></li>' for s in vs)
+    return (f'<p class="stepcount">Step {n} of {len(vs)}</p>'
+            f'<ol class="dots" aria-label="Progress">{dots}</ol>')
+
+
+_AREA_HINT = "Type one on each line. You can leave this empty."
+
+
+def _screen_body(step: str, d: Draft) -> str:
+    if step == "consent":
+        radios = "".join(_radio("basis", v, t, d.basis) for v, t in BASIS_LABELS.items())
+        return (radios + '<div class="note">If you are helping an adult, you need their '
+                'signed permission. <a href="/wizard/authorization-form" target="_blank">'
+                'Open the form to print</a>. You will attach it on the next screen.</div>')
+    if step == "sign":
+        paras = "".join(f"<p>{esc(t)}</p>" for t in CONSENT_TEXT)
+        up = ""
+        if d.basis == "authorized_agent":
+            up = ('<label for="authorization">Photo or scan of the signed form</label>'
+                  '<input id="authorization" name="authorization" type="file" '
+                  'accept="image/*,application/pdf"><p class="hint">You can also add it later. '
+                  'Vanish will not start until it is attached.</p>')
+        return (paras + up + _inp("attested_by", "Type your full name here to sign",
+                                  d.attested_by, req=True)
+                + _check("ack", "I have read this and I agree.", d.consent_ack)
+                + f'<p class="hint">Wording version {esc(CONSENT_VERSION)}</p>')
+    if step == "names":
+        return (_inp("first", "First name", d.first, req=True)
+                + _inp("last", "Last name", d.last, req=True)
+                + _inp("label", "What should we call them on screen?", d.label,
+                       hint="For example: Mom. Only shown on this computer."))
+    if step == "othernames":
+        return (_inp("middle", "Middle name", d.middle) + _inp("suffix", "Jr., Sr., III", d.suffix)
+                + _area("nicknames", "Nicknames", d.nicknames, "Like Bill for William.")
+                + _area("previous_names", "Maiden or earlier names", d.previous_names,
+                        "Full names, one per line. Leave empty if none."))
+    if step in ("addresses", "moreaddr"):
+        rows = list(d.addresses) + [{}] * 4
+        idx = [0] if step == "addresses" else [1, 2, 3]
+        intro = ('<p>A city and state is enough.</p>' if step == "addresses" else
+                 '<p>Websites often show old addresses too. Add up to three. '
+                 'You can leave this empty.</p>')
+        out = intro
+        for i in idx:
+            a = rows[i]
+            out += ('<div class="row">' + _inp(f"city{i}", "City", a.get("city", ""),
+                                               req=step == "addresses")
+                    + _inp(f"state{i}", "State (2 letters, like IL)", a.get("state", ""),
+                           req=step == "addresses", extra='maxlength="2" size="3"') + "</div>")
+        return out
+    if step == "birth":
+        return ('<div class="note">This is only used to tell the right person apart from '
+                'people with the same name. It is never sent to a website.</div>'
+                + _inp("dob", "Date of birth", d.dob, typ="date")
+                + _inp("age", "Or just their age", d.age, typ="number"))
+    if step in ("phones", "emails", "relatives"):
+        what = {"phones": ("phones", "Phone numbers", d.phones),
+                "emails": ("emails", "Email addresses", d.emails),
+                "relatives": ("relatives", "Relatives (full names)", d.relatives)}[step]
+        extra = ("Websites often list relatives; this helps tell people with the same name "
+                 "apart. " if step == "relatives" else "")
+        return ('<div class="note">Only used for recognising the right person. Never sent to '
+                'a website.</div>' + _area(what[0], what[1], what[2], extra + _AREA_HINT))
+    if step == "permissions":
+        return ('<p>Everything here is <b>off</b> unless you tick it. If a website asks for '
+                'something you did not allow, Vanish stops and asks you. Vanish never pays '
+                'for anything.</p>'
+                + _check("allow_id_upload", "Vanish may upload a copy of an ID if a website "
+                         "requires it", d.allow_id_upload)
+                + _check("allow_account_creation", "Vanish may create an account on a website "
+                         "if required", d.allow_account_creation)
+                + _check("allow_phone_disclosure", "Vanish may give a phone number if "
+                         "required", d.allow_phone_disclosure))
+    if step == "mailbox":
+        opts = (("gmail", "Gmail"), ("outlook", "Outlook or Hotmail"),
+                ("proton_bridge", "Proton Mail"), ("other", "Other"))
+        radios = "".join(_radio("provider", k, n, d.provider) for k, n in opts)
+        return ('<p>Vanish asks websites to reply to a separate email address, so your '
+                'everyday inbox stays private. A free new Gmail address works well. Which '
+                'service is it with?</p>' + radios
+                + _check("skip_mailbox", "I will do this later (some websites will wait)",
+                         d.skip_mailbox))
+    if step == "mailbox_login":
+        return _mailbox_login_body(d)
+    if step == "email":
+        return ('<p>When Vanish needs to email a website to remove information, who decides?'
+                '</p>' + _radio("email_mode", "approve_each", "Ask me before every email "
+                                "(recommended)", d.email_mode)
+                + _radio("email_mode", "auto", "Send ordinary removal emails by itself. "
+                         "Legal letters will still ask me.", d.email_mode))
+    if step == "schedule":
+        return ('<p>Information often comes back. Vanish can look again once a week.</p>'
+                + _check("weekly_recheck", "Check for me every week", d.weekly_recheck,
+                         "This adds a small Vanish task to Windows (Task Scheduler) so it "
+                         "can run even when this window is closed. If the computer was off, "
+                         "it runs the next time it is on. You can turn it off in Settings.")
+                + '<p class="hint">Leave it unticked and nothing is added to your computer.</p>')
+    if step == "browser":
+        return ('<div id="browser-box" data-status-url="/browser/status" '
+                'data-install-url="/browser/install"><p id="browser-msg">Checking...</p>'
+                '<div class="bar" hidden><div class="fill" id="browser-fill"></div></div>'
+                '<div class="actions"><button type="button" id="browser-btn" hidden>'
+                'Download it now</button></div></div>')
+    return ""
+
+
+def _mailbox_login_body(d: Draft) -> str:
+    mb = d.mailbox or {}
+    prov = d.provider
+    guides = {
+        "gmail": ("Make a password just for Vanish",
+                  ["Open myaccount.google.com and sign in to the Gmail address you chose.",
+                   "Click Security, then turn on 2-Step Verification if it is not on.",
+                   "In the search box at the top, type App passwords and open it.",
+                   "Name it Vanish and click Create.",
+                   "Google shows 16 letters. Copy them and paste them below. (Not your "
+                   "normal Gmail password.)"]),
+        "proton_bridge": ("Use Proton Mail Bridge",
+                          ["Install and open the free Proton Mail Bridge app on this computer "
+                           "and sign in.",
+                           "Bridge shows a username and a password just for programs. Copy "
+                           "them below."]),
+        "other": ("Use an app password if your email has one",
+                  ["Ask your email provider for an app password or program password.",
+                   "Your provider's help page lists its mail server names. Fill them in below."]),
+    }
+    title, steps = guides.get(prov, guides["other"])
+    helplist = "".join(f"<li>{esc(x)}</li>" for x in steps)
+    pw_hint = "Leave empty to keep the saved one." if d.editing else ""
+    out = (f'<input type="hidden" name="provider" value="{esc(prov)}">'
+           f'<div class="note"><b>{esc(title)}</b><ol>{helplist}</ol></div>'
+           + _inp("address", "Email address", mb.get("address", ""), typ="email", req=True)
+           + _inp("password", "Password", "", typ="password", hint=pw_hint))
+    if prov == "proton_bridge":
+        out += _inp("username", "Bridge username", mb.get("username", ""))
+    if prov == "other":
+        out += ('<div class="row">' + _inp("imap_host", "Incoming mail server",
+                                           mb.get("imap_host", ""))
+                + _inp("imap_port", "Port", mb.get("imap_port", 993), typ="number")
+                + '</div><div class="row">'
+                + _inp("smtp_host", "Outgoing mail server", mb.get("smtp_host", ""))
+                + _inp("smtp_port", "Port", mb.get("smtp_port", 465), typ="number") + "</div>"
+                + _check("imap_ssl", "Incoming is secure (SSL)", mb.get("imap_ssl", True))
+                + _check("smtp_starttls", "Outgoing uses STARTTLS", mb.get("smtp_starttls", False)))
+    out += ('<div class="actions"><button type="button" class="secondary" id="test-conn">'
+            'Test that it works</button></div><div id="test-result" role="status"></div>'
+            '<p class="hint">The test only talks to your email company. The password is kept '
+            "in Windows' protected store, not in Vanish's files.</p>")
+    return out
 
 
 def step_page(step: str, d: Draft, csrf: str, errs: list[str], summary: str = "") -> str:
-    body = ""
-    multipart = ' enctype="multipart/form-data"' if step == "consent" else ""
-    if step == "consent":
-        body = _consent_body(d)
-    elif step == "names":
-        body = (_inp("label", "What should we call this person on screen?", d.label,
-                     hint="For example: Mom. Only shown on this computer.")
-                + '<div class="row">' + _inp("first", "First name", d.first, req=True)
-                + _inp("middle", "Middle name", d.middle)
-                + _inp("last", "Last name", d.last, req=True)
-                + _inp("suffix", "Suffix", d.suffix, hint="Jr., III") + "</div>"
-                + _area("nicknames", "Nicknames", d.nicknames, "One per line, like Bill for William.")
-                + _area("previous_names", "Previous or maiden names", d.previous_names,
-                        "One full name per line, like Jane Q Smith."))
-    elif step == "addresses":
-        body = ('<p>City and state are enough. Add places this person has lived; brokers often '
-                'list older addresses too. You can add up to four here.</p>')
-        rows = list(d.addresses) + [{}] * 4
-        for i in range(4):
-            a = rows[i]
-            body += (f'<div class="card"><h2>Address {i + 1}</h2><div class="row">'
-                     + _inp(f"city{i}", "City", a.get("city", ""))
-                     + _inp(f"state{i}", "State (2 letters)", a.get("state", ""),
-                            extra='maxlength="2" size="3"')
-                     + "</div><div class=\"row\">"
-                     + _inp(f"street{i}", "Street (optional)", a.get("street", ""))
-                     + _inp(f"zip{i}", "ZIP (optional)", a.get("zip", "")) + "</div>"
-                     + f'<label class="check"><input type="radio" name="current" value="{i}"'
-                     f'{" checked" if a.get("current") else ""}><span>This is the current '
-                     'address</span></label></div>')
-    elif step == "details":
-        body = ('<div class="note">Everything on this page is used <b>only to recognise the '
-                'right person</b> in search results. It is never sent to a broker.</div>'
-                + '<div class="row">'
-                + _inp("dob", "Date of birth", d.dob, typ="date", hint="or enter an age instead")
-                + _inp("age", "Age", d.age, typ="number") + "</div>"
-                + _area("phones", "Phone numbers", d.phones, "One per line.")
-                + _area("emails", "Personal email addresses", d.emails, "One per line.")
-                + _area("relatives", "Relatives", d.relatives,
-                        "One full name per line. Brokers often list relatives, which helps "
-                        "tell people with the same name apart."))
-    elif step == "permissions":
-        body = ('<p>All of these are <b>off</b> unless you turn them on. If a broker asks for '
-                'something you have not allowed, Vanish stops and puts it on your to-do list '
-                'instead. Vanish never pays for anything.</p>'
-                + _check("allow_id_upload", "Allow uploading a copy of an ID when a broker "
-                         "requires one", d.allow_id_upload,
-                         "Some brokers ask for a photo ID. Leave this off unless you are "
-                         "comfortable with it.")
-                + _check("allow_account_creation", "Allow creating an account on a broker's "
-                         "site if it is required", d.allow_account_creation)
-                + _check("allow_phone_disclosure", "Allow giving a phone number to a broker "
-                         "if it is required", d.allow_phone_disclosure))
-    elif step == "mailbox":
-        body = _mailbox_body(d)
-    elif step == "email":
-        body = ('<p>When Vanish emails a broker, who decides?</p>'
-                + _radio("email_mode", "approve_each", "Ask me before each email is sent "
-                         "(recommended)", d.email_mode)
-                + _radio("email_mode", "auto", "Send routine removal emails automatically. "
-                         "Legal demand letters will still ask me first.", d.email_mode))
-    elif step == "schedule":
-        days = "".join(f'<option value="{i}"{" selected" if i == d.weekday else ""}>{n}</option>'
-                       for i, n in enumerate(WEEKDAYS))
-        hours = "".join(f'<option value="{h}"{" selected" if h == d.hour else ""}>'
-                        f'{h:02d}:00</option>' for h in range(24))
-        body = ('<p>Listings come back. Vanish re-checks in the background, only on brokers '
-                'that are due.</p>'
-                + _check("weekly_recheck", "Re-check regularly", d.weekly_recheck)
-                + '<div class="row"><div><label for="weekday">Preferred day</label>'
-                f'<select id="weekday" name="weekday">{days}</select></div>'
-                f'<div><label for="hour">Preferred time</label><select id="hour" name="hour">'
-                f'{hours}</select></div></div><p class="hint">If the computer is off or asleep, '
-                'checks run when it wakes up. Install the background job from the '
-                '"Background checks" page after saving.</p>')
-    elif step == "review":
-        body = summary
-    return layout(STEP_TITLES[step], _form_shell(step, d, csrf, errs, body, multipart))
+    body = summary if step == "review" else _screen_body(step, d)
+    multipart = ' enctype="multipart/form-data"' if step == "sign" else ""
+    vs = visible_steps(d)
+    i = vs.index(step) if step in vs else 0
+    back = (f'<a class="btn secondary big" href="/wizard/{vs[i - 1]}">Back</a>' if i > 0 else "")
+    nxt = "Save and finish" if step == "review" else "Next"
+    return layout(STEP_TITLES[step],
+                  f'{steps_bar(step, d)}<h1>{esc(STEP_TITLES[step])}</h1>{errors_html(errs)}'
+                  f'<form method="post" action="/wizard/{step}"{multipart} class="card" '
+                  f'autocomplete="off">{csrf_field(csrf)}{body}'
+                  f'<div class="actions">{back}<button class="big" type="submit">{nxt}</button>'
+                  f'</div></form><p class="hint">{esc(HONESTY)}</p>')
 
 
-def _radio(name: str, value: str, text: str, cur: str) -> str:
-    return (f'<label class="check"><input type="radio" name="{name}" value="{esc(value)}"'
-            f'{" checked" if cur == value else ""}><span>{esc(text)}</span></label>')
-
-
-def _form_shell(step: str, d: Draft, csrf: str, errs: list[str], body: str, multipart: str) -> str:
-    idx = STEPS.index(step)
-    back = (f'<a class="btn secondary" href="/wizard/{STEPS[idx - 1]}">Back</a>'
-            if idx > 0 and not (d.editing and STEPS[idx - 1] == "consent") else "")
-    nxt = "Save" if step == "review" else "Next"
-    test_btn = ""
-    return (f'{steps_bar(step, d.editing)}<h1>{esc(STEP_TITLES[step])}</h1>{errors_html(errs)}'
-            f'<form method="post" action="/wizard/{step}"{multipart} class="card" '
-            f'autocomplete="off">{csrf_field(csrf)}{body}{test_btn}'
-            f'<div class="actions">{back}<button type="submit">{nxt}</button></div></form>'
-            f'<p class="hint">{esc(HONESTY)}</p>')
-
-
-def _consent_body(d: Draft) -> str:
-    paras = "".join(f"<p>{esc(t)}</p>" for t in CONSENT_TEXT)
-    radios = "".join(_radio("basis", v, t, d.basis) for v, t in BASIS_LABELS.items())
-    return (f'<p class="hint">Consent text version {esc(CONSENT_VERSION)}</p>{paras}'
-            f'<h2>Who is giving permission?</h2>{radios}'
-            '<div class="note">If you are helping an adult, you need their signed permission. '
-            '<a href="/wizard/authorization-form" target="_blank">Open the printable '
-            'authorization form</a>, have them sign it, then attach a scan or photo below '
-            '(you can also attach it later from the person\'s page). Vanish will not run '
-            'for them until it is attached.</div>'
-            '<label for="authorization">Signed authorization (only for the helper option)</label>'
-            '<input id="authorization" name="authorization" type="file" '
-            'accept="image/*,application/pdf">'
-            + _inp("attested_by", "Type your full name to sign", d.attested_by, req=True)
-            + _check("ack", "I have read this and I agree.", d.consent_ack))
-
-
-def _mailbox_body(d: Draft) -> str:
-    mb = d.mailbox or {}
-    cur = mb.get("provider", "gmail")
-    helps = {
-        "gmail": "Use a dedicated Gmail address and an app password (Google account, "
-                 "Security, 2-Step Verification, App passwords). Not your normal password.",
-        "proton_bridge": "Requires the Proton Mail Bridge app running on this computer. Use "
-                         "the Bridge username and password shown inside Bridge.",
-        "other": "Enter your mail provider's server names below.",
-    }
-    pj = json.dumps({k: {"help": helps[k]} for k in PRESETS}).replace("<", "\\u003c")
-    opts = "".join(f'<option value="{k}"{" selected" if k == cur else ""}>{n}</option>' for k, n in
-                   (("gmail", "Gmail (app password)"), ("proton_bridge", "Proton Mail (Bridge)"),
-                    ("other", "Other provider (e.g. Fastmail app password)")))
-    pw_hint = "Leave blank to keep the saved one." if d.editing else ""
-    return (f'<script type="application/json" id="presets">{pj}</script>'
-            '<div class="note">Outlook / Hotmail: not supported yet (Microsoft requires '
-            'OAuth sign-in). Use Gmail with an app password, Proton Bridge, or another '
-            'provider.</div><p>Vanish uses its own email address for removal requests, so brokers never get '
-            'your everyday inbox. Create a new free address just for this.</p>'
-            f'<label for="provider">Mail provider</label><select id="provider" name="provider">'
-            f'{opts}</select><p class="hint" id="provider-help"></p>'
-            + _inp("address", "Removal mailbox address", mb.get("address", ""), typ="email")
-            + _inp("username", "Username", mb.get("username", ""),
-                   hint="Usually the same as the address; leave blank to use it.")
-            + _inp("password", "Password or app password", "", typ="password", hint=pw_hint)
-            + '<div id="custom-hosts" hidden><div class="row">'
-            + _inp("imap_host", "Incoming (IMAP) server", mb.get("imap_host", ""))
-            + _inp("imap_port", "Port", mb.get("imap_port", 993), typ="number")
-            + '</div><div class="row">'
-            + _inp("smtp_host", "Outgoing (SMTP) server", mb.get("smtp_host", ""))
-            + _inp("smtp_port", "Port", mb.get("smtp_port", 465), typ="number") + "</div>"
-            + _check("imap_ssl", "Incoming uses SSL", mb.get("imap_ssl", True))
-            + _check("imap_starttls", "Incoming uses STARTTLS", mb.get("imap_starttls", False))
-            + _check("smtp_starttls", "Outgoing uses STARTTLS", mb.get("smtp_starttls", False))
-            + '</div><div class="actions"><button type="button" class="secondary" id="test-conn">'
-            'Test connection</button></div><div id="test-result" role="status"></div>'
-            '<p class="hint">The test connects only to the mail servers named above. The '
-            'password is stored in this computer\'s keychain, never in Vanish\'s database.</p>'
-            + _check("skip_mailbox", "Skip for now (email-based removals will wait)",
-                     d.skip_mailbox))
+def next_page(label: str, sched_on: bool, mailbox: bool, email_mode: str) -> str:
+    items = [f"Vanish has saved the details for {esc(label)} on this computer only.",
+             "Next, do a practice run. It looks for listings but sends nothing.",
+             "Anything that needs a person (like a puzzle on a website) appears on the "
+             "main page under Needs you."]
+    items.append("Check for me every week is ON." if sched_on else
+                 "Weekly checking is off. You can turn it on in Settings.")
+    if email_mode == "approve_each":
+        items.append("Before any email goes out, you will see it and press Approve.")
+    if not mailbox:
+        items.append("Your removal email is not set up yet; some websites will wait for it.")
+    lis = "".join(f"<li>{x}</li>" for x in items)
+    return layout("What happens next", f'<h1>What happens next</h1><div class="card"><ol class='
+                  f'"big-list">{lis}</ol><p class="hint">{esc(HONESTY)}</p><div class="actions">'
+                  '<a class="btn big" href="/">Go to my main page</a></div></div>')
 
 
 def review_summary(d: Draft, warnings: list[str]) -> str:

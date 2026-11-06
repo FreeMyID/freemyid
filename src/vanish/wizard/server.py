@@ -26,7 +26,11 @@ from fastapi.staticfiles import StaticFiles
 
 from .. import paths
 from ..models import (
-    Actor, ConsentBasis, Event, ListingState, RequestStatus,
+    Actor,
+    ConsentBasis,
+    Event,
+    ListingState,
+    RequestStatus,
 )
 from . import dashboard as dash
 from . import draft as dr
@@ -110,6 +114,11 @@ def create_app(store, token: str, allowed_hosts: set[str],
                 return _hardened(Response("Bad origin", status_code=403))
             sent = request.headers.get("x-csrf")
             if sent is None:
+                body = await request.body()
+
+                async def replay(body=body):
+                    return {"type": "http.request", "body": body, "more_body": False}
+                request._receive = replay   # let the route re-read the body
                 form = await request.form()
                 sent = str(form.get("csrf", ""))
             if not hmac.compare_digest(sent, csrf_token):
@@ -142,9 +151,9 @@ def create_app(store, token: str, allowed_hosts: set[str],
             counts: dict[ListingState, int] = {}
             for st in store.list_statuses(p.id):
                 counts[st.state] = counts.get(st.state, 0) + 1
-            rows.append(dict(profile=p, counts=counts, todos=len(store.list_todos(p.id)),
-                             outbox=sum(1 for r in queued if r.profile_id == p.id),
-                             consent_problem=_consent_problem(p)))
+            rows.append({"profile": p, "counts": counts, "todos": len(store.list_todos(p.id)),
+                             "outbox": sum(1 for r in queued if r.profile_id == p.id),
+                             "consent_problem": _consent_problem(p)})
         return html(dash.home_page(rows, csrf_token, flash(request)))
 
     @app.get("/profile/{pid}")

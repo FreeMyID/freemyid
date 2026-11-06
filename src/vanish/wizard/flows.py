@@ -74,20 +74,20 @@ def _consent(d: dr.Draft) -> None:
         if basis == "authorized_agent":
             _say("  The signed form can be attached later from the dashboard; Vanish will "
                  "not run for this person until it is.")
-        return dict(basis=basis, attested_by=_ask("Type your full name to sign", d.attested_by),
-                    ack="1" if _yes("I have read this and I agree") else "")
+        return {"basis": basis, "attested_by": _ask("Type your full name to sign", d.attested_by),
+                    "ack": "1" if _yes("I have read this and I agree") else ""}
     _loop(d, "consent", ask)
 
 
 def _names(d: dr.Draft) -> None:
     _say("\n== Names ==")
-    _loop(d, "names", lambda: dict(
-        first=_ask("First name", d.first), middle=_ask("Middle name (optional)", d.middle),
-        last=_ask("Last name", d.last), suffix=_ask("Suffix (optional)", d.suffix),
-        label=_ask("What to call them on screen", d.label or d.first),
-        nicknames=_split(_ask("Nicknames, separated by ;", _lines_default(d.nicknames))),
-        previous_names=_split(_ask("Previous/maiden full names, separated by ;",
-                                   _lines_default(d.previous_names)))))
+    _loop(d, "names", lambda: {
+        "first": _ask("First name", d.first), "middle": _ask("Middle name (optional)", d.middle),
+        "last": _ask("Last name", d.last), "suffix": _ask("Suffix (optional)", d.suffix),
+        "label": _ask("What to call them on screen", d.label or d.first),
+        "nicknames": _split(_ask("Nicknames, separated by ;", _lines_default(d.nicknames))),
+        "previous_names": _split(_ask("Previous/maiden full names, separated by ;",
+                                   _lines_default(d.previous_names)))})
 
 
 def _addresses(d: dr.Draft) -> None:
@@ -114,22 +114,22 @@ def _addresses(d: dr.Draft) -> None:
 
 def _details(d: dr.Draft) -> None:
     _say("\n== Other details (used only for matching, never sent to brokers) ==")
-    _loop(d, "details", lambda: dict(
-        dob=_ask("Date of birth YYYY-MM-DD (or blank)", d.dob),
-        age=_ask("Age (if no date of birth)", d.age),
-        phones=_split(_ask("Phones, separated by ;", _lines_default(d.phones))),
-        emails=_split(_ask("Personal emails, separated by ;", _lines_default(d.emails))),
-        relatives=_split(_ask("Relatives (full names), separated by ;",
-                              _lines_default(d.relatives)))))
+    _loop(d, "details", lambda: {
+        "dob": _ask("Date of birth YYYY-MM-DD (or blank)", d.dob),
+        "age": _ask("Age (if no date of birth)", d.age),
+        "phones": _split(_ask("Phones, separated by ;", _lines_default(d.phones))),
+        "emails": _split(_ask("Personal emails, separated by ;", _lines_default(d.emails))),
+        "relatives": _split(_ask("Relatives (full names), separated by ;",
+                              _lines_default(d.relatives)))})
 
 
 def _permissions(d: dr.Draft) -> None:
     _say("\n== What Vanish may do (all off unless you say yes; it never pays) ==")
-    _step(d, "permissions", dict(
-        allow_id_upload="1" if _yes("Allow uploading an ID when a broker requires it") else "",
-        allow_account_creation="1" if _yes("Allow creating a broker account if required")
+    _step(d, "permissions", {
+        "allow_id_upload": "1" if _yes("Allow uploading an ID when a broker requires it") else "",
+        "allow_account_creation": "1" if _yes("Allow creating a broker account if required")
         else "",
-        allow_phone_disclosure="1" if _yes("Allow giving a phone number if required") else ""))
+        "allow_phone_disclosure": "1" if _yes("Allow giving a phone number if required") else ""})
 
 
 def _mailbox(d: dr.Draft) -> None:
@@ -143,8 +143,8 @@ def _mailbox(d: dr.Draft) -> None:
 
     def ask():
         prov = _ask(f"Provider ({'/'.join(provs)})", old.get("provider", "gmail"))
-        a = dict(provider=prov, address=_ask("Mailbox address", old.get("address", "")),
-                 password=_secret("Password / app password (hidden; blank keeps saved)"))
+        a = {"provider": prov, "address": _ask("Mailbox address", old.get("address", "")),
+                 "password": _secret("Password / app password (hidden; blank keeps saved)")}
         if prov == "other":
             a.update(imap_host=_ask("IMAP server"), smtp_host=_ask("SMTP server"),
                      imap_port=_ask("IMAP port", "993"), smtp_port=_ask("SMTP port", "465"),
@@ -159,10 +159,10 @@ def _mailbox(d: dr.Draft) -> None:
 def _email_sched(d: dr.Draft) -> None:
     _say("\n== Email approval ==")
     auto = _yes("Send routine removal emails automatically? (No = ask me each time)")
-    _step(d, "email", dict(email_mode="auto" if auto else "approve_each"))
+    _step(d, "email", {"email_mode": "auto" if auto else "approve_each"})
     _say("\n== Schedule ==")
     on = _yes("Re-check regularly", d.weekly_recheck)
-    _step(d, "schedule", dict(weekly_recheck="1" if on else "", weekday=d.weekday, hour=d.hour))
+    _step(d, "schedule", {"weekly_recheck": "1" if on else "", "weekday": d.weekday, "hour": d.hour})
 
 
 def _finish(store, d: dr.Draft) -> Profile:
@@ -230,9 +230,12 @@ def load_bundle(blob: bytes, passphrase: str) -> dr.Draft:
     obj = json.loads(import_with_passphrase(blob, passphrase))
     if obj.get("vanish_bundle") != BUNDLE_VERSION:
         raise ValueError("unsupported bundle version")
-    pr = obj["profile"]
-    now = Profile.model_construct()   # placeholder only for typing; not used
-    del now
+    pr = obj.get("profile")
+    if not isinstance(pr, dict):
+        raise TypeError("bad bundle")
+    # Never trust identifiers from a file: a fresh id is minted on save (path-traversal guard).
+    for k in ("id", "consent", "mailbox", "created_at", "updated_at", "is_minor"):
+        pr.pop(k, None)
     from ..models import Consent, ConsentBasis
     tmp = Profile.model_validate({
         **pr, "consent": Consent(basis=ConsentBasis.SELF, attested_by="x",

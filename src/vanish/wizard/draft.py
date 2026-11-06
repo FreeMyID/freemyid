@@ -14,23 +14,36 @@ from datetime import date, datetime
 from typing import Any, Protocol
 
 from ..models import (
-    Actor, Address, Consent, ConsentBasis, EmailMode, Event, Evidence, EvidenceKind,
-    MailboxConfig, Permissions, PersonName, Profile, ScheduleConfig, new_id, utcnow,
+    Actor,
+    Address,
+    Consent,
+    ConsentBasis,
+    EmailMode,
+    Event,
+    Evidence,
+    EvidenceKind,
+    MailboxConfig,
+    Permissions,
+    PersonName,
+    Profile,
+    ScheduleConfig,
+    new_id,
+    utcnow,
 )
 
 log = logging.getLogger(__name__)
 
 CONSENT_VERSION = "2026-11-a"
 CONSENT_TEXT = [
-    "Vanish will look for the information of the person named in this setup on "
-    "\"people-search\" and data-broker websites, and ask those sites to remove it.",
-    "Everything you type here stays on this computer, encrypted. Nothing is sent to us "
-    "or to any server we run. There is no account, no tracking and no cloud.",
-    "When Vanish contacts a broker it sends only what that broker already shows about the "
-    "person, plus the dedicated removal mailbox you set up. It never pays anyone.",
-    "Honest limits: some brokers need a manual step from a human, listings can come back "
+    ("Vanish will look for the information of the person named in this setup on "
+    "\"people-search\" and data-broker websites, and ask those sites to remove it."),
+    ("Everything you type here stays on this computer, encrypted. Nothing is sent to us "
+    "or to any server we run. There is no account, no tracking and no cloud."),
+    ("When Vanish contacts a broker it sends only what that broker already shows about the "
+    "person, plus the dedicated removal mailbox you set up. It never pays anyone."),
+    ("Honest limits: some brokers need a manual step from a human, listings can come back "
     "after they are removed, and \"removed\" only ever means removed from that one broker, "
-    "not from the whole internet.",
+    "not from the whole internet."),
     "You can pause, edit or delete everything at any time.",
 ]
 BASIS_LABELS = {
@@ -41,24 +54,33 @@ BASIS_LABELS = {
         "I am helping an adult who gave me signed written permission (an authorized agent).",
 }
 
-STEPS = ["consent", "names", "addresses", "details", "permissions", "mailbox", "email",
-         "schedule", "review"]
+STEPS = ["consent", "sign", "names", "othernames", "addresses", "moreaddr", "birth", "phones",
+         "emails", "relatives", "permissions", "mailbox", "mailbox_login", "email", "schedule",
+         "browser", "review"]
 STEP_TITLES = {
-    "consent": "Permission", "names": "Names", "addresses": "Addresses",
-    "details": "Other details", "permissions": "What Vanish may do",
-    "mailbox": "Removal mailbox", "email": "Email approval", "schedule": "Schedule",
-    "review": "Review and save",
+    "consent": "Who is this for?", "sign": "Please read and agree",
+    "names": "What is the person's name?", "othernames": "Any other names they have used?",
+    "addresses": "Where do they live now?", "moreaddr": "Anywhere else they have lived?",
+    "birth": "How old are they?", "phones": "Phone numbers", "emails": "Email addresses they use",
+    "relatives": "Names of relatives", "permissions": "What may Vanish do?",
+    "mailbox": "Your email for removal replies", "mailbox_login": "Sign in to that email",
+    "email": "Who approves the emails?", "schedule": "Check every week?",
+    "browser": "Get the web browser ready", "review": "Check everything",
 }
+NO_CONSENT_NEEDED = ("consent", "sign")
 
 PRESETS: dict[str, dict[str, Any]] = {
-    "gmail": dict(imap_host="imap.gmail.com", imap_port=993, imap_ssl=True,
-                  smtp_host="smtp.gmail.com", smtp_port=465, smtp_starttls=False),
-    "proton_bridge": dict(imap_host="127.0.0.1", imap_port=1143, imap_ssl=False,
-                          imap_starttls=True, smtp_host="127.0.0.1", smtp_port=1025, smtp_starttls=True),
-    "other": dict(imap_host="", imap_port=993, imap_ssl=True,
-                  smtp_host="", smtp_port=465, smtp_starttls=False),
+    "gmail": {"imap_host": "imap.gmail.com", "imap_port": 993, "imap_ssl": True,
+                  "smtp_host": "smtp.gmail.com", "smtp_port": 465, "smtp_starttls": False},
+    "proton_bridge": {"imap_host": "127.0.0.1", "imap_port": 1143, "imap_ssl": False,
+                          "imap_starttls": True, "smtp_host": "127.0.0.1", "smtp_port": 1025, "smtp_starttls": True},
+    "other": {"imap_host": "", "imap_port": 993, "imap_ssl": True,
+                  "smtp_host": "", "smtp_port": 465, "smtp_starttls": False},
 }
 
+OUTLOOK_MSG = ("Outlook and Hotmail cannot be used yet, because Microsoft only allows a "
+               "special sign-in that Vanish does not support. Please pick Gmail, Proton or "
+               "Other, or create a free Gmail address just for Vanish.")
 MAX_AUTH_BYTES = 10 * 1024 * 1024
 _HOST_RE = re.compile(r"^[A-Za-z0-9]([A-Za-z0-9.\-]{0,251}[A-Za-z0-9])?$")
 
@@ -103,6 +125,8 @@ class Draft:
     allow_phone_disclosure: bool = False
     # mailbox
     skip_mailbox: bool = False
+    provider: str = "gmail"
+    schedule_consent: bool = False
     mailbox: dict[str, Any] = field(default_factory=dict)
     password: str = ""
     # email
@@ -168,6 +192,7 @@ def apply_step(d: Draft, step: str, f: FormLike, files: dict[str, tuple[str, byt
             errs.append("Please choose who is giving permission.")
         else:
             d.basis = basis
+    elif step == "sign":
         d.attested_by = (f.get("attested_by") or "").strip()
         if not d.attested_by:
             errs.append("Please type your full name to confirm.")
@@ -182,46 +207,64 @@ def apply_step(d: Draft, step: str, f: FormLike, files: dict[str, tuple[str, byt
         if not errs:
             d.consent_ack = True
             d.consent_at = utcnow()
-    elif step == "names":
-        d.first = (f.get("first") or "").strip()
-        d.middle = (f.get("middle") or "").strip()
-        d.last = (f.get("last") or "").strip()
-        d.suffix = (f.get("suffix") or "").strip()
-        d.nicknames = _lines(f.get("nicknames"))
-        d.previous_names = _name_lines(f.get("previous_names"))
-        d.label = (f.get("label") or "").strip() or d.first
-        if not d.first or not d.last:
+    elif step in ("names", "othernames"):
+        def got(k: str) -> str | None:
+            v = f.get(k)
+            return None if v is None else str(v)
+        for k in ("first", "middle", "last", "suffix"):
+            if (v := got(k)) is not None:
+                setattr(d, k, v.strip())
+        if got("nicknames") is not None:
+            d.nicknames = _lines(got("nicknames"))
+        if got("previous_names") is not None:
+            d.previous_names = _name_lines(got("previous_names"))
+        if got("label") is not None:
+            d.label = got("label").strip() or d.first
+        elif step == "names" and not d.label:
+            d.label = d.first
+        if step == "names" and (not d.first or not d.last):
             errs.append("First and last name are required.")
         for n in d.previous_names:
             try:
                 parse_person_name(n)
             except ValueError as e:
                 errs.append(str(e))
-    elif step == "addresses":
-        rows = []
-        cur = f.get("current", "0")
+    elif step in ("addresses", "moreaddr"):
+        rows: list[dict[str, Any] | None] = (list(d.addresses) + [None] * 4)[:4]
+        cur = f.get("current")
         for i in range(4):
+            if f.get(f"city{i}") is None and f.get(f"state{i}") is None:
+                continue
             city = (f.get(f"city{i}") or "").strip()
             st = (f.get(f"state{i}") or "").strip().upper()
             if not city and not st:
+                rows[i] = None
                 continue
             if not city or not re.fullmatch(r"[A-Z]{2}", st):
-                errs.append(f"Address {i + 1}: please give a city and a 2-letter state (like IL).")
+                errs.append(f"Please give a city and a 2-letter state (like IL) for address {i + 1}.")
                 continue
-            rows.append(dict(street=(f.get(f"street{i}") or "").strip(), city=city, state=st,
-                             zip=(f.get(f"zip{i}") or "").strip(), current=str(i) == cur))
-        if not rows and not errs:
+            old = rows[i] or {}
+            rows[i] = {"street": (f.get(f"street{i}") or old.get("street") or "").strip(),
+                       "city": city, "state": st,
+                       "zip": (f.get(f"zip{i}") or old.get("zip") or "").strip(),
+                       "current": bool(old.get("current")) if cur is None else str(i) == cur}
+        kept = [r for r in rows if r]
+        if step == "addresses" and not kept and not errs:
             errs.append("Please enter at least one city and state.")
-        if rows and not any(r["current"] for r in rows):
-            rows[0]["current"] = True
+        if kept and not any(r["current"] for r in kept):
+            kept[0]["current"] = True
         if not errs:
-            d.addresses = rows
-    elif step == "details":
-        d.dob = (f.get("dob") or "").strip()
-        d.age = (f.get("age") or "").strip()
-        d.phones = _lines(f.get("phones"))
-        d.emails = _lines(f.get("emails"))
-        d.relatives = _name_lines(f.get("relatives"))
+            d.addresses = kept
+    elif step in ("details", "birth", "phones", "emails", "relatives"):
+        if f.get("dob") is not None or f.get("age") is not None:
+            d.dob = (f.get("dob") or "").strip()
+            d.age = (f.get("age") or "").strip()
+        if f.get("phones") is not None:
+            d.phones = _lines(f.get("phones"))
+        if f.get("emails") is not None:
+            d.emails = _lines(f.get("emails"))
+        if f.get("relatives") is not None:
+            d.relatives = _name_lines(f.get("relatives"))
         if d.dob:
             try:
                 if date.fromisoformat(d.dob) > date.today():
@@ -233,15 +276,25 @@ def apply_step(d: Draft, step: str, f: FormLike, files: dict[str, tuple[str, byt
                 errs.append("Age should be a number.")
         if not errs and is_minor(d) and d.basis != ConsentBasis.GUARDIAN_OF_MINOR.value:
             errs.append("This person is under 18, so a parent or guardian must give "
-                        "permission. Go back to step 1 and choose the parent/guardian option.")
+                        "permission. Go back to the first screen and choose the parent or "
+                        "guardian option.")
     elif step == "permissions":
         d.allow_id_upload = bool(f.get("allow_id_upload"))
         d.allow_account_creation = bool(f.get("allow_account_creation"))
         d.allow_phone_disclosure = bool(f.get("allow_phone_disclosure"))
     elif step == "mailbox":
-        d.skip_mailbox = bool(f.get("skip_mailbox"))
-        if not d.skip_mailbox:
-            errs += _apply_mailbox(d, f)
+        prov = f.get("provider", d.provider)
+        if f.get("skip_mailbox"):
+            d.skip_mailbox = True
+        elif prov == "outlook":
+            errs.append(OUTLOOK_MSG)
+        elif prov not in PRESETS:
+            errs.append("Please choose your email service.")
+        else:
+            d.skip_mailbox, d.provider = False, prov
+    elif step == "mailbox_login":
+        d.skip_mailbox = False
+        errs += _apply_mailbox(d, f)
     elif step == "email":
         mode = f.get("email_mode", EmailMode.APPROVE_EACH.value)
         if mode not in (EmailMode.APPROVE_EACH.value, EmailMode.AUTO.value):
@@ -250,23 +303,17 @@ def apply_step(d: Draft, step: str, f: FormLike, files: dict[str, tuple[str, byt
             d.email_mode = mode
     elif step == "schedule":
         d.weekly_recheck = bool(f.get("weekly_recheck"))
-        try:
-            d.weekday = int(f.get("weekday", 6))
-            d.hour = int(f.get("hour", 10))
-            if not (0 <= d.weekday <= 6 and 0 <= d.hour <= 23):
-                raise ValueError
-        except ValueError:
-            errs.append("Please pick a valid day and hour.")
+        d.schedule_consent = d.weekly_recheck   # ticking the box IS the consent
+    elif step == "browser":
+        pass
     return errs
 
 
 def _apply_mailbox(d: Draft, f: FormLike) -> list[str]:
     errs: list[str] = []
-    provider = f.get("provider", "other")
+    provider = f.get("provider") or d.provider or "other"
     if provider == "outlook":
-        return ["Outlook/Hotmail is not supported yet (Microsoft requires OAuth sign-in). "
-                "Please use Gmail with an app password, Proton Bridge, or Other provider "
-                "(for example Fastmail with an app password)."]
+        return [OUTLOOK_MSG]
     if provider not in PRESETS:
         provider = "other"
     mb: dict[str, Any] = dict(PRESETS[provider])
@@ -337,7 +384,7 @@ def test_mailbox_connection(mb: dict[str, Any], password: str, timeout: float = 
             try:
                 im.logout()
             except Exception:  # noqa: BLE001
-                pass
+                log.debug("logout failed")
     except (imaplib.IMAP4.error, OSError, ssl.SSLError) as e:
         return False, f"Could not sign in to the incoming mail server ({type(e).__name__})."
     try:
@@ -355,7 +402,7 @@ def test_mailbox_connection(mb: dict[str, Any], password: str, timeout: float = 
             try:
                 sm.quit()
             except Exception:  # noqa: BLE001
-                pass
+                log.debug("quit failed")
     except (smtplib.SMTPException, OSError, ssl.SSLError) as e:
         return False, f"Incoming mail works, but the outgoing server failed ({type(e).__name__})."
     return True, "Connection works. Vanish can read and send from this mailbox."
@@ -425,7 +472,7 @@ def save_draft(store, d: Draft, actor: Actor = Actor.WIZARD) -> Profile:
     if prof.mailbox and d.password:
         try:
             set_mailbox_password(prof.id, prof.mailbox, d.password)
-        except Exception as e:  # noqa: BLE001  keyring backends raise assorted errors
+        except Exception as e:
             raise SaveError("Could not store the mailbox password in this computer's "
                             "keychain. Unlock the keychain and try again.") from e
     prior = store.get_profile(prof.id)
@@ -441,13 +488,13 @@ def save_draft(store, d: Draft, actor: Actor = Actor.WIZARD) -> Profile:
 
 
 def draft_from_profile(p: Profile, *, keep_consent: bool = True) -> Draft:
-    d = Draft(id=p.id, editing=True, label=p.label, first=p.name.first,
+    d = Draft(provider=(p.mailbox.provider if p.mailbox and p.mailbox.provider else "gmail"), id=p.id, editing=True, label=p.label, first=p.name.first,
               middle=p.name.middle or "", last=p.name.last, suffix=p.name.suffix or "",
               nicknames=list(p.nicknames),
               previous_names=[" ".join(x for x in (n.first, n.middle, n.last) if x)
                               for n in p.previous_names],
-              addresses=[dict(street=a.street or "", city=a.city, state=a.state,
-                              zip=a.zip or "", current=a.current) for a in p.addresses],
+              addresses=[{"street": a.street or "", "city": a.city, "state": a.state,
+                              "zip": a.zip or "", "current": a.current} for a in p.addresses],
               dob=p.dob.isoformat() if p.dob else "", age=str(p.age) if p.age is not None else "",
               phones=list(p.phones), emails=list(p.emails), relatives=list(p.relatives),
               allow_id_upload=p.permissions.allow_id_upload,

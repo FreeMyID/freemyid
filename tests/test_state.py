@@ -19,7 +19,7 @@ def _broker(days=30):
 
 
 def _st(s=S.UNKNOWN, **kw):
-    return BrokerStatus(profile_id="p", broker_id="fakeb", state=s, **kw)
+    return BrokerStatus(profile_id="a" * 32, broker_id="fakeb", state=s, **kw)
 
 
 @pytest.mark.parametrize("src,dst,ok", [
@@ -102,8 +102,6 @@ def test_next_check_at_bounds():
 
 # ---- findings ----
 
-@pytest.mark.xfail(strict=True, reason="SEC-01: rescan of a still-listed SUBMITTED record "
-                   "re-stamps last_submitted_at, so escalation never becomes due")
 def test_rescan_does_not_reset_escalation_anchor():
     b = _broker(30)
     st = _st(S.SUBMITTED, last_submitted_at=NOW, attempts=1)
@@ -116,15 +114,11 @@ def test_rescan_does_not_reset_escalation_anchor():
     assert state.next_escalation(st, b, t).action == Escalation.RESUBMIT
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-01: NEEDS_HUMAN after a prior submission rescans "
-                   "to SUBMITTED although nothing was sent; should re-enter the submit path")
 def test_needs_human_rescan_reenters_submit_path():
     st = _st(S.NEEDS_HUMAN, last_submitted_at=NOW - timedelta(days=60))
     assert state.should_submit(state.after_scan(st, True, NOW))
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-01: NOT_FOUND with prior submission -> after_scan "
-                   "returns SUBMITTED, an illegal transition")
 def test_not_found_after_prior_submission_is_legal():
     st = _st(S.NOT_FOUND, last_submitted_at=NOW - timedelta(days=60))
     dst = state.after_scan(st, True, NOW)

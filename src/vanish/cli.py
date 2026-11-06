@@ -1,16 +1,20 @@
 """`vanish` command line. OWNER: orchestrator. Thin layer: all logic lives in modules."""
 from __future__ import annotations
 
+import os
+import sys
+from collections.abc import Callable, Sequence
 from pathlib import Path
-from typing import Optional
+from typing import Annotated, TypeVar
 
 import typer
 from rich.console import Console
 from rich.table import Table
 
 from . import config as cfgmod
-from . import logging_setup
-from .models import ConsentBasis, Profile, RequestStatus
+from . import logging_setup, paths
+from .consent import consent_ok
+from .models import Profile, RequestStatus
 
 app = typer.Typer(help="Vanish: remove your info from data brokers, and keep it removed.",
                   no_args_is_help=True)
@@ -39,27 +43,54 @@ def _registry():
     return load_registry()
 
 
-def consent_ok(p: Profile) -> tuple[bool, str]:
-    """Hard consent gate (shared by CLI and runner)."""
-    c = p.consent
-    if not c.attested_by.strip():
-        return False, "consent has no attesting name"
-    if p.is_minor and c.basis not in (ConsentBasis.GUARDIAN_OF_MINOR,):
-        return False, "minor profile requires parent/guardian consent"
-    if c.basis == ConsentBasis.AUTHORIZED_AGENT and not c.authorization_doc:
-        return False, "authorized agent needs the signed authorization attached"
-    return True, ""
+T = TypeVar("T")
 
 
-def _select(store, profile: Optional[str]) -> list[Profile]:
-    ps = store.list_profiles()
-    if profile:
-        ps = [p for p in ps if p.id.startswith(profile) or p.label.lower() == profile.lower()]
-        if not ps:
-            raise typer.BadParameter(f"no profile matches {profile!r}")
+def _pick_one(items: Sequence[T], key: str, what: str, ident: Callable[[T], str],
+              describe: Callable[[T], str],
+              alias: Callable[[T], str] | None = None) -> T:
+    """Exactly one item whose id starts with `key` (or whose alias equals it).
+
+    A full id match wins. Otherwise zero or several matches list the candidates and exit
+    with code 2, so a short prefix never acts on the wrong record (SEC-12).
+    """
+    if not key:
+        raise typer.BadParameter(f"empty {what} id")
+    exact = [x for x in items if ident(x) == key]
+    if len(exact) == 1:
+        return exact[0]
+    k = key.lower()
+    match = [x for x in items if ident(x).startswith(key)
+             or (alias is not None and alias(x).lower() == k)]
+    if len(match) == 1:
+        return match[0]
+    if not match:
+        con.print(f"[red]No {what} matches {key!r}.[/]")
+    else:
+        con.print(f"[red]{key!r} matches {len(match)} {what}s; use more of the id:[/]")
+        for x in match:
+            con.print(f"  {ident(x)[:12]}  {describe(x)}")
+    raise typer.Exit(2)
+
+
+def _one_profile(store, key: str) -> Profile:
+    return _pick_one(store.list_profiles(), key, "profile", lambda p: p.id,
+                     lambda p: p.label, alias=lambda p: p.label)
+
+
+def _require_consent(store, p: Profile) -> Profile:
+    good, why = consent_ok(p, store)
+    if not good:
+        con.print(f"[red]{p.label}: {why}[/]")
+        raise typer.Exit(1)
+    return p
+
+
+def _select(store, profile: str | None) -> list[Profile]:
+    ps = [_one_profile(store, profile)] if profile else store.list_profiles()
     ok = []
     for p in ps:
-        good, why = consent_ok(p)
+        good, why = consent_ok(p, store)
         if good:
             ok.append(p)
         else:
@@ -67,8 +98,22 @@ def _select(store, profile: Optional[str]) -> list[Profile]:
     return ok
 
 
+def _harden_home() -> None:
+    """Private files by default (SEC-14): umask 077 and a 0700 data directory."""
+    os.umask(0o077)
+    if sys.platform == "win32":
+        return
+    try:
+        h = paths.home()
+        if h.stat().st_mode & 0o077:
+            h.chmod(0o700)
+    except OSError as e:
+        con.print(f"[yellow]Could not make the Vanish data folder private: {e}[/]")
+
+
 @app.callback()
-def _main(verbose: bool = typer.Option(False, "--verbose", "-v")) -> None:
+def _main(verbose: Annotated[bool, typer.Option("--verbose", "-v")] = False) -> None:
+    _harden_home()
     logging_setup.setup(verbose)
 
 
@@ -76,8 +121,10 @@ def _main(verbose: bool = typer.Option(False, "--verbose", "-v")) -> None:
 
 
 @app.command()
-def setup(prefill: Optional[Path] = typer.Option(None, help="Family bundle (.vanish-profile)"),
-          web: bool = typer.Option(True, help="Open the web wizard (else terminal prompts)")):
+def setup(prefill: Annotated[Path | None,
+                             typer.Option(help="Family bundle (.vanish-profile)")] = None,
+          web: Annotated[bool, typer.Option(
+              help="Open the web wizard (else terminal prompts)")] = True):
     """Walk through setup for a person (opens the local web wizard by default)."""
     if web:
         from .wizard.server import serve
@@ -111,23 +158,24 @@ def _do_run(profile, broker, scan_only, dry_run, scheduled):
 
 
 @app.command()
-def scan(profile: Optional[str] = typer.Option(None, "--profile", "-p"),
-         broker: list[str] = typer.Option([], "--broker", "-b")):
+def scan(profile: Annotated[str | None, typer.Option("--profile", "-p")] = None,
+         broker: Annotated[list[str] | None, typer.Option("--broker", "-b")] = None):
     """Search brokers for listings. Never submits anything."""
-    _do_run(profile, broker, scan_only=True, dry_run=True, scheduled=False)
+    _do_run(profile, broker or [], scan_only=True, dry_run=True, scheduled=False)
 
 
 @app.command()
-def run(profile: Optional[str] = typer.Option(None, "--profile", "-p"),
-        broker: list[str] = typer.Option([], "--broker", "-b"),
-        dry_run: bool = typer.Option(False, "--dry-run", help="Search + report, submit nothing"),
-        scheduled: bool = typer.Option(False, "--scheduled", hidden=True)):
+def run(profile: Annotated[str | None, typer.Option("--profile", "-p")] = None,
+        broker: Annotated[list[str] | None, typer.Option("--broker", "-b")] = None,
+        dry_run: Annotated[bool, typer.Option(
+            "--dry-run", help="Search + report, submit nothing")] = False,
+        scheduled: Annotated[bool, typer.Option("--scheduled", hidden=True)] = False):
     """Scan, submit opt-outs, check verifications and escalate ignored requests."""
-    _do_run(profile, broker, scan_only=False, dry_run=dry_run, scheduled=scheduled)
+    _do_run(profile, broker or [], scan_only=False, dry_run=dry_run, scheduled=scheduled)
 
 
 @app.command()
-def status(profile: Optional[str] = typer.Option(None, "--profile", "-p")):
+def status(profile: Annotated[str | None, typer.Option("--profile", "-p")] = None):
     """Per-broker status for each person."""
     store, reg = _store(), _registry()
     names = {b.id: b.name for b in reg.brokers}
@@ -149,8 +197,8 @@ def status(profile: Optional[str] = typer.Option(None, "--profile", "-p")):
 
 
 @app.command()
-def report(profile: Optional[str] = typer.Option(None, "--profile", "-p"),
-           fmt: str = typer.Option("html", "--format", help="html | pdf")):
+def report(profile: Annotated[str | None, typer.Option("--profile", "-p")] = None,
+           fmt: Annotated[str, typer.Option("--format", help="html | pdf")] = "html"):
     """Export a report (HTML or PDF)."""
     from .wizard.report import build_report
     store, reg = _store(), _registry()
@@ -162,7 +210,7 @@ def report(profile: Optional[str] = typer.Option(None, "--profile", "-p"),
 
 
 @profile_app.command("add")
-def profile_add(prefill: Optional[Path] = typer.Option(None)):
+def profile_add(prefill: Annotated[Path | None, typer.Option()] = None):
     setup(prefill=prefill, web=prefill is None)
 
 
@@ -181,23 +229,22 @@ def profile_list():
 def profile_edit(profile: str):
     from .wizard.flows import edit_cli
     store = _store()
-    p = _select(store, profile)[0]
+    p = _require_consent(store, _one_profile(store, profile))
     edit_cli(store, p.id)
 
 
 @profile_app.command("remove")
-def profile_remove(profile: str, yes: bool = typer.Option(False, "--yes")):
+def profile_remove(profile: str, yes: Annotated[bool, typer.Option("--yes")] = False):
     """Delete a person and all their stored data from this computer."""
     store = _store()
-    p = [x for x in store.list_profiles() if x.id.startswith(profile) or x.label == profile]
-    if not p:
-        raise typer.BadParameter("no such profile")
-    if not yes and not typer.confirm(f"Permanently delete {p[0].label} and all evidence?"):
+    p = _one_profile(store, profile)
+    if not yes and not typer.confirm(f"Permanently delete {p.label} ({p.id[:8]}) "
+                                     "and all evidence?"):
         raise typer.Exit()
-    if p[0].mailbox:
+    if p.mailbox:
         from .secrets import delete_mailbox_password
-        delete_mailbox_password(p[0].id, p[0].mailbox)
-    store.delete_profile(p[0].id)
+        delete_mailbox_password(p.id, p.mailbox)
+    store.delete_profile(p.id)
     con.print("Deleted.")
 
 
@@ -206,7 +253,7 @@ def profile_export(profile: str, dest: Path):
     """Create a passphrase-protected pre-filled profile for a family installer."""
     from .wizard.flows import export_family_bundle
     store = _store()
-    p = _select(store, profile)[0]
+    p = _require_consent(store, _one_profile(store, profile))
     pw = typer.prompt("Passphrase (tell them by phone, not email)", hide_input=True,
                       confirmation_prompt=True)
     con.print(f"Wrote {export_family_bundle(store, p.id, dest, pw)}")
@@ -244,7 +291,7 @@ def registry_update():
 
 
 @registry_app.command("validate")
-def registry_validate(path: Optional[Path] = typer.Argument(None)):
+def registry_validate(path: Annotated[Path | None, typer.Argument()] = None):
     from .registry import load_registry
     reg = load_registry(path)
     unver = sum(1 for b in reg.brokers if b.verification_status.value != "verified")
@@ -266,7 +313,7 @@ def registry_show():
 
 
 @todo_app.command("list")
-def todo_list(profile: Optional[str] = typer.Option(None, "--profile", "-p")):
+def todo_list(profile: Annotated[str | None, typer.Option("--profile", "-p")] = None):
     store = _store()
     for p in _select(store, profile):
         for t in store.list_todos(p.id):
@@ -276,10 +323,9 @@ def todo_list(profile: Optional[str] = typer.Option(None, "--profile", "-p")):
 @todo_app.command("done")
 def todo_done(todo_id: str):
     store = _store()
-    match = [t for t in store.list_todos() if t.id.startswith(todo_id)]
-    if not match:
-        raise typer.BadParameter("no such open to-do")
-    store.complete_todo(match[0].id)
+    t = _pick_one(store.list_todos(), todo_id, "open to-do", lambda t: t.id,
+                  lambda t: f"{t.kind.value} · {t.title}")
+    store.complete_todo(t.id)
     con.print("Marked done.")
 
 
@@ -294,11 +340,9 @@ def outbox_list():
 def outbox_approve(request_id: str):
     from .engine.outbox import approve_and_send
     store = _store()
-    match = [r for r in store.list_requests(status=RequestStatus.QUEUED_FOR_APPROVAL)
-             if r.id.startswith(request_id)]
-    if not match:
-        raise typer.BadParameter("no such queued email")
-    approve_and_send(store, match[0].id)
+    r = _pick_one(store.list_requests(status=RequestStatus.QUEUED_FOR_APPROVAL), request_id,
+                  "queued email", lambda r: r.id, lambda r: f"{r.broker_id} · {r.kind.value}")
+    approve_and_send(store, r.id)
     con.print("Sent.")
 
 
