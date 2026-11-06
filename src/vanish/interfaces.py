@@ -84,7 +84,7 @@ class RunContext:
 class Submitter(abc.ABC):
     """One per method (generic) plus optional per-broker subclasses.
 
-    Lookup order (engine/registry_plugins.py): broker.submitter 'module:Class' ->
+    Lookup order (engine/plugins.py): broker.submitter 'module:Class' ->
     entry point group 'vanish.submitters' keyed by broker id ->
     vanish.submitters.<broker_id> module with class `Submitter` -> generic by broker.method.
 

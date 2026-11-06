@@ -21,7 +21,6 @@ class Config(BaseModel):
     user_agent_suffix: str = "Vanish/0.1 (personal privacy opt-out tool)"
     wizard_port: int = 8765
     real_submissions_enabled: bool = False   # flipped only after explicit user approval
-    first_email_approved: bool = False
 
 
 def load() -> Config:

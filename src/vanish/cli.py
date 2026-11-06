@@ -308,8 +308,7 @@ def outbox_approve(request_id: str):
 @config_app.command("set")
 def config_set(key: str, value: str):
     cfg = cfgmod.load()
-    if key not in type(cfg).model_fields or key in ("real_submissions_enabled",
-                                                    "first_email_approved"):
+    if key not in type(cfg).model_fields or key == "real_submissions_enabled":
         raise typer.BadParameter(f"unknown or protected key {key}")
     field = type(cfg).model_fields[key]
     cur = getattr(cfg, key)

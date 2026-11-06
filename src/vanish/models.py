@@ -193,7 +193,8 @@ class MailboxConfig(_Base):
     provider: Literal["gmail", "outlook", "proton_bridge", "other"] = "other"
     imap_host: str
     imap_port: int = 993
-    imap_ssl: bool = True
+    imap_ssl: bool = True          # implicit TLS (993)
+    imap_starttls: bool = False    # e.g. Proton Bridge 127.0.0.1:1143
     smtp_host: str
     smtp_port: int = 465
     smtp_starttls: bool = False
