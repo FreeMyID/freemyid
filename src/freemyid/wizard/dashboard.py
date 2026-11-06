@@ -160,7 +160,7 @@ def home_page(*, statuses: list[BrokerStatus], todos: list[tuple[Todo, str, str]
                      'Fix it</a></div>')
     if outbox_count:
         body += (f'<div class="card todo"><h2>{outbox_count} email(s) waiting for your OK</h2>'
-                 '<p>Look at each one, then press Approve.</p><div class="actions">'
+                 '<p>Look at each one, then press Approve. Nothing is sent until you do.</p><div class="actions">'
                  '<a class="btn primary" href="/outbox">Look at them</a></div></div>')
     if filling:
         body += ('<div class="banner">A form is being filled in. <a href="/fill">'
@@ -175,8 +175,9 @@ def home_page(*, statuses: list[BrokerStatus], todos: list[tuple[Todo, str, str]
         p = r["profile"]
         body += (f'<p><a class="btn secondary" href="/profile/{esc(p.id)}">All the details for '
                  f'{esc(p.label)}</a></p>')
-    body += ('<p class="hint">"Removed" means removed from that one broker only. Listings can '
-             'reappear, which is why Free My ID keeps re-checking.</p></div>')
+    body += ('<p class="hint">A site that says it deleted you has done that for that one site only. '
+             'Details can reappear, which is why Free My ID keeps checking. Free My ID does '
+             'not change anything on Facebook or Google.</p></div>')
     return layout("Home", body, refresh=6 if running else 0)
 
 
@@ -231,7 +232,7 @@ def profile_page(p: Profile, statuses: list[BrokerStatus], names: dict[str, str]
         body += todo_card(t, p.label, names.get(t.broker_id or "", ""), csrf, fill=fill)
     body += "</div>"
     # per-broker table
-    body += ('<div class="card"><h2>Brokers</h2><table><tr><th>Broker</th><th>State</th>'
+    body += ('<div class="card"><h2>Sites</h2><table><tr><th>Site</th><th>State</th>'
              '<th>Updated</th><th>Next check</th></tr>')
     for st in sorted(statuses, key=lambda s: (names.get(s.broker_id, s.broker_id)).lower()):
         extra = (f'<br><span class="hint">{esc(st.needs_human_reason)}</span>'
@@ -240,11 +241,11 @@ def profile_page(p: Profile, statuses: list[BrokerStatus], names: dict[str, str]
                  f'<td>{chip(st.state)}{extra}</td><td>{_dt(st.updated_at)}</td>'
                  f'<td>{_dt(st.next_check_at)}</td></tr>')
     if not statuses:
-        body += '<tr><td colspan="4">No brokers checked yet. Run <code>freemyid scan</code>.</td></tr>'
+        body += '<tr><td colspan="4">No sites checked yet.</td></tr>'
     body += "</table></div>"
     # evidence
-    body += '<div class="card"><h2>Evidence</h2><p class="hint">Screenshots are stored ' \
-            'encrypted and only decrypted when shown here.</p>'
+    body += '<div class="card"><h2>Receipts</h2><p class="hint">Pictures of what each site showed and replied. ' \
+            'Kept on this computer only, encrypted.</p>'
     any_ev = False
     for bid, evs in sorted(evidence_by_broker.items()):
         shots = [e for e in evs if e.kind == EvidenceKind.SCREENSHOT]
@@ -262,7 +263,7 @@ def profile_page(p: Profile, statuses: list[BrokerStatus], names: dict[str, str]
                      f'{esc(e.kind.value)} {_dt(e.created_at)}</a>')
         body += "</div>"
     if not any_ev:
-        body += "<p>No evidence yet.</p>"
+        body += "<p>No receipts yet.</p>"
     body += "</div>"
     return layout(p.label, body)
 
@@ -290,12 +291,12 @@ def confirm_real_page(people: list[Profile], csrf: str) -> str:
     names = ", ".join(esc(p.label) for p in people) or "nobody yet"
     body = ('<h1>Start sending real requests?</h1>'
             f'<div class="card"><p>This is for: <b>{names}</b>.</p>'
-            '<p>Free My ID will email removal requests to data brokers and, where a broker allows '
-            'it, submit their opt-out forms. Each request names the person and only the details '
-            'the broker already shows, plus the removal mailbox address. Nothing is paid for.</p>'
+            '<p>Free My ID will now send your requests to people-search sites by email and, where a '
+            'site allows it, fill in their forms. Each request names the person and only the '
+            'details the site already shows, plus the separate email address. Nothing is paid for.</p>'
             '<p>Emails for people who chose "approve each" wait for your OK first. The first '
             'email for every person always waits for your OK.</p>'
-            '<p>Some brokers need steps by hand, and listings can come back. You can switch '
+            '<p>Some sites need steps by hand, and details can come back. You can switch '
             'back to practice mode in Settings at any time. Requests already sent cannot be '
             'taken back.</p>'
             '<form method="post" action="/settings/submissions/on" class="actions">'
@@ -336,7 +337,7 @@ def settings_page(*, people: list[Profile], schedule_status: str, practice: bool
                  f'<p><a class="btn secondary" href="/settings/{esc(p.id)}/mailbox">Change it'
                  '</a></p><h3>What Free My ID may do</h3>'
                  '<p class="hint">Everything here is off unless you tick it. If a website asks '
-                 'for something you did not allow, Free My ID stops and asks you. It never pays.</p>'
+                 'for something you did not allow, Free My ID stops and asks you. It never pays. It will never ask for a Social Security number or bank or card details.</p>'
                  f'<form method="post" action="/settings/{esc(p.id)}/permissions">'
                  f'{csrf_field(csrf)}'
                  + _check("allow_id_upload", "Free My ID may upload a copy of an ID if a website "

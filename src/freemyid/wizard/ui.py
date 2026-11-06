@@ -15,15 +15,16 @@ from .draft import (
     birth_year_of,
 )
 
-HONESTY = ("Please know: some brokers need a manual step from you, listings can reappear "
-           "later, and \"removed\" only means removed from that one broker, not from the "
-           "whole internet. Free My ID keeps checking so you do not have to.")
+HONESTY = ("Good to know: a few sites need a step from you. Sites can put your details back "
+           "up, which is why Free My ID keeps checking. When a site says it has deleted your "
+           "details, that is true for that one site only. Free My ID works on people-search "
+           "sites. It does not change anything on Facebook or Google.")
 
 CHIP_LABEL = {
     ListingState.UNKNOWN: "not checked yet", ListingState.NOT_FOUND: "not found",
-    ListingState.FOUND: "found", ListingState.SUBMITTED: "submitted",
-    ListingState.AWAITING_VERIFICATION: "pending verification",
-    ListingState.CONFIRMED: "broker confirmed", ListingState.REMOVED: "removed",
+    ListingState.FOUND: "your details are listed", ListingState.SUBMITTED: "asked",
+    ListingState.AWAITING_VERIFICATION: "waiting for the site to reply",
+    ListingState.CONFIRMED: "site confirmed", ListingState.REMOVED: "not listed now",
     ListingState.REAPPEARED: "reappeared", ListingState.NEEDS_HUMAN: "needs you",
     ListingState.ERROR: "error",
 }
@@ -174,10 +175,19 @@ def _screen_body(step: str, d: Draft) -> str:
               'here (or later, from their page).<label for="authorization">Photo or scan of the '
               'signed form</label><input id="authorization" name="authorization" type="file" '
               'accept="image/*,application/pdf"></div>')
-        return ('<p class="lead">Free My ID asks websites that sell personal details to delete '
-                'them. Everything stays on this computer.</p><div class="card soft">' + paras
+        return ('<p class="lead"><b>That post didn\'t stop anyone. This does.</b><br>'
+                'Take your name off the websites that sell it.</p>'
+                '<p>Free My ID asks people-search sites (websites that publish names, '
+                'addresses and phone numbers, also called data brokers) to delete your '
+                'details, in the written form they have to answer. Then it keeps checking.</p>'
+                '<div class="card soft trust"><p><b>No account. No cloud. Never asks for your '
+                'Social Security number, bank or card details. Free and open source. '
+                'Uninstall anytime.</b></p></div>'
+                '<p class="hint">Free My ID works on people-search sites. It does not change '
+                'what Facebook itself does with your account.</p>'
+                '<div class="card soft">' + paras
                 + '</div><h2>Who is this for?</h2>' + radios + up
-                + _inp("attested_by", "Type your full name here to say yes", d.attested_by,
+                + _inp("attested_by", "Type your full name to sign", d.attested_by,
                        req=True)
                 + _check("ack", "I have read this and I agree.", d.consent_ack)
                 + f'<p class="hint">Wording version {esc(CONSENT_VERSION)}. '
@@ -203,7 +213,7 @@ def _screen_body(step: str, d: Draft) -> str:
             return ('<div class="row">' + _inp(f"city{i}", "City", a.get("city", ""), req=req)
                     + _inp(f"state{i}", "State (2 letters, like IL)", a.get("state", ""),
                            req=req, extra='maxlength="2" size="3"') + "</div>")
-        return ('<p>A city and state is enough. Websites show the town, so that is what '
+        return ('<p>A city and state is enough. People-search sites show the town, so that is what '
                 'Free My ID looks for.</p>' + row(0, True)
                 + '<details class="more"' + (" open" if any(rows[1:4]) else "")
                 + '><summary>Have they lived anywhere else in the last 10 years?</summary>'
@@ -211,7 +221,7 @@ def _screen_body(step: str, d: Draft) -> str:
                 + row(1, False) + row(2, False) + row(3, False) + "</details>")
     if step == "about":
         return ('<div class="note">All of this is only used to tell the right person apart '
-                'from people with the same name. It is never sent to a website.</div>'
+                'from people with the same name. It is never sent to anyone.</div>'
                 + _inp("birth_year", "Year of birth", birth_year_of(d), typ="number",
                        hint="Four digits, like 1952.", extra='min="1900" max="2100"')
                 + _inp("phones", "Phone number", ", ".join(d.phones), hint=_AREA_HINT)
@@ -224,11 +234,11 @@ def _screen_body(step: str, d: Draft) -> str:
     if step == "mailbox":
         return _mailbox_body(d)
     if step == "finish":
-        items = ["Free My ID looks for the person on data-broker websites.",
-                 "Where it can, it sends the removal request itself.",
+        items = ["Free My ID looks for the person on people-search sites.",
+                 "Where it can, it sends the request asking the site to delete the details.",
                  ("When a website needs a real person, a card appears with one big button "
                  "to help you."),
-                 "Listings can come back, so Free My ID keeps checking."]
+                 "Details can come back, so Free My ID keeps checking."]
         lis = "".join(f"<li>{esc(x)}</li>" for x in items)
         auto = ("" if d.editing else _check(
             "weekly_recheck", "Yes, keep checking for me automatically", d.weekly_recheck,
@@ -269,8 +279,8 @@ def _mailbox_body(d: Draft) -> str:
               'Test that it works</button></div><div id="test-result" role="status"></div>'
               '<p class="hint">The test only talks to your email company. The password is kept '
               "in your computer's protected store, not in Free My ID's files.</p></div>")
-    return ('<p class="lead">Free My ID can use a separate email address to send removal '
-            'requests and click the confirmation links for you. Pick yours, or skip it.</p>'
+    return ('<p class="lead">Free My ID can use a separate email address to send '
+            'deletion requests and click the confirmation links for you. Pick yours, or skip it.</p>'
             + radios + guides + creds)
 
 
@@ -294,7 +304,7 @@ def authorization_form(person: str, agent: str) -> str:
     p, a = esc(person) or "______________________", esc(agent) or "______________________"
     return layout("Authorization form", (
         '<div class="printable"><h1>Authorization to act on my behalf</h1>'
-        f'<p>I, <b>{p}</b>, authorize <b>{a}</b> to act as my agent in asking data brokers and '
+        f'<p>I, <b>{p}</b>, authorize <b>{a}</b> to act as my agent in asking companies that sell personal information and '
         'people-search websites to find, delete, and stop selling my personal information, '
         'including making requests under applicable state privacy laws, using the '
         'Free My ID software on their computer.</p>'
