@@ -3,10 +3,10 @@ from __future__ import annotations
 
 import pytest
 
+from freemyid import config
+from freemyid.models import MailboxConfig
+from freemyid.netpolicy import NetPolicy
 from tests.conftest import make_profile
-from vanish import config
-from vanish.models import MailboxConfig
-from vanish.netpolicy import NetPolicy
 
 
 @pytest.fixture

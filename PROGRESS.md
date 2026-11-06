@@ -1,4 +1,4 @@
-# Vanish — Progress
+# Free My ID — Progress
 
 ## Phase 1 — Plan ✅ (approved 2026-11-05; orchestrator given full autonomy)
 ## Phase 2 — Scaffold ✅
@@ -18,7 +18,7 @@ Models, state machine, encrypted store (AES-GCM blobs, key in keyring, append-on
 - Decision: 3 tiers (Email auto / Assisted "do it with me" / Automatic browser for verified only); mailbox optional; CA DROP first; Edge + pywebview + PyInstaller + Inno Setup per-user; GitHub Actions builds the exe.
 - Running: automation-engineer (runner, tiers, submitters), wizard-packager (6-screen wizard, dashboard, launcher, schtasks, packaging, CI), broker-researcher (privacy emails, plain steps, 3-5 verified forms), qa-security (test/lint fixes, e2e dry-run scaffold).
 ## Blocked / decisions
-- GitHub repo: the old personal repo (private, pushed 2026-11-06). The empty old personal repo can be deleted.
+- GitHub repo: github.com/FreeMyID/freemyid (private, pushed 2026-11-06). The empty old personal repo can be deleted.
 - Code signing: user decided 2026-11-06 to ship unsigned (close family only; user helps install, SmartScreen warning OK).
 - License: AGPL-3.0-or-later for the app (decided 2026-11-06, open-source + paid subscription model). Registry data: separate license, TBD (brokers/LICENSE-DATA.md). Repo stays private until rename + public launch.
 - Outlook.com mailboxes need OAuth (basic auth retired); v1 supports Gmail app password, Proton Bridge, other IMAP providers.
@@ -32,7 +32,7 @@ Integrate wave → qa review → GitHub repo + first CI exe build (user OK neede
 - Next: finish VM install + 6-screen wizard walkthrough with screenshots; D9/D10 "fill it in for me"; rename; mypy warnings (24).
 
 ## Session 2026-11-06 afternoon (orchestrator)
-- Done: mypy 31 -> 9 (0d77063); D9 Fill it in for me engine (1255acd); contracts for D9/D10 + `vanish fill` (c8b8b80).
+- Done: mypy 31 -> 9 (0d77063); D9 Fill it in for me engine (1255acd); contracts for D9/D10 + `freemyid fill` (c8b8b80).
 - Windows VM walkthrough (fresh install of CI build 42233985711 on clean snapshot, QMP absolute clicks via scratchpad qmp.py; `extra_args` QMP socket added to ~/VMs/windows-11.conf):
   - SmartScreen -> More info -> Run anyway works; installer appears ~10 s later with no feedback.
   - **BLOCKER fixed (54ff105):** wizard step 1 POST -> "Bad origin". Referrer-Policy no-referrer makes Chromium send `Origin: null`. Reproduced + verified in headless Chromium. TestClient never sends Origin -> real-browser e2e test added (qa).

@@ -1,7 +1,7 @@
-# Shared rules for every Vanish agent (read first)
+# Shared rules for every Free My ID agent (read first)
 
-Project: Vanish, a local-first data-broker opt-out tool. Current scope and tier design: `docs/PLAN_V1.md` (read it). Python 3.12, venv at `.venv/` (use `.venv/bin/python`, `uv pip install --python .venv <pkg>` for new deps and tell the orchestrator so it can update pyproject.toml).
-Contracts you MUST build on, owned by the orchestrator (read-only for you): `src/vanish/models.py`, `state.py`, `interfaces.py`, `storage/`, `registry.py`, `netpolicy.py`, `crypto.py`, `secrets.py`, `logging_setup.py`, `config.py`, `paths.py`, `cli.py`, `schema/`, `pyproject.toml`.
+Project: Free My ID, a local-first data-broker opt-out tool. Current scope and tier design: `docs/PLAN_V1.md` (read it). Python 3.12, venv at `.venv/` (use `.venv/bin/python`, `uv pip install --python .venv <pkg>` for new deps and tell the orchestrator so it can update pyproject.toml).
+Contracts you MUST build on, owned by the orchestrator (read-only for you): `src/freemyid/models.py`, `state.py`, `interfaces.py`, `storage/`, `registry.py`, `netpolicy.py`, `crypto.py`, `secrets.py`, `logging_setup.py`, `config.py`, `paths.py`, `cli.py`, `schema/`, `pyproject.toml`.
 `zzz_legacy/` is the user's earlier prototype: reference only, never edit.
 
 Hard rules:

@@ -5,14 +5,14 @@ import urllib.request
 
 import pytest
 
-from vanish.wizard import desktop
-from vanish.wizard.server import start_background
+from freemyid.wizard import desktop
+from freemyid.wizard.server import start_background
 
 
 @pytest.fixture
 def home(tmp_path, monkeypatch):
-    monkeypatch.setenv("VANISH_HOME", str(tmp_path))
-    monkeypatch.setenv("VANISH_TEST_KEY", "dev")
+    monkeypatch.setenv("FREEMYID_HOME", str(tmp_path))
+    monkeypatch.setenv("FREEMYID_TEST_KEY", "dev")
     return tmp_path
 
 

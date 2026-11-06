@@ -5,10 +5,10 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from vanish import state
-from vanish.models import Broker, BrokerStatus
-from vanish.models import ListingState as S
-from vanish.state import Escalation
+from freemyid import state
+from freemyid.models import Broker, BrokerStatus
+from freemyid.models import ListingState as S
+from freemyid.state import Escalation
 
 NOW = datetime(2026, 11, 5, 12, tzinfo=UTC)
 

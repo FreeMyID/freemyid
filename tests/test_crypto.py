@@ -6,8 +6,8 @@ import sys
 import pytest
 from cryptography.exceptions import InvalidTag
 
-from vanish import crypto
-from vanish.crypto import Cipher, export_with_passphrase, import_with_passphrase
+from freemyid import crypto
+from freemyid.crypto import Cipher, export_with_passphrase, import_with_passphrase
 
 
 def test_roundtrip_and_format():
@@ -54,7 +54,7 @@ def test_test_key_is_deterministic():
 
 
 def test_keyring_key_created_once(monkeypatch, memkeyring):
-    monkeypatch.delenv("VANISH_TEST_KEY")
+    monkeypatch.delenv("FREEMYID_TEST_KEY")
     c1 = Cipher()
     assert (crypto.SERVICE, crypto.KEY_NAME) in memkeyring.store
     assert Cipher().decrypt(c1.encrypt(b"x")) == b"x"
@@ -63,7 +63,7 @@ def test_keyring_key_created_once(monkeypatch, memkeyring):
 def test_keyring_error_becomes_key_unavailable(monkeypatch):
     import keyring
     from keyring.errors import KeyringError
-    monkeypatch.delenv("VANISH_TEST_KEY")
+    monkeypatch.delenv("FREEMYID_TEST_KEY")
 
     def boom(*a, **k):
         raise KeyringError("locked")

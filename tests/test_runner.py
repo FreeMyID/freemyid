@@ -10,12 +10,11 @@ from datetime import timedelta
 
 import pytest
 
-from tests.conftest import make_profile
-from vanish.consent import CURRENT_TEXT_VERSION
-from vanish.engine import _dev
-from vanish.engine.mail import FakeMailer
-from vanish.engine.runner import run
-from vanish.models import (
+from freemyid.consent import CURRENT_TEXT_VERSION
+from freemyid.engine import _dev
+from freemyid.engine.mail import FakeMailer
+from freemyid.engine.runner import run
+from freemyid.models import (
     Consent,
     ConsentBasis,
     ListingState,
@@ -25,6 +24,7 @@ from vanish.models import (
     TodoKind,
     utcnow,
 )
+from tests.conftest import make_profile
 
 MB = MailboxConfig(address="removals.testperson@example.com", imap_host="imap.example.com",
                    smtp_host="smtp.example.com", username="removals.testperson@example.com")
@@ -97,7 +97,7 @@ def test_scan_finds_confirmed_listing_and_saves_evidence(store, no_smtp):
 
 
 def test_consent_gate_skips_profile(store):
-    from vanish.models import Consent, ConsentBasis
+    from freemyid.models import Consent, ConsentBasis
     p = make_profile(consent=Consent(basis=ConsentBasis.SELF, attested_by="Jane Q Testperson",
                                      text_version="v1"))   # outdated consent text: refused
     store.save_profile(p)
@@ -124,7 +124,7 @@ def test_scheduled_skips_not_due(store):
 
 
 def test_ca_resident_gets_drop_todo_first_once(store):
-    from vanish.models import Address
+    from freemyid.models import Address
     p = person(addresses=[Address(city="Fresno", state="CA", current=True)])
     store.save_profile(p)
     _run(store, [p], dry_run=True)
@@ -136,7 +136,7 @@ def test_ca_resident_gets_drop_todo_first_once(store):
 
 def test_fixture_submit_loop_and_escalation(store, no_smtp, monkeypatch):
     """Non-dry run against fixtures only (FakeMailer + local server)."""
-    from vanish import config as cfgmod
+    from freemyid import config as cfgmod
     cfg = cfgmod.Config(min_delay_s=0, max_delay_s=0, max_retries=1)
     p = person(mailbox=MB)
     store.save_profile(p)
@@ -150,7 +150,7 @@ def test_fixture_submit_loop_and_escalation(store, no_smtp, monkeypatch):
     q = store.list_requests(p.id, "devmail", status=RequestStatus.QUEUED_FOR_APPROVAL)
     assert len(q) == 1
     # approve -> FakeMailer send, EMAIL_SENT evidence, broker SUBMITTED
-    from vanish.engine.outbox import approve_and_send
+    from freemyid.engine.outbox import approve_and_send
     approve_and_send(store, q[0].id, mailer=mailer, registry=_dev.fixture_registry())
     assert len(mailer.sent) == 1 and mailer.sent[0].to == "privacy@devmail.example"
     assert store.get_status(p.id, "devmail").state == ListingState.SUBMITTED

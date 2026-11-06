@@ -35,9 +35,9 @@ def browser():
 
 
 @pytest.fixture
-def running(vanish_env, monkeypatch):
-    monkeypatch.setenv("VANISH_NO_BACKGROUND", "1")
-    from vanish.wizard.server import start_background
+def running(freemyid_env, monkeypatch):
+    monkeypatch.setenv("FREEMYID_NO_BACKGROUND", "1")
+    from freemyid.wizard.server import start_background
     r = start_background()
     yield r
     r.stop()
@@ -62,8 +62,8 @@ def page(browser, running):
     log: dict[str, list] = {"posts": [], "responses": [], "blocked": blocked}
     pg.on("requestfinished", lambda q: log["posts"].append(q) if q.method == "POST" else None)
     pg.on("response", lambda r: log["responses"].append(r))
-    pg.vanish_log = log  # type: ignore[attr-defined]
-    pg.vanish_origin = origin  # type: ignore[attr-defined]
+    pg.freemyid_log = log  # type: ignore[attr-defined]
+    pg.freemyid_origin = origin  # type: ignore[attr-defined]
     yield pg
     ctx.close()
 
@@ -83,7 +83,7 @@ def _submit(pg, button_name: str = "") -> None:
 
 
 def _assert_no_rejection(pg) -> None:
-    for r in pg.vanish_log["responses"]:
+    for r in pg.freemyid_log["responses"]:
         assert r.status != 403, f"403 on {r.request.method} {r.url}"
         assert r.status < 500, f"{r.status} on {r.request.method} {r.url}"
     body = pg.inner_text("body").lower()
@@ -96,8 +96,8 @@ def _check(pg, name: str) -> None:
     box.check(force=not box.is_visible())
 
 
-def test_walk_all_six_screens_to_dashboard_in_real_browser(page, running, vanish_env):
-    pg, origin = page, page.vanish_origin
+def test_walk_all_six_screens_to_dashboard_in_real_browser(page, running, freemyid_env):
+    pg, origin = page, page.freemyid_origin
     first = pg.goto(running.url)
     assert first is not None and first.ok
     # Token exchange: the ?t= URL redirects to the wizard (no profiles yet), token gone.
@@ -139,15 +139,15 @@ def test_walk_all_six_screens_to_dashboard_in_real_browser(page, running, vanish
     _assert_no_rejection(pg)
 
     # Each wizard POST went to the step it was on, came back 303, and carried the real origin.
-    posts = pg.vanish_log["posts"]
+    posts = pg.freemyid_log["posts"]
     assert [_path(q.url, origin) for q in posts] == [f"/wizard/{s}" for s in STEPS]
     for q in posts:
         assert q.all_headers().get("origin") == origin, q.url
         resp = q.response()
         assert resp is not None and resp.status == 303, (q.url, resp and resp.status)
 
-    # The profile really was saved (encrypted store, under the temp VANISH_HOME).
-    from vanish.storage import Store
+    # The profile really was saved (encrypted store, under the temp FREEMYID_HOME).
+    from freemyid.storage import Store
     st = Store()
     try:
         profs = st.list_profiles()
@@ -165,20 +165,20 @@ def test_walk_all_six_screens_to_dashboard_in_real_browser(page, running, vanish
     pg.wait_for_load_state()
     assert _path(pg.url, origin) == "/settings"
     assert "msg=saved" in pg.url
-    new = pg.vanish_log["posts"][n_before:]
+    new = pg.freemyid_log["posts"][n_before:]
     assert len(new) == 1 and new[0].all_headers().get("origin") == origin
     assert new[0].response().status == 303
     _assert_no_rejection(pg)
 
     # Nothing tried to leave 127.0.0.1 (no external assets, fonts or analytics).
-    assert pg.vanish_log["blocked"] == []
+    assert pg.freemyid_log["blocked"] == []
 
 
 def test_guard_still_rejects_foreign_and_null_origins(page, running):
     """The fix must not have weakened the Origin check: same cookie, wrong origin -> 403."""
-    pg, origin = page, page.vanish_origin
+    pg, origin = page, page.freemyid_origin
     pg.goto(running.url)   # sets the session cookie in this context
-    from vanish.wizard.server import _csrf_for
+    from freemyid.wizard.server import _csrf_for
     csrf = _csrf_for(running.token)
     for bad in ("http://evil.example", "null", f"http://127.0.0.1:{running.port + 1}"):
         r = pg.request.post(f"{origin}/settings/submissions/off", form={"csrf": csrf},

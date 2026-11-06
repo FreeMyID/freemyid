@@ -8,7 +8,7 @@ build/
 dist/
 *.spec.bak
 # never commit personal data
-*.vanish-profile
+*.freemyid-profile
 local_profiles/
-.vanish/
+.freemyid/
 zzz_legacy/*.zip

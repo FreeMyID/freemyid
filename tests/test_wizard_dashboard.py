@@ -5,7 +5,7 @@ import keyring
 import pytest
 from fastapi.testclient import TestClient
 
-from vanish.models import (
+from freemyid.models import (
     Address,
     BrokerStatus,
     Consent,
@@ -16,24 +16,24 @@ from vanish.models import (
     Todo,
     TodoKind,
 )
-from vanish.storage import Store
-from vanish.wizard import dashboard as dash
-from vanish.wizard.server import _csrf_for, create_app
+from freemyid.storage import Store
+from freemyid.wizard import dashboard as dash
+from freemyid.wizard.server import _csrf_for, create_app
 
 TOKEN = "tok-test"
 
 
 @pytest.fixture
 def env(tmp_path, monkeypatch):
-    monkeypatch.setenv("VANISH_HOME", str(tmp_path))
-    monkeypatch.setenv("VANISH_TEST_KEY", "dev")
+    monkeypatch.setenv("FREEMYID_HOME", str(tmp_path))
+    monkeypatch.setenv("FREEMYID_TEST_KEY", "dev")
     monkeypatch.setattr(keyring, "set_password", lambda *a: None)
     store = Store()
     opened: list[str] = []
     app = create_app(store, TOKEN, {"testserver"}, registry_loader=lambda: None,
                      open_url=lambda u: opened.append(u) or True)
     c = TestClient(app, follow_redirects=False)
-    c.cookies.set("vanish_session", TOKEN)
+    c.cookies.set("freemyid_session", TOKEN)
     p = Profile(label="Jane", name=PersonName(first="Jane", last="Testperson"),
                 addresses=[Address(city="Springfield", state="IL", current=True)],
                 consent=Consent(basis=ConsentBasis.SELF, attested_by="Jane Q Testperson",
@@ -59,7 +59,7 @@ def test_status_sentence():
     sts = [BrokerStatus(profile_id="a" * 32, broker_id=f"b{i}", state=s) for i, s in enumerate(
         [ListingState.REMOVED, ListingState.REMOVED, ListingState.SUBMITTED])]
     s, good = dash.status_sentence(sts, 2, False)
-    assert s == "Vanish is working. 2 sites done, 1 waiting, 2 need you." and not good
+    assert s == "Free My ID is working. 2 sites done, 1 waiting, 2 need you." and not good
     assert dash.status_sentence(sts, 0, False)[1]
     assert "checking now" in dash.status_sentence(sts, 0, True)[0]
 

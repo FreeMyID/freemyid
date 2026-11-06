@@ -4,9 +4,9 @@ from __future__ import annotations
 from datetime import date
 from urllib.parse import parse_qs, urlsplit
 
+from freemyid.engine.outbox import compose, compose_links, initial_template
+from freemyid.models import Address, Broker, StateLaw
 from tests.conftest import make_profile
-from vanish.engine.outbox import compose, compose_links, initial_template
-from vanish.models import Address, Broker, StateLaw
 
 B = Broker(id="fakeb", name="Fake B", url="https://fakeb.example/", category="data_broker",
            domains=["fakeb.example"], method="email", opt_out_email="privacy@fakeb.example")

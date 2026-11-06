@@ -1,4 +1,4 @@
-"""Generate packaging/windows/vanish.ico (original art: a blue shield with a white eraser).
+"""Generate packaging/windows/freemyid.ico (original art: a blue shield with a white eraser).
 
 Needs Pillow (dev only):  python tools/make_icon.py
 """
@@ -8,7 +8,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-OUT = Path(__file__).resolve().parents[1] / "packaging" / "windows" / "vanish.ico"
+OUT = Path(__file__).resolve().parents[1] / "packaging" / "windows" / "freemyid.ico"
 S = 512   # draw big, let Pillow downsample for each icon size
 
 

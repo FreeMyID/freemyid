@@ -1,8 +1,8 @@
-"""Regenerate schema/registry.schema.json from vanish.models.Registry. OWNER: orchestrator."""
+"""Regenerate schema/registry.schema.json from freemyid.models.Registry. OWNER: orchestrator."""
 import json
 from pathlib import Path
 
-from vanish.models import Registry, StateLawRegistry
+from freemyid.models import Registry, StateLawRegistry
 
 root = Path(__file__).resolve().parent.parent
 (root / "schema" / "registry.schema.json").write_text(

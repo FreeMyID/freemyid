@@ -1,5 +1,5 @@
 """Security review, v1 wave 2 (engine runner/outbox/mail, wizard dashboard/desktop, scheduler,
-`vanish wipe`). See docs/SECURITY_REVIEW.md SEC-16 onward. Fake people and fake domains only.
+`freemyid wipe`). See docs/SECURITY_REVIEW.md SEC-16 onward. Fake people and fake domains only.
 
 Strict xfails mark open findings: when the fix lands the test XPASSes and fails the run, so
 remove the marker then.
@@ -25,10 +25,9 @@ import pytest
 from fastapi.testclient import TestClient
 from typer.testing import CliRunner
 
-from tests.conftest import make_profile
-from vanish import config as cfgmod
-from vanish.consent import CURRENT_TEXT_VERSION
-from vanish.models import (
+from freemyid import config as cfgmod
+from freemyid.consent import CURRENT_TEXT_VERSION
+from freemyid.models import (
     Broker,
     BrokerStatus,
     Consent,
@@ -42,7 +41,8 @@ from vanish.models import (
     Todo,
     TodoKind,
 )
-from vanish.wizard.server import _csrf_for, create_app
+from freemyid.wizard.server import _csrf_for, create_app
+from tests.conftest import make_profile
 
 F = ProfileField
 TOKEN = "tok-sec-wave2"
@@ -89,7 +89,7 @@ def client(store):
 
 
 def _authed(c):
-    c.cookies.set("vanish_session", TOKEN)
+    c.cookies.set("freemyid_session", TOKEN)
     return {"csrf": _csrf_for(TOKEN)}
 
 
@@ -97,8 +97,8 @@ def _authed(c):
 
 
 def test_runner_forces_dry_run_unless_real_enabled(store, fake_registry, monkeypatch):
-    from vanish.engine.runner import Runner
-    monkeypatch.delenv("VANISH_DEV_FIXTURES", raising=False)
+    from freemyid.engine.runner import Runner
+    monkeypatch.delenv("FREEMYID_DEV_FIXTURES", raising=False)
     kw = {"scan_only": False, "dry_run": False, "interactive": False, "broker_ids": None,
           "only_due": False, "state_laws": {}}
     assert Runner(store, fake_registry, cfg=cfgmod.Config(), **kw).dry_run is True
@@ -109,8 +109,8 @@ def test_runner_forces_dry_run_unless_real_enabled(store, fake_registry, monkeyp
 
 def test_approve_and_send_refuses_without_real_enabled(store, fake_registry, no_smtp,
                                                       monkeypatch):
-    from vanish.engine.outbox import OutboxError, approve_and_send, queue_email, send_request
-    monkeypatch.delenv("VANISH_DEV_FIXTURES", raising=False)
+    from freemyid.engine.outbox import OutboxError, approve_and_send, queue_email, send_request
+    monkeypatch.delenv("FREEMYID_DEV_FIXTURES", raising=False)
     p = person(mailbox=MB)
     store.save_profile(p)
     b = fake_registry.get("fakemail")
@@ -125,8 +125,8 @@ def test_approve_and_send_refuses_without_real_enabled(store, fake_registry, no_
 
 
 def test_first_run_thread_is_practice_mode(store, monkeypatch):
-    from vanish.engine import runner
-    from vanish.wizard import server
+    from freemyid.engine import runner
+    from freemyid.wizard import server
     p = person()
     store.save_profile(p)
     calls: list[dict] = []
@@ -135,7 +135,7 @@ def test_first_run_thread_is_practice_mode(store, monkeypatch):
     app = SimpleNamespace(state=SimpleNamespace(running=False))
     server._default_finish(app, lambda: SimpleNamespace(brokers=[]), p, False)
     for t in threading.enumerate():
-        if t.name == "vanish-first-run":
+        if t.name == "freemyid-first-run":
             t.join(10)
     assert calls and calls[0]["dry_run"] is True and calls[0]["scan_only"] is False
 
@@ -173,7 +173,7 @@ def test_real_submissions_switch_needs_session_csrf_and_origin(client, store):
 
 
 def test_outbox_card_shows_to_subject_and_escaped_letter(client, store, fake_registry):
-    from vanish.engine.outbox import queue_email
+    from freemyid.engine.outbox import queue_email
     c, _app, _ = client
     _authed(c)
     p = person(mailbox=MB)
@@ -197,8 +197,8 @@ def test_focus_endpoint_needs_session_and_csrf(client):
 
 
 def test_scheduled_run_in_practice_mode_runs_dry(store, monkeypatch):
-    from vanish import cli
-    from vanish.engine import runner
+    from freemyid import cli
+    from freemyid.engine import runner
     store.save_profile(person())
     calls: list[dict] = []
     monkeypatch.setattr(runner, "run",
@@ -209,8 +209,8 @@ def test_scheduled_run_in_practice_mode_runs_dry(store, monkeypatch):
 
 
 def test_dev_fixture_base_must_be_loopback(monkeypatch):
-    from vanish.engine.runner import dev_fixture_base
-    monkeypatch.setenv("VANISH_DEV_FIXTURES", "http://collector.example:80")
+    from freemyid.engine.runner import dev_fixture_base
+    monkeypatch.setenv("FREEMYID_DEV_FIXTURES", "http://collector.example:80")
     assert dev_fixture_base() is None
 
 
@@ -251,11 +251,11 @@ def test_open_refuses_plain_http(client, store):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX modes")
-def test_instance_file_is_private(vanish_env):
-    from vanish.wizard import desktop
+def test_instance_file_is_private(freemyid_env):
+    from freemyid.wizard import desktop
     desktop.write_instance(1234, "secret-token")
     assert (desktop._instance_path().stat().st_mode & 0o077) == 0
-    assert (Path(vanish_env).stat().st_mode & 0o077) == 0
+    assert (Path(freemyid_env).stat().st_mode & 0o077) == 0
 
 
 # --------------------------------------------------------------------------- IMAP links
@@ -272,7 +272,7 @@ def _mail(sender: str, html: str) -> bytes:
 
 
 def test_confirmation_links_only_on_confirmation_domains():
-    from vanish.engine.mail import SmtpImapMailer, extract_links
+    from freemyid.engine.mail import SmtpImapMailer, extract_links
     hrefs = [
         "https://mail.fakeb.example/confirm?t=1",               # ok
         "https://mail.fakeb.example.evil.example/confirm",      # suffix lookalike
@@ -295,7 +295,7 @@ def test_confirmation_links_only_on_confirmation_domains():
 
 
 def test_cancel_and_unsubscribe_links_are_not_clicked():
-    from vanish.engine.mail import SmtpImapMailer
+    from freemyid.engine.mail import SmtpImapMailer
     html = ('<a href="https://mail.fakeb.example/confirm?t=1">Confirm</a>'
             '<a href="https://mail.fakeb.example/cancel?t=1">I did not ask for this</a>'
             '<a href="https://mail.fakeb.example/unsubscribe?t=1">Unsubscribe</a>')
@@ -305,7 +305,7 @@ def test_cancel_and_unsubscribe_links_are_not_clicked():
 
 
 def _browser_exe() -> str | None:
-    if exe := os.environ.get("VANISH_BROWSER_EXECUTABLE"):
+    if exe := os.environ.get("FREEMYID_BROWSER_EXECUTABLE"):
         return exe
     found = sorted(glob.glob(os.path.expanduser(
         "~/.cache/ms-playwright/chromium_headless_shell-*/*/chrome-headless-shell")))
@@ -336,9 +336,9 @@ def test_browser_does_not_follow_redirect_off_allowlist(monkeypatch):
     if not exe:
         pytest.xfail("no local Chromium to test with")
     pytest.importorskip("playwright")
-    from vanish.engine.browser import BlockedByPolicy, BrowserManager
-    from vanish.netpolicy import NetPolicy
-    monkeypatch.setenv("VANISH_BROWSER_EXECUTABLE", exe)
+    from freemyid.engine.browser import BlockedByPolicy, BrowserManager
+    from freemyid.netpolicy import NetPolicy
+    monkeypatch.setenv("FREEMYID_BROWSER_EXECUTABLE", exe)
 
     class Evil(_Hits):
         hits: ClassVar[list[str]] = []
@@ -382,9 +382,9 @@ def _values(d) -> str:
 
 @pytest.mark.parametrize("phone_ok", [False, True])
 def test_copy_fields_and_letters_are_minimized(phone_ok):
-    from vanish.engine.outbox import compose
-    from vanish.submitters import assisted
-    from vanish.submitters.base import copy_fields, form_vars
+    from freemyid.engine.outbox import compose
+    from freemyid.submitters import assisted
+    from freemyid.submitters.base import copy_fields, form_vars
     p = person(mailbox=MB, permissions=Permissions(allow_phone_disclosure=phone_ok))
     every = [f for f in ProfileField if f != F.ID_DOCUMENT]
     li = listing(p, every)
@@ -409,8 +409,8 @@ def test_copy_fields_and_letters_are_minimized(phone_ok):
 
 
 def test_fields_not_shown_are_not_sent():
-    from vanish.engine.outbox import compose
-    from vanish.submitters.base import copy_fields
+    from freemyid.engine.outbox import compose
+    from freemyid.submitters.base import copy_fields
     p = person(mailbox=MB, permissions=Permissions(allow_phone_disclosure=True))
     li = listing(p, [F.FULL_NAME, F.CITY])
     cf = copy_fields(p, BROKER, [li])
@@ -424,23 +424,23 @@ def test_fields_not_shown_are_not_sent():
 
 
 def test_windows_task_xml_paths_with_spaces_and_xml_metachars():
-    from vanish.scheduler import render
-    exe = r"C:\Users\Jane Q\AppData\Local\Programs\Vanish & Co <x>\Vanish.exe"
+    from freemyid.scheduler import render
+    exe = r"C:\Users\Jane Q\AppData\Local\Programs\Free My ID & Co <x>\FreeMyID.exe"
     root = ET.fromstring(render.windows_task_xml([exe, "run", "--scheduled"]).split("\n", 1)[1])
     ns = {"t": "http://schemas.microsoft.com/windows/2004/02/mit/task"}
     assert root.find(".//t:Exec/t:Command", ns).text == exe
     assert root.find(".//t:Exec/t:Arguments", ns).text == "run --scheduled"
     py = r"C:\Program Files\Python312\pythonw.exe"
-    dev = [py, "-c", "from vanish.cli import app; app()", "run", "--scheduled"]
+    dev = [py, "-c", "from freemyid.cli import app; app()", "run", "--scheduled"]
     root = ET.fromstring(render.windows_task_xml(dev).split("\n", 1)[1])
     assert root.find(".//t:Exec/t:Arguments", ns).text == \
-        '-c "from vanish.cli import app; app()" run --scheduled'
+        '-c "from freemyid.cli import app; app()" run --scheduled'
 
 
 def test_windows_arguments_quote_like_list2cmdline():
-    from vanish.scheduler import render
+    from freemyid.scheduler import render
     args = ["run", r"C:\dir with space" + "\\", 'say "hi"', ""]
-    xml = render.windows_task_xml([r"C:\x\Vanish.exe", *args])
+    xml = render.windows_task_xml([r"C:\x\FreeMyID.exe", *args])
     root = ET.fromstring(xml.split("\n", 1)[1])
     ns = {"t": "http://schemas.microsoft.com/windows/2004/02/mit/task"}
     assert root.find(".//t:Exec/t:Arguments", ns).text == subprocess.list2cmdline(args)
@@ -451,15 +451,15 @@ def test_windows_arguments_quote_like_list2cmdline():
 
 @pytest.fixture
 def no_scheduler(monkeypatch):
-    from vanish import scheduler
+    from freemyid import scheduler
     calls: list[int] = []
     monkeypatch.setattr(scheduler, "remove", lambda: calls.append(1) or "removed")
     return calls
 
 
 def test_wipe_removes_home_key_and_mailbox_password(store, memkeyring, no_scheduler,
-                                                    vanish_env):
-    from vanish import cli, crypto, secrets
+                                                    freemyid_env):
+    from freemyid import cli, crypto, secrets
     p = person(mailbox=MB)
     store.save_profile(p)
     secrets.set_mailbox_password(p.id, MB, "app-password-not-real")
@@ -470,15 +470,15 @@ def test_wipe_removes_home_key_and_mailbox_password(store, memkeyring, no_schedu
     assert no_scheduler == [1]
     assert not any(v == "app-password-not-real" for v in memkeyring.store.values())
     assert not any(k[0] == crypto.SERVICE for k in memkeyring.store)
-    assert not any(Path(vanish_env).rglob("*"))
+    assert not any(Path(freemyid_env).rglob("*"))
 
 
-def test_wipe_never_deletes_a_non_vanish_directory(tmp_path, monkeypatch, no_scheduler):
-    from vanish import cli
+def test_wipe_never_deletes_a_non_freemyid_directory(tmp_path, monkeypatch, no_scheduler):
+    from freemyid import cli
     danger = tmp_path / "Documents"
     danger.mkdir()
-    (danger / "taxes-2025.pdf").write_bytes(b"not vanish data")
-    monkeypatch.setenv("VANISH_HOME", str(danger))
+    (danger / "taxes-2025.pdf").write_bytes(b"not freemyid data")
+    monkeypatch.setenv("FREEMYID_HOME", str(danger))
     CliRunner().invoke(cli.app, ["wipe", "--yes"])
     assert (danger / "taxes-2025.pdf").exists()
 
@@ -487,9 +487,9 @@ def test_wipe_never_deletes_a_non_vanish_directory(tmp_path, monkeypatch, no_sch
 
 
 def test_handoff_and_run_notifications_hold_no_pii(store):
-    from vanish.engine import _dev
-    from vanish.engine.handoff import QueuedHandoff
-    from vanish.engine.runner import run
+    from freemyid.engine import _dev
+    from freemyid.engine.handoff import QueuedHandoff
+    from freemyid.engine.runner import run
 
     class Rec:
         def __init__(self):
@@ -520,9 +520,9 @@ def test_handoff_and_run_notifications_hold_no_pii(store):
 
 def test_failed_browser_launch_stops_playwright(monkeypatch):
     pytest.importorskip("playwright")
-    from vanish.engine.browser import BrowserManager
-    from vanish.netpolicy import NetPolicy
-    monkeypatch.setenv("VANISH_BROWSER_EXECUTABLE", str(Path("/nonexistent") / "chrome"))
+    from freemyid.engine.browser import BrowserManager
+    from freemyid.netpolicy import NetPolicy
+    monkeypatch.setenv("FREEMYID_BROWSER_EXECUTABLE", str(Path("/nonexistent") / "chrome"))
     bm = BrowserManager(NetPolicy(None), headless=True,
                         cfg=cfgmod.Config(min_delay_s=0, max_delay_s=0))
 

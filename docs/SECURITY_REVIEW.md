@@ -1,5 +1,7 @@
 # Security review: scaffold (commit aa5976c), 2026-11-05, qa-security
 
+> **Note (2026-11-06):** the project was renamed Vanish → Free My ID. Paths below such as `src/vanish/…` now live at `src/freemyid/…`, and env vars `VANISH_*` are now `FREEMYID_*`. The history text and SEC IDs are left as written.
+
 **Verdict: BLOCK.** Fix SEC-01 through SEC-05 before merge. Each finding has a strict-xfail test in
 `tests/`. When a fix lands, the xfail turns XPASS and fails the run: remove the marker then.
 

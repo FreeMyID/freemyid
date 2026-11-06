@@ -9,8 +9,8 @@ from datetime import date
 import pytest
 from typer.testing import CliRunner
 
-from vanish import consent as cg
-from vanish.models import Consent, ConsentBasis, Todo, TodoKind
+from freemyid import consent as cg
+from freemyid.models import Consent, ConsentBasis, Todo, TodoKind
 
 from .conftest import make_profile
 
@@ -28,7 +28,7 @@ def _p(basis=ConsentBasis.SELF, consent_kw=None, **over):
 
 
 def _attach_auth(store, p):
-    from vanish.wizard.draft import save_authorization
+    from freemyid.wizard.draft import save_authorization
     doc = save_authorization(store, p.id, "auth.pdf", b"%PDF-1.4 signed")
     return p.model_copy(update={"consent": p.consent.model_copy(
         update={"authorization_doc": doc})})
@@ -53,7 +53,7 @@ def test_unknown_text_version_refused(version):
 
 
 def test_wizard_shows_the_version_the_gate_accepts():
-    from vanish.wizard import draft
+    from freemyid.wizard import draft
     assert draft.CONSENT_VERSION in cg.ACCEPTED_TEXT_VERSIONS
 
 
@@ -132,7 +132,7 @@ def test_agent_doc_of_another_profile_refused(store):
 
 
 def test_agent_doc_file_missing_refused(store):
-    from vanish import paths
+    from freemyid import paths
     p = _p(ConsentBasis.AUTHORIZED_AGENT)
     store.save_profile(p)
     p = _attach_auth(store, p)
@@ -142,7 +142,7 @@ def test_agent_doc_file_missing_refused(store):
 
 
 def test_cli_reexports_the_same_gate():
-    from vanish import cli
+    from freemyid import cli
     assert cli.consent_ok is cg.consent_ok
 
 
@@ -167,7 +167,7 @@ def _two_profiles(store, prefix="ab"):
 
 
 def test_remove_ambiguous_prefix_refuses(store, runner):
-    from vanish.cli import app
+    from freemyid.cli import app
     a, b = _two_profiles(store)
     r = runner.invoke(app, ["profile", "remove", "ab", "--yes"])
     assert r.exit_code == 2
@@ -176,7 +176,7 @@ def test_remove_ambiguous_prefix_refuses(store, runner):
 
 
 def test_remove_unique_prefix_deletes_only_that_one(store, runner):
-    from vanish.cli import app
+    from freemyid.cli import app
     a, _ = _two_profiles(store)
     r = runner.invoke(app, ["profile", "remove", "ab2", "--yes"])
     assert r.exit_code == 0, r.output
@@ -184,7 +184,7 @@ def test_remove_unique_prefix_deletes_only_that_one(store, runner):
 
 
 def test_remove_no_match_exits_nonzero(store, runner):
-    from vanish.cli import app
+    from freemyid.cli import app
     _two_profiles(store)
     r = runner.invoke(app, ["profile", "remove", "ee", "--yes"])
     assert r.exit_code == 2 and "No profile" in r.output
@@ -192,7 +192,7 @@ def test_remove_no_match_exits_nonzero(store, runner):
 
 
 def test_label_and_prefix_collision_is_ambiguous(store, runner):
-    from vanish.cli import app
+    from freemyid.cli import app
     a = _p(label="ab", id=_hid("ff1"))
     b = _p(label="Bob", id=_hid("ab2"))
     store.save_profile(a)
@@ -203,7 +203,7 @@ def test_label_and_prefix_collision_is_ambiguous(store, runner):
 
 
 def test_export_without_consent_exits_cleanly(store, runner):
-    from vanish.cli import app
+    from freemyid.cli import app
     p = _p(is_minor=True)   # SELF consent on a minor -> refused
     store.save_profile(p)
     r = runner.invoke(app, ["profile", "export", p.id[:8], "out.bin"])
@@ -213,7 +213,7 @@ def test_export_without_consent_exits_cleanly(store, runner):
 
 
 def test_todo_done_ambiguous_prefix(store, runner):
-    from vanish.cli import app
+    from freemyid.cli import app
     p = _p()
     store.save_profile(p)
     for tid in (_hid("cd1"), _hid("cd2")):
@@ -231,9 +231,9 @@ def test_todo_done_ambiguous_prefix(store, runner):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX permissions")
-def test_cli_start_sets_umask_and_private_home(vanish_env, runner):
-    from vanish import paths
-    from vanish.cli import app
+def test_cli_start_sets_umask_and_private_home(freemyid_env, runner):
+    from freemyid import paths
+    from freemyid.cli import app
     home = paths.home()
     home.chmod(0o755)
     old = os.umask(0o022)

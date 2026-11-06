@@ -13,9 +13,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pytest
 
-from tests.conftest import make_profile
-from vanish.engine import filler
-from vanish.engine.fill_for_me import (
+from freemyid.engine import filler
+from freemyid.engine.fill_for_me import (
     BANNER_ID,
     MSG_DONE,
     MSG_FILLED,
@@ -25,7 +24,7 @@ from vanish.engine.fill_for_me import (
     _matched,
     fill_for_me,
 )
-from vanish.models import (
+from freemyid.models import (
     Broker,
     Listing,
     MailboxConfig,
@@ -33,6 +32,7 @@ from vanish.models import (
     ProfileField,
     Registry,
 )
+from tests.conftest import make_profile
 
 pytest.importorskip("playwright.async_api")
 
@@ -170,7 +170,7 @@ class _Handler(BaseHTTPRequestHandler):
 
 @contextlib.contextmanager
 def _site(monkeypatch):
-    from vanish.engine.outbox import DEV_FIXTURES_ENV
+    from freemyid.engine.outbox import DEV_FIXTURES_ENV
     srv = ThreadingHTTPServer(("127.0.0.1", 0), _Handler)
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     monkeypatch.setenv(DEV_FIXTURES_ENV, f"http://127.0.0.1:{srv.server_address[1]}")

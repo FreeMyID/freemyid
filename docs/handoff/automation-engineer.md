@@ -11,23 +11,23 @@ wait for orchestrator): D9 visible-Edge "Fill it in for me" + D10 listing finder
    send_request, approve_and_send, effective_law (template: ccpa/state_privacy ONLY when the
    current-address state's law has last_verified, deletion right, in effect; else generic).
    Letters stored as LETTER evidence; dry_run -> DRAFT never sent; legal demand always queued;
-   approve_and_send refuses unless real_submissions_enabled or VANISH_DEV_FIXTURES.
+   approve_and_send refuses unless real_submissions_enabled or FREEMYID_DEV_FIXTURES.
    CR-2 from qa applied to mail.py.
 3. submitters/base.py (copy_fields/form_vars minimization), assisted.py, email.py,
    web_form.py (data-driven search+form, any error -> Assisted todo), engine/plugins.py.
 4. engine/runner.py: Runner + run(); consent gate; DROP first for CA; tier stored for every
    broker (ca_drop too); blind brokers presumed FOUND; covered_by mirrors parent; IMAP links
    (confirmation_domains only, never clicked in dry run); escalation ladder; one notification.
-5. browser.py: msedge first on win32 (channel_candidates), VANISH_BROWSER_EXECUTABLE,
+5. browser.py: msedge first on win32 (channel_candidates), FREEMYID_BROWSER_EXECUTABLE,
    fixture_base routing (route.fetch -> local server), start().
 6. engine/_dev/: registry.yaml (6 fake .example brokers), site/, inbox/, fixture_registry(),
-   fixture_server(), fixture_inbox(); devrun.py (`python -m vanish.engine._dev.devrun
-   [--no-mailbox|--submit|--scheduled]`) drives the real CLI `vanish run --dry-run`.
+   fixture_server(), fixture_inbox(); devrun.py (`python -m freemyid.engine._dev.devrun
+   [--no-mailbox|--submit|--scheduled]`) drives the real CLI `freemyid run --dry-run`.
 Also: handoff.mark_resolved (dashboard "I did it" -> SUBMITTED); postal_letter template no
 longer embeds a Subject line.
 
 ## Tests
-- Drafts: `.venv/bin/python -m pytest -q src/vanish/engine/_test_drafts` -> 20 pass
+- Drafts: `.venv/bin/python -m pytest -q src/freemyid/engine/_test_drafts` -> 20 pass
   (test_tiers, test_runner, test_outbox_letters; conftest re-exports tests/conftest).
 - tests/test_e2e_dryrun.py fails ONLY because tests/conftest.make_profile uses
   text_version="v1" (consent gate refuses -> profile skipped). Passes with "v1" accepted.
@@ -35,7 +35,7 @@ longer embeds a Subject line.
 
 ## Notes
 - Playwright in .venv expects chromium 1248; ~/.cache has 1208 only. Fixture mode falls back
-  to the newest cached headless shell automatically; else set VANISH_BROWSER_EXECUTABLE.
+  to the newest cached headless shell automatically; else set FREEMYID_BROWSER_EXECUTABLE.
 - Pending CRs: Config.browser_automation, Windows browser_channel default, conftest
   text_version, interfaces.py run() kwargs doc, pyproject package-data for _dev,
   beautifulsoup4 not needed by engine (can drop).
@@ -46,7 +46,7 @@ longer embeds a Subject line.
   localhost/127.0.0.1/::1). Verified: the rules also cover IP literals (unlisted 127.0.0.1 ->
   ERR_NAME_NOT_RESOLVED), so allowlisted IPs are EXCLUDEd explicitly. A `request` listener
   records off-list redirect hops (any frame) and main-frame navigations in
-  `ctx.vanish_escaped`; `goto` and `check_escaped(page)` raise BlockedByPolicy (never
+  `ctx.freemyid_escaped`; `goto` and `check_escaped(page)` raise BlockedByPolicy (never
   retried). web_form click/submit calls `bm.check_escaped`; the headed handoff window uses
   `bm.goto`. `url_allowed` uses `netpolicy.host_of`.
   OPEN GAP: Chromium resolves `localhost` itself, so a redirect to an off-list `localhost`
@@ -67,13 +67,13 @@ longer embeds a Subject line.
 - SEC-27 (orchestrator request): `needs_approval(profile, kind, store)`: the first AUTO email
   per profile waits for approval (no store -> approval).
 - Removed the strict xfails for SEC-16/18/21/26 in tests/test_security_wave2.py.
-- Drafts: src/vanish/engine/_test_drafts/test_wave2_fixes.py (8 tests;
-  run with `.venv/bin/python -m pytest -q src/vanish/engine/_test_drafts`).
+- Drafts: src/freemyid/engine/_test_drafts/test_wave2_fixes.py (8 tests;
+  run with `.venv/bin/python -m pytest -q src/freemyid/engine/_test_drafts`).
 - Results: full suite 243 passed under -W error::PytestUnraisableExceptionWarning; ruff clean.
 
 ## D9 "Fill it in for me" (wave 3, 2026-11-06) - DONE, reported
 - engine/filler.py: Control (JS scan of main-frame input/select/textarea; marks each with
-  data-vanish-field), classify() (label > aria-labelledby > aria-label > name > id >
+  data-freemyid-field), classify() (label > aria-labelledby > aria-label > name > id >
   placeholder > title, then autocomplete / input type; negative list first), protected()
   (captcha ancestors/data-sitekey, password/file/hidden/checkbox/radio/buttons, invisible,
   off-screen, aria-hidden, tabindex=-1, disabled/readonly), choose_state_option (NC /
@@ -99,8 +99,8 @@ longer embeds a Subject line.
 - Fixtures: engine/_dev/site/devfill.example/{labels,aria,fullname,empty,done}.html
   (brokers built in tests, dev registry untouched).
 - Drafts: engine/_test_drafts/test_fill_for_me.py (+conftest). 54 pass.
-- Full: `pytest -q tests src/vanish/engine/_test_drafts` 305 passed; ruff clean.
-- CRs: wizard button; optional `vanish fill`; Broker.success_text/success_url and
+- Full: `pytest -q tests src/freemyid/engine/_test_drafts` 305 passed; ruff clean.
+- CRs: wizard button; optional `freemyid fill`; Broker.success_text/success_url and
   safe_checkboxes (registry); see final report.
 
 ## Wave 4 (2026-11-06): mypy cleanup + D9 registry fields + D10 listing finder - DONE, reported
@@ -134,5 +134,5 @@ longer embeds a Subject line.
    Fixtures: _dev/site/devfind.example/{search,results,hostile}.html + p/{2 profiles}.
    Drafts: _test_drafts/test_listing_finder.py (32). Drafts folder recreated (qa had moved
    it): __init__.py + conftest.py (same re-export as before) are new copies.
-- Results: `pytest -q tests src/vanish/engine/_test_drafts` 368 passed, 3 xfailed; drafts
+- Results: `pytest -q tests src/freemyid/engine/_test_drafts` 368 passed, 3 xfailed; drafts
   48 pass x3; ruff clean; mypy clean.

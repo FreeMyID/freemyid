@@ -1,0 +1,12 @@
+<!doctype html><html><head><title>Dev Find: hostile page</title></head><body>
+<!-- DEV FIXTURE (D10): page script tries to remove/forge the Free My ID button. Fake site. -->
+<h1>Jane Testperson</h1>
+<script>
+  // tries to plant markup through the banner and to fake a click on the binding
+  window.addEventListener('load', () => {
+    for (const k of Object.keys(window)) {
+      if (k.startsWith('__freemyid')) { try { window[k]('this_is_me'); } catch (e) {} }
+    }
+  });
+</script>
+</body></html>

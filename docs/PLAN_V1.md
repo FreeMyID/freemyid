@@ -1,8 +1,8 @@
-# Vanish v1 plan (project lead, 2026-11-06)
+# Free My ID v1 plan (project lead, 2026-11-06)
 
 ## Goal
-A relative double-clicks `VanishSetup.exe`, clicks Next a few times, answers simple questions in a
-window that looks like a normal app, and is done. After that Vanish runs by itself on a schedule and
+A relative double-clicks `FreeMyIDSetup.exe`, clicks Next a few times, answers simple questions in a
+window that looks like a normal app, and is done. After that Free My ID runs by itself on a schedule and
 only bothers them when a human really has to do something, with one big button per task.
 
 ## Review findings (why the plan changed)
@@ -29,7 +29,7 @@ No per-broker Python classes unless the data-driven path really can't work.
 
 ### D2. Mailbox is optional
 - With a mailbox: the Email tier is fully automatic, and confirmation links get auto-clicked.
-- Without one: Email-tier brokers become Assisted. Vanish shows the letter and offers "Open in Gmail /
+- Without one: Email-tier brokers become Assisted. Free My ID shows the letter and offers "Open in Gmail /
   Outlook / Yahoo" compose links (prefilled `to`/`subject`/`body`), plus Copy.
 - Guided presets: Gmail and Yahoo (app password, with screenshots-style help), iCloud (app-specific
   password), Proton Bridge, and Other. Outlook.com is labeled "use Assisted mode" (basic auth retired).
@@ -39,21 +39,21 @@ If the current address is in CA, the first "To do" is the DROP portal (one reque
 registered brokers). That's a GOVERNMENT_PORTAL todo with plain-language steps.
 
 ### D4. Scheduled runs do the cheap, reliable things
-A per-user Windows Task Scheduler job (`schtasks`, no admin) runs `vanish run --scheduled` daily:
+A per-user Windows Task Scheduler job (`schtasks`, no admin) runs `freemyid run --scheduled` daily:
 check IMAP for confirmations, send due follow-ups and escalations, re-scan the Automatic-tier
 brokers on `recheck_interval_days`, and raise one desktop notification if there are to-dos
-("Vanish needs 5 minutes of your help"). Clicking it opens the dashboard. Quiet otherwise.
+("Free My ID needs 5 minutes of your help"). Clicking it opens the dashboard. Quiet otherwise.
 
 ### D5. App shape on Windows
-- PyInstaller **onedir**, two executables: `Vanish.exe` (windowed: launcher + wizard/dashboard) and
-  `vanish-cli.exe` (console; used by the scheduled task with `--scheduled`, which shows no window).
+- PyInstaller **onedir**, two executables: `FreeMyID.exe` (windowed: launcher + wizard/dashboard) and
+  `freemyid-cli.exe` (console; used by the scheduled task with `--scheduled`, which shows no window).
   The scheduled task should run windowless (use the windowed exe with the subcommand, or the `pythonw` equivalent).
 - The launcher shows the wizard/dashboard in a native window via **pywebview (Edge WebView2)**, with
   the default browser as a fallback. The user never sees "localhost" or a terminal.
-- **Inno Setup**, per-user install (`PrivilegesRequired=lowest`), Start Menu + Desktop "Vanish"
+- **Inno Setup**, per-user install (`PrivilegesRequired=lowest`), Start Menu + Desktop "Free My ID"
   shortcut, launches the app at the end of setup. The uninstaller removes the scheduled task and asks
   before deleting data.
-- Built by GitHub Actions on `windows-latest`. The artifact is `VanishSetup-<ver>.exe`.
+- Built by GitHub Actions on `windows-latest`. The artifact is `FreeMyIDSetup-<ver>.exe`.
 - Unsigned for family testing (SmartScreen: "More info → Run anyway", covered in the Quick Start).
   Before wider release, use Azure Trusted Signing.
 
@@ -68,12 +68,12 @@ Permissions (ID upload, accounts, phone) stay off and live under Settings, not i
 18px+ text, one question per screen, progress dots, Back always works, no jargon.
 
 ### D7. Dashboard = "what's left for me to do"
-The top shows a single status ("Vanish is working. 23 sites done, 12 waiting, 4 need you").
+The top shows a single status ("Free My ID is working. 23 sites done, 12 waiting, 4 need you").
 Under it is a list of to-do cards, each with one big primary button. Details sit behind "More".
 
 ## Ownership for this wave
 - **automation-engineer**: `engine/runner.py`, `engine/outbox.py`, submitters `email`, `assisted`,
-  `web_form` (data-driven), the `vanish run --scheduled` behavior, Edge channel default on Windows,
+  `web_form` (data-driven), the `freemyid run --scheduled` behavior, Edge channel default on Windows,
   and the dev fixture server + devrun (dry run end to end).
 - **wizard-packager**: D5, D6, D7, D2 UI, `FAMILY_QUICK_START.md`, `.github/workflows/build.yml`.
 - **broker-researcher**: add `opt_out_email` (+ `alt_methods: [email]`) with citations for every broker
@@ -102,25 +102,25 @@ How they actually work: **Incogni** mostly sends legal deletion requests by emai
 registered data brokers and re-sends them on a schedule. It doesn't search for listings.
 **DeleteMe** adds human staff who search sites, solve CAPTCHAs and fill forms by hand.
 Neither of them beats bot protection with software. Scale comes from (1) bulk email requests,
-(2) persistent re-sends, and (3) humans for the hard sites. Vanish does the same, with the user as
+(2) persistent re-sends, and (3) humans for the hard sites. Free My ID does the same, with the user as
 the human, but makes that human's part as small as possible.
 
 - **D8 Bulk email coverage (the Incogni model).** Import every broker from the official
   state data-broker registries (CA CPPA ~500+, VT, TX, OR) that lists a contact email, as
   `method: email`, `category: data_broker`, low priority, `verification_status: unverified`,
-  with the registry as the citation. Vanish sends each one a deletion request (generic voluntary
+  with the registry as the citation. Free My ID sends each one a deletion request (generic voluntary
   letter outside CA), re-sends every 90 days, and auto-clicks confirmation links. Requires the
-  removal mailbox, so the wizard now recommends one ("strongly recommended: Vanish can contact
+  removal mailbox, so the wizard now recommends one ("strongly recommended: Free My ID can contact
   hundreds of companies for you").
 - **D9 "Fill it in for me" (the DeleteMe model, with the user as the human).** For web forms,
-  Vanish opens a **visible** Edge window, goes to the opt-out page, and fills the fields itself using
+  Free My ID opens a **visible** Edge window, goes to the opt-out page, and fills the fields itself using
   deterministic label/name/placeholder matching (first/last name, email, city, state, zip,
   listing address). Then a big banner tells the user: "Tick the box that says you're not a robot,
-  then press Submit." Vanish watches for the success text/URL and records evidence. No CAPTCHA
+  then press Submit." Free My ID watches for the success text/URL and records evidence. No CAPTCHA
   solving, no stealth: a real person is at a real browser. If filling fails, it falls back
   to the Assisted card. This becomes the default for web_form brokers when the user is at the
   computer ("Do my to-dos now" button). Scheduled runs never do this, because they're headless.
-- **D10 Listing finder.** Same visible-window approach for people-search sites: Vanish opens the
+- **D10 Listing finder.** Same visible-window approach for people-search sites: Free My ID opens the
   search page with the name/city filled in, and the user clicks "This is me" on the right
   result. That gives the listing address the opt-out form needs.
 - Unchanged: no CAPTCHA solvers, no paying, no ID upload or accounts unless the permission flag
@@ -135,6 +135,6 @@ Open-source app (AGPL-3.0-or-later) plus a paid subscription. Customer PII never
 Paid parts are the things that need ongoing work: weekly verified registry feed, managed removal
 mailbox, "fill it in for me" scripts for hard sites, family plans, later a staffed agent tier.
 The business plan page lives at https://claude.ai/artifact/PWHBkUkfNLWU78XQ9vQhmF.
-Building blocks, in order: rename (Vanish clashes with Reckitt's brand) → signed registry feed →
+Building blocks, in order: rename (Free My ID clashes with Reckitt's brand) → signed registry feed →
 plan/entitlement setting (no payments yet) → opt-in anonymous per-broker outcome reports →
 code signing + public launch.

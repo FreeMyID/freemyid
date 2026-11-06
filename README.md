@@ -1,8 +1,8 @@
 <!-- Status: done all sections (first draft) / next: lead review; resolve TODO verify markers as engine, wizard and scheduler land -->
 
-# Vanish
+# Free My ID
 
-Vanish is a local-first tool that finds your listings on data-broker and people-search sites, files opt-out requests with each broker, and keeps checking so it can re-file when listings come back.
+Free My ID is a local-first tool that finds your listings on data-broker and people-search sites, files opt-out requests with each broker, and keeps checking so it can re-file when listings come back.
 
 It runs on your own computer. There is no AI or cloud service at runtime: every step is deterministic Python driven by a broker registry (YAML) and a per-listing state machine. Your personal data stays in an encrypted database on your machine.
 
@@ -24,21 +24,21 @@ Non-technical users should start with the [User Guide](docs/USER_GUIDE.md) or `F
 **Honest limits:**
 
 - **"Removed" means removed from that one broker.** It does not mean removed from the internet, from search engines, from public records, or from brokers that aren't in the registry.
-- **Listings come back.** Brokers re-ingest data from their sources, and clone sites copy one another. That is why Vanish keeps re-checking rather than running once.
-- **Some brokers need you.** CAPTCHAs, ID requests, login walls, postal letters and phone calls are handed to a person. Vanish never solves or bypasses a CAPTCHA or other bot protection.
+- **Listings come back.** Brokers re-ingest data from their sources, and clone sites copy one another. That is why Free My ID keeps re-checking rather than running once.
+- **Some brokers need you.** CAPTCHAs, ID requests, login walls, postal letters and phone calls are handed to a person. Free My ID never solves or bypasses a CAPTCHA or other bot protection.
 - **The registry goes stale.** Brokers move opt-out pages and change forms. Entries carry a `verification_status` (`verified`, `unverified` or `broken`), and a weekly health check flags breakage, but some entries will be wrong at any given time.
 - **Matching is fuzzy.** Only `CONFIRMED` matches (name plus at least 2 other signals) are submitted automatically. `POSSIBLE` matches (name plus 1 signal) wait for you to confirm.
 - **It's not legal advice.** The letter templates cite state privacy laws, but you are responsible for what you send.
 
 ## Install
 
-Requires Python 3.11+ (development uses 3.12). Vanish drives your installed Chrome or Edge first. It only downloads Playwright's bundled browser if neither is present, and it asks before doing so. <!-- TODO verify: first-run browser prompt is wizard-packager work -->
+Requires Python 3.11+ (development uses 3.12). Free My ID drives your installed Chrome or Edge first. It only downloads Playwright's bundled browser if neither is present, and it asks before doing so. <!-- TODO verify: first-run browser prompt is wizard-packager work -->
 
 ### With pipx (users)
 
 ```bash
-pipx install git+https://github.com/<OWNER>/vanish.git   # <!-- TODO verify: repo URL not set yet -->
-vanish setup
+pipx install git+https://github.com/<OWNER>/freemyid.git   # <!-- TODO verify: repo URL not set yet -->
+freemyid setup
 ```
 
 Prebuilt installers (PyInstaller) for Linux, macOS and Windows are planned. They will ship unsigned for now; see `FAMILY_QUICK_START.md` for how to open an unsigned app. <!-- TODO verify -->
@@ -48,57 +48,57 @@ Prebuilt installers (PyInstaller) for Linux, macOS and Windows are planned. They
 ```bash
 python3.12 -m venv .venv            # or: uv venv --python 3.12 .venv
 .venv/bin/pip install -e '.[dev]'   # or: uv pip install --python .venv -e '.[dev]'
-.venv/bin/vanish --help
+.venv/bin/freemyid --help
 .venv/bin/pytest -q
 .venv/bin/ruff check src tests
 ```
 
 Optional extras: `.[pdf]` (WeasyPrint, for PDF reports) and `.[package]` (PyInstaller).
 
-For development, point Vanish at a throwaway data directory and a test key so you never touch your real data or OS keychain:
+For development, point Free My ID at a throwaway data directory and a test key so you never touch your real data or OS keychain:
 
 ```bash
-export VANISH_HOME="$(mktemp -d)"
-export VANISH_TEST_KEY=dev-only-not-a-secret
+export FREEMYID_HOME="$(mktemp -d)"
+export FREEMYID_TEST_KEY=dev-only-not-a-secret
 ```
 
-`VANISH_TEST_KEY` is for tests and development only. Never set it on a real install, because it replaces the keychain-held database key with one derived from that string.
+`FREEMYID_TEST_KEY` is for tests and development only. Never set it on a real install, because it replaces the keychain-held database key with one derived from that string.
 
 ## Commands
 
-Run `vanish --help` or `vanish <command> --help` for full options. `-v/--verbose` turns on debug logging (still redacted).
+Run `freemyid --help` or `freemyid <command> --help` for full options. `-v/--verbose` turns on debug logging (still redacted).
 
 | Command | What it does |
 |---|---|
-| `vanish setup [--no-web] [--prefill FILE]` | Add a person. Opens the local web wizard by default; `--no-web` uses terminal prompts. `--prefill` imports a family bundle. |
-| `vanish dashboard` | Open the local dashboard: status, evidence, to-dos, outbox approvals. |
-| `vanish scan [-p PROFILE] [-b BROKER ...]` | Search brokers for listings. Never submits anything. |
-| `vanish run --dry-run [-p ...] [-b ...]` | Full pipeline, but submits nothing. Run this first. |
-| `vanish run [-p ...] [-b ...]` | Scan, submit opt-outs, check verifications, escalate ignored requests. Refuses to run until real submissions are enabled. |
-| `vanish status [-p PROFILE]` | Per-broker state, last update, next check and escalation level for each person. |
-| `vanish report [-p PROFILE] [--format html\|pdf]` | Export a report to the artifacts folder. |
-| `vanish profile add [--prefill FILE]` | Same as `setup`. |
-| `vanish profile list` | List people, consent basis and whether a mailbox is configured. |
-| `vanish profile edit PROFILE` | Edit a person (terminal flow). |
-| `vanish profile remove PROFILE [--yes]` | Delete a person, all their evidence, and their mailbox password from the keychain. |
-| `vanish profile export PROFILE DEST` | Write a passphrase-protected `.vanish-profile` bundle for a family member's install. |
-| `vanish schedule install\|remove\|status` | Manage the background re-check job. |
-| `vanish registry show` | List brokers: method, verification, CAPTCHA, `covered_by`. |
-| `vanish registry validate [PATH]` | Validate a registry file against the model and JSON Schema. |
-| `vanish registry update` | Fetch and validate a new registry from `registry_url`. |
-| `vanish todo list [-p PROFILE]` | Items that need a person. |
-| `vanish todo done ID` | Mark a to-do done (an ID prefix is enough). |
-| `vanish outbox list` | Emails waiting for your approval. |
-| `vanish outbox approve ID` | Approve and send one queued email. |
-| `vanish config set KEY VALUE` | Change a setting in `config.yaml`. Protected keys are rejected. |
-| `vanish config enable-submissions` | One-time explicit opt-in to real submissions. |
+| `freemyid setup [--no-web] [--prefill FILE]` | Add a person. Opens the local web wizard by default; `--no-web` uses terminal prompts. `--prefill` imports a family bundle. |
+| `freemyid dashboard` | Open the local dashboard: status, evidence, to-dos, outbox approvals. |
+| `freemyid scan [-p PROFILE] [-b BROKER ...]` | Search brokers for listings. Never submits anything. |
+| `freemyid run --dry-run [-p ...] [-b ...]` | Full pipeline, but submits nothing. Run this first. |
+| `freemyid run [-p ...] [-b ...]` | Scan, submit opt-outs, check verifications, escalate ignored requests. Refuses to run until real submissions are enabled. |
+| `freemyid status [-p PROFILE]` | Per-broker state, last update, next check and escalation level for each person. |
+| `freemyid report [-p PROFILE] [--format html\|pdf]` | Export a report to the artifacts folder. |
+| `freemyid profile add [--prefill FILE]` | Same as `setup`. |
+| `freemyid profile list` | List people, consent basis and whether a mailbox is configured. |
+| `freemyid profile edit PROFILE` | Edit a person (terminal flow). |
+| `freemyid profile remove PROFILE [--yes]` | Delete a person, all their evidence, and their mailbox password from the keychain. |
+| `freemyid profile export PROFILE DEST` | Write a passphrase-protected `.freemyid-profile` bundle for a family member's install. |
+| `freemyid schedule install\|remove\|status` | Manage the background re-check job. |
+| `freemyid registry show` | List brokers: method, verification, CAPTCHA, `covered_by`. |
+| `freemyid registry validate [PATH]` | Validate a registry file against the model and JSON Schema. |
+| `freemyid registry update` | Fetch and validate a new registry from `registry_url`. |
+| `freemyid todo list [-p PROFILE]` | Items that need a person. |
+| `freemyid todo done ID` | Mark a to-do done (an ID prefix is enough). |
+| `freemyid outbox list` | Emails waiting for your approval. |
+| `freemyid outbox approve ID` | Approve and send one queued email. |
+| `freemyid config set KEY VALUE` | Change a setting in `config.yaml`. Protected keys are rejected. |
+| `freemyid config enable-submissions` | One-time explicit opt-in to real submissions. |
 
 `PROFILE` matches an ID prefix or the profile's label (e.g. `Mom`). Profiles that fail the consent gate are skipped with a message.
 
 ### Safety gates, in order
 
 1. **Consent gate** (`cli.consent_ok`, re-checked in the runner). Every profile needs an attesting name. A minor needs `guardian_of_minor` consent. An `authorized_agent` needs a signed authorization attached.
-2. **Dry run first.** `vanish run` without `--dry-run` exits until `vanish config enable-submissions` has been confirmed interactively. `real_submissions_enabled` can't be set with `config set`.
+2. **Dry run first.** `freemyid run` without `--dry-run` exits until `freemyid config enable-submissions` has been confirmed interactively. `real_submissions_enabled` can't be set with `config set`.
 3. **Email approval.** With `email_mode: approve_each` (the default), every outgoing email waits in the outbox. Legal demands always wait, even in `auto` mode.
 4. **Match gate.** Only `CONFIRMED` listings are auto-submitted.
 5. **Permission flags.** ID upload, account creation and phone disclosure are off by default per profile. When a broker needs one of them, you get a `permission_needed` to-do instead.
@@ -106,7 +106,7 @@ Run `vanish --help` or `vanish <command> --help` for full options. `-v/--verbose
 ## Architecture
 
 ```
-src/vanish/
+src/freemyid/
   cli.py              Typer CLI (thin; all logic lives in modules)
   models.py           Pydantic models: Profile, Broker, Registry, StateLaw, Listing, Request, ...
   state.py            Pure state machine + escalation ladder + re-check timing
@@ -160,18 +160,18 @@ Listing states: `unknown`, `not_found`, `found`, `submitted`, `awaiting_verifica
 
 ## Security and privacy model
 
-**What's stored, and where.** Everything lives under `~/.vanish/` (`%APPDATA%\Vanish` on Windows), or under `VANISH_HOME` if set. The directory is created with mode `0700`.
+**What's stored, and where.** Everything lives under `~/.freemyid/` (`%APPDATA%\Free My ID` on Windows), or under `FREEMYID_HOME` if set. The directory is created with mode `0700`.
 
 | Path | Contents | Protection |
 |---|---|---|
-| `vanish.db` | Profiles, statuses, listings, requests, to-dos, append-only event log | SQLite. Only ids, enums and timestamps are in clear text. Every model is an AES-256-GCM blob with AAD bound to (table, id). |
+| `freemyid.db` | Profiles, statuses, listings, requests, to-dos, append-only event log | SQLite. Only ids, enums and timestamps are in clear text. Every model is an AES-256-GCM blob with AAD bound to (table, id). |
 | `evidence/` | Screenshots, HTML, sent/received emails | Encrypted files. The dashboard decrypts them in memory only. |
 | `artifacts/` | Generated letters, call scripts, reports | <!-- TODO verify: encrypted at rest vs. plain after export --> |
 | `logs/` | Rotating logs | PII-redacted: known profile values plus email/phone patterns. Code logs ids and enums only. |
 | `config.yaml` | Non-PII settings | Mode `0600` |
 | `registry.yaml` | Cached registry update | Public data |
 
-**Keys and passwords.** The database key is a random 256-bit key stored in the OS keychain (service `vanish`) through `keyring`. Mailbox passwords also live only in the keychain (service `vanish-mailbox`), never in the database or config. If the keychain is locked or unavailable (for example, in a headless session), Vanish raises `KeyUnavailable` and surfaces it as needing a person; it does not fall back to plaintext. <!-- TODO verify: surfacing behavior in scheduled runs -->
+**Keys and passwords.** The database key is a random 256-bit key stored in the OS keychain (service `freemyid`) through `keyring`. Mailbox passwords also live only in the keychain (service `freemyid-mailbox`), never in the database or config. If the keychain is locked or unavailable (for example, in a headless session), Free My ID raises `KeyUnavailable` and surfaces it as needing a person; it does not fall back to plaintext. <!-- TODO verify: surfacing behavior in scheduled runs -->
 
 **Family bundles.** `profile export` encrypts a profile with a passphrase (scrypt, then AES-GCM). Share the passphrase by phone, not in the same channel as the file. The family member reviews the imported data and gives their own consent.
 
@@ -257,17 +257,17 @@ Rules for registry entries:
 Then validate the entry and regenerate the schemas if you changed models:
 
 ```bash
-.venv/bin/vanish registry validate brokers/registry.yaml
+.venv/bin/freemyid registry validate brokers/registry.yaml
 .venv/bin/python tools/gen_schema.py        # only after models.py changes
 ```
 
 ### 2. Optional custom submitter
 
-If the declarative form isn't enough, subclass `vanish.interfaces.Submitter`:
+If the declarative form isn't enough, subclass `freemyid.interfaces.Submitter`:
 
 ```python
-from vanish.interfaces import RunContext, Submitter
-from vanish.models import Listing, SubmitOutcome
+from freemyid.interfaces import RunContext, Submitter
+from freemyid.models import Listing, SubmitOutcome
 
 class ExamplePeopleSubmitter(Submitter):
     method = "web_form"
@@ -285,8 +285,8 @@ class ExamplePeopleSubmitter(Submitter):
 The engine looks a submitter up in this order <!-- TODO verify: interfaces.py says engine/registry_plugins.py, automation-engineer.md says engine/plugins.py -->:
 
 1. `submitter: "module:Class"` in the registry entry
-2. an entry point in the `vanish.submitters` group, keyed by broker id (for third-party packages)
-3. a `vanish.submitters.<broker_id>` module containing a class named `Submitter`
+2. an entry point in the `freemyid.submitters` group, keyed by broker id (for third-party packages)
+3. a `freemyid.submitters.<broker_id>` module containing a class named `Submitter`
 4. the generic submitter for `broker.method`
 
 Write the search parser against saved HTML in `tests/fixtures/<broker_id>/`. If you couldn't test it against the live site, mark it `UNTESTED_AGAINST_LIVE`. Every submitter must follow the rules in the `Submitter` docstring:
@@ -308,11 +308,11 @@ These apply to people and agents alike:
 - **No network calls outside `NetPolicy`.** No telemetry.
 - **Never bypass a CAPTCHA.** No solver services and no stealth plugins.
 - **During development:** don't send real email, submit real opt-outs, or install scheduler jobs or browsers system-wide. Use `--dry-run`, fixtures and fakes.
-- **Before a PR:** `.venv/bin/pytest -q` and `.venv/bin/ruff check src tests` must pass. Run `vanish registry validate` if you touched the registry.
+- **Before a PR:** `.venv/bin/pytest -q` and `.venv/bin/ruff check src tests` must pass. Run `freemyid registry validate` if you touched the registry.
 
 ### Agent workflow
 
-Vanish is built by an orchestrator session plus four specialist Claude Code agents (`.claude/agents/`). AI is used only to *build* Vanish, never inside it at runtime.
+Free My ID is built by an orchestrator session plus four specialist Claude Code agents (`.claude/agents/`). AI is used only to *build* Free My ID, never inside it at runtime.
 
 1. Every agent reads `.claude/agents/_shared-rules.md` first.
 2. Agents edit only files they own. To change anything else, an agent files a **CHANGE REQUEST** (file, exact change, reason) in its report, and the orchestrator applies it.

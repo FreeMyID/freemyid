@@ -1,4 +1,4 @@
-"""Shared fixtures. Every test runs with a throwaway VANISH_HOME and VANISH_TEST_KEY, an
+"""Shared fixtures. Every test runs with a throwaway FREEMYID_HOME and FREEMYID_TEST_KEY, an
 in-memory keyring and outbound network blocked. Fake people only (Jane Q Testperson)."""
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ import keyring
 import pytest
 from keyring.backend import KeyringBackend
 
-from vanish.consent import CURRENT_TEXT_VERSION
+from freemyid.consent import CURRENT_TEXT_VERSION
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -47,15 +47,15 @@ def _guarded_connect(self, address):
 
 
 @pytest.fixture(autouse=True)
-def vanish_env(tmp_path, monkeypatch):
+def freemyid_env(tmp_path, monkeypatch):
     home = tmp_path / "vhome"
-    monkeypatch.setenv("VANISH_HOME", str(home))
-    monkeypatch.setenv("VANISH_TEST_KEY", "unit-test-key-not-secret")
+    monkeypatch.setenv("FREEMYID_HOME", str(home))
+    monkeypatch.setenv("FREEMYID_TEST_KEY", "unit-test-key-not-secret")
     monkeypatch.setattr(socket.socket, "connect", _guarded_connect)
     kr = MemoryKeyring()
     old = keyring.get_keyring()
     keyring.set_keyring(kr)
-    from vanish import logging_setup
+    from freemyid import logging_setup
     with logging_setup._lock:
         saved = set(logging_setup._pii)
         logging_setup._pii.clear()
@@ -82,8 +82,8 @@ def memkeyring() -> MemoryKeyring:
 
 
 @pytest.fixture
-def store(vanish_env):
-    from vanish.storage import Store
+def store(freemyid_env):
+    from freemyid.storage import Store
     s = Store()
     yield s
     s.close()
@@ -91,12 +91,12 @@ def store(vanish_env):
 
 @pytest.fixture
 def fake_registry():
-    from vanish.registry import load_registry
+    from freemyid.registry import load_registry
     return load_registry(FIXTURES / "registry_min.yaml")
 
 
 def make_profile(**over):
-    from vanish.models import Address, Consent, ConsentBasis, PersonName, Profile
+    from freemyid.models import Address, Consent, ConsentBasis, PersonName, Profile
     data = {
         "label": "Tester",
         "consent": Consent(basis=ConsentBasis.SELF, attested_by="Jane Q Testperson",

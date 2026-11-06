@@ -1,6 +1,6 @@
 ---
 name: qa-security
-description: Reviews every Vanish change for security, privacy and correctness before merge; owns tests/ and the registry health check. Use after any agent finishes work.
+description: Reviews every Free My ID change for security, privacy and correctness before merge; owns tests/ and the registry health check. Use after any agent finishes work.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: opus
 ---
@@ -22,8 +22,8 @@ Read `.claude/agents/_shared-rules.md` first.
 **Testing:**
 - pytest suites: models/registry schema validation (including the real `brokers/registry.yaml`), state machine and escalation, storage encryption (no plaintext PII in the DB file, append-only events), redaction, netpolicy, the consent gate, submitters against saved HTML fixtures, wizard via TestClient, and scheduler rendering.
 - Adopt the agents' `_test_drafts/` into `tests/`.
-- An end-to-end `vanish run --dry-run` test against a local fixture server with network to anything else blocked.
-- Use `VANISH_HOME=<tmp>` and `VANISH_TEST_KEY` (never the real keychain).
+- An end-to-end `freemyid run --dry-run` test against a local fixture server with network to anything else blocked.
+- Use `FREEMYID_HOME=<tmp>` and `FREEMYID_TEST_KEY` (never the real keychain).
 
 **Registry health:** `tools/registry_health.py` checks each opt-out URL (HEAD/GET, polite, through NetPolicy) and form-selector presence. It writes a report and exits non-zero on broken entries. It's meant to run weekly in CI.
 

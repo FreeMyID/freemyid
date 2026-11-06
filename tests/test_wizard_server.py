@@ -5,16 +5,16 @@ import keyring
 import pytest
 from fastapi.testclient import TestClient
 
-from vanish.storage import Store
-from vanish.wizard.server import _csrf_for, create_app
+from freemyid.storage import Store
+from freemyid.wizard.server import _csrf_for, create_app
 
 TOKEN = "tok-test"
 
 
 @pytest.fixture
 def env(tmp_path, monkeypatch):
-    monkeypatch.setenv("VANISH_HOME", str(tmp_path))
-    monkeypatch.setenv("VANISH_TEST_KEY", "dev")
+    monkeypatch.setenv("FREEMYID_HOME", str(tmp_path))
+    monkeypatch.setenv("FREEMYID_TEST_KEY", "dev")
     saved = {}
     monkeypatch.setattr(keyring, "set_password", lambda s, u, p: saved.__setitem__((s, u), p))
     store = Store()
@@ -24,7 +24,7 @@ def env(tmp_path, monkeypatch):
 
 
 def authed(c):
-    c.cookies.set("vanish_session", TOKEN)
+    c.cookies.set("freemyid_session", TOKEN)
     return {"csrf": _csrf_for(TOKEN)}
 
 
@@ -32,7 +32,7 @@ def test_requires_token(env):
     c, _, _ = env
     assert c.get("/").status_code == 403
     r = c.get(f"/?t={TOKEN}")
-    assert r.status_code == 303 and "vanish_session" in r.cookies
+    assert r.status_code == 303 and "freemyid_session" in r.cookies
 
 
 def test_bad_host_and_csrf(env):
@@ -48,8 +48,8 @@ def finish_hook(calls):
 
 
 def test_full_wizard_creates_profile(tmp_path, monkeypatch):
-    monkeypatch.setenv("VANISH_HOME", str(tmp_path))
-    monkeypatch.setenv("VANISH_TEST_KEY", "dev")
+    monkeypatch.setenv("FREEMYID_HOME", str(tmp_path))
+    monkeypatch.setenv("FREEMYID_TEST_KEY", "dev")
     saved, calls = {}, []
     monkeypatch.setattr(keyring, "set_password", lambda s, u, p: saved.__setitem__((s, u), p))
     store = Store()
@@ -62,7 +62,7 @@ def test_full_wizard_creates_profile(tmp_path, monkeypatch):
         ("name", {"first": "Jane", "middle": "Q", "last": "Testperson", "label": "Jane"}),
         ("address", {"city0": "Springfield", "state0": "il", "current": "0"}),
         ("about", {"birth_year": "1980", "phones": "555-0100"}),
-        ("mailbox", {"provider": "gmail", "address": "jane.vanish@example.com",
+        ("mailbox", {"provider": "gmail", "address": "jane.freemyid@example.com",
                      "password": "pw"}),
         ("finish", {"weekly_recheck": "1"}),
     ]

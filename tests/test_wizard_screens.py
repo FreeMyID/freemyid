@@ -5,24 +5,24 @@ import keyring
 import pytest
 from fastapi.testclient import TestClient
 
-from vanish.storage import Store
-from vanish.wizard import draft as dr
-from vanish.wizard.server import _csrf_for, create_app
+from freemyid.storage import Store
+from freemyid.wizard import draft as dr
+from freemyid.wizard.server import _csrf_for, create_app
 
 TOKEN = "tok-test"
 
 
 @pytest.fixture
 def env(tmp_path, monkeypatch):
-    monkeypatch.setenv("VANISH_HOME", str(tmp_path))
-    monkeypatch.setenv("VANISH_TEST_KEY", "dev")
+    monkeypatch.setenv("FREEMYID_HOME", str(tmp_path))
+    monkeypatch.setenv("FREEMYID_TEST_KEY", "dev")
     saved, calls = {}, []
     monkeypatch.setattr(keyring, "set_password", lambda s, u, p: saved.__setitem__((s, u), p))
     store = Store()
     app = create_app(store, TOKEN, {"testserver"}, registry_loader=lambda: None,
                      on_finish=lambda p, on: calls.append(on))
     c = TestClient(app, follow_redirects=False)
-    c.cookies.set("vanish_session", TOKEN)
+    c.cookies.set("freemyid_session", TOKEN)
     return c, store, saved, calls, {"csrf": _csrf_for(TOKEN)}
 
 

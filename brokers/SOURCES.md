@@ -44,7 +44,7 @@ Not recorded because the address is not on the broker's own domains (the `Broker
 
 ## D8 bulk import from state data broker registries, 2026-11-06
 
-Goal: give every registered broker with an on-domain contact email an `email`-method entry so Vanish can send it a deletion request (the Incogni model).
+Goal: give every registered broker with an on-domain contact email an `email`-method entry so Free My ID can send it a deletion request (the Incogni model).
 
 Sources attempted:
 | Registry | URL | Result |

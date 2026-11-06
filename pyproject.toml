@@ -3,7 +3,7 @@ requires = ["hatchling>=1.24"]
 build-backend = "hatchling.build"
 
 [project]
-name = "vanish"
+name = "freemyid"
 version = "0.1.0"
 description = "Local-first personal data broker opt-out tool with scheduled re-checks."
 readme = "README.md"
@@ -34,17 +34,17 @@ pdf = ["weasyprint>=62"]
 package = ["pyinstaller>=6.8", "pywebview>=5.0"]
 
 [project.scripts]
-vanish = "vanish.cli:app"
+freemyid = "freemyid.cli:app"
 
-[project.entry-points."vanish.submitters"]
+[project.entry-points."freemyid.submitters"]
 # third-party/per-broker submitters register here: broker_id = "module:Class"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/vanish"]
+packages = ["src/freemyid"]
 
 [tool.hatch.build.targets.wheel.force-include]
-"brokers" = "vanish/_data/brokers"
-"schema" = "vanish/_data/schema"
+"brokers" = "freemyid/_data/brokers"
+"schema" = "freemyid/_data/schema"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,12 +1,12 @@
 ---
 name: wizard-packager
-description: Builds the Vanish setup wizard and dashboard (FastAPI + plain HTML on localhost), CLI setup flows, notifications, OS schedulers and installers. Use for UI, scheduling or packaging work.
+description: Builds the Free My ID setup wizard and dashboard (FastAPI + plain HTML on localhost), CLI setup flows, notifications, OS schedulers and installers. Use for UI, scheduling or packaging work.
 tools: Read, Write, Edit, Bash
 model: sonnet
 ---
-Read `.claude/agents/_shared-rules.md` first, then `src/vanish/interfaces.py` (entry points you must implement), `models.py`, `storage/db.py` and `cli.py`.
+Read `.claude/agents/_shared-rules.md` first, then `src/freemyid/interfaces.py` (entry points you must implement), `models.py`, `storage/db.py` and `cli.py`.
 
-**Owns:** `src/vanish/wizard/**`, `src/vanish/scheduler/**`, `src/vanish/notify.py`, `packaging/**`, `.github/workflows/**`, `FAMILY_QUICK_START.md`.
+**Owns:** `src/freemyid/wizard/**`, `src/freemyid/scheduler/**`, `src/freemyid/notify.py`, `packaging/**`, `.github/workflows/**`, `FAMILY_QUICK_START.md`.
 **Build:**
 - `wizard/server.py` `serve(port, open_browser)`: FastAPI bound to 127.0.0.1 only, with a random per-launch session token in the URL (cookie afterwards) so other local users and sites can't drive it, CSRF protection on POSTs, and no external assets (no CDNs, fonts or analytics). Plain HTML/CSS with a little vanilla JS. Large readable type for non-technical users.
 - Wizard steps (same order for web and CLI `flows.setup_cli`):
@@ -24,8 +24,8 @@ Read `.claude/agents/_shared-rules.md` first, then `src/vanish/interfaces.py` (e
 - `wizard/report.py` `build_report` (HTML; PDF through optional weasyprint) to `paths.artifacts_dir()`.
 - `wizard/flows.py`: `setup_cli`, `edit_cli`, `export_family_bundle` (uses `crypto.export_with_passphrase`), and import of a bundle in setup (the family member must review and give their own consent).
 - `notify.py` `get_notifier()` using desktop-notifier, falling back to logging. Bodies must contain no PII.
-- `scheduler/`: `install/remove/status`. Linux: a systemd user timer (`OnCalendar=daily`, `Persistent=true` so it catches up after sleep or power-off), falling back to crontab plus `@reboot`. macOS: a launchd agent with `StartCalendarInterval` (launchd runs missed jobs on wake). Windows: `schtasks` with "run as soon as possible after a missed start". The job runs `vanish run --scheduled`. Render the unit/plist/xml files to strings and test them without installing anything. DO NOT run install during development.
-- `packaging/`: a PyInstaller spec, `pipx install` instructions, a GitHub Actions matrix (ubuntu/macos/windows) that builds artifacts, and a first-run Playwright browser install only when system Chrome is missing (prompted). A "family installer" option ships a `.vanish-profile` bundle alongside.
+- `scheduler/`: `install/remove/status`. Linux: a systemd user timer (`OnCalendar=daily`, `Persistent=true` so it catches up after sleep or power-off), falling back to crontab plus `@reboot`. macOS: a launchd agent with `StartCalendarInterval` (launchd runs missed jobs on wake). Windows: `schtasks` with "run as soon as possible after a missed start". The job runs `freemyid run --scheduled`. Render the unit/plist/xml files to strings and test them without installing anything. DO NOT run install during development.
+- `packaging/`: a PyInstaller spec, `pipx install` instructions, a GitHub Actions matrix (ubuntu/macos/windows) that builds artifacts, and a first-run Playwright browser install only when system Chrome is missing (prompted). A "family installer" option ships a `.freemyid-profile` bundle alongside.
 - `FAMILY_QUICK_START.md`: one page, plain English.
 
-**Done when:** `serve()` runs and the wizard can create a profile against a temp `VANISH_HOME` (test with httpx TestClient); scheduler files render for all 3 OSes; tests are drafted in `src/vanish/wizard/_test_drafts/` for qa to adopt; ruff clean.
+**Done when:** `serve()` runs and the wizard can create a profile against a temp `FREEMYID_HOME` (test with httpx TestClient); scheduler files render for all 3 OSes; tests are drafted in `src/freemyid/wizard/_test_drafts/` for qa to adopt; ruff clean.

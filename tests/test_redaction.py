@@ -5,8 +5,8 @@ import logging
 
 import pytest
 
-from vanish import logging_setup
-from vanish.logging_setup import RedactingFilter, redact, register_pii
+from freemyid import logging_setup
+from freemyid.logging_setup import RedactingFilter, redact, register_pii
 
 PID = "0" * 32  # valid Id
 
@@ -46,7 +46,7 @@ def test_filter_redacts_args(caplog_redacted):
     assert "555-0142" not in caplog_redacted.text
 
 
-def test_log_file_redacted(vanish_env):
+def test_log_file_redacted(freemyid_env):
     root = logging.getLogger()
     before = list(root.handlers)
     logging_setup.setup()
@@ -55,7 +55,7 @@ def test_log_file_redacted(vanish_env):
         logging.getLogger("t").info("listing for Jane Testperson jane.testperson@example.com")
         for h in root.handlers:
             h.flush()
-        text = (vanish_env / "logs" / "vanish.log").read_text()
+        text = (freemyid_env / "logs" / "freemyid.log").read_text()
         assert "listing for" in text and "Testperson" not in text and "@example" not in text
     finally:
         for h in list(root.handlers):
@@ -97,7 +97,7 @@ def test_store_registers_profile_pii(store, profile):
 # ---- v1: Assisted copy_fields values must never reach logs ----
 
 def test_copy_fields_values_never_logged(store, profile, caplog_redacted):
-    from vanish.models import Todo, TodoKind
+    from freemyid.models import Todo, TodoKind
     store.save_profile(profile)          # registers profile PII
     t = Todo(profile_id=profile.id, broker_id="fakepeople", kind=TodoKind.ASSISTED_OPT_OUT,
              title="Remove your listing",
@@ -106,7 +106,7 @@ def test_copy_fields_values_never_logged(store, profile, caplog_redacted):
                           "Phone": "217-555-0142", "Email": "jane.testperson@example.com",
                           "Birth date": "04/01/1980"})
     store.save_todo(t)
-    log = logging.getLogger("vanish.engine.test")
+    log = logging.getLogger("freemyid.engine.test")
     log.info("todo %s", t)                      # careless: whole model
     log.info("fields %r", store.list_todos(profile.id)[0].copy_fields)
     log.warning("dump %s", t.model_dump_json())
@@ -116,7 +116,7 @@ def test_copy_fields_values_never_logged(store, profile, caplog_redacted):
 
 
 def test_copy_fields_hidden_from_repr():
-    from vanish.models import Todo, TodoKind
+    from freemyid.models import Todo, TodoKind
     t = Todo(profile_id=PID, kind=TodoKind.ASSISTED_OPT_OUT, title="t",
              copy_fields={"Name": "Unregistered Alias"})
     assert "Unregistered Alias" not in repr(t) and "Unregistered Alias" not in str(t)

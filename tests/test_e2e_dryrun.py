@@ -1,6 +1,6 @@
 """End-to-end dry run (docs/PLAN_V1.md D1/D2) against the dev fixture registry + local server.
 
-Runs against `vanish.engine.runner.run` and `vanish.engine._dev` (fixture_registry +
+Runs against `freemyid.engine.runner.run` and `freemyid.engine._dev` (fixture_registry +
 fixture_server). The assertions below are the acceptance criteria; do not loosen them.
 
 Network: conftest blocks every socket connect that isn't loopback, so the fixture server on
@@ -13,8 +13,7 @@ import smtplib
 
 import pytest
 
-from tests.conftest import make_profile
-from vanish.models import (
+from freemyid.models import (
     ListingState,
     MailboxConfig,
     ProfileField,
@@ -22,19 +21,20 @@ from vanish.models import (
     Tier,
     TodoKind,
 )
+from tests.conftest import make_profile
 
 # Candidate homes for the dev fixture registry/server (automation-engineer, PLAN_V1 wave 1).
 # Expected API: fixture_registry() -> models.Registry whose URLs point at the server, and
 # fixture_server() -> context manager yielding the base URL (http://127.0.0.1:<port>).
-_DEV_MODULES = ("vanish.engine._dev", "vanish._dev", "vanish.engine.devrun")
+_DEV_MODULES = ("freemyid.engine._dev", "freemyid._dev", "freemyid.engine.devrun")
 
 
 def _load_dev():
     try:
-        runner = importlib.import_module("vanish.engine.runner")
+        runner = importlib.import_module("freemyid.engine.runner")
         run = runner.run
     except (ImportError, AttributeError) as e:
-        pytest.skip(f"vanish.engine.runner.run not landed yet (automation-engineer): {e}")
+        pytest.skip(f"freemyid.engine.runner.run not landed yet (automation-engineer): {e}")
     for name in _DEV_MODULES:
         try:
             mod = importlib.import_module(name)

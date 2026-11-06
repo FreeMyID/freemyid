@@ -5,10 +5,10 @@ import threading
 from pathlib import Path
 from types import SimpleNamespace
 
+from freemyid.engine import fill_for_me as ffm
+from freemyid.models import TodoKind
+from freemyid.wizard import desktop
 from tests.test_wizard_dashboard import TOKEN, _assisted, env  # noqa: F401
-from vanish.engine import fill_for_me as ffm
-from vanish.models import TodoKind
-from vanish.wizard import desktop
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -38,16 +38,16 @@ def test_window_geometry_fits_small_screen():
 
 
 def test_consent_text_mailbox_optional():
-    from vanish.wizard.draft import CONSENT_TEXT
+    from freemyid.wizard.draft import CONSENT_TEXT
     assert "you set up" not in " ".join(CONSENT_TEXT).replace("if you set one up", "")
 
 
 def test_icon_and_installer_settings():
-    assert (ROOT / "packaging/windows/vanish.ico").stat().st_size > 1000
-    iss = (ROOT / "packaging/windows/vanish.iss").read_text()
-    for k in ("DisableDirPage=yes", "DisableReadyPage=yes", "SetupIconFile=vanish.ico"):
+    assert (ROOT / "packaging/windows/freemyid.ico").stat().st_size > 1000
+    iss = (ROOT / "packaging/windows/freemyid.iss").read_text()
+    for k in ("DisableDirPage=yes", "DisableReadyPage=yes", "SetupIconFile=freemyid.ico"):
         assert k in iss
-    assert "icon=ICON" in (ROOT / "packaging/windows/vanish.spec").read_text()
+    assert "icon=ICON" in (ROOT / "packaging/windows/freemyid.spec").read_text()
 
 
 def _fill_env(env, monkeypatch, result, gate=None):  # noqa: F811

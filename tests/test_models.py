@@ -7,9 +7,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from freemyid import registry
+from freemyid.models import Actor, Broker, Event, Registry
 from tests.conftest import FIXTURES, make_profile
-from vanish import registry
-from vanish.models import Actor, Broker, Event, Registry
 
 ROOT = Path(__file__).resolve().parent.parent
 PID = "0" * 32  # valid Id
@@ -110,7 +110,7 @@ def test_opt_out_email_must_be_on_broker_domain():
         Broker.model_validate(_broker(method="email", opt_out_email="x@attacker.example"))
 
 
-def test_submitter_restricted_to_vanish_namespace():
+def test_submitter_restricted_to_freemyid_namespace():
     with pytest.raises(ValidationError):
         Broker.model_validate(_broker(submitter="subprocess:Popen"))
 
@@ -121,7 +121,7 @@ def test_profile_id_format_enforced():
 
 
 def test_evidence_relpath_confined():
-    from vanish.models import Evidence
+    from freemyid.models import Evidence
     with pytest.raises(ValidationError):
         Evidence(profile_id="a", broker_id="b", kind="html", relpath="/etc/x", sha256="")
 
@@ -142,13 +142,13 @@ def test_fixture_dir_has_no_obvious_real_pii():
 # ---- v1 contract pieces (docs/PLAN_V1.md D1/D2) ----
 
 def test_tier_values():
-    from vanish.models import Tier
+    from freemyid.models import Tier
     assert {t.value for t in Tier} == {"email", "assisted", "automatic"}
     assert Tier("assisted") is Tier.ASSISTED
 
 
 def test_broker_status_tier_default_and_validation():
-    from vanish.models import BrokerStatus, Tier
+    from freemyid.models import BrokerStatus, Tier
     st = BrokerStatus(profile_id=PID, broker_id="fakeb")
     assert st.tier is None
     st = BrokerStatus(profile_id=PID, broker_id="fakeb", tier="email")
@@ -159,7 +159,7 @@ def test_broker_status_tier_default_and_validation():
 
 
 def test_new_todo_kinds():
-    from vanish.models import Todo, TodoKind
+    from freemyid.models import Todo, TodoKind
     assert TodoKind("assisted_opt_out") is TodoKind.ASSISTED_OPT_OUT
     assert TodoKind("send_email_manually") is TodoKind.SEND_EMAIL_MANUALLY
     for k in (TodoKind.ASSISTED_OPT_OUT, TodoKind.SEND_EMAIL_MANUALLY):
@@ -168,7 +168,7 @@ def test_new_todo_kinds():
 
 
 def test_todo_copy_fields_roundtrip_and_types():
-    from vanish.models import Todo, TodoKind
+    from freemyid.models import Todo, TodoKind
     t = Todo(profile_id=PID, broker_id="fakeb", kind=TodoKind.ASSISTED_OPT_OUT, title="t",
              copy_fields={"Full name": "Jane Q Testperson", "City": "Springfield"})
     assert Todo.model_validate_json(t.model_dump_json()) == t

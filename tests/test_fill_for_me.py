@@ -1,6 +1,6 @@
 """D9 "Fill it in for me": filler + visible-window flow, against loopback-only fixtures.
 
-Fixture pages live in vanish/engine/_dev/site/devfill.example/ and are served by the dev
+Fixture pages live in freemyid/engine/_dev/site/devfill.example/ and are served by the dev
 fixture server (127.0.0.1). Brokers are built here (not in the dev registry, so the e2e
 dry-run counts do not change). Headless in tests; real use is headed.
 Fake people only.
@@ -11,17 +11,16 @@ from datetime import date
 
 import pytest
 
-from tests.conftest import make_profile
-from vanish.engine import filler
-from vanish.engine._dev import fixture_server
-from vanish.engine.fill_for_me import (
+from freemyid.engine import filler
+from freemyid.engine._dev import fixture_server
+from freemyid.engine.fill_for_me import (
     BANNER_ID,
     MSG_PRACTICE,
     fill_for_me,
     fill_for_me_sync,
     success_signals,
 )
-from vanish.models import (
+from freemyid.models import (
     Broker,
     Listing,
     ListingState,
@@ -32,6 +31,7 @@ from vanish.models import (
     RequestStatus,
     TodoKind,
 )
+from tests.conftest import make_profile
 
 F = ProfileField
 H = "https://devfill.example"
@@ -159,9 +159,9 @@ def test_success_signals():
 
 
 async def _page(registry: Registry, url: str):
-    from vanish.engine.browser import BrowserManager
-    from vanish.engine.outbox import dev_fixture_base
-    from vanish.netpolicy import NetPolicy
+    from freemyid.engine.browser import BrowserManager
+    from freemyid.engine.outbox import dev_fixture_base
+    from freemyid.netpolicy import NetPolicy
     bm = BrowserManager(NetPolicy(registry), headless=True, fixture_base=dev_fixture_base())
     await bm.start()
     ctx = await bm.new_context(["devfill.example"])
@@ -256,8 +256,8 @@ async def test_fill_for_me_success_records_like_web_form(store):
 
 
 async def test_success_closes_open_assisted_todo(store):
-    from vanish.engine.handoff import persist_todo
-    from vanish.submitters.assisted import assisted_todo
+    from freemyid.engine.handoff import persist_todo
+    from freemyid.submitters.assisted import assisted_todo
     b = _broker("fill_todo", "labels", form=SUCCESS)
     p, li = _setup(store, b)
     t = persist_todo(store, assisted_todo(p, b, [li]))
@@ -361,7 +361,7 @@ async def test_data_minimization_in_flow(store):
 
 
 async def test_refusals(store):
-    from vanish.models import Consent, ConsentBasis
+    from freemyid.models import Consent, ConsentBasis
     b = _broker("fill_ref", "labels", form=SUCCESS)
     mail = Broker(id="fill_mail", name="Dev Mail", url=f"{H}/", category="data_broker",
                   domains=["devfill.example"], method="email",

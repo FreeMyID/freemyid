@@ -4,13 +4,12 @@ from __future__ import annotations
 import asyncio
 from email.message import EmailMessage
 
-from tests.conftest import make_profile
-from vanish.engine import outbox
-from vanish.engine.browser import host_resolver_rules
-from vanish.engine.handoff import GENERIC_HELP, QueuedHandoff
-from vanish.engine.letters import letter_vars
-from vanish.engine.mail import FakeMailer, extract_links
-from vanish.models import (
+from freemyid.engine import outbox
+from freemyid.engine.browser import host_resolver_rules
+from freemyid.engine.handoff import GENERIC_HELP, QueuedHandoff
+from freemyid.engine.letters import letter_vars
+from freemyid.engine.mail import FakeMailer, extract_links
+from freemyid.models import (
     Broker,
     EmailMode,
     Listing,
@@ -22,6 +21,7 @@ from vanish.models import (
     Todo,
     TodoKind,
 )
+from tests.conftest import make_profile
 
 B = Broker(id="fakeb", name="Fake B", url="https://fakeb.example/", category="data_broker",
            domains=["fakeb.example"], method="email", opt_out_email="privacy@fakeb.example",
@@ -111,7 +111,7 @@ def test_queued_handoff_notification_is_generic(store):
     t = Todo(profile_id=p.id, broker_id="fakeb", kind=TodoKind.ASSISTED_OPT_OUT, title="t",
              body="b")
     asyncio.run(QueuedHandoff(store, Rec(), p.label).request(t, None))
-    assert calls == [("Vanish needs you", GENERIC_HELP, None)]
+    assert calls == [("Free My ID needs you", GENERIC_HELP, None)]
 
 
 # ---------------------------------------------------------------- SEC-29

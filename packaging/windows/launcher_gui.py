@@ -1,4 +1,4 @@
-"""Entry point of the windowed Vanish.exe (no console window).
+"""Entry point of the windowed FreeMyID.exe (no console window).
 
 No arguments: open the app window (wizard on first launch, dashboard afterwards).
 With arguments (e.g. `run --scheduled`, used by the scheduled task): behave like the CLI, but
@@ -20,10 +20,10 @@ def main() -> int:
     multiprocessing.freeze_support()
     _quiet_streams()
     if len(sys.argv) > 1:
-        from vanish.cli import app
+        from freemyid.cli import app
         app()
         return 0
-    from vanish.wizard.desktop import main as desktop_main
+    from freemyid.wizard.desktop import main as desktop_main
     return desktop_main()
 
 

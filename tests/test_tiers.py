@@ -5,10 +5,9 @@ from datetime import date
 
 import pytest
 
-from tests.conftest import make_profile
-from vanish.config import Config
-from vanish.engine.tiers import can_scan, submit_target, tier_for
-from vanish.models import (
+from freemyid.config import Config
+from freemyid.engine.tiers import can_scan, submit_target, tier_for
+from freemyid.models import (
     Broker,
     FormStep,
     MailboxConfig,
@@ -19,6 +18,7 @@ from vanish.models import (
     Tier,
     VerificationStatus,
 )
+from tests.conftest import make_profile
 
 MB = MailboxConfig(address="removals@mail.example", imap_host="imap.mail.example",
                    smtp_host="smtp.mail.example", username="removals@mail.example")

@@ -7,9 +7,8 @@ import sys
 import pytest
 from cryptography.exceptions import InvalidTag
 
-from tests.conftest import make_profile
-from vanish import paths
-from vanish.models import (
+from freemyid import paths
+from freemyid.models import (
     Actor,
     BrokerStatus,
     Event,
@@ -26,7 +25,8 @@ from vanish.models import (
     Todo,
     TodoKind,
 )
-from vanish.storage import Store
+from freemyid.storage import Store
+from tests.conftest import make_profile
 
 PII = [b"Testperson", b"testperson", b"Evergreen", b"217-555-0142", b"Springfield",
        b"jane.testperson@example.com", b"1980-04-01"]
@@ -73,12 +73,12 @@ def test_roundtrip(store, profile):
     assert store.list_requests(status=RequestStatus.DRAFT)
 
 
-def test_no_plaintext_pii_on_disk(vanish_env, profile):
+def test_no_plaintext_pii_on_disk(freemyid_env, profile):
     s = Store()
     _populate(s, profile)
-    raw = _all_bytes(vanish_env)        # db + wal + shm + evidence
+    raw = _all_bytes(freemyid_env)        # db + wal + shm + evidence
     s.close()
-    raw += _all_bytes(vanish_env)
+    raw += _all_bytes(freemyid_env)
     for needle in PII:
         assert needle not in raw, needle
 
@@ -138,8 +138,8 @@ def test_delete_profile_removes_rows_and_evidence(store, profile):
 
 # ---- regressions for fixed findings ----
 
-def test_delete_profile_path_traversal(vanish_env, store):
-    canary = vanish_env / "canary.txt"
+def test_delete_profile_path_traversal(freemyid_env, store):
+    canary = freemyid_env / "canary.txt"
     canary.write_text("keep me")
     try:
         store.delete_profile("..")
@@ -148,14 +148,14 @@ def test_delete_profile_path_traversal(vanish_env, store):
     assert canary.exists()
 
 
-def test_save_evidence_confined(vanish_env, store, profile):
+def test_save_evidence_confined(freemyid_env, store, profile):
     try:
         store.save_evidence(Evidence.model_construct(
             id="e" * 32, profile_id=profile.id, broker_id="b", kind=EvidenceKind.SCREENSHOT,
             relpath="../escaped.bin", sha256=""), b"x")
     except ValueError:
         pass
-    assert not (vanish_env / "escaped.bin").exists()
+    assert not (freemyid_env / "escaped.bin").exists()
 
 
 def test_delete_profile_removes_all_evidence_files(store, profile):
@@ -168,7 +168,7 @@ def test_delete_profile_removes_all_evidence_files(store, profile):
 
 
 def test_delete_profile_removes_mailbox_password(store, memkeyring):
-    from vanish.secrets import get_mailbox_password, set_mailbox_password
+    from freemyid.secrets import get_mailbox_password, set_mailbox_password
     mb = MailboxConfig(address="removals@example.com", imap_host="imap.example.com",
                        smtp_host="smtp.example.com", username="removals@example.com")
     p = make_profile(mailbox=mb)
@@ -178,13 +178,13 @@ def test_delete_profile_removes_mailbox_password(store, memkeyring):
     assert get_mailbox_password(p.id, mb) is None
 
 
-def test_delete_profile_scrubs_ciphertext(vanish_env, profile):
+def test_delete_profile_scrubs_ciphertext(freemyid_env, profile):
     s = Store()
     s.save_profile(profile)
     blob = s._conn.execute("SELECT data FROM profiles WHERE id=?", (profile.id,)).fetchone()[0]
     s.delete_profile(profile.id)
     s.close()
-    raw = _all_bytes(vanish_env)
+    raw = _all_bytes(freemyid_env)
     assert blob[14:46] not in raw
 
 
@@ -203,7 +203,7 @@ def test_events_replace_blocked(store):
 # ---- v1 contract pieces: tiers + Assisted copy_fields (docs/PLAN_V1.md D1/D2) ----
 
 def test_status_tier_roundtrip(store, profile):
-    from vanish.models import Tier
+    from freemyid.models import Tier
     store.save_profile(profile)
     store.save_status(BrokerStatus(profile_id=profile.id, broker_id="fakepeople",
                                    state=ListingState.FOUND, tier=Tier.ASSISTED))
@@ -219,7 +219,7 @@ def _assisted_todo(pid):
                              "Email": "jane.testperson@example.com"})
 
 
-def test_todo_copy_fields_roundtrip_encrypted(vanish_env, profile):
+def test_todo_copy_fields_roundtrip_encrypted(freemyid_env, profile):
     s = Store()
     s.save_profile(profile)
     t = _assisted_todo(profile.id)
@@ -231,8 +231,8 @@ def test_todo_copy_fields_roundtrip_encrypted(vanish_env, profile):
     assert got[TodoKind.SEND_EMAIL_MANUALLY].copy_fields == {"To": "privacy@fakemail.example"}
     done = s.complete_todo(t.id)
     assert done is not None and done.copy_fields == t.copy_fields
-    raw = _all_bytes(vanish_env)
+    raw = _all_bytes(freemyid_env)
     s.close()
-    raw += _all_bytes(vanish_env)
+    raw += _all_bytes(freemyid_env)
     for needle in [*PII, b"Full name", b"privacy@fakemail.example"]:
         assert needle not in raw, needle
