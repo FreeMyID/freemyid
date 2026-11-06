@@ -8,8 +8,8 @@ How the marketing (brand-marketing), art (graphic-designer) and web (web-develop
 
 | ID | Page | Request and why | Copy / asset | Priority | Owner | Status |
 |---|---|---|---|---|---|---|
-| WR-1 | all | `art:` proposals for the logo/wordmark (2–3 directions) | brand/logo/options.html | P2 | graphic-designer | open |
-| WR-2 | all | `art:` Open Graph share image 1200×630 for Facebook link previews (the audience arrives from Facebook) | brand/social/og-default.png | P1 | graphic-designer | open |
+| WR-1 | all | `art:` proposals for the logo/wordmark (2–3 directions) | brand/logo/options.html | P2 | graphic-designer | proposals ready (brand/logo/options.html), awaiting user pick |
+| WR-2 | all | `art:` Open Graph share image 1200×630 for Facebook link previews (the audience arrives from Facebook) | brand/social/og-default.png | P1 | graphic-designer | done (brand/social/og-default.png) |
 | WR-3 | index | Conversion review of the new landing page: section order, CTA wording, objections answered. Output new WR rows. | n/a | P1 | brand-marketing | done (this commit; output WR-4 to WR-11) |
 | WR-4 | index | Answer the "is it safe / why the blue warning" objection before the first download click, not only on /download. Add a second `note` line under the hero buttons, linking to the download page's blue-warning section. Source: site_src/data/faq.yaml `Why does Windows warn me` (existing, published copy). | `Windows may show a blue "protected your PC" box the first time. <a href="download/#smartscreen">That's expected. Here's what to click.</a>` | P1 | web-developer | open |
 | WR-5 | index | Show the two objection FAQs a wary visitor asks next on the home page: set `home: true` on the existing FAQ entries "Why does Windows warn me when I install it?" and "Can I set it up for my parents?" (keep the four already shown; put the Windows one last of the five or six). No new copy, no new claims. | n/a (data flag only, site_src/data/faq.yaml) | P1 | web-developer | open |

@@ -1,0 +1,33 @@
+<!doctype html><html lang=en><meta charset=utf-8><title>Free My ID logo directions (proposals)</title>
+<style>
+body{margin:0;padding:32px;font:16px/1.4 "DejaVu Sans",Arial,sans-serif;background:#eee;color:#14181f;width:1100px}
+h1{font-size:24px}h2{margin:36px 0 8px;font-size:19px}
+.row{display:flex;gap:0}.pane{flex:1;padding:20px 24px;display:flex;align-items:center;gap:28px}
+.l{background:#fff}.d{background:#0f1520;color:#f2f4f8}
+.wm{font-family:Georgia,"DejaVu Serif",serif;font-weight:700;color:#1b2f5b;white-space:nowrap}.d .wm{color:#c4d5f7}
+.lock{display:flex;align-items:center;gap:.3em}
+small{display:block;font-size:12px;opacity:.7}
+.sz{display:flex;align-items:center;gap:24px}
+</style>
+<h1>Free My ID: logo directions (proposals only, nothing live is changed)</h1>
+<p>Each shown at favicon (16/32), nav (28px mark) and hero (64px mark), light and dark. Tokens: navy #1b2f5b, red #a3202e, dark-mode tints #c4d5f7 / #f5a3ab.</p>
+<div id=out></div>
+<script>
+const star='M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7L12 17.3 5.8 21l1.6-7L2 9.3l7.1-.7z';
+// each mark(dark) -> svg inner on 24 grid
+const dirs=[
+ {n:'A. Star badge: a navy rounded tile with one white star and a flag-red bar. Simplest, reads at 16px.',
+  m:d=>`<rect width=24 height=24 rx=5 fill="${d?'#c4d5f7':'#1b2f5b'}"/><path d="${star}" transform="translate(4.8 4.8) scale(.6)" fill="${d?'#0f1520':'#fff'}"/><rect y=20 width=24 height=2 fill="${d?'#f5a3ab':'#a3202e'}"/>`},
+ {n:'B. ID card: an ID-card outline with a star where the photo would be and two text lines. Most literal "ID" reading; weakest at 16px.',
+  m:d=>{const c=d?'#c4d5f7':'#1b2f5b',r=d?'#f5a3ab':'#a3202e';return `<rect x="1.5" y="4.5" width="21" height="15" rx="2.5" fill="none" stroke="${c}" stroke-width="2"/><path d="${star}" transform="translate(3.6 7.6) scale(.38)" fill="${r}"/><path d="M13 9.5h6M13 14.5h6" stroke="${c}" stroke-width="2" stroke-linecap="round"/><path d="M11.5 12h9" stroke="${r}" stroke-width=2 stroke-linecap=round opacity=0 />`}},
+ {n:'C. Open ring: a navy circle with a gap (a name freed) and a red star inside. Reads as a seal; the gap suggests "opened up" and free.',
+  m:d=>{const c=d?'#c4d5f7':'#1b2f5b',r=d?'#f5a3ab':'#a3202e';return `<path d="M19.5 7.5A9 9 0 1 0 21 12" fill=none stroke="${c}" stroke-width="2.4" stroke-linecap="round"/><path d="${star}" transform="translate(7.2 7.2) scale(.4)" fill="${r}"/>`}}];
+const out=document.getElementById('out');
+for(const x of dirs){
+ let h=`<h2>${x.n}</h2><div class=row>`;
+ for(const d of [0,1]){
+  const s=(px)=>`<svg width=${px} height=${px} viewBox="0 0 24 24">${x.m(d)}</svg>`;
+  const lock=(px,fs)=>`<span class=lock>${s(px)}<span class=wm style="font-size:${fs}px">Free My ID</span></span>`;
+  h+=`<div class="pane ${d?'d':'l'}"><div><small>favicon 16 / 32</small><div class=sz>${s(16)}${s(32)}</div></div><div><small>nav</small>${lock(28,24)}</div><div><small>hero</small>${lock(64,56)}</div></div>`}
+ out.innerHTML+=h+'</div>'}
+</script></html>
