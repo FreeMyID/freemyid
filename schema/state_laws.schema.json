@@ -1,0 +1,222 @@
+{
+  "$defs": {
+    "StateLaw": {
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "maxLength": 2,
+          "minLength": 2,
+          "title": "State",
+          "type": "string"
+        },
+        "statute_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Statute Name"
+        },
+        "citation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Citation"
+        },
+        "effective_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Effective Date"
+        },
+        "rights": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Rights",
+          "type": "array"
+        },
+        "response_days": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Response Days"
+        },
+        "extension_days": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Extension Days"
+        },
+        "data_broker_law": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Data Broker Law"
+        },
+        "government_portal_url": {
+          "anyOf": [
+            {
+              "format": "uri",
+              "maxLength": 2083,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Government Portal Url"
+        },
+        "ag_complaint_url": {
+          "anyOf": [
+            {
+              "format": "uri",
+              "maxLength": 2083,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ag Complaint Url"
+        },
+        "other_complaint_urls": {
+          "default": [],
+          "items": {
+            "format": "uri",
+            "maxLength": 2083,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Other Complaint Urls",
+          "type": "array"
+        },
+        "authorized_agent_allowed": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Authorized Agent Allowed"
+        },
+        "template": {
+          "default": "generic",
+          "description": "Template family to use",
+          "title": "Template",
+          "type": "string"
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Notes"
+        },
+        "source_urls": {
+          "default": [],
+          "items": {
+            "format": "uri",
+            "maxLength": 2083,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Source Urls",
+          "type": "array"
+        },
+        "last_verified": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Last Verified"
+        }
+      },
+      "required": [
+        "state"
+      ],
+      "title": "StateLaw",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "title": "Version",
+      "type": "string"
+    },
+    "updated": {
+      "format": "date",
+      "title": "Updated",
+      "type": "string"
+    },
+    "states": {
+      "items": {
+        "$ref": "#/$defs/StateLaw"
+      },
+      "title": "States",
+      "type": "array"
+    }
+  },
+  "required": [
+    "version",
+    "updated",
+    "states"
+  ],
+  "title": "StateLawRegistry",
+  "type": "object"
+}

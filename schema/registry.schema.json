@@ -1,0 +1,606 @@
+{
+  "$defs": {
+    "Broker": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-z0-9_]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "url": {
+          "format": "uri",
+          "maxLength": 2083,
+          "minLength": 1,
+          "title": "Url",
+          "type": "string"
+        },
+        "category": {
+          "$ref": "#/$defs/BrokerCategory"
+        },
+        "domains": {
+          "description": "Hostnames the engine may contact",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Domains",
+          "type": "array"
+        },
+        "search_url_pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Python format string. Placeholders: {first} {last} {middle} {city} {state} {state_name} {zip} {phone}; values are slugified/URL-encoded by the engine",
+          "title": "Search Url Pattern"
+        },
+        "opt_out_url": {
+          "anyOf": [
+            {
+              "format": "uri",
+              "maxLength": 2083,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Opt Out Url"
+        },
+        "method": {
+          "$ref": "#/$defs/Method"
+        },
+        "alt_methods": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Method"
+          },
+          "title": "Alt Methods",
+          "type": "array"
+        },
+        "opt_out_email": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Opt Out Email"
+        },
+        "postal": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PostalContact"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "phone": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Phone"
+        },
+        "required_fields": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ProfileField"
+          },
+          "title": "Required Fields",
+          "type": "array"
+        },
+        "needs_email_verification": {
+          "default": false,
+          "title": "Needs Email Verification",
+          "type": "boolean"
+        },
+        "confirmation_domains": {
+          "default": [],
+          "description": "Only links on these domains are auto-clicked from IMAP",
+          "items": {
+            "type": "string"
+          },
+          "title": "Confirmation Domains",
+          "type": "array"
+        },
+        "has_captcha": {
+          "default": false,
+          "title": "Has Captcha",
+          "type": "boolean"
+        },
+        "needs_id_upload": {
+          "default": false,
+          "title": "Needs Id Upload",
+          "type": "boolean"
+        },
+        "typical_processing_days": {
+          "default": 30,
+          "maximum": 365,
+          "minimum": 0,
+          "title": "Typical Processing Days",
+          "type": "integer"
+        },
+        "recheck_interval_days": {
+          "default": 30,
+          "maximum": 365,
+          "minimum": 1,
+          "title": "Recheck Interval Days",
+          "type": "integer"
+        },
+        "parent_company": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Company"
+        },
+        "feeds_from": {
+          "default": [],
+          "description": "Broker ids this site copies from",
+          "items": {
+            "type": "string"
+          },
+          "title": "Feeds From",
+          "type": "array"
+        },
+        "covered_by": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Broker id whose opt-out also removes this site (shared suppression center); engine submits once to covered_by and only re-scans this one",
+          "title": "Covered By"
+        },
+        "legal_basis_notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Legal Basis Notes"
+        },
+        "ca_registered": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ca Registered"
+        },
+        "vt_registered": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Vt Registered"
+        },
+        "steps": {
+          "default": [],
+          "description": "Human-readable step-by-step notes",
+          "items": {
+            "type": "string"
+          },
+          "title": "Steps",
+          "type": "array"
+        },
+        "search": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SearchSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "form": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/FormStep"
+          },
+          "title": "Form",
+          "type": "array"
+        },
+        "submitter": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Optional custom submitter 'module:Class'",
+          "title": "Submitter"
+        },
+        "source_urls": {
+          "default": [],
+          "description": "Citations for opt-out info",
+          "items": {
+            "format": "uri",
+            "maxLength": 2083,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Source Urls",
+          "type": "array"
+        },
+        "verification_status": {
+          "$ref": "#/$defs/VerificationStatus",
+          "default": "unverified"
+        },
+        "verification_notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Verification Notes"
+        },
+        "last_verified": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Last Verified"
+        },
+        "priority": {
+          "default": 50,
+          "description": "Higher runs first",
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Priority",
+          "type": "integer"
+        },
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "url",
+        "category",
+        "domains",
+        "method"
+      ],
+      "title": "Broker",
+      "type": "object"
+    },
+    "BrokerCategory": {
+      "enum": [
+        "people_search",
+        "background_check",
+        "data_broker",
+        "risk_data",
+        "family_tree",
+        "phone_lookup",
+        "other"
+      ],
+      "title": "BrokerCategory",
+      "type": "string"
+    },
+    "FormStep": {
+      "additionalProperties": false,
+      "description": "Declarative web-form step, so most brokers need no Python.\n\n`value` is a jinja2 template rendered with {profile, listing, mailbox, broker}.",
+      "properties": {
+        "action": {
+          "enum": [
+            "goto",
+            "fill",
+            "select",
+            "check",
+            "click",
+            "wait_for",
+            "screenshot",
+            "submit",
+            "expect_text",
+            "human"
+          ],
+          "title": "Action",
+          "type": "string"
+        },
+        "selector": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Selector"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Url"
+        },
+        "timeout_ms": {
+          "default": 15000,
+          "title": "Timeout Ms",
+          "type": "integer"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        }
+      },
+      "required": [
+        "action"
+      ],
+      "title": "FormStep",
+      "type": "object"
+    },
+    "Method": {
+      "enum": [
+        "web_form",
+        "email",
+        "postal",
+        "phone",
+        "account_required"
+      ],
+      "title": "Method",
+      "type": "string"
+    },
+    "PostalContact": {
+      "additionalProperties": false,
+      "properties": {
+        "recipient": {
+          "title": "Recipient",
+          "type": "string"
+        },
+        "lines": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Lines",
+          "type": "array"
+        }
+      },
+      "required": [
+        "recipient",
+        "lines"
+      ],
+      "title": "PostalContact",
+      "type": "object"
+    },
+    "ProfileField": {
+      "description": "Profile data a broker's opt-out may require.",
+      "enum": [
+        "full_name",
+        "first_name",
+        "last_name",
+        "middle_name",
+        "city",
+        "state",
+        "zip",
+        "street_address",
+        "age",
+        "dob",
+        "phone",
+        "email",
+        "listing_url",
+        "id_document"
+      ],
+      "title": "ProfileField",
+      "type": "string"
+    },
+    "SearchSpec": {
+      "additionalProperties": false,
+      "description": "How to find listings. Selectors are CSS; all optional so researcher can fill later.",
+      "properties": {
+        "result_selector": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Result Selector"
+        },
+        "name_selector": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name Selector"
+        },
+        "age_selector": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Age Selector"
+        },
+        "location_selector": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Location Selector"
+        },
+        "relatives_selector": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Relatives Selector"
+        },
+        "link_selector": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Link Selector"
+        },
+        "no_results_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "No Results Text"
+        }
+      },
+      "title": "SearchSpec",
+      "type": "object"
+    },
+    "VerificationStatus": {
+      "enum": [
+        "verified",
+        "unverified",
+        "broken"
+      ],
+      "title": "VerificationStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "title": "Version",
+      "type": "string"
+    },
+    "updated": {
+      "format": "date",
+      "title": "Updated",
+      "type": "string"
+    },
+    "brokers": {
+      "items": {
+        "$ref": "#/$defs/Broker"
+      },
+      "title": "Brokers",
+      "type": "array"
+    }
+  },
+  "required": [
+    "version",
+    "updated",
+    "brokers"
+  ],
+  "title": "Registry",
+  "type": "object"
+}

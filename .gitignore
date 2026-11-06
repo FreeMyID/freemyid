@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+build/
+dist/
+*.spec.bak
+# never commit personal data
+*.vanish-profile
+local_profiles/
+.vanish/
+zzz_legacy/*.zip
