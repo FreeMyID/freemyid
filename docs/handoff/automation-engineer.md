@@ -136,3 +136,7 @@ longer embeds a Subject line.
    it): __init__.py + conftest.py (same re-export as before) are new copies.
 - Results: `pytest -q tests src/freemyid/engine/_test_drafts` 368 passed, 3 xfailed; drafts
   48 pass x3; ruff clean; mypy clean.
+
+## Registry split (2026-11-06) - IN PROGRESS
+Public repo ships brokers/registry.sample.yaml only; full brokers/registry.yaml becomes private.
+Checkpoint: started; sample + registry.py precedence next.

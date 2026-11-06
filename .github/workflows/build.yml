@@ -50,6 +50,15 @@ jobs:
         run: |
           $v = python -c "import freemyid; print(freemyid.__version__)"
           "version=$v" >> $env:GITHUB_OUTPUT
+      # Broker registry: the public repo carries only brokers/registry.sample.yaml, which is always
+      # bundled. The full maintained registry lives in a private data repo. When it is set up, a
+      # step here will check it out with a read-only secret (for example FREEMYID_DATA_TOKEN) and
+      # copy registry.yaml into brokers/ before PyInstaller; the spec bundles it if present.
+      # Until then (and for forks / pull requests, which never get secrets) builds ship the sample.
+      - name: Registry in this build
+        shell: pwsh
+        run: |
+          if (Test-Path brokers/registry.yaml) { Write-Host "Bundling FULL registry" } else { Write-Host "Bundling SAMPLE registry only" }
       - name: "PyInstaller (onedir, FreeMyID.exe and freemyid-cli.exe)"
         run: pyinstaller packaging/windows/freemyid.spec --noconfirm --distpath dist --workpath build
       - name: Smoke test the built program

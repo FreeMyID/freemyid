@@ -17,9 +17,21 @@ SRC = ROOT / "src" / "freemyid"
 datas = [
     (str(SRC / "templates"), "freemyid/templates"),                  # letter templates
     (str(SRC / "wizard" / "static"), "freemyid/wizard/static"),      # css / js, no CDNs
-    (str(ROOT / "brokers"), "freemyid/_data/brokers"),               # registry + state laws
     (str(ROOT / "schema"), "freemyid/_data/schema"),                 # json schemas
 ]
+# Broker data. The public sample registry and state laws are always bundled. The full maintained
+# registry (brokers/registry.yaml) is NOT in the public repo; family/private builds drop it in
+# (CI fetches it from the private data repo when that secret is configured) and then it is
+# bundled too and takes precedence over the sample (see freemyid.registry).
+BROKERS = ROOT / "brokers"
+for _name, _required in (("registry.sample.yaml", True), ("state_laws.yaml", True),
+                         ("LICENSE-DATA.md", True), ("registry.yaml", False)):
+    _f = BROKERS / _name
+    if _f.exists():
+        datas.append((str(_f), "freemyid/_data/brokers"))
+    elif _required:
+        raise SystemExit(f"missing required data file: {_f}")
+print("bundling full broker registry:", (BROKERS / "registry.yaml").exists())
 datas += collect_data_files("desktop_notifier")
 datas += collect_data_files("jsonschema_specifications")
 

@@ -1,6 +1,9 @@
 """Broker + state-law registry loading, validation and updates. OWNER: orchestrator.
 
-Precedence: FREEMYID_HOME/registry.yaml (validated update) > bundled brokers/registry.yaml.
+Precedence: FREEMYID_HOME/registry.yaml (validated update or family-bundle registry)
+  > bundled brokers/registry.yaml (full registry; family/private builds only)
+  > bundled brokers/registry.sample.yaml (small public sample; always shipped).
+`registry_source()` tells the UI/CLI which one is in use: "update" | "full" | "sample".
 Updates: fetched ONLY from config.registry_url (the user's own GitHub repo), validated
 against the pydantic model + JSON Schema, optionally pinned by sha256, then atomically
 swapped in. A failed validation never replaces the working copy.
@@ -25,8 +28,39 @@ class RegistryError(RuntimeError):
     pass
 
 
-def bundled_registry_path() -> Path:
+SOURCE_UPDATE, SOURCE_FULL, SOURCE_SAMPLE = "update", "full", "sample"
+
+
+def bundled_full_registry_path() -> Path:
+    """Full maintained registry. Not in the public repo; present in family/private builds."""
     return paths.bundled_data_dir() / "brokers" / "registry.yaml"
+
+
+def bundled_sample_registry_path() -> Path:
+    """Small public sample registry; always shipped."""
+    return paths.bundled_data_dir() / "brokers" / "registry.sample.yaml"
+
+
+def bundled_registry_path() -> Path:
+    """The bundled registry in use: the full one if this build carries it, else the sample."""
+    full = bundled_full_registry_path()
+    return full if full.exists() else bundled_sample_registry_path()
+
+
+def _active_registry() -> tuple[str, Path]:
+    cached = paths.registry_cache_path()
+    if cached.exists():
+        return SOURCE_UPDATE, cached
+    full = bundled_full_registry_path()
+    if full.exists():
+        return SOURCE_FULL, full
+    return SOURCE_SAMPLE, bundled_sample_registry_path()
+
+
+def registry_source() -> str:
+    """Which registry `load_registry()` uses: "update" (FREEMYID_HOME/registry.yaml, from the
+    update feed or a family bundle), "full" (bundled full registry) or "sample" (public sample)."""
+    return _active_registry()[0]
 
 
 def bundled_state_laws_path() -> Path:
@@ -47,7 +81,7 @@ def validate_text(text: str) -> Registry:
     except yaml.YAMLError as e:
         raise RegistryError(f"registry is not valid YAML: {e}") from e
     sp = schema_path()
-    schema = json.loads(sp.read_text()) if sp.exists() else json_schema()
+    schema = json.loads(sp.read_text(encoding="utf-8")) if sp.exists() else json_schema()
     try:
         jsonschema.validate(json.loads(json.dumps(raw, default=str)), schema)
         return Registry.model_validate(raw)
@@ -57,16 +91,15 @@ def validate_text(text: str) -> Registry:
 
 def load_registry(path: Path | None = None) -> Registry:
     if path is None:
-        cached = paths.registry_cache_path()
-        path = cached if cached.exists() else bundled_registry_path()
-    return validate_text(path.read_text())
+        path = _active_registry()[1]
+    return validate_text(path.read_text(encoding="utf-8"))
 
 
 def load_state_laws(path: Path | None = None) -> dict[str, StateLaw]:
     p = path or bundled_state_laws_path()
     if not p.exists():
         return {}
-    reg = StateLawRegistry.model_validate(yaml.safe_load(p.read_text()))
+    reg = StateLawRegistry.model_validate(yaml.safe_load(p.read_text(encoding="utf-8")))
     return {s.state: s for s in reg.states}
 
 
@@ -125,6 +158,18 @@ def update_registry(timeout: float = 30.0, *,
                 raise RegistryError("registry sha256 pin is empty or malformed; refusing update")
             if want != hashlib.sha256(body).hexdigest():
                 raise RegistryError("registry sha256 mismatch; refusing update")
+    reg = install_registry_bytes(body)
+    return reg.version, len(reg.brokers)
+
+
+def install_registry_bytes(body: bytes) -> Registry:
+    """Validate a registry and atomically install it as FREEMYID_HOME/registry.yaml.
+
+    Shared by `update_registry` and family-bundle import, so both get the same checks:
+    size cap, UTF-8, YAML, JSON Schema + pydantic. On any failure nothing is replaced.
+    """
+    if len(body) > MAX_REGISTRY_BYTES:
+        raise RegistryError(f"registry is larger than {MAX_REGISTRY_BYTES} bytes; refusing")
     try:
         text = body.decode("utf-8")
     except UnicodeDecodeError as e:
@@ -132,6 +177,31 @@ def update_registry(timeout: float = 30.0, *,
     reg = validate_text(text)
     dest = paths.registry_cache_path()
     tmp = dest.with_suffix(".tmp")
-    tmp.write_text(text)
+    tmp.write_text(text, encoding="utf-8")
     tmp.replace(dest)
+    return reg
+
+
+FAMILY_REGISTRY_NAME = "registry.yaml"
+
+
+def find_family_registry() -> Path | None:
+    """A registry.yaml shipped next to the installed app (family installer), if any.
+
+    Only checked for frozen (installed) builds, mirroring wizard.flows.find_family_bundle.
+    """
+    import sys
+    if not getattr(sys, "frozen", False):
+        return None
+    p = Path(sys.executable).parent / FAMILY_REGISTRY_NAME
+    return p if p.is_file() else None
+
+
+def install_family_registry(src: Path | bytes) -> tuple[str, int]:
+    """Install a family-bundle registry (file path or raw bytes) through the update checks."""
+    if isinstance(src, Path):
+        if src.stat().st_size > MAX_REGISTRY_BYTES:
+            raise RegistryError(f"registry is larger than {MAX_REGISTRY_BYTES} bytes; refusing")
+        src = src.read_bytes()
+    reg = install_registry_bytes(src)
     return reg.version, len(reg.brokers)

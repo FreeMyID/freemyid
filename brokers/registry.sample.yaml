@@ -1,0 +1,671 @@
+version: "2026.11.06-sample"
+updated: 2026-11-06
+# SAMPLE broker registry (public). A small, representative slice of the maintained Free My ID
+# registry, licensed CC BY-NC 4.0 (see brokers/LICENSE-DATA.md). The full maintained registry
+# (several hundred brokers, kept current) is not in the public repository; it ships with
+# family/private builds and through the registry update feed (config registry_url).
+# Each entry below is copied verbatim from the maintained registry; see brokers/SOURCES.md.
+brokers:
+  - id: ca_drop
+    name: California DROP (Delete Request and Opt-out Platform)
+    url: https://privacy.ca.gov/drop/
+    category: other
+    domains: [privacy.ca.gov, consumer.drop.privacy.ca.gov]
+    opt_out_url: https://consumer.drop.privacy.ca.gov
+    method: account_required
+    required_fields: [full_name, street_address, city, state, zip, dob, email]
+    needs_email_verification: true
+    needs_id_upload: false
+    typical_processing_days: 90
+    recheck_interval_days: 90
+    ca_registered: false
+    legal_basis_notes: "California Delete Act (SB 362). From 2026-08-01 registered data brokers must check DROP at least every 45 days; status updates can take up to 90 days."
+    steps:
+      - "Only for people who live in California. Open the DROP web address."
+      - "Prove who you are with the State of California sign-in. You do this yourself."
+      - "Make a profile with only the details you choose to share."
+      - "Send one deletion request. It reaches 600+ registered data brokers and is free."
+      - "Come back in about 3 months to see the results."
+    source_urls: [https://privacy.ca.gov/drop/]
+    verification_status: verified
+    verification_notes: "privacy.ca.gov/drop page fetched 2026-11-05 and matched. The consumer.drop.privacy.ca.gov host is named on that page but was not itself fetched. Identity check happens on the state site; Free My ID must hand off to the human (TodoKind.GOVERNMENT_PORTAL)."
+    last_verified: 2026-11-05
+    priority: 95
+  - id: spokeo
+    name: Spokeo
+    success_text: ["We've received your request to remove the profile"]
+    listing_url_pattern: "^/[A-Za-z0-9-]+/[A-Za-z0-9-]+/[A-Za-z0-9-]+/p[0-9]+$"
+    url: https://www.spokeo.com/
+    category: people_search
+    domains: [www.spokeo.com, spokeo.com]
+    opt_out_url: https://www.spokeo.com/optout
+    method: web_form
+    alt_methods: [email, phone]
+    opt_out_email: CustomerCare@spokeo.com
+    phone: "1 (877) 864-0183"
+    required_fields: [listing_url, email]
+    needs_email_verification: true
+    confirmation_domains: [spokeo.com]
+    typical_processing_days: 3
+    ca_registered: true
+    steps:
+      - "Search for yourself on Spokeo and open your listing."
+      - "Copy the web address of that listing from the top of your browser."
+      - "Go to the opt-out page. Paste the web address and type your removal email."
+      - "Press the button to send."
+      - "Open the email Spokeo sends you and click its link."
+    source_urls: [&badbool https://github.com/yaelwrites/Big-Ass-Data-Broker-Opt-Out-List, https://www.spokeo.com/privacy-policy, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    verification_status: unverified
+    verification_notes: "Opt-out page /optout returned HTTP 403 (bot protection), so unverified. Email source: Spokeo's own privacy policy (fetched 2026-11-06) lists CustomerCare@spokeo.com for general privacy questions and says EEA users may email it to request erasure; deletion for others is via its web form or phone (877) 864-0183. privacy@spokeo.com is named there only for the Data Protection Officer and appeals; the CA registry primary contact is legal@spokeo.com. The registry also lists freepeopledirectory.com, peoplewin.com and thatsthem.com as Spokeo sites. BADBOOL warns paid accounts may keep removed data."
+    priority: 90
+  - id: freepeopledirectory
+    name: FreePeopleDirectory
+    url: https://www.freepeopledirectory.com/
+    category: people_search
+    domains: [www.freepeopledirectory.com, freepeopledirectory.com, www.spokeo.com]
+    opt_out_url: https://www.spokeo.com/optout
+    method: web_form
+    covered_by: spokeo
+    parent_company: Spokeo, Inc.
+    feeds_from: [spokeo]
+    steps:
+      - "Nothing extra to do. The Spokeo removal is meant to cover FreePeopleDirectory."
+      - "Do the Spokeo card first, then check this site again in a week."
+    source_urls: [*badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    verification_status: unverified
+    verification_notes: "BADBOOL says to opt out of FreePeopleDirectory via the Spokeo opt-out. The CA registry (2026-11-06) lists freepeopledirectory.com among Spokeo, Inc.'s websites, which supports ownership; opt-out coverage itself is not confirmed from a primary source."
+    priority: 30
+  - id: whitepages
+    name: Whitepages
+    url: https://www.whitepages.com/
+    category: people_search
+    domains: [www.whitepages.com, whitepages.com, support.whitepages.com]
+    opt_out_url: https://www.whitepages.com/suppression_requests
+    method: web_form
+    alt_methods: [email]
+    opt_out_email: legal@whitepages.com
+    required_fields: [listing_url, phone]
+    needs_email_verification: false
+    typical_processing_days: 2
+    ca_registered: true
+    steps:
+      - "Search for yourself on Whitepages and open your listing."
+      - "Copy the web address of that listing."
+      - "Paste it on the removal page and press the button."
+      - "Whitepages phones you with a 4-digit code. This needs your OK to share a phone number."
+      - "Type the code. If you cannot, Free My ID will mark this one as needing you."
+    source_urls: [*badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    verification_status: unverified
+    verification_notes: "Fetch blocked by tool policy. BADBOOL gives suppression_requests (underscore); the legacy seed used suppression-requests (hyphen); confirm which is live. Phone verification means NEEDS_HUMAN unless allow_phone_disclosure is set. Email: legal@whitepages.com is the 'primary contact email' in the CA CPPA registry 2025 CSV (fetched 2026-11-06) and a search-result summary of Whitepages pages names it for written CCPA deletion requests; not confirmed on a Whitepages page. A separate search result mentioned privacyrequest@whitepages.com; not recorded (single weak source)."
+    priority: 90
+  - id: whitepages_411
+    name: 411.com
+    url: https://www.411.com/
+    category: people_search
+    domains: [www.411.com, 411.com, www.whitepages.com]
+    opt_out_url: https://www.whitepages.com/suppression_requests
+    method: web_form
+    covered_by: whitepages
+    parent_company: Whitepages
+    steps:
+      - "Nothing extra to do. Removing your listing from Whitepages also covers 411.com."
+      - "If you still see yourself on 411.com after a week, tell Free My ID."
+    source_urls: [*badbool]
+    verification_status: unverified
+    verification_notes: "BADBOOL says 411.com is owned by Whitepages and uses the same opt-out. Coverage not confirmed from a primary source."
+    priority: 40
+  - id: beenverified
+    name: BeenVerified
+    success_text: ["Your optout request was submitted"]
+    url: https://www.beenverified.com/
+    category: people_search
+    domains: [www.beenverified.com, beenverified.com]
+    opt_out_url: https://www.beenverified.com/app/optout/search
+    method: web_form
+    required_fields: [full_name, state, email]
+    needs_email_verification: true
+    confirmation_domains: [beenverified.com]
+    typical_processing_days: 7
+    ca_registered: true
+    steps:
+      - "Open the opt-out page and type your name and state."
+      - "Find your record in the list and click it."
+      - "Type your removal email address."
+      - "Open the email BeenVerified sends and click its link."
+      - "You need to repeat this for each email address you use."
+    source_urls: [*badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    verification_status: unverified
+    verification_notes: "Fetch blocked by tool policy. URL from seed and BADBOOL. A separate property-record opt-out exists at /app/optout/address-search. The CA registry (fetched 2026-11-06) lists the CCPA request page as https://www.beenverified.com/svc/optout/search/comprehensive_optouts, a different path from /app/optout/search; neither was loadable, so confirm which is live. No email channel recorded: the registry primary contact is privacy@moneybot5000.com, which is not a BeenVerified domain (the schema only allows addresses on a broker's domains); see report."
+    priority: 90
+  - id: peoplelooker
+    name: PeopleLooker
+    url: https://www.peoplelooker.com/
+    category: people_search
+    domains: [www.peoplelooker.com, peoplelooker.com, www.beenverified.com]
+    opt_out_url: https://www.beenverified.com/app/optout/search
+    method: web_form
+    covered_by: beenverified
+    parent_company: BeenVerified, Inc.
+    feeds_from: [beenverified]
+    ca_registered: true
+    steps:
+      - "Nothing extra to do. The BeenVerified opt-out is meant to cover PeopleLooker."
+      - "If you still see yourself on PeopleLooker after a week, tell Free My ID."
+    source_urls: [*badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    verification_status: unverified
+    verification_notes: "The CA registry (2026-11-06) lists peoplelooker.com among BeenVerified, Inc.'s subsidiary sites, which supports common ownership. The legacy seed opt-out path /f/optout/search returned HTTP 404 on 2026-11-05. covered_by is an assumption from common ownership; if PeopleLooker still lists after the BeenVerified opt-out, remove covered_by and find the live form."
+    priority: 70
+  - id: peopleconnect
+    name: PeopleConnect Suppression Center (Intelius, Instant Checkmate, TruthFinder, US Search, ZabaSearch)
+    url: https://suppression.peopleconnect.us/
+    category: people_search
+    domains: [suppression.peopleconnect.us, peopleconnect.us]
+    opt_out_url: https://suppression.peopleconnect.us/login
+    method: web_form
+    required_fields: [full_name, email]
+    needs_email_verification: true
+    confirmation_domains: [peopleconnect.us]
+    typical_processing_days: 7
+    steps:
+      - "Open the Suppression Center page."
+      - "Type your name and removal email address, and find your record."
+      - "Select your record, then confirm."
+      - "Open the email they send and click its link."
+      - "This covers Intelius, Instant Checkmate, TruthFinder, US Search and ZabaSearch. It does not cover Classmates."
+    source_urls: [*badbool]
+    verification_status: unverified
+    verification_notes: "Page loaded 2026-11-05 but only the title 'PeopleConnect - Suppression Center' was returned (JS app), so the flow could not be confirmed. Coverage of the brands is stated by BADBOOL and several third-party guides, not by a primary page. DeleteMe help-center articles say PeopleConnect rejects requests submitted by third-party agents. No email recorded for this entry; see intelius, truthfinder, instantcheckmate."
+    priority: 90
+  - id: intelius
+    name: Intelius
+    url: https://www.intelius.com/
+    category: people_search
+    domains: [www.intelius.com, intelius.com, suppression.peopleconnect.us]
+    opt_out_url: https://suppression.peopleconnect.us/login
+    method: web_form
+    alt_methods: [email, phone]
+    opt_out_email: support@mailer.intelius.com
+    phone: "1-888-245-1655"
+    covered_by: peopleconnect
+    parent_company: PeopleConnect
+    ca_registered: true
+    steps:
+      - "Nothing extra to do. The PeopleConnect Suppression Center request covers Intelius."
+      - "Use the PeopleConnect card first, then check Intelius again in a week."
+    source_urls: [*badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    verification_status: unverified
+    verification_notes: "Fetch blocked by tool policy. Email support@mailer.intelius.com is the 'primary contact email' for Intelius, LLC in the CA CPPA registry 2025 CSV (fetched 2026-11-06; also BADBOOL). The registry lists US Search as an Intelius DBA. Phone is from BADBOOL only; a third-party profile could not confirm it. Registry contact, not a stated request intake."
+    priority: 80
+  - id: truthfinder
+    name: TruthFinder
+    url: https://www.truthfinder.com/
+    category: background_check
+    domains: [www.truthfinder.com, truthfinder.com, suppression.peopleconnect.us]
+    opt_out_url: https://suppression.peopleconnect.us/login
+    method: web_form
+    alt_methods: [email]
+    opt_out_email: help@truthfinder.com
+    covered_by: peopleconnect
+    parent_company: PeopleConnect
+    ca_registered: true
+    steps:
+      - "Nothing extra to do. The PeopleConnect Suppression Center request covers TruthFinder."
+      - "Use the PeopleConnect card first, then check this site again in a week."
+    source_urls: [*badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    verification_status: unverified
+    verification_notes: "truthfinder.com/opt-out returned HTTP 403. Covered by the PeopleConnect Suppression Center per BADBOOL; not confirmed from a primary page. help@truthfinder.com is the 'primary contact email' for TruthFinder, LLC in the CA CPPA registry 2025 CSV (2026-11-06)."
+    priority: 70
+  - id: peoplefinders
+    name: PeopleFinders
+    url: https://www.peoplefinders.com/
+    category: people_search
+    domains: [www.peoplefinders.com, peoplefinders.com]
+    opt_out_url: https://www.peoplefinders.com/opt-out
+    method: web_form
+    alt_methods: [email]
+    opt_out_email: customercare@peoplefinders.com
+    required_fields: [listing_url, email]
+    needs_email_verification: true
+    confirmation_domains: [peoplefinders.com]
+    ca_registered: true
+    steps:
+      - "Search for yourself on PeopleFinders and open your listing."
+      - "Copy the web address of that listing."
+      - "Paste it on the opt-out page and type your removal email."
+      - "Open the email they send and click its link within 24 hours."
+    source_urls: [*badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    verification_status: unverified
+    verification_notes: "HTTP 403 on fetch (opt-out and /about/privacy). URL from the legacy seed only. BADBOOL notes an opt-out at SmartBackgroundChecks likely also removes PeopleFinders. Email customercare@peoplefinders.com is the 'primary contact email' for Peoplefinders LLC in the CA CPPA registry 2025 CSV (2026-11-06), a customer-service mailbox. The registry says CCPA requests go through links in section V of peoplefinders.com/about/privacy. A search result (third party) mentions a 24-hour email verification link; sender domain assumed peoplefinders.com. privacy@peoplefinders.com appears only in a third-party guide; not recorded."
+    priority: 70
+  - id: truepeoplesearch
+    name: TruePeopleSearch
+    success_text: ["The following information was submitted to our system successfully", "Expect your information to be fully removed in 3 days or less"]
+    url: https://www.truepeoplesearch.com/
+    category: people_search
+    domains: [www.truepeoplesearch.com, truepeoplesearch.com]
+    opt_out_url: https://www.truepeoplesearch.com/removal
+    method: web_form
+    alt_methods: [email]
+    opt_out_email: support@truepeoplesearch.com
+    required_fields: [listing_url]
+    has_captcha: true
+    needs_email_verification: true
+    confirmation_domains: [truepeoplesearch.com]
+    typical_processing_days: 3
+    ca_registered: true
+    steps:
+      - "Search for yourself on TruePeopleSearch and open your listing."
+      - "Copy the web address of that listing."
+      - "Paste it on the removal page. A picture puzzle (captcha) appears; you must solve it."
+      - "Open the email they send and click its link within 24 hours."
+    source_urls: [*badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    verification_status: unverified
+    verification_notes: "Fetch blocked by tool policy. BADBOOL says captchas are required. Imitation sites exist (e.g. truepeoplesearch.net) and are not this operator. Email support@truepeoplesearch.com is the 'primary contact email' for Free Data Services, LLC (TruePeopleSearch) in the CA CPPA registry 2025 CSV (2026-11-06); a search result (third-party guide) says verification emails come from the same address."
+    priority: 85
+  - id: fastpeoplesearch
+    name: FastPeopleSearch
+    success_text: ["The following information was submitted to our system successfully", "Expect your information to be fully removed in 3 days or less"]
+    url: https://www.fastpeoplesearch.com/
+    category: people_search
+    domains: [www.fastpeoplesearch.com, fastpeoplesearch.com]
+    opt_out_url: https://www.fastpeoplesearch.com/removal
+    method: web_form
+    required_fields: [listing_url]
+    has_captcha: true
+    needs_email_verification: true
+    confirmation_domains: [fastpeoplesearch.com]
+    parent_company: Mississippi Tornado Alley LLC
+    ca_registered: true
+    steps:
+      - "Search for yourself on FastPeopleSearch and open your listing."
+      - "Copy the web address of that listing."
+      - "Paste it on the removal page and type your removal email. Solve the picture puzzle (captcha)."
+      - "Open the email they send and click its link within 24 hours."
+      - "Each listing needs its own request."
+    source_urls: [*badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    verification_status: unverified
+    verification_notes: "Fetch blocked by tool policy. Seed says /removal; BADBOOL says /optout. Confirm which is live. No email channel recorded: the CA registry lists the operator (Mississippi Tornado Alley LLC) contact as privacy@mtalley.zendesk.com, a host outside this broker's domains. A third-party guide says confirmation emails come from support@fastpeoplesearch.com (confirmation domain recorded from that)."
+    priority: 85
+  - id: radaris
+    name: Radaris
+    url: https://radaris.com/
+    category: people_search
+    domains: [radaris.com]
+    opt_out_url: https://radaris.com/control/privacy
+    method: web_form
+    steps:
+      - "Nothing to do here for now. The Radaris web address now belongs to a privacy company after a court order."
+    source_urls: [https://radaris.com/control/privacy]
+    verification_status: unverified
+    verification_notes: "Independently confirmed 2026-11-05 by fetching https://radaris.com/control/privacy: the page says the radaris.com domain was transferred to Atlas Data Privacy Corporation under an NJ Superior Court (Middlesex) judgment, with a default judgment dated 2026-08-27 under Daniel's Law (N.J.S.A. 56:8-166.1) against Radaris.com, Rehold.com and Trustoria.com, plus a permanent injunction covering affiliated domains. Contact shown: support@atlas.net (not a Radaris domain, so not recorded as opt_out_email). No removal flow. Disabled: nothing to automate on this domain. Re-enable for re-scan only if listings reappear under another domain (add that domain then)."
+    enabled: false
+    priority: 5
+  - id: mylife
+    name: MyLife
+    url: https://www.mylife.com/
+    category: people_search
+    domains: [www.mylife.com, mylife.com]
+    opt_out_url: https://www.mylife.com/privacyrequest
+    method: web_form
+    alt_methods: [email, phone]
+    opt_out_email: privacy@mylife.com
+    phone: "(888) 704-1900"
+    required_fields: [full_name, email, phone]
+    ca_registered: true
+    steps:
+      - "Open the privacy request page and fill in your name and removal email."
+      - "MyLife may ask for a phone number. Only give it if you have allowed that in Free My ID."
+      - "MyLife may try to start an account or ask for ID. Stop and ask Free My ID for help if so."
+      - "If the page does not work, send the prepared email letter instead."
+    source_urls: [*badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    verification_status: unverified
+    verification_notes: "Seed URL (/ccpa/index.pubview) returned HTTP 403; /privacy-policy also 403. URL, email privacy@mylife.com and phone are from BADBOOL only. The CA registry (2026-11-06) lists Insightbridge LLC (alt. name MyLife) with primary contact membersupport@mylife.com and request page https://www.mylife.com/privacy-policy; that address is not recorded because only one email field exists. BADBOOL reports MyLife may push an account and a phone call or driver's licence; treat as human-assisted."
+    priority: 70
+  - id: nuwber
+    name: Nuwber
+    url: https://nuwber.com/
+    category: people_search
+    domains: [nuwber.com]
+    opt_out_url: https://nuwber.com/removal/link
+    method: web_form
+    alt_methods: [email]
+    opt_out_email: support@nuwber.com
+    required_fields: [listing_url, email]
+    needs_email_verification: true
+    ca_registered: true
+    steps:
+      - "Search for yourself on Nuwber and open your listing."
+      - "Copy the web address of that listing."
+      - "Paste it on the removal page and type your removal email."
+      - "Open the email Nuwber sends and click its link."
+    source_urls: [*badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    verification_status: unverified
+    verification_notes: "HTTP 403 on fetch (removal page and /policy). URL from legacy seed only. Email support@nuwber.com is the 'primary contact email' for Nuwber Inc in the CA CPPA registry 2025 CSV (2026-11-06); request page listed there is https://www.nuwber.com/policy. Registry contact, not a stated request intake."
+    priority: 70
+  - id: thatsthem
+    name: That's Them
+    url: https://thatsthem.com/
+    category: people_search
+    domains: [thatsthem.com]
+    opt_out_url: https://thatsthem.com/optout
+    method: web_form
+    required_fields: [street_address]
+    parent_company: Spokeo, Inc.
+    steps:
+      - "Open the opt-out page."
+      - "Type the street address that shows on your listing."
+      - "Follow the on-screen buttons to finish."
+    source_urls: [*badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    verification_status: unverified
+    verification_notes: "HTTP 403 on fetch. URL from seed and BADBOOL. The CA registry (2026-11-06) lists thatsthem.com as a website of Spokeo, Inc., but its own opt-out form is separate, so covered_by is not set. No email: the registry contact legal@spokeo.com is not on this broker's domain."
+    priority: 70
+  - id: familytreenow
+    name: FamilyTreeNow
+    url: https://www.familytreenow.com/
+    category: family_tree
+    domains: [www.familytreenow.com, familytreenow.com]
+    opt_out_url: https://www.familytreenow.com/optout
+    method: web_form
+    alt_methods: [email]
+    opt_out_email: support@familytreenow.com
+    ca_registered: true
+    steps:
+      - "Open the opt-out page."
+      - "Type your name and find your record in the list."
+      - "Click your record and follow the buttons to ask for removal."
+      - "Check the site again in a week."
+    source_urls: [*badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    verification_status: unverified
+    verification_notes: "HTTP 403 on fetch. URL from seed and BADBOOL. Email support@familytreenow.com is the 'primary contact email' for Family Tree Now, LLC in the CA CPPA registry 2025 CSV (2026-11-06); request page there: https://www.familytreenow.com/privacy. Registry contact, not a stated request intake."
+    priority: 70
+  - id: searchpeoplefree
+    name: SearchPeopleFree
+    success_text: ["Your record request has been received and accepted"]
+    url: https://www.searchpeoplefree.com/
+    category: people_search
+    domains: [www.searchpeoplefree.com, searchpeoplefree.com]
+    opt_out_url: https://www.searchpeoplefree.com/opt-out
+    method: web_form
+    required_fields: [full_name, email]
+    needs_email_verification: true
+    has_captcha: true
+    typical_processing_days: 3
+    parent_company: Mississippi Tornado Alley LLC
+    steps:
+      - "Open the opt-out page and type your first name, last name and removal email."
+      - "Solve the picture puzzle (captcha) and press Begin removal process."
+      - "Open the email within 24 hours and click its link. You have 30 minutes after that."
+      - "Fill in the record details exactly as the site shows them."
+      - "Allow up to 3 days. This removes you from this site only."
+    form:
+      - action: goto
+        url: https://www.searchpeoplefree.com/opt-out
+      - action: expect_text
+        value: "Begin removal process"
+        note: "Button text seen on the live page 2026-11-06. Selectors for the fields were not visible in the fetched text, so none are recorded."
+      - action: human
+        note: "A person fills first name, last name and the removal email, solves the captcha and presses Begin removal process, then clicks the emailed link."
+    source_urls: [https://www.searchpeoplefree.com/opt-out, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    verification_status: verified
+    verification_notes: "Page fetched 2026-11-05 and again 2026-11-06 and matched; visible fields: First Name*, Middle Name, Last Name*, Email*; button 'Begin removal process.'; the page reports the emailed link, captcha, and 3-day processing. Removes only this site. Confirmation link domain is presumed searchpeoplefree.com. The fetch returns rendered text only (no HTML), so no CSS selectors are recorded; the form block is a page check plus a human step. CA registry lists the site under Mississippi Tornado Alley LLC."
+    last_verified: 2026-11-06
+    confirmation_domains: [searchpeoplefree.com]
+    priority: 60
+  - id: peoplesearchnow
+    name: PeopleSearchNow
+    success_text: ["The following information was submitted to our system successfully", "Expect your information to be fully removed in 3 days or less"]
+    url: https://www.peoplesearchnow.com/
+    category: people_search
+    domains: [www.peoplesearchnow.com, peoplesearchnow.com]
+    opt_out_url: https://www.peoplesearchnow.com/opt-out
+    method: web_form
+    required_fields: [full_name, email]
+    needs_email_verification: true
+    has_captcha: true
+    typical_processing_days: 3
+    parent_company: Mississippi Tornado Alley LLC
+    steps:
+      - "Open the opt-out page. Choose 'The subject of the request' (that is you)."
+      - "Type your first name, last name and removal email."
+      - "Solve the picture puzzle (captcha) and press Begin Removal Process."
+      - "Open the email within 24 hours and click its link."
+      - "Enter the record details as the site shows them. Allow up to 3 days."
+    form:
+      - action: goto
+        url: https://www.peoplesearchnow.com/opt-out
+      - action: expect_text
+        value: "Begin Removal Process"
+        note: "Button text seen on the live page 2026-11-06. Selectors for the fields were not visible in the fetched text, so none are recorded."
+      - action: human
+        note: "A person chooses 'The subject of the request', fills first name, last name and the removal email, solves the captcha and presses Begin Removal Process, then clicks the emailed link."
+    source_urls: [https://www.peoplesearchnow.com/opt-out, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    verification_status: verified
+    verification_notes: "Page fetched 2026-11-05 and again 2026-11-06 and matched; visible: radio 'The subject of the request' / 'An authorized agent of the subject of the request', Subject First Name*, Middle Name, Last Name*, Email*, button 'Begin Removal Process'; a captcha is mentioned. Confirmation link domain is presumed peoplesearchnow.com. Rendered text only, so no CSS selectors recorded. CA registry lists the site under Mississippi Tornado Alley LLC."
+    last_verified: 2026-11-06
+    confirmation_domains: [peoplesearchnow.com]
+    priority: 50
+  - id: acxiom
+    name: Acxiom
+    success_text: ["Thank You for Submitting Your Opt Out Request to Acxiom"]
+    url: https://www.acxiom.com/
+    category: data_broker
+    domains: [www.acxiom.com, acxiom.com, enterpriseot-privacy.my.onetrust.com]
+    opt_out_url: https://www.acxiom.com/optout/
+    method: web_form
+    alt_methods: [phone, postal]
+    phone: "1-877-774-2094"
+    postal:
+      recipient: "Acxiom LLC, Consumer Care Advocate, Attn: Consumer Rights Requests"
+      lines: ["CWY0301-026", "P.O. Box 2000", "Conway, AR 72033"]
+    required_fields: [email]
+    needs_email_verification: true
+    confirmation_domains: [acxiom.com]
+    typical_processing_days: 14
+    recheck_interval_days: 90
+    ca_registered: true
+    steps:
+      - "Open the opt-out page and choose 'US individual - opt out request'."
+      - "Type your name and removal email, then send."
+      - "Open the email Acxiom sends and click its link."
+      - "To see or delete your data, use the form linked from their privacy page instead."
+      - "Opting out does not call back data already given to advertisers."
+    source_urls: [https://www.acxiom.com/optout/, https://www.acxiom.com/privacy/]
+    verification_status: verified
+    verification_notes: "Both pages fetched 2026-11-05 and matched (opt-out, phone, address, two-week processing); opt-out page re-fetched 2026-11-06 (the form itself is not in the fetched text). No email channel: the only registry contact is a named individual's address, not recorded."
+    last_verified: 2026-11-06
+    priority: 60
+  - id: oracle
+    name: Oracle Advertising (Oracle Data Cloud)
+    url: https://www.oracle.com/
+    category: data_broker
+    domains: [www.oracle.com, oracle.com]
+    method: email
+    opt_out_email: oracleadvertising-inquiries_mb@oracle.com
+    recheck_interval_days: 180
+    legal_basis_notes: "Oracle's advertising products reached end of life on 2024-09-30. Oracle's EOL FAQ says to keep using prior opt-out/DSAR/deletion practices during wind-down and names the contact above. Likely nothing left to remove; kept for completeness."
+    source_urls: [https://oracle.com/a/ocom/docs/oracle-advertising-end-of-life-faqs.pdf]
+    verification_status: unverified
+    verification_notes: "Found via search result only; PDF fetch returned HTTP 403 on 2026-11-06 and 2026-11-05. Address may no longer work. No current web opt-out page found. Disabled by default."
+    enabled: false
+    priority: 10
+  - id: liveramp
+    name: LiveRamp
+    success_text: ["Thank you for submitting your request. LiveRamp is reviewing your request"]
+    url: https://liveramp.com/
+    category: data_broker
+    domains: [liveramp.com, optout.liveramp.com]
+    opt_out_url: https://liveramp.com/privacy/my-privacy-choices
+    method: web_form
+    alt_methods: [email, phone]
+    opt_out_email: consumercare@liveramp.com
+    phone: "(844) 678-0045"
+    recheck_interval_days: 90
+    ca_registered: true
+    steps:
+      - "Open the privacy choices page."
+      - "Under 'Deletion Request', click 'As a consumer'."
+      - "Fill in the form on the page that opens and send it."
+      - "For ads on your phone or browser, use the separate links at the top of the page."
+      - "You can also call (844) 678-0045 and follow the spoken menu."
+    source_urls: [https://liveramp.com/privacy/my-privacy-choices, https://liveramp.com/opt_out/]
+    verification_status: verified
+    verification_notes: "https://liveramp.com/opt_out/ fetched 2026-11-05 and lists this portal URL. The portal page itself was fetched 2026-11-06: sections Opt Out, Access, Category Access, Correction and Deletion (consumer / parent / agent links to external TrustArc forms, not recorded), phone (844) 678-0045 with service codes (deletion = 4), and the email consumercare@liveramp.com for requests, all shown on the page. No form HTML visible."
+    last_verified: 2026-11-06
+    priority: 50
+  - id: cotality
+    name: Cotality (formerly CoreLogic)
+    url: https://www.cotality.com/
+    category: data_broker
+    domains: [www.cotality.com, cotality.com]
+    method: phone
+    alt_methods: [email]
+    opt_out_email: privacy@cotality.com
+    phone: "1-866-221-9291"
+    recheck_interval_days: 90
+    legal_basis_notes: "Opt-out (sale/sharing) and deletion are separate requests. Deletion covers only data Cotality holds; county property records are not covered."
+    steps:
+      - "Call 1-866-221-9291 (California residents) and ask to opt out or delete."
+      - "Or use the Online Privacy Portal linked from their privacy policy page."
+      - "Or send the prepared email letter. They may ask for your name, address or phone to find you."
+    source_urls: [https://www.cotality.com/legal/privacy-policy]
+    verification_status: verified
+    verification_notes: "Privacy policy fetched 2026-11-06: deletion via the Online Privacy Portal (no web address given on the page) or by calling 1-866-221-9291 for California residents; privacy@cotality.com is named on the page for marketing opt-out requests and general questions (not explicitly for deletion). /privacy-center returned 404 earlier. Portal URL not recorded because it was not seen."
+    last_verified: 2026-11-06
+    priority: 30
+  - id: experian
+    name: Experian (marketing data opt-outs)
+    url: https://www.experian.com/
+    category: data_broker
+    domains: [www.experian.com, experian.com, consumerprivacy.experian.com]
+    opt_out_url: https://www.experian.com/privacy/opting_out
+    method: web_form
+    alt_methods: [email]
+    opt_out_email: privacyrequests@experian.com
+    recheck_interval_days: 180
+    ca_registered: true
+    steps:
+      - "Open the opting-out page."
+      - "Pick the choice you want, such as direct mail, phone calls, email or preapproved offers."
+      - "For other privacy choices, use the 'Your privacy choices' link on that page."
+      - "Follow the buttons and fill in your details."
+    source_urls: [https://www.experian.com/privacy/opting_out, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    verification_status: verified
+    verification_notes: "Fetched 2026-11-05. Required fields not visible from the index page. 'Your privacy choices' is at https://consumerprivacy.experian.com. privacyrequests@experian.com is the 'primary contact email' for Experian Marketing Solutions, LLC and Experian Information Solutions, Inc. in the CA CPPA registry 2025 CSV (2026-11-06); the registry's request page is https://www.experian.com/privacy/us-consumer-data-privacy-policy. Registry contact, not a stated request intake."
+    last_verified: 2026-11-05
+    priority: 40
+  - id: equifax
+    name: Equifax (marketing data opt-outs)
+    url: https://www.equifax.com/
+    category: data_broker
+    domains: [www.equifax.com, equifax.com, myprivacy.equifax.com]
+    opt_out_url: https://myprivacy.equifax.com/opt-in-opt-out/personal-info
+    method: web_form
+    alt_methods: [email, phone]
+    opt_out_email: usprivacy@equifax.com
+    phone: "1-866-295-6801"
+    recheck_interval_days: 180
+    ca_registered: true
+    steps:
+      - "Open the privacy portal page."
+      - "Fill in your name and address, then pick the choices you want."
+      - "Or call 1-866-295-6801."
+    source_urls: [https://www.equifax.com/privacy/privacy-statement/, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    verification_status: verified
+    verification_notes: "Privacy statement fetched 2026-11-05 and names this portal and phone; the portal was not loaded. usprivacy@equifax.com is the 'primary contact email' for Equifax Information Services LLC in the CA CPPA registry 2025 CSV (2026-11-06); registry request page https://www.equifax.com/personal/my-privacy/. Registry contact, not a stated request intake."
+    last_verified: 2026-11-05
+    priority: 40
+  - id: transunion
+    name: TransUnion (marketing data opt-outs)
+    url: https://www.transunion.com/
+    category: data_broker
+    domains: [www.transunion.com, transunion.com]
+    opt_out_url: https://www.transunion.com/consumer-privacy
+    method: web_form
+    alt_methods: [email, phone]
+    opt_out_email: usprivacy@transunion.com
+    phone: "866-310-8783"
+    recheck_interval_days: 180
+    ca_registered: true
+    steps:
+      - "Open the consumer privacy page."
+      - "Pick the request you want and fill in your details."
+      - "Or call 866-310-8783."
+    source_urls: [https://www.transunion.com/consumer-privacy, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    verification_status: unverified
+    verification_notes: "HTTP 403 on fetch. URL and phone are from a search-result summary. usprivacy@transunion.com is the 'primary contact email' for several TransUnion entities in the CA CPPA registry 2025 CSV (2026-11-06), whose request page is the same URL. Registry contact, not a stated request intake."
+    priority: 40
+  - id: optoutprescreen
+    name: OptOutPrescreen (credit bureau prescreen opt-out, covers Equifax, Experian, TransUnion, Innovis)
+    url: https://www.optoutprescreen.com/
+    category: other
+    domains: [www.optoutprescreen.com]
+    opt_out_url: https://www.optoutprescreen.com/
+    method: web_form
+    required_fields: [full_name, street_address, zip, dob]
+    recheck_interval_days: 365
+    legal_basis_notes: "Five-year opt-out online; a permanent opt-out needs a signed mailed form. May ask for SSN: Free My ID must not supply it (human step)."
+    steps:
+      - "Open the OptOutPrescreen page."
+      - "Choose the 5-year opt-out and type your name, address and birth date."
+      - "If it asks for a Social Security number, type it yourself. Free My ID will never do this for you."
+      - "For a permanent opt-out, print, sign and mail the form it gives you."
+    source_urls: [https://www.innovis.com/personal/lc_optOut]
+    verification_status: unverified
+    verification_notes: "HTTP 403 on fetch. The URL is confirmed by the Innovis page; the form's field list is from general knowledge/search summaries and unconfirmed."
+    priority: 30
+  - id: google_results_about_you
+    name: Google Results about you (removes search results, not broker data)
+    url: https://myactivity.google.com/results-about-you
+    category: other
+    domains: [myactivity.google.com, support.google.com, www.google.com]
+    opt_out_url: https://myactivity.google.com/results-about-you
+    method: account_required
+    recheck_interval_days: 90
+    steps:
+      - "Sign in to your Google account."
+      - "Open the Results about you page."
+      - "Add your name, phone, home address and email so Google can look for them."
+      - "Ask Google to remove any results it finds. This hides search results; it does not delete the sites' data."
+    source_urls: [*badbool]
+    verification_status: unverified
+    verification_notes: "Seed URL; needs a Google account (allow_account_creation / human). Not fetched. BADBOOL cites https://support.google.com/websearch/answer/12719076 for the tool."
+    priority: 35
+  - id: explorium
+    name: Explorium Inc
+    url: https://www.explorium.ai/
+    category: data_broker
+    domains:
+    - explorium.ai
+    - www.explorium.ai
+    method: email
+    opt_out_email: privacy@explorium.ai
+    ca_registered: true
+    typical_processing_days: 45
+    recheck_interval_days: 90
+    source_urls:
+    - https://cppa.ca.gov/data_broker_registry/registry2025.csv
+    verification_status: unverified
+    verification_notes: CA data broker registry contact field, imported 2026-11-06 by tools/import_ca_registry.py;
+      not confirmed as a deletion-request address.
+    priority: 20
+    opt_out_url: https://www.explorium.ai/platform-privacy-policy/
+  - id: peopledatalabs
+    name: People Data Labs, Inc
+    url: https://www.peopledatalabs.com/
+    category: people_search
+    domains:
+    - peopledatalabs.com
+    - privacy.peopledatalabs.com
+    - www.peopledatalabs.com
+    method: email
+    opt_out_email: privacy@peopledatalabs.com
+    ca_registered: true
+    typical_processing_days: 45
+    recheck_interval_days: 90
+    source_urls:
+    - https://cppa.ca.gov/data_broker_registry/registry2025.csv
+    verification_status: unverified
+    verification_notes: CA data broker registry contact field, imported 2026-11-06 by tools/import_ca_registry.py;
+      not confirmed as a deletion-request address.
+    priority: 20
+    opt_out_url: https://privacy.peopledatalabs.com/policies?name=privacy-policy

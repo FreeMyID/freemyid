@@ -12,3 +12,6 @@ dist/
 local_profiles/
 .freemyid/
 zzz_legacy/*.zip
+
+# full broker registry is private (paid feed / family builds); only registry.sample.yaml is public
+brokers/registry.yaml
