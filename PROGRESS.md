@@ -13,10 +13,14 @@ Models, state machine, encrypted store (AES-GCM blobs, key in keyring, append-on
 - Done (924a79b): SEC-01 state/escalation, SEC-02 ids+paths, SEC-03 full delete, SEC-05 registry fetch, SEC-07 broker hosts, SEC-08 submitter ns, SEC-09 netpolicy, SEC-11 append-only.
 - In progress: SEC-04/10/13 (peer e6, stopping), SEC-06/12/14 consent+cli (peer e8, stopping); qa-security updating tests for new id rules.
 - User priority: one-click **Windows** installer + very simple wizard for non-technical older users (wizard-packager).
+## Phase 5 — v1 re-plan + build wave 🔄 (2026-11-06, see docs/PLAN_V1.md)
+- Review: no runner/submitters yet; 58/63 brokers are bot-protected web forms; packaging not started.
+- Decision: 3 tiers (Email auto / Assisted "do it with me" / Automatic browser for verified only); mailbox optional; CA DROP first; Edge + pywebview + PyInstaller + Inno Setup per-user; GitHub Actions builds the exe.
+- Running: automation-engineer (runner, tiers, submitters), wizard-packager (6-screen wizard, dashboard, launcher, schtasks, packaging, CI), broker-researcher (privacy emails, plain steps, 3-5 verified forms), qa-security (test/lint fixes, e2e dry-run scaffold).
 ## Blocked / decisions
-- Registry GitHub repo URL: not set yet (placeholder).
+- GitHub repo: none yet. Needed for the Windows build (Actions) and registry updates. Ask user before creating/pushing.
 - Code signing for macOS/Windows: undecided (ship unsigned + Quick Start instructions for now).
 - License: pyproject says MIT but there is no LICENSE file; user to confirm (MIT default).
 - Outlook.com mailboxes need OAuth (basic auth retired); v1 supports Gmail app password, Proton Bridge, other IMAP providers.
 ## Next
-Phase 4 QA fixes → Phase 5 integration + dry run against the user's profile.
+Integrate wave → qa review → GitHub repo + first CI exe build (user OK needed) → test on a Windows 11 VM → dry run on a family profile.
