@@ -1,4 +1,4 @@
-<!-- Status: done all sections (first draft) / next: lead review; resolve TODO verify markers as engine, wizard and scheduler land -->
+<!-- Status: copy aligned with docs/POSITIONING.md and the 6-screen plan; resolve TODO verify markers as features land -->
 
 # Free My ID User Guide
 
@@ -22,10 +22,15 @@ This guide is for the person using Free My ID. You don't need to be technical. I
 
 ## 1. What Free My ID does (and doesn't)
 
-"People-search" sites such as Spokeo, Whitepages and BeenVerified collect your name, age, addresses, phone numbers and relatives, and show them to anyone. Most of them must let you opt out, but doing it by hand across dozens of sites takes hours, and the listings come back.
+**That post didn't stop anyone. This does.** If you ever posted "I do not give permission to use my information", you were right to object. That post goes to your friends' feeds, though, and nobody who sells your details has to read it. Free My ID sends the same wish to the right place, in the written form the sites have to answer.
+
+"People-search" sites (also called data brokers) such as Spokeo, Whitepages and BeenVerified collect your name, age, addresses, phone numbers and relatives, and show them to anyone. Many of them have a way to ask them to take your details down, but doing it by hand across dozens of sites takes hours, and the details come back.
+
+**No account. No cloud. Free My ID never asks for your Social Security number, bank or card details. It is free and open source, and you can uninstall it anytime.**
 
 Free My ID does the repetitive part for you, on your own computer:
 
+- It asks the sites to delete your details, in the formal way they are required to answer.
 - It searches each site for you.
 - It fills in each site's own removal form, or writes the removal email.
 - It clicks the "confirm your request" links that sites send.
@@ -34,8 +39,9 @@ Free My ID does the repetitive part for you, on your own computer:
 
 Please know these limits up front:
 
-- **"Removed" means removed from that one site,** not from the whole internet. Google results, social media, news articles and government records are not affected.
-- **Listings often come back.** Sites buy fresh data and copy one another, so expect some reappearances. Free My ID keeps watching for this.
+- **When a site says it deleted you, that is for that one site only,** not the whole internet. Google results, social media, news articles and government records are not affected.
+- **Free My ID does not change what Facebook does.** It works on people-search sites. It does not change what Facebook (or Google) does with your account.
+- **Details often come back.** Sites buy fresh data and copy one another, so expect some reappearances. Free My ID keeps watching for this.
 - **Some sites need a real person.** Some sites ask you to prove you're human, mail a letter, make a phone call or show ID. Free My ID prepares everything it can and then asks you to do that one step. See [section 6](#6-needs-you-items).
 - **Nothing is perfect.** Sites change their pages. If a step fails, Free My ID tells you instead of guessing.
 
@@ -83,57 +89,43 @@ Bridge has to be running whenever Free My ID checks mail, including scheduled ba
 
 ## 3. Setting up
 
-Open a terminal and run:
+On Windows you do not need a terminal. Double-click the **Free My ID** icon on your Desktop (or find it in the Start Menu). Free My ID opens in its own window. It runs only on your computer, and nothing you type is sent to a website.
 
-```
-freemyid setup
-```
+The setup has **six screens**. Each asks one thing. Press **Next** to go on, or **Back** if you change your mind.
 
-This opens the setup wizard in your web browser. It runs only on your computer (the address starts with `http://127.0.0.1`), and nothing you type is sent to a website. If you prefer typed questions in the terminal, run `freemyid setup --no-web`.
+1. **Welcome.** Choose one of these:
+   - **This is for me.**
+   - **This is for my child** (I am their parent or guardian, and they are under 18).
+   - **This is for an adult who asked me to help.** That adult must sign a short permission form. Free My ID prints one for you to get signed and attach.
 
-The wizard walks you through these steps:
+   Type your full name to sign, and tick the box. Free My ID won't work on anyone without this step.
+2. **Name.** Full name, plus any nicknames or maiden or earlier names. Example: *Jane Q Testperson*, nickname *Janie*, earlier name *Jane Q Example*.
+3. **Address.** The city and state where you live now (for example *Springfield, IL*). Add past cities if you like. They help Free My ID recognize *your* listing among people with the same name.
+4. **A few details.** Birth year, a phone number and an email. These are **only used on this computer to tell you apart from other people with your name.** Free My ID does not send them to any site as your details.
+5. **Email for removals.** The separate mailbox from [section 2](#2-before-you-start-a-separate-email-address-for-removals). Pick your email company and follow the short steps on screen, **or** choose **Skip, I'll do these by hand**. Skipping is fine. Permissions for ID, accounts and phone numbers stay **off** unless you turn them on later in Settings.
+6. **Run automatically?** Leave the box ticked so Free My ID keeps checking by itself. Click **Finish**.
 
-1. **Consent.** Choose one of these:
-   - **This is me.**
-   - **I'm the parent or guardian of a child under 18.**
-   - **I'm an authorized agent for another adult.** That adult must sign a written permission form. Free My ID prints one for you to get signed and attach.
+**Setting up a family member.** Someone can fill in a profile for a parent and send it as a password-protected file. Tell the parent the password **by phone**, not in the same email as the file. On their computer, they choose **I have a family setup file** on the Welcome screen, check the details, and give their own permission.
 
-   Type your name to confirm. Free My ID won't work on anyone without this step.
-2. **Names.** Full name, middle name, nicknames, and previous or maiden names. Example: *Jane Q Testperson*, nickname *Janie*, previous name *Jane Q Example*.
-3. **Addresses.** At least the city and state of where you live now (e.g. *Springfield, IL*). Add past cities too. They help Free My ID recognize *your* listing among people with the same name.
-4. **Age or birth date, phones, emails, relatives.** These are **only for recognizing your listings. Free My ID never sends them to any site.**
-5. **Permissions.** Some sites ask for a photo ID, an account, or a phone number. All three are **off** by default. If a site insists on one, Free My ID asks you instead of doing it. Leave them off unless you have a reason to turn them on.
-6. **Removal mailbox.** The mailbox from [section 2](#2-before-you-start-a-separate-email-address-for-removals).
-7. **Email mode.** Keep **Approve each email** (the default) so you see every email before it's sent.
-8. **Schedule.** How often Free My ID re-checks in the background. The default is weekly (Sunday 10:00).
-9. **Review.** Check everything, then save.
-
-<!-- TODO verify: wizard step wording and layout -->
-
-**Setting up a family member.** You can fill in a profile for a parent and send it to them as a password-protected file (`freemyid profile export Mom mom.freemyid-profile`). Tell them the password **by phone**, not in the same email as the file. On their computer, they open it during setup, check the details, and give their own consent.
-
-**Turning on the background check.** Run `freemyid schedule install`. It catches up automatically if your computer was asleep or off at the scheduled time. Check it with `freemyid schedule status`; turn it off with `freemyid schedule remove`.
+**Turning the background check on or off later.** Open **Settings** and use **Turn on** or **Turn off** under **Run automatically**. It catches up if your computer was asleep or off at the usual time.
 
 ## 4. Your first run
 
-1. **Practice run (sends nothing):**
-   ```
-   freemyid run --dry-run
-   ```
-   Free My ID searches every site and shows what it found and what it *would* do.
-2. **Look at the results:** `freemyid dashboard` (or `freemyid status` in the terminal).
-3. **Turn on real requests (one time only):**
-   ```
-   freemyid config enable-submissions
-   ```
-   Free My ID explains what will happen and asks you to confirm.
-4. **The real run:**
-   ```
-   freemyid run
-   ```
-   You can leave this running. If a site needs you, a browser window opens on that page and Free My ID waits. Do the step, then click **Done** in the dashboard (or press Enter in the terminal).
+1. **Practice first (sends nothing).** Free My ID starts in practice mode. It looks for your details on each site and shows what it found and what it *would* do.
+2. **Look at the results** on the Home page.
+3. **Turn on real requests (one time only).** Open **Settings** and click **Start sending real requests**. Free My ID explains what will happen and asks you to confirm.
+4. **Let it work.** You can close the window. If a site needs you, a card appears on the Home page with one big button. Do the step, then click **I did it**.
 
-To work on one person only, add `-p Mom` (their profile name). For one site only, add `-b spokeo`.
+## For helpers: the command line
+
+Helpers and developers can do the same things in a terminal. Normal users can skip this part.
+
+- `freemyid setup` opens the setup wizard. `freemyid setup --no-web` asks typed questions instead.
+- `freemyid profile export Mom mom.freemyid-profile` writes a password-protected family file.
+- `freemyid schedule install | status | remove` manages the background check.
+- `freemyid run --dry-run` is a practice run. `freemyid config enable-submissions` turns on real requests. `freemyid run` does a real run. Add `-p Mom` for one person or `-b spokeo` for one site.
+- `freemyid status`, `freemyid dashboard`, `freemyid todo list`, `freemyid outbox list`, `freemyid report`.
+- Mail server details for the presets: Gmail `imap.gmail.com` and `smtp.gmail.com`; Proton Bridge `127.0.0.1` ports 1143 (IMAP) and 1025 (SMTP) with STARTTLS.
 
 ## 5. What each status means
 
@@ -143,12 +135,12 @@ The dashboard shows a colored label for each site. <!-- TODO verify: exact chip 
 |---|---|---|
 | **Not checked yet** | Free My ID hasn't searched this site yet. | Nothing. |
 | **Not found** | No listing for you right now. | Nothing. Free My ID checks again later. |
-| **Found** | Your listing is there. A request will be sent on the next real run. | Nothing, unless it also says "needs you". |
-| **Submitted** | The removal request was sent. | Nothing. Sites usually take days to weeks. |
-| **Pending verification** | The site sent a confirmation email, or will. Free My ID clicks the link when it arrives. | Nothing, unless a to-do appears. |
-| **Confirmed** | The site accepted the request. Free My ID is waiting for the listing to disappear. | Nothing. |
-| **Removed** | Free My ID searched again and the listing is gone from this site. | Nothing. Free My ID keeps checking. |
-| **Reappeared** | A removed listing came back. A new request will be filed. | Nothing. This is normal; see [section 9](#9-when-listings-come-back). |
+| **Your details are listed** | Your listing is there. A request will be sent on the next real run. | Nothing, unless it also says "needs you". |
+| **Asked** | The request was sent. | Nothing. Sites usually take days to weeks. |
+| **Waiting for the site to reply** | The site sent a confirmation email, or will. Free My ID clicks the link when it arrives. | Nothing, unless a to-do appears. |
+| **Site confirmed** | The site accepted the request. Free My ID is waiting for the listing to disappear. | Nothing. |
+| **Not listed now** | Free My ID searched again and your listing was not on this site. That is for this one site only. | Nothing. Free My ID keeps checking. |
+| **Reappeared** | A listing that had gone came back. A new request will be filed. | Nothing. This is normal; see [section 9](#9-when-listings-come-back). |
 | **Needs you** | Free My ID can't go further without a person. | See [section 6](#6-needs-you-items). |
 | **Error** | Something went wrong, often because the site changed its page. | Nothing right away. Free My ID tries again on the next run. If it stays stuck, tell whoever set up Free My ID for you. |
 
@@ -156,8 +148,8 @@ The dashboard shows a colored label for each site. <!-- TODO verify: exact chip 
 
 1. It sends the request again.
 2. It sends a follow-up email citing your state's privacy law, if your state has one.
-3. It drafts a formal legal demand. **This always waits for your approval.**
-4. It gives you a to-do with links for filing a complaint with your state Attorney General (or California's privacy agency).
+3. It drafts a firmer letter. **This always waits for your approval.**
+4. It gives you a to-do with links to file a complaint with your state, if you want to.
 
 ## 6. "Needs you" items
 
@@ -201,12 +193,11 @@ The site showed something Free My ID didn't recognize, for example a redesigned 
 
 Many sites take removal requests by email. In **Approve each email** mode (the default), Free My ID writes each email but **doesn't send it until you approve it**.
 
-- In the dashboard, open **Outbox**, read the email, and click **Approve** to send it. <!-- TODO verify: dashboard outbox UI -->
-- In the terminal, list waiting emails with `freemyid outbox list` and send one with `freemyid outbox approve <id>`.
+- On the Home page, open **Emails to approve**, read the email, and click **Approve and send**. <!-- TODO verify: dashboard outbox UI -->
 
 Each email comes from your removal mailbox and includes only the details that site already shows about you. A copy of every sent email is kept in your encrypted records.
 
-**Formal legal demands always wait for your approval,** even if you switch to automatic mode.
+**Firmer letters always wait for your approval,** even if you switch to automatic mode.
 
 ## 8. If you live in California: DROP
 
@@ -231,12 +222,13 @@ What Free My ID does:
 
 What you can do:
 
-- Keep the background check on (`freemyid schedule status`).
+- Keep the background check on (see Settings).
 - Handle "needs you" items when they appear. That's where most stuck removals are.
-- Run `freemyid report` now and then to save a record of what was removed and when.
+- Helpers can run `freemyid report`, or use **Download report** on a person's page, to save a record of what was asked and when.
 
 ## 10. Your privacy
 
+- **Free My ID will never ask you for a Social Security number, bank details or a card number, and it never charges you.**
 - **Everything stays on your computer.** Free My ID has no account, no cloud and no tracking.
 - **Your information is encrypted.** The database and screenshots are encrypted, and the key is kept in your computer's secure password store.
 - **Free My ID talks only to the removal sites themselves and your removal mailbox.** It's blocked from contacting anything else.
@@ -245,11 +237,15 @@ What you can do:
 
 ## 11. Questions
 
+**Does this change what Facebook does?** No. Free My ID works on people-search sites. It does not change what Facebook itself does with your account. Facebook has its own privacy settings.
+
+**I posted "I do not consent". Did that work?** You were right to object. On its own that post does not reach the sites that sell your details. Free My ID sends your wish to them directly.
+
 **Will this remove me from Google?** No. Once a people-search page is gone, Google usually drops it over the following weeks, but Free My ID doesn't contact Google.
 
 **How long does it take?** Most sites act within a few days to six weeks. Some take longer, and Free My ID follows up.
 
-**Does it cost anything?** Free My ID is free. It never pays a site, and it never uses paid removal services.
+**Does it cost anything?** Free My ID is free in this family version. It never pays a site, and it never uses paid removal services.
 
 **I got an email from a site asking me to do something. Should I?** Check the dashboard first. If Free My ID already handled it, you'll see it there. Never send ID or payment to a site because of an email alone.
 
