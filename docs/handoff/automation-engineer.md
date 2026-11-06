@@ -139,4 +139,5 @@ longer embeds a Subject line.
 
 ## Registry split (2026-11-06) - IN PROGRESS
 Public repo ships brokers/registry.sample.yaml only; full brokers/registry.yaml becomes private.
-Checkpoint: started; sample + registry.py precedence next.
+Checkpoint: sample, registry.py, spec, build.yml, LICENSE-DATA, .gitignore, tests/test_registry_split.py done.
+Next: full suite with brokers/registry.yaml moved to brokers/registry.yaml.ASIDE (restore if you see that name!).
