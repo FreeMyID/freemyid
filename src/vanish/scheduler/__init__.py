@@ -14,7 +14,8 @@ from pathlib import Path
 from .. import paths
 from . import render
 
-__all__ = ["install", "job_command", "platform_name", "remove", "status"]
+__all__ = ["install", "job_command", "platform_name", "remove", "status", "windows_create_args",
+           "windows_delete_args", "windows_query_args"]
 
 
 def platform_name() -> str:
@@ -27,17 +28,36 @@ def platform_name() -> str:
     raise RuntimeError("Scheduling is not supported on this system.")
 
 
-def job_command() -> list[str]:
-    if getattr(sys, "frozen", False):
-        return [sys.executable, "run", "--scheduled"]
-    exe = shutil.which("vanish")
-    if exe:
-        return [exe, "run", "--scheduled"]
+def _windowless_python() -> str:
+    """pythonw.exe next to python.exe (no console window); falls back to python.exe."""
+    exe = Path(sys.executable)
+    pw = exe.with_name("pythonw.exe")
+    return str(pw) if pw.exists() else str(exe)
+
+
+def job_command(frozen: bool | None = None, platform: str | None = None) -> list[str]:
+    """The command the scheduler runs. Arguments let tests render it for any OS."""
+    frozen = getattr(sys, "frozen", False) if frozen is None else frozen
+    win = (sys.platform == "win32") if platform is None else platform == "windows"
+    if frozen:
+        exe = Path(sys.executable)
+        if win:   # the windowed Vanish.exe, so no console window flashes
+            gui = exe.with_name("Vanish.exe")
+            return [str(gui if gui.exists() else exe), "run", "--scheduled"]
+        return [str(exe), "run", "--scheduled"]
+    if win:
+        return [_windowless_python(), "-c", "from vanish.cli import app; app()",
+                "run", "--scheduled"]
+    exe_path = shutil.which("vanish")
+    if exe_path:
+        return [exe_path, "run", "--scheduled"]
     return [sys.executable, "-c", "from vanish.cli import app; app()", "run", "--scheduled"]
 
 
 def _run(args: list[str], input: str | None = None) -> subprocess.CompletedProcess:
-    return subprocess.run(args, input=input, check=False, capture_output=True, text=True, timeout=60)
+    flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0
+    return subprocess.run(args, input=input, check=False, capture_output=True, text=True,
+                          timeout=60, creationflags=flags)
 
 
 def _systemd_dir() -> Path:
@@ -64,6 +84,19 @@ def _crontab_get() -> str:
 
 def _strip_cron(text: str) -> str:
     return "".join(ln + "\n" for ln in text.splitlines() if render.CRON_MARK not in ln)
+
+
+def windows_create_args(xml_path: str) -> list[str]:
+    # No /RU or /RP: the task belongs to the current user and needs no admin rights.
+    return ["schtasks", "/Create", "/TN", render.TASK, "/XML", xml_path, "/F"]
+
+
+def windows_delete_args() -> list[str]:
+    return ["schtasks", "/Delete", "/TN", render.TASK, "/F"]
+
+
+def windows_query_args() -> list[str]:
+    return ["schtasks", "/Query", "/TN", render.TASK]
 
 
 def install() -> str:
@@ -97,8 +130,10 @@ def install() -> str:
         return "Installed a daily launchd agent. Missed runs happen when the Mac wakes."
     xml = paths.home() / "vanish-task.xml"
     xml.write_text(render.windows_task_xml(cmd), encoding="utf-16")
-    r = _run(["schtasks", "/Create", "/TN", render.TASK, "/XML", str(xml), "/F"])
-    xml.unlink(missing_ok=True)
+    try:   # /F replaces an existing task, so installing twice is harmless
+        r = _run(windows_create_args(str(xml)))
+    finally:
+        xml.unlink(missing_ok=True)
     if r.returncode != 0:
         raise RuntimeError("Could not create the scheduled task.")
     return "Installed a daily scheduled task that also runs after a missed start."
@@ -122,7 +157,7 @@ def remove() -> str:
         _run(["launchctl", "unload", str(p)])
         p.unlink(missing_ok=True)
         return "Background checks removed."
-    _run(["schtasks", "/Delete", "/TN", render.TASK, "/F"])
+    _run(windows_delete_args())    # fails harmlessly if it was never installed
     return "Background checks removed."
 
 
@@ -140,5 +175,5 @@ def status() -> str:
         return "not installed"
     if plat == "macos":
         return "launchd agent installed" if _plist_path().exists() else "not installed"
-    r = _run(["schtasks", "/Query", "/TN", render.TASK])
+    r = _run(windows_query_args())
     return "scheduled task installed" if r.returncode == 0 else "not installed"

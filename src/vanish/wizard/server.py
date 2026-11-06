@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import logging
+import os
 import secrets as pysecrets
 import socket
 import threading
@@ -27,10 +28,9 @@ from fastapi.staticfiles import StaticFiles
 from .. import paths
 from ..models import (
     Actor,
-    ConsentBasis,
     Event,
-    ListingState,
     RequestStatus,
+    TodoKind,
 )
 from . import dashboard as dash
 from . import draft as dr
@@ -42,13 +42,18 @@ COOKIE = "vanish_session"
 CSP = ("default-src 'none'; img-src 'self'; style-src 'self'; script-src 'self'; "
        "connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'")
 MSGS = {
-    "created": "Saved. Next: do a practice run with `vanish run --dry-run`.",
-    "updated": "Changes saved.", "done": "Marked done.", "resolved": "Resolved.",
+    "created": "All set. Vanish is starting its first check now.",
+    "updated": "Changes saved.", "done": "Great, thank you. Marked as done.",
+    "resolved": "Thank you. Vanish will carry on.",
+    "couldnt": "No problem. Vanish will try again later or suggest another way.",
+    "opened": "Opened in your web browser. Come back here when you are finished.",
+    "openfail": "Could not open your browser. Try again.",
     "sent": "Email sent.", "cancelled": "Email cancelled.",
-    "sendfail": "Could not send that email. Check the mailbox settings and try again.",
+    "sendfail": "Could not send that email. Check the email settings and try again.",
     "noengine": "The sending engine is not available yet in this install.",
-    "attached": "Authorization attached.", "sched_on": "Background checks turned on.",
-    "sched_off": "Background checks turned off.", "sched_fail": "Could not change the schedule.",
+    "attached": "Authorization attached.", "sched_on": "Automatic checking is on.",
+    "sched_off": "Automatic checking is off.", "sched_fail": "Could not change that setting.",
+    "saved": "Saved.", "real_on": "Real requests are on.", "real_off": "Practice mode is on.",
 }
 
 
@@ -71,10 +76,64 @@ def _consent_problem(p) -> str:
     return "" if ok else why
 
 
+def _background_disabled() -> bool:
+    """Never touch the system (scheduler, first run) under pytest or when told not to."""
+    return bool(os.environ.get("PYTEST_CURRENT_TEST") or os.environ.get("VANISH_NO_BACKGROUND"))
+
+
+def _default_finish(app: FastAPI, registry_loader: Callable[[], Any], profile,
+                    schedule_on: bool) -> None:
+    """After the wizard saves: install the scheduled job if asked, start the first run."""
+    if _background_disabled():
+        return
+    if schedule_on:
+        try:
+            from .. import scheduler
+            scheduler.install()
+        except Exception as e:  # noqa: BLE001  never block finishing on this
+            log.warning("scheduler install failed: %s", type(e).__name__)
+    pid = profile.id
+
+    def job() -> None:
+        from .. import config as cfgmod
+        from ..storage import Store
+        app.state.running = True
+        try:
+            from ..engine.runner import run as engine_run
+            reg = registry_loader()
+            if reg is None:
+                return
+            st = Store()
+            prof = st.get_profile(pid)
+            if prof is None:
+                return
+            # Practice (dry) run until the user turns on real requests in Settings.
+            engine_run(st, reg, [prof], scan_only=False,
+                       dry_run=not cfgmod.load().real_submissions_enabled, scheduled=False)
+        except ImportError:
+            log.info("engine not installed; skipping first run")
+        except Exception as e:  # noqa: BLE001
+            log.warning("first run failed: %s", type(e).__name__)
+        finally:
+            app.state.running = False
+    threading.Thread(target=job, name="vanish-first-run", daemon=True).start()
+
+
+def _open_in_browser(url: str) -> bool:
+    return bool(webbrowser.open(url))
+
+
 def create_app(store, token: str, allowed_hosts: set[str],
-               registry_loader: Callable[[], Any] = _load_registry) -> FastAPI:
+               registry_loader: Callable[[], Any] = _load_registry, *,
+               open_url: Callable[[str], bool] = _open_in_browser,
+               on_finish: Callable[[Any, bool], None] | None = None) -> FastAPI:
+    """`open_url` opens a page in the user's default browser (server side, so it works from a
+    pywebview window too). `on_finish(profile, schedule_on)` runs after the wizard saves."""
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     app.state.draft = None
+    app.state.running = False
+    app.state.on_focus = None      # desktop launcher: bring the window to the front
+    app.state.on_quit = None       # browser fallback: lets the user stop the program
     csrf_token = _csrf_for(token)
 
     def names() -> dict[str, str]:
@@ -142,19 +201,21 @@ def create_app(store, token: str, allowed_hosts: set[str],
     # ---------------------------------------------------------------- dashboard
     @app.get("/")
     async def home(request: Request):
+        from .. import config as cfgmod
         profiles = store.list_profiles()
         if not profiles:
             return redirect("/wizard/consent?new=1")
         queued = store.list_requests(status=RequestStatus.QUEUED_FOR_APPROVAL)
-        rows = []
-        for p in profiles:
-            counts: dict[ListingState, int] = {}
-            for st in store.list_statuses(p.id):
-                counts[st.state] = counts.get(st.state, 0) + 1
-            rows.append({"profile": p, "counts": counts, "todos": len(store.list_todos(p.id)),
-                             "outbox": sum(1 for r in queued if r.profile_id == p.id),
-                             "consent_problem": _consent_problem(p)})
-        return html(dash.home_page(rows, csrf_token, flash(request)))
+        nm = names()
+        who = {p.id: p.label for p in profiles}
+        people = [{"profile": p, "consent_problem": _consent_problem(p)} for p in profiles]
+        todos = [(t, who.get(t.profile_id, ""), nm.get(t.broker_id or "", ""))
+                 for t in store.list_todos()]
+        return html(dash.home_page(
+            statuses=store.list_statuses(), todos=todos, people=people,
+            outbox_count=len(queued), csrf=csrf_token, flash=flash(request),
+            practice=not cfgmod.load().real_submissions_enabled,
+            running=bool(app.state.running)))
 
     @app.get("/profile/{pid}")
     async def profile_view(pid: str, request: Request):
@@ -187,20 +248,71 @@ def create_app(store, token: str, allowed_hosts: set[str],
                 return Response(data, media_type=mt, headers=hdr)
         return Response("Not found", status_code=404)
 
+    def _todo(tid: str):
+        return next((t for t in store.list_todos() if t.id == tid), None)
+
+    def _back(t) -> str:
+        return "/"
+
     @app.post("/todo/{tid}/done")
     async def todo_done(tid: str):
-        t = store.complete_todo(tid)
+        t = _todo(tid)
+        if not t:
+            return redirect("/")
+        if t.kind in (TodoKind.ASSISTED_OPT_OUT, TodoKind.SEND_EMAIL_MANUALLY) and t.broker_id:
+            try:   # the person did the opt-out themselves: broker moves to "submitted"
+                from ..engine.handoff import mark_manual_submitted
+                mark_manual_submitted(store, t.profile_id, t.broker_id, t.request_id)
+            except Exception as e:  # noqa: BLE001  e.g. engine missing or odd state
+                log.info("mark_manual_submitted skipped: %s", type(e).__name__)
+        store.complete_todo(t.id)
+        store.log(Event(profile_id=t.profile_id, broker_id=t.broker_id, actor=Actor.USER,
+                        action="todo_done", detail={"todo_kind": t.kind.value}))
+        return redirect(_back(t), "done")
+
+    @app.post("/todo/{tid}/couldnt")
+    async def todo_couldnt(tid: str):
+        t = _todo(tid)
         if t:
+            store.complete_todo(t.id)
             store.log(Event(profile_id=t.profile_id, broker_id=t.broker_id, actor=Actor.USER,
-                            action="todo_done", detail={"todo_kind": t.kind.value}))
-        return redirect(f"/profile/{t.profile_id}" if t else "/", "done")
+                            action="todo_could_not", detail={"todo_kind": t.kind.value}))
+        return redirect("/", "couldnt")
+
+    @app.post("/todo/{tid}/open")
+    async def todo_open(tid: str):
+        t = _todo(tid)
+        url = dash.open_url_of(t) if t else None
+        if not url:
+            return redirect("/")
+        ok = False
+        try:
+            ok = open_url(url)
+        except Exception as e:  # noqa: BLE001
+            log.warning("open browser failed: %s", type(e).__name__)
+        return redirect("/", "opened" if ok else "openfail")
+
+    @app.post("/todo/{tid}/compose/{provider}")
+    async def todo_compose(tid: str, provider: str):
+        t = _todo(tid)
+        if not t or t.kind != TodoKind.SEND_EMAIL_MANUALLY:
+            return redirect("/")
+        to, subject, letter = dash.email_parts(t)
+        url = dash.compose_url(provider, to, subject, letter)
+        if not url:
+            return redirect("/")
+        ok = False
+        try:
+            ok = open_url(url)
+        except Exception as e:  # noqa: BLE001
+            log.warning("open browser failed: %s", type(e).__name__)
+        return redirect("/", "opened" if ok else "openfail")
 
     @app.post("/todo/{tid}/resolve")
     async def todo_resolve(tid: str):
-        match = [t for t in store.list_todos() if t.id == tid]
-        if not match:
+        t = _todo(tid)
+        if not t:
             return redirect("/")
-        t = match[0]
         try:   # let the engine resume the paused flow if it exposes a hook
             from ..engine import handoff
             hook = getattr(handoff, "mark_resolved", None)
@@ -211,7 +323,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
         store.complete_todo(t.id)
         store.log(Event(profile_id=t.profile_id, broker_id=t.broker_id, actor=Actor.USER,
                         action="todo_resolved", detail={"todo_kind": t.kind.value}))
-        return redirect(f"/profile/{t.profile_id}", "resolved")
+        return redirect("/", "resolved")
 
     @app.get("/outbox")
     async def outbox(request: Request):
@@ -248,8 +360,78 @@ def create_app(store, token: str, allowed_hosts: set[str],
 
     @app.get("/settings")
     async def settings(request: Request):
+        from .. import config as cfgmod
         from .. import scheduler
-        return html(dash.settings_page(scheduler.status(), csrf_token, flash(request)))
+        try:
+            sched = scheduler.status()
+        except Exception:  # noqa: BLE001
+            sched = "unknown"
+        return html(dash.settings_page(
+            people=store.list_profiles(), schedule_status=sched,
+            practice=not cfgmod.load().real_submissions_enabled, csrf=csrf_token,
+            flash=flash(request), can_quit=app.state.on_quit is not None))
+
+    @app.post("/_focus")
+    async def focus():
+        cb = app.state.on_focus
+        if cb:
+            try:
+                cb()
+            except Exception as e:  # noqa: BLE001
+                log.info("focus failed: %s", type(e).__name__)
+        return Response("ok", media_type="text/plain")
+
+    @app.post("/quit")
+    async def quit_app():
+        cb = app.state.on_quit
+        if cb:
+            threading.Timer(0.3, cb).start()
+            return html(ui.layout("Closed", "<h1>Vanish is closing.</h1><p>You can close this "
+                                  "tab.</p>", nav=False))
+        return redirect("/settings")
+
+    @app.post("/settings/submissions/{mode}")
+    async def submissions(mode: str):
+        from .. import config as cfgmod
+        if mode in ("on", "off"):
+            cfg = cfgmod.load()
+            cfgmod.save(cfg.model_copy(update={"real_submissions_enabled": mode == "on"}))
+            store.log(Event(actor=Actor.USER, action=f"real_submissions_{mode}"))
+        return redirect("/settings", "real_on" if mode == "on" else "real_off")
+
+    @app.post("/settings/{pid}/permissions")
+    async def set_permissions(pid: str, request: Request):
+        p = store.get_profile(pid)
+        if not p:
+            return redirect("/settings")
+        d = dr.draft_from_profile(p)
+        dr.apply_step(d, "permissions", await request.form())
+        dr.save_draft(store, d)
+        return redirect("/settings", "saved")
+
+    @app.get("/settings/{pid}/mailbox")
+    async def mailbox_get(pid: str):
+        p = store.get_profile(pid)
+        if not p:
+            return redirect("/settings")
+        d = dr.draft_from_profile(p)
+        return html(dash.mailbox_settings_page(p, ui._mailbox_body(d), csrf_token, []))
+
+    @app.post("/settings/{pid}/mailbox")
+    async def mailbox_post(pid: str, request: Request):
+        p = store.get_profile(pid)
+        if not p:
+            return redirect("/settings")
+        d = dr.draft_from_profile(p)
+        errs = dr.apply_step(d, "mailbox", await request.form())
+        if not errs:
+            try:
+                dr.save_draft(store, d)
+            except dr.SaveError as e:
+                errs = [str(e)]
+        if errs:
+            return html(dash.mailbox_settings_page(p, ui._mailbox_body(d), csrf_token, errs), 400)
+        return redirect("/settings", "saved")
 
     @app.post("/schedule/{action}")
     async def schedule(action: str):
@@ -296,7 +478,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
         if not p:
             return redirect("/")
         app.state.draft = dr.draft_from_profile(p)
-        return redirect("/wizard/names")
+        return redirect("/wizard/name")
 
     # ---------------------------------------------------------------- wizard
     @app.get("/wizard/authorization-form")
@@ -318,25 +500,30 @@ def create_app(store, token: str, allowed_hosts: set[str],
 
     @app.get("/wizard/import")
     async def import_form():
+        from .flows import find_family_bundle
+        found = find_family_bundle()
+        pick = ('<p>A setup file came with this program. Just type its passphrase.</p>'
+                if found else
+                '<label for="bundle">Setup file (.vanish-profile)</label>'
+                '<input id="bundle" name="bundle" type="file" required>')
         body = ('<h1>Use a family setup file</h1><form class="card" method="post" '
                 'enctype="multipart/form-data" action="/wizard/import">'
-                f'{ui.csrf_field(csrf_token)}'
-                '<label for="bundle">Setup file (.vanish-profile)</label>'
-                '<input id="bundle" name="bundle" type="file" required>'
+                f'{ui.csrf_field(csrf_token)}{pick}'
                 '<label for="passphrase">Passphrase</label>'
                 '<input id="passphrase" name="passphrase" type="password" required>'
                 '<p class="hint">You will review everything and give your own permission '
-                'before anything is saved.</p><div class="actions"><button type="submit">'
-                'Continue</button></div></form>')
-        return html(ui.layout("Import", body))
+                'before anything is saved.</p><div class="actions"><button type="submit" '
+                'class="big">Continue</button></div></form>')
+        return html(ui.layout("Import", body, nav=False))
 
     @app.post("/wizard/import")
     async def import_post(request: Request):
-        from .flows import load_bundle
+        from .flows import find_family_bundle, load_bundle
         form = await request.form()
         up = form.get("bundle")
         try:
-            data = await up.read()
+            found = find_family_bundle()
+            data = found.read_bytes() if found and not hasattr(up, "read") else await up.read()
             app.state.draft = load_bundle(data, str(form.get("passphrase", "")))
         except Exception:  # noqa: BLE001
             return html(ui.layout("Import", ui.errors_html(
@@ -349,17 +536,11 @@ def create_app(store, token: str, allowed_hosts: set[str],
         if step not in dr.STEPS:
             return redirect("/")
         d = get_draft(new=request.query_params.get("new") == "1" and step == "consent")
+        if step not in ui.visible_steps(d):
+            return redirect("/wizard/name")
         if step != "consent" and not d.editing and not d.consent_ack:
             return redirect("/wizard/consent")
-        summary = ""
-        if step == "review":
-            warn = []
-            if d.basis == ConsentBasis.AUTHORIZED_AGENT.value and not d.auth_bytes and not (
-                    d.existing_consent and d.existing_consent.authorization_doc):
-                warn.append("The signed authorization is not attached. Vanish will not run for "
-                            "this person until you attach it from their page.")
-            summary = ui.review_summary(d, warn)
-        return html(ui.step_page(step, d, csrf_token, [], summary))
+        return html(ui.step_page(step, d, csrf_token, []))
 
     @app.post("/wizard/{step}")
     async def wizard_post(step: str, request: Request):
@@ -371,20 +552,22 @@ def create_app(store, token: str, allowed_hosts: set[str],
         up = form.get("authorization")
         if hasattr(up, "read"):
             files["authorization"] = (getattr(up, "filename", "") or "", await up.read())
-        if step == "review":
-            try:
-                prof = dr.save_draft(store, d)
-            except dr.SaveError as e:
-                return html(ui.step_page("review", d, csrf_token, [str(e)],
-                                         ui.review_summary(d, [])), 400)
-            was_edit = d.editing
-            app.state.draft = None
-            return redirect(f"/profile/{prof.id}", "updated" if was_edit else "created")
         errs = dr.apply_step(d, step, form, files)
         if errs:
             return html(ui.step_page(step, d, csrf_token, errs), 400)
-        nxt = dr.STEPS[dr.STEPS.index(step) + 1]
-        return redirect(f"/wizard/{nxt}")
+        if step != "finish":
+            vs = ui.visible_steps(d)
+            return redirect(f"/wizard/{vs[vs.index(step) + 1]}")
+        try:
+            prof = dr.save_draft(store, d)
+        except dr.SaveError as e:
+            return html(ui.step_page("finish", d, csrf_token, [str(e)]), 400)
+        was_edit, sched_on = d.editing, d.weekly_recheck and d.schedule_consent
+        app.state.draft = None
+        if was_edit:
+            return redirect("/", "updated")
+        (on_finish or (lambda p, on: _default_finish(app, registry_loader, p, on)))(prof, sched_on)
+        return redirect("/", "created")
 
     return app
 
@@ -419,3 +602,45 @@ def serve(port: int, open_browser: bool = True) -> None:
     paths.home()
     server = uvicorn.Server(uvicorn.Config(app, log_level="warning", access_log=False))
     server.run(sockets=[sock])
+
+
+class Running:
+    """A server running on a background thread (used by the desktop launcher)."""
+
+    def __init__(self, app: FastAPI, server: Any, thread: threading.Thread, port: int,
+                 token: str) -> None:
+        self.app, self.server, self.thread, self.port, self.token = (
+            app, server, thread, port, token)
+
+    @property
+    def url(self) -> str:
+        return f"http://127.0.0.1:{self.port}/?t={self.token}"
+
+    def stop(self) -> None:
+        self.server.should_exit = True
+        self.thread.join(timeout=5)
+
+
+def start_background(port: int = 0, store=None, registry_loader=_load_registry) -> Running:
+    """Start the app on 127.0.0.1 (port 0 = any free port) without blocking."""
+    import time
+
+    import uvicorn
+
+    from ..storage import Store
+
+    sock = _bind(port)
+    real_port = sock.getsockname()[1]
+    token = pysecrets.token_urlsafe(32)
+    allowed = {f"127.0.0.1:{real_port}", f"localhost:{real_port}"}
+    paths.home()
+    app = create_app(store or Store(), token, allowed, registry_loader)
+    server = uvicorn.Server(uvicorn.Config(app, log_level="warning", access_log=False))
+    t = threading.Thread(target=lambda: server.run(sockets=[sock]), name="vanish-server",
+                         daemon=True)
+    t.start()
+    for _ in range(100):
+        if server.started:
+            break
+        time.sleep(0.05)
+    return Running(app, server, t, real_port, token)

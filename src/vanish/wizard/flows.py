@@ -138,7 +138,7 @@ def _mailbox(d: dr.Draft) -> None:
         d.skip_mailbox = True
         return
     d.skip_mailbox = False
-    provs = list(dr.PRESETS)
+    provs = list(dr.PRESETS)   # gmail, yahoo, icloud, proton_bridge, other (Outlook.com: skip)
     old = d.mailbox or {}
 
     def ask():
@@ -225,6 +225,15 @@ def export_family_bundle(store, profile_id: str, dest: Path, passphrase: str) ->
     return dest
 
 
+def find_family_bundle() -> Path | None:
+    """A .vanish-profile shipped next to the installed app (the "family installer")."""
+    import sys
+    base = Path(sys.executable).parent if getattr(sys, "frozen", False) else None
+    if base is None:
+        return None
+    return next(iter(sorted(base.glob("*.vanish-profile"))), None)
+
+
 def load_bundle(blob: bytes, passphrase: str) -> dr.Draft:
     """Decrypt a bundle into a fresh draft. Consent and mailbox are never imported."""
     obj = json.loads(import_with_passphrase(blob, passphrase))
@@ -245,5 +254,5 @@ def load_bundle(blob: bytes, passphrase: str) -> dr.Draft:
     d.imported = True
     d.attested_by = ""
     d.basis = ConsentBasis.SELF.value
-    d.mailbox, d.skip_mailbox = {}, False
+    d.mailbox, d.skip_mailbox, d.mailbox_answered = {}, False, False
     return d

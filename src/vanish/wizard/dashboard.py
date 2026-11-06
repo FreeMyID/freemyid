@@ -1,6 +1,9 @@
 """Dashboard page rendering (status, to-dos, outbox, evidence)."""
 from __future__ import annotations
 
+import re
+from urllib.parse import quote
+
 from ..models import (
     BrokerStatus,
     EvidenceKind,
@@ -8,8 +11,9 @@ from ..models import (
     Profile,
     Request,
     Todo,
+    TodoKind,
 )
-from .ui import chip, csrf_field, esc, layout
+from .ui import _check, chip, csrf_field, esc, layout
 
 SUMMARY_ORDER = [ListingState.NEEDS_HUMAN, ListingState.FOUND, ListingState.REAPPEARED,
                  ListingState.AWAITING_VERIFICATION, ListingState.SUBMITTED,
@@ -20,22 +24,151 @@ def _dt(d) -> str:
     return d.strftime("%Y-%m-%d") if d else "-"
 
 
-def home_page(rows: list[dict], csrf: str, flash: str = "") -> str:
-    body = f'<h1>Your people</h1>{_flash(flash)}'
-    for r in rows:
-        p: Profile = r["profile"]
-        counts: dict[ListingState, int] = r["counts"]
-        chips = " ".join(f'{chip(s)} {counts[s]}' for s in SUMMARY_ORDER if counts.get(s))
-        warn = ""
+DONE_STATES = (ListingState.REMOVED, ListingState.CONFIRMED)
+WAITING_STATES = (ListingState.SUBMITTED, ListingState.AWAITING_VERIFICATION,
+                  ListingState.FOUND, ListingState.REAPPEARED)
+COMPOSE = {
+    "gmail": ("Gmail", "https://mail.google.com/mail/?view=cm&fs=1&to={to}&su={su}&body={body}"),
+    "outlook": ("Outlook", ("https://outlook.live.com/mail/0/deeplink/compose?to={to}"
+                           "&subject={su}&body={body}")),
+    "yahoo": ("Yahoo Mail", "https://compose.mail.yahoo.com/?to={to}&subject={su}&body={body}"),
+}
+CANT = "I couldn't"   # escaped by _post_btn
+_MAX_COMPOSE_BODY = 1800   # long URLs get cut by some mail sites; Copy is the fallback
+
+
+def compose_url(provider: str, to: str, subject: str, body: str) -> str | None:
+    if provider not in COMPOSE:
+        return None
+    return COMPOSE[provider][1].format(to=quote(to, safe=""), su=quote(subject, safe=""),
+                                       body=quote(body[:_MAX_COMPOSE_BODY], safe=""))
+
+
+def email_parts(t: Todo) -> tuple[str, str, str]:
+    """(to, subject, letter) of a SEND_EMAIL_MANUALLY todo. Keys in copy_fields: To, Subject."""
+    low = {k.strip().lower(): v for k, v in t.copy_fields.items()}
+    return low.get("to", ""), low.get("subject", ""), t.body
+
+
+def open_url_of(t: Todo, index: int = 0) -> str | None:
+    urls = [u for u in t.links if u.startswith(("https://", "http://"))]
+    return urls[index] if 0 <= index < len(urls) else None
+
+
+def status_sentence(statuses: list[BrokerStatus], n_todos: int, running: bool,
+                    has_people: bool = True) -> tuple[str, bool]:
+    """(sentence, all_good)."""
+    if running:
+        return "Vanish is checking now. This page updates by itself.", True
+    done = sum(1 for s in statuses if s.state in DONE_STATES)
+    waiting = sum(1 for s in statuses if s.state in WAITING_STATES)
+    if not statuses and not n_todos:
+        return "Vanish is set up. Nothing to do yet.", True
+    if n_todos == 0:
+        return (f"Vanish is working. {done} sites done, {waiting} waiting. Nothing needs you "
+                "right now."), True
+    return (f"Vanish is working. {done} sites done, {waiting} waiting, {n_todos} need you."), False
+
+
+def _steps_list(body: str) -> list[str]:
+    out = []
+    for ln in body.splitlines():
+        ln = re.sub(r"^\s*(\d+[.)]|[-*])\s*", "", ln).strip()
+        if ln:
+            out.append(ln)
+    return out
+
+
+def _copy_rows(fields: dict[str, str]) -> str:
+    return "".join(
+        f'<div class="copyrow"><span class="lbl">{esc(k)}</span><span class="val">{esc(v)}</span>'
+        f'<button type="button" class="secondary" data-copy="{esc(v)}">Copy</button></div>'
+        for k, v in fields.items())
+
+
+def _post_btn(action: str, csrf: str, label: str, cls: str = "", extra: str = "") -> str:
+    return (f'<form method="post" action="{esc(action)}" class="inline">{csrf_field(csrf)}'
+            f'{extra}<button type="submit" class="{cls}">{esc(label)}</button></form>')
+
+
+def todo_card(t: Todo, who: str, bname: str, csrf: str, show_who: bool = False) -> str:
+    tid = esc(t.id)
+    head = (f'<h2>{esc(bname) or esc(t.title)}</h2>'
+            + (f'<p class="hint">For {esc(who)}</p>' if show_who else ""))
+    done = f"/todo/{tid}/done"
+    couldnt = f"/todo/{tid}/couldnt"
+    if t.kind == TodoKind.ASSISTED_OPT_OUT:
+        steps = _steps_list(t.body)
+        ol = ("<ol>" + "".join(f"<li>{esc(x)}</li>" for x in steps) + "</ol>") if steps else ""
+        url = open_url_of(t)
+        primary = (_post_btn(f"/todo/{tid}/open", csrf, "Open the site", "primary")
+                   if url else "")
+        copies = _copy_rows(t.copy_fields)
+        if copies:
+            copies = ("<p><b>Copy and paste these when the site asks:</b></p>" + copies)
+        return (f'<div class="card todo" data-kind="assisted_opt_out">{head}'
+                f'<p>{esc(t.title)}</p>{ol}{copies}<div class="actions">{primary}'
+                f'{_post_btn(done, csrf, "I did it", "secondary")}'
+                f'{_post_btn(couldnt, csrf, CANT, "secondary")}</div></div>')
+    if t.kind == TodoKind.SEND_EMAIL_MANUALLY:
+        letter = email_parts(t)[2]
+        rest = dict(t.copy_fields)
+        buttons = "".join(
+            _post_btn(f"/todo/{tid}/compose/{k}", csrf, f"Open in {COMPOSE[k][0]}",
+                      "primary" if k == "gmail" else "secondary") for k in COMPOSE)
+        return (f'<div class="card todo" data-kind="send_email_manually">{head}'
+                f'<p>{esc(t.title)}</p><p><b>This is the message. Send it from your own '
+                f'email.</b></p>'
+                f'<div class="letter" aria-label="Message preview">{esc(letter)}</div>'
+                f'<div class="actions"><button type="button" class="secondary" '
+                f'data-copy="{esc(letter)}">Copy the message</button></div>'
+                f'{_copy_rows(rest)}<div class="actions">{buttons}</div>'
+                f'<div class="actions">{_post_btn(done, csrf, "I sent it", "secondary")}'
+                f'{_post_btn(couldnt, csrf, CANT, "secondary")}</div></div>')
+    # everything else: one primary button
+    url = open_url_of(t)
+    opener = _post_btn(f"/todo/{tid}/open", csrf, "Open the page", "secondary") if url else ""
+    if t.resume_token:
+        primary = _post_btn(f"/todo/{tid}/resolve", csrf, "I finished it", "primary")
+    else:
+        primary = _post_btn(done, csrf, "Done", "primary")
+    return (f'<div class="card todo" data-kind="{esc(t.kind.value)}">{head}<p>{esc(t.title)}</p>'
+            f'<p class="hint">{esc(t.body)}</p><div class="actions">{opener}{primary}</div></div>')
+
+
+def home_page(*, statuses: list[BrokerStatus], todos: list[tuple[Todo, str, str]],
+              people: list[dict], outbox_count: int, csrf: str, flash: str = "",
+              practice: bool = False, running: bool = False) -> str:
+    """todos = (todo, person label, broker name)."""
+    sentence, good = status_sentence(statuses, len(todos), running)
+    body = (f'{_flash(flash)}<p class="status-line{" ok" if good else ""}" role="status">'
+            f'{esc(sentence)}</p>')
+    if practice:
+        body += ('<div class="banner"><b>Practice mode.</b> Vanish is looking but is not sending '
+                 'anything yet. <a href="/settings">Change this in Settings</a> when you are '
+                 'ready.</div>')
+    for r in people:
         if r["consent_problem"]:
-            warn = f'<div class="error">Not running yet: {esc(r["consent_problem"])}</div>'
-        body += (f'<div class="card"><h2><a href="/profile/{esc(p.id)}">{esc(p.label)}</a></h2>'
-                 f'{warn}<p>{chips or "Nothing checked yet."}</p>'
-                 f'<p>{r["todos"]} thing(s) need you. {r["outbox"]} email(s) waiting for approval.'
-                 f'</p><a class="btn" href="/profile/{esc(p.id)}">Open</a></div>')
+            body += (f'<div class="error">Not running yet for {esc(r["profile"].label)}: '
+                     f'{esc(r["consent_problem"])} <a href="/profile/{esc(r["profile"].id)}">'
+                     'Fix it</a></div>')
+    if outbox_count:
+        body += (f'<div class="card todo"><h2>{outbox_count} email(s) waiting for your OK</h2>'
+                 '<p>Look at each one, then press Approve.</p><div class="actions">'
+                 '<a class="btn primary" href="/outbox">Look at them</a></div></div>')
+    multi = len({w for _, w, _ in todos}) > 1
+    for t, who, bname in todos:
+        body += todo_card(t, who, bname, csrf, multi)
+    if not todos and not outbox_count and not running:
+        body += '<div class="card"><p>You have nothing to do right now. That is good.</p></div>'
+    body += '<h2>More</h2><div class="card">'
+    for r in people:
+        p = r["profile"]
+        body += (f'<p><a class="btn secondary" href="/profile/{esc(p.id)}">All the details for '
+                 f'{esc(p.label)}</a></p>')
     body += ('<p class="hint">"Removed" means removed from that one broker only. Listings can '
-             'reappear, which is why Vanish keeps re-checking.</p>')
-    return layout("Dashboard", body)
+             'reappear, which is why Vanish keeps re-checking.</p></div>')
+    return layout("Home", body, refresh=6 if running else 0)
 
 
 def _flash(msg: str) -> str:
@@ -58,22 +191,11 @@ def profile_page(p: Profile, statuses: list[BrokerStatus], names: dict[str, str]
     body += (f'<p><a class="btn secondary" href="/profile/{esc(p.id)}/edit">Edit details</a> '
              f'<a class="btn secondary" href="/profile/{esc(p.id)}/report">Download report</a></p>')
     # todos
-    body += '<div class="card"><h2>Needs you</h2>'
+    body += "<h2>Needs you</h2><div>"
     if not todos:
         body += "<p>Nothing right now.</p>"
     for t in todos:
-        links = "".join(f'<li><a href="{esc(u)}" target="_blank" rel="noopener noreferrer">'
-                        f'{esc(u)}</a></li>' for u in t.links if u.startswith(("http://",
-                                                                               "https://")))
-        body += (f'<div class="card"><b>{esc(names.get(t.broker_id or "", ""))}</b> '
-                 f'<span class="chip">{esc(t.kind.value.replace("_", " "))}</span>'
-                 f'<p>{esc(t.title)}</p><p class="hint">{esc(t.body)}</p>'
-                 f'{"<ul>" + links + "</ul>" if links else ""}'
-                 f'<form method="post" action="/todo/{esc(t.id)}/done" class="actions">'
-                 f'{csrf_field(csrf)}'
-                 + (f'<button type="submit" formaction="/todo/{esc(t.id)}/resolve">Resolve'
-                    '</button>' if t.resume_token else "")
-                 + '<button type="submit" class="secondary">Done</button></form></div>')
+        body += todo_card(t, p.label, names.get(t.broker_id or "", ""), csrf)
     body += "</div>"
     # per-broker table
     body += ('<div class="card"><h2>Brokers</h2><table><tr><th>Broker</th><th>State</th>'
@@ -129,13 +251,60 @@ def outbox_page(items: list[tuple[Request, str, str]], csrf: str, flash: str = "
     return layout("Emails", body)
 
 
-def settings_page(status: str, csrf: str, flash: str = "") -> str:
-    body = (f'<h1>Background checks</h1>{_flash(flash)}<div class="card">'
-            '<p>Vanish can re-check brokers once a day in the background. If the computer was '
-            'off or asleep, it catches up when it wakes.</p>'
-            f'<pre>{esc(status)}</pre>'
-            f'<form method="post" action="/schedule/install" class="actions">{csrf_field(csrf)}'
-            '<button type="submit">Turn on</button>'
-            '<button type="submit" class="secondary" formaction="/schedule/remove">Turn off'
-            '</button></form></div>')
-    return layout("Background checks", body)
+def settings_page(*, people: list[Profile], schedule_status: str, practice: bool, csrf: str,
+                  flash: str = "", can_quit: bool = False) -> str:
+    body = f'<h1>Settings</h1>{_flash(flash)}'
+    body += ('<div class="card"><h2>Run automatically</h2><p>Once a day Vanish can check '
+             'quietly in the background. If the computer was off, it catches up when it is '
+             f'next on.</p><p><b>Right now:</b> {esc(schedule_status)}</p>'
+             f'<form method="post" action="/schedule/install" class="actions">{csrf_field(csrf)}'
+             '<button type="submit">Turn on</button>'
+             '<button type="submit" class="secondary" formaction="/schedule/remove">Turn off'
+             '</button></form></div>')
+    if practice:
+        body += ('<div class="card"><h2>Practice mode is on</h2><p>Vanish looks for listings but '
+                 'does not send any request. When you have looked at the results and are happy, '
+                 f'turn on real requests.</p><form method="post" '
+                 f'action="/settings/submissions/on" class="actions">{csrf_field(csrf)}'
+                 '<button type="submit" data-confirm="Start sending real removal requests?">'
+                 'Start sending real requests</button></form></div>')
+    else:
+        body += ('<div class="card"><h2>Real requests are on</h2>'
+                 f'<form method="post" action="/settings/submissions/off" class="actions">'
+                 f'{csrf_field(csrf)}<button type="submit" class="secondary">Go back to '
+                 'practice mode</button></form></div>')
+    for p in people:
+        mb = (f"{p.mailbox.address}" if p.mailbox else "Not set up (you send messages by hand)")
+        perms = p.permissions
+        body += (f'<div class="card"><h2>{esc(p.label)}</h2>'
+                 f'<h3>Email for removals</h3><p>{esc(mb)}</p>'
+                 f'<p><a class="btn secondary" href="/settings/{esc(p.id)}/mailbox">Change it'
+                 '</a></p><h3>What Vanish may do</h3>'
+                 '<p class="hint">Everything here is off unless you tick it. If a website asks '
+                 'for something you did not allow, Vanish stops and asks you. It never pays.</p>'
+                 f'<form method="post" action="/settings/{esc(p.id)}/permissions">'
+                 f'{csrf_field(csrf)}'
+                 + _check("allow_id_upload", "Vanish may upload a copy of an ID if a website "
+                          "requires it", perms.allow_id_upload)
+                 + _check("allow_account_creation", "Vanish may create an account on a website "
+                          "if required", perms.allow_account_creation)
+                 + _check("allow_phone_disclosure", "Vanish may give a phone number if "
+                          "required", perms.allow_phone_disclosure)
+                 + '<div class="actions"><button type="submit">Save</button></div></form></div>')
+    if not people:
+        body += "<p>No one has been added yet.</p>"
+    if can_quit:
+        body += (f'<div class="card"><h2>Close Vanish</h2><form method="post" action="/quit" '
+                 f'class="actions">{csrf_field(csrf)}<button type="submit" class="secondary" '
+                 'data-confirm="Close Vanish now?">Close Vanish</button></form></div>')
+    return layout("Settings", body)
+
+
+def mailbox_settings_page(p: Profile, body_html: str, csrf: str, errs: list[str]) -> str:
+    from .ui import errors_html
+    return layout("Email for removals", (
+        f'<h1>Email for removals: {esc(p.label)}</h1>{errors_html(errs)}'
+        f'<form method="post" action="/settings/{esc(p.id)}/mailbox" class="card" '
+        f'autocomplete="off">{csrf_field(csrf)}{body_html}<div class="actions">'
+        '<a class="btn secondary" href="/settings">Back</a><button type="submit" class="big">'
+        'Save</button></div></form>'))

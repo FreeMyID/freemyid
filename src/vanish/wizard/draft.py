@@ -54,33 +54,32 @@ BASIS_LABELS = {
         "I am helping an adult who gave me signed written permission (an authorized agent).",
 }
 
-STEPS = ["consent", "sign", "names", "othernames", "addresses", "moreaddr", "birth", "phones",
-         "emails", "relatives", "permissions", "mailbox", "mailbox_login", "email", "schedule",
-         "browser", "review"]
+STEPS = ["consent", "name", "address", "about", "mailbox", "finish"]
 STEP_TITLES = {
-    "consent": "Who is this for?", "sign": "Please read and agree",
-    "names": "What is the person's name?", "othernames": "Any other names they have used?",
-    "addresses": "Where do they live now?", "moreaddr": "Anywhere else they have lived?",
-    "birth": "How old are they?", "phones": "Phone numbers", "emails": "Email addresses they use",
-    "relatives": "Names of relatives", "permissions": "What may Vanish do?",
-    "mailbox": "Your email for removal replies", "mailbox_login": "Sign in to that email",
-    "email": "Who approves the emails?", "schedule": "Check every week?",
-    "browser": "Get the web browser ready", "review": "Check everything",
+    "consent": "Welcome. Who is this for?", "name": "What is the person's name?",
+    "address": "Where do they live?", "about": "A few details to recognize them",
+    "mailbox": "An email address for removal replies", "finish": "Run automatically?",
 }
-NO_CONSENT_NEEDED = ("consent", "sign")
+NO_CONSENT_NEEDED = ("consent",)
 
 PRESETS: dict[str, dict[str, Any]] = {
     "gmail": {"imap_host": "imap.gmail.com", "imap_port": 993, "imap_ssl": True,
                   "smtp_host": "smtp.gmail.com", "smtp_port": 465, "smtp_starttls": False},
     "proton_bridge": {"imap_host": "127.0.0.1", "imap_port": 1143, "imap_ssl": False,
                           "imap_starttls": True, "smtp_host": "127.0.0.1", "smtp_port": 1025, "smtp_starttls": True},
+    "yahoo": {"imap_host": "imap.mail.yahoo.com", "imap_port": 993, "imap_ssl": True,
+                  "smtp_host": "smtp.mail.yahoo.com", "smtp_port": 465, "smtp_starttls": False},
+    "icloud": {"imap_host": "imap.mail.me.com", "imap_port": 993, "imap_ssl": True,
+                   "smtp_host": "smtp.mail.me.com", "smtp_port": 587, "smtp_starttls": True},
     "other": {"imap_host": "", "imap_port": 993, "imap_ssl": True,
                   "smtp_host": "", "smtp_port": 465, "smtp_starttls": False},
 }
 
-OUTLOOK_MSG = ("Outlook and Hotmail cannot be used yet, because Microsoft only allows a "
-               "special sign-in that Vanish does not support. Please pick Gmail, Proton or "
-               "Other, or create a free Gmail address just for Vanish.")
+OUTLOOK_MSG = ("Outlook.com and Hotmail no longer allow programs like Vanish to sign in. "
+               "Please choose \"Skip, I'll do these by hand\" (Vanish will prepare each "
+               "message and open your email for you), or pick a different email service.")
+# MailboxConfig.provider only accepts these; yahoo/icloud are stored as "other" (same servers).
+STORED_PROVIDERS = ("gmail", "outlook", "proton_bridge", "other")
 MAX_AUTH_BYTES = 10 * 1024 * 1024
 _HOST_RE = re.compile(r"^[A-Za-z0-9]([A-Za-z0-9.\-]{0,251}[A-Za-z0-9])?$")
 
@@ -125,6 +124,7 @@ class Draft:
     allow_phone_disclosure: bool = False
     # mailbox
     skip_mailbox: bool = False
+    mailbox_answered: bool = False   # the mailbox screen has been completed
     provider: str = "gmail"
     schedule_consent: bool = False
     mailbox: dict[str, Any] = field(default_factory=dict)
@@ -186,13 +186,13 @@ def apply_step(d: Draft, step: str, f: FormLike, files: dict[str, tuple[str, byt
     """Apply one wizard step's form to the draft. Returns a list of plain-language errors."""
     files = files or {}
     errs: list[str] = []
-    if step == "consent":
-        basis = f.get("basis", "")
-        if basis not in BASIS_LABELS:
-            errs.append("Please choose who is giving permission.")
-        else:
-            d.basis = basis
-    elif step == "sign":
+    if step in ("consent", "sign"):
+        if step == "consent":
+            basis = f.get("basis", "")
+            if basis not in BASIS_LABELS:
+                errs.append("Please choose who is giving permission.")
+            else:
+                d.basis = basis
         d.attested_by = (f.get("attested_by") or "").strip()
         if not d.attested_by:
             errs.append("Please type your full name to confirm.")
@@ -207,7 +207,7 @@ def apply_step(d: Draft, step: str, f: FormLike, files: dict[str, tuple[str, byt
         if not errs:
             d.consent_ack = True
             d.consent_at = utcnow()
-    elif step in ("names", "othernames"):
+    elif step in ("name", "names", "othernames"):
         def got(k: str) -> str | None:
             v = f.get(k)
             return None if v is None else str(v)
@@ -220,16 +220,16 @@ def apply_step(d: Draft, step: str, f: FormLike, files: dict[str, tuple[str, byt
             d.previous_names = _name_lines(got("previous_names"))
         if got("label") is not None:
             d.label = got("label").strip() or d.first
-        elif step == "names" and not d.label:
+        elif step in ("name", "names") and not d.label:
             d.label = d.first
-        if step == "names" and (not d.first or not d.last):
+        if step in ("name", "names") and (not d.first or not d.last):
             errs.append("First and last name are required.")
         for n in d.previous_names:
             try:
                 parse_person_name(n)
             except ValueError as e:
                 errs.append(str(e))
-    elif step in ("addresses", "moreaddr"):
+    elif step in ("address", "addresses", "moreaddr"):
         rows: list[dict[str, Any] | None] = (list(d.addresses) + [None] * 4)[:4]
         cur = f.get("current")
         for i in range(4):
@@ -249,13 +249,15 @@ def apply_step(d: Draft, step: str, f: FormLike, files: dict[str, tuple[str, byt
                        "zip": (f.get(f"zip{i}") or old.get("zip") or "").strip(),
                        "current": bool(old.get("current")) if cur is None else str(i) == cur}
         kept = [r for r in rows if r]
-        if step == "addresses" and not kept and not errs:
+        if step in ("address", "addresses") and not kept and not errs:
             errs.append("Please enter at least one city and state.")
         if kept and not any(r["current"] for r in kept):
             kept[0]["current"] = True
         if not errs:
             d.addresses = kept
-    elif step in ("details", "birth", "phones", "emails", "relatives"):
+    elif step in ("about", "details", "birth", "phones", "emails", "relatives"):
+        if f.get("birth_year") is not None:
+            _apply_birth_year(d, str(f.get("birth_year")).strip(), errs)
         if f.get("dob") is not None or f.get("age") is not None:
             d.dob = (f.get("dob") or "").strip()
             d.age = (f.get("age") or "").strip()
@@ -271,9 +273,8 @@ def apply_step(d: Draft, step: str, f: FormLike, files: dict[str, tuple[str, byt
                     errs.append("Date of birth is in the future.")
             except ValueError:
                 errs.append("Date of birth should look like 1960-04-23.")
-        if d.age:
-            if not d.age.isdigit() or not 0 <= int(d.age) <= 130:
-                errs.append("Age should be a number.")
+        if d.age and (not d.age.isdigit() or not 0 <= int(d.age) <= 130):
+            errs.append("Age should be a number.")
         if not errs and is_minor(d) and d.basis != ConsentBasis.GUARDIAN_OF_MINOR.value:
             errs.append("This person is under 18, so a parent or guardian must give "
                         "permission. Go back to the first screen and choose the parent or "
@@ -283,15 +284,17 @@ def apply_step(d: Draft, step: str, f: FormLike, files: dict[str, tuple[str, byt
         d.allow_account_creation = bool(f.get("allow_account_creation"))
         d.allow_phone_disclosure = bool(f.get("allow_phone_disclosure"))
     elif step == "mailbox":
-        prov = f.get("provider", d.provider)
-        if f.get("skip_mailbox"):
-            d.skip_mailbox = True
+        prov = f.get("provider") or ("skip" if f.get("skip_mailbox") else "")
+        if prov == "skip":
+            d.skip_mailbox, d.mailbox_answered = True, True
         elif prov == "outlook":
             errs.append(OUTLOOK_MSG)
         elif prov not in PRESETS:
-            errs.append("Please choose your email service.")
+            errs.append("Please choose one of the options, or Skip.")
         else:
             d.skip_mailbox, d.provider = False, prov
+            errs += _apply_mailbox(d, f)
+            d.mailbox_answered = not errs
     elif step == "mailbox_login":
         d.skip_mailbox = False
         errs += _apply_mailbox(d, f)
@@ -301,12 +304,31 @@ def apply_step(d: Draft, step: str, f: FormLike, files: dict[str, tuple[str, byt
             errs.append("Please choose an email option.")
         else:
             d.email_mode = mode
-    elif step == "schedule":
+    elif step in ("schedule", "finish"):
         d.weekly_recheck = bool(f.get("weekly_recheck"))
         d.schedule_consent = d.weekly_recheck   # ticking the box IS the consent
-    elif step == "browser":
-        pass
     return errs
+
+
+def _apply_birth_year(d: Draft, text: str, errs: list[str]) -> None:
+    if not text:
+        return
+    this_year = date.today().year
+    if not (text.isdigit() and len(text) == 4 and 1900 <= int(text) <= this_year):
+        errs.append("Birth year should be four digits, like 1952.")
+        return
+    y = int(text)
+    if d.dob and d.dob[:4] == text:
+        return      # same year as the stored date of birth: keep the exact date
+    d.dob, d.age = "", str(this_year - y)
+
+
+def birth_year_of(d: Draft) -> str:
+    if d.dob:
+        return d.dob[:4]
+    if d.age.isdigit():
+        return str(date.today().year - int(d.age))
+    return ""
 
 
 def _apply_mailbox(d: Draft, f: FormLike) -> list[str]:
@@ -317,7 +339,7 @@ def _apply_mailbox(d: Draft, f: FormLike) -> list[str]:
     if provider not in PRESETS:
         provider = "other"
     mb: dict[str, Any] = dict(PRESETS[provider])
-    mb["provider"] = provider
+    mb["provider"] = provider if provider in STORED_PROVIDERS else "other"
     mb["address"] = (f.get("address") or "").strip()
     mb["username"] = (f.get("username") or "").strip() or mb["address"]
     if provider == "other" or f.get("custom_hosts"):
@@ -340,8 +362,12 @@ def _apply_mailbox(d: Draft, f: FormLike) -> list[str]:
     pw = f.get("password") or ""
     if pw:
         d.password = pw
+    elif d.editing and d.mailbox and not d.password and (
+            mb["address"] != d.mailbox.get("address") or mb["imap_host"] != d.mailbox.get(
+                "imap_host")):
+        errs.append("You changed the email service, so please enter its app password.")
     elif not d.password and not (d.editing and d.mailbox):
-        errs.append("Please enter the mailbox password (for Gmail, an app password).")
+        errs.append("Please enter the app password. (It is not your normal email password.)")
     if not errs:
         d.mailbox = mb
     return errs
@@ -487,8 +513,17 @@ def save_draft(store, d: Draft, actor: Actor = Actor.WIZARD) -> Profile:
     return prof
 
 
+def _provider_of(p: Profile) -> str:
+    if not p.mailbox:
+        return "gmail"
+    for name, preset in PRESETS.items():
+        if preset["imap_host"] and preset["imap_host"] == p.mailbox.imap_host:
+            return name
+    return p.mailbox.provider or "other"
+
+
 def draft_from_profile(p: Profile, *, keep_consent: bool = True) -> Draft:
-    d = Draft(provider=(p.mailbox.provider if p.mailbox and p.mailbox.provider else "gmail"), id=p.id, editing=True, label=p.label, first=p.name.first,
+    d = Draft(provider=_provider_of(p), id=p.id, editing=True, label=p.label, first=p.name.first,
               middle=p.name.middle or "", last=p.name.last, suffix=p.name.suffix or "",
               nicknames=list(p.nicknames),
               previous_names=[" ".join(x for x in (n.first, n.middle, n.last) if x)
@@ -505,6 +540,7 @@ def draft_from_profile(p: Profile, *, keep_consent: bool = True) -> Draft:
               basis=p.consent.basis.value, attested_by=p.consent.attested_by)
     if keep_consent:
         d.existing_consent = p.consent
+    d.mailbox_answered = True
     if p.mailbox:
         d.mailbox = p.mailbox.model_dump(exclude={"keyring_service"})
     else:

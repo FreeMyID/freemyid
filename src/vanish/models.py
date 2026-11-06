@@ -246,7 +246,7 @@ class Address(_Base):
 class MailboxConfig(_Base):
     """Dedicated removal mailbox. Password lives ONLY in the OS keychain."""
     address: str
-    provider: Literal["gmail", "outlook", "proton_bridge", "other"] = "other"
+    provider: Literal["gmail", "yahoo", "icloud", "outlook", "proton_bridge", "other"] = "other"
     imap_host: str
     imap_port: int = 993
     imap_ssl: bool = True          # implicit TLS (993)

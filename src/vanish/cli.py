@@ -135,6 +135,14 @@ def setup(prefill: Annotated[Path | None,
         con.print(f"[green]Saved profile {p.label} ({p.id[:8]})[/]")
 
 
+@app.command("app")
+def app_window(no_window: Annotated[bool, typer.Option(
+        "--no-window", help="Use the web browser instead of an app window")] = False):
+    """Open Vanish in its own window (wizard on first launch, dashboard after)."""
+    from .wizard.desktop import main as desktop_main
+    raise typer.Exit(desktop_main(window=not no_window))
+
+
 @app.command()
 def dashboard():
     """Open the local dashboard (status, evidence, to-dos, approvals)."""

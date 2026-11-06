@@ -1,0 +1,72 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-test-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install ".[dev]"
+      - name: Ruff
+        run: ruff check src tests
+      - name: Tests
+        run: pytest -q
+
+  windows-installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install (with packaging extras)
+        run: pip install ".[package,dev]"
+      - name: Tests
+        run: pytest -q
+      - name: Version
+        id: ver
+        shell: pwsh
+        run: |
+          $v = python -c "import vanish; print(vanish.__version__)"
+          "version=$v" >> $env:GITHUB_OUTPUT
+      - name: "PyInstaller (onedir, Vanish.exe and vanish-cli.exe)"
+        run: pyinstaller packaging/windows/vanish.spec --noconfirm --distpath dist --workpath build
+      - name: Smoke test the built program
+        shell: pwsh
+        run: ./dist/Vanish/vanish-cli.exe registry validate
+      - name: Inno Setup
+        shell: pwsh
+        run: |
+          $iscc = (Get-Command iscc -ErrorAction SilentlyContinue).Source
+          if (-not $iscc) { $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" }
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup -y --no-progress
+            $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          }
+          & $iscc "/DAppVersion=${{ steps.ver.outputs.version }}" packaging\windows\vanish.iss
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed" }
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: VanishSetup-${{ steps.ver.outputs.version }}
+          path: dist/VanishSetup-${{ steps.ver.outputs.version }}.exe
+          if-no-files-found: error

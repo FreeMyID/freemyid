@@ -1,10 +1,19 @@
 # wizard-packager handoff
-## Done
-- wizard/{draft,ui,dashboard,server,flows,report,firstrun}, notify.py, scheduler/{__init__,render}; ruff clean; 5 TestClient drafts pass
-- server fix: POST body replayed after CSRF middleware reads form (forms were arriving empty)
-## NEW TOP PRIORITY (user): Windows boomer-easy install
-1. packaging/windows/ (PyInstaller onedir spec + Inno Setup .iss: per-user, no admin, Start+Desktop "Vanish" shortcut launching `vanish serve`/wizard, Apps uninstall asks to delete data)
-2. Wizard UX rewrite: one question/screen, 18px+, progress dots, plain words, mailbox guided choice + app-password help, "What happens next", schedule = single checkbox w/ consent -> scheduler.install
-3. Playwright browser download inside wizard with progress bar
-4. FAMILY_QUICK_START.md picture-style; .github/workflows/build.yml windows-latest (+ others)
-5. Tests for scheduler render + flows bundle
+## Done (v1 wave, ruff clean, 22 TestClient drafts pass: src/vanish/wizard/_test_drafts)
+1. Wizard = 6 screens (consent, name, address, about, mailbox, finish) per D6. Provider presets
+   gmail/yahoo/icloud/proton_bridge/other + "Skip, I'll do these by hand"; Outlook -> says skip.
+   Finish: "run automatically" checkbox (default on) -> scheduler.install (skipped under pytest or
+   VANISH_NO_BACKGROUND), first run in a thread (dry unless config.real_submissions_enabled), then "/".
+2. Dashboard D7: status sentence, to-do cards (ASSISTED_OPT_OUT, SEND_EMAIL_MANUALLY, generic),
+   Settings page (schedule, practice/real toggle, per-person mailbox + permissions).
+## Todo
+3 desktop.py (+ CHANGE REQUEST for `vanish app`) 4 Windows scheduler 5 packaging/windows
+6 .github/workflows/build.yml 7 FAMILY_QUICK_START.md
+3. DONE wizard/desktop.py (+ server.start_background, /_focus, /quit); tests test_wizard_desktop.py
+4. DONE Windows scheduler: hidden per-user task, windowed Vanish.exe/pythonw, idempotent /F, no
+   console flash (CREATE_NO_WINDOW); tests test_scheduler_render.py
+5. DONE packaging/windows/{vanish.spec,vanish.iss,launcher_gui.py,launcher_cli.py}, packaging/README.md.
+   Spec test-built on Linux (scratchpad venv): data paths + vanish-cli OK. Family bundle: iss
+   /DFamilyBundle=..., wizard/flows.find_family_bundle, import page uses it.
+6. DONE .github/workflows/build.yml
+7. DONE FAMILY_QUICK_START.md (text screenshots; real screenshots TBD)

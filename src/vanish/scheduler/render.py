@@ -52,13 +52,19 @@ def launchd_plist(cmd: list[str], log_path: str) -> str:
             "</dict>\n</plist>\n")
 
 
-def windows_task_xml(cmd: list[str]) -> str:
-    """Task Scheduler XML: daily trigger and 'run as soon as possible after a missed start'."""
+def windows_task_xml(cmd: list[str], hour: int = DAILY_HOUR) -> str:
+    """Per-user Task Scheduler XML (no admin needed).
+
+    Daily trigger; StartWhenAvailable = run as soon as possible after a missed start;
+    Hidden + a windowed executable (Vanish.exe / pythonw.exe) = no console window flashes.
+    """
     exe, args = cmd[0], " ".join(_win_quote(c) for c in cmd[1:])
     return ('<?xml version="1.0" encoding="UTF-16"?>\n'
             '<Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">\n'
+            "  <RegistrationInfo><Description>Vanish: quiet daily check for data-broker "
+            "listings. Only bothers you when it needs help.</Description></RegistrationInfo>\n"
             "  <Triggers>\n    <CalendarTrigger>\n"
-            f"      <StartBoundary>2000-01-01T{DAILY_HOUR:02d}:00:00</StartBoundary>\n"
+            f"      <StartBoundary>2000-01-01T{hour:02d}:00:00</StartBoundary>\n"
             "      <Enabled>true</Enabled>\n      <ScheduleByDay><DaysInterval>1</DaysInterval>"
             "</ScheduleByDay>\n    </CalendarTrigger>\n  </Triggers>\n"
             "  <Principals><Principal id=\"Author\"><LogonType>InteractiveToken</LogonType>"
@@ -66,6 +72,9 @@ def windows_task_xml(cmd: list[str]) -> str:
             "  <Settings>\n    <StartWhenAvailable>true</StartWhenAvailable>\n"
             "    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>\n"
             "    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>\n"
+            "    <RunOnlyIfNetworkAvailable>true</RunOnlyIfNetworkAvailable>\n"
+            "    <WakeToRun>false</WakeToRun>\n    <Hidden>true</Hidden>\n"
+            "    <Enabled>true</Enabled>\n"
             "    <ExecutionTimeLimit>PT2H</ExecutionTimeLimit>\n"
             "    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>\n  </Settings>\n"
             f"  <Actions Context=\"Author\">\n    <Exec>\n      <Command>{xesc(exe)}</Command>\n"
