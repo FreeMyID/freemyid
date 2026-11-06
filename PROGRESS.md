@@ -18,7 +18,7 @@ Models, state machine, encrypted store (AES-GCM blobs, key in keyring, append-on
 - Decision: 3 tiers (Email auto / Assisted "do it with me" / Automatic browser for verified only); mailbox optional; CA DROP first; Edge + pywebview + PyInstaller + Inno Setup per-user; GitHub Actions builds the exe.
 - Running: automation-engineer (runner, tiers, submitters), wizard-packager (6-screen wizard, dashboard, launcher, schtasks, packaging, CI), broker-researcher (privacy emails, plain steps, 3-5 verified forms), qa-security (test/lint fixes, e2e dry-run scaffold).
 ## Blocked / decisions
-- GitHub repo: the old personal repo (private, created 2026-11-06; user approved pushes). First push blocked until the account email is verified.
+- GitHub repo: the old personal repo (private, pushed 2026-11-06). The empty old personal repo can be deleted.
 - Code signing: user decided 2026-11-06 to ship unsigned (close family only; user helps install, SmartScreen warning OK).
 - License: pyproject says MIT but there is no LICENSE file; user to confirm (MIT default).
 - Outlook.com mailboxes need OAuth (basic auth retired); v1 supports Gmail app password, Proton Bridge, other IMAP providers.

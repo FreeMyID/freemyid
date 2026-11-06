@@ -86,3 +86,13 @@ Under it is a list of to-do cards, each with one big primary button. Details sit
 On a clean Windows 11 VM: install without admin → wizard in under 10 minutes → first dry run
 → dashboard shows tiers per broker → scheduled task present → uninstall cleans up. Plus
 `pytest` and `ruff` green on Linux and Windows CI.
+
+## Registry decisions (2026-11-06, after research wave)
+- 29/63 brokers now have `opt_out_email`. 21 of those come from the CA data-broker registry
+  "primary contact" field: we use them as best-effort letters, and the dashboard keeps these
+  brokers on a re-check and never shows them as "removed" just because a letter went out.
+- `covered_by` sites: submit only through the parent; ignore the covered site's own email.
+- `form` steps that end in `human` with `has_captcha: true` are page-health checks only → ASSISTED.
+  AUTOMATIC needs real fill/click steps, so no broker qualifies yet. Selectors need a real-browser
+  inspect session (later, with the user's OK, against opt-out pages only).
+- Off-domain contact emails (e.g. BeenVerified's moneybot5000.com) stay excluded for v1.
