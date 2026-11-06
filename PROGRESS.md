@@ -24,3 +24,9 @@ Models, state machine, encrypted store (AES-GCM blobs, key in keyring, append-on
 - Outlook.com mailboxes need OAuth (basic auth retired); v1 supports Gmail app password, Proton Bridge, other IMAP providers.
 ## Next
 Integrate wave → qa review → GitHub repo + first CI exe build (user OK needed) → test on a Windows 11 VM → dry run on a family profile.
+
+## Checkpoint 2026-11-06 ~09:30 (usage limit reached)
+- Done: v1 engine + wizard + packaging; 428 brokers; state_laws; SEC-15..29 fixed; AGPL; CI green incl. Windows silent install/uninstall test (run 42232871017).
+- Windows test VM: ~/VMs (quickemu; SSH via ~/VMs/vmssh; clean snapshot `clean-ssh-ready`, reset with ~/VMs/reset-clean.sh; GL off). Fixed installer copied to VM Downloads with MOTW; SmartScreen screen confirmed.
+- In progress: hands-on install through SmartScreen. Mouse via HMP is relative+accelerated; next: add QMP socket (extra_args) for absolute clicks, or keyboard focus.
+- Next: finish VM install + 6-screen wizard walkthrough with screenshots; D9/D10 "fill it in for me"; rename; mypy warnings (24).
