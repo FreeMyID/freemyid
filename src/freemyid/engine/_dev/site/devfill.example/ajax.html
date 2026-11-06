@@ -1,0 +1,20 @@
+<!doctype html><html><head><title>Dev Fill: in-page opt out</title></head><body>
+<!-- DEV FIXTURE (SEC-32/37): the form posts with fetch() and shows the thank-you text on the
+     same page while the form stays visible. Fake site. -->
+<h1>Opt out</h1>
+<form id="f" onsubmit="return false">
+  <label for="fn">First name</label> <input id="fn" name="a1"><br>
+  <label for="ln">Last name</label> <input id="ln" name="a3"><br>
+  <label for="em">Email address</label> <input id="em" name="a4"><br>
+  <button type="button" id="send">Submit</button>
+</form>
+<div id="out"></div>
+<script>
+document.getElementById('send').addEventListener('click', async () => {
+  try { await fetch('/api/optout', {method: 'POST', body: 'x=1'}); } catch (e) {}
+  const p = document.createElement('p');
+  p.textContent = 'Thank you. Your request has been received.';
+  document.getElementById('out').appendChild(p);
+});
+</script>
+</body></html>

@@ -14,6 +14,11 @@
   `check_escaped` raise BlockedByPolicy (never retried). Residual gap: IP-literal and
   loopback redirect targets bypass the resolver floor; they are detected (BlockedByPolicy)
   but the request itself has already been sent. Full fix = allowlisting proxy (SEC-16 A).
+* SEC-36: the headed human-in-the-loop windows (D9 fill_for_me, D10 listing finder) may
+  opt in with `new_context(..., headed=True, allow_captcha_frames=True)`. Only then the
+  CAPTCHA widget hosts (`netpolicy.captcha_subresource_allowed` / `captcha_hosts`) load as
+  sub-frames / sub-resources (never a main-frame navigation, never headless, never in dev
+  fixture mode), so the person can tick the robot box themselves. Free My ID never touches it.
 * Honest user agent: the browser's real UA + `config.user_agent_suffix`.
 * Random delay min_delay_s..max_delay_s before each navigation, per-domain rate limit,
   retries with exponential backoff.
@@ -30,11 +35,19 @@ import random
 import re
 import sys
 import time
+from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlsplit
 
 from .. import config as cfgmod
-from ..netpolicy import LOOPBACK_HOSTS, NetPolicy, _host_ok, host_of
+from ..netpolicy import (
+    LOOPBACK_HOSTS,
+    NetPolicy,
+    _host_ok,
+    captcha_hosts,
+    captcha_subresource_allowed,
+    host_of,
+)
 
 if TYPE_CHECKING:
     from playwright.async_api import Browser, BrowserContext, Page, Playwright, Response
@@ -194,14 +207,18 @@ class BrowserManager:
         self._browser = await self._launch(self.headless)
         return self._browser
 
-    def launch_args(self) -> list[str]:
-        """Browser-wide network floor (SEC-16 b)."""
-        rules = host_resolver_rules(self.netpolicy.allowed, bool(self.fixture_base))
+    def launch_args(self, extra_hosts: set[str] | None = None) -> list[str]:
+        """Browser-wide network floor (SEC-16 b). `extra_hosts` (the CAPTCHA widget hosts,
+        SEC-36) are only ever passed for a headed fill/finder window; never in fixture mode."""
+        allowed = set(self.netpolicy.allowed)
+        if extra_hosts and not self.fixture_base:
+            allowed |= extra_hosts
+        rules = host_resolver_rules(allowed, bool(self.fixture_base))
         return [f"--host-resolver-rules={rules}"]
 
-    async def _launch(self, headless: bool) -> Browser:
+    async def _launch(self, headless: bool, extra_hosts: set[str] | None = None) -> Browser:
         assert self._pw
-        args = self.launch_args()
+        args = self.launch_args(extra_hosts)
         exe = os.environ.get("FREEMYID_BROWSER_EXECUTABLE")
         if exe:
             return await self._pw.chromium.launch(executable_path=exe, headless=headless,
@@ -242,12 +259,77 @@ class BrowserManager:
             return False
         return _host_ok(host, hosts) and self.netpolicy.is_allowed(host)
 
+    @staticmethod
+    def _is_main_frame_navigation(req: Any) -> bool:
+        """True for a top-level document load (any page, popups included). Anything we
+        cannot judge (no frame, e.g. a worker) counts as one: the strict side."""
+        try:
+            return bool(req.is_navigation_request()) and req.frame.parent_frame is None
+        except Exception:  # noqa: BLE001
+            return True
+
+    def route_decision(self, url: str, *, is_main_frame_navigation: bool, hosts: set[str],
+                       allow_captcha_frames: bool = False) -> str:
+        """What the route handler does with a request: "fixture" (answered by the local dev
+        server), "continue", "captcha" (a CAPTCHA widget sub-resource in an opted-in headed
+        window, SEC-36; continued) or "block". Pure; unit-tested with fake requests."""
+        if self.url_allowed(url, hosts):
+            if self.fixture_base and not url.startswith(_LOCAL_SCHEMES):
+                return "fixture"
+            return "continue"
+        if allow_captcha_frames and not self.fixture_base and captcha_subresource_allowed(
+                url, is_main_frame_navigation=is_main_frame_navigation):
+            return "captcha"
+        return "block"
+
+    def is_escape(self, req: Any, hosts: set[str], allow_captcha_frames: bool = False) -> bool:
+        """Off-list redirect hop (any frame) or off-list main-frame navigation (SEC-16).
+        In an opted-in headed window a CAPTCHA sub-frame / sub-resource is not an escape,
+        but a main-frame navigation to a CAPTCHA host still is (SEC-36)."""
+        try:
+            hop = req.redirected_from is not None
+        except Exception:  # noqa: BLE001
+            hop = True
+        nav = self._is_main_frame_navigation(req)
+        if not (hop or nav) or self.url_allowed(req.url, hosts):
+            return False
+        return not (allow_captcha_frames and not nav and not self.fixture_base and
+                    captcha_subresource_allowed(req.url, is_main_frame_navigation=False))
+
+    def make_route_handler(self, hosts: set[str], blocked: list[str],
+                           allow_captcha_frames: bool = False) -> Callable[[Any], Awaitable[None]]:
+        async def _route(route: Any) -> None:
+            req = route.request
+            url = req.url
+            what = self.route_decision(
+                url, is_main_frame_navigation=self._is_main_frame_navigation(req), hosts=hosts,
+                allow_captcha_frames=allow_captcha_frames)
+            if what == "fixture":
+                try:
+                    resp = await route.fetch(url=fixture_url(str(self.fixture_base), url),
+                                             max_redirects=0)
+                    await route.fulfill(response=resp)
+                except Exception:  # noqa: BLE001
+                    await route.abort("failed")
+            elif what in ("continue", "captcha"):
+                await route.continue_()
+            else:
+                blocked.append(host_of(url) or "?")
+                await route.abort("blockedbyclient")
+        return _route
+
     async def new_context(self, domains: list[str], extra: list[str] | None = None,
-                          storage_state: Any = None, headed: bool = False) -> BrowserContext:
+                          storage_state: Any = None, headed: bool = False,
+                          allow_captcha_frames: bool = False) -> BrowserContext:
+        """One context per broker. `allow_captcha_frames` (default False) is honoured only
+        for a headed window (the person is there to tick the box); ignored otherwise."""
         hosts = self.allowed_hosts(domains, extra)
+        captcha_ok = bool(allow_captcha_frames and headed and not self.fixture_base)
+        if allow_captcha_frames and not captcha_ok:
+            log.info("allow_captcha_frames ignored (headless or fixture mode)")
         if headed:
             await self._ensure()
-            b = await self._launch(False)
+            b = await self._launch(False, captcha_hosts() if captcha_ok else None)
             self._headed.append(b)
         else:
             b = await self._ensure()
@@ -259,35 +341,15 @@ class BrowserManager:
 
         def _on_request(req: Any) -> None:
             # Redirect hops never reach the route handler (SEC-16): record off-list ones.
-            try:
-                hop = req.redirected_from is not None
-                nav = req.is_navigation_request() and req.frame.parent_frame is None
-            except Exception:  # noqa: BLE001 - e.g. no frame: judge by URL alone
-                hop, nav = True, True
-            if (hop or nav) and not self.url_allowed(req.url, hosts):
+            if self.is_escape(req, hosts, captcha_ok):
                 escaped.append(host_of(req.url) or "?")
 
-        async def _route(route: Any) -> None:
-            url = route.request.url
-            if self.fixture_base and self.url_allowed(url, hosts) and \
-                    not url.startswith(_LOCAL_SCHEMES):
-                try:
-                    resp = await route.fetch(url=fixture_url(self.fixture_base, url),
-                                             max_redirects=0)
-                    await route.fulfill(response=resp)
-                except Exception:  # noqa: BLE001
-                    await route.abort("failed")
-            elif self.url_allowed(url, hosts):
-                await route.continue_()
-            else:
-                blocked.append(host_of(url) or "?")
-                await route.abort("blockedbyclient")
-
         ctx.on("request", _on_request)
-        await ctx.route("**/*", _route)
+        await ctx.route("**/*", self.make_route_handler(hosts, blocked, captcha_ok))
         ctx.freemyid_blocked = blocked  # type: ignore[attr-defined]
         ctx.freemyid_escaped = escaped  # type: ignore[attr-defined]
         ctx.freemyid_hosts = hosts      # type: ignore[attr-defined]
+        ctx.freemyid_captcha_frames = captcha_ok  # type: ignore[attr-defined]
         return ctx
 
     async def polite_delay(self, host: str) -> None:

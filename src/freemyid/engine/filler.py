@@ -21,6 +21,7 @@ The report holds field keys and counts only (no values), so it is safe to log.
 """
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
@@ -44,6 +45,10 @@ _NEGATIVE = re.compile(
     r"password|passcode|captcha|recaptcha|robot|human|comment|comments|message|subject|"
     r"reason|age|birth|birthday|dob|ssn|social security|country|line 2|address 2|apt|"
     r"apartment|suite|unit|honeypot|leave (this )?blank|confirm(ation)? code|otp|verification)\b")
+
+# A box whose whole label / name is one of these is a typical honeypot ("leave this empty")
+# and is skipped even when visible (a "Website" box would otherwise get the listing URL).
+_HONEYPOT = re.compile(r"(your )?(website|web site|homepage|home page|hp|trap|honey ?pot)( url)?")
 
 _PATTERNS: dict[str, re.Pattern[str]] = {
     "email": re.compile(r"\b(e ?mail|email address|e mail address)\b"),
@@ -137,7 +142,7 @@ def classify(c: Control) -> str | None:
         t = _norm(src)
         if not t:
             continue
-        if _NEGATIVE.search(t):
+        if _NEGATIVE.search(t) or _HONEYPOT.fullmatch(t):
             return None
         for k in KEYS:
             if _PATTERNS[k].search(t):
@@ -198,6 +203,9 @@ class FillReport:
     unknown: int = 0                                      # visible boxes we did not recognise
     errors: int = 0
     ticked: int = 0                                       # Broker.safe_checkboxes ticked
+    # (name, id) attributes of the boxes we filled: lets fill_for_me tell whether the filled
+    # form is still on the page (SEC-32). Attribute names only, never values.
+    controls: list[tuple[str, str]] = field(default_factory=list)
 
     def summary(self) -> dict[str, Any]:
         return {"filled": sorted(set(self.filled)), "not_found": sorted(self.not_found),
@@ -205,31 +213,95 @@ class FillReport:
                 "unknown": self.unknown, "errors": self.errors, "ticked": self.ticked}
 
 
+# Shared page-side helpers (SEC-30 / SEC-33). `parentOf` walks up through shadow roots;
+# `trulyVisible` is the honeypot test: checkVisibility(), own size and style, not pushed off
+# the page, no clipping ancestor (overflow != visible with ~zero size or not overlapping the
+# element), and a hit test at the element's centre after scrolling it into view.
+_JS_HELPERS = r"""
+  const CAP = /(g-recaptcha|h-captcha|hcaptcha|recaptcha|cf-turnstile|turnstile|captcha|arkose|funcaptcha|px-captcha|cf-challenge|challenge-form)/i;
+  const parentOf = (a) => {
+    if (a.parentElement) return a.parentElement;
+    const r = a.getRootNode ? a.getRootNode() : null;
+    return (r && r !== a && r.host) ? r.host : null;
+  };
+  const captchaOrHidden = (el) => {
+    let inCaptcha = false, hidden = false;
+    for (let a = el; a && a.nodeType === 1; a = parentOf(a)) {
+      const cls = typeof a.className === 'string' ? a.className : '';
+      if (CAP.test((a.id || '') + ' ' + cls) || a.hasAttribute('data-sitekey')) inCaptcha = true;
+      if (a.getAttribute('aria-hidden') === 'true' || a.hidden) hidden = true;
+    }
+    return [inCaptcha, hidden];
+  };
+  const labelOf = (el) => {
+    let lab = el.closest('label');
+    if (!lab && el.id) {
+      try {
+        lab = el.getRootNode().querySelector('label[for="' + CSS.escape(el.id) + '"]');
+      } catch (e) { lab = null; }
+    }
+    return lab;
+  };
+  const trulyVisible = (el) => {
+    if (typeof el.checkVisibility === 'function' &&
+        !el.checkVisibility({checkOpacity: true, checkVisibilityCSS: true,
+                             opacityProperty: true, visibilityProperty: true})) return false;
+    const cs = getComputedStyle(el);
+    if (cs.visibility !== 'visible' || cs.display === 'none' ||
+        parseFloat(cs.opacity) <= 0.05 || el.getAttribute('tabindex') === '-1') return false;
+    const r0 = el.getBoundingClientRect();
+    if (r0.width <= 2 || r0.height <= 2) return false;
+    // pushed off the page: left/top of the document, or only reachable by scrolling sideways
+    const sx = window.scrollX, sy = window.scrollY;
+    if (r0.right + sx <= 0 || r0.bottom + sy <= 0) return false;
+    if (r0.left + sx >= window.innerWidth) return false;
+    const de = document.documentElement;
+    if (r0.top + sy >= Math.max(de.scrollHeight, de.clientHeight)) return false;
+    try { el.scrollIntoView({block: 'center', inline: 'nearest', behavior: 'instant'}); }
+    catch (e) { /* keep going with the current position */ }
+    const r = el.getBoundingClientRect();
+    for (let a = parentOf(el); a && a.nodeType === 1; a = parentOf(a)) {
+      if (a === document.body || a === de) continue;   // their overflow is the viewport's
+      const s = getComputedStyle(a);
+      if (parseFloat(s.opacity) <= 0.05) return false;
+      if (s.overflowX !== 'visible' || s.overflowY !== 'visible') {
+        const ar = a.getBoundingClientRect();
+        if (ar.width <= 2 || ar.height <= 2) return false;
+        if (ar.right <= r.left || ar.left >= r.right || ar.bottom <= r.top || ar.top >= r.bottom)
+          return false;
+      }
+    }
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    if (cx < 0 || cy < 0 || cx >= window.innerWidth || cy >= window.innerHeight) return false;
+    const root = el.getRootNode && el.getRootNode().elementFromPoint ? el.getRootNode() : document;
+    const hit = root.elementFromPoint(cx, cy);
+    if (!hit) return false;
+    if (hit === el || el.contains(hit)) return true;
+    const lab = labelOf(el);
+    return !!(lab && (lab === hit || lab.contains(hit)));
+  };
+"""
+
 SCAN_JS = r"""
 () => {
-  const CAP = /(g-recaptcha|h-captcha|hcaptcha|recaptcha|cf-turnstile|turnstile|captcha|arkose|funcaptcha|px-captcha|cf-challenge|challenge-form)/i;
+""" + _JS_HELPERS + r"""
   const textOf = (node) => {
     if (!node) return '';
     const c = node.cloneNode(true);
     c.querySelectorAll('input,select,textarea,option,script,style').forEach(e => e.remove());
     return (c.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 200);
   };
+  const sx0 = window.scrollX, sy0 = window.scrollY;
   const out = [];
   let n = 0;
   for (const el of document.querySelectorAll('input, select, textarea')) {
     const tag = el.tagName.toLowerCase();
     const type = tag === 'input' ? (el.getAttribute('type') || 'text').toLowerCase() : tag;
-    let inCaptcha = false, hidden = false;
-    for (let a = el; a && a.nodeType === 1; a = a.parentElement) {
-      const cls = typeof a.className === 'string' ? a.className : '';
-      if (CAP.test((a.id || '') + ' ' + cls) || a.hasAttribute('data-sitekey')) inCaptcha = true;
-      if (a.getAttribute('aria-hidden') === 'true' || a.hidden) hidden = true;
+    const [inCaptcha, hidden] = captchaOrHidden(el);
+    let visible = false;
+    if (!hidden && type !== 'hidden') {
+      try { visible = trulyVisible(el); } catch (e) { visible = false; }
     }
-    const r = el.getBoundingClientRect();
-    const cs = getComputedStyle(el);
-    const visible = !hidden && r.width > 2 && r.height > 2 && r.right > 0 && r.bottom > 0 &&
-      cs.visibility !== 'hidden' && cs.display !== 'none' && parseFloat(cs.opacity) > 0.05 &&
-      el.getAttribute('tabindex') !== '-1';
     let label = '';
     if (el.id) {
       try { label = textOf(document.querySelector('label[for="' + CSS.escape(el.id) + '"]')); }
@@ -253,6 +325,7 @@ SCAN_JS = r"""
         .map(o => ({value: o.value, text: (o.text || '').trim()})) : [],
     });
   }
+  try { window.scrollTo(sx0, sy0); } catch (e) { /* ignore */ }
   return out;
 }
 """
@@ -261,6 +334,44 @@ SCAN_JS = r"""
 async def scan(page: Page) -> list[Control]:
     """Controls of the page's main frame (CAPTCHA iframes are other frames: never seen)."""
     return [Control.from_js(d) for d in await page.evaluate(SCAN_JS)]
+
+
+_KEY_RE = re.compile(r"f\d{1,6}")
+_FILL_TAGS = frozenset({"input", "select", "textarea"})
+# Ancestor-or-self CAPTCHA containers, evaluated by Playwright's own selector engine (its
+# isolated world), not by page script.
+_LOWER = "translate(concat(@class,' ',@id),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')"
+_CAPTCHA_ANCESTOR_XPATH = (
+    "xpath=ancestor-or-self::*[@data-sitekey or "
+    + " or ".join(f"contains({_LOWER},'{w}')" for w in (
+        "captcha", "turnstile", "arkose", "cf-challenge", "challenge-form"))
+    + "]")
+
+
+def _locator_for(page: Page, c: Control) -> Any | None:
+    """Playwright locator for a scanned control, or None if the scan output looks forged
+    (SEC-34: the key and tag come from page-world JS and go into a selector)."""
+    if not isinstance(c.key, str) or not _KEY_RE.fullmatch(c.key) or c.tag not in _FILL_TAGS:
+        return None
+    return page.locator(f'{c.tag}[data-freemyid-field="{c.key}"]')
+
+
+async def _still_safe(loc: Any, c: Control, timeout_ms: int) -> bool:
+    """Re-check through Playwright (not page JS) right before typing: exactly one element,
+    a text-like type, visible, editable, not named like or inside a CAPTCHA (SEC-34)."""
+    if await loc.count() != 1:
+        return False
+    if c.tag == "input":
+        t = ((await loc.get_attribute("type", timeout=timeout_ms)) or "text").strip().lower()
+        if t not in _TEXTLIKE:
+            return False
+    name = _norm(f"{await loc.get_attribute('name', timeout=timeout_ms) or ''} "
+                 f"{await loc.get_attribute('id', timeout=timeout_ms) or ''}")
+    if re.search(r"\b(g recaptcha|h captcha|cf turnstile|captcha)\b", name):
+        return False
+    if not await loc.is_visible() or not await loc.is_editable(timeout=timeout_ms):
+        return False
+    return await loc.locator(_CAPTCHA_ANCESTOR_XPATH).count() == 0
 
 
 async def fill_page(page: Page, values: dict[str, str], *, timeout_ms: int = 5000) -> FillReport:
@@ -281,7 +392,10 @@ async def fill_page(page: Page, values: dict[str, str], *, timeout_ms: int = 500
         if not val:
             rep.withheld.append(k)
             continue
-        loc = page.locator(f'[data-freemyid-field="{c.key}"]')
+        loc = _locator_for(page, c)
+        if loc is None:
+            rep.errors += 1
+            continue
         try:
             if c.tag == "select":
                 if k != "state":
@@ -291,13 +405,20 @@ async def fill_page(page: Page, values: dict[str, str], *, timeout_ms: int = 500
                 if opt is None:
                     rep.errors += 1
                     continue
+                if not await _still_safe(loc, c, timeout_ms):
+                    rep.protected += 1
+                    continue
                 await loc.select_option(value=opt, timeout=timeout_ms)
             elif c.has_value:
                 rep.already_filled.append(k)
                 continue
             else:
+                if not await _still_safe(loc, c, timeout_ms):
+                    rep.protected += 1
+                    continue
                 await loc.fill(val, timeout=timeout_ms)
             rep.filled.append(k)
+            rep.controls.append((c.name[:100], c.id[:100]))
         except Exception:  # noqa: BLE001 - one stubborn box never stops the rest
             rep.errors += 1
     rep.not_found = [k for k in values if k not in seen and not _covered(k, seen)]
@@ -305,31 +426,48 @@ async def fill_page(page: Page, values: dict[str, str], *, timeout_ms: int = 500
 
 
 # The element must be a real, visible, enabled, unticked checkbox input that is not inside
-# a CAPTCHA / challenge container. Returns a reason string ('' = ok to tick).
+# a CAPTCHA / challenge container (also across shadow roots, SEC-33), and whose wording is
+# not a robot / human check (SEC-31) or a marketing opt-in. Returns '' when it is ok to tick.
+_ROBOT_WORDS = r"robot|human|\bbot\b|captcha|verify|verification|not a machine|security check"
+_MARKETING_WORDS = (r"newsletter|offers?\b|marketing|partners?\b|subscribe|promotion|"
+                    r"promotional|special deals|third.?part")
+_ROBOT_RE = re.compile(_ROBOT_WORDS, re.IGNORECASE)
+_MARKETING_RE = re.compile(_MARKETING_WORDS, re.IGNORECASE)
+
 CHECKBOX_OK_JS = r"""
 (el) => {
-  const CAP = /(g-recaptcha|h-captcha|hcaptcha|recaptcha|cf-turnstile|turnstile|captcha|arkose|funcaptcha|px-captcha|cf-challenge|challenge-form)/i;
+""" + _JS_HELPERS + r"""
+  const ROBOT = new RegExp(""" + json.dumps(_ROBOT_WORDS) + r""", 'i');
+  const MKT = new RegExp(""" + json.dumps(_MARKETING_WORDS) + r""", 'i');
   if (!el || el.tagName !== 'INPUT' || (el.getAttribute('type') || '').toLowerCase() !== 'checkbox')
     return 'not_checkbox';
   if (el.disabled || el.readOnly) return 'disabled';
   if (el.checked) return 'already';
-  for (let a = el; a && a.nodeType === 1; a = a.parentElement) {
-    const cls = typeof a.className === 'string' ? a.className : '';
-    if (CAP.test((a.id || '') + ' ' + cls) || a.hasAttribute('data-sitekey')) return 'captcha';
-    if (a.getAttribute('aria-hidden') === 'true' || a.hidden) return 'hidden';
-  }
+  const [inCaptcha, hidden] = captchaOrHidden(el);
+  if (inCaptcha) return 'captcha';
+  if (hidden) return 'hidden';
   const blob = (el.name || '') + ' ' + (el.id || '');
   if (CAP.test(blob)) return 'captcha';
-  const r = el.getBoundingClientRect();
-  const cs = getComputedStyle(el);
-  const visible = r.width > 2 && r.height > 2 && r.right > 0 && r.bottom > 0 &&
-    cs.visibility !== 'hidden' && cs.display !== 'none' && parseFloat(cs.opacity) > 0.05 &&
-    el.getAttribute('tabindex') !== '-1';
-  return visible ? '' : 'hidden';
+  const parts = [el.getAttribute('name'), el.id, el.getAttribute('aria-label'),
+                 el.getAttribute('title'), el.getAttribute('value')];
+  const lab = labelOf(el);
+  if (lab) parts.push(lab.textContent);
+  const lb = el.getAttribute('aria-labelledby');
+  if (lb) lb.split(/\s+/).forEach(i => {
+    const n = document.getElementById(i); if (n) parts.push(n.textContent);
+  });
+  const words = parts.filter(Boolean).join(' ').replace(/[_-]+/g, ' ');
+  if (ROBOT.test(words)) return 'robot';
+  if (MKT.test(words)) return 'marketing';
+  const sx0 = window.scrollX, sy0 = window.scrollY;
+  let vis = false;
+  try { vis = trulyVisible(el); } catch (e) { vis = false; }
+  try { window.scrollTo(sx0, sy0); } catch (e) { /* ignore */ }
+  return vis ? '' : 'hidden';
 }
 """
 
-_MAX_SAFE_SELECTORS = 10
+_MAX_SAFE_SELECTORS = 3      # models.Broker allows at most 3
 _MAX_PER_SELECTOR = 5
 
 
@@ -352,11 +490,28 @@ async def tick_safe_checkboxes(page: Page, selectors: list[str], *,
             try:
                 if await el.evaluate(CHECKBOX_OK_JS) != "":
                     continue
+                if not await _checkbox_still_safe(el):
+                    continue
                 await el.check(timeout=timeout_ms)
                 ticked += 1
             except Exception:  # noqa: BLE001, S112 - detached / covered element
                 continue
     return ticked
+
+
+async def _checkbox_still_safe(el: Any) -> bool:
+    """Second opinion through Playwright's handle API (not page JS): a visible, enabled
+    checkbox whose name / id / aria-label / title has no robot or marketing words and that
+    is not inside a CAPTCHA container (SEC-31 / SEC-34)."""
+    if ((await el.get_attribute("type")) or "").strip().lower() != "checkbox":
+        return False
+    words = " ".join([(await el.get_attribute(a)) or "" for a in
+                      ("name", "id", "aria-label", "title")]).replace("_", " ").replace("-", " ")
+    if _ROBOT_RE.search(words) or _MARKETING_RE.search(words):
+        return False
+    if not await el.is_visible() or not await el.is_enabled():
+        return False
+    return not await el.query_selector(_CAPTCHA_ANCESTOR_XPATH)
 
 
 def _covered(k: str, seen: set[str]) -> bool:

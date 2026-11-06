@@ -138,3 +138,7 @@ The business plan page lives at https://claude.ai/artifact/PWHBkUkfNLWU78XQ9vQhm
 Building blocks, in order: rename (Free My ID clashes with Reckitt's brand) → signed registry feed →
 plan/entitlement setting (no payments yet) → opt-in anonymous per-broker outcome reports →
 code signing + public launch.
+
+## Registry distribution (decided 2026-11-06)
+- Public repo ships `brokers/registry.sample.yaml` only (CC BY-NC 4.0). Full registry is private: family bundle and the paid update feed, both via the validated `registry_url` update path.
+- Paid-feed constraint: the update download sends nothing about the user or the people they protect. The entitlement token is an opaque random subscription key with no name, email, profile or device data, so site/privacy.html stays true.

@@ -1,0 +1,22 @@
+<!doctype html><html><head><title>Dev Fill: late text</title></head><body>
+<!-- DEV FIXTURE (SEC-32): the success phrase renders late (FAQ widget) with no submit, and a
+     "save draft" button POSTs without the request being accepted. Neither is success. -->
+<h1>Opt out</h1>
+<form id="f" onsubmit="return false">
+  <label for="fn">First name</label> <input id="fn" name="a1"><br>
+  <label for="ln">Last name</label> <input id="ln" name="a3"><br>
+  <label for="em">Email address</label> <input id="em" name="a4"><br>
+  <button type="button" id="draft">Save draft</button>
+</form>
+<div id="faq"></div>
+<script>
+setTimeout(() => {
+  const p = document.createElement('p');
+  p.textContent = 'FAQ: once your request has been received we remove it within 72 hours.';
+  document.getElementById('faq').appendChild(p);
+}, 300);
+document.getElementById('draft').addEventListener('click', async () => {
+  try { await fetch('/api/draft', {method: 'POST', body: 'x=1'}); } catch (e) {}
+});
+</script>
+</body></html>

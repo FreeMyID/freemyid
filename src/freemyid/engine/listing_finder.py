@@ -394,7 +394,9 @@ async def find_listing(store: Store, profile_id: str, broker_id: str, *, timeout
     try:
         try:
             await bm.start()
-            bctx = await bm.new_context(broker.domains, headed=headed)
+            # SEC-36: the person may need the site's robot box; headed windows only.
+            bctx = await bm.new_context(broker.domains, headed=headed,
+                                        allow_captcha_frames=headed)
         except Exception as e:  # noqa: BLE001 - no browser: the card still works
             log.warning("listing_finder: browser unavailable (%s)", type(e).__name__)
             return fallback("browser_unavailable")

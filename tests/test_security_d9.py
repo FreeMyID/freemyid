@@ -108,9 +108,6 @@ async def test_captcha_robot_password_file_never_touched(page):
 # --------------------------------------------------------------------------- open findings
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-30: honeypot inside a clipped (overflow:hidden, "
-                   "0-height) container or pushed off-screen right counts as visible and gets "
-                   "the listing URL / name; filling a honeypot flags the request as a bot")
 async def test_sec30_clipped_or_offscreen_honeypots_not_filled(page):
     await page.set_content("""<html><body><form>
       <label>Your name <input id=real name=fullname></label>
@@ -125,9 +122,6 @@ async def test_sec30_clipped_or_offscreen_honeypots_not_filled(page):
     assert await page.input_value("#hp2") == ""
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-31: tick_safe_checkboxes only rejects CAPTCHA by "
-                   "class/id regex; a home-made 'I am not a robot' / 'human' checkbox matched "
-                   "by a broad registry selector gets ticked (bot-protection bypass)")
 async def test_sec31_homemade_robot_checkbox_never_ticked(page):
     await page.set_content("""<html><body><form>
       <label><input type=checkbox id=agree name=agree> I agree to the terms</label>
@@ -181,9 +175,6 @@ def _site(monkeypatch):
         srv.server_close()
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-32: success text already on the form page "
-                   "(baseline) + any navigation (e.g. POST that re-renders the form with a "
-                   "validation error) is recorded as submitted and closes the Assisted card")
 async def test_sec32_preexisting_success_text_plus_reload_is_not_success(store, monkeypatch):
     b = Broker(id="d9_fp", name="D9 FP", url="https://devd9.example/", category="people_search",
                domains=["devd9.example"], opt_out_url="https://devd9.example/optout",
@@ -208,9 +199,6 @@ async def test_sec32_preexisting_success_text_plus_reload_is_not_success(store, 
     assert res.status != "submitted", res
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-33: Playwright CSS pierces open shadow roots but "
-                   "CHECKBOX_OK_JS's ancestor walk stops at the shadow root, so a checkbox inside "
-                   "a CAPTCHA custom element's shadow DOM is not recognised as CAPTCHA")
 async def test_sec33_checkbox_in_captcha_shadow_host_never_ticked(page):
     await page.set_content("""<html><body><form>
       <div class="h-captcha" data-sitekey="x"><span id=host></span></div>

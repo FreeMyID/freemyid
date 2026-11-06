@@ -178,9 +178,10 @@ async def test_fill_for_me_ticks_safe_checkboxes_and_nothing_else(store):
         res = await fill_for_me(store, p.id, b.id, registry=_registry(b), headed=False,
                                 timeout_s=20, on_ready=person, close_delay_s=0)
     assert res.ok
-    assert seen == {"agree": True, "robot": False, "news": True}   # registry chose #news
+    # SEC-31: a marketing box ("Send me offers") is refused even when the registry picks it
+    assert seen == {"agree": True, "robot": False, "news": False}
     ev = [e for e in store.events(p.id) if e.action == "fill_for_me_filled"]
-    assert ev and ev[0].detail["ticked"] == 2
+    assert ev and ev[0].detail["ticked"] == 1
 
 
 async def test_no_safe_checkboxes_ticks_nothing(store):

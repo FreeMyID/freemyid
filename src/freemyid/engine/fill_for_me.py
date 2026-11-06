@@ -8,10 +8,17 @@ Flow (only ever started by the person, from the dashboard; scheduled runs never 
      touched, Submit is NOT pressed;
   4. a big plain-English banner asks the person to tick the robot box and press Submit;
   5. Free My ID watches for the registry's success signal (the `expect_text` / `wait_for` steps
-     after the form's submit step, same as web_form). On success: screenshots saved as
-     evidence, a SENT web-form Request, the broker moves to SUBMITTED (or
-     AWAITING_VERIFICATION) exactly like a successful web_form submission, and the
-     Assisted to-do is closed;
+     after the form's submit step, same as web_form, plus `success_text` /
+     `success_url_pattern`). SEC-32: success needs BOTH a submit-like event after the fill
+     (a main-frame navigation, or an XHR/fetch POST to an allowed host) AND a signal that
+     is new compared with the baseline taken after filling (kept up to date until the
+     first submit event): a success phrase that appears more often than before, a success
+     selector that was not there, a URL that changed to match `success_url_pattern`, or the
+     filled form gone while a success phrase/selector is on the page. A POST that re-shows
+     the same form never counts. On success: screenshots saved as evidence (the form as it
+     was when the person pressed Submit, SEC-37, and the confirmation without our banner),
+     a SENT web-form Request, the broker moves to SUBMITTED (or AWAITING_VERIFICATION)
+     exactly like a successful web_form submission, and the Assisted to-do is closed;
   6. timeout / window closed / no success signal / any error: the Assisted to-do card
      stays (or is created), so nothing is lost.
 
@@ -80,7 +87,7 @@ class FillResult:
     filled: list[str] = field(default_factory=list)
     not_found: list[str] = field(default_factory=list)
     withheld: list[str] = field(default_factory=list)
-    submit_seen: bool = False       # the page navigated / posted after filling
+    submit_seen: bool = False       # a navigation / POST happened after filling
     practice_mode: bool = False
     todo_id: str | None = None      # Assisted card to fall back to (fallback)
     request_id: str | None = None   # SENT request (submitted)
@@ -198,6 +205,103 @@ async def _matched(page: Page, texts: list[str], sels: list[str],
     return None
 
 
+# One look at the page for SEC-32: how often each success phrase occurs (our banner's words
+# subtracted), which success selectors exist, how many of the boxes we filled are still
+# there and visible, and the URL. All inputs are passed as arguments, never interpolated.
+_SNAPSHOT_JS = """
+([banner, texts, sels, controls]) => {
+  const b = document.getElementById(banner);
+  let t = document.body ? document.body.innerText : '';
+  if (b) t = t.replace(b.innerText, '');
+  t = t.toLowerCase();
+  const counts = texts.map((x) => {
+    let n = 0, i = 0;
+    while (x && (i = t.indexOf(x, i)) !== -1) { n++; i += x.length; }
+    return n;
+  });
+  const present = sels.map((s) => { try { return !!document.querySelector(s); }
+                                    catch (e) { return false; } });
+  const vis = (el) => {
+    const r = el.getBoundingClientRect(); const cs = getComputedStyle(el);
+    return r.width > 0 && r.height > 0 && cs.visibility !== 'hidden' && cs.display !== 'none';
+  };
+  let formLeft = 0;
+  for (const [name, id] of controls) {
+    let el = null;
+    try {
+      if (id) el = document.getElementById(id);
+      if (!el && name) el = document.querySelector('[name="' + CSS.escape(name) + '"]');
+    } catch (e) { el = null; }
+    if (el && vis(el)) formLeft++;
+  }
+  return {counts, present, formLeft, url: location.href};
+}
+"""
+
+_REMOVE_BANNER_JS = f"""
+() => {{
+  const b = document.getElementById({BANNER_ID!r});
+  if (b) {{ b.remove(); if (document.body) document.body.style.marginTop = ''; }}
+  return true;
+}}
+"""
+
+
+@dataclass
+class _Snap:
+    counts: list[int]
+    present: list[bool]
+    form_left: int
+    url: str
+
+
+async def _snapshot(page: Page, texts: list[str], sels: list[str],
+                    controls: list[tuple[str, str]]) -> _Snap:
+    d = await page.evaluate(_SNAPSHOT_JS, [BANNER_ID, texts, sels,
+                                           [list(c) for c in controls]])
+    counts = [int(x) for x in (d.get("counts") or [])][:len(texts)]
+    present = [bool(x) for x in (d.get("present") or [])][:len(sels)]
+    counts += [0] * (len(texts) - len(counts))
+    present += [False] * (len(sels) - len(present))
+    return _Snap(counts, present, int(d.get("formLeft") or 0), page.url)
+
+
+def _merge_baseline(base: _Snap, now: _Snap) -> _Snap:
+    """Before the first submit event, anything that shows up (late-rendered FAQ text, ...)
+    becomes part of the baseline: it cannot be the result of submitting."""
+    return _Snap([max(a, b) for a, b in zip(base.counts, now.counts, strict=True)],
+                 [a or b for a, b in zip(base.present, now.present, strict=True)],
+                 max(base.form_left, now.form_left), base.url)
+
+
+def _path_of(url: str) -> str:
+    from urllib.parse import urlsplit
+    try:
+        u = urlsplit(url)
+    except ValueError:
+        return url
+    return (u.path or "/") + (f"?{u.query}" if u.query else "")
+
+
+def new_signal(base: _Snap, now: _Snap, url_pattern: str | None) -> str | None:
+    """A success signal that was NOT there at baseline (SEC-32), or None."""
+    if url_pattern and url_matches(url_pattern, now.url) and \
+            not url_matches(url_pattern, base.url) and _path_of(now.url) != _path_of(base.url):
+        return "success_url"
+    if any(n > b for n, b in zip(now.counts, base.counts, strict=True)):
+        return "success_text"
+    if any(n and not b for n, b in zip(now.present, base.present, strict=True)):
+        return "success_selector"
+    # The filled form is gone (e.g. replaced by a thank-you page that repeats a phrase the
+    # form page already had in its instructions) and a success phrase / selector is shown.
+    if base.form_left > 0 and now.form_left == 0:
+        if any(now.counts):
+            return "success_text"
+        if any(now.present):
+            return "success_selector"
+    return None
+
+
 def _confirmed_listing(store: Store, profile_id: str, broker_id: str) -> tuple[
         Listing | None, list[Listing]]:
     lis = [li for li in store.list_listings(profile_id, broker_id) if li.gone_since is None]
@@ -300,6 +404,11 @@ async def fill_for_me(store: Store, profile_id: str, broker_id: str, *, timeout_
     law = state_laws.get(profile.state_of_residence)
     practice = not cfg.real_submissions_enabled
     listing, listings = _confirmed_listing(store, profile.id, broker.id)
+    if broker.id != broker_id:
+        # covered_by child: the listing finder (D10) records the listing on the child site
+        c_listing, c_listings = _confirmed_listing(store, profile.id, broker_id)
+        listing = listing or c_listing
+        listings = listings + [li for li in c_listings if li not in listings]
     res = FillResult("fallback", "", broker.id, practice_mode=practice)
 
     def fallback(reason: str) -> FillResult:
@@ -326,7 +435,9 @@ async def fill_for_me(store: Store, profile_id: str, broker_id: str, *, timeout_
     try:
         try:
             await bm.start()
-            bctx = await bm.new_context(broker.domains, headed=headed)
+            # SEC-36: the person may need the site's robot box; headed windows only.
+            bctx = await bm.new_context(broker.domains, headed=headed,
+                                        allow_captcha_frames=headed)
             page = await bctx.new_page()
         except Exception as e:  # noqa: BLE001 - no browser: the card still works
             log.warning("fill_for_me: browser unavailable (%s)", type(e).__name__)
@@ -357,7 +468,6 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
                  close_delay_s: float, fallback: Callable[[str], FillResult]) -> FillResult:
     from ..submitters.base import form_vars
     closed = {"v": False}
-    navs: dict[str, int | bool] = {"n": 0, "post": False}
     page.on("close", lambda _p: closed.__setitem__("v", True))
 
     await bm.goto(page, str(broker.opt_out_url), check_challenge=False)
@@ -370,11 +480,11 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
     _event(store, profile.id, broker.id, "fill_for_me_filled", **rep.summary())
     if not rep.filled:
         return fallback("nothing_filled")
+    # Kept only as a fallback: the evidence shot is taken when the person submits (SEC-37).
     filled_png = await page.screenshot(full_page=True)
 
     texts, sels = success_signals(broker, form_vars(profile, broker, listing))
     url_re = broker.success_url_pattern
-    baseline = await _matched(page, texts, sels, url_re)
     lines = [MSG_FILLED]
     if rep.not_found or rep.withheld or rep.unknown:
         lines.append(MSG_MISSING)
@@ -383,22 +493,41 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
     lines.append(MSG_HINT)
     banner = _banner_js(lines, done=False)
     await page.evaluate(banner)
-    start_url = page.url
+    controls = rep.controls
+    hosts: set[str] = getattr(page.context, "freemyid_hosts", set())
+    # "base" = the page as it was before the person submitted: taken now, merged with every
+    # poll until the first submit event, and with a last look taken at that event itself.
+    submit: dict[str, Any] = {"n": 0, "shot": None,
+                              "base": await _snapshot(page, texts, sels, controls)}
 
-    def _on_nav(frame: Any) -> None:
-        if frame == page.main_frame:
-            navs["n"] += 1
-
-    def _on_req(req: Any) -> None:
+    async def _watch(route: Any) -> None:
+        """Submit-like events after the fill (SEC-32): a main-frame navigation, or an
+        XHR/fetch POST to an allowed host. The page is captured while the request waits,
+        i.e. exactly as the person sent it (SEC-37). Then the context route decides."""
+        req = route.request
         try:
-            if req.is_navigation_request() and req.frame == page.main_frame and \
-                    req.method == "POST":
-                navs["post"] = True
-        except Exception:  # noqa: BLE001, S110 - request without a frame
-            pass
+            nav = req.is_navigation_request() and req.frame == page.main_frame
+            post = (req.resource_type in ("xhr", "fetch") and
+                    req.method not in ("GET", "HEAD", "OPTIONS") and
+                    bm.url_allowed(req.url, hosts))
+        except Exception:  # noqa: BLE001 - no frame (worker): not a submit
+            nav = post = False
+        if nav or post:
+            first = submit["n"] == 0
+            submit["n"] += 1
+            if first:   # the request waits here, so this is the page before submitting
+                try:
+                    submit["base"] = _merge_baseline(
+                        submit["base"], await _snapshot(page, texts, sels, controls))
+                except Exception as e:  # noqa: BLE001 - keep the last poll's baseline
+                    log.debug("submit-time baseline failed: %s", type(e).__name__)
+            try:
+                submit["shot"] = await asyncio.wait_for(page.screenshot(full_page=True), 5)
+            except Exception as e:  # noqa: BLE001 - the fill-time shot is the fallback
+                log.debug("submit-time screenshot failed: %s", type(e).__name__)
+        await route.fallback()
 
-    page.on("framenavigated", _on_nav)
-    page.on("request", _on_req)
+    await page.route("**/*", _watch)
     task: asyncio.Task[Any] | None = (
         asyncio.ensure_future(on_ready(page)) if on_ready else None)
 
@@ -410,15 +539,17 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
             if closed["v"] or page.is_closed():
                 return fallback("window_closed")
             bm.check_escaped(page)
-            moved = bool(navs["n"]) or bool(navs["post"]) or page.url != start_url
-            res.submit_seen = res.submit_seen or moved
+            submitted_before = submit["n"] > 0
+            res.submit_seen = res.submit_seen or submitted_before
             try:
-                hit = await _matched(page, texts, sels, url_re)
-                # a URL match only counts after the page moved; text/selector signals too
-                # when they were already on the page before the person did anything
-                if hit and (moved or (not baseline and hit != "success_url")):
-                    how = hit
-                    break
+                now = await _snapshot(page, texts, sels, controls)
+                if not submitted_before:
+                    if submit["n"] == 0:      # nothing was submitted while we looked
+                        submit["base"] = _merge_baseline(submit["base"], now)
+                else:
+                    how = new_signal(submit["base"], now, url_re)
+                    if how:
+                        break
                 if await page.evaluate(_NEEDS_BANNER_JS):
                     await page.evaluate(banner)   # page reloaded (e.g. a validation error)
             except Exception:  # noqa: BLE001 - mid-navigation; try again next tick
@@ -430,10 +561,16 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
                 return fallback("unverified")
             return fallback("timeout")
         bm.check_escaped(page)
+        try:
+            await page.evaluate(_REMOVE_BANNER_JS)       # SEC-37: no banner in the proof
+        except Exception:  # noqa: BLE001, S110 - mid-navigation: shoot what is there
+            pass
         done_png = await page.screenshot(full_page=True)
-        res.request_id, res.evidence_ids = _record_success(
-            store, profile, broker, listing,
-            [(filled_png, "form filled by Free My ID"), (done_png, "confirmation page")], how)
+        sent_png = submit["shot"]
+        shots = [(sent_png, "form as sent") if sent_png else
+                 (filled_png, "form filled by Free My ID"), (done_png, "confirmation page")]
+        res.request_id, res.evidence_ids = _record_success(store, profile, broker, listing,
+                                                           shots, how)
         res.status, res.reason = "submitted", how
         try:
             await page.evaluate(_banner_js([MSG_DONE], done=True))

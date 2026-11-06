@@ -39,3 +39,9 @@ Integrate wave → qa review → GitHub repo + first CI exe build (user OK neede
   - Window larger than 1024x768 screen; dir/ready pages unnecessary; default Python icon; consent copy mentions mailbox as if required. -> wizard-packager.
 - Running: wizard-packager (window fit, friendly error pages, installer pages+icon, consent copy, D9 button), qa-security (browser e2e, adopt D9 tests, D9 security review), automation-engineer (D10 listing finder, engine mypy, wire new Broker fields).
 - Next: integrate -> push -> CI exe -> redo VM walkthrough through all 6 screens + dashboard + a fill-for-me on a fixture; broker-researcher: success_text/listing patterns for verified web-form brokers.
+
+## Checkpoint 2026-11-06 evening (quota ~97%)
+- Committed: D9 SEC-30..33 fixes (xfails removed), PLAN_V1 registry-distribution decision + feed-token no-PII rule.
+- NOT public yet: history still holds zzz_legacy/ and the full brokers/registry.yaml. User decisions: drop both from history (filter-repo, force-push with user OK), sample-only public registry (CC BY-NC 4.0).
+- In flight: automation-engineer registry split (uncommitted, see docs/handoff/automation-engineer.md "Registry split").
+- Next session: install git-filter-repo (.venv) + gitleaks (blocked by auto-mode, needs user OK) -> filter-repo fresh clone -> gitleaks -> force-push (ask) -> CI green -> tag v0.1.0 -> VM check -> ping data-removal-f8 for site re-check -> flip public + Pages.
