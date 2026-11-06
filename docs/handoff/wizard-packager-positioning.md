@@ -191,3 +191,18 @@ Suggested order: copy fixes, then myth card (S, high payoff), then declaration, 
 - A style change in `static/style.css`: stop using `.error` for non-error banners (dashboard.py:152, 183). I did not audit `style.css`.
 - The `USER_GUIDE.md` wizard step list and "open a terminal" instructions are out of date relative to the 6-screen Windows plan.
 - I did not audit email/letter templates (`engine`, `letters`), the broker registry text, or `FAMILY_QUICK_START.md`. These also need the same rule check, especially R4 (named sender) and the R2 "confirmed" wording in letters.
+
+## Change requests for orchestrator
+
+Applied so far (commits 861b0c9, f8dbb6d, 21fcdc1): ui.py and dashboard.py copy, README, FAMILY_QUICK_START, USER_GUIDE. Templates were reviewed and left unchanged (the letters already read plainly and are addressed to the sites, so no wording change was needed). Tests: 368 passed, 4 xfailed; ruff clean.
+
+1. `src/freemyid/wizard/dashboard.py` `status_sentence` still says "{done} sites done, {waiting} waiting, {n} need you". `tests/test_wizard_dashboard.py:62` asserts that exact string, so I did not change it. Proposed string: "Free My ID is working. {done} sites have confirmed or no longer list you, {waiting} are still waiting, {n} need you." Update the test with it. FAMILY_QUICK_START.md shows the current sentence and needs the same update.
+2. `draft.py` CONSENT_TEXT and BASIS_LABELS: replace "data-broker"/"broker" with "people-search sites (websites that publish names, addresses and phone numbers)", "ask those sites to delete it", and add "Free My ID does not change what Facebook, Google or any other service does with your account." Bump CONSENT_VERSION (currently "2026-11-b"). The welcome lead in ui.py now explains the term, but the consent card below it still says "broker".
+3. `draft.py` STEP_TITLES: "An email address for removal replies" -> "A separate email address for replies". Optional: welcome title.
+4. `report.py:38-40`: headline and summary per section 2c above (sentence form, "Site" not "Broker", no "removed" count). It builds from CHIP_LABEL, which now renders REMOVED as "not listed now" and SUBMITTED as "asked", so check its summary reads sensibly.
+5. `style.css`/`dashboard.py`: the "Not running yet" banners (home_page and profile_page) use `class="error"` (red alarm). Rule R3 says calm. Switch them to `class="note"` (dashboard.py is mine to edit, but the CSS and the tests that may look for `error` are not; do it together).
+6. `server.py` strings: "The sending engine is not available yet" -> "Sending is not switched on in this copy of Free My ID yet."; "Open Free My ID using the link printed when it started." -> "Please open Free My ID from its icon on your desktop."; "Bad or missing form token" -> "That page timed out. Go back and try again."; import page "Passphrase" -> "Password for the setup file".
+7. `flows.py` CLI: "IMAP server"/"SMTP server" -> "Incoming mail server (IMAP)"/"Outgoing mail server (SMTP)".
+8. `firstrun.py`: "Chromium" -> "a small extra browser just for Free My ID".
+9. Model enums: ListingState labels only live in ui.CHIP_LABEL (done), so no enum change needed.
+10. Declaration step and `Consent` model fields (section 3 above) remain a proposal for the orchestrator.
