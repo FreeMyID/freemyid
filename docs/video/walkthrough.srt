@@ -1,0 +1,59 @@
+1
+00:00:00,200 --> 00:00:04,816
+This is Free My ID It takes your name off the websites that sell it.
+
+2
+00:00:05,316 --> 00:00:15,866
+Maybe you've seen the post: I do not give permission to use my information. The instinct is right. But that post never reaches the companies that sell your details.
+
+3
+00:00:16,366 --> 00:00:27,890
+People-search sites list your home address, phone number, age and relatives, and sell them to anyone who pays. A federal consumer agency has warned that includes scammers and stalkers.
+
+4
+00:00:28,390 --> 00:00:39,602
+Free My ID asks each of those sites to remove you, the way that site takes requests, and keeps checking. Here's what setup looks like. It's six short screens.
+
+5
+00:00:40,102 --> 00:00:45,160
+Step one. Choose who this is for, type your name to sign, and agree.
+
+6
+00:00:45,660 --> 00:00:50,916
+Step two. Their name. Add maiden or earlier names if they have any.
+
+7
+00:00:51,416 --> 00:00:55,871
+Step three. Where they live. A city and state is enough.
+
+8
+00:00:56,371 --> 00:01:05,703
+Step four. A few optional details, like year of birth. These only help tell them apart from people with the same name, and they're never sent to anyone.
+
+9
+00:01:06,203 --> 00:01:15,209
+Step five. Pick an email service for replies. Or choose skip, and Free My ID opens each message for you to send yourself.
+
+10
+00:01:15,709 --> 00:01:21,834
+Step six. Let it keep checking automatically, once a day, quietly in the background.
+
+11
+00:01:22,334 --> 00:01:28,053
+That's it. It starts in practice mode, so nothing is sent until you say so.
+
+12
+00:01:28,553 --> 00:01:36,920
+When you're ready, turn on real requests in Settings. If a website ever needs a real person, a card appears with one big button.
+
+13
+00:01:37,420 --> 00:01:46,729
+No account. No cloud. It never asks for your Social Security number, bank, or card details. Your records stay on your computer.
+
+14
+00:01:47,229 --> 00:01:57,175
+Some sites take weeks, and some list people again later. That's why it keeps checking, and it always shows you which sites confirmed and which are still waiting.
+
+15
+00:01:57,675 --> 00:02:03,312
+Free My ID is free and open source. The download link is below this video.
