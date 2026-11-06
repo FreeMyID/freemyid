@@ -83,7 +83,7 @@ class NetPolicy:
 
     def is_allowed(self, url_or_host: str) -> bool:
         host = host_of(url_or_host)
-        return bool(host) and _host_ok(host, self.allowed)
+        return bool(host) and _host_ok(str(host), self.allowed)
 
     def for_broker(self, broker_domains: list[str], extra: list[str] | None = None) -> set[str]:
         """Narrow allowlist for a single broker run: (broker + extras) ∩ global allowlist.

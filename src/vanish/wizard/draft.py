@@ -85,8 +85,8 @@ _HOST_RE = re.compile(r"^[A-Za-z0-9]([A-Za-z0-9.\-]{0,251}[A-Za-z0-9])?$")
 
 
 class FormLike(Protocol):
-    def get(self, key: str, default: Any = None) -> Any: ...
-    def getlist(self, key: str) -> list[Any]: ...
+    def get(self, key: str, /, *args: Any) -> Any: ...
+    def getlist(self, key: str, /) -> list[Any]: ...
 
 
 @dataclass
@@ -219,7 +219,7 @@ def apply_step(d: Draft, step: str, f: FormLike, files: dict[str, tuple[str, byt
         if got("previous_names") is not None:
             d.previous_names = _name_lines(got("previous_names"))
         if got("label") is not None:
-            d.label = got("label").strip() or d.first
+            d.label = str(got("label")).strip() or d.first
         elif step in ("name", "names") and not d.label:
             d.label = d.first
         if step in ("name", "names") and (not d.first or not d.last):
@@ -460,7 +460,7 @@ def build_profile(d: Draft) -> Profile:
                             suffix=d.suffix or None),
             nicknames=d.nicknames,
             previous_names=[parse_person_name(n) for n in d.previous_names],
-            addresses=[Address(**{k: (v or None) if k in ("street", "zip") else v
+            addresses=[Address(**{k: (v or None) if k in ("street", "zip") else v  # type: ignore[arg-type]
                                   for k, v in a.items()}) for a in d.addresses],
             dob=date.fromisoformat(d.dob) if d.dob else None,
             age=int(d.age) if d.age and not d.dob else None,

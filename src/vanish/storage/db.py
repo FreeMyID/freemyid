@@ -259,7 +259,8 @@ class Store:
         )
 
     def list_statuses(self, pid: str | None = None) -> list[BrokerStatus]:
-        q, a = "SELECT profile_id, broker_id, data FROM broker_status", ()
+        q = "SELECT profile_id, broker_id, data FROM broker_status"
+        a: tuple[str, ...] = ()
         if pid:
             q, a = q + " WHERE profile_id=?", (pid,)
         return [self._dec("broker_status", f"{p}/{b}", d, BrokerStatus)
@@ -275,7 +276,8 @@ class Store:
         )
 
     def list_listings(self, pid: str, bid: str | None = None) -> list[Listing]:
-        q, a = "SELECT id, data FROM listings_found WHERE profile_id=?", (pid,)
+        q = "SELECT id, data FROM listings_found WHERE profile_id=?"
+        a: tuple[str, ...] = (pid,)
         if bid:
             q, a = q + " AND broker_id=?", (pid, bid)
         return [self._dec("listings_found", i, d, Listing) for i, d in self._x(q, a).fetchall()]
@@ -323,7 +325,8 @@ class Store:
         return self._cipher.decrypt_file(_confined(paths.evidence_dir(), e.relpath))
 
     def list_evidence(self, pid: str, bid: str | None = None) -> list[Evidence]:
-        q, a = "SELECT id, data FROM evidence WHERE profile_id=?", (pid,)
+        q = "SELECT id, data FROM evidence WHERE profile_id=?"
+        a: tuple[str, ...] = (pid,)
         if bid:
             q, a = q + " AND broker_id=?", (pid, bid)
         q += " ORDER BY created_at"
@@ -368,7 +371,8 @@ class Store:
 
     def events(self, pid: str | None = None, bid: str | None = None,
                limit: int = 500) -> list[Event]:
-        q, a = "SELECT id, data FROM events WHERE 1=1", []
+        q = "SELECT id, data FROM events WHERE 1=1"
+        a: list[str | int] = []
         for col, val in (("profile_id", pid), ("broker_id", bid)):
             if val:
                 q += f" AND {col}=?"

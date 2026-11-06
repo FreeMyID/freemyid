@@ -240,6 +240,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
                 except Exception:  # noqa: BLE001
                     return Response("Could not decrypt this item.", status_code=500)
                 if data[:8] == b"\x89PNG\r\n\x1a\n":
+                    hdr: dict[str, str]
                     mt, hdr = "image/png", {}
                 elif data[:3] == b"\xff\xd8\xff":
                     mt, hdr = "image/jpeg", {}
@@ -334,11 +335,12 @@ def create_app(store, token: str, allowed_hosts: set[str],
         try:
             from ..engine.outbox import letter_for
         except ImportError:
-            letter_for = None
+            letter_for = None  # type: ignore[assignment]
         items = []
         for r in store.list_requests(status=RequestStatus.QUEUED_FOR_APPROVAL):
             try:
-                letter = letter_for(store, r) if letter_for else ("", "", "")
+                letter = (letter_for(store, r) if letter_for  # type: ignore[truthy-function]
+                          else ("", "", ""))
             except Exception:  # noqa: BLE001
                 letter = ("", "", "(the letter could not be read)")
             items.append((r, who.get(r.profile_id, "?"), nm.get(r.broker_id, r.broker_id),
@@ -491,7 +493,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
         up = form.get("authorization")
         if not p or not hasattr(up, "read"):
             return redirect("/")
-        data = await up.read()
+        data = await up.read()  # type: ignore[union-attr]
         if not data or len(data) > dr.MAX_AUTH_BYTES:
             return redirect(f"/profile/{pid}")
         doc = dr.save_authorization(store, pid, getattr(up, "filename", "") or "", data)
@@ -552,7 +554,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
         up = form.get("bundle")
         try:
             found = find_family_bundle()
-            data = found.read_bytes() if found and not hasattr(up, "read") else await up.read()
+            data = found.read_bytes() if found and not hasattr(up, "read") else await up.read()  # type: ignore[union-attr]
             app.state.draft = load_bundle(data, str(form.get("passphrase", "")))
         except Exception:  # noqa: BLE001
             return html(ui.layout("Import", ui.errors_html(
@@ -580,7 +582,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
         files = {}
         up = form.get("authorization")
         if hasattr(up, "read"):
-            files["authorization"] = (getattr(up, "filename", "") or "", await up.read())
+            files["authorization"] = (getattr(up, "filename", "") or "", await up.read())  # type: ignore[union-attr]
         errs = dr.apply_step(d, step, form, files)
         if errs:
             return html(ui.step_page(step, d, csrf_token, errs), 400)
