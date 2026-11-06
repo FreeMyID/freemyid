@@ -391,6 +391,22 @@ class Broker(_Base):
     steps: list[str] = Field(default=[], description="Human-readable step-by-step notes")
     search: SearchSpec | None = None
     form: list[FormStep] = []
+    success_text: list[str] = Field(
+        default=[], description="Visible text that means the opt-out was accepted (any match). "
+        "Used by 'Fill it in for me' when the form steps have no expect_text",
+    )
+    success_url_pattern: str | None = Field(
+        default=None, max_length=200,
+        description="Regex matched against the URL path+query after submit; a match = success",
+    )
+    safe_checkboxes: list[str] = Field(
+        default=[], description="CSS selectors of plain consent checkboxes 'Fill it in for me' "
+        "may tick (never CAPTCHA, never marketing opt-ins). Empty = tick nothing",
+    )
+    listing_url_pattern: str | None = Field(
+        default=None, max_length=200,
+        description="Regex matched against a listing page's URL path (listing finder)",
+    )
     submitter: str | None = Field(
         default=None, description="Optional custom submitter 'module:Class'"
     )
@@ -405,6 +421,13 @@ class Broker(_Base):
     @classmethod
     def _hosts(cls, v: list[str]) -> list[str]:
         return [_check_host(h) for h in v]
+
+    @field_validator("success_url_pattern", "listing_url_pattern")
+    @classmethod
+    def _regex(cls, v: str | None) -> str | None:
+        if v is not None:
+            re.compile(v)   # raises -> validation error
+        return v
 
     @field_validator("submitter")
     @classmethod

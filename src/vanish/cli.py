@@ -187,6 +187,24 @@ def run(profile: Annotated[str | None, typer.Option("--profile", "-p")] = None,
 
 
 @app.command()
+def fill(broker: Annotated[str, typer.Argument(help="Broker id")],
+         profile: Annotated[str | None, typer.Option("--profile", "-p")] = None,
+         timeout: Annotated[int, typer.Option("--timeout", min=30, max=3600)] = 600):
+    """Open the broker's form in a visible window and fill it in; you tick the box and Submit."""
+    from .engine.fill_for_me import fill_for_me_sync
+    store = _store()
+    people = _select(store, profile)
+    if len(people) != 1:
+        con.print("[red]Choose one person with --profile.[/]")
+        raise typer.Exit(2)
+    res = fill_for_me_sync(store, people[0].id, broker, timeout_s=timeout)
+    con.print(f"{res.status}: {res.reason}")
+    if res.filled:
+        con.print("Filled: " + ", ".join(res.filled))
+    raise typer.Exit(0 if res.ok else 1)
+
+
+@app.command()
 def status(profile: Annotated[str | None, typer.Option("--profile", "-p")] = None):
     """Per-broker status for each person."""
     store, reg = _store(), _registry()

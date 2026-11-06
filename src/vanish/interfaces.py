@@ -124,6 +124,11 @@ class Submitter(abc.ABC):
 #           only_due: bool = False) -> "RunReport"
 #   RunReport: dataclass with per_profile: dict[profile_id, dict[ListingState, int]],
 #              needs_human: int, errors: int, summary_lines() -> list[str] (PII-free)
+# automation-engineer — vanish/engine/fill_for_me.py  (D9, interactive only, never scheduled)
+#   async def fill_for_me(store, profile_id: str, broker_id: str, *, timeout_s: int = 600,
+#                         **kw) -> "FillResult"
+#   def fill_for_me_sync(store, profile_id: str, broker_id: str, **kw) -> "FillResult"
+#   FillResult: status "submitted" | "fallback" | "refused", reason, filled, todo_id, .ok
 # automation-engineer — vanish/engine/outbox.py
 #   def approve_and_send(store, request_id: str) -> None   # user-approved email send
 # automation-engineer — vanish/engine/letters.py

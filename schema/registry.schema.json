@@ -249,6 +249,52 @@
           "title": "Form",
           "type": "array"
         },
+        "success_text": {
+          "default": [],
+          "description": "Visible text that means the opt-out was accepted (any match). Used by 'Fill it in for me' when the form steps have no expect_text",
+          "items": {
+            "type": "string"
+          },
+          "title": "Success Text",
+          "type": "array"
+        },
+        "success_url_pattern": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Regex matched against the URL path+query after submit; a match = success",
+          "title": "Success Url Pattern"
+        },
+        "safe_checkboxes": {
+          "default": [],
+          "description": "CSS selectors of plain consent checkboxes 'Fill it in for me' may tick (never CAPTCHA, never marketing opt-ins). Empty = tick nothing",
+          "items": {
+            "type": "string"
+          },
+          "title": "Safe Checkboxes",
+          "type": "array"
+        },
+        "listing_url_pattern": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Regex matched against a listing page's URL path (listing finder)",
+          "title": "Listing Url Pattern"
+        },
         "submitter": {
           "anyOf": [
             {
