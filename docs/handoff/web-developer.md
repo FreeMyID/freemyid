@@ -27,11 +27,34 @@ Gaps vs the checklist:
 - Quick wins carried into the rebuild: descriptive titles, shared partials, focus ring, tap targets,
   heading order, print CSS, OG image, sitemap.
 
-## Phases 2-6 progress (2026-11-06)
-Commits: 1bf1d98 build+check tools, 63372e2 design system, bae9350 core pages, a78c1d1 "I do not consent",
-9be5aca site_check fix, f8b2a7e broker guides (29) + index. `tools/build_site.py` -> OK, 0 problems.
-- Source layout: site_src/{site.yaml,tokens.yaml,pages.yaml,css/*.css,data/*.yaml,templates/,static/}.
-- Nav/footer links render only for pages present in pages.yaml (lets pages land one at a time).
-- Git rule: commit by explicit path only (`git commit -- <paths>`), one page per commit, never push.
-Next: og.png (referenced in meta, NOT yet created), styleguide/ page, docs/WEBSITE.md, pages.yml
-`--check` step, then verify (keyboard, 200/400% zoom, print, weights) and report.
+## State at handoff (2026-11-06, stopped on coordinator request)
+
+DONE and committed (build_site.py --check OK, site_check OK, ruff clean):
+1bf1d98 build+check tools | 63372e2 design system | bae9350 core pages | a78c1d1 "I do not consent" page |
+9be5aca site_check fix | f8b2a7e 29 broker guides + index | 7e74ce4 og.png | 03fb690 styleguide/ |
+e21d90b pages.yml --check job | 7ddda4e 320px/400% zoom fixes | 544fe5f docs/WEBSITE.md.
+Half-done: nothing.
+
+Commands: `.venv/bin/python tools/build_site.py` (rebuild site/ + check), `--check` (CI, no writes),
+`python3 tools/site_check.py site`, preview `.venv/bin/python -m http.server -d site 8000`.
+Edit site_src/, never site/ by hand. Full design system, component names and partials: docs/WEBSITE.md.
+Key partials: header.html (nav_items; links shown only for pages in pages.yaml), footer.html, trust.html,
+crumbs.html, mockup.html, smartscreen.html (ss_step 1|2), star-rule.html, brand-mark.svg.
+Helpers in templates: url('path/'), asset('style.css'), icon('name', cls), render(html_with_url_calls).
+
+Verified: 320px no horizontal scroll on every page (light+dark); keyboard tab order logical with 3px gold
+focus ring; no-JS menu works; print CSS shows link URLs; zero external requests; CSS 6.6 KB gzip, largest
+HTML 6.0 KB gzip (home), og.png 55 KB. Screenshot scripts: scratchpad shots.py / verify.py (not committed).
+
+Decisions for the next session:
+- Git: commit by explicit path (`git add P && git commit -m ... -- P`), one page per commit, never push.
+- No native CSS nesting (iOS 16); light-dark() with @supports fallback; no JS; system fonts only.
+- 404 uses absolute base_path links (looks unstyled on a local server; fine on Pages).
+- og.png is an interim image; swap for brand/social/og-default.png when WR-2 lands (copy to site_src/static/).
+- Guide steps are the registry's verbatim app steps; covered_by guides get generated text linking the parent.
+
+NEXT (in order):
+1. Check docs/WEBSITE_REQUESTS.md (WR-2 OG art, WR-3 landing conversion review -> new rows).
+2. Families/helpers page (needs content decision on HELPER_GUIDE.md + fridge card; add a WR row for copy).
+3. Real SmartScreen screenshots once the VM walkthrough exists; fill data/release.yaml at first release.
+4. Optional: AVIF/WebP pipeline only if raster images are added (none yet).
