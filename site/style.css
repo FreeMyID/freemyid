@@ -306,7 +306,8 @@
     font-weight: 700; color: var(--color-heading); cursor: pointer; list-style: none; user-select: none;
   }
   .menu > summary::-webkit-details-marker { display: none; }
-  .menu > summary svg { inline-size: 1.2em; block-size: 1.2em; }
+  .menu > summary svg { inline-size: 1.2em; block-size: 1.2em; flex: none; }
+  .menu > summary { white-space: nowrap; }
   .menu > summary .when-open { display: none; }
   .menu[open] > summary .when-open { display: inline; }
   .menu[open] > summary .when-closed { display: none; }
@@ -580,6 +581,15 @@
 @layer components {
   .btn-row--center { justify-content: center; }
   .center .lead { margin-inline: auto; }
+}
+@layer components {
+  /* 320px / 400% zoom: let long words (file names, email addresses) break, keep the header in one row. */
+  .btn, .steps > li, .download-card, .callout > div { min-inline-size: 0; overflow-wrap: anywhere; }
+  .two-col > *, .grid-auto > * { min-inline-size: 0; }
+  @media (max-width: 22em) {
+    .brand { font-size: 1rem; gap: 0.4em; }
+    .menu > summary { padding-inline: var(--space-xs); }
+  }
 }
 
 @layer pages {
