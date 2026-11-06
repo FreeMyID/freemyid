@@ -8,7 +8,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
 
-from .models import Broker, BrokerStatus, ListingState as S
+from .models import Broker, BrokerStatus
+from .models import ListingState as S
 
 GRACE_DAYS = 15
 
@@ -16,7 +17,7 @@ GRACE_DAYS = 15
 # any non-terminal state once resolved, so they are handled in `can_transition`.
 TRANSITIONS: dict[S, set[S]] = {
     S.UNKNOWN: {S.NOT_FOUND, S.FOUND},
-    S.NOT_FOUND: {S.NOT_FOUND, S.FOUND},
+    S.NOT_FOUND: {S.NOT_FOUND, S.FOUND, S.REAPPEARED},
     S.FOUND: {S.FOUND, S.SUBMITTED, S.NOT_FOUND},
     S.SUBMITTED: {S.SUBMITTED, S.AWAITING_VERIFICATION, S.CONFIRMED, S.REMOVED},
     S.AWAITING_VERIFICATION: {S.AWAITING_VERIFICATION, S.CONFIRMED, S.SUBMITTED, S.REMOVED},
@@ -40,10 +41,16 @@ def can_transition(src: S, dst: S) -> bool:
 
 
 def transition(status: BrokerStatus, dst: S, now: datetime) -> BrokerStatus:
+    """Move to `dst`. Entering SUBMITTED from another state counts as a send.
+
+    A rescan that leaves the state unchanged (SUBMITTED -> SUBMITTED) does NOT re-stamp
+    `last_submitted_at`/`attempts`, otherwise escalation would never become due (SEC-01).
+    A real resubmission of an already-SUBMITTED listing must call `mark_submitted`.
+    """
     if not can_transition(status.state, dst):
         raise TransitionError(f"{status.state} -> {dst} not allowed")
     upd = status.model_copy(update={"state": dst, "updated_at": now})
-    if dst == S.SUBMITTED:
+    if dst == S.SUBMITTED and status.state != S.SUBMITTED:
         upd.last_submitted_at = now
         upd.attempts = status.attempts + 1
     if dst != S.NEEDS_HUMAN:
@@ -52,6 +59,16 @@ def transition(status: BrokerStatus, dst: S, now: datetime) -> BrokerStatus:
         upd.escalation_level = 0
         upd.last_escalated_at = None
     return upd
+
+
+def mark_submitted(status: BrokerStatus, now: datetime) -> BrokerStatus:
+    """Record a real send (first submission or resubmission). Call only after a send succeeded."""
+    if not can_transition(status.state, S.SUBMITTED):
+        raise TransitionError(f"{status.state} -> {S.SUBMITTED} not allowed")
+    return status.model_copy(update={
+        "state": S.SUBMITTED, "updated_at": now, "last_submitted_at": now,
+        "attempts": status.attempts + 1, "needs_human_reason": None,
+    })
 
 
 def after_scan(status: BrokerStatus, found: bool, now: datetime) -> S:
@@ -67,8 +84,11 @@ def after_scan(status: BrokerStatus, found: bool, now: datetime) -> S:
         return S.REAPPEARED if found else S.REMOVED
     if st == S.FOUND:
         return S.FOUND if found else S.NOT_FOUND
-    # NEEDS_HUMAN/ERROR after a prior submission
-    return S.SUBMITTED if found else S.REMOVED
+    # NOT_FOUND / NEEDS_HUMAN / ERROR after a prior submission: a listing that is visible
+    # again goes back on the submit path (nothing was sent from these states).
+    if found:
+        return S.REAPPEARED
+    return S.NOT_FOUND if st == S.NOT_FOUND else S.REMOVED
 
 
 def should_submit(state: S) -> bool:

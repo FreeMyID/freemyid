@@ -6,20 +6,67 @@ Everything here is plain data (pydantic v2). No I/O, no network, no Playwright.
 """
 from __future__ import annotations
 
+import re
+import string
 import uuid
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from enum import StrEnum
-from typing import Any, Literal
+from pathlib import PurePosixPath
+from typing import Annotated, Any, Literal
+from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator, model_validator
 
 
 def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def new_id() -> str:
     return uuid.uuid4().hex
+
+
+# SEC-02: ids end up in filesystem paths (evidence/<profile_id>/...), so they are constrained.
+Id = Annotated[str, Field(pattern=r"^[0-9a-f]{32}$")]
+BrokerId = Annotated[str, Field(pattern=r"^[a-z0-9_]{1,64}$")]
+
+
+def _safe_relpath(v: str | None) -> str | None:
+    if v is None:
+        return v
+    if not v or "\\" in v or "\x00" in v:
+        raise ValueError("relpath must be a non-empty POSIX relative path")
+    p = PurePosixPath(v)
+    if p.is_absolute() or any(part in ("..", "") for part in v.split("/")):
+        raise ValueError("relpath must be relative and must not contain '..'")
+    return v
+
+
+# SEC-07: hosts a (remotely updatable) registry may name. Public suffixes / shared hosting
+# would make NetPolicy allow unrelated sites.
+_HOST_RE = re.compile(r"^(?=.{4,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$")
+_SHARED_SUFFIXES = frozenset({
+    "github.io", "githubusercontent.com", "gitlab.io", "herokuapp.com", "appspot.com",
+    "cloudfront.net", "amazonaws.com", "azurewebsites.net", "blogspot.com", "netlify.app",
+    "vercel.app", "pages.dev", "workers.dev", "web.app", "firebaseapp.com", "co.uk", "com.au",
+    "co.nz", "co.jp", "com.br", "co.in",
+})
+_SEARCH_PLACEHOLDERS = frozenset(
+    {"first", "last", "middle", "city", "state", "state_name", "zip", "phone"})
+_SUBMITTER_RE = re.compile(r"^vanish\.submitters\.[a-z0-9_.]+:[A-Za-z_][A-Za-z0-9_]*$")
+
+
+def _check_host(h: str) -> str:
+    if not _HOST_RE.match(h) or h in _SHARED_SUFFIXES:
+        raise ValueError(f"invalid or shared-suffix hostname: {h!r}")
+    return h
+
+
+def _host_in(host: str | None, domains: list[str]) -> bool:
+    if not host:
+        return False
+    host = host.lower().rstrip(".")
+    return any(host == d or host.endswith("." + d) for d in domains)
 
 
 class _Base(BaseModel):
@@ -155,7 +202,7 @@ class Consent(_Base):
     )
 
     @model_validator(mode="after")
-    def _agent_needs_doc_flag(self) -> "Consent":
+    def _agent_needs_doc_flag(self) -> Consent:
         # Authorization doc may be attached after setup; enforcement happens at run time.
         return self
 
@@ -227,7 +274,7 @@ class ScheduleConfig(_Base):
 
 
 class Profile(_Base):
-    id: str = Field(default_factory=new_id)
+    id: Id = Field(default_factory=new_id)
     label: str = Field(description="Display name, e.g. 'Mom'")
     consent: Consent
     name: PersonName
@@ -298,7 +345,7 @@ class PostalContact(_Base):
 
 
 class Broker(_Base):
-    id: str = Field(pattern=r"^[a-z0-9_]+$")
+    id: BrokerId
     name: str
     url: HttpUrl
     category: BrokerCategory
@@ -345,8 +392,41 @@ class Broker(_Base):
     priority: int = Field(default=50, ge=0, le=100, description="Higher runs first")
     enabled: bool = True
 
+    @field_validator("domains", "confirmation_domains")
+    @classmethod
+    def _hosts(cls, v: list[str]) -> list[str]:
+        return [_check_host(h) for h in v]
+
+    @field_validator("submitter")
+    @classmethod
+    def _submitter_ns(cls, v: str | None) -> str | None:
+        if v is not None and not _SUBMITTER_RE.match(v):
+            raise ValueError("submitter must be 'vanish.submitters.<module>:<Class>'")
+        return v
+
     @model_validator(mode="after")
-    def _method_requirements(self) -> "Broker":
+    def _hosts_inside_domains(self) -> Broker:
+        doms = self.domains
+        urls = [str(self.url), str(self.opt_out_url) if self.opt_out_url else None]
+        urls += [st.url for st in self.form if st.url]
+        for u in filter(None, urls):
+            if not _host_in(urlsplit(u).hostname, doms):
+                raise ValueError(f"{self.id}: URL host outside broker domains: {u}")
+        if self.search_url_pattern:
+            fields = {f for _, f, _, _ in string.Formatter().parse(self.search_url_pattern) if f}
+            if bad := fields - _SEARCH_PLACEHOLDERS:
+                raise ValueError(f"{self.id}: unknown search placeholders {sorted(bad)}")
+            probe = self.search_url_pattern.format(**{k: "x" for k in fields})
+            if urlsplit(probe).scheme != "https" or not _host_in(urlsplit(probe).hostname, doms):
+                raise ValueError(f"{self.id}: search_url_pattern must be https on broker domains")
+        if self.opt_out_email:
+            local, _, host = self.opt_out_email.rpartition("@")
+            if not local or not _host_in(host, doms):
+                raise ValueError(f"{self.id}: opt_out_email must be on a broker domain")
+        return self
+
+    @model_validator(mode="after")
+    def _method_requirements(self) -> Broker:
         if self.verification_status == VerificationStatus.VERIFIED:
             if not self.source_urls:
                 raise ValueError(f"{self.id}: verified brokers must cite source_urls")
@@ -388,7 +468,7 @@ class Registry(_Base):
     brokers: list[Broker]
 
     @model_validator(mode="after")
-    def _unique_ids(self) -> "Registry":
+    def _unique_ids(self) -> Registry:
         ids = [b.id for b in self.brokers]
         dupes = {i for i in ids if ids.count(i) > 1}
         if dupes:
@@ -418,9 +498,9 @@ class StateLawRegistry(_Base):
 
 
 class Listing(_Base):
-    id: str = Field(default_factory=new_id)
-    profile_id: str
-    broker_id: str
+    id: Id = Field(default_factory=new_id)
+    profile_id: Id
+    broker_id: BrokerId
     url: str
     name_shown: str | None = None
     age_shown: int | None = None
@@ -439,16 +519,16 @@ class Listing(_Base):
 
 
 class Request(_Base):
-    id: str = Field(default_factory=new_id)
-    profile_id: str
-    broker_id: str
+    id: Id = Field(default_factory=new_id)
+    profile_id: Id
+    broker_id: BrokerId
     kind: RequestKind
     method: Method
-    listing_ids: list[str] = []
+    listing_ids: list[Id] = []
     status: RequestStatus = RequestStatus.DRAFT
     created_at: datetime = Field(default_factory=utcnow)
     sent_at: datetime | None = None
-    original_request_id: str | None = None   # for follow-ups / legal demands
+    original_request_id: Id | None = None   # for follow-ups / legal demands
     reference: str | None = None             # broker ticket / confirmation number
     attempt: int = 1
     dry_run: bool = False
@@ -456,8 +536,8 @@ class Request(_Base):
 
 class BrokerStatus(_Base):
     """Current state for one (profile, broker). History lives in Event rows."""
-    profile_id: str
-    broker_id: str
+    profile_id: Id
+    broker_id: BrokerId
     state: ListingState = ListingState.UNKNOWN
     updated_at: datetime = Field(default_factory=utcnow)
     last_scan_at: datetime | None = None
@@ -470,24 +550,26 @@ class BrokerStatus(_Base):
 
 
 class Evidence(_Base):
-    id: str = Field(default_factory=new_id)
-    profile_id: str
-    broker_id: str
+    id: Id = Field(default_factory=new_id)
+    profile_id: Id
+    broker_id: BrokerId
     kind: EvidenceKind
-    listing_id: str | None = None
-    request_id: str | None = None
+    listing_id: Id | None = None
+    request_id: Id | None = None
     relpath: str = Field(description="Path under VANISH_HOME/evidence, encrypted file")
     sha256: str
     created_at: datetime = Field(default_factory=utcnow)
     caption: str | None = None
 
+    _relpath_ok = field_validator("relpath")(classmethod(lambda cls, v: _safe_relpath(v)))
+
 
 class Event(_Base):
     """Append-only audit row. `detail` MUST NOT contain PII (ids/enums/counts only)."""
-    id: str = Field(default_factory=new_id)
+    id: Id = Field(default_factory=new_id)
     ts: datetime = Field(default_factory=utcnow)
-    profile_id: str | None = None
-    broker_id: str | None = None
+    profile_id: Id | None = None
+    broker_id: BrokerId | None = None
     actor: Actor
     action: str
     from_state: ListingState | None = None
@@ -496,18 +578,21 @@ class Event(_Base):
 
 
 class Todo(_Base):
-    id: str = Field(default_factory=new_id)
-    profile_id: str
-    broker_id: str | None = None
+    id: Id = Field(default_factory=new_id)
+    profile_id: Id
+    broker_id: BrokerId | None = None
     kind: TodoKind
     title: str
     body: str = ""
     links: list[str] = []
-    request_id: str | None = None
+    request_id: Id | None = None
     artifact_relpath: str | None = None    # letter / call script
     created_at: datetime = Field(default_factory=utcnow)
     done_at: datetime | None = None
     resume_token: str | None = None        # engine uses to resume after human step
+
+    _relpath_ok = field_validator("artifact_relpath")(
+        classmethod(lambda cls, v: _safe_relpath(v)))
 
 
 class SubmitOutcome(_Base):

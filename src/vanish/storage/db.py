@@ -18,6 +18,7 @@ Public API (stable; other modules use only this):
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 import threading
 from collections.abc import Iterator
@@ -31,7 +32,15 @@ from pydantic import BaseModel
 from .. import paths
 from ..crypto import Cipher
 from ..models import (
-    BrokerStatus, Event, Evidence, Listing, Profile, Request, RequestStatus, Todo, utcnow,
+    BrokerStatus,
+    Event,
+    Evidence,
+    Listing,
+    Profile,
+    Request,
+    RequestStatus,
+    Todo,
+    utcnow,
 )
 
 M = TypeVar("M", bound=BaseModel)
@@ -65,8 +74,11 @@ CREATE TABLE IF NOT EXISTS events (
   from_state TEXT, to_state TEXT, data BLOB NOT NULL);
 CREATE TRIGGER IF NOT EXISTS events_no_update BEFORE UPDATE ON events
   BEGIN SELECT RAISE(ABORT, 'events are append-only'); END;
-CREATE TRIGGER IF NOT EXISTS events_no_delete BEFORE DELETE ON events
-  WHEN (SELECT v FROM meta WHERE k='allow_event_purge') IS NOT '1'
+DROP TRIGGER IF EXISTS events_no_delete;
+CREATE TRIGGER events_no_delete BEFORE DELETE ON events
+  BEGIN SELECT RAISE(ABORT, 'events are append-only'); END;
+CREATE TRIGGER IF NOT EXISTS events_no_replace BEFORE INSERT ON events
+  WHEN EXISTS (SELECT 1 FROM events WHERE id = NEW.id)
   BEGIN SELECT RAISE(ABORT, 'events are append-only'); END;
 CREATE INDEX IF NOT EXISTS ix_listings_pb ON listings_found(profile_id, broker_id);
 CREATE INDEX IF NOT EXISTS ix_requests_pb ON requests(profile_id, broker_id);
@@ -78,6 +90,32 @@ def _ts(d: datetime | None) -> str | None:
     return d.isoformat() if d else None
 
 
+_HEX_ID = re.compile(r"^[0-9a-f]{32}$")
+
+
+def _confined(base: Path, rel: str) -> Path:
+    """Resolve `rel` under `base`; refuse anything that escapes it (SEC-02)."""
+    root = base.resolve()
+    p = (root / rel).resolve()
+    if p == root or not p.is_relative_to(root):
+        raise ValueError("path escapes its data directory")
+    return p
+
+
+def _rm_tree_files(d: Path) -> None:
+    """Delete every file below `d` (no symlink following), then the empty dirs."""
+    if not d.exists() or d.is_symlink():
+        if d.is_symlink():
+            d.unlink()
+        return
+    for f in sorted(d.rglob("*"), key=lambda x: len(x.parts), reverse=True):
+        if f.is_symlink() or f.is_file():
+            f.unlink()
+        elif f.is_dir():
+            f.rmdir()
+    d.rmdir()
+
+
 class Store:
     def __init__(self, path: Path | None = None, cipher: Cipher | None = None) -> None:
         self.path = path or paths.db_path()
@@ -86,6 +124,8 @@ class Store:
         self._conn = sqlite3.connect(self.path, check_same_thread=False, isolation_level=None)
         self._conn.execute("PRAGMA journal_mode=WAL")
         self._conn.execute("PRAGMA foreign_keys=ON")
+        self._conn.execute("PRAGMA secure_delete=ON")       # SEC-03: zero freed pages
+        self._conn.execute("PRAGMA recursive_triggers=ON")  # SEC-11: REPLACE fires delete trigger
         self._conn.executescript(_DDL)
         self._conn.execute(
             "INSERT OR IGNORE INTO meta VALUES ('schema_version', ?)", (str(SCHEMA_VERSION),)
@@ -138,16 +178,38 @@ class Store:
         return [self._dec("profiles", i, d, Profile) for i, d in rows]
 
     def delete_profile(self, pid: str) -> None:
-        """Hard-delete a person's PII. Events keep only ids (no PII) for the audit trail."""
+        """Hard-delete a person's PII (SEC-03).
+
+        Removes DB rows, evidence files, letters/call scripts, the mailbox password in the OS
+        keychain, then checkpoints the WAL and VACUUMs so no ciphertext lingers. Events keep
+        only ids (no PII) for the audit trail.
+        """
+        if not _HEX_ID.match(pid):
+            raise ValueError("invalid profile id")
+        prof = self.get_profile(pid)
+        ev_files = [e.relpath for e in self.list_evidence(pid)]
+        art_files = [t.artifact_relpath for t in self.list_todos(pid, open_only=False)
+                     if t.artifact_relpath]
         with self.transaction():
             for t in ("listings_found", "requests", "evidence", "todos", "broker_status"):
                 self._conn.execute(f"DELETE FROM {t} WHERE profile_id=?", (pid,))
             self._conn.execute("DELETE FROM profiles WHERE id=?", (pid,))
-        d = paths.evidence_dir() / pid
-        if d.exists():
-            for f in d.rglob("*"):
-                if f.is_file():
+        for base, rels in ((paths.evidence_dir(), ev_files), (paths.artifacts_dir(), art_files)):
+            for rel in rels:
+                try:
+                    f = _confined(base, rel)
+                except ValueError:
+                    continue
+                if f.is_file() or f.is_symlink():
                     f.unlink()
+            _rm_tree_files(_confined(base, pid))
+        if prof and prof.mailbox:
+            from ..secrets import delete_mailbox_password
+            delete_mailbox_password(pid, prof.mailbox)
+        with self._lock:
+            self._conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+            self._conn.execute("VACUUM")
+            self._conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
 
     # ------------------------------------------------------------------ status
     def get_status(self, pid: str, bid: str) -> BrokerStatus:
@@ -217,18 +279,20 @@ class Store:
     # ------------------------------------------------------------------ evidence
     def save_evidence(self, e: Evidence, plaintext: bytes) -> Evidence:
         """Encrypts `plaintext` to VANISH_HOME/evidence/<relpath>; sets sha256."""
-        dest = paths.evidence_dir() / e.relpath
+        dest = _confined(paths.evidence_dir(), e.relpath)
+        dest.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         sha = self._cipher.encrypt_file(plaintext, dest)
         e = e.model_copy(update={"sha256": sha})
         self._x(
-            "INSERT OR REPLACE INTO evidence VALUES (?,?,?,?,?,?)",
+            "INSERT INTO evidence VALUES (?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET "
+            "data=excluded.data",
             (e.id, e.profile_id, e.broker_id, e.kind.value, _ts(e.created_at),
              self._enc("evidence", e.id, e)),
         )
         return e
 
     def read_evidence(self, e: Evidence) -> bytes:
-        return self._cipher.decrypt_file(paths.evidence_dir() / e.relpath)
+        return self._cipher.decrypt_file(_confined(paths.evidence_dir(), e.relpath))
 
     def list_evidence(self, pid: str, bid: str | None = None) -> list[Evidence]:
         q, a = "SELECT id, data FROM evidence WHERE profile_id=?", (pid,)

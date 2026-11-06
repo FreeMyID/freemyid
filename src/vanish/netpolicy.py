@@ -1,42 +1,102 @@
 """Network allowlist. OWNER: orchestrator.
 
 The ONLY hosts Vanish may contact: broker domains from the registry, the profile's own
-mail servers, the configured registry host, and user-approved extras. The engine must call
+mail servers, the configured registry hosts, and user-approved extras. The engine must call
 `is_allowed` for every browser request (Playwright route) and before any httpx/SMTP/IMAP.
+
+Loopback (localhost, 127.0.0.1, ::1) is NOT allowed by default: broker-page JS in the
+engine browser must never reach the local wizard. Callers that legitimately need it (the
+wizard, tests) opt in with `NetPolicy(..., allow_loopback=True)` or `policy.with_loopback()`.
+A profile's own mailbox host (e.g. Proton Bridge on 127.0.0.1) is still allowed for mail,
+but `for_broker` never hands loopback to a browser run unless loopback was opted in.
 """
 from __future__ import annotations
 
+import copy
 from urllib.parse import urlsplit
 
 from . import config
 from .models import Profile, Registry
 
+LOOPBACK_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
+
+
+def _norm(host: str) -> str:
+    return host.strip().lower().rstrip(".").strip("[]")
+
 
 def _host_ok(host: str, allowed: set[str]) -> bool:
-    host = host.lower().rstrip(".")
-    return any(host == a or host.endswith("." + a) for a in allowed)
+    host = _norm(host)
+    return bool(host) and any(host == a or host.endswith("." + a) for a in allowed)
+
+
+def _is_loopback(host: str) -> bool:
+    h = _norm(host)
+    return h in LOOPBACK_HOSTS or h.endswith(".localhost") or h.startswith("127.")
+
+
+def host_of(url_or_host: str) -> str | None:
+    """Hostname of a URL (or a bare host); None if it is unsafe or unparsable.
+
+    Rejects backslashes (urlsplit reads `https://evil.com\\@broker.com` as broker.com,
+    browsers read it as evil.com), whitespace and control characters.
+    """
+    s = url_or_host
+    if not s or "\\" in s or any(c.isspace() or ord(c) < 0x20 or ord(c) == 0x7F for c in s):
+        return None
+    if "://" in s:
+        try:
+            host = urlsplit(s).hostname
+        except ValueError:
+            return None
+    else:
+        host = s
+    return _norm(host) if host else None
 
 
 class NetPolicy:
-    def __init__(self, registry: Registry, profiles: list[Profile] | None = None) -> None:
+    def __init__(self, registry: Registry | None, profiles: list[Profile] | None = None,
+                 *, allow_loopback: bool = False) -> None:
         cfg = config.load()
+        self.allow_loopback = allow_loopback
         self.allowed: set[str] = set()
-        for b in registry.brokers:
-            self.allowed.update(d.lower() for d in b.domains)
-            self.allowed.update(d.lower() for d in b.confirmation_domains)
+        for b in registry.brokers if registry else []:
+            self.allowed.update(_norm(d) for d in b.domains)
+            self.allowed.update(_norm(d) for d in b.confirmation_domains)
         for p in profiles or []:
             if p.mailbox:
-                self.allowed.update({p.mailbox.imap_host.lower(), p.mailbox.smtp_host.lower()})
-        if cfg.registry_url:
-            self.allowed.add((urlsplit(cfg.registry_url).hostname or "").lower())
-        self.allowed.update(h.lower() for h in cfg.extra_allowed_hosts)
-        self.allowed.update({"localhost", "127.0.0.1"})
+                self.allowed.update({_norm(p.mailbox.imap_host), _norm(p.mailbox.smtp_host)})
+        for u in (cfg.registry_url, cfg.registry_sha256_url):
+            if u:
+                self.allowed.add(host_of(u) or "")
+        self.allowed.update(_norm(h) for h in cfg.extra_allowed_hosts)
+        if allow_loopback:
+            self.allowed.update(LOOPBACK_HOSTS)
         self.allowed.discard("")
 
+    def with_loopback(self) -> NetPolicy:
+        """Copy of this policy that also allows localhost/127.0.0.1/::1 (wizard, tests)."""
+        other = copy.copy(self)
+        other.allowed = set(self.allowed) | LOOPBACK_HOSTS
+        other.allow_loopback = True
+        return other
+
     def is_allowed(self, url_or_host: str) -> bool:
-        host = urlsplit(url_or_host).hostname if "://" in url_or_host else url_or_host
+        host = host_of(url_or_host)
         return bool(host) and _host_ok(host, self.allowed)
 
     def for_broker(self, broker_domains: list[str], extra: list[str] | None = None) -> set[str]:
-        """Narrow allowlist for a single broker run (broker + its confirmation domains)."""
-        return {d.lower() for d in [*broker_domains, *(extra or [])]}
+        """Narrow allowlist for a single broker run: (broker + extras) ∩ global allowlist.
+
+        Hosts not covered by the global allowlist are dropped, and loopback is dropped
+        unless this policy opted in to it.
+        """
+        out: set[str] = set()
+        for d in [*broker_domains, *(extra or [])]:
+            h = host_of(d)
+            if not h or not _host_ok(h, self.allowed):
+                continue
+            if _is_loopback(h) and not self.allow_loopback:
+                continue
+            out.add(h)
+        return out
