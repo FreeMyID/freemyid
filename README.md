@@ -2,7 +2,11 @@
 
 # Free My ID
 
-Free My ID is a local-first tool that finds your listings on data-broker and people-search sites, files opt-out requests with each broker, and keeps checking so it can re-file when listings come back.
+**Take your name off the websites that sell it.**
+
+Free My ID is a local-first tool that finds your listings on people-search sites (also called data brokers), asks each one to delete your details, and keeps checking so it can ask again when listings come back.
+
+No account. No cloud. It never asks for your Social Security number, bank or card details. Free and open source. Uninstall anytime.
 
 It runs on your own computer. There is no AI or cloud service at runtime: every step is deterministic Python driven by a broker registry (YAML) and a per-listing state machine. Your personal data stays in an encrypted database on your machine.
 
@@ -17,13 +21,14 @@ Non-technical users should start with the [User Guide](docs/USER_GUIDE.md) or `F
 - Search each broker in the registry for each person (a "profile"), scoring candidate listings against names, nicknames, previous names, city/state, age, relatives, phone and email.
 - Submit opt-outs through the broker's own channel (web form, email, postal letter, phone script, or a to-do when an account is required), sending only what the listing already shows.
 - Click email verification links in a dedicated removal mailbox, but only links on that broker's own domains.
-- Escalate requests that get ignored: resubmit, then a state-law follow-up email, then a formal legal demand (always held for your approval), then a to-do with the right Attorney General or CPPA complaint links.
+- Escalate requests that get ignored: resubmit, then a state-law follow-up email, then a firmer letter (always held for your approval), then a to-do with the right Attorney General or CPPA complaint links.
 - Re-scan on a schedule and file again when a listing reappears.
 - Keep encrypted evidence: screenshots of every listing found and every confirmation page, plus copies of every email sent.
 
 **Honest limits:**
 
-- **"Removed" means removed from that one broker.** It does not mean removed from the internet, from search engines, from public records, or from brokers that aren't in the registry.
+- **Free My ID works on people-search sites. It does not change what Facebook or Google does with your account.**
+- **A site's "removed" means removed from that one broker.** It does not mean removed from the internet, from search engines, from public records, or from brokers that aren't in the registry.
 - **Listings come back.** Brokers re-ingest data from their sources, and clone sites copy one another. That is why Free My ID keeps re-checking rather than running once.
 - **Some brokers need you.** CAPTCHAs, ID requests, login walls, postal letters and phone calls are handed to a person. Free My ID never solves or bypasses a CAPTCHA or other bot protection.
 - **The registry goes stale.** Brokers move opt-out pages and change forms. Entries carry a `verification_status` (`verified`, `unverified` or `broken`), and a weekly health check flags breakage, but some entries will be wrong at any given time.

@@ -1,11 +1,17 @@
 # Free My ID: Quick Start (one page)
 
-Free My ID asks websites that sell your name and address to delete them. It runs on your own
-computer. Nothing is sent to us. It never pays anyone.
+**That post didn't stop anyone. This does.** Free My ID takes your name off the websites that
+sell it. These are called people-search sites (also known as data brokers). They publish names,
+addresses and phone numbers. Free My ID asks each one to delete yours, in the written form they
+have to answer.
 
-**Please know:** a few websites need you to click a button yourself, listings can come back
-later, and "removed" means removed from that one website only. Free My ID keeps checking so you
-do not have to.
+**No account. No cloud. Never asks for your Social Security number, bank or card details. Free
+and open source. Uninstall anytime.** It runs on your own computer, and nothing is sent to us.
+
+**Please know:** a few sites need you to click a button yourself. Sites can put your details back
+up later, which is why Free My ID keeps checking. When a site says it deleted you, that is true
+for that one site only. Free My ID does not change what Facebook or Google does with your
+account.
 
 ---
 
@@ -39,7 +45,7 @@ Free My ID opens in its own window. Each screen asks one thing. Press **Next** t
 | 1. Welcome | Choose who this is for (you, your child, or someone who asked you to help). Type your full name and tick the box. |
 | 2. Name | Type the name. Add nicknames or a maiden name if there are any. |
 | 3. Address | Type the city and the 2-letter state, for example Springfield, IL. |
-| 4. A few details | Birth year, a phone number and an email. These are only used to recognize the right person. They are never sent to a website. |
+| 4. A few details | Birth year, a phone number and an email. These are only used to recognize the right person. They are never sent to anyone. |
 | 5. Email for removals | Pick your email company and follow the little instructions on screen, **or** choose **Skip, I'll do these by hand**. Skipping is fine. |
 | 6. Run automatically? | Leave the box ticked so Free My ID keeps checking by itself. Click **Finish**. |
 
@@ -54,7 +60,7 @@ Under it are **cards**. Each card is one thing for you to do, with one big butto
 - **Open the site** opens the website. Follow the numbered steps on the card. Click a
   **Copy** button, then paste into the website's box. When finished, click **I did it**.
   If you get stuck, click **I couldn't**. That is okay.
-- **Open in Gmail / Outlook / Yahoo** opens a ready-written email. Read it, press Send in
+- **Open in Gmail / Outlook / Yahoo** opens a ready-written message. Read it, press Send in
   your email, then come back and click **I sent it**.
 
 If there are no cards, you have nothing to do. Close the window. Free My ID keeps working quietly
