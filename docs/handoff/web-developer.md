@@ -53,8 +53,11 @@ Decisions for the next session:
 - og.png is an interim image; swap for brand/social/og-default.png when WR-2 lands (copy to site_src/static/).
 - Guide steps are the registry's verbatim app steps; covered_by guides get generated text linking the parent.
 
-NEXT (in order):
-1. Check docs/WEBSITE_REQUESTS.md (WR-2 OG art, WR-3 landing conversion review -> new rows).
-2. Families/helpers page (needs content decision on HELPER_GUIDE.md + fridge card; add a WR row for copy).
-3. Real SmartScreen screenshots once the VM walkthrough exists; fill data/release.yaml at first release.
-4. Optional: AVIF/WebP pipeline only if raster images are added (none yet).
+## Builder round (2026-11-06): WR-4..7, 9..18 done (shas in docs/WEBSITE_REQUESTS.md)
+
+New: /families/ page + assets/free-my-id-fridge-card.pdf (copied from docs/assets), download "opens soon" state
+(flips on when data/release.yaml version is set), final logo A (favicon set + nav mark with light-dark fills).
+Tooling: FMID_SAMPLE_REGISTRY env var pins the registry copy (use it if a peer has an uncommitted registry edit,
+else guide pages pick it up). WR-1 closed by user pick; WR-8 still blocked (repo private).
+
+NEXT: real SmartScreen screenshots; fill data/release.yaml at first release; WR-8 at launch; AVIF only if rasters added.
