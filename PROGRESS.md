@@ -9,6 +9,10 @@ Models, state machine, encrypted store (AES-GCM blobs, key in keyring, append-on
 - wizard-packager: wizard, dashboard, scheduler, packaging
 - qa-security: scaffold review + test suite
 - Peer sessions: 9e README + USER_GUIDE ✅ (committed 8a9cab6); 85 broker agent policies 🔄; cf long-tail brokers 🔄
+## Phase 4 — Security fixes 🔄 (2026-11-05)
+- Done (924a79b): SEC-01 state/escalation, SEC-02 ids+paths, SEC-03 full delete, SEC-05 registry fetch, SEC-07 broker hosts, SEC-08 submitter ns, SEC-09 netpolicy, SEC-11 append-only.
+- In progress: SEC-04/10/13 (peer e6, stopping), SEC-06/12/14 consent+cli (peer e8, stopping); qa-security updating tests for new id rules.
+- User priority: one-click **Windows** installer + very simple wizard for non-technical older users (wizard-packager).
 ## Blocked / decisions
 - Registry GitHub repo URL: not set yet (placeholder).
 - Code signing for macOS/Windows: undecided (ship unsigned + Quick Start instructions for now).
