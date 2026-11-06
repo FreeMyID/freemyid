@@ -57,7 +57,7 @@ External links (broker removal pages, GitHub, a Facebook share link) are plain l
 | heading = brand | #1b2f5b | #c4d5f7 | headings, primary buttons |
 | brand-ink | #ffffff | #0f1520 | text on brand (13:1) |
 | accent | #a3202e | #f5a3ab | flag red: kickers, myth borders, stars. Never alarm UI |
-| link | #1a4fa0 | #a8caff | >= 7:1 on every background |
+| link | #17488f | #a8caff | >= 7:1 on every background |
 | ok / warn | #1e6b3c / #7a4f00 | #8fd6a6 / #f0c674 | mockup status chips, fact callouts |
 | line / line-strong | #c5ccd8 / #6b778c | #36435a / #8794ab | decorative / 3:1 borders |
 | focus / focus-inner | #f2b705 / #14181f | #f2b705 / #f2f4f8 | 3px gold outline + 2px contrasting inner ring |

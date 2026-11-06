@@ -12,7 +12,7 @@ color:
   brand:          ["#1b2f5b", "#c4d5f7"]   # primary buttons, step numbers
   brand-ink:      ["#ffffff", "#0f1520"]   # text on brand
   accent:         ["#a3202e", "#f5a3ab"]   # flag red: kickers, myth borders. Never for alarm UI.
-  link:           ["#1a4fa0", "#a8caff"]
+  link:           ["#17488f", "#a8caff"]
   ok:             ["#1e6b3c", "#8fd6a6"]   # "confirmed" chip in the mockup
   warn:           ["#7a4f00", "#f0c674"]   # "waiting" chip in the mockup
   line:           ["#c5ccd8", "#36435a"]   # decorative borders
@@ -35,6 +35,7 @@ pairs:
   - [heading, bg-alt, 7]
   - [link, bg, 7]
   - [link, surface, 7]
+  - [link, surface-strong, 7]
   - [link, bg-alt, 7]
   - [brand-ink, brand, 7]
   - [accent, bg, 4.5]
