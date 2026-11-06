@@ -96,3 +96,32 @@ On a clean Windows 11 VM: install without admin → wizard in under 10 minutes �
   AUTOMATIC needs real fill/click steps, so no broker qualifies yet. Selectors need a real-browser
   inspect session (later, with the user's OK, against opt-out pages only).
 - Off-domain contact emails (e.g. BeenVerified's moneybot5000.com) stay excluded for v1.
+
+## D8–D10: closing the gap with DeleteMe / Incogni (user request 2026-11-06)
+How they actually work: **Incogni** mostly sends legal deletion requests by email to hundreds of
+registered data brokers and re-sends them on a schedule. It doesn't search for listings.
+**DeleteMe** adds human staff who search sites, solve CAPTCHAs and fill forms by hand.
+Neither of them beats bot protection with software. Scale comes from (1) bulk email requests,
+(2) persistent re-sends, and (3) humans for the hard sites. Vanish does the same, with the user as
+the human, but makes that human's part as small as possible.
+
+- **D8 Bulk email coverage (the Incogni model).** Import every broker from the official
+  state data-broker registries (CA CPPA ~500+, VT, TX, OR) that lists a contact email, as
+  `method: email`, `category: data_broker`, low priority, `verification_status: unverified`,
+  with the registry as the citation. Vanish sends each one a deletion request (generic voluntary
+  letter outside CA), re-sends every 90 days, and auto-clicks confirmation links. Requires the
+  removal mailbox, so the wizard now recommends one ("strongly recommended: Vanish can contact
+  hundreds of companies for you").
+- **D9 "Fill it in for me" (the DeleteMe model, with the user as the human).** For web forms,
+  Vanish opens a **visible** Edge window, goes to the opt-out page, and fills the fields itself using
+  deterministic label/name/placeholder matching (first/last name, email, city, state, zip,
+  listing address). Then a big banner tells the user: "Tick the box that says you're not a robot,
+  then press Submit." Vanish watches for the success text/URL and records evidence. No CAPTCHA
+  solving, no stealth: a real person is at a real browser. If filling fails, it falls back
+  to the Assisted card. This becomes the default for web_form brokers when the user is at the
+  computer ("Do my to-dos now" button). Scheduled runs never do this, because they're headless.
+- **D10 Listing finder.** Same visible-window approach for people-search sites: Vanish opens the
+  search page with the name/city filled in, and the user clicks "This is me" on the right
+  result. That gives the listing address the opt-out form needs.
+- Unchanged: no CAPTCHA solvers, no paying, no ID upload or accounts unless the permission flag
+  is set.
