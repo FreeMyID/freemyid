@@ -35,6 +35,13 @@ log = logging.getLogger(__name__)
 
 _URL = re.compile(r"https://[^\s<>\"')\]]+", re.IGNORECASE)
 _HREF = re.compile(r"""href\s*=\s*["']([^"']+)["']""", re.IGNORECASE)
+_ANCHOR = re.compile(r"""<a\b[^>]*?href\s*=\s*["']([^"']+)["'][^>]*>(.*?)</a\s*>""",
+                     re.IGNORECASE | re.DOTALL)
+# SEC-18: links that would cancel/undo/unsubscribe (or are just boilerplate) are never clicked
+_AVOID = re.compile(r"cancel|unsubscribe|opt.?in|not (you|me)|did ?n.?t (request|ask)|"
+                    r"did not (request|ask)|report|preferences|privacy|terms|login|sign.?in",
+                    re.IGNORECASE)
+_CONFIRM = re.compile(r"confirm|verif|validate|activate|complete", re.IGNORECASE)
 MAX_MESSAGES = 50            # per poll; we only need recent broker mail
 MAX_MESSAGE_BYTES = 2_000_000
 
@@ -82,7 +89,12 @@ def extract_links(raw: bytes, allowed_domains: list[str]) -> list[str]:
         except (LookupError, ValueError):
             continue
     found: list[str] = []
+    text_of: dict[str, str] = {}
     for t in texts:
+        for href, inner in _ANCHOR.findall(t):
+            u = unescape(href).strip()
+            label = " ".join(unescape(re.sub(r"<[^>]+>", " ", inner)).split())
+            text_of[u] = f"{text_of.get(u, '')} {label}".strip()
         cands = [unescape(h) for h in _HREF.findall(t)] + _URL.findall(unescape(t))
         for u in cands:
             u = u.strip().rstrip(".,;")
@@ -91,7 +103,26 @@ def extract_links(raw: bytes, allowed_domains: list[str]) -> list[str]:
             h = host_of(u)
             if h and _host_in(h, allowed_domains) and u not in found:
                 found.append(u)
-    return found
+    keep = [u for u in found if not _avoid(u, text_of.get(u, ""))]
+    return rank_links(keep, text_of)
+
+
+def _url_tail(u: str) -> str:
+    """Path, query and fragment only (a host like privacy.broker.example is not a signal)."""
+    rest = u.split("://", 1)[-1]
+    i = min((rest.find(c) for c in "/?#" if c in rest), default=len(rest))
+    return rest[i:]
+
+
+def _avoid(u: str, text: str) -> bool:
+    return bool(_AVOID.search(_url_tail(u)) or _AVOID.search(text))
+
+
+def rank_links(links: list[str], text_of: dict[str, str] | None = None) -> list[str]:
+    """Confirm/verify-looking links first (stable)."""
+    t = text_of or {}
+    return sorted(links, key=lambda u: not (_CONFIRM.search(_url_tail(u))
+                                             or _CONFIRM.search(t.get(u, ""))))
 
 
 def sender_domain(raw: bytes) -> str | None:
@@ -196,7 +227,7 @@ class SmtpImapMailer:
             for u in extract_links(raw, allowed):
                 if u not in links:
                     links.append(u)
-        return links
+        return links          # each message's links are already filtered + ranked (SEC-18)
 
     async def wait_for_confirmation(self, profile: Profile, broker: Broker, since: datetime,
                                     timeout_s: int = 600) -> list[str]:

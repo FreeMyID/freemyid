@@ -81,7 +81,9 @@ def letter_vars(profile: Profile, broker: Broker, listings: list[Listing],
     shown: set[ProfileField] = {f for li in listings for f in li.shown_fields}
     cur = next((a for a in profile.addresses if a.current), profile.addresses[0])
     v: dict[str, Any] = {
-        "name": profile.name.full,
+        # SEC-29: middle name / suffix only if the listing itself shows the middle name
+        "name": profile.name.full if ProfileField.MIDDLE_NAME in shown
+        else f"{profile.name.first} {profile.name.last}",
         "broker_name": broker.name,
         "listing_urls": [li.url for li in listings],
         "mailbox": profile.mailbox.address if profile.mailbox else None,

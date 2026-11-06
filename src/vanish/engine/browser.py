@@ -7,6 +7,13 @@
   fixture server (http://127.0.0.1:<port>/<host><path>); nothing reaches the internet.
 * Every request goes through a route handler: anything whose host is not in the broker's
   narrow allowlist (and the global NetPolicy) is aborted.
+* SEC-16: Playwright routes only see the first URL of a redirect chain, and service workers
+  bypass routes. So: service workers are blocked; every launch gets a Chromium
+  `--host-resolver-rules` floor (off-list DNS names never resolve, even on a redirect hop);
+  a request listener records off-list redirect hops / main-frame navigations and `goto` /
+  `check_escaped` raise BlockedByPolicy (never retried). Residual gap: IP-literal and
+  loopback redirect targets bypass the resolver floor; they are detected (BlockedByPolicy)
+  but the request itself has already been sent. Full fix = allowlisting proxy (SEC-16 A).
 * Honest user agent: the browser's real UA + `config.user_agent_suffix`.
 * Random delay min_delay_s..max_delay_s before each navigation, per-domain rate limit,
   retries with exponential backoff.
@@ -16,6 +23,7 @@ from __future__ import annotations
 
 import asyncio
 import glob
+import ipaddress
 import logging
 import os
 import random
@@ -26,7 +34,7 @@ from typing import TYPE_CHECKING, Any
 from urllib.parse import urlsplit
 
 from .. import config as cfgmod
-from ..netpolicy import NetPolicy, _host_ok
+from ..netpolicy import LOOPBACK_HOSTS, NetPolicy, _host_ok, host_of
 
 if TYPE_CHECKING:
     from playwright.async_api import Browser, BrowserContext, Page, Playwright, Response
@@ -105,6 +113,33 @@ def fixture_url(base: str, url: str) -> str:
     return f"{base.rstrip('/')}/{sp.hostname}{path}" + (f"?{sp.query}" if sp.query else "")
 
 
+def _is_ip(host: str) -> bool:
+    try:
+        ipaddress.ip_address(host.strip("[]"))
+        return True
+    except ValueError:
+        return False
+
+
+def host_resolver_rules(allowed: set[str], fixture_mode: bool = False) -> str:
+    """Chromium `--host-resolver-rules` value: every DNS name fails unless allowlisted.
+
+    Fixture mode only needs the local fixture server (broker hosts are answered by routes).
+    The rules also apply to IP literals (verified: an unlisted 127.0.0.1 fails with
+    ERR_NAME_NOT_RESOLVED), so allowlisted IPs are excluded without a `*.` wildcard.
+    """
+    hosts = set(LOOPBACK_HOSTS) if fixture_mode else set(allowed)
+    rules = ["MAP * ~NOTFOUND"]
+    for h in sorted(hosts):
+        if not h or any(c in h for c in ", "):
+            continue
+        if _is_ip(h):
+            rules.append(f"EXCLUDE [{h}]" if ":" in h else f"EXCLUDE {h}")
+        else:
+            rules += [f"EXCLUDE {h}", f"EXCLUDE *.{h}"]
+    return ", ".join(rules)
+
+
 class RateLimiter:
     """Minimum spacing between requests to the same domain (per process)."""
 
@@ -140,8 +175,16 @@ class BrowserManager:
         self.fast = self.cfg.max_delay_s <= 0 or bool(fixture_base)   # dev/test: no sleeps
 
     async def start(self) -> None:
-        """Launch now (so a missing browser is detected up front)."""
-        await self._ensure()
+        """Launch now (so a missing browser is detected up front).
+
+        On failure the Playwright driver is stopped too (SEC-26: otherwise its subprocess
+        transport outlives the event loop -> "Event loop is closed" warnings).
+        """
+        try:
+            await self._ensure()
+        except BaseException:
+            await self.close()
+            raise
 
     async def _ensure(self) -> Browser:
         if self._browser:
@@ -151,28 +194,37 @@ class BrowserManager:
         self._browser = await self._launch(self.headless)
         return self._browser
 
+    def launch_args(self) -> list[str]:
+        """Browser-wide network floor (SEC-16 b)."""
+        rules = host_resolver_rules(self.netpolicy.allowed, bool(self.fixture_base))
+        return [f"--host-resolver-rules={rules}"]
+
     async def _launch(self, headless: bool) -> Browser:
         assert self._pw
+        args = self.launch_args()
         exe = os.environ.get("VANISH_BROWSER_EXECUTABLE")
         if exe:
-            return await self._pw.chromium.launch(executable_path=exe, headless=headless)
+            return await self._pw.chromium.launch(executable_path=exe, headless=headless,
+                                                  args=args)
         for chan in channel_candidates(self.cfg.browser_channel):
             try:
-                return await self._pw.chromium.launch(channel=chan, headless=headless)
+                return await self._pw.chromium.launch(channel=chan, headless=headless,
+                                                      args=args)
             except Exception as e:  # noqa: BLE001 - try the next one
                 log.info("browser channel %s unavailable (%s)", chan, type(e).__name__)
         try:
-            return await self._pw.chromium.launch(headless=headless)
+            return await self._pw.chromium.launch(headless=headless, args=args)
         except Exception:
             shell = _cached_headless_shell() if self.fixture_base else None
             if shell is None:
                 raise
-            return await self._pw.chromium.launch(executable_path=shell, headless=headless)
+            return await self._pw.chromium.launch(executable_path=shell, headless=headless,
+                                                  args=args)
 
     async def user_agent(self) -> str:
         if self._ua is None:
             b = await self._ensure()
-            ctx = await b.new_context()
+            ctx = await b.new_context(service_workers="block")
             pg = await ctx.new_page()
             real = await pg.evaluate("navigator.userAgent")
             await ctx.close()
@@ -185,7 +237,7 @@ class BrowserManager:
     def url_allowed(self, url: str, hosts: set[str]) -> bool:
         if url.startswith(_LOCAL_SCHEMES):
             return True
-        host = urlsplit(url).hostname or ""
+        host = host_of(url)
         return bool(host) and _host_ok(host, hosts) and self.netpolicy.is_allowed(host)
 
     async def new_context(self, domains: list[str], extra: list[str] | None = None,
@@ -198,8 +250,20 @@ class BrowserManager:
         else:
             b = await self._ensure()
         ctx = await b.new_context(user_agent=await self.user_agent(),
-                                  storage_state=storage_state, locale="en-US")
+                                  storage_state=storage_state, locale="en-US",
+                                  service_workers="block")
         blocked: list[str] = []
+        escaped: list[str] = []
+
+        def _on_request(req: Any) -> None:
+            # Redirect hops never reach the route handler (SEC-16): record off-list ones.
+            try:
+                hop = req.redirected_from is not None
+                nav = req.is_navigation_request() and req.frame.parent_frame is None
+            except Exception:  # noqa: BLE001 - e.g. no frame: judge by URL alone
+                hop, nav = True, True
+            if (hop or nav) and not self.url_allowed(req.url, hosts):
+                escaped.append(host_of(req.url) or "?")
 
         async def _route(route: Any) -> None:
             url = route.request.url
@@ -214,11 +278,13 @@ class BrowserManager:
             elif self.url_allowed(url, hosts):
                 await route.continue_()
             else:
-                blocked.append(urlsplit(url).hostname or "?")
+                blocked.append(host_of(url) or "?")
                 await route.abort("blockedbyclient")
 
+        ctx.on("request", _on_request)
         await ctx.route("**/*", _route)
         ctx.vanish_blocked = blocked  # type: ignore[attr-defined]
+        ctx.vanish_escaped = escaped  # type: ignore[attr-defined]
         ctx.vanish_hosts = hosts      # type: ignore[attr-defined]
         return ctx
 
@@ -228,26 +294,47 @@ class BrowserManager:
         await self.rate.wait(host)
         await asyncio.sleep(random.uniform(self.cfg.min_delay_s, self.cfg.max_delay_s))
 
+    def escaped(self, page: Page) -> str | None:
+        """Off-list host this page reached or tried to reach (redirect hop / navigation)."""
+        hosts: set[str] = getattr(page.context, "vanish_hosts", set())
+        esc: list[str] = getattr(page.context, "vanish_escaped", [])
+        if esc:
+            return esc[0]
+        if not self.url_allowed(page.url, hosts):
+            return host_of(page.url) or "?"
+        return None
+
+    def check_escaped(self, page: Page) -> None:
+        """Raise BlockedByPolicy if the page left the allowlist. Call after every
+        navigation, click or submit."""
+        h = self.escaped(page)
+        if h is not None:
+            raise BlockedByPolicy(h)
+
     async def goto(self, page: Page, url: str, *, check_challenge: bool = True,
                    timeout_ms: int = 30000) -> Response | None:
         hosts: set[str] = getattr(page.context, "vanish_hosts", set())
         if not self.url_allowed(url, hosts):
-            raise BlockedByPolicy(urlsplit(url).hostname or "?")
-        host = urlsplit(url).hostname or ""
+            raise BlockedByPolicy(host_of(url) or "?")
+        host = host_of(url) or ""
         last: Exception | None = None
         for attempt in range(max(1, self.cfg.max_retries)):
             await self.polite_delay(host)
             try:
                 resp = await page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
+                self.check_escaped(page)
                 if resp is not None and resp.status in (500, 502, 504) and \
                         attempt + 1 < self.cfg.max_retries:
                     raise RuntimeError(f"http_{resp.status}")
                 if check_challenge:
                     await self.raise_if_challenge(page, resp.status if resp else None)
                 return resp
-            except ChallengeEncountered:
+            except (ChallengeEncountered, BlockedByPolicy):
                 raise
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
+                esc: list[str] = getattr(page.context, "vanish_escaped", [])
+                if esc:
+                    raise BlockedByPolicy(esc[0]) from e
                 last = e
                 if not self.fast:
                     await asyncio.sleep(min(60.0, 2.0 ** (attempt + 1)))

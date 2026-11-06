@@ -180,6 +180,7 @@ async def run_steps(bm: BrowserManager, page: Page, steps: list[FormStep], vars:
         elif a in ("click", "submit"):
             await page.click(st.selector, timeout=st.timeout_ms)
             await page.wait_for_load_state("domcontentloaded", timeout=st.timeout_ms)
+            bm.check_escaped(page)          # SEC-16: a submit may redirect off-list
             await bm.raise_if_challenge(page)
         elif a == "screenshot":
             shots.append(await page.screenshot(full_page=True))

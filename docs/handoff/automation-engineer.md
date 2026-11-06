@@ -39,3 +39,34 @@ longer embeds a Subject line.
 - Pending CRs: Config.browser_automation, Windows browser_channel default, conftest
   text_version, interfaces.py run() kwargs doc, pyproject package-data for _dev,
   beautifulsoup4 not needed by engine (can drop).
+
+## Security wave 2 fixes (2026-11-06) - done: SEC-16, 21, 26, 18, 29, 28 (+ SEC-27 engine part)
+- SEC-16 browser.py: `service_workers="block"` on every context; every launch gets
+  `--host-resolver-rules` from `host_resolver_rules(NetPolicy.allowed)` (fixture mode: only
+  localhost/127.0.0.1/::1). Verified: the rules also cover IP literals (unlisted 127.0.0.1 ->
+  ERR_NAME_NOT_RESOLVED), so allowlisted IPs are EXCLUDEd explicitly. A `request` listener
+  records off-list redirect hops (any frame) and main-frame navigations in
+  `ctx.vanish_escaped`; `goto` and `check_escaped(page)` raise BlockedByPolicy (never
+  retried). web_form click/submit calls `bm.check_escaped`; the headed handoff window uses
+  `bm.goto`. `url_allowed` uses `netpolicy.host_of`.
+  OPEN GAP: Chromium resolves `localhost` itself, so a redirect to an off-list `localhost`
+  is SENT before it is detected (probe: hit reached the server, BlockedByPolicy raised).
+  It matters only for local services. The full fix is the in-process allowlisting proxy
+  (SEC-16 option A), which isn't done. Needs care: Chromium bypasses proxies for loopback
+  unless `--proxy-bypass-list=<-loopback>` is set, and route.fetch in fixture mode runs
+  in the driver.
+- SEC-21: `outbox.dev_fixture_base()` (runner re-exports it): http + loopback host only,
+  never when `sys.frozen`; `_default_mailer` uses it.
+- SEC-26: `BrowserManager.start()` closes on failure; `Runner.browser()` closes bm too.
+- SEC-18 mail.py: anchors parsed with their text; cancel/unsubscribe/not-you/preferences/...
+  are dropped by URL tail (path, query, fragment, not the host) or text; confirm/verify links
+  are ranked first; runner clicks only `links[:1]`.
+- SEC-29 letters: first+last unless MIDDLE_NAME is shown.
+- SEC-28: handoff notifications use `GENERIC_HELP`; the run notification passes url=None.
+  The click-to-open-app part is in notify.py (wizard-packager), sent as a CR.
+- SEC-27 (orchestrator request): `needs_approval(profile, kind, store)`: the first AUTO email
+  per profile waits for approval (no store -> approval).
+- Removed the strict xfails for SEC-16/18/21/26 in tests/test_security_wave2.py.
+- Drafts: src/vanish/engine/_test_drafts/test_wave2_fixes.py (8 tests;
+  run with `.venv/bin/python -m pytest -q src/vanish/engine/_test_drafts`).
+- Results: full suite 243 passed under -W error::PytestUnraisableExceptionWarning; ruff clean.

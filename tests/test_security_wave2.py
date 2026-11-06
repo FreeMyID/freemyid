@@ -14,7 +14,7 @@ import subprocess
 import sys
 import threading
 import xml.etree.ElementTree as ET
-from datetime import date
+from datetime import UTC, date, datetime
 from email.message import EmailMessage
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -30,6 +30,7 @@ from vanish import config as cfgmod
 from vanish.consent import CURRENT_TEXT_VERSION
 from vanish.models import (
     Broker,
+    BrokerStatus,
     Consent,
     ConsentBasis,
     Listing,
@@ -139,21 +140,49 @@ def test_first_run_thread_is_practice_mode(store, monkeypatch):
     assert calls and calls[0]["dry_run"] is True and calls[0]["scan_only"] is False
 
 
-def test_real_submissions_switch_needs_session_csrf_and_origin(client):
+def test_real_submissions_switch_needs_session_csrf_and_origin(client, store):
     c, _app, _ = client
     assert c.post("/settings/submissions/on").status_code == 403          # no session
     form = _authed(c)
     assert c.post("/settings/submissions/on").status_code == 403          # no csrf
     assert c.post("/settings/submissions/on", data={"csrf": "x" * 64}).status_code == 403
-    r = c.post("/settings/submissions/on", data=form,
+    r = c.post("/settings/submissions/on", data={**form, "confirm": "yes"},
                headers={"Origin": "http://evil.example"})
     assert r.status_code == 403
     assert cfgmod.load().real_submissions_enabled is False
-    assert 'data-confirm="Start sending real removal requests?"' in c.get("/settings").text
-    assert c.post("/settings/submissions/on", data=form).status_code == 303
+    assert "/settings/submissions/confirm" in c.get("/settings").text
+    # SEC-27: no confirm field -> sent to the confirmation page, nothing changes
+    r = c.post("/settings/submissions/on", data=form)
+    assert r.status_code == 303 and r.headers["location"].endswith("/confirm")
+    assert cfgmod.load().real_submissions_enabled is False
+    # confirm=yes but no practice run has completed yet -> refused
+    r = c.post("/settings/submissions/on", data={**form, "confirm": "yes"})
+    assert r.status_code == 303 and cfgmod.load().real_submissions_enabled is False
+    assert c.get("/settings/submissions/confirm").status_code == 303
+    # after a practice run
+    p = person()
+    store.save_profile(p)
+    store.save_status(BrokerStatus(profile_id=p.id, broker_id="fakeb",
+                                   last_scan_at=datetime.now(UTC)))
+    page = c.get("/settings/submissions/confirm")
+    assert page.status_code == 200 and 'name="confirm" value="yes"' in page.text
+    assert c.post("/settings/submissions/on", data={**form, "confirm": "yes"}).status_code == 303
     assert cfgmod.load().real_submissions_enabled is True
     c.post("/settings/submissions/off", data=form)
     assert cfgmod.load().real_submissions_enabled is False
+
+
+def test_outbox_card_shows_to_subject_and_escaped_letter(client, store, fake_registry):
+    from vanish.engine.outbox import queue_email
+    c, _app, _ = client
+    _authed(c)
+    p = person(mailbox=MB)
+    store.save_profile(p)
+    b = fake_registry.get("fakemail")
+    queue_email(store, p, b, [], dry_run=False, mailer=None)
+    page = c.get("/outbox").text
+    assert "<b>To:</b>" in page and "<b>Subject:</b>" in page and 'class="letter"' in page
+    assert b.opt_out_email in page
 
 
 def test_focus_endpoint_needs_session_and_csrf(client):
@@ -179,7 +208,6 @@ def test_scheduled_run_in_practice_mode_runs_dry(store, monkeypatch):
     assert calls and calls[0]["dry_run"] is True
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-21: VANISH_DEV_FIXTURES honored for any URL")
 def test_dev_fixture_base_must_be_loopback(monkeypatch):
     from vanish.engine.runner import dev_fixture_base
     monkeypatch.setenv("VANISH_DEV_FIXTURES", "http://collector.example:80")
@@ -210,7 +238,6 @@ def test_open_only_http_links_from_the_stored_todo(client, store):
     assert opened == ["https://fakeb.example/optout?next=/x"]
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-19: plain http:// links are opened")
 def test_open_refuses_plain_http(client, store):
     c, _app, opened = client
     form = _authed(c)
@@ -267,7 +294,6 @@ def test_confirmation_links_only_on_confirmation_domains():
     assert m.links_from([spoof], BROKER) == []
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-18: every confirmation-domain link is clicked")
 def test_cancel_and_unsubscribe_links_are_not_clicked():
     from vanish.engine.mail import SmtpImapMailer
     html = ('<a href="https://mail.fakeb.example/confirm?t=1">Confirm</a>'
@@ -305,7 +331,6 @@ class _Hits(BaseHTTPRequestHandler):
         pass
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-16: redirects bypass the Playwright route allowlist")
 def test_browser_does_not_follow_redirect_off_allowlist(monkeypatch):
     exe = _browser_exe()
     if not exe:
@@ -412,7 +437,6 @@ def test_windows_task_xml_paths_with_spaces_and_xml_metachars():
         '-c "from vanish.cli import app; app()" run --scheduled'
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-24: _win_quote is not CommandLineToArgvW-safe")
 def test_windows_arguments_quote_like_list2cmdline():
     from vanish.scheduler import render
     args = ["run", r"C:\dir with space" + "\\", 'say "hi"', ""]
@@ -494,8 +518,6 @@ def test_handoff_and_run_notifications_hold_no_pii(store):
 # --------------------------------------------------------------------------- browser cleanup
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-26: failed browser launch leaks the Playwright "
-                   "driver (Windows CI 'Event loop is closed' warnings)")
 def test_failed_browser_launch_stops_playwright(monkeypatch):
     pytest.importorskip("playwright")
     from vanish.engine.browser import BrowserManager

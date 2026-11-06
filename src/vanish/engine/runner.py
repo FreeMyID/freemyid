@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import os
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -66,7 +65,7 @@ from ..submitters import assisted
 from ..submitters import base as sbase
 from . import handoff as hmod
 from . import plugins, tiers
-from .outbox import DEV_FIXTURES_ENV, OutboxError
+from .outbox import OutboxError, dev_fixture_base
 
 if TYPE_CHECKING:
     from ..storage import Store
@@ -126,11 +125,6 @@ class RunReport:
 class NullNotifier:
     def notify(self, title: str, body: str, url: str | None = None) -> None:
         return None
-
-
-def dev_fixture_base() -> str | None:
-    """Base URL of the dev fixture server when VANISH_DEV_FIXTURES is set (dev runs only)."""
-    return os.environ.get(DEV_FIXTURES_ENV) or None
 
 
 # --------------------------------------------------------------------------- entry point
@@ -213,6 +207,7 @@ class Runner:
             return self._browser
         if self._browser_failed or not tiers.browser_automation_allowed(self.cfg):
             return None
+        bm = None
         try:
             from ..netpolicy import NetPolicy
             from .browser import BrowserManager
@@ -223,6 +218,11 @@ class Runner:
             self._browser = bm
             return bm
         except Exception as e:  # noqa: BLE001 - no browser: Automatic drops to Assisted
+            if bm is not None:        # SEC-26: never leak the Playwright driver
+                try:
+                    await bm.close()
+                except Exception as ce:  # noqa: BLE001
+                    log.debug("browser cleanup failed: %s", type(ce).__name__)
             log.warning("browser unavailable (%s); automatic sites become assisted",
                         type(e).__name__)
             self._browser_failed = True
@@ -579,7 +579,7 @@ class Runner:
                         clicked=False)
             return st
         clicked = 0
-        for u in links[:3]:
+        for u in links[:1]:       # SEC-18: only the best-ranked confirm link
             if await self._click(profile, target, u):
                 clicked += 1
         if clicked:
@@ -709,9 +709,9 @@ class Runner:
         if n == 0:
             return
         try:
-            url = f"http://127.0.0.1:{self.cfg.wizard_port}/"
-            body = (f"{n} thing{'s' if n != 1 else ''} need you. "
-                    "Click to open the dashboard.")
-            self._notifier().notify("Vanish needs 5 minutes of your help", body, url)
+            # SEC-28: no URL (a bare dashboard URL has no session token and lands on 403);
+            # the notifier's click handler opens the app itself.
+            body = f"{n} thing{'s' if n != 1 else ''} need you. Open Vanish to see them."
+            self._notifier().notify("Vanish needs 5 minutes of your help", body, None)
         except Exception as e:  # noqa: BLE001
             log.info("notification failed: %s", type(e).__name__)

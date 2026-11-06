@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
 from datetime import date, datetime
 from urllib.parse import quote, urlencode
 
@@ -49,6 +50,34 @@ from . import letters
 log = logging.getLogger(__name__)
 
 DEV_FIXTURES_ENV = "VANISH_DEV_FIXTURES"
+_DEV_LOOPBACK = frozenset({"127.0.0.1", "localhost", "::1"})
+_dev_warned = False
+
+
+def dev_fixture_base() -> str | None:
+    """Base URL of the dev fixture server, or None.
+
+    SEC-21: honored only for a plain-http loopback URL and never in a frozen (installed)
+    build; anything else is ignored (logged once, value not logged).
+    """
+    global _dev_warned
+    v = os.environ.get(DEV_FIXTURES_ENV)
+    if not v:
+        return None
+    from urllib.parse import urlsplit
+
+    from ..netpolicy import host_of
+    try:
+        scheme = urlsplit(v).scheme
+    except ValueError:
+        scheme = ""
+    if scheme == "http" and host_of(v) in _DEV_LOOPBACK and not getattr(sys, "frozen", False):
+        return v
+    if not _dev_warned:
+        log.warning("%s ignored (only a loopback http URL in a dev checkout)",
+                    DEV_FIXTURES_ENV)
+        _dev_warned = True
+    return None
 
 
 class OutboxError(RuntimeError):
@@ -161,8 +190,14 @@ def _open_request(store, profile_id: str, broker_id: str, kind: RequestKind,
     return None
 
 
-def needs_approval(profile: Profile, kind: RequestKind) -> bool:
-    return kind == RequestKind.LEGAL_DEMAND or profile.email_mode != EmailMode.AUTO
+def needs_approval(profile: Profile, kind: RequestKind, store=None) -> bool:
+    """Legal demands and every non-AUTO email wait for approval. SEC-27: in AUTO mode the
+    FIRST email for a profile waits too, so the person sees one before any goes out."""
+    if kind == RequestKind.LEGAL_DEMAND or profile.email_mode != EmailMode.AUTO:
+        return True
+    if store is None:
+        return True       # can't prove an earlier send: be safe
+    return not any(r.status == RequestStatus.SENT for r in store.list_requests(profile.id))
 
 
 def queue_email(store, profile: Profile, broker: Broker, listings: list[Listing], *,
@@ -195,7 +230,7 @@ def queue_email(store, profile: Profile, broker: Broker, listings: list[Listing]
     store.log(Event(profile_id=profile.id, broker_id=broker.id, actor=Actor.ENGINE,
                     action="email_drafted" if dry_run else "email_queued",
                     detail={"request_id": req.id, "kind": kind.value, "dry_run": dry_run}))
-    if dry_run or mailer is None or needs_approval(profile, kind):
+    if dry_run or mailer is None or needs_approval(profile, kind, store):
         return req
     return send_request(store, req, profile, mailer, now=now)
 
@@ -238,7 +273,7 @@ def send_request(store, req: Request, profile: Profile, mailer, *,
 def _default_mailer(profile: Profile, registry: Registry | None):
     from ..netpolicy import NetPolicy
     from .mail import FakeMailer, SmtpImapMailer
-    if os.environ.get(DEV_FIXTURES_ENV):
+    if dev_fixture_base():
         return FakeMailer()
     if not cfgmod.load().real_submissions_enabled:
         raise OutboxError("real email sending is not enabled yet "

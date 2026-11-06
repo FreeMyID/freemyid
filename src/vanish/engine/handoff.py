@@ -66,6 +66,9 @@ def persist_todo(store: Store, todo: Todo) -> Todo:
     return todo
 
 
+GENERIC_HELP = "Vanish needs your help with 1 site. Open Vanish to see it."
+
+
 class QueuedHandoff:
     def __init__(self, store: Store, notifier: Notifier, label: str = "") -> None:
         self.store, self.notifier, self.label = store, notifier, label
@@ -74,9 +77,8 @@ class QueuedHandoff:
     async def request(self, todo: Todo, page: Page | None, timeout_s: int = 900) -> bool:
         persist_todo(self.store, todo)
         self.count += 1
-        who = f"{self.label}: " if self.label else ""
-        self.notifier.notify("Vanish needs you", f"{who}{todo.kind.value.replace('_', ' ')} "
-                             f"for {todo.broker_id or 'a broker'}")
+        # SEC-28: lock-screen text stays generic (no label, kind or site)
+        self.notifier.notify("Vanish needs you", GENERIC_HELP)
         return False
 
 
@@ -108,11 +110,10 @@ class InteractiveHandoff(QueuedHandoff):
                 headed_ctx = await self.browser.new_context(hosts, storage_state=state,
                                                             headed=True)
                 hp = await headed_ctx.new_page()
-                await hp.goto(page.url)
+                await self.browser.goto(hp, page.url, check_challenge=False)
             except Exception as e:  # noqa: BLE001
                 log.warning("could not open visible browser: %s", type(e).__name__)
-        self.notifier.notify("Vanish needs you",
-                             f"{todo.kind.value.replace('_', ' ')} for {todo.broker_id}")
+        self.notifier.notify("Vanish needs you", GENERIC_HELP)
         print(f"\n[Vanish] {todo.title}\n  {todo.body}\n"
               "  Finish it in the browser window, then press Enter here "
               f"(or wait {timeout_s // 60} min to skip).", flush=True)
