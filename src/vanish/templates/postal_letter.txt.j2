@@ -7,4 +7,14 @@ Attn: Privacy / Opt-Out
 
 Re: Request to delete personal information and opt out of sale
 
-{% include "generic_removal.txt.j2" ignore missing %}
+To {{ broker_name or "the privacy team" }},
+
+I am asking you to remove my personal information from your website and records, and to
+stop selling or sharing it. The record(s) concerned:
+
+{% include "_identity.txt.j2" %}
+
+Please delete these records, suppress them from future publication, and confirm in writing
+when this is done.
+
+{% include "_signature.txt.j2" %}

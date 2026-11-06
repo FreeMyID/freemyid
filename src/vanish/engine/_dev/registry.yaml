@@ -1,0 +1,106 @@
+# DEV FIXTURE REGISTRY. Fake brokers on reserved .example hosts; served by the local fixture
+# server (vanish.engine._dev.fixture_server). Never used against real sites. Fake people only.
+version: "dev-fixtures-1"
+updated: 2026-11-06
+brokers:
+  # AUTOMATIC: verified, search spec + real form steps, email verification link.
+  - id: devauto
+    name: Dev Auto People
+    url: https://devauto.example/
+    category: people_search
+    domains: [devauto.example]
+    search_url_pattern: "https://devauto.example/name/{first}-{last}/{state}"
+    search:
+      result_selector: ".result"
+      name_selector: ".name"
+      age_selector: ".age"
+      location_selector: ".loc"
+      relatives_selector: ".rel"
+      link_selector: "a.view"
+      no_results_text: "No records found"
+    opt_out_url: https://devauto.example/optout
+    method: web_form
+    required_fields: [listing_url, email]
+    needs_email_verification: true
+    confirmation_domains: [devauto.example]
+    typical_processing_days: 7
+    recheck_interval_days: 30
+    form:
+      - {action: goto, url: "https://devauto.example/optout"}
+      - {action: fill, selector: "#email", value: "{{ mailbox.address }}"}
+      - {action: fill, selector: "input[name=url]", value: "{{ listing.url }}"}
+      - {action: submit, selector: "button.submit"}
+      - {action: expect_text, value: "request received"}
+    steps:
+      - "Find your listing and copy its link."
+      - "Paste the link and your removal email on the opt-out page."
+      - "Click the link in the confirmation email."
+    source_urls: [https://devauto.example/privacy]
+    verification_status: verified
+    last_verified: 2026-11-01
+    priority: 90
+  # AUTOMATIC by registry, but its pages show a bot challenge -> drops to Assisted.
+  - id: devblocked
+    name: Dev Blocked Search
+    url: https://devblocked.example/
+    category: people_search
+    domains: [devblocked.example]
+    search_url_pattern: "https://devblocked.example/name/{first}-{last}/{state}"
+    search: {result_selector: ".result", name_selector: ".name"}
+    opt_out_url: https://devblocked.example/optout
+    method: web_form
+    required_fields: [listing_url]
+    form:
+      - {action: goto, url: "https://devblocked.example/optout"}
+      - {action: fill, selector: "#url", value: "{{ listing.url }}"}
+      - {action: submit, selector: "button"}
+    source_urls: [https://devblocked.example/privacy]
+    verification_status: verified
+    last_verified: 2026-11-01
+    priority: 80
+  # EMAIL: privacy requests by email (Assisted manual-send letter without a mailbox).
+  - id: devmail
+    name: Dev Mail Data Co
+    url: https://devmail.example/
+    category: data_broker
+    domains: [devmail.example]
+    method: email
+    opt_out_email: privacy@devmail.example
+    typical_processing_days: 45
+    source_urls: [https://devmail.example/privacy]
+    verification_status: verified
+    last_verified: 2026-11-01
+    priority: 70
+  # ASSISTED: unverified web form, the user does it with copy buttons.
+  - id: devweb
+    name: Dev Web Finder
+    url: https://devweb.example/
+    category: people_search
+    domains: [devweb.example]
+    opt_out_url: https://devweb.example/remove
+    method: web_form
+    required_fields: [full_name, city, state, listing_url, email]
+    steps:
+      - "Search for your name on the site and open your listing."
+      - "Copy the listing link and paste it into the removal form."
+      - "Enter your name and the removal email, then submit."
+    priority: 60
+  # covered_by: removed through devweb's opt-out; never submitted on its own.
+  - id: devchild
+    name: Dev Web Finder Mirror
+    url: https://devchild.example/
+    category: people_search
+    domains: [devchild.example]
+    opt_out_url: https://devchild.example/optout
+    method: web_form
+    covered_by: devweb
+    priority: 50
+  # POSTAL: print-and-mail letter.
+  - id: devpost
+    name: Dev Postal Records
+    url: https://devpost.example/
+    category: data_broker
+    domains: [devpost.example]
+    method: postal
+    postal: {recipient: "Dev Postal Records, Privacy Dept", lines: ["PO Box 0000", "Springfield, IL 00000"]}
+    priority: 40

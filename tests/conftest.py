@@ -11,6 +11,8 @@ import keyring
 import pytest
 from keyring.backend import KeyringBackend
 
+from vanish.consent import CURRENT_TEXT_VERSION
+
 FIXTURES = Path(__file__).parent / "fixtures"
 
 
@@ -98,7 +100,7 @@ def make_profile(**over):
     data = {
         "label": "Tester",
         "consent": Consent(basis=ConsentBasis.SELF, attested_by="Jane Q Testperson",
-                           text_version="v1"),
+                           text_version=CURRENT_TEXT_VERSION),
         "name": PersonName(first="Jane", middle="Q", last="Testperson"),
         "addresses": [Address(street="742 Evergreen Terrace", city="Springfield", state="il",
                               zip="62704", current=True)],

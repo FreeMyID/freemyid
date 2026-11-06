@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import email
 import email.policy
 import imaplib
@@ -180,10 +181,8 @@ class SmtpImapMailer:
                     if typ == "OK" and msgdata and isinstance(msgdata[0], tuple):
                         out.append(msgdata[0][1])
             finally:
-                try:
+                with contextlib.suppress(Exception):
                     conn.logout()
-                except Exception:  # noqa: BLE001
-                    pass
         except (imaplib.IMAP4.error, OSError) as e:
             raise MailError(f"imap failed: {type(e).__name__}") from None
         return out

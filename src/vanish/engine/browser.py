@@ -1,6 +1,10 @@
 """Playwright browser wrapper: allowlisted, polite, honest. Never bypasses bot protection.
 
-* System Chrome first (`config.browser_channel`), then Playwright's bundled Chromium.
+* System browser first: on Windows Microsoft Edge (`channel="msedge"`, on every Windows
+  10/11 machine) then `config.browser_channel`; elsewhere `config.browser_channel`; then
+  Playwright's bundled Chromium. VANISH_BROWSER_EXECUTABLE overrides (dev machines).
+* Dev fixture mode (`fixture_base`): every allowlisted request is answered by the local
+  fixture server (http://127.0.0.1:<port>/<host><path>); nothing reaches the internet.
 * Every request goes through a route handler: anything whose host is not in the broker's
   narrow allowlist (and the global NetPolicy) is aborted.
 * Honest user agent: the browser's real UA + `config.user_agent_suffix`.
@@ -11,9 +15,12 @@
 from __future__ import annotations
 
 import asyncio
+import glob
 import logging
+import os
 import random
 import re
+import sys
 import time
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlsplit
@@ -72,6 +79,32 @@ def detect_challenge(html: str, frame_urls: list[str] | None = None,
     return None
 
 
+def channel_candidates(configured: str | None, platform: str | None = None) -> list[str]:
+    """Browser channels to try, in order (PLAN_V1 D1: Edge on Windows, no download)."""
+    platform = platform or sys.platform
+    out: list[str] = []
+    if platform == "win32":
+        out.append("msedge")
+    if configured and configured not in out:
+        out.append(configured)
+    return out
+
+
+def _cached_headless_shell() -> str | None:
+    """Newest Playwright headless shell in the user cache (dev fixture runs only)."""
+    pat = os.path.expanduser(
+        "~/.cache/ms-playwright/chromium_headless_shell-*/*/chrome-headless-shell")
+    found = sorted(glob.glob(pat))
+    return found[-1] if found else None
+
+
+def fixture_url(base: str, url: str) -> str:
+    """https://host/path?q -> <base>/host/path?q (dev fixture server)."""
+    sp = urlsplit(url)
+    path = sp.path or "/"
+    return f"{base.rstrip('/')}/{sp.hostname}{path}" + (f"?{sp.query}" if sp.query else "")
+
+
 class RateLimiter:
     """Minimum spacing between requests to the same domain (per process)."""
 
@@ -94,8 +127,9 @@ class BrowserManager:
     """Lazily launched, shared by all brokers in one run. One context per broker."""
 
     def __init__(self, netpolicy: NetPolicy, *, headless: bool | None = None,
-                 cfg: cfgmod.Config | None = None) -> None:
+                 cfg: cfgmod.Config | None = None, fixture_base: str | None = None) -> None:
         self.cfg = cfg or cfgmod.load()
+        self.fixture_base = fixture_base
         self.netpolicy = netpolicy
         self.headless = self.cfg.headless if headless is None else headless
         self._pw: Playwright | None = None
@@ -103,7 +137,11 @@ class BrowserManager:
         self._ua: str | None = None
         self._headed: list[Browser] = []
         self.rate = RateLimiter(self.cfg.min_delay_s)
-        self.fast = self.cfg.max_delay_s <= 0      # dev/test mode: no sleeps
+        self.fast = self.cfg.max_delay_s <= 0 or bool(fixture_base)   # dev/test: no sleeps
+
+    async def start(self) -> None:
+        """Launch now (so a missing browser is detected up front)."""
+        await self._ensure()
 
     async def _ensure(self) -> Browser:
         if self._browser:
@@ -115,14 +153,21 @@ class BrowserManager:
 
     async def _launch(self, headless: bool) -> Browser:
         assert self._pw
-        chan = self.cfg.browser_channel
-        if chan:
+        exe = os.environ.get("VANISH_BROWSER_EXECUTABLE")
+        if exe:
+            return await self._pw.chromium.launch(executable_path=exe, headless=headless)
+        for chan in channel_candidates(self.cfg.browser_channel):
             try:
                 return await self._pw.chromium.launch(channel=chan, headless=headless)
-            except Exception as e:  # noqa: BLE001 - fall back to bundled chromium
-                log.info("system browser channel %s unavailable (%s); using bundled",
-                         chan, type(e).__name__)
-        return await self._pw.chromium.launch(headless=headless)
+            except Exception as e:  # noqa: BLE001 - try the next one
+                log.info("browser channel %s unavailable (%s)", chan, type(e).__name__)
+        try:
+            return await self._pw.chromium.launch(headless=headless)
+        except Exception:
+            shell = _cached_headless_shell() if self.fixture_base else None
+            if shell is None:
+                raise
+            return await self._pw.chromium.launch(executable_path=shell, headless=headless)
 
     async def user_agent(self) -> str:
         if self._ua is None:
@@ -158,7 +203,15 @@ class BrowserManager:
 
         async def _route(route: Any) -> None:
             url = route.request.url
-            if self.url_allowed(url, hosts):
+            if self.fixture_base and self.url_allowed(url, hosts) and \
+                    not url.startswith(_LOCAL_SCHEMES):
+                try:
+                    resp = await route.fetch(url=fixture_url(self.fixture_base, url),
+                                             max_redirects=0)
+                    await route.fulfill(response=resp)
+                except Exception:  # noqa: BLE001
+                    await route.abort("failed")
+            elif self.url_allowed(url, hosts):
                 await route.continue_()
             else:
                 blocked.append(urlsplit(url).hostname or "?")

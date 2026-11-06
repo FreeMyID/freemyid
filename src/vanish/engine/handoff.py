@@ -187,3 +187,31 @@ def mark_manual_submitted(store: Store, profile_id: str, broker_id: str,
         store.save_request(r.model_copy(update={"status": RequestStatus.SENT, "sent_at": now}))
     store.log(Event(profile_id=profile_id, broker_id=broker_id, actor=Actor.USER,
                     action="manual_submitted", from_state=st.state, to_state=new.state))
+
+
+_SUBMIT_KINDS = frozenset({"assisted_opt_out", "send_email_manually", "postal_letter",
+                           "phone_call", "account_required"})
+
+
+def mark_resolved(store: Store, todo: Todo) -> None:
+    """Dashboard "I did it" hook (wizard/server.py looks this up by name).
+
+    For hand-done opt-outs (Assisted card, manual email, letter, call) the broker becomes
+    SUBMITTED so the re-check and escalation clocks start. Follow-up/demand letters sent by
+    hand do not restart the clock. Other kinds just get closed by the caller.
+    """
+    if not todo.broker_id or todo.kind.value not in _SUBMIT_KINDS:
+        return
+    tok = todo.resume_token or ""
+    if tok.count(":") >= 2:          # manual_email:<broker>:<follow_up|legal_demand>
+        store.log(Event(profile_id=todo.profile_id, broker_id=todo.broker_id,
+                        actor=Actor.USER, action="manual_letter_sent",
+                        detail={"todo_kind": todo.kind.value}))
+        return
+    from ..state import can_transition
+    st = store.get_status(todo.profile_id, todo.broker_id)
+    if st.state == S.SUBMITTED or not can_transition(st.state, S.SUBMITTED):
+        return
+    if st.state in (S.UNKNOWN, S.NOT_FOUND):
+        return      # nothing was found to remove; just close the to-do
+    mark_manual_submitted(store, todo.profile_id, todo.broker_id, todo.request_id)

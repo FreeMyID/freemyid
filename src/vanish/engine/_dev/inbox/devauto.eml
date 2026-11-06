@@ -1,0 +1,7 @@
+From: Dev Auto People <noreply@devauto.example>
+To: removals.testperson@mail.example
+Subject: Confirm your opt-out
+Content-Type: text/html; charset=utf-8
+
+<p>Click to confirm: <a href="https://devauto.example/confirm?token=dev123">confirm</a></p>
+<p>Not this one: <a href="https://evil.example/steal">x</a></p>

@@ -1,6 +1,8 @@
 """App config (non-PII) in VANISH_HOME/config.yaml. OWNER: orchestrator."""
 from __future__ import annotations
 
+import sys
+
 import yaml
 from pydantic import BaseModel, ConfigDict
 
@@ -13,7 +15,8 @@ class Config(BaseModel):
     registry_url: str | None = None          # raw URL to registry.yaml in the user's GitHub repo
     registry_sha256_url: str | None = None   # optional: URL of a .sha256 file to pin content
     extra_allowed_hosts: list[str] = []      # e.g. playwright CDN if user approved download
-    browser_channel: str | None = "chrome"   # use system Chrome/Edge first; None = bundled
+    browser_channel: str | None = "msedge" if sys.platform == "win32" else "chrome"
+    browser_automation: bool = True          # Automatic tier on/off (engine.tiers)
     headless: bool = True
     min_delay_s: float = 3.0
     max_delay_s: float = 12.0

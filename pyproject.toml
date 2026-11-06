@@ -26,7 +26,6 @@ dependencies = [
   "platformdirs>=4.2",
   "desktop-notifier>=6.0",
   "jsonschema>=4.22",
-  "beautifulsoup4>=4.12",
 ]
 
 [project.optional-dependencies]

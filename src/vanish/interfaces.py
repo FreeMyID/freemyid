@@ -117,6 +117,8 @@ class Submitter(abc.ABC):
 # Signatures the orchestrator's CLI calls. Implementers must keep these exact.
 #
 # automation-engineer — vanish/engine/runner.py
+#   (optional kwargs: scheduled=None, mailer=None, notifier=None, browser=None,
+#    state_laws=None, now=None, cfg=None)
 #   def run(store, registry, profiles, *, scan_only: bool, dry_run: bool,
 #           interactive: bool, broker_ids: list[str] | None = None,
 #           only_due: bool = False) -> "RunReport"

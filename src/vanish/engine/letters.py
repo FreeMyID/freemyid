@@ -58,12 +58,13 @@ def split_subject(text: str) -> tuple[str, str]:
 
 
 def choose_template(state_law: StateLaw | None) -> str:
-    """Initial-request template family for the person's state of residence."""
+    """Initial-request template family for a law that is ALREADY known to apply and be in
+    effect (see engine.outbox.effective_law): ccpa for CA, state_privacy for another state
+    with a statute, generic_removal otherwise."""
     if state_law is None:
         return "generic_removal"
-    t = _ALIASES.get(state_law.template, state_law.template)
-    if t in ("ccpa", "state_privacy", "generic_removal"):
-        return t
+    if state_law.state.upper() == "CA":
+        return "ccpa"
     return "state_privacy" if state_law.statute_name else "generic_removal"
 
 
