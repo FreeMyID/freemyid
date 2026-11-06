@@ -1,8 +1,7 @@
 """End-to-end dry run (docs/PLAN_V1.md D1/D2) against the dev fixture registry + local server.
 
-SCAFFOLD: skipped until automation-engineer lands `vanish.engine.runner.run` and the dev
-fixture registry/server. When they land, adjust `_load_dev()` to the real names if they differ;
-the assertions below are the acceptance criteria and should not be loosened.
+Runs against `vanish.engine.runner.run` and `vanish.engine._dev` (fixture_registry +
+fixture_server). The assertions below are the acceptance criteria; do not loosen them.
 
 Network: conftest blocks every socket connect that isn't loopback, so the fixture server on
 127.0.0.1 is the only thing reachable. SMTP is additionally patched to fail loudly.

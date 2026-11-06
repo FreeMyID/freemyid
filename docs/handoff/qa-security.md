@@ -17,3 +17,15 @@ models.py SEC-15 repr=False (orchestrator).
 Next: adopt src/vanish/wizard/_test_drafts and tests/fixtures/test_wizard_server.py (misplaced
 test file in fixtures/) once wizard-packager's wave settles; un-skip e2e when runner lands and
 align _load_dev() names; tools/registry_health.py; review engine/wizard/scheduler for this wave.
+Wave 2 (2026-11-06):
+- Step 1 DONE: git mv engine/_test_drafts/test_{outbox_letters,runner,tiers}.py and
+  wizard/_test_drafts/test_{scheduler_render,wizard_dashboard,wizard_desktop,wizard_screens,
+  wizard_server}.py into tests/; deleted the drafts' conftest/__init__ and both draft dirs.
+  tests/fixtures/test_wizard_server.py no longer exists. e2e dry-run now runs (not skipped).
+  pytest 220 passed, ruff clean.
+- Step 2 tests DONE: tests/test_security_wave2.py (14 pass, 7 strict xfail = SEC-16,18,19,20,
+  21,22,24). Redirect bypass (SEC-16) confirmed live with the cached chromium headless shell.
+- Step 2 doc DONE: SECURITY_REVIEW.md wave-2 section (SEC-16..29). Verdict BLOCK on SEC-16.
+- Orchestrator FYI handled: Windows CI 'Event loop is closed' = SEC-26 (Playwright driver leak on
+  failed launch), reproduced + fix verified on Linux; xfail test cleans up after itself.
+Next wave: remove xfail markers as SEC fixes land; tools/registry_health.py still TODO.

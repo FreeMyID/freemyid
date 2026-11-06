@@ -14,8 +14,32 @@ def home() -> Path:
         p = Path(os.environ.get("APPDATA", Path.home() / "AppData" / "Roaming")) / "Vanish"
     else:
         p = Path.home() / ".vanish"
+    created = not p.exists()
     p.mkdir(parents=True, exist_ok=True, mode=0o700)
+    marker = p / MARKER
+    # Mark only folders Vanish created itself (or that already hold its database), so
+    # `vanish wipe` can never mistake an arbitrary folder for Vanish's own (SEC-20).
+    if not marker.exists() and (created or (p / "vanish.db").exists()):
+        try:
+            marker.write_text("This folder belongs to Vanish. `vanish wipe` deletes it.\n")
+        except OSError:
+            pass
     return p
+
+
+MARKER = ".vanish-home"
+# Every top-level entry Vanish may create in home(); `vanish wipe` deletes only these.
+OWNED_ENTRIES = ("vanish.db", "vanish.db-wal", "vanish.db-shm", "evidence", "artifacts", "logs",
+                 "config.yaml", "registry.yaml", "app-instance.json", "vanish-task.xml", MARKER)
+
+
+def is_safe_wipe_target(p: Path) -> bool:
+    """True only for a folder that is clearly Vanish's own and not a home/system root."""
+    p = p.resolve()
+    user_home = Path.home().resolve()
+    if p == user_home or p in user_home.parents or p.parent == p or len(p.parts) <= 2:
+        return False
+    return (p / MARKER).exists() or (p / "vanish.db").exists()
 
 
 def db_path() -> Path:

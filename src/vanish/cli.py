@@ -155,6 +155,8 @@ def dashboard():
 def _do_run(profile, broker, scan_only, dry_run, scheduled):
     from .engine.runner import run as engine_run
     cfg = cfgmod.load()
+    if scheduled and not cfg.real_submissions_enabled:
+        dry_run = True   # practice mode: the daily task still runs, just as a dry run (SEC-22)
     if not scan_only and not dry_run and not cfg.real_submissions_enabled:
         con.print("[red]Real submissions are not enabled yet.[/] Run a dry run first, then "
                   "`vanish config enable-submissions`.")
@@ -265,6 +267,10 @@ def wipe(yes: Annotated[bool, typer.Option("--yes")] = False):
     import shutil
 
     from . import crypto
+    target = paths.home()
+    if not paths.is_safe_wipe_target(target):
+        con.print(f"[red]Refusing to wipe {target}:[/] it doesn't look like a Vanish data folder.")
+        raise typer.Exit(2)
     if not yes and not typer.confirm("Delete ALL Vanish data on this computer?"):
         raise typer.Exit()
     try:
@@ -283,7 +289,16 @@ def wipe(yes: Annotated[bool, typer.Option("--yes")] = False):
         except Exception:  # noqa: BLE001  key may already be gone; still delete files
             log.warning("wipe: could not read profiles to remove mailbox passwords")
     crypto.delete_key()
-    shutil.rmtree(paths.home(), ignore_errors=True)
+    for name in paths.OWNED_ENTRIES:   # only what Vanish created; never rmtree the folder itself
+        e = target / name
+        if e.is_dir() and not e.is_symlink():
+            shutil.rmtree(e, ignore_errors=True)
+        elif e.exists() or e.is_symlink():
+            e.unlink(missing_ok=True)
+    try:
+        target.rmdir()                  # only succeeds if nothing else is left in it
+    except OSError:
+        pass
     con.print("All Vanish data deleted.")
 
 
