@@ -191,6 +191,9 @@ def check_site(site: Path, base_url: str, base_path: str) -> list[str]:
             err("missing canonical link")
         elif not canon.startswith(base_url):
             err(f"canonical {canon} is not under {base_url}")
+        og = p.meta("property", "og:image")
+        if og and (not og.startswith(base_url) or not (site / og[len(base_url):]).is_file()):
+            err(f"og:image {og} is not a file in this site")
         if p.h1 != 1:
             err(f"has {p.h1} <h1> elements (need exactly 1)")
         if p.style_attrs:
