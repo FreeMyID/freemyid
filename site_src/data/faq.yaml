@@ -56,6 +56,7 @@
   a: |-
     <p>Yes. Our free <a href="{{ url('guides/') }}">opt-out guides</a> show the steps for some of the best-known sites. Free My ID does the repetitive part for you, keeps track, and keeps checking.</p>
 - id: windows-warning
+  home: true
   q: 'Why does Windows warn me when I install it?'
   a: |-
     <p>Windows shows a blue "Windows protected your PC" box for new programs that haven't bought a publisher certificate. Free My ID hasn't bought one yet. <a href="{{ url('download/#smartscreen') }}">See what to click, with pictures</a>.</p>
