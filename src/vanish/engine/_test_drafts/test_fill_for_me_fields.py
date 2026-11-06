@@ -32,8 +32,12 @@ def _broker(bid: str, page: str, **kw) -> Broker:
          "domains": ["devfill.example"], "opt_out_url": f"{H}/{page}", "method": "web_form",
          "required_fields": [F.FIRST_NAME, F.LAST_NAME, F.FULL_NAME, F.CITY, F.STATE,
                              F.EMAIL, F.LISTING_URL]}
+    # safe_checkboxes / success_text are set WITHOUT model validation, so these tests keep
+    # exercising the engine's own defence-in-depth against registry data that the model
+    # validators (SEC-31/32) would normally refuse.
+    raw = {k: kw.pop(k) for k in ("safe_checkboxes", "success_text") if k in kw}
     d.update(kw)
-    return Broker(**d)
+    return Broker(**d).model_copy(update=raw)
 
 
 def _registry(*brokers: Broker) -> Registry:

@@ -100,3 +100,46 @@ class NetPolicy:
                 continue
             out.add(h)
         return out
+
+
+# --------------------------------------------------------------------------- CAPTCHA frames
+# SEC-36. The human-in-the-loop windows (D9 "Fill it in for me", D10 listing finder) ask the
+# person to tick the site's "I'm not a robot" box. That box is served by a CAPTCHA provider,
+# not the broker. These hosts are allowed ONLY in those headed windows, ONLY as embedded
+# sub-resources / sub-frames (never a main-frame navigation), and only https. Vanish never
+# reads, solves or automates them; it just stops blocking the widget the person clicks.
+CAPTCHA_HOSTS: dict[str, tuple[str, ...]] = {
+    # host (exact or subdomain)  -> allowed path prefixes ("" = any path)
+    "www.google.com": ("/recaptcha/",),
+    "www.gstatic.com": ("/recaptcha/",),
+    "www.recaptcha.net": ("/recaptcha/",),
+    "hcaptcha.com": ("",),
+    "challenges.cloudflare.com": ("",),
+}
+
+
+def captcha_subresource_allowed(url: str, *, is_main_frame_navigation: bool) -> bool:
+    """True if `url` is a CAPTCHA widget resource a headed fill/finder window may load."""
+    if is_main_frame_navigation:
+        return False
+    host = host_of(url)
+    if not host:
+        return False
+    try:
+        parts = urlsplit(url)
+    except ValueError:
+        return False
+    if parts.scheme != "https" or parts.username or parts.password or parts.port not in (
+            None, 443):
+        return False
+    path = parts.path or "/"
+    for h, prefixes in CAPTCHA_HOSTS.items():
+        if host == h or (h == "hcaptcha.com" and host.endswith(".hcaptcha.com")):
+            return any(path.startswith(p) for p in prefixes)
+    return False
+
+
+def captcha_hosts() -> set[str]:
+    """Hostnames to add to the DNS/resolver allowlist of a headed fill/finder window."""
+    return set(CAPTCHA_HOSTS) | {"js.hcaptcha.com", "newassets.hcaptcha.com",
+                                 "api.hcaptcha.com", "imgs.hcaptcha.com"}

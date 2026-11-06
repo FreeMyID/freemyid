@@ -54,6 +54,11 @@ _SHARED_SUFFIXES = frozenset({
 _SEARCH_PLACEHOLDERS = frozenset(
     {"first", "last", "middle", "city", "state", "state_name", "zip", "phone"})
 _SUBMITTER_RE = re.compile(r"^vanish\.submitters\.[a-z0-9_.]+:[A-Za-z_][A-Za-z0-9_]*$")
+# SEC-35: "(a+)+", "(a*)*", "(a{1,9})+", "(a|aa)+" style groups followed by a quantifier
+_NESTED_QUANT_RE = re.compile(r"\((?:[^()\\]|\\.)*(?:[+*}]|\|)(?:[^()\\]|\\.)*\)[+*{]")
+# SEC-31: input#id or input[name="x"] only
+_SAFE_CHECKBOX_RE = re.compile(r"input(?:#[A-Za-z][\w-]{0,63}|\[name=\"[\w.\[\]-]{1,64}\"\])")
+_ROBOTISH_RE = re.compile(r"robot|human|bot\b|captcha|verif|recaptcha|hcaptcha|turnstile", re.IGNORECASE)
 
 
 def _check_host(h: str) -> str:
@@ -429,8 +434,34 @@ class Broker(_Base):
     @field_validator("success_url_pattern", "listing_url_pattern")
     @classmethod
     def _regex(cls, v: str | None) -> str | None:
+        # SEC-35: registry is remotely updatable; refuse patterns that can backtrack
+        # catastrophically (a quantified group that itself contains a quantifier).
         if v is not None:
+            if _NESTED_QUANT_RE.search(v) or "(?" in v.replace("(?:", ""):
+                raise ValueError("pattern too complex (nested quantifier or lookaround)")
             re.compile(v)   # raises -> validation error
+        return v
+
+    @field_validator("safe_checkboxes")
+    @classmethod
+    def _safe_checkboxes(cls, v: list[str]) -> list[str]:
+        # SEC-31: only narrow, anchored selectors: input#id or input[name="..."]
+        if len(v) > 3:
+            raise ValueError("at most 3 safe_checkboxes")
+        for sel in v:
+            if not _SAFE_CHECKBOX_RE.fullmatch(sel):
+                raise ValueError("safe_checkboxes entries must be input#id or "
+                                 "input[name=\"...\"]")
+            if _ROBOTISH_RE.search(sel):
+                raise ValueError("safe_checkboxes must never target a robot/verify box")
+        return v
+
+    @field_validator("success_text")
+    @classmethod
+    def _success_text(cls, v: list[str]) -> list[str]:
+        # SEC-32: short phrases ("thank you") appear on form pages too
+        if any(len(s.strip()) < 12 for s in v):
+            raise ValueError("success_text phrases must be at least 12 characters")
         return v
 
     @field_validator("submitter")
