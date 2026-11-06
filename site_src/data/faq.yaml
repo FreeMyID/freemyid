@@ -50,7 +50,7 @@
 - id: google
   q: 'Will this remove me from Google?'
   a: |-
-    <p>No. Free My ID doesn't contact Google. Once a people-search page is gone, Google usually drops it from its results over the following weeks.</p>
+    <p>No. Free My ID doesn't contact Google. Once the site has removed your listing, Google drops the page on its own schedule, which can take a while. Google's "Refresh outdated content" tool can speed it up.</p>
 - id: without-app
   q: 'Can I do this without the app?'
   a: |-
