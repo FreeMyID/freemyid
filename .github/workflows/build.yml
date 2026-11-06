@@ -69,6 +69,7 @@ jobs:
         shell: pwsh
         run: |
           # CI runners are disposable, so installing a per-user scheduled task here is fine.
+          $PSNativeCommandUseErrorActionPreference = $false
           $setup = (Get-ChildItem dist\VanishSetup-*.exe | Select-Object -First 1).FullName
           $p = Start-Process $setup -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART","/CURRENTUSER" -Wait -PassThru
           if ($p.ExitCode -ne 0) { throw "installer exit code $($p.ExitCode)" }
@@ -82,16 +83,17 @@ jobs:
           Run $cli @("--help")
           Run $cli @("registry", "validate")
           Run $cli @("schedule", "install")
-          Run schtasks @("/Query", "/TN", "Vanish Recheck")
+          if (-not (Get-ScheduledTask -TaskName "Vanish Recheck" -ErrorAction SilentlyContinue)) { throw "task missing after schedule install" }
           Run $cli @("schedule", "remove")
-          schtasks /Query /TN "Vanish Recheck" 2>$null
-          if ($LASTEXITCODE -eq 0) { throw "task still present after schedule remove" }
+          if (Get-ScheduledTask -TaskName "Vanish Recheck" -ErrorAction SilentlyContinue) { throw "task still present after schedule remove" }
           $un = Join-Path $app "unins000.exe"
           $p = Start-Process $un -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART" -Wait -PassThru
           if ($p.ExitCode -ne 0) { throw "uninstaller exit code $($p.ExitCode)" }
           # the uninstaller process may finish copying itself away; give it a moment
           for ($i = 0; $i -lt 20 -and (Test-Path $app); $i++) { Start-Sleep -Seconds 1 }
           if (Test-Path $app) { throw "app folder still present after uninstall" }
+          Write-Host "Install test passed"
+          exit 0
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
