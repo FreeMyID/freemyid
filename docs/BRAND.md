@@ -43,7 +43,7 @@ Content plan (free):
 | Item | Status | Who |
 |---|---|---|
 | Rename the codebase vanish → freemyid | Coordinating with the other active session | orchestrator |
-| Rename the GitHub repo the old personal repo → freemyid (stays private) | After the code rename | orchestrator |
+| Rename the GitHub repo to freemyid (stays private) | After the code rename | orchestrator |
 | GitHub org `freemyid` (free) | Needs the user's GitHub web login (orgs can't be created via the CLI) | user, ~2 min |
 | PyPI name `freemyid` | Wait: reserving it means publishing a public package, so do it at launch | at launch |
 | Social handles (Facebook page, X, YouTube) `freemyid` | Need the user's accounts; free | user |

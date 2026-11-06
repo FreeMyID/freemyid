@@ -15,3 +15,7 @@ zzz_legacy/*.zip
 
 # full broker registry is private (paid feed / family builds); only registry.sample.yaml is public
 brokers/registry.yaml
+# broker research behind the full registry is private too
+docs/research/broker_policies.md
+docs/research/broker_candidates.md
+docs/research/success_signals.yaml

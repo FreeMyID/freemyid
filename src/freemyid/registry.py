@@ -1,9 +1,10 @@
 """Broker + state-law registry loading, validation and updates. OWNER: orchestrator.
 
-Precedence: FREEMYID_HOME/registry.yaml (validated update or family-bundle registry)
+Precedence: FREEMYID_HOME/registry.yaml (validated update or installed family registry)
+  > registry.yaml next to the installed exe (family installer; frozen builds only)
   > bundled brokers/registry.yaml (full registry; family/private builds only)
   > bundled brokers/registry.sample.yaml (small public sample; always shipped).
-`registry_source()` tells the UI/CLI which one is in use: "update" | "full" | "sample".
+`registry_source()` tells the UI/CLI which one is in use: "update" | "family" | "full" | "sample".
 Updates: fetched ONLY from config.registry_url (the user's own GitHub repo), validated
 against the pydantic model + JSON Schema, optionally pinned by sha256, then atomically
 swapped in. A failed validation never replaces the working copy.
@@ -28,7 +29,7 @@ class RegistryError(RuntimeError):
     pass
 
 
-SOURCE_UPDATE, SOURCE_FULL, SOURCE_SAMPLE = "update", "full", "sample"
+SOURCE_UPDATE, SOURCE_FAMILY, SOURCE_FULL, SOURCE_SAMPLE = "update", "family", "full", "sample"
 
 
 def bundled_full_registry_path() -> Path:
@@ -51,6 +52,9 @@ def _active_registry() -> tuple[str, Path]:
     cached = paths.registry_cache_path()
     if cached.exists():
         return SOURCE_UPDATE, cached
+    family = find_family_registry()
+    if family is not None:
+        return SOURCE_FAMILY, family
     full = bundled_full_registry_path()
     if full.exists():
         return SOURCE_FULL, full
@@ -59,7 +63,8 @@ def _active_registry() -> tuple[str, Path]:
 
 def registry_source() -> str:
     """Which registry `load_registry()` uses: "update" (FREEMYID_HOME/registry.yaml, from the
-    update feed or a family bundle), "full" (bundled full registry) or "sample" (public sample)."""
+    update feed or an installed family registry), "family" (registry.yaml next to the installed
+    exe), "full" (bundled full registry) or "sample" (public sample)."""
     return _active_registry()[0]
 
 
@@ -92,6 +97,8 @@ def validate_text(text: str) -> Registry:
 def load_registry(path: Path | None = None) -> Registry:
     if path is None:
         path = _active_registry()[1]
+    if path.stat().st_size > MAX_REGISTRY_BYTES:
+        raise RegistryError(f"registry is larger than {MAX_REGISTRY_BYTES} bytes; refusing")
     return validate_text(path.read_text(encoding="utf-8"))
 
 

@@ -18,7 +18,7 @@ Models, state machine, encrypted store (AES-GCM blobs, key in keyring, append-on
 - Decision: 3 tiers (Email auto / Assisted "do it with me" / Automatic browser for verified only); mailbox optional; CA DROP first; Edge + pywebview + PyInstaller + Inno Setup per-user; GitHub Actions builds the exe.
 - Running: automation-engineer (runner, tiers, submitters), wizard-packager (6-screen wizard, dashboard, launcher, schtasks, packaging, CI), broker-researcher (privacy emails, plain steps, 3-5 verified forms), qa-security (test/lint fixes, e2e dry-run scaffold).
 ## Blocked / decisions
-- GitHub repo: github.com/FreeMyID/freemyid (private, pushed 2026-11-06). The empty old personal repo can be deleted.
+- GitHub repo: github.com/FreeMyID/freemyid (private, pushed 2026-11-06). An old empty personal repo can be deleted.
 - Code signing: user decided 2026-11-06 to ship unsigned (close family only; user helps install, SmartScreen warning OK).
 - License: AGPL-3.0-or-later for the app (decided 2026-11-06, open-source + paid subscription model). Registry data: separate license, TBD (brokers/LICENSE-DATA.md). Repo stays private until rename + public launch.
 - Outlook.com mailboxes need OAuth (basic auth retired); v1 supports Gmail app password, Proton Bridge, other IMAP providers.
@@ -45,3 +45,9 @@ Integrate wave → qa review → GitHub repo + first CI exe build (user OK neede
 - NOT public yet: history still holds zzz_legacy/ and the full brokers/registry.yaml. User decisions: drop both from history (filter-repo, force-push with user OK), sample-only public registry (CC BY-NC 4.0).
 - In flight: automation-engineer registry split (uncommitted, see docs/handoff/automation-engineer.md "Registry split").
 - Next session: install git-filter-repo (.venv) + gitleaks (blocked by auto-mode, needs user OK) -> filter-repo fresh clone -> gitleaks -> force-push (ask) -> CI green -> tag v0.1.0 -> VM check -> ping data-removal-f8 for site re-check -> flip public + Pages.
+
+## Session 2026-11-06 night (orchestrator)
+- Registry split: brokers/registry.yaml + docs/research/{broker_policies,broker_candidates}.md + success_signals.yaml untracked (gitignored, kept on disk). Load order now update > family (registry.yaml beside the exe) > bundled full > sample; size cap on load.
+- Old repo handles removed at HEAD. History scrub dry run by peer d7: 0 gitleaks findings; family states found in OLD history and rewritten; handles, example email and research files added to the rules.
+- Full suite hung in a Playwright test (no browser launched); qa-security fixing in tests/.
+- Next: qa green (with and without full registry) -> commit split -> d7 re-runs scrub -> force-push (user OK) -> CI -> tag v0.1.0.
