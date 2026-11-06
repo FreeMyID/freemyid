@@ -13,6 +13,7 @@ No data from the private full registry (brokers/registry.yaml) may appear in the
 from __future__ import annotations
 
 import argparse
+import hashlib
 import re
 import sys
 import xml.etree.ElementTree as ET
@@ -151,6 +152,29 @@ def full_registry_needles() -> list[str]:
     return sorted(v for v in full_vals if len(v) > 8 and v not in sample_text)
 
 
+HOST_HASHES = Path(__file__).resolve().parent / "private_host_hashes.txt"
+HOST_RE = re.compile(r"(?<![a-z0-9-])[a-z0-9-]+(?:\.[a-z0-9-]+)+", re.IGNORECASE)
+
+
+def private_host_hashes() -> set[str]:
+    if not HOST_HASHES.exists():
+        return set()
+    return {ln.strip() for ln in HOST_HASHES.read_text(encoding="utf-8").splitlines()
+            if ln.strip() and not ln.startswith("#")}
+
+
+def hashed_host_leaks(text: str, hashes: set[str]) -> list[str]:
+    """Hostnames in text whose SHA-256 is in the private-only list (returns hashes, never names)."""
+    found = set()
+    for m in HOST_RE.findall(text):
+        h = m.lower().rstrip(".")
+        h = h.removeprefix("www.")
+        d = hashlib.sha256(h.encode()).hexdigest()
+        if d in hashes:
+            found.add(d[:12])
+    return sorted(found)
+
+
 def check_site(site: Path, base_url: str, base_path: str) -> list[str]:
     errors: list[str] = []
     site = site.resolve()
@@ -283,6 +307,12 @@ def check_site(site: Path, base_url: str, base_path: str) -> list[str]:
                 for n in needles:
                     if n in text:
                         errors.append(f"{f.relative_to(site)}: contains full-registry-only value {n}")
+    # Works without the full registry: compare hashed hostnames in the output with the checked-in list.
+    hashes = private_host_hashes()
+    for f in sorted(site.rglob("*")):
+        if hashes and f.is_file() and f.suffix in (".html", ".xml", ".txt", ".css"):
+            for d in hashed_host_leaks(f.read_text(encoding="utf-8"), hashes):
+                errors.append(f"{f.relative_to(site)}: contains a private-only broker hostname (hash {d}...)")
     for f in sorted(site.rglob("*")):
         if f.is_file() and f.suffix == ".html" and re.search(r"registry\.yaml\b",
                                                               f.read_text(encoding="utf-8")):
