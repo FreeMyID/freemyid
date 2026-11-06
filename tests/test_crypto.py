@@ -1,6 +1,8 @@
 """crypto.py: AES-GCM blob format, AAD binding, file encryption, passphrase export."""
 from __future__ import annotations
 
+import sys
+
 import pytest
 from cryptography.exceptions import InvalidTag
 
@@ -76,7 +78,8 @@ def test_encrypt_file(tmp_path):
     sha = c.encrypt_file(b"Jane Q Testperson screenshot", dest)
     assert len(sha) == 64
     assert b"Testperson" not in dest.read_bytes()
-    assert dest.stat().st_mode & 0o077 == 0
+    if sys.platform != "win32":  # POSIX mode bits; Windows relies on per-user %APPDATA% ACLs
+        assert dest.stat().st_mode & 0o077 == 0
     assert c.decrypt_file(dest) == b"Jane Q Testperson screenshot"
 
 
