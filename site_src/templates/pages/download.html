@@ -9,7 +9,13 @@
       <p class="lead mt-s">For Windows 10 and Windows 11. Free. Installs in a few minutes, with no administrator password needed.</p>
     </div>
     <div class="download-card">
+      {% if release.version %}
       <a class="btn btn--lg" href="{{ site.download_url }}">{{ icon('download') }}Download FreeMyIDSetup.exe</a>
+      {% else %}
+      <!-- WR-9: no release yet, so no link (releases/latest would 404). Set release.version in data/release.yaml to switch this on. -->
+      <p class="btn btn--lg btn--pending">Download opens soon</p>
+      <p class="note">Not published yet. We'll show the download button here the day the first version is ready.</p>
+      {% endif %}
       <dl class="facts">
         <dt>Works on</dt><dd>Windows 10 and 11</dd>
         <dt>Price</dt><dd>Free</dd>
@@ -23,7 +29,7 @@
       {% if not release.version %}
       <p class="note">Version number, size and checksum will show here when the first version is published.</p>
       {% endif %}
-      <p class="note">If the button doesn't work, get the newest version from <a href="{{ site.releases_url }}/latest">the releases page</a>. Mac and phone versions aren't available yet.</p>
+      {% if release.version %}<p class="note">If the button doesn't work, get the newest version from <a href="{{ site.releases_url }}/latest">the releases page</a>. Mac and phone versions aren't available yet.</p>{% else %}<p class="note">Mac and phone versions aren't available yet.</p>{% endif %}
     </div>
   </div>
 </div>
