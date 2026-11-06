@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% set g = page.guide %}
+{% block main %}
+<!-- Source: brokers/registry.sample.yaml entry "{{ g.id }}" (CC BY-NC 4.0), registry version {{ guides_meta.version }}. Entry sources: {{ g.source_urls | join(', ') }} -->
+<div class="wrap main-pad prose">
+  {% include "partials/crumbs.html" %}
+  <h1>How to remove yourself from {{ g.name }}</h1>
+  <p class="lead mt-s">
+  {% if g.intro %}{{ g.intro }}
+  {% elif g.group == 'people' %}{{ g.name }} is a people-search site. Sites like this build listings from public records and purchased data, often with your address, age, phone number and relatives.
+  {% elif g.ca_registered %}{{ g.name }} is a data company registered as a data broker in California.
+  {% else %}{{ g.name }} is a data company.
+  {% endif %}
+  Here's how to ask it to remove you, for free. You don't need Free My ID to do this.</p>
+
+  {% if g.covered_by %}
+  <div class="callout callout--fact">
+    {{ icon('check') }}
+    <div><p><strong>Good news:</strong> the {{ g.covered_by.name }} removal is meant to cover {{ g.name }} too. Start with the <a href="{{ url(g.covered_by.out) }}">{{ g.covered_by.name }} guide</a>, then check {{ g.name }} again in about a week.</p></div>
+  </div>
+  {% endif %}
+
+  {% if not g.covered_by %}
+  {% if g.required or g.needs_email_verification or g.has_captcha or g.needs_id_upload %}
+  <h2 class="mt-l" id="need">What you'll need</h2>
+  <ul class="checklist checklist--yes mt-s" role="list">
+    {% for r in g.required %}<li>{{ icon('check') }}<span>{{ r[:1] | upper }}{{ r[1:] }}</span></li>{% endfor %}
+    {% if g.needs_email_verification %}<li>{{ icon('mail') }}<span>A few minutes to open the email {{ g.name }} sends and click its link. If you skip this, the request may not go through.</span></li>{% endif %}
+    {% if g.has_captcha %}<li>{{ icon('pointer') }}<span>A picture puzzle ("I'm not a robot") you solve yourself</span></li>{% endif %}
+    {% if g.needs_id_upload %}<li>{{ icon('info') }}<span>This site may ask for a photo of your ID. Only you can decide whether that's worth it.</span></li>{% endif %}
+  </ul>
+  {% endif %}
+
+  <h2 class="mt-l" id="steps">Step by step</h2>
+  {% if g.steps %}
+  <ol class="steps mt-m" role="list">
+    {% for s in g.steps %}<li><p>{{ s }}</p></li>{% endfor %}
+  </ol>
+  {% if g.steps_mention_app %}<p class="note mt-s">These are the same steps Free My ID shows inside the app.</p>{% endif %}
+  {% elif g.email %}
+  <ol class="steps mt-m" role="list">
+    <li><p>Write an email to <strong>{{ g.email }}</strong>.</p></li>
+    <li><p>Say: "Please delete my personal information and stop selling or sharing it." Add your full name and the city and state where you live.</p></li>
+    <li><p>Keep a copy of your email.{% if g.days %} Allow about {{ g.days }} days for a reply.{% endif %}</p></li>
+  </ol>
+  {% endif %}
+  {% if g.days and g.steps %}<p class="mt-s">Allow about {{ g.days }} day{{ 's' if g.days != 1 }}, then check again.</p>{% endif %}
+
+  {% if g.opt_out_url %}
+  <div class="btn-row mt-m">
+    <a class="btn" href="{{ g.opt_out_url }}" rel="noopener noreferrer nofollow">{{ icon('external') }}Open {{ g.name }}'s {{ 'privacy page' if g.method == 'email' else 'removal page' }}</a>
+  </div>
+  <p class="note mt-s">Opens {{ g.opt_out_host }}, {{ g.name }}'s own website.</p>
+  {% endif %}
+
+  <div class="callout {{ 'callout--fact' if g.verified else 'callout--gold' }}">
+    {{ icon('check-circle' if g.verified else 'info') }}
+    <div><p>{% if g.verified %}We checked these steps against {{ g.name }}'s own page on {{ g.last_verified }}.{% else %}We haven't been able to check these steps against {{ g.name }}'s live page yet. Sites change their pages often, so if something looks different, follow what the page says.{% endif %}</p></div>
+  </div>
+  {% endif %}
+
+  {% if g.covers %}
+  <p class="mt-m">The {{ g.name }} removal is also meant to cover:
+  {% for o in g.covers %}<a href="{{ url(o.out) }}">{{ o.name }}</a>{{ ', ' if not loop.last }}{% endfor %}.</p>
+  {% endif %}
+
+  {% if g.group == 'people' %}
+  <div class="callout callout--gold">
+    {{ icon('shield') }}
+    <div><p>You should never have to pay to be removed. If a people-search site asks for money or your Social Security number, stop.</p></div>
+  </div>
+  {% endif %}
+
+  <section class="card mt-l" aria-labelledby="fmid">
+    <h2 id="fmid">Or let Free My ID do it</h2>
+    <!-- Sources: docs/PLAN_V1.md D1, D2, D9; docs/USER_GUIDE.md sections 6, 8, 9 -->
+    <p class="mt-s">
+    {% if g.covered_by %}Free My ID sends the {{ g.covered_by.name }} request and later checks whether {{ g.name }} still lists you.
+    {% elif g.method == 'email' %}Free My ID writes this email for you. With a removal mailbox set up, it sends it and watches for the reply; without one, it opens the message in your own email program.
+    {% elif g.method == 'account_required' %}This one needs you to sign in or make an account, which Free My ID never does for you. It gives you a reminder with the link and these steps, and keeps track.
+    {% elif g.method == 'web_form' %}Free My ID opens {{ g.name }}'s removal page in your own browser, with these steps beside it and a Copy button for each box. On sites that allow it, it can fill the boxes in while you watch. You tick any "I'm not a robot" box yourself.
+    {% else %}Free My ID shows you these steps as a to-do and keeps track{% if g.has_email %}, and it can send a prepared email letter instead{% endif %}.
+    {% endif %}
+    Then it checks again later, because sites can list people again.</p>
+    <div class="btn-row mt-m"><a class="btn" href="{{ url('download/') }}">{{ icon('download') }}Get Free My ID for Windows, free</a></div>
+  </section>
+
+  <p class="mt-l"><a href="{{ url('guides/') }}">See all opt-out guides</a></p>
+  <p class="note">Guide data updated {{ guides_meta.updated }} from the Free My ID sample broker registry (<a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>).</p>
+</div>
+{% endblock %}

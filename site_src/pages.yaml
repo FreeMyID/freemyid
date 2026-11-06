@@ -17,6 +17,14 @@
   title: "How Free My ID works: by email, with you, or for you"
   description: Free My ID sends removal requests three ways - by email, by guiding you through a site's form, or by filling the form in for you - and keeps checking.
   jsonld: [breadcrumbs]
+- id: guides
+  out: guides/
+  template: pages/guides.html
+  label: Opt-out guides
+  nav: guides
+  title: "Free opt-out guides for people-search sites"
+  description: Step-by-step, plain-English guides to remove yourself from Spokeo, Whitepages, BeenVerified and other people-search sites. Free, no app needed.
+  jsonld: [breadcrumbs]
 - id: privacy
   out: privacy/
   template: pages/privacy.html

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block main %}
+<div class="wrap main-pad">
+  {% include "partials/crumbs.html" %}
+  <div class="prose">
+    <h1>Free opt-out guides</h1>
+    <p class="lead mt-s">Step-by-step guides to ask people-search sites to remove your listing. They're free, and you don't need Free My ID to use them.</p>
+  </div>
+  <div class="callout prose">
+    {{ icon('info') }}
+    <div>
+      <h2>Before you start</h2>
+      <ul>
+        <li>Make a separate email address just for removals. Sites send confirmation links to it, and you won't mind if it gets spam.</li>
+        <li>You should never have to pay to be removed. If a people-search site asks for money or your Social Security number, stop.</li>
+        <li>Sites often list people again later. Check back every few months.</li>
+      </ul>
+    </div>
+  </div>
+  {% for key, label, cats in groups %}
+  {% set items = guides | selectattr('group', 'equalto', key) | list %}
+  {% if items %}
+  <section class="mt-l" aria-labelledby="g-{{ key }}">
+    <h2 id="g-{{ key }}">{{ label }}</h2>
+    <ul class="guide-list mt-s" role="list">
+    {% for g in items %}
+      <li><a href="{{ url(g.out) }}">{{ g.name }}<small>{% if g.covered_by %}Covered by the {{ g.covered_by.name }} removal{% elif g.verified %}Steps checked {{ g.last_verified }}{% else %}Steps from our research{% endif %}</small></a></li>
+    {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+  {% endfor %}
+  <section class="card mt-l prose" aria-labelledby="let-us">
+    <h2 id="let-us">Rather not do it all by hand?</h2>
+    <p class="mt-s">Free My ID does the repetitive part for you on your own computer, keeps track of every site, and checks again later.</p>
+    <div class="btn-row mt-m"><a class="btn" href="{{ url('download/') }}">{{ icon('download') }}Get Free My ID for Windows, free</a></div>
+  </section>
+  <p class="note mt-l prose">Guide data: the Free My ID sample broker registry, version {{ guides_meta.version }}, licensed <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>. Sites change their pages often; if a guide is out of date, follow what the site's own page says.</p>
+</div>
+{% endblock %}
