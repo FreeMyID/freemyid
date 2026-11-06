@@ -38,6 +38,39 @@ SAMPLE_REGISTRY = Path(os.environ.get("FMID_SAMPLE_REGISTRY") or ROOT / "brokers
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import site_check
 
+
+def validate_registry_path(path: Path) -> str | None:
+    """Return a refusal message if path is not a safe public sample registry, else None."""
+    real = path.resolve()
+    if real == (ROOT / "brokers" / "registry.yaml").resolve():
+        return f"refusing {path}: it resolves to brokers/registry.yaml (private full registry)"
+    if not real.name.endswith(".sample.yaml"):
+        return f"refusing {path}: resolved name {real.name!r} does not end in .sample.yaml"
+    if not real.is_relative_to(ROOT.resolve()):
+        return f"refusing {path}: resolves outside the repo"
+    return None
+
+
+def selftest() -> int:
+    import tempfile as tf
+    with tf.TemporaryDirectory() as t:
+        link = Path(t) / "x.sample.yaml"
+        link.symlink_to(ROOT / "brokers" / "registry.yaml")
+        cases = {
+            "full registry": ROOT / "brokers" / "registry.yaml",
+            "symlink to full registry": link,
+            "wrong name": ROOT / "brokers" / "state_laws.yaml",
+            "outside repo": Path(t) / "other.sample.yaml",
+        }
+        bad = 0
+        for name, p in cases.items():
+            msg = validate_registry_path(p)
+            print(f"{'ok  ' if msg else 'FAIL'} refuses {name}: {msg}")
+            bad += msg is None
+        ok = validate_registry_path(ROOT / "brokers" / "registry.sample.yaml") is None
+        print(f"{'ok  ' if ok else 'FAIL'} accepts brokers/registry.sample.yaml")
+        return 0 if ok and not bad else 1
+
 CSP = ("default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; font-src 'self'; "
        "connect-src 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; base-uri 'none'")
 
@@ -383,7 +416,14 @@ def existing_files(d: Path) -> set[str]:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--check", action="store_true", help="fail if site/ differs from a fresh build or checks fail")
+    ap.add_argument("--selftest", action="store_true", help="test that the registry-path guard refuses unsafe paths")
     args = ap.parse_args(argv)
+    if args.selftest:
+        return selftest()
+    msg = validate_registry_path(SAMPLE_REGISTRY)
+    if msg:
+        print("ERROR:", msg)
+        return 2
 
     s = Site()
     errors = check_contrast(s.tokens)
