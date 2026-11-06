@@ -1,0 +1,29 @@
+{% set nav_items = [
+  ("how-it-works/", "How it works", "how-it-works"),
+  ("guides/", "Opt-out guides", "guides"),
+  ("privacy/", "Your privacy", "privacy"),
+  ("faq/", "Questions", "faq"),
+] %}
+{% macro nav_list() %}
+<ul role="list">
+{% for href, label, key in nav_items if key in pages %}
+  <li><a href="{{ url(href) }}"{% if page.nav == key %} aria-current="page"{% endif %}>{{ label }}</a></li>
+{% endfor %}
+  <li><a class="btn btn--small" href="{{ url('download/') }}"{% if page.nav == 'download' %} aria-current="page"{% endif %}>{{ icon('download') }}Download</a></li>
+</ul>
+{% endmacro %}
+<div class="flagbar" aria-hidden="true"><span></span><span></span><span></span></div>
+<header class="site-header">
+  <div class="wrap site-header__inner">
+    <a class="brand" href="{{ url('') }}">{% include "partials/brand-mark.svg" %}<span>Free My ID<span class="visually-hidden">, home page</span></span></a>
+    <nav class="nav nav--wide" aria-label="Main">
+      {{ nav_list() }}
+    </nav>
+    <details class="menu">
+      <summary>{{ icon('menu') }}<span class="when-closed">Menu</span><span class="when-open">Close menu</span></summary>
+      <nav class="nav" aria-label="Main">
+        {{ nav_list() }}
+      </nav>
+    </details>
+  </div>
+</header>

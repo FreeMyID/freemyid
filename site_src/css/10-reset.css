@@ -1,0 +1,9 @@
+@layer reset {
+  *, *::before, *::after { box-sizing: border-box; }
+  * { margin: 0; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  img, svg, picture { display: block; max-width: 100%; }
+  img { height: auto; }
+  input, button, select, textarea { font: inherit; }
+  :where(ul, ol)[role="list"] { list-style: none; padding: 0; }
+}

@@ -1,0 +1,80 @@
+# Design tokens. tools/build_site.py turns these into the `tokens` CSS layer, the styleguide swatches
+# and a contrast check (`pairs`) that fails the build if a pair drops below its minimum.
+# Each color is [light, dark].
+color:
+  bg:             ["#ffffff", "#0f1520"]   # page
+  bg-alt:         ["#f7f5ef", "#141c29"]   # warm "parchment" bands (hero, alternate sections)
+  surface:        ["#f2f4f8", "#1a2331"]   # cards, panels
+  surface-strong: ["#e4e9f1", "#243046"]   # card headers, chips
+  text:           ["#14181f", "#f2f4f8"]
+  muted:          ["#3d4654", "#c3cad6"]
+  heading:        ["#1b2f5b", "#c4d5f7"]
+  brand:          ["#1b2f5b", "#c4d5f7"]   # primary buttons, step numbers
+  brand-ink:      ["#ffffff", "#0f1520"]   # text on brand
+  accent:         ["#a3202e", "#f5a3ab"]   # flag red: kickers, myth borders. Never for alarm UI.
+  link:           ["#1a4fa0", "#a8caff"]
+  ok:             ["#1e6b3c", "#8fd6a6"]   # "confirmed" chip in the mockup
+  warn:           ["#7a4f00", "#f0c674"]   # "waiting" chip in the mockup
+  line:           ["#c5ccd8", "#36435a"]   # decorative borders
+  line-strong:    ["#6b778c", "#8794ab"]   # borders that must meet 3:1
+  focus:          ["#f2b705", "#f2b705"]   # gold focus ring (outer)
+  focus-inner:    ["#14181f", "#f2f4f8"]   # contrasting ring inside the gold so it shows on any page color
+  footer-bg:      ["#1b2f5b", "#0a0f18"]
+  footer-text:    ["#e8edf6", "#dfe5ee"]
+  flag-white:     ["#ffffff", "#e8edf6"]
+
+# Contrast pairs checked at build time: [foreground, background, minimum ratio], in both themes.
+pairs:
+  - [text, bg, 7]
+  - [text, bg-alt, 7]
+  - [text, surface, 7]
+  - [muted, bg, 7]
+  - [muted, bg-alt, 7]
+  - [muted, surface, 7]
+  - [heading, bg, 7]
+  - [heading, bg-alt, 7]
+  - [link, bg, 7]
+  - [link, surface, 7]
+  - [link, bg-alt, 7]
+  - [brand-ink, brand, 7]
+  - [accent, bg, 4.5]
+  - [accent, bg-alt, 4.5]
+  - [ok, surface, 4.5]
+  - [warn, surface, 4.5]
+  - [line-strong, bg, 3]
+  - [footer-text, footer-bg, 7]
+  - [focus-inner, bg, 3]
+
+space:       # fluid where it helps; rem so it follows browser zoom
+  3xs: 0.25rem
+  2xs: 0.5rem
+  xs: 0.75rem
+  s: 1rem
+  m: 1.5rem
+  l: 2rem
+  xl: clamp(2.5rem, 2rem + 2vw, 3.5rem)
+  2xl: clamp(3rem, 2rem + 4vw, 5rem)
+
+step:        # type scale; 1rem = 20px (html font-size 125%)
+  "-1": 0.85rem
+  "0": 1rem
+  "1": clamp(1.1rem, 1.05rem + 0.3vw, 1.25rem)
+  "2": clamp(1.2rem, 1.1rem + 0.5vw, 1.45rem)
+  "3": clamp(1.4rem, 1.2rem + 1vw, 1.9rem)
+  "4": clamp(1.8rem, 1.35rem + 2.2vw, 2.85rem)
+
+radius:
+  sm: 6px
+  md: 10px
+  lg: 16px
+  pill: 999px
+
+misc:
+  wrap: 60rem          # page container
+  measure: 36rem       # prose line length (~70 characters)
+  tap: 3rem            # minimum control height (60px at default size, >= 48px at any size)
+  font-body: 'system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif'
+  font-display: 'Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, "Noto Serif", serif'
+  font-mono: 'ui-monospace, "Cascadia Mono", Consolas, "Liberation Mono", monospace'
+  shadow-1: "0 1px 2px rgb(15 25 50 / 0.08), 0 2px 10px rgb(15 25 50 / 0.06)"
+  shadow-2: "0 2px 4px rgb(15 25 50 / 0.10), 0 12px 32px rgb(15 25 50 / 0.14)"

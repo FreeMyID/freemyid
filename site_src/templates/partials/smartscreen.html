@@ -1,0 +1,15 @@
+{# Drawing of the Windows SmartScreen box (not a screenshot). Real screenshots: LAUNCH_CHECKLIST section 3. #}
+<figure class="ss mt-s">
+  <div class="ss__box" role="img" aria-label="{% if ss_step == 1 %}Drawing of the blue Windows protected your PC box. The small More info link under the message is highlighted.{% else %}Drawing of the same blue box after clicking More info. It shows App: FreeMyIDSetup.exe and Publisher: Unknown publisher. The Run anyway button is highlighted.{% endif %}">
+    <p class="ss__title">Windows protected your PC</p>
+    <p>Microsoft Defender SmartScreen prevented an unrecognized app from starting. Running this app might put your PC at risk.</p>
+    {% if ss_step == 1 %}
+    <p><span class="ss__link ss__hint">More info</span></p>
+    <div class="ss__btns"><span class="ss__btn">Don't run</span></div>
+    {% else %}
+    <p>App: FreeMyIDSetup.exe<br>Publisher: Unknown publisher</p>
+    <div class="ss__btns"><span class="ss__btn ss__btn--hi ss__hint">Run anyway</span><span class="ss__btn">Don't run</span></div>
+    {% endif %}
+  </div>
+  <figcaption>A drawing of what Windows shows{% if ss_step == 1 %}. Click the highlighted words.{% else %} after you click More info. Click the highlighted button.{% endif %}</figcaption>
+</figure>

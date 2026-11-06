@@ -1,0 +1,21 @@
+{# Drawing of the Free My ID home screen in HTML. Fake person, made-up numbers. The status sentence
+   follows src/freemyid/wizard/dashboard.py status_sentence(); status labels follow docs/USER_GUIDE.md section 5. #}
+<figure class="mock">
+  <div class="mock__window" role="img" aria-label="Drawing of the Free My ID home screen for an example person, Jane Q Testperson of Springfield, Illinois. It says Free My ID is working, most sites have confirmed, some are still waiting, and one site needs a few minutes of help, with a big Do it with me button.">
+    <div class="mock__bar">{% include "partials/brand-mark.svg" %}<span>Free My ID</span><span class="mock__ctl">&#8211; &#9633; &#215;</span></div>
+    <div class="mock__body">
+      <p class="mock__who">Jane Q Testperson &middot; Springfield, IL</p>
+      <p class="mock__status">{{ icon('check-circle') }}<span>Free My ID is working. 23 sites have confirmed or no longer list you, 12 are still waiting, 1 needs you.</span></p>
+      <div class="mock__todo">
+        <p><strong>Whitepages needs 2 minutes of your help</strong></p>
+        <span class="mock__btn">Do it with me</span>
+      </div>
+      <ul class="mock__list">
+        <li><span>Spokeo</span><span class="chip chip--ok">Site confirmed</span></li>
+        <li><span>BeenVerified</span><span class="chip chip--warn">Waiting for the site to reply</span></li>
+        <li><span>TruePeopleSearch</span><span class="chip">Asked</span></li>
+      </ul>
+    </div>
+  </div>
+  <figcaption>Example screen. The person and the numbers are made up.</figcaption>
+</figure>

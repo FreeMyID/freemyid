@@ -1,0 +1,18 @@
+/* People print instructions: plain black on white, no navigation, show where links go. */
+@media print {
+  html { font-size: 12pt; }
+  :root { color-scheme: light; }
+  body { background: #fff !important; color: #000 !important; display: block; }
+  .flagbar, .site-header nav, .menu, .skip-link, .hero__stars, .btn-row .btn--secondary, .no-print, .star-rule { display: none !important; }
+  .site-header, .hero, .section--alt { background: none !important; border: 0 !important; padding-block: 0.5rem !important; }
+  .site-footer { background: none !important; color: #000 !important; border-block-start: 1px solid #000; }
+  .footer-grid nav { display: none; }
+  a { color: #000 !important; }
+  main a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 0.85em; overflow-wrap: anywhere; }
+  .btn { background: none !important; color: #000 !important; border: 1px solid #000 !important; box-shadow: none !important; }
+  .card, .callout, .download-card, .mock__window { box-shadow: none !important; break-inside: avoid; }
+  .steps > li { break-inside: avoid; }
+  .steps > li::before { background: none !important; color: #000 !important; border: 2px solid #000; }
+  h1, h2, h3 { color: #000 !important; break-after: avoid; }
+  .faq details > :not(summary) { display: block !important; }
+}

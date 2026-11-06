@@ -1,0 +1,12 @@
+{# The trust panel, word for word from docs/BRAND.md ("Trust panel"). #}
+<div class="trust{{ ' ' ~ trust_class if trust_class is defined else '' }}">
+  <h2 class="visually-hidden">Our promises</h2>
+  <ul role="list">
+    <li>{{ icon('user-off') }}<span>No account</span></li>
+    <li>{{ icon('cloud-off') }}<span>No cloud</span></li>
+    <li>{{ icon('shield') }}<span>Never asks for your Social Security number, bank or card details</span></li>
+    <li>{{ icon('computer') }}<span>Your records stay on your computer</span></li>
+    <li>{{ icon('code') }}<span>Free and open source</span></li>
+    <li>{{ icon('trash') }}<span>Uninstall anytime</span></li>
+  </ul>
+</div>

@@ -1,0 +1,70 @@
+@layer base {
+  html {
+    font-size: 125%;                 /* 20px base: easy reading, still follows browser zoom */
+    color-scheme: light dark;
+    scroll-padding-block-start: var(--space-m);
+  }
+  :root[data-theme="light"] { color-scheme: light; }
+  :root[data-theme="dark"]  { color-scheme: dark; }
+  body {
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-body);
+    font-size: var(--step-0);
+    line-height: 1.6;
+    min-block-size: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  main { flex: 1; }
+  h1, h2, h3, h4 {
+    color: var(--color-heading);
+    line-height: 1.2;
+    text-wrap: balance;
+    overflow-wrap: break-word;
+  }
+  h1, h2 { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.005em; }
+  h1 { font-size: var(--step-4); }
+  h2 { font-size: var(--step-3); }
+  h3 { font-size: var(--step-2); font-weight: 700; }
+  h4 { font-size: var(--step-1); font-weight: 700; }
+  p, li, dd { text-wrap: pretty; overflow-wrap: break-word; }
+  :where(p, ul, ol, dl, details, figure, table, blockquote) + :where(p, ul, ol, dl, details, figure, table, blockquote) {
+    margin-block-start: var(--space-s);
+  }
+  :where(ul, ol):not([role="list"]) { padding-inline-start: 1.4em; }
+  li + li { margin-block-start: var(--space-2xs); }
+  a {
+    color: var(--color-link);
+    text-decoration-thickness: 0.08em;
+    text-underline-offset: 0.18em;
+  }
+  a:hover { text-decoration-thickness: 0.14em; }
+  strong { font-weight: 700; }
+  code, kbd, samp {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-sm);
+    padding: 0.05em 0.3em;
+    overflow-wrap: anywhere;
+  }
+  /* Focus: dark inner ring + 3px gold outer ring, visible on every background. */
+  :focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--color-focus-inner);
+    border-radius: 2px;
+  }
+  ::selection { background: var(--color-focus); color: #14181f; }
+  hr { border: 0; border-block-start: 1px solid var(--color-line); margin-block: var(--space-xl); }
+}
+
+/* Cross-document page transitions, only for people who haven't asked for less motion. */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

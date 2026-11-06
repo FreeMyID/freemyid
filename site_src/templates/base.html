@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ page.title }}</title>
+<meta name="description" content="{{ page.description }}">
+<meta http-equiv="Content-Security-Policy" content="{{ csp }}">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#1b2f5b">
+{% if page.noindex %}
+<meta name="robots" content="noindex">
+{% endif %}
+<link rel="canonical" href="{{ page.canonical }}">
+<link rel="stylesheet" href="{{ asset('style.css') }}">
+<link rel="icon" href="{{ url('favicon.svg') }}" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Free My ID">
+<meta property="og:locale" content="en_US">
+<meta property="og:title" content="{{ page.og_title | default(page.title) }}">
+<meta property="og:description" content="{{ page.description }}">
+<meta property="og:url" content="{{ page.canonical }}">
+<meta property="og:image" content="{{ site.base_url }}og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Free My ID: take your name off the websites that sell it. Free. No account. No cloud.">
+<meta name="twitter:card" content="summary_large_image">
+{% for ld in jsonld %}
+<script type="application/ld+json">{{ ld | safe }}</script>
+{% endfor %}
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to main content</a>
+{% include "partials/header.html" %}
+<main id="main" tabindex="-1">
+{% block main %}{% endblock %}
+</main>
+{% include "partials/footer.html" %}
+</body>
+</html>
