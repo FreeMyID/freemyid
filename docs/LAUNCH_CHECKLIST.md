@@ -56,7 +56,7 @@ Public means **the whole history is public**, not just the latest files.
 - [ ] GitHub org `FreeMyID`. ✅ created by the user
 - [ ] GitHub Pages enabled once the repo is public (pages.yml is ready). **O**
 - [ ] Social handles `freemyid` on Facebook, X and YouTube reserved, with no posts until launch. **U**
-- [ ] PyPI `freemyid`: reserve at launch, only if a Python package is published. **O**
+- [ ] PyPI `freemyid` (`pipx install freemyid`) and a winget manifest (`winget install FreeMyID.FreeMyID`) submitted at launch; see docs/ONBOARDING_PATHS.md. **O**
 
 ## 7. Release and go
 
