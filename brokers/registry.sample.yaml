@@ -70,7 +70,7 @@ brokers:
     feeds_from: [spokeo]
     steps:
       - "Nothing extra to do. The Spokeo removal is meant to cover FreePeopleDirectory."
-      - "Do the Spokeo card first, then check this site again in a week."
+      - "Do the Spokeo removal first, then check this site again in a week."
     source_urls: [*badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
     verification_status: unverified
     verification_notes: "BADBOOL says to opt out of FreePeopleDirectory via the Spokeo opt-out. The CA registry (2026-11-06) lists freepeopledirectory.com among Spokeo, Inc.'s websites, which supports ownership; opt-out coverage itself is not confirmed from a primary source."
@@ -93,7 +93,7 @@ brokers:
       - "Copy the web address of that listing."
       - "Paste it on the removal page and press the button."
       - "Whitepages phones you with a 4-digit code. This needs your OK to share a phone number."
-      - "Type the code. If you cannot, Free My ID will mark this one as needing you."
+      - "Type the code. If you cannot, this one will need you to finish it yourself."
     source_urls: [*badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
     verification_status: unverified
     verification_notes: "Fetch blocked by tool policy. BADBOOL gives suppression_requests (underscore); the legacy seed used suppression-requests (hyphen); confirm which is live. Phone verification means NEEDS_HUMAN unless allow_phone_disclosure is set. Email: legal@whitepages.com is the 'primary contact email' in the CA CPPA registry 2025 CSV (fetched 2026-11-06) and a search-result summary of Whitepages pages names it for written CCPA deletion requests; not confirmed on a Whitepages page. A separate search result mentioned privacyrequest@whitepages.com; not recorded (single weak source)."
@@ -109,7 +109,7 @@ brokers:
     parent_company: Whitepages
     steps:
       - "Nothing extra to do. Removing your listing from Whitepages also covers 411.com."
-      - "If you still see yourself on 411.com after a week, tell Free My ID."
+      - "If you still see yourself on 411.com after a week, submit the Whitepages request again."
     source_urls: [*badbool]
     verification_status: unverified
     verification_notes: "BADBOOL says 411.com is owned by Whitepages and uses the same opt-out. Coverage not confirmed from a primary source."
@@ -150,7 +150,7 @@ brokers:
     ca_registered: true
     steps:
       - "Nothing extra to do. The BeenVerified opt-out is meant to cover PeopleLooker."
-      - "If you still see yourself on PeopleLooker after a week, tell Free My ID."
+      - "If you still see yourself on PeopleLooker after a week, check the BeenVerified opt-out page again or ask BeenVerified for help."
     source_urls: [*badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
     verification_status: unverified
     verification_notes: "The CA registry (2026-11-06) lists peoplelooker.com among BeenVerified, Inc.'s subsidiary sites, which supports common ownership. The legacy seed opt-out path /f/optout/search returned HTTP 404 on 2026-11-05. covered_by is an assumption from common ownership; if PeopleLooker still lists after the BeenVerified opt-out, remove covered_by and find the live form."
@@ -191,7 +191,7 @@ brokers:
     ca_registered: true
     steps:
       - "Nothing extra to do. The PeopleConnect Suppression Center request covers Intelius."
-      - "Use the PeopleConnect card first, then check Intelius again in a week."
+      - "Do the PeopleConnect Suppression Center request first, then check Intelius again in a week."
     source_urls: [*badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
     verification_status: unverified
     verification_notes: "Fetch blocked by tool policy. Email support@mailer.intelius.com is the 'primary contact email' for Intelius, LLC in the CA CPPA registry 2025 CSV (fetched 2026-11-06; also BADBOOL). The registry lists US Search as an Intelius DBA. Phone is from BADBOOL only; a third-party profile could not confirm it. Registry contact, not a stated request intake."
@@ -210,7 +210,7 @@ brokers:
     ca_registered: true
     steps:
       - "Nothing extra to do. The PeopleConnect Suppression Center request covers TruthFinder."
-      - "Use the PeopleConnect card first, then check this site again in a week."
+      - "Do the PeopleConnect Suppression Center request first, then check this site again in a week."
     source_urls: [*badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
     verification_status: unverified
     verification_notes: "truthfinder.com/opt-out returned HTTP 403. Covered by the PeopleConnect Suppression Center per BADBOOL; not confirmed from a primary page. help@truthfinder.com is the 'primary contact email' for TruthFinder, LLC in the CA CPPA registry 2025 CSV (2026-11-06)."
@@ -314,9 +314,9 @@ brokers:
     ca_registered: true
     steps:
       - "Open the privacy request page and fill in your name and removal email."
-      - "MyLife may ask for a phone number. Only give it if you have allowed that in Free My ID."
-      - "MyLife may try to start an account or ask for ID. Stop and ask Free My ID for help if so."
-      - "If the page does not work, send the prepared email letter instead."
+      - "MyLife may ask for a phone number. Only give it if you are comfortable doing so."
+      - "MyLife may try to start an account or ask for ID. Stop if so. You do not need to do either."
+      - "If the page does not work, email privacy@mylife.com asking for your listing to be deleted."
     source_urls: [*badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
     verification_status: unverified
     verification_notes: "Seed URL (/ccpa/index.pubview) returned HTTP 403; /privacy-policy also 403. URL, email privacy@mylife.com and phone are from BADBOOL only. The CA registry (2026-11-06) lists Insightbridge LLC (alt. name MyLife) with primary contact membersupport@mylife.com and request page https://www.mylife.com/privacy-policy; that address is not recorded because only one email field exists. BADBOOL reports MyLife may push an account and a phone call or driver's licence; treat as human-assisted."
@@ -351,6 +351,7 @@ brokers:
     method: web_form
     required_fields: [street_address]
     parent_company: Spokeo, Inc.
+    ca_registered: true
     steps:
       - "Open the opt-out page."
       - "Type the street address that shows on your listing."
@@ -391,6 +392,7 @@ brokers:
     has_captcha: true
     typical_processing_days: 3
     parent_company: Mississippi Tornado Alley LLC
+    ca_registered: true
     steps:
       - "Open the opt-out page and type your first name, last name and removal email."
       - "Solve the picture puzzle (captcha) and press Begin removal process."
@@ -424,6 +426,7 @@ brokers:
     has_captcha: true
     typical_processing_days: 3
     parent_company: Mississippi Tornado Alley LLC
+    ca_registered: true
     steps:
       - "Open the opt-out page. Choose 'The subject of the request' (that is you)."
       - "Type your first name, last name and removal email."
@@ -526,7 +529,7 @@ brokers:
     steps:
       - "Call 1-866-221-9291 (California residents) and ask to opt out or delete."
       - "Or use the Online Privacy Portal linked from their privacy policy page."
-      - "Or send the prepared email letter. They may ask for your name, address or phone to find you."
+      - "Or email privacy@cotality.com asking to delete your data. They may ask for your name, address or phone to find you."
     source_urls: [https://www.cotality.com/legal/privacy-policy]
     verification_status: verified
     verification_notes: "Privacy policy fetched 2026-11-06: deletion via the Online Privacy Portal (no web address given on the page) or by calling 1-866-221-9291 for California residents; privacy@cotality.com is named on the page for marketing opt-out requests and general questions (not explicitly for deletion). /privacy-center returned 404 earlier. Portal URL not recorded because it was not seen."
@@ -607,7 +610,7 @@ brokers:
     steps:
       - "Open the OptOutPrescreen page."
       - "Choose the 5-year opt-out and type your name, address and birth date."
-      - "If it asks for a Social Security number, type it yourself. Free My ID will never do this for you."
+      - "If it asks for a Social Security number, type it yourself. Only do this on the official OptOutPrescreen site."
       - "For a permanent opt-out, print, sign and mail the form it gives you."
     source_urls: [https://www.innovis.com/personal/lc_optOut]
     verification_status: unverified
