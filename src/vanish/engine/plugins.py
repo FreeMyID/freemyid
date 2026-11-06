@@ -43,8 +43,8 @@ def custom_submitter(broker: Broker) -> Submitter | None:
         log.warning("entry point for %s failed: %s", broker.id, type(e).__name__)
     if broker.id not in _GENERIC_NAMES:
         try:
-            mod = importlib.import_module(f"vanish.submitters.{broker.id}")
-            return _instantiate(getattr(mod, "Submitter", None))
+            module = importlib.import_module(f"vanish.submitters.{broker.id}")
+            return _instantiate(getattr(module, "Submitter", None))
         except ImportError:
             pass
     return None

@@ -166,19 +166,20 @@ async def run_steps(bm: BrowserManager, page: Page, steps: list[FormStep], vars:
         if a == "goto":
             await bm.goto(page, render_value(st.url, vars), timeout_ms=st.timeout_ms)
             continue
-        if a in ("fill", "select", "check", "click", "wait_for", "submit") and not st.selector:
+        sel = st.selector or ""
+        if a in ("fill", "select", "check", "click", "wait_for", "submit") and not sel:
             raise UnexpectedPage(f"step_{a}_without_selector")
         if a == "fill":
-            await page.fill(st.selector, render_value(st.value, vars), timeout=st.timeout_ms)
+            await page.fill(sel, render_value(st.value, vars), timeout=st.timeout_ms)
         elif a == "select":
-            await page.select_option(st.selector, render_value(st.value, vars),
+            await page.select_option(sel, render_value(st.value, vars),
                                      timeout=st.timeout_ms)
         elif a == "check":
-            await page.check(st.selector, timeout=st.timeout_ms)
+            await page.check(sel, timeout=st.timeout_ms)
         elif a == "wait_for":
-            await page.wait_for_selector(st.selector, timeout=st.timeout_ms)
+            await page.wait_for_selector(sel, timeout=st.timeout_ms)
         elif a in ("click", "submit"):
-            await page.click(st.selector, timeout=st.timeout_ms)
+            await page.click(sel, timeout=st.timeout_ms)
             await page.wait_for_load_state("domcontentloaded", timeout=st.timeout_ms)
             bm.check_escaped(page)          # SEC-16: a submit may redirect off-list
             await bm.raise_if_challenge(page)

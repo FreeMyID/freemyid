@@ -238,7 +238,9 @@ class BrowserManager:
         if url.startswith(_LOCAL_SCHEMES):
             return True
         host = host_of(url)
-        return bool(host) and _host_ok(host, hosts) and self.netpolicy.is_allowed(host)
+        if not host:                      # unparseable / hostless URL -> blocked
+            return False
+        return _host_ok(host, hosts) and self.netpolicy.is_allowed(host)
 
     async def new_context(self, domains: list[str], extra: list[str] | None = None,
                           storage_state: Any = None, headed: bool = False) -> BrowserContext:

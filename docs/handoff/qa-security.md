@@ -29,3 +29,19 @@ Wave 2 (2026-11-06):
 - Orchestrator FYI handled: Windows CI 'Event loop is closed' = SEC-26 (Playwright driver leak on
   failed launch), reproduced + fix verified on Linux; xfail test cleans up after itself.
 Next wave: remove xfail markers as SEC fixes land; tools/registry_health.py still TODO.
+Wave D9 (2026-11-06):
+- A DONE: tests/test_wizard_browser_e2e.py. Real Playwright Chromium (headless) against
+  start_background() with VANISH_NO_BACKGROUND=1: all 6 screens (Pat Testperson, Raleigh NC) to
+  the dashboard, then a Settings permissions save. Asserts each POST → 303 → expected next step,
+  real Origin header, no 403/5xx, Referrer-Policy != no-referrer, nothing leaves 127.0.0.1. A
+  second test checks that foreign, null and other-port Origins and a bad CSRF still get 403. Skips
+  if Chromium can't launch. Negative check (scratch, not committed): forcing no-referrer via an
+  ASGI header rewrite gives Origin: null → 403 and the walk stops on step 1, so the test catches
+  the 54ff105 bug, including with the context route in place.
+- B DONE: engine/_test_drafts/test_fill_for_me.py → tests/test_fill_for_me.py (byte-identical,
+  54 pass; no conftest changes needed). Verified it before git rm of engine/_test_drafts.
+- C DONE: SECURITY_REVIEW.md D9 section SEC-30..38; tests/test_security_d9.py (3 pass, 4 strict
+  xfail = SEC-30,31,32,33). Verdict BLOCK (narrow) on SEC-31 (robot checkbox via broad
+  safe_checkboxes selector).
+- Full suite: 320 passed, 4 xfailed; ruff clean.
+Next: remove xfail markers as SEC-30..33 land; tools/registry_health.py still TODO.

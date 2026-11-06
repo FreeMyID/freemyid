@@ -4,7 +4,7 @@ Flow (only ever started by the person, from the dashboard; scheduled runs never 
   1. consent gate, broker checks (web form with an opt-out page; covered_by -> parent);
   2. a VISIBLE browser window (system Edge on Windows) opens the opt-out page through
      BrowserManager (NetPolicy allowlist, `bm.goto`, `check_escaped`);
-  3. `filler.fill_page` fills the minimized fields; nothing is ticked, CAPTCHAs are not
+  3. `filler.fill_page` fills the minimized fields; only registry safe_checkboxes are ticked, CAPTCHAs are not
      touched, Submit is NOT pressed;
   4. a big plain-English banner asks the person to tick the robot box and press Submit;
   5. Vanish watches for the registry's success signal (the `expect_text` / `wait_for` steps
@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 import threading
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
@@ -95,7 +96,8 @@ class FillResult:
 
 def success_signals(broker: Broker, vars: dict | None = None) -> tuple[list[str], list[str]]:
     """(texts, selectors) that mean "it worked": the `expect_text` values and `wait_for`
-    selectors after the last click/submit step of `Broker.form` (what web_form checks)."""
+    selectors after the last click/submit step of `Broker.form` (what web_form checks),
+    plus `Broker.success_text`."""
     from ..submitters.web_form import render_value
     steps = broker.form
     last = max((i for i, s in enumerate(steps) if s.action in ("click", "submit")), default=-1)
@@ -111,7 +113,30 @@ def success_signals(broker: Broker, vars: dict | None = None) -> tuple[list[str]
                 texts.append(t.lower())
         elif s.action == "wait_for" and s.selector and last >= 0:
             sels.append(s.selector)
+    for t in broker.success_text:
+        t = (t or "").strip().lower()
+        if t and t not in texts:
+            texts.append(t)
     return texts, sels
+
+
+_URL_MATCH_MAX = 2048
+
+
+def url_matches(pattern: str | None, url: str) -> bool:
+    """re.search of a registry regex against the URL's path+query (bounded length)."""
+    if not pattern or not url:
+        return False
+    from urllib.parse import urlsplit
+    try:
+        u = urlsplit(url)
+    except ValueError:
+        return False
+    target = (u.path or "/") + (f"?{u.query}" if u.query else "")
+    try:
+        return re.search(pattern, target[:_URL_MATCH_MAX]) is not None
+    except re.error:
+        return False
 
 
 def _banner_js(lines: list[str], done: bool) -> str:
@@ -159,7 +184,10 @@ _NEEDS_BANNER_JS = f"""
 """
 
 
-async def _matched(page: Page, texts: list[str], sels: list[str]) -> str | None:
+async def _matched(page: Page, texts: list[str], sels: list[str],
+                   url_pattern: str | None = None) -> str | None:
+    if url_matches(url_pattern, page.url):
+        return "success_url"
     if texts:
         body = await page.evaluate(_PAGE_TEXT_JS)
         if any(t in body for t in texts):
@@ -329,12 +357,14 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
                  close_delay_s: float, fallback: Callable[[str], FillResult]) -> FillResult:
     from ..submitters.base import form_vars
     closed = {"v": False}
-    navs = {"n": 0, "post": False}
+    navs: dict[str, int | bool] = {"n": 0, "post": False}
     page.on("close", lambda _p: closed.__setitem__("v", True))
 
     await bm.goto(page, str(broker.opt_out_url), check_challenge=False)
     values = filler.plan_values(profile, broker, listing)
     rep = await filler.fill_page(page, values)
+    if broker.safe_checkboxes:
+        rep.ticked = await filler.tick_safe_checkboxes(page, broker.safe_checkboxes)
     res.filled, res.not_found, res.withheld = (sorted(set(rep.filled)), rep.not_found,
                                                sorted(set(rep.withheld)))
     _event(store, profile.id, broker.id, "fill_for_me_filled", **rep.summary())
@@ -343,7 +373,8 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
     filled_png = await page.screenshot(full_page=True)
 
     texts, sels = success_signals(broker, form_vars(profile, broker, listing))
-    baseline = await _matched(page, texts, sels)
+    url_re = broker.success_url_pattern
+    baseline = await _matched(page, texts, sels, url_re)
     lines = [MSG_FILLED]
     if rep.not_found or rep.withheld or rep.unknown:
         lines.append(MSG_MISSING)
@@ -368,7 +399,8 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
 
     page.on("framenavigated", _on_nav)
     page.on("request", _on_req)
-    task = asyncio.create_task(on_ready(page)) if on_ready else None
+    task: asyncio.Task[Any] | None = (
+        asyncio.ensure_future(on_ready(page)) if on_ready else None)
 
     loop = asyncio.get_running_loop()
     deadline = loop.time() + max(1, timeout_s)
@@ -378,11 +410,13 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
             if closed["v"] or page.is_closed():
                 return fallback("window_closed")
             bm.check_escaped(page)
-            moved = navs["n"] > 0 or navs["post"] or page.url != start_url
+            moved = bool(navs["n"]) or bool(navs["post"]) or page.url != start_url
             res.submit_seen = res.submit_seen or moved
             try:
-                hit = await _matched(page, texts, sels)
-                if hit and (moved or not baseline):
+                hit = await _matched(page, texts, sels, url_re)
+                # a URL match only counts after the page moved; text/selector signals too
+                # when they were already on the page before the person did anything
+                if hit and (moved or (not baseline and hit != "success_url")):
                     how = hit
                     break
                 if await page.evaluate(_NEEDS_BANNER_JS):
@@ -392,7 +426,7 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
                     return fallback("window_closed")
             await asyncio.sleep(_POLL_S)
         if how is None:
-            if not (texts or sels) and res.submit_seen:
+            if not (texts or sels or url_re) and res.submit_seen:
                 return fallback("unverified")
             return fallback("timeout")
         bm.check_escaped(page)

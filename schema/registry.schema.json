@@ -59,6 +59,22 @@
           "default": null,
           "title": "Opt Out Url"
         },
+        "search_page_url": {
+          "anyOf": [
+            {
+              "format": "uri",
+              "maxLength": 2083,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Page with the people-search form, if not Broker.url (listing finder)",
+          "title": "Search Page Url"
+        },
         "method": {
           "$ref": "#/$defs/Method"
         },

@@ -365,6 +365,10 @@ class Broker(_Base):
         "{state_name} {zip} {phone}; values are slugified/URL-encoded by the engine",
     )
     opt_out_url: HttpUrl | None = None
+    search_page_url: HttpUrl | None = Field(
+        default=None, description="Page with the people-search form, if not Broker.url "
+        "(listing finder)",
+    )
     method: Method
     alt_methods: list[Method] = []
     opt_out_email: str | None = None
@@ -439,7 +443,8 @@ class Broker(_Base):
     @model_validator(mode="after")
     def _hosts_inside_domains(self) -> Broker:
         doms = self.domains
-        urls = [str(self.url), str(self.opt_out_url) if self.opt_out_url else None]
+        urls = [str(self.url), str(self.opt_out_url) if self.opt_out_url else None,
+                str(self.search_page_url) if self.search_page_url else None]
         urls += [st.url for st in self.form if st.url]
         for u in filter(None, urls):
             if not _host_in(urlsplit(u).hostname, doms):

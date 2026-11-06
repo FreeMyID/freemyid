@@ -6,7 +6,8 @@ fixed synonym table; `fill_page()` fills only the values `plan_values()` allows.
 
 Never touched, whatever the labels say:
   * anything inside a CAPTCHA / challenge widget (recaptcha, hcaptcha, turnstile, ...);
-  * password, file, hidden, checkbox, radio, button-like inputs (nothing gets ticked);
+  * password, file, hidden, checkbox, radio, button-like inputs (nothing gets ticked,
+    except `tick_safe_checkboxes` for the registry's `Broker.safe_checkboxes`);
   * invisible / off-screen / aria-hidden controls (bot "honeypots": filling them marks the
     request as a bot) and disabled / read-only ones;
   * phone, birth date, age, middle name, company, search boxes and anything unrecognised.
@@ -196,11 +197,12 @@ class FillReport:
     protected: int = 0                                    # captcha/password/file/checkbox...
     unknown: int = 0                                      # visible boxes we did not recognise
     errors: int = 0
+    ticked: int = 0                                       # Broker.safe_checkboxes ticked
 
     def summary(self) -> dict[str, Any]:
         return {"filled": sorted(set(self.filled)), "not_found": sorted(self.not_found),
                 "withheld": sorted(set(self.withheld)), "protected": self.protected,
-                "unknown": self.unknown, "errors": self.errors}
+                "unknown": self.unknown, "errors": self.errors, "ticked": self.ticked}
 
 
 SCAN_JS = r"""
@@ -300,6 +302,61 @@ async def fill_page(page: Page, values: dict[str, str], *, timeout_ms: int = 500
             rep.errors += 1
     rep.not_found = [k for k in values if k not in seen and not _covered(k, seen)]
     return rep
+
+
+# The element must be a real, visible, enabled, unticked checkbox input that is not inside
+# a CAPTCHA / challenge container. Returns a reason string ('' = ok to tick).
+CHECKBOX_OK_JS = r"""
+(el) => {
+  const CAP = /(g-recaptcha|h-captcha|hcaptcha|recaptcha|cf-turnstile|turnstile|captcha|arkose|funcaptcha|px-captcha|cf-challenge|challenge-form)/i;
+  if (!el || el.tagName !== 'INPUT' || (el.getAttribute('type') || '').toLowerCase() !== 'checkbox')
+    return 'not_checkbox';
+  if (el.disabled || el.readOnly) return 'disabled';
+  if (el.checked) return 'already';
+  for (let a = el; a && a.nodeType === 1; a = a.parentElement) {
+    const cls = typeof a.className === 'string' ? a.className : '';
+    if (CAP.test((a.id || '') + ' ' + cls) || a.hasAttribute('data-sitekey')) return 'captcha';
+    if (a.getAttribute('aria-hidden') === 'true' || a.hidden) return 'hidden';
+  }
+  const blob = (el.name || '') + ' ' + (el.id || '');
+  if (CAP.test(blob)) return 'captcha';
+  const r = el.getBoundingClientRect();
+  const cs = getComputedStyle(el);
+  const visible = r.width > 2 && r.height > 2 && r.right > 0 && r.bottom > 0 &&
+    cs.visibility !== 'hidden' && cs.display !== 'none' && parseFloat(cs.opacity) > 0.05 &&
+    el.getAttribute('tabindex') !== '-1';
+  return visible ? '' : 'hidden';
+}
+"""
+
+_MAX_SAFE_SELECTORS = 10
+_MAX_PER_SELECTOR = 5
+
+
+async def tick_safe_checkboxes(page: Page, selectors: list[str], *,
+                               timeout_ms: int = 5000) -> int:
+    """Tick the registry's `Broker.safe_checkboxes` (plain consent boxes) and nothing else.
+
+    Main frame only (`page.query_selector_all` never looks into iframes, where CAPTCHA
+    widgets live); every element must pass CHECKBOX_OK_JS. Returns how many were ticked.
+    """
+    ticked = 0
+    for sel in selectors[:_MAX_SAFE_SELECTORS]:
+        if not sel or len(sel) > 300:
+            continue
+        try:
+            els = await page.query_selector_all(sel)
+        except Exception:  # noqa: BLE001, S112 - malformed selector from the registry
+            continue
+        for el in els[:_MAX_PER_SELECTOR]:
+            try:
+                if await el.evaluate(CHECKBOX_OK_JS) != "":
+                    continue
+                await el.check(timeout=timeout_ms)
+                ticked += 1
+            except Exception:  # noqa: BLE001, S112 - detached / covered element
+                continue
+    return ticked
 
 
 def _covered(k: str, seen: set[str]) -> bool:

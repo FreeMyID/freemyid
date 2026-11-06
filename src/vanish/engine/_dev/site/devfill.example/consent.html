@@ -1,0 +1,20 @@
+<!doctype html><html><head><title>Dev Fill: consent boxes</title></head><body>
+<!-- DEV FIXTURE (D9 safe_checkboxes): every box below has class "safe"; only #agree is a
+     real, visible, main-frame checkbox outside the CAPTCHA. Fake site. -->
+<h1>Remove your record</h1>
+<form action="/done" method="post">
+  <label for="fn">First name</label> <input id="fn" name="a1"><br>
+  <label for="ln">Last name</label> <input id="ln" name="a3"><br>
+  <label><input type="checkbox" id="agree" class="safe"> I am the person in this listing</label><br>
+  <label><input type="checkbox" id="news" name="newsletter"> Send me offers</label><br>
+  <input type="checkbox" id="hiddencb" class="safe" style="display:none">
+  <input type="checkbox" id="offcb" class="safe" style="position:absolute;left:-9999px">
+  <input type="checkbox" id="discb" class="safe" disabled>
+  <input type="text" id="txt" class="safe" aria-label="Notes">
+  <div class="g-recaptcha" data-sitekey="dev-not-a-real-key">
+    <label><input type="checkbox" id="robot" class="safe"> I'm not a robot</label>
+  </div>
+  <iframe id="fr" srcdoc="<input type='checkbox' id='framecb' class='safe'>"></iframe>
+  <button type="submit" id="send">Submit</button>
+</form>
+</body></html>

@@ -13,7 +13,7 @@ import asyncio
 import logging
 import os
 import sys
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 from ..models import Actor, Event, Todo
 from ..models import ListingState as S
@@ -122,7 +122,7 @@ class InteractiveHandoff(QueuedHandoff):
             try:
                 if page is not None and done:
                     # carry the solved session back to the automated page's context
-                    await page.context.add_cookies(await headed_ctx.cookies())
+                    await page.context.add_cookies(cast(Any, await headed_ctx.cookies()))
                 await headed_ctx.close()
             except Exception as e:  # noqa: BLE001
                 log.debug("closing visible browser failed: %s", type(e).__name__)

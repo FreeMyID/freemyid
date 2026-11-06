@@ -102,3 +102,37 @@ longer embeds a Subject line.
 - Full: `pytest -q tests src/vanish/engine/_test_drafts` 305 passed; ruff clean.
 - CRs: wizard button; optional `vanish fill`; Broker.success_text/success_url and
   safe_checkboxes (registry); see final report.
+
+## Wave 4 (2026-11-06): mypy cleanup + D9 registry fields + D10 listing finder - DONE, reported
+1. mypy (src clean, `.venv/bin/mypy src` -> no issues): browser.url_allowed treats a None
+   host as blocked (only behaviour change); handoff add_cookies cast; plugins var rename;
+   web_form `sel = st.selector or ""` guard; fill_for_me navs/task annotations.
+2. D9 wired to the new Broker fields: success = expect_text/wait_for OR `success_text` OR
+   `success_url_pattern` (fill_for_me.url_matches: re.search on path+query, capped 2048
+   chars, fragment ignored). URL success needs the page to have moved; text/selector
+   success already on the page needs a move too (unchanged guard). `safe_checkboxes`:
+   filler.tick_safe_checkboxes - main frame only, real visible enabled unticked
+   `input[type=checkbox]`, not in a CAPTCHA/aria-hidden ancestor, max 10 selectors x 5
+   elements, bad selectors skipped; FillReport.ticked (logged as a count).
+   Fixture devfill.example/consent.html. Drafts: _test_drafts/test_fill_for_me_fields.py (16).
+3. D10 engine/listing_finder.py: `find_listing(store, profile_id, broker_id, *,
+   timeout_s=600, registry=None, browser=None, headed=True, cfg=None, on_ready=None,
+   close_delay_s=3.0) -> FindResult` + `find_listing_sync(...)`. search_url_pattern ->
+   results URL; else Broker.url + filler.fill_page(search_values: first/last/full name,
+   city, state only). Banner + green 'This is me' + 'I can't find me' via a context init
+   script (DOM APIs + textContent only, re-added every 800 ms, main frames only). Binding
+   name random per window; init script moves it into a closure and deletes it from window;
+   only `event.isTrusted` clicks report; URL comes from Playwright's source frame (must be
+   a main frame). check_listing_url: https, no creds, host on broker.domains, not the
+   search page, re.search(listing_url_pattern, path[:2048]) when set, else not "/".
+   Accepted -> record_listing: CONFIRMED Listing (score 100, reasons user_confirmed +
+   listing_finder, shown_fields = listing_url/full/first/last name/city/state), screenshot
+   evidence, after_scan -> FOUND, next_check_at=None, Event actor USER
+   `listing_confirmed`, REVIEW_MATCH todos closed. Fallback (timeout, window_closed,
+   user_cant_find, blocked [off-allowlist navigation], browser_unavailable, error:<T>) ->
+   existing REVIEW_MATCH todo id, else Assisted card (fill_for_me._fallback_todo).
+   Fixtures: _dev/site/devfind.example/{search,results,hostile}.html + p/{2 profiles}.
+   Drafts: _test_drafts/test_listing_finder.py (32). Drafts folder recreated (qa had moved
+   it): __init__.py + conftest.py (same re-export as before) are new copies.
+- Results: `pytest -q tests src/vanish/engine/_test_drafts` 368 passed, 3 xfailed; drafts
+  48 pass x3; ruff clean; mypy clean.

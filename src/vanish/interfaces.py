@@ -129,6 +129,12 @@ class Submitter(abc.ABC):
 #                         **kw) -> "FillResult"
 #   def fill_for_me_sync(store, profile_id: str, broker_id: str, **kw) -> "FillResult"
 #   FillResult: status "submitted" | "fallback" | "refused", reason, filled, todo_id, .ok
+# automation-engineer — vanish/engine/listing_finder.py  (D10, interactive only)
+#   async def find_listing(store, profile_id: str, broker_id: str, *, timeout_s: int = 600,
+#                          **kw) -> "FindResult"
+#   def find_listing_sync(store, profile_id: str, broker_id: str, **kw) -> "FindResult"
+#   FindResult: status "found" | "fallback" | "refused", reason, listing_id, todo_id, .ok
+#   (listing_url contains the person's name: never log it)
 # automation-engineer — vanish/engine/outbox.py
 #   def approve_and_send(store, request_id: str) -> None   # user-approved email send
 # automation-engineer — vanish/engine/letters.py
