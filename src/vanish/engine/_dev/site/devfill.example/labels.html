@@ -1,0 +1,32 @@
+<!doctype html><html><head><title>Dev Fill: remove a record</title></head><body>
+<!-- DEV FIXTURE: labels via <label for> and wrapping <label>. Fake site, fake data. -->
+<h1>Remove your record</h1>
+<form action="/done" method="post">
+  <label for="fn">First name</label> <input id="fn" name="a1"><br>
+  <label for="mn">Middle name</label> <input id="mn" name="a2"><br>
+  <label for="ln">Last name</label> <input id="ln" name="a3"><br>
+  <label>Email address <input type="email" name="a4"></label><br>
+  <label for="ct">City</label> <input id="ct" name="a5"><br>
+  <label for="st">State</label>
+  <select id="st" name="a6">
+    <option value="">Choose a state</option>
+    <option value="Illinois">Illinois</option>
+    <option value="North Carolina">North Carolina</option>
+    <option value="South Carolina">South Carolina</option>
+  </select><br>
+  <label for="zp">ZIP code</label> <input id="zp" name="a7"><br>
+  <label for="pu">Link to your listing</label> <input id="pu" name="a8"><br>
+  <label for="ph">Phone number</label> <input id="ph" name="a9"><br>
+  <label for="pw">Password</label> <input id="pw" type="password" name="a10"><br>
+  <label for="up">Upload ID</label> <input id="up" type="file" name="a11"><br>
+  <input name="website" id="hp" style="display:none">
+  <input name="hp2" id="hp2" style="position:absolute;left:-9999px">
+  <div class="g-recaptcha" data-sitekey="dev-not-a-real-key" id="cap">
+    <label>Name <input name="cap-name" id="capname"></label>
+    <textarea name="g-recaptcha-response" id="g-recaptcha-response"></textarea>
+    <label><input type="checkbox" id="robot"> I'm not a robot</label>
+  </div>
+  <label><input type="checkbox" id="agree" name="agree"> I agree to the terms</label><br>
+  <button type="submit" id="send">Submit</button>
+</form>
+</body></html>

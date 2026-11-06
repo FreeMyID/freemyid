@@ -70,3 +70,35 @@ longer embeds a Subject line.
 - Drafts: src/vanish/engine/_test_drafts/test_wave2_fixes.py (8 tests;
   run with `.venv/bin/python -m pytest -q src/vanish/engine/_test_drafts`).
 - Results: full suite 243 passed under -W error::PytestUnraisableExceptionWarning; ruff clean.
+
+## D9 "Fill it in for me" (wave 3, 2026-11-06) - DONE, reported
+- engine/filler.py: Control (JS scan of main-frame input/select/textarea; marks each with
+  data-vanish-field), classify() (label > aria-labelledby > aria-label > name > id >
+  placeholder > title, then autocomplete / input type; negative list first), protected()
+  (captcha ancestors/data-sitekey, password/file/hidden/checkbox/radio/buttons, invisible,
+  off-screen, aria-hidden, tabindex=-1, disabled/readonly), choose_state_option (NC /
+  North Carolina / "NC - North Carolina"), plan_values() = submitters.base.form_vars
+  (same minimization as Automatic tier), fill_page() -> FillReport (keys+counts only).
+  Never ticks anything; never overwrites a non-empty text box.
+- engine/fill_for_me.py: `async fill_for_me(store, profile_id, broker_id, *, timeout_s=600,
+  registry=None, browser=None, headed=True, cfg=None, state_laws=None, on_ready=None,
+  close_delay_s=4.0) -> FillResult` and `fill_for_me_sync(...)` (runs in a worker thread if a
+  loop is already running). Consent gate, covered_by -> parent, web_form + opt_out_url only,
+  id-upload w/o permission -> fallback. Headed context via BrowserManager (netpolicy, bm.goto
+  check_challenge=False, check_escaped every poll). Banner (yellow/black 26px, role=alert,
+  textContent only, re-shown after a reload while a form is on the page). Success = the
+  expect_text / wait_for steps after the last click/submit step of Broker.form (what web_form
+  checks), and only after a navigation/POST if the text was already on the page. Success ->
+  2 screenshots (filled form, confirmation) as SCREENSHOT evidence, SENT web_form Request,
+  FOUND->SUBMITTED via mark_submitted (+AWAITING_VERIFICATION if needs_email_verification),
+  next_check_at, Event actor=USER detail via=fill_for_me, closes ASSISTED_OPT_OUT/CAPTCHA
+  todos. Fallback (timeout, window_closed, unverified, nothing_filled, blocked,
+  browser_unavailable, error:<T>) -> existing/new ASSISTED_OPT_OUT todo id in result.
+  Practice mode: fills; banner adds "Practice mode is on, but this is the real website:
+  pressing Submit really sends your removal request."
+- Fixtures: engine/_dev/site/devfill.example/{labels,aria,fullname,empty,done}.html
+  (brokers built in tests, dev registry untouched).
+- Drafts: engine/_test_drafts/test_fill_for_me.py (+conftest). 54 pass.
+- Full: `pytest -q tests src/vanish/engine/_test_drafts` 305 passed; ruff clean.
+- CRs: wizard button; optional `vanish fill`; Broker.success_text/success_url and
+  safe_checkboxes (registry); see final report.
