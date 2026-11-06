@@ -52,6 +52,16 @@ def layout(title: str, body: str, nav: bool = True, refresh: int = 0) -> str:
             f'<main>{body}</main><script src="/static/app.js"></script></body></html>')
 
 
+def error_page(heading: str, lines: list[str]) -> str:
+    """Calm, plain-English page for a refused request (shown with its 403 status)."""
+    paras = "".join(f"<p>{esc(x)}</p>" for x in lines)
+    return layout("Please try again", (
+        f'<div class="card"><h1>{esc(heading)}</h1>{paras}'
+        '<p>Nothing was changed and nothing was sent.</p><div class="actions">'
+        '<a class="btn primary" href="/" data-back="1">Go back and try again</a></div></div>'),
+        nav=False)
+
+
 def csrf_field(csrf: str) -> str:
     return f'<input type="hidden" name="csrf" value="{esc(csrf)}">'
 

@@ -11,6 +11,7 @@ from pathlib import Path
 from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 ROOT = Path(SPECPATH).resolve().parents[1]
+ICON = str(Path(SPECPATH).resolve() / "vanish.ico")
 SRC = ROOT / "src" / "vanish"
 
 datas = [
@@ -46,9 +47,9 @@ a_gui = analysis("launcher_gui.py")
 a_cli = analysis("launcher_cli.py")
 
 exe_gui = EXE(PYZ(a_gui.pure), a_gui.scripts, [], exclude_binaries=True, name="Vanish",
-              console=False, icon=None, upx=False)
+              console=False, icon=ICON, upx=False)
 exe_cli = EXE(PYZ(a_cli.pure), a_cli.scripts, [], exclude_binaries=True, name="vanish-cli",
-              console=True, icon=None, upx=False)
+              console=True, icon=ICON, upx=False)
 
 coll = COLLECT(
     exe_gui, a_gui.binaries, a_gui.datas,

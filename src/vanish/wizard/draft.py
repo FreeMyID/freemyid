@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from typing import Any, Protocol
 
+from ..consent import CURRENT_TEXT_VERSION
 from ..models import (
     Actor,
     Address,
@@ -33,14 +34,14 @@ from ..models import (
 
 log = logging.getLogger(__name__)
 
-CONSENT_VERSION = "2026-11-a"
+CONSENT_VERSION = CURRENT_TEXT_VERSION   # single source of truth (consent.py)
 CONSENT_TEXT = [
     ("Vanish will look for the information of the person named in this setup on "
-    "\"people-search\" and data-broker websites, and ask those sites to remove it."),
+    "\"people-search\" sites (also called data brokers), and ask those sites to remove it."),
     ("Everything you type here stays on this computer, encrypted. Nothing is sent to us "
     "or to any server we run. There is no account, no tracking and no cloud."),
     ("When Vanish contacts a broker it sends only what that broker already shows about the "
-    "person, plus the dedicated removal mailbox you set up. It never pays anyone."),
+    "person, plus the removal email address if you set one up. It never pays anyone."),
     ("Honest limits: some brokers need a manual step from a human, listings can come back "
     "after they are removed, and \"removed\" only ever means removed from that one broker, "
     "not from the whole internet."),

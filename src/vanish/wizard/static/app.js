@@ -18,6 +18,11 @@
     sync();
   }
 
+  var back = document.querySelector("[data-back]");
+  if (back && window.history.length > 1) {
+    back.addEventListener("click", function (e) { e.preventDefault(); window.history.back(); });
+  }
+
   var btn = document.getElementById("test-conn");
   if (btn) {
     btn.addEventListener("click", function () {

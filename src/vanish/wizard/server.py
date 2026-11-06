@@ -55,6 +55,10 @@ MSGS = {
     "attached": "Authorization attached.", "sched_on": "Automatic checking is on.",
     "sched_off": "Automatic checking is off.", "sched_fail": "Could not change that setting.",
     "saved": "Saved.", "real_on": "Real requests are on.", "real_off": "Practice mode is on.",
+    "fill_done": "That one is done. Thank you.",
+    "fill_busy": "Another form is already being filled in. Please finish that one first.",
+    "fill_none": ("The form was not sent, so nothing changed. Your to-do is still on the "
+                  "list. You can try again or use \"Open the site myself\"."),
     "no_practice": "Please let a practice check finish first, then look at the results.",
 }
 
@@ -135,6 +139,8 @@ def create_app(store, token: str, allowed_hosts: set[str],
     app.state.draft = None
     app.state.running = False
     app.state.on_focus = None      # desktop launcher: bring the window to the front
+    app.state.fill = {"running": False, "tid": None, "result": None}
+    fill_lock = threading.Lock()
     app.state.on_quit = None       # browser fallback: lets the user stop the program
     csrf_token = _csrf_for(token)
 
@@ -167,12 +173,17 @@ def create_app(store, token: str, allowed_hosts: set[str],
             r.set_cookie(COOKIE, token, httponly=True, samesite="strict", path="/")
             return _hardened(r)
         if not authed:
-            return _hardened(Response("Open Vanish using the link printed when it started.",
-                                      status_code=403, media_type="text/plain"))
+            return _hardened(html(ui.error_page(
+                "Please open Vanish from its icon",
+                [("This page can only be opened from the Vanish app or the link it "
+                  "shows when it starts.")]), 403))
         if request.method == "POST":
             origin = request.headers.get("origin")
             if origin and urlsplit(origin).netloc.lower() not in allowed_hosts:
-                return _hardened(Response("Bad origin", status_code=403))
+                return _hardened(html(ui.error_page(
+                    "That didn't work",
+                    ["Vanish could not tell that this request came from its own window."]),
+                    403))
             sent = request.headers.get("x-csrf")
             if sent is None:
                 body = await request.body()
@@ -183,8 +194,10 @@ def create_app(store, token: str, allowed_hosts: set[str],
                 form = await request.form()
                 sent = str(form.get("csrf", ""))
             if not hmac.compare_digest(sent, csrf_token):
-                return _hardened(Response("Bad or missing form token. Go back and try again.",
-                                          status_code=403, media_type="text/plain"))
+                return _hardened(html(ui.error_page(
+                    "That page has expired",
+                    [("The page was open for a while, or was opened a second time. "
+                      "Going back and trying again usually fixes it.")]), 403))
         return _hardened(await call_next(request))
 
     def _hardened(resp: Response) -> Response:
@@ -217,7 +230,8 @@ def create_app(store, token: str, allowed_hosts: set[str],
             statuses=store.list_statuses(), todos=todos, people=people,
             outbox_count=len(queued), csrf=csrf_token, flash=flash(request),
             practice=not cfgmod.load().real_submissions_enabled,
-            running=bool(app.state.running)))
+            running=bool(app.state.running), fill=True,
+            filling=bool(app.state.fill["running"])))
 
     @app.get("/profile/{pid}")
     async def profile_view(pid: str, request: Request):
@@ -229,7 +243,8 @@ def create_app(store, token: str, allowed_hosts: set[str],
             if e.broker_id != "_consent":
                 ev.setdefault(e.broker_id, []).append(e)
         return html(dash.profile_page(p, store.list_statuses(pid), names(), store.list_todos(pid),
-                                      ev, csrf_token, _consent_problem(p), flash(request)))
+                                      ev, csrf_token, _consent_problem(p), flash(request),
+                                      fill=not app.state.fill["running"]))
 
     @app.get("/evidence/{pid}/{eid}")
     async def evidence(pid: str, eid: str):
@@ -272,6 +287,48 @@ def create_app(store, token: str, allowed_hosts: set[str],
         store.log(Event(profile_id=t.profile_id, broker_id=t.broker_id, actor=Actor.USER,
                         action="todo_done", detail={"todo_kind": t.kind.value}))
         return redirect(_back(t), "done")
+
+    # "Fill it in for me" (D9): interactive only, one at a time, in a background thread.
+    @app.post("/todo/{tid}/fill")
+    async def todo_fill(tid: str):
+        t = _todo(tid)
+        if not t or t.kind != TodoKind.ASSISTED_OPT_OUT or not t.broker_id:
+            return redirect("/")
+        with fill_lock:
+            if app.state.fill["running"]:
+                return redirect("/", "fill_busy")
+            app.state.fill = {"running": True, "tid": t.id, "result": None}
+        pid, bid = t.profile_id, t.broker_id
+
+        def job() -> None:
+            res = None
+            try:
+                from ..engine import fill_for_me as ffm
+                from ..storage import Store
+                res = ffm.fill_for_me_sync(Store(), pid, bid)
+            except Exception as e:  # noqa: BLE001  never leave the page waiting forever
+                log.warning("fill failed: %s", type(e).__name__)
+            finally:
+                app.state.fill = {"running": False, "tid": t.id, "result": res}
+        threading.Thread(target=job, name="vanish-fill-ui", daemon=True).start()
+        return redirect("/fill")
+
+    @app.get("/fill")
+    async def fill_status():
+        f = app.state.fill
+        if f["tid"] is None:
+            return html(dash.fill_page("none", "", csrf_token))
+        if f["running"]:
+            return html(dash.fill_page("waiting", f["tid"], csrf_token))
+        res, tid = f["result"], f["tid"]
+        app.state.fill = {"running": False, "tid": None, "result": None}
+        if res is not None and getattr(res, "status", "") == "submitted":
+            return redirect("/", "fill_done")
+        if res is not None and getattr(res, "status", "") == "fallback" \
+                and getattr(res, "submit_seen", False):
+            return html(dash.fill_page("pressed", getattr(res, "todo_id", None) or tid,
+                                       csrf_token))
+        return redirect("/", "fill_none")
 
     @app.post("/todo/{tid}/couldnt")
     async def todo_couldnt(tid: str):

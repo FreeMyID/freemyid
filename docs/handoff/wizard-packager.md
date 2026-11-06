@@ -22,3 +22,10 @@
 - SEC-27 DONE (GET /settings/submissions/confirm page, confirm=yes POST, needs a completed practice scan/dry request). First-email-per-profile approval needs engine change: CR below.
 - SEC-17 DONE (To/Subject/escaped letter on outbox cards). SEC-24 DONE (list2cmdline, Hidden=false). SEC-25 DONE (0600 + os.replace). SEC-19 DONE (https only). SEC-23 DONE (EXCLUSIVEADDRUSE on win32).
 - CI install test step added to windows-installer job in build.yml (unverified until it runs on GitHub).
+
+## Wave 3 (Windows VM walkthrough fixes) DONE, pytest+ruff green
+- Window fits screen: desktop.window_geometry (<=90% of primary screen, centered; webview.screens, Win32 fallback).
+- Friendly 403 pages: ui.error_page (3 cases: bad origin, bad CSRF, no session), status unchanged. app.js data-back.
+- Installer: DisableDirPage/ReadyPage, SetupIconFile, icon on shortcuts + both exes (spec ICON). tools/make_icon.py -> packaging/windows/vanish.ico.
+- Consent copy: mailbox sentence fixed in draft.py; draft.CONSENT_VERSION now imports consent.CURRENT_TEXT_VERSION. CR pending: bump consent.py to 2026-11-b and keep 2026-11-a in ACCEPTED_TEXT_VERSIONS.
+- D9 Fill it in for me: POST /todo/{id}/fill (thread, one at a time), GET /fill (waiting page, meta refresh), outcomes submitted/fallback+submit_seen/else. Tests tests/test_wizard_polish.py.

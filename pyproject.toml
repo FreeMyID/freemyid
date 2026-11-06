@@ -29,7 +29,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.2", "pytest-asyncio>=0.23", "ruff>=0.5", "mypy>=1.10", "types-PyYAML"]
+dev = ["pytest>=8.2", "pytest-asyncio>=0.23", "ruff>=0.5", "mypy>=1.10", "types-PyYAML", "pillow>=10"]
 pdf = ["weasyprint>=62"]
 package = ["pyinstaller>=6.8", "pywebview>=5.0"]
 

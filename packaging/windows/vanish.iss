@@ -13,6 +13,9 @@ AppPublisher=Vanish
 DefaultDirName={localappdata}\Programs\Vanish
 DefaultGroupName=Vanish
 DisableProgramGroupPage=yes
+DisableDirPage=yes
+DisableReadyPage=yes
+SetupIconFile=vanish.ico
 PrivilegesRequired=lowest
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir=..\..\dist
@@ -25,6 +28,7 @@ UninstallDisplayIcon={app}\Vanish.exe
 CloseApplications=yes
 
 [Files]
+Source: "vanish.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\dist\Vanish\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion createallsubdirs
 #ifdef FamilyBundle
 ; Pre-filled details for a family member. The app offers to import it on first launch; the
@@ -33,8 +37,8 @@ Source: "{#FamilyBundle}"; DestDir: "{app}"; Flags: ignoreversion
 #endif
 
 [Icons]
-Name: "{autoprograms}\Vanish"; Filename: "{app}\Vanish.exe"
-Name: "{autodesktop}\Vanish"; Filename: "{app}\Vanish.exe"
+Name: "{autoprograms}\Vanish"; Filename: "{app}\Vanish.exe"; IconFilename: "{app}\vanish.ico"
+Name: "{autodesktop}\Vanish"; Filename: "{app}\Vanish.exe"; IconFilename: "{app}\vanish.ico"
 
 [Run]
 Filename: "{app}\Vanish.exe"; Description: "Start Vanish now"; Flags: nowait postinstall skipifsilent

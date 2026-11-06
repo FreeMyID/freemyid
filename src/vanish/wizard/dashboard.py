@@ -91,7 +91,8 @@ def _post_btn(action: str, csrf: str, label: str, cls: str = "", extra: str = ""
             f'{extra}<button type="submit" class="{cls}">{esc(label)}</button></form>')
 
 
-def todo_card(t: Todo, who: str, bname: str, csrf: str, show_who: bool = False) -> str:
+def todo_card(t: Todo, who: str, bname: str, csrf: str, show_who: bool = False,
+              fill: bool = False) -> str:
     tid = esc(t.id)
     head = (f'<h2>{esc(bname) or esc(t.title)}</h2>'
             + (f'<p class="hint">For {esc(who)}</p>' if show_who else ""))
@@ -103,6 +104,10 @@ def todo_card(t: Todo, who: str, bname: str, csrf: str, show_who: bool = False) 
         url = open_url_of(t)
         primary = (_post_btn(f"/todo/{tid}/open", csrf, "Open the site", "primary")
                    if url else "")
+        if fill and t.broker_id:
+            primary = (_post_btn(f"/todo/{tid}/fill", csrf, "Fill it in for me", "primary big")
+                       + (_post_btn(f"/todo/{tid}/open", csrf, "Open the site myself",
+                                    "secondary") if url else ""))
         copies = _copy_rows(t.copy_fields)
         if copies:
             copies = ("<p><b>Copy and paste these when the site asks:</b></p>" + copies)
@@ -138,7 +143,8 @@ def todo_card(t: Todo, who: str, bname: str, csrf: str, show_who: bool = False) 
 
 def home_page(*, statuses: list[BrokerStatus], todos: list[tuple[Todo, str, str]],
               people: list[dict], outbox_count: int, csrf: str, flash: str = "",
-              practice: bool = False, running: bool = False) -> str:
+              practice: bool = False, running: bool = False, fill: bool = False,
+              filling: bool = False) -> str:
     """todos = (todo, person label, broker name)."""
     sentence, good = status_sentence(statuses, len(todos), running)
     body = (f'{_flash(flash)}<p class="status-line{" ok" if good else ""}" role="status">'
@@ -156,9 +162,12 @@ def home_page(*, statuses: list[BrokerStatus], todos: list[tuple[Todo, str, str]
         body += (f'<div class="card todo"><h2>{outbox_count} email(s) waiting for your OK</h2>'
                  '<p>Look at each one, then press Approve.</p><div class="actions">'
                  '<a class="btn primary" href="/outbox">Look at them</a></div></div>')
+    if filling:
+        body += ('<div class="banner">A form is being filled in. <a href="/fill">'
+                 'Go to that window</a></div>')
     multi = len({w for _, w, _ in todos}) > 1
     for t, who, bname in todos:
-        body += todo_card(t, who, bname, csrf, multi)
+        body += todo_card(t, who, bname, csrf, multi, fill and not filling)
     if not todos and not outbox_count and not running:
         body += '<div class="card"><p>You have nothing to do right now. That is good.</p></div>'
     body += '<h2>More</h2><div class="card">'
@@ -171,13 +180,37 @@ def home_page(*, statuses: list[BrokerStatus], todos: list[tuple[Todo, str, str]
     return layout("Home", body, refresh=6 if running else 0)
 
 
+FILL_WAIT = ("A window opened. Vanish filled in the form. Tick the \"I'm not a robot\" box "
+             "and press Submit.")
+
+
+def fill_page(state: str, tid: str, csrf: str, bname: str = "") -> str:
+    """state: waiting | pressed (Submit seen but not confirmed) | none."""
+    who = f" for {esc(bname)}" if bname else ""
+    if state == "waiting":
+        return layout("Filling in the form", (
+            f'<div class="card"><h1>Your turn{who}</h1><p class="big">{esc(FILL_WAIT)}</p>'
+            '<p>This page will update by itself when you are done. You can take your time. '
+            'Vanish never presses Submit for you.</p></div>'), refresh=3)
+    if state == "pressed":
+        return layout("Did it go through?", (
+            f'<div class="card"><h1>Did it go through{who}?</h1>'
+            '<p>Vanish could not see a confirmation on the page. If you pressed Submit and the '
+            'site thanked you, tell us here. Otherwise your to-do stays on the list.</p>'
+            f'<div class="actions">{_post_btn(f"/todo/{esc(tid)}/done", csrf, "I did it", "primary")}'
+            '<a class="btn secondary" href="/">Not yet</a></div></div>'))
+    return layout("Fill it in", (
+        '<div class="card"><h1>Nothing is being filled in</h1><div class="actions">'
+        '<a class="btn primary" href="/">Back to home</a></div></div>'))
+
+
 def _flash(msg: str) -> str:
     return f'<div class="note" role="status">{esc(msg)}</div>' if msg else ""
 
 
 def profile_page(p: Profile, statuses: list[BrokerStatus], names: dict[str, str],
                  todos: list[Todo], evidence_by_broker: dict[str, list], csrf: str,
-                 consent_problem: str, flash: str = "") -> str:
+                 consent_problem: str, flash: str = "", fill: bool = False) -> str:
     body = f'<h1>{esc(p.label)}</h1>{_flash(flash)}'
     if consent_problem:
         body += f'<div class="error">Not running yet: {esc(consent_problem)}</div>'
@@ -195,7 +228,7 @@ def profile_page(p: Profile, statuses: list[BrokerStatus], names: dict[str, str]
     if not todos:
         body += "<p>Nothing right now.</p>"
     for t in todos:
-        body += todo_card(t, p.label, names.get(t.broker_id or "", ""), csrf)
+        body += todo_card(t, p.label, names.get(t.broker_id or "", ""), csrf, fill=fill)
     body += "</div>"
     # per-broker table
     body += ('<div class="card"><h2>Brokers</h2><table><tr><th>Broker</th><th>State</th>'

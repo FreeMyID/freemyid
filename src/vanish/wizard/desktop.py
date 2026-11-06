@@ -92,6 +92,37 @@ def _wait_forever(stop: threading.Event) -> None:
         pass
 
 
+def window_geometry(screen_w: int | None, screen_h: int | None, want_w: int = 1100,
+                    want_h: int = 820, min_w: int = 760, min_h: int = 560
+                    ) -> tuple[int, int, int | None, int | None]:
+    """(width, height, x, y) that fits the screen: at most 90% of it, centered.
+
+    x/y are None when the screen size is unknown (let the toolkit choose). Never larger than
+    the screen, even below the usual minimum size.
+    """
+    if not screen_w or not screen_h or screen_w < 300 or screen_h < 300:
+        return want_w, want_h, None, None
+    w = min(want_w, int(screen_w * 0.9))
+    h = min(want_h, int(screen_h * 0.9))
+    return w, h, (screen_w - w) // 2, max(0, (screen_h - h) // 2 - 10)
+
+
+def _primary_screen_size(webview: Any) -> tuple[int | None, int | None]:
+    try:
+        scr = webview.screens[0]
+        return int(scr.width), int(scr.height)
+    except Exception as e:  # noqa: BLE001  older pywebview or no screens
+        log.debug("webview.screens unavailable (%s)", type(e).__name__)
+    if sys.platform == "win32":
+        try:
+            import ctypes
+            u = ctypes.windll.user32  # type: ignore[attr-defined]
+            return int(u.GetSystemMetrics(0)), int(u.GetSystemMetrics(1))
+        except Exception as e:  # noqa: BLE001
+            log.debug("GetSystemMetrics failed (%s)", type(e).__name__)
+    return None, None
+
+
 def _show_window(url: str, on_ready: Callable[[Any], None]) -> bool:
     """Open a pywebview window and block until it closes. False if pywebview is unusable."""
     try:
@@ -101,7 +132,12 @@ def _show_window(url: str, on_ready: Callable[[Any], None]) -> bool:
     try:
         with contextlib.suppress(Exception):
             webview.settings["ALLOW_DOWNLOADS"] = True
-        win = webview.create_window(TITLE, url, width=1100, height=820, min_size=(760, 560))
+        sw, sh = _primary_screen_size(webview)
+        w, h, x, y = window_geometry(sw, sh)
+        # Taskbar takes some height; 90% leaves room. Small screens get a smaller minimum.
+        mins = (min(760, w), min(560, h))
+        extra: dict[str, Any] = {} if x is None else {"x": x, "y": y}
+        win = webview.create_window(TITLE, url, width=w, height=h, min_size=mins, **extra)
         on_ready(win)
         webview.start()
         return True
