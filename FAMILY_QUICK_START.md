@@ -2,8 +2,8 @@
 
 **That post didn't stop anyone. This does.** Free My ID takes your name off the websites that
 sell it. These are called people-search sites (also known as data brokers). They publish names,
-addresses and phone numbers. Free My ID asks each one to delete yours, in the written form they
-have to answer.
+addresses and phone numbers. Free My ID asks each one to delete yours, through that site's own
+removal process (a formal legal request where your state has a privacy law).
 
 **No account. No cloud. Never asks for your Social Security number, bank or card details. Free
 and open source. Uninstall anytime.** It runs on your own computer, and nothing is sent to us.

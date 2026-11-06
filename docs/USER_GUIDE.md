@@ -22,7 +22,7 @@ This guide is for the person using Free My ID. You don't need to be technical. I
 
 ## 1. What Free My ID does (and doesn't)
 
-**That post didn't stop anyone. This does.** If you ever posted "I do not give permission to use my information", you were right to object. That post goes to your friends' feeds, though, and nobody who sells your details has to read it. Free My ID sends the same wish to the right place, in the written form the sites have to answer.
+**That post didn't stop anyone. This does.** If you ever posted "I do not give permission to use my information", you were right to object. That post goes to your friends' feeds, though, and nobody who sells your details has to read it. Free My ID sends the same wish to the right place, through each site's own removal process (a formal legal request where your state has a privacy law).
 
 "People-search" sites (also called data brokers) such as Spokeo, Whitepages and BeenVerified collect your name, age, addresses, phone numbers and relatives, and show them to anyone. Many of them have a way to ask them to take your details down, but doing it by hand across dozens of sites takes hours, and the details come back.
 
@@ -30,7 +30,7 @@ This guide is for the person using Free My ID. You don't need to be technical. I
 
 Free My ID does the repetitive part for you, on your own computer:
 
-- It asks the sites to delete your details, in the formal way they are required to answer.
+- It asks the sites to delete your details, through each site's own removal process. Where your state has a privacy law, sites must answer. Elsewhere most sites honour the request but don't have to.
 - It searches each site for you.
 - It fills in each site's own removal form, or writes the removal email.
 - It clicks the "confirm your request" links that sites send.

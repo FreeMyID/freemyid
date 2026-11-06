@@ -32,6 +32,7 @@ Public means **the whole history is public**, not just the latest files.
 - [ ] SmartScreen walkthrough checked on a clean Windows 10 and 11 VM, with real screenshots added. **O**
 - [ ] The download link `releases/latest/download/FreeMyIDSetup.exe` resolves (needs the first release). **O**
 - [ ] SHA256SUMS published with the release and mentioned on the download page. **O, B for copy**
+- [ ] **Site claims re-checked on launch day**, especially "open source" and "source code" links (true only once the repo is public), the install time and the legal wording ("must answer" only where a state law applies). **B**
 - [ ] The site works with no scripts, on a phone at 360 px width, in dark mode, and reads well at 200% zoom. **B**
 
 ## 4. Security and quality gate

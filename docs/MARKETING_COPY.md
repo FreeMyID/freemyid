@@ -89,6 +89,7 @@ Slogans in that voice:
 - Built to answer to you. Nobody else.
 
 **Fear, told truthfully**
+<!-- "scammers and stalkers" source: CFPB press release, 3 Dec 2024: https://www.consumerfinance.gov/about-us/newsroom/cfpb-proposes-rule-to-stop-data-brokers-from-selling-sensitive-personal-data-to-scammers-stalkers-and-spies/ -->
 - Anyone with $1 and your name can find your address. Let's change that.
 - Scammers shop on people-search sites. Take yourself off the shelf.
 - Your address, your phone number, your relatives' names, all for sale. Not anymore.
@@ -107,7 +108,7 @@ Slogans in that voice:
 ## Social posts (Facebook-ready, no personal details)
 
 1. **The swap post.** "Remember that 'I do not give Facebook permission…' post? It never stopped anything. Here's something that actually works: Free My ID sends real legal removal requests to the sites selling your address and phone number. Free. 👉 [link]"
-2. **Myth vs. fact.** Image card. MYTH: posting "I do not consent" protects your privacy. FACT: people-search sites sell your address to anyone. Free My ID asks them to remove it, in the form the law makes them answer.
+2. **Myth vs. fact.** Image card. MYTH: posting "I do not consent" protects your privacy. FACT: people-search sites sell your address to anyone. Free My ID asks each one to remove it, through the site's own removal process.
 3. **Search yourself.** "Try this: search your full name and town. See your address? Your phone? Your relatives? So can every scammer. Free My ID takes it down. Free."
 4. **Patriotic.** Flag accent. "Your information is your property. Free My ID: take your name off the websites that sell it. American privacy, on your own computer."
 5. **Grandkids.** "Spend 20 minutes this holiday helping your grandparents get their address off the internet. Here's the free tool we used."
@@ -140,6 +141,7 @@ Slogans in that voice:
 
 - "Erase yourself from the internet", "100% removed", "guaranteed"
 - "Cyber terrorists", "criminals" or "hackers" to mean the data brokers themselves
+- "They have to answer", "the law makes them" (true only in states with a broker privacy law; say "where your state's law applies")
 - Countdown timers, "act now", red alarm graphics
 - Any party, candidate, network or politician
 - Claims that we stop phone listening, wiretaps or government surveillance

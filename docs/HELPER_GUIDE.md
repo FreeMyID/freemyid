@@ -2,7 +2,7 @@
 
 *For the family member setting Free My ID up for someone else, in person or over the phone. Print this and keep it by the computer. Allow about half an hour the first time.*
 
-**What it does, in one sentence:** Free My ID asks people-search sites (websites that publish names, addresses and phone numbers, also called data brokers) to delete a person's details, in the written form those sites have to answer, and then keeps checking.
+**What it does, in one sentence:** Free My ID asks people-search sites (websites that publish names, addresses and phone numbers, also called data brokers) to delete a person's details, using each site's own removal process, and then keeps checking. (In states with a privacy law, sites must answer. Elsewhere, many honor the request but don't have to.)
 
 **What it doesn't do:** it doesn't change what Facebook itself does with their account, and it can't remove news stories or government records. Some sites take weeks, and some list people again later. That's why it keeps checking.
 
