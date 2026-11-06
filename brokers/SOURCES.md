@@ -8,7 +8,7 @@ Registry: `brokers/registry.yaml`. Each broker entry cites its own `source_urls`
 |---|---|---|---|
 | BADBOOL (Big-Ass Data Broker Opt-Out List, third party) | https://github.com/yaelwrites/Big-Ass-Data-Broker-Opt-Out-List | 2026-11-05 | Opt-out URLs for most people-search sites (not primary; entries marked unverified) |
 | Legacy seed list | `zzz_legacy/family-privacy-sweep-kit/family-privacy-sweep/data/brokers.json` | 2026-11-05 | Seed URLs only; re-checked |
-| California CPPA data broker registry (2025 CSV) | https://cppa.ca.gov/data_broker_registry/registry2025.csv | 2026-11-06 | "Data broker primary contact email address", websites and CCPA request URLs for about 30 registered brokers; operator/ownership (Mississippi Tornado Alley LLC, BeenVerified subsidiaries, Spokeo sites). Only the file's first ~100k and last ~236k characters were scanned per name list; a broker absent from this note may still be in the file |
+| California CPPA data broker registry (2025 CSV) | https://cppa.ca.gov/data_broker_registry/registry2025.csv | 2026-11-06 | "Data broker primary contact email address", websites and CCPA request URLs for about 30 registered brokers; operator/ownership (Mississippi Tornado Alley LLC, BeenVerified subsidiaries, Spokeo sites). Only the file's first ~100k and last ~236k characters were scanned per name list; a broker absent from this note may still be in the file. The D8 bulk import (below) later covered the whole file |
 | California CPPA registry page | https://cppa.ca.gov/data_broker_registry/ | 2026-11-06 | Registry structure; links to the CSV files (the current-year file listed 0 brokers) |
 | California DROP | https://privacy.ca.gov/drop/ | 2026-11-05 | `ca_drop` |
 | Spokeo privacy policy | https://www.spokeo.com/privacy-policy | 2026-11-06 | Spokeo contact addresses and request routes |
@@ -41,3 +41,23 @@ Email channels: 29 brokers now carry `opt_out_email` (10 before). Origin of each
 - Third-party guides only (unconfirmed): infotracer (privacy@infotracer.com).
 
 Not recorded because the address is not on the broker's own domains (the `Broker` validator requires this): BeenVerified (registry contact privacy@moneybot5000.com), Mississippi Tornado Alley LLC sites (privacy@mtalley.zendesk.com), Radaris and PeekYou (support@atlas.net), US Search/Intelius cross-domain, That's Them (legal@spokeo.com), LexisNexis (consumer.documents@lexisnexisrisk.com, also looks like a document intake mailbox). Acxiom's registry contact is a named individual, not recorded.
+
+## D8 bulk import from state data broker registries, 2026-11-06
+
+Goal: give every registered broker with an on-domain contact email an `email`-method entry so Vanish can send it a deletion request (the Incogni model).
+
+Sources attempted:
+| Registry | URL | Result |
+|---|---|---|
+| California CPPA (2025 CSV, newest; `registry2026.csv` returned 404) | https://cppa.ca.gov/data_broker_registry/registry2025.csv | Fetched whole file in four overlapping 100,000-character windows (offsets 0, 95000, 195000, 290000 of 336,849 chars). Source of all imports |
+| Vermont Secretary of State | https://sos.vermont.gov/data-brokers/ | HTTP 404. Search results say the registry is a searchable portal (no bulk file seen). Not imported |
+| Texas Secretary of State | https://www.sos.texas.gov/statdoc/data-brokers.shtml | Page loads; registry is an Appian portal (https://texas-sos.appianportalsgov.com/data-broker-registry), JS search, no list or download visible. Not imported |
+| Oregon DFR/DCBS | https://dfr.oregon.gov/business/licensing/data-broker-registry | Page loads; only links to licence-search portals (www4.cbs.state.or.us, ordcbs.mylicense.com), no list. Contact for a full list: dfr.ndp.licensing@dcbs.oregon.gov. Not imported |
+
+Method and limits: the fetch tool summarises pages through a small model, so rows were extracted by prompt, not parsed by script. Overlapping windows were used so boundary rows were not lost. Treat the extraction as high-confidence but not byte-exact; the CSV should be re-parsed by script when a shell is available (check each `opt_out_email` against the CSV).
+
+Rules applied: keep only rows whose email host is on the broker's own website domain; skip rows already in the registry (matched by domain or name); one entry per registrable domain (e.g. Deep Sync, Deloitte, Nielsen/eXelate, Ziff Davis, FinThrive, Precisely/PlaceIQ each appear once); skip addresses that look like a named individual's mailbox (not a privacy desk). Fields per entry: method `email`, priority 20, `verification_status: unverified`, `ca_registered: true`, `recheck_interval_days: 90`, `typical_processing_days: 45`, source_urls = the CSV.
+
+Output location: superseded. The orchestrator re-did the import deterministically with `tools/import_ca_registry.py`, which reads the CSV directly, because the fetch-tool extraction above was model-summarized. Result: 365 imported into the generated block at the end of `registry.yaml`. Skipped: 57 off-domain, 79 non-role (personal-looking) mailboxes, 41 already curated, 1 with no email. Vermont, Texas and Oregon have no downloadable list (see above).
+
+Progress note for a later run: California CSV fully covered (all four windows done). Remaining work: re-check emails by script; fetch Vermont/Texas/Oregon if a bulk export or accessible listing is found.
