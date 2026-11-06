@@ -147,8 +147,8 @@ def full_registry_needles() -> list[str]:
         return []
     pat = re.compile(r"^\s*(?:opt_out_url|opt_out_email):\s*\"?([^\s\"#]+)", re.MULTILINE)
     full_vals = set(pat.findall(full.read_text(encoding="utf-8")))
-    sample_vals = set(pat.findall(sample.read_text(encoding="utf-8")))
-    return sorted(v for v in full_vals - sample_vals if len(v) > 8)
+    sample_text = sample.read_text(encoding="utf-8")  # anything in the public sample is fine
+    return sorted(v for v in full_vals if len(v) > 8 and v not in sample_text)
 
 
 def check_site(site: Path, base_url: str, base_path: str) -> list[str]:
