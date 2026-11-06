@@ -61,3 +61,9 @@ Tooling: FMID_SAMPLE_REGISTRY env var pins the registry copy (use it if a peer h
 else guide pages pick it up). WR-1 closed by user pick; WR-8 still blocked (repo private).
 
 NEXT: real SmartScreen screenshots; fill data/release.yaml at first release; WR-8 at launch; AVIF only if rasters added.
+
+## Builder round 2 (2026-11-06): WR-19..23 done (1b41d10, ff06e58, df4f69a, 272c75a, 54ff2fb)
+
+build_site.py refuses unsafe FMID_SAMPLE_REGISTRY (`--selftest` shows it). site_check leak scan now also uses
+tools/private_host_hashes.txt (SHA-256 of private-only hostnames; regenerate with tools/gen_private_host_hashes.py
+while brokers/registry.yaml exists locally; hashes only). Remember to ship SHA256SUMS.txt with the first release (WR-19).
