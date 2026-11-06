@@ -376,6 +376,11 @@
   .hero .wrap { position: relative; }
   .hero h1 { margin-block: var(--space-xs) var(--space-s); max-inline-size: 18ch; }
   .hero .lead { margin-block-end: var(--space-m); }
+  /* WR-23: keep the main download button on one line on desktop; it may wrap on phones. */
+  @media (min-width: 60em) {
+    .hero .two-col { grid-template-columns: 1.3fr 0.7fr; }
+    .hero .btn-row .btn:first-child { white-space: nowrap; }
+  }
   .hero .btn-row + .note { margin-block-start: var(--space-xs); }
 
   /* ---------- Cards ---------- */
