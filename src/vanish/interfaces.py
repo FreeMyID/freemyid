@@ -44,7 +44,7 @@ class HumanHandoff(Protocol):
     Never attempts to solve or bypass the challenge.
     """
 
-    async def request(self, todo: Todo, page: "Page | None", timeout_s: int = 900) -> bool: ...
+    async def request(self, todo: Todo, page: Page | None, timeout_s: int = 900) -> bool: ...
 
 
 @runtime_checkable
@@ -65,14 +65,14 @@ class Mailer(Protocol):
 class RunContext:
     profile: Profile
     broker: Broker
-    store: "Store"
-    netpolicy: "NetPolicy"
+    store: Store
+    netpolicy: NetPolicy
     handoff: HumanHandoff
     notifier: Notifier
     mailer: Mailer | None
     dry_run: bool
     interactive: bool
-    browser: "BrowserContext | None" = None
+    browser: BrowserContext | None = None
     state_law: Any = None            # models.StateLaw | None
     now: datetime | None = None
     scratch: dict[str, Any] = field(default_factory=dict)

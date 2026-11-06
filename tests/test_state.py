@@ -1,15 +1,16 @@
 """State machine + escalation ladder (pure functions)."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
 from vanish import state
-from vanish.models import Broker, BrokerStatus, ListingState as S
+from vanish.models import Broker, BrokerStatus
+from vanish.models import ListingState as S
 from vanish.state import Escalation
 
-NOW = datetime(2026, 11, 5, 12, tzinfo=timezone.utc)
+NOW = datetime(2026, 11, 5, 12, tzinfo=UTC)
 
 
 def _broker(days=30):

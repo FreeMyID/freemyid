@@ -601,7 +601,8 @@ class Todo(_Base):
     done_at: datetime | None = None
     resume_token: str | None = None        # engine uses to resume after human step
     copy_fields: dict[str, str] = Field(
-        default={}, description="Label -> value shown with a Copy button on Assisted cards. "
+        default={}, repr=False,
+        description="Label -> value shown with a Copy button on Assisted cards. "
         "Only fields the broker needs (data minimization); never stored in logs.")
 
     _relpath_ok = field_validator("artifact_relpath")(

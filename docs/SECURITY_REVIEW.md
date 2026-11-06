@@ -26,3 +26,17 @@
 - The NetPolicy suffix match uses a dot boundary (`evilfakepeople.example` is rejected), handles case and trailing dots, and fails closed on missing hosts, ports and `file:`.
 - The registry update rejects http and redirects, validates before swapping, and swaps atomically.
 - `config set` refuses `real_submissions_enabled` and `first_email_approved`. `run` without enable-submissions exits 2 before the engine is called.
+
+# v1 wave 1 (PLAN_V1 contract pieces), 2026-11-06, qa-security
+
+Scope: models.py `Tier`, `BrokerStatus.tier`, `TodoKind.ASSISTED_OPT_OUT`/`SEND_EMAIL_MANUALLY`,
+`Todo.copy_fields`. Runner/submitters not landed yet, so the D1 end-to-end checks are a skipped
+scaffold (`tests/test_e2e_dryrun.py`).
+
+| ID | Sev | Where | Finding | Fix |
+|----|-----|-------|---------|-----|
+| SEC-15 | LOW | models.py:603 | `Todo.copy_fields` holds raw profile values (name, address, mailbox) and is shown in `repr()`/`str()` of the Todo, so any `log.info("%s", todo)` or exception carrying the model leaks them. Redaction catches values that are registered profile PII (tested), but not derived or unregistered values (e.g. a new alias typed on the Assisted card). Strict xfail: `tests/test_redaction.py::test_copy_fields_hidden_from_repr`. | Add `repr=False` to the `copy_fields` Field. |
+
+Checked and OK: `copy_fields` round-trips through the encrypted store and no value appears in the
+DB/WAL bytes; `tier` round-trips and rejects unknown values; registered PII inside copy_fields is
+redacted from logs even when the whole model or its JSON dump is logged.

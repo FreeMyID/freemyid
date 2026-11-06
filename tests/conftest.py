@@ -2,6 +2,7 @@
 in-memory keyring and outbound network blocked. Fake people only (Jane Q Testperson)."""
 from __future__ import annotations
 
+import logging
 import socket
 from datetime import date
 from pathlib import Path
@@ -56,7 +57,17 @@ def vanish_env(tmp_path, monkeypatch):
     with logging_setup._lock:
         saved = set(logging_setup._pii)
         logging_setup._pii.clear()
+    # cli.main() calls logging_setup.setup(), which attaches a StreamHandler bound to the
+    # (CliRunner / capture) stderr of that test. Without this, those handlers leak into later
+    # tests, write to closed streams and make setup() a no-op (it is idempotent).
+    root = logging.getLogger()
+    saved_handlers, saved_level = list(root.handlers), root.level
     yield home
+    for h in list(root.handlers):
+        if h not in saved_handlers:
+            root.removeHandler(h)
+            h.close()
+    root.setLevel(saved_level)
     keyring.set_keyring(old)
     with logging_setup._lock:
         logging_setup._pii.clear()
@@ -84,18 +95,18 @@ def fake_registry():
 
 def make_profile(**over):
     from vanish.models import Address, Consent, ConsentBasis, PersonName, Profile
-    data = dict(
-        label="Tester",
-        consent=Consent(basis=ConsentBasis.SELF, attested_by="Jane Q Testperson",
-                        text_version="v1"),
-        name=PersonName(first="Jane", middle="Q", last="Testperson"),
-        addresses=[Address(street="742 Evergreen Terrace", city="Springfield", state="il",
-                           zip="62704", current=True)],
-        dob=date(1980, 4, 1),
-        phones=["217-555-0142"],
-        emails=["jane.testperson@example.com"],
-        relatives=["John Testperson"],
-    )
+    data = {
+        "label": "Tester",
+        "consent": Consent(basis=ConsentBasis.SELF, attested_by="Jane Q Testperson",
+                           text_version="v1"),
+        "name": PersonName(first="Jane", middle="Q", last="Testperson"),
+        "addresses": [Address(street="742 Evergreen Terrace", city="Springfield", state="il",
+                              zip="62704", current=True)],
+        "dob": date(1980, 4, 1),
+        "phones": ["217-555-0142"],
+        "emails": ["jane.testperson@example.com"],
+        "relatives": ["John Testperson"],
+    }
     data.update(over)
     return Profile(**data)
 

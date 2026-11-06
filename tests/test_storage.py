@@ -4,12 +4,26 @@ from __future__ import annotations
 import sqlite3
 
 import pytest
+from cryptography.exceptions import InvalidTag
 
 from tests.conftest import make_profile
 from vanish import paths
 from vanish.models import (
-    Actor, BrokerStatus, Event, Evidence, EvidenceKind, Listing, ListingState, MailboxConfig,
-    MatchLevel, Method, Request, RequestKind, RequestStatus, Todo, TodoKind,
+    Actor,
+    BrokerStatus,
+    Event,
+    Evidence,
+    EvidenceKind,
+    Listing,
+    ListingState,
+    MailboxConfig,
+    MatchLevel,
+    Method,
+    Request,
+    RequestKind,
+    RequestStatus,
+    Todo,
+    TodoKind,
 )
 from vanish.storage import Store
 
@@ -78,7 +92,7 @@ def test_rows_cannot_be_swapped(store, profile):
     store.save_profile(other)
     blob = store._conn.execute("SELECT data FROM profiles WHERE id=?", (other.id,)).fetchone()[0]
     store._conn.execute("UPDATE profiles SET data=? WHERE id=?", (blob, profile.id))
-    with pytest.raises(Exception):
+    with pytest.raises(InvalidTag):
         store.get_profile(profile.id)
 
 
@@ -101,10 +115,9 @@ def test_complete_todo(store, profile):
 
 
 def test_transaction_rollback(store, profile):
-    with pytest.raises(RuntimeError):
-        with store.transaction():
-            store._conn.execute("INSERT INTO meta VALUES ('k', 'v')")
-            raise RuntimeError
+    with pytest.raises(RuntimeError), store.transaction():
+        store._conn.execute("INSERT INTO meta VALUES ('k', 'v')")
+        raise RuntimeError
     assert store._conn.execute("SELECT v FROM meta WHERE k='k'").fetchone() is None
 
 
@@ -183,3 +196,41 @@ def test_events_replace_blocked(store):
     except sqlite3.IntegrityError:
         pass
     assert store._conn.execute("SELECT action FROM events").fetchall() == [("x",)]
+
+
+# ---- v1 contract pieces: tiers + Assisted copy_fields (docs/PLAN_V1.md D1/D2) ----
+
+def test_status_tier_roundtrip(store, profile):
+    from vanish.models import Tier
+    store.save_profile(profile)
+    store.save_status(BrokerStatus(profile_id=profile.id, broker_id="fakepeople",
+                                   state=ListingState.FOUND, tier=Tier.ASSISTED))
+    assert store.get_status(profile.id, "fakepeople").tier is Tier.ASSISTED
+    assert store.list_statuses(profile.id)[0].tier is Tier.ASSISTED
+    assert store.get_status(profile.id, "nobody").tier is None
+
+
+def _assisted_todo(pid):
+    return Todo(profile_id=pid, broker_id="fakepeople", kind=TodoKind.ASSISTED_OPT_OUT,
+                title="Remove your listing", links=["https://fakepeople.example/optout"],
+                copy_fields={"Full name": "Jane Q Testperson", "City": "Springfield",
+                             "Email": "jane.testperson@example.com"})
+
+
+def test_todo_copy_fields_roundtrip_encrypted(vanish_env, profile):
+    s = Store()
+    s.save_profile(profile)
+    t = _assisted_todo(profile.id)
+    s.save_todo(t)
+    s.save_todo(Todo(profile_id=profile.id, kind=TodoKind.SEND_EMAIL_MANUALLY, title="Send it",
+                     copy_fields={"To": "privacy@fakemail.example"}))
+    got = {x.kind: x for x in s.list_todos(profile.id)}
+    assert got[TodoKind.ASSISTED_OPT_OUT] == t
+    assert got[TodoKind.SEND_EMAIL_MANUALLY].copy_fields == {"To": "privacy@fakemail.example"}
+    done = s.complete_todo(t.id)
+    assert done is not None and done.copy_fields == t.copy_fields
+    raw = _all_bytes(vanish_env)
+    s.close()
+    raw += _all_bytes(vanish_env)
+    for needle in [*PII, b"Full name", b"privacy@fakemail.example"]:
+        assert needle not in raw, needle

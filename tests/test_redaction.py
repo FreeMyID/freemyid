@@ -8,6 +8,8 @@ import pytest
 from vanish import logging_setup
 from vanish.logging_setup import RedactingFilter, redact, register_pii
 
+PID = "0" * 32  # valid Id
+
 
 @pytest.fixture
 def caplog_redacted(caplog):
@@ -85,10 +87,36 @@ def test_dob_backstop(dob):
     assert dob not in redact(f"born {dob}")
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-04b: Store does not yet call register_profile "
-                   "(peer e6 in progress)")
 def test_store_registers_profile_pii(store, profile):
     store.save_profile(profile)
     store.get_profile(profile.id)
     assert "Testperson" not in redact("Jane Q Testperson lives at 742 Evergreen Terrace")
     assert "Evergreen" not in redact("742 Evergreen Terrace")
+
+
+# ---- v1: Assisted copy_fields values must never reach logs ----
+
+def test_copy_fields_values_never_logged(store, profile, caplog_redacted):
+    from vanish.models import Todo, TodoKind
+    store.save_profile(profile)          # registers profile PII
+    t = Todo(profile_id=profile.id, broker_id="fakepeople", kind=TodoKind.ASSISTED_OPT_OUT,
+             title="Remove your listing",
+             copy_fields={"Full name": "Jane Q Testperson",
+                          "Address": "742 Evergreen Terrace, Springfield, IL 62704",
+                          "Phone": "217-555-0142", "Email": "jane.testperson@example.com",
+                          "Birth date": "04/01/1980"})
+    store.save_todo(t)
+    log = logging.getLogger("vanish.engine.test")
+    log.info("todo %s", t)                      # careless: whole model
+    log.info("fields %r", store.list_todos(profile.id)[0].copy_fields)
+    log.warning("dump %s", t.model_dump_json())
+    for v in ("Testperson", "Evergreen", "Springfield", "62704", "555-0142",
+              "jane.testperson", "1980"):
+        assert v not in caplog_redacted.text, v
+
+
+def test_copy_fields_hidden_from_repr():
+    from vanish.models import Todo, TodoKind
+    t = Todo(profile_id=PID, kind=TodoKind.ASSISTED_OPT_OUT, title="t",
+             copy_fields={"Name": "Unregistered Alias"})
+    assert "Unregistered Alias" not in repr(t) and "Unregistered Alias" not in str(t)
