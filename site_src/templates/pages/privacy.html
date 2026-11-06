@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block main %}
+<div class="wrap main-pad prose">
+  {% include "partials/crumbs.html" %}
+  <h1>Your privacy</h1>
+  <p class="lead mt-s">A privacy tool you have to trust with your information isn't much of a privacy tool. So Free My ID is built so you don't have to trust us at all.</p>
+
+  <h2 class="mt-l" id="never-ask">We will never ask for</h2>
+  <ul class="checklist checklist--no mt-s" role="list">
+    <li>{{ icon('x') }}<span>Your Social Security number</span></li>
+    <li>{{ icon('x') }}<span>Bank account, credit or debit card details</span></li>
+    <li>{{ icon('x') }}<span>Your full birthday. The setup asks only for a year of birth, and you can leave that blank</span></li>
+    <li>{{ icon('x') }}<span>A photo of your ID, unless you switch that on yourself in Settings for a site that insists on it</span></li>
+    <li>{{ icon('x') }}<span>Your Facebook or Google password, or the password to your everyday email. If you want it to send requests for you, you give it an app password for a separate removal mailbox, which is optional</span></li>
+  </ul>
+  <div class="callout callout--gold">
+    {{ icon('shield') }}
+    <div><p><strong>If anything claiming to be Free My ID asks you for these, it isn't us.</strong></p></div>
+  </div>
+
+  <h2 class="mt-l" id="where">Where your information lives</h2>
+  <ul class="checklist checklist--yes mt-s" role="list">
+    <li>{{ icon('computer') }}<span><strong>Only on your computer.</strong> There's no account and no cloud. We have no servers holding your data.</span></li>
+    <li>{{ icon('lock') }}<span><strong>Locked.</strong> Its records are encrypted, and the key is kept in Windows' own secure password store.</span></li>
+    <li>{{ icon('shield') }}<span><strong>Fenced in.</strong> The app may only contact the removal sites themselves and your removal mailbox. Everything else is blocked. The only exception is a one-time, optional download of a small extra browser, and only if your computer has no Chrome or Edge, and it asks you first.</span></li>
+    <li>{{ icon('check') }}<span><strong>Sites get as little as possible:</strong> only what they already show about you, plus a removal email address.</span></li>
+  </ul>
+
+  <h2 class="mt-l" id="updates">Keeping the list of sites up to date</h2>
+  <p class="mt-s">People-search sites change their removal pages often. So Free My ID can download an updated list of sites and removal steps from the Free My ID project. That download sends nothing about you or the people you protect: it only fetches the list.</p>
+
+  <h2 class="mt-l" id="this-website">This website</h2>
+  <p class="mt-s">No cookies, no trackers, no analytics, no outside fonts or scripts. Every picture, icon and style on this site comes from this site itself, so visiting it doesn't tell any other company that you were here.</p>
+  <p>That's also why you didn't see a cookie banner: there are no cookies to ask about. The site has no forms, so it can't collect anything you type.</p>
+  <p>Links to other websites (such as a people-search site's removal page, or our code on GitHub) are ordinary links. Once you click one, that website's own privacy rules apply.</p>
+
+  <h2 class="mt-l" id="check">Check our work</h2>
+  <p class="mt-s">Free My ID is open source, so anyone can read exactly what it does. <a href="{{ site.repo_url }}">See the code on GitHub</a>.</p>
+</div>
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block main %}
+<section class="hero" aria-labelledby="hero-title">
+  {% include "partials/hero-stars.svg" %}
+  <div class="wrap two-col">
+    <div>
+      <p class="kicker">{{ icon('star') }}That post didn't stop anyone. This does.</p>
+      <h1 id="hero-title">Take your name off the websites that sell it.</h1>
+      <!-- Source for "scammers and stalkers": U.S. CFPB press release, 3 Dec 2024, "CFPB Proposes Rule to Stop Data Brokers from Selling Sensitive Personal Data to Scammers, Stalkers, and Spies" https://www.consumerfinance.gov/archive/newsroom/cfpb-proposes-rule-to-stop-data-brokers-from-selling-sensitive-personal-data-to-scammers-stalkers-and-spies/ -->
+      <p class="lead">Right now, websites are selling your home address, phone number, age and relatives' names to anyone who pays, scammers and stalkers included. Free My ID asks each one to remove you, the way that site takes removal requests, and keeps checking that it did.</p>
+      <div class="btn-row">
+        <a class="btn btn--lg" href="{{ url('download/') }}">{{ icon('download') }}Get Free My ID for Windows, free</a>
+        <a class="btn btn--lg btn--secondary" href="{{ url('how-it-works/') }}">See how it works</a>
+      </div>
+      <!-- Source: docs/PLAN_V1.md D5 (per-user install, PrivilegesRequired=lowest); install time VM-measured (commit 891452e) -->
+      <p class="note">For Windows 10 and 11. Installs in a few minutes, with no administrator password.</p>
+    </div>
+    {% include "partials/mockup.html" %}
+  </div>
+</section>
+
+<section class="section" aria-labelledby="promises">
+  <div class="wrap">
+    <h2 id="promises" class="section-head">Our promises to you</h2>
+    {% set trust_class = "" %}
+    {% include "partials/trust.html" %}
+  </div>
+</section>
+
+<section class="section section--alt" aria-labelledby="the-post">
+  <div class="wrap prose">
+    <p class="kicker">{{ icon('chat') }}You may have seen it on Facebook</p>
+    <h2 id="the-post">That post went to the wrong place</h2>
+    <p class="mt-s">Lots of people have posted "I do not give permission to use my pictures or information…" on Facebook. The instinct is right: your information should be yours. But a post on your own page doesn't reach the companies that sell your details, and they aren't required to read it.</p>
+    <p>Free My ID sends your "I do not consent" to the right place: the people-search sites (also called data brokers) that list and sell personal information. It uses each site's own opt-out process. Where a state privacy law applies (California and a growing list of other states), it sends a formal request the site is required to answer. Everywhere else it sends a clear, polite removal request: many sites honor these, but they aren't legally required to.</p>
+    <p><a href="{{ url('i-do-not-consent/') }}">Does the "I do not consent" post work? Read the full answer</a></p>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="three-steps">
+  <div class="wrap">
+    <h2 id="three-steps" class="section-head">How it works, in three steps</h2>
+    <div class="card-grid card-grid--3">
+    <ol class="steps steps--big grid-auto" role="list">
+      <li><h3>Tell it who to protect</h3><p>Six simple screens: your name and the towns you've lived in. It never asks for your Social Security number or bank details.</p></li>
+      <li><h3>It sends the requests</h3><p>By email, by walking you through a site's form, or by filling the form in while you watch. Each site gets only what it already shows about you.</p></li>
+      <li><h3>It keeps checking</h3><p>Once a day, in the background. It shows you which sites confirmed and which are still waiting, and asks again if a site lists you again.</p></li>
+    </ol>
+    </div>
+    <p class="mt-m"><a href="{{ url('how-it-works/') }}">More about how Free My ID works</a></p>
+  </div>
+</section>
+
+{% include "partials/star-rule.html" %}
+
+<section class="section" aria-labelledby="honest">
+  <div class="wrap">
+    <h2 id="honest" class="section-head">What it does, honestly</h2>
+    <div class="card-grid">
+      <div class="grid-auto">
+        <div class="card">
+          <h3>Free My ID does</h3>
+          <ul class="checklist checklist--yes mt-s" role="list">
+            <li>{{ icon('check') }}<span>Ask people-search and data-broker sites to remove your listing, using each site's own process</span></li>
+            <li>{{ icon('check') }}<span>Send a formal legal request where your state's privacy law applies, and a polite request everywhere else</span></li>
+            <li>{{ icon('check') }}<span>Click the "confirm your request" links that sites send, and follow up when a site goes quiet</span></li>
+            <li>{{ icon('check') }}<span>Check again later, because some sites list people again</span></li>
+            <li>{{ icon('check') }}<span>Show you where each site stands: <em>asked</em>, <em>confirmed</em> or <em>still waiting</em></span></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Free My ID does not</h3>
+          <ul class="checklist checklist--no mt-s" role="list">
+            <li>{{ icon('dash') }}<span>Erase you from the whole internet. Nobody honest can promise that.</span></li>
+            <li>{{ icon('dash') }}<span>Change what Facebook itself does with your account</span></li>
+            <li>{{ icon('dash') }}<span>Stop hacking, phone tapping or government surveillance</span></li>
+            <li>{{ icon('dash') }}<span>Remove news stories, social media posts or government records</span></li>
+            <li>{{ icon('dash') }}<span>Ask for your Social Security number, bank or card details. Ever.</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <p class="mt-m">Some sites take weeks to respond, and some list people again later. That's why Free My ID keeps checking.</p>
+  </div>
+</section>
+
+<section class="section section--alt" id="helping" aria-labelledby="helping-title">
+  <div class="wrap two-col">
+    <div class="prose">
+      <p class="kicker">{{ icon('family') }}For families and helpers</p>
+      <h2 id="helping-title">Helping a parent or grandparent?</h2>
+      <p class="mt-s">Free My ID was built so your parents and grandparents can use it: one installer, six simple screens, big buttons, plain words. After that it quietly re-checks once a day in the background, and only asks for help when a site truly needs a person.</p>
+      <!-- Sources: site/faq.html "Can I set it up for my parents?"; docs/USER_GUIDE.md section 3 (adult signs a permission form; "won't work on anyone without this step"); docs/USER_GUIDE.md section 4 (practice mode first) -->
+      <ul>
+        <li>Set it up on their computer in one visit, or protect several family members from one computer.</li>
+        <li>Each adult gives their own permission. Free My ID won't work on anyone without it.</li>
+        <li>Practice mode comes first, so nothing is sent until you say so.</li>
+      </ul>
+      <div class="btn-row mt-m">
+        <a class="btn" href="{{ url('download/') }}">{{ icon('download') }}Download, free</a>
+        <a class="btn btn--secondary" href="{{ url('guides/') }}">Use the free guides instead</a>
+      </div>
+    </div>
+    <div class="card">
+      <h3>{{ icon('shield', 'icon card__icon') }}A good rule to share</h3>
+      <p class="mt-s">Free My ID will <strong>never</strong> ask for a Social Security number, bank card or passwords. If something claiming to be Free My ID asks for those, it isn't us. Stop and call your helper.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="short-faq">
+  <div class="wrap prose">
+    <h2 id="short-faq" class="section-head">Common questions</h2>
+    <div class="faq">
+    {% for q in faq if q.get('home') %}
+      <details id="q-{{ q.id }}"><summary>{{ q.q }}</summary>{{ render(q.a) }}</details>
+    {% endfor %}
+    </div>
+    <p class="mt-m"><a href="{{ url('faq/') }}">See all questions</a></p>
+  </div>
+</section>
+
+<section class="section section--alt" aria-labelledby="cta">
+  <div class="wrap center">
+    <h2 id="cta">Your information. Off the market.</h2>
+    <p class="lead mt-s">Free, open source, and it runs on your own computer.</p>
+    <div class="btn-row btn-row--center mt-m">
+      <a class="btn btn--lg" href="{{ url('download/') }}">{{ icon('download') }}Get Free My ID for Windows, free</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

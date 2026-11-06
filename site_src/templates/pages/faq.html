@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block main %}
+<div class="wrap main-pad prose">
+  {% include "partials/crumbs.html" %}
+  <h1>Questions</h1>
+  <p class="lead mt-s">Plain answers about Free My ID. Tap a question to see the answer.</p>
+
+  <h2 class="mt-l" id="myths">Myth vs. fact</h2>
+  <div class="callout callout--myth">{{ icon('x') }}<div><p><span class="label">Myth:</span> Posting "I do not give Facebook permission…" on my page protects my information.</p></div></div>
+  <div class="callout callout--fact">{{ icon('check') }}<div><p><span class="label">Fact:</span> That post doesn't reach the companies that sell your details, and they aren't required to honor it. A removal request sent to each site, through the process that site uses, is what works. That's what Free My ID sends. In states with a privacy law, sites must answer; elsewhere many still honor it.</p></div></div>
+  <div class="callout callout--myth">{{ icon('x') }}<div><p><span class="label">Myth:</span> If I'm not on social media, I'm not online.</p></div></div>
+  <div class="callout callout--fact">{{ icon('check') }}<div><p><span class="label">Fact:</span> People-search sites build listings from public records and purchased data. Many people who've never had a Facebook account are listed, with address, age and relatives.</p></div></div>
+
+  <h2 class="mt-l" id="common">Common questions</h2>
+  <div class="faq mt-s">
+  {% for q in faq %}
+    <details id="q-{{ q.id }}"><summary>{{ q.q }}</summary>{{ render(q.a) }}</details>
+  {% endfor %}
+  </div>
+  <div class="btn-row mt-l">
+    <a class="btn btn--lg" href="{{ url('download/') }}">{{ icon('download') }}Download, free</a>
+  </div>
+</div>
+{% endblock %}

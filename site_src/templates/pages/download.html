@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block main %}
+<div class="wrap main-pad">
+  {% include "partials/crumbs.html" %}
+  <div class="two-col">
+    <div class="prose">
+      <h1>Download Free My ID</h1>
+      <!-- Source: docs/PLAN_V1.md D5 (per-user install, no admin); install time VM-measured (commit 891452e) -->
+      <p class="lead mt-s">For Windows 10 and Windows 11. Free. Installs in a few minutes, with no administrator password needed.</p>
+    </div>
+    <div class="download-card">
+      <a class="btn btn--lg" href="{{ site.download_url }}">{{ icon('download') }}Download FreeMyIDSetup.exe</a>
+      <dl class="facts">
+        <dt>Works on</dt><dd>Windows 10 and 11</dd>
+        <dt>Price</dt><dd>Free</dd>
+        {% if release.version %}
+        <dt>Version</dt><dd>{{ release.version }}{% if release.date %} ({{ release.date }}){% endif %}</dd>
+        {% endif %}
+        {% if release.size_mb %}
+        <dt>Size</dt><dd>{{ release.size_mb }} MB</dd>
+        {% endif %}
+      </dl>
+      {% if not release.version %}
+      <p class="note">Version number, size and checksum will show here when the first version is published.</p>
+      {% endif %}
+      <p class="note">If the button doesn't work, get the newest version from <a href="{{ site.releases_url }}/latest">the releases page</a>. Mac and phone versions aren't available yet.</p>
+    </div>
+  </div>
+</div>
+
+<section class="section section--alt" id="smartscreen" aria-labelledby="ss-title">
+  <div class="wrap">
+    <h2 id="ss-title" class="section-head">Windows may show a blue warning. Here's why, and what to do</h2>
+    <p class="prose">Windows shows "Windows protected your PC" for new programs that haven't paid for a publisher certificate yet. Free My ID is free and hasn't bought one yet. The warning doesn't mean anything is wrong.</p>
+    <ol class="steps steps--big mt-l" role="list">
+      <li><h3>Open the file you downloaded</h3><p>It's called <strong>FreeMyIDSetup.exe</strong>. You'll usually find it in your <strong>Downloads</strong> folder, or at the bottom or top-right of your web browser.</p></li>
+      <li>
+        <h3>Click the small words "More info"</h3>
+        <p>If a blue box says <strong>"Windows protected your PC"</strong>, don't click "Don't run". Click <strong>More info</strong> instead.</p>
+        {% set ss_step = 1 %}{% include "partials/smartscreen.html" %}
+      </li>
+      <li>
+        <h3>Check the name, then click "Run anyway"</h3>
+        <p>Make sure it says the app is <strong>FreeMyIDSetup.exe</strong>. It will say "Unknown publisher"; that's expected. Then click <strong>Run anyway</strong>.</p>
+        {% set ss_step = 2 %}{% include "partials/smartscreen.html" %}
+      </li>
+      <li><h3>Click Install</h3><p>Free My ID opens by itself and walks you through six simple screens.</p></li>
+    </ol>
+  </div>
+</section>
+
+<div class="wrap section prose">
+  <h2 id="genuine">How to know it's really us</h2>
+  <div class="callout callout--gold">
+    {{ icon('shield') }}
+    <div><p><strong>Stay safe:</strong> only download Free My ID from this page or from <a href="{{ site.releases_url }}">our GitHub releases page</a>. We will never email you an installer, and we will never call you.</p></div>
+  </div>
+  <div class="faq mt-m">
+    <details id="checksum"><summary>For helpers: check the download is genuine</summary>
+      <p>Each release lists a <strong>SHA256SUMS.txt</strong> file. In PowerShell, run <code>Get-FileHash .\FreeMyIDSetup.exe</code> and check that the long code matches the line for FreeMyIDSetup.exe in that file.</p>
+      {% if release.sha256 %}
+      <p>For version {{ release.version }}, the code is: <span class="hash">{{ release.sha256 }}</span></p>
+      {% endif %}
+    </details>
+  </div>
+
+  <h2 class="mt-l" id="remove">Removing it</h2>
+  <p class="mt-s">Open Windows <strong>Settings → Apps</strong>, find <strong>Free My ID</strong>, and click <strong>Uninstall</strong>. It asks whether to delete your saved records too.</p>
+</div>
+{% endblock %}

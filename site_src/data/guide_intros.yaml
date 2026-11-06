@@ -1,0 +1,11 @@
+# Opening sentence for broker guides whose category is "other" (official tools, special opt-outs).
+# Every sentence is taken from that entry in brokers/registry.sample.yaml (name, steps, legal_basis_notes).
+ca_drop: >-
+  California DROP is a free website run by the State of California. One request there reaches
+  600+ registered data brokers. It is only for people who live in California.
+optoutprescreen: >-
+  OptOutPrescreen is the credit bureaus' opt-out site for prescreened offers. One request covers
+  Equifax, Experian, TransUnion and Innovis.
+google_results_about_you: >-
+  Google's "Results about you" tool can hide search results that show your phone number, home
+  address or email. It hides search results; it does not delete the data on the sites themselves.

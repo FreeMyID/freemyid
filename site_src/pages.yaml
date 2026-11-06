@@ -1,0 +1,51 @@
+# Page manifest for tools/build_site.py. `out` is the output folder (clean URL); "" is the home page.
+# Titles <= 60 characters, descriptions <= 155 (site_check enforces both).
+# jsonld: organization | website | software | faq | breadcrumbs. Broker guides are added from the
+# public sample registry automatically (template pages/guide.html).
+- id: home
+  out: ""
+  template: pages/home.html
+  label: Home
+  title: "Free My ID: take your name off the websites that sell it"
+  description: Free My ID takes your name, address and phone number off the people-search websites that sell them. Free, open source, runs on your own computer.
+  jsonld: [organization, website, software]
+- id: how-it-works
+  out: how-it-works/
+  template: pages/how-it-works.html
+  label: How it works
+  nav: how-it-works
+  title: "How Free My ID works: by email, with you, or for you"
+  description: Free My ID sends removal requests three ways - by email, by guiding you through a site's form, or by filling the form in for you - and keeps checking.
+  jsonld: [breadcrumbs]
+- id: privacy
+  out: privacy/
+  template: pages/privacy.html
+  label: Your privacy
+  nav: privacy
+  title: "Your privacy with Free My ID: no account, no cloud"
+  description: Free My ID has no account, no cloud and no tracking. Here is exactly what it stores, what it sends and what it never asks for.
+  jsonld: [breadcrumbs]
+- id: faq
+  out: faq/
+  template: pages/faq.html
+  label: Questions
+  nav: faq
+  title: "Questions about Free My ID, answered plainly"
+  description: Is it free? Will it ask for my Social Security number? Do sites have to remove me? Plain-English answers about Free My ID.
+  jsonld: [faq, breadcrumbs]
+- id: download
+  out: download/
+  template: pages/download.html
+  label: Download
+  nav: download
+  title: "Download Free My ID for Windows 10 and 11 (free)"
+  description: Download Free My ID for Windows 10 and 11. Free. Includes a step-by-step guide, with pictures, for the blue Windows SmartScreen warning.
+  jsonld: [software, breadcrumbs]
+- id: "404"
+  out: 404.html
+  template: pages/404.html
+  label: Page not found
+  title: "Page not found - Free My ID"
+  description: We couldn't find that page. Nothing is wrong with your computer.
+  noindex: true
+  absolute: true

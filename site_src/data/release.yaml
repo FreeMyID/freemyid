@@ -1,0 +1,6 @@
+# Filled in by the orchestrator for each published release (from the release's SHA256SUMS.txt).
+# Leave values null until a release exists; the download page then says so plainly.
+version: null        # e.g. "1.0.0"
+date: null           # e.g. 2026-12-01
+size_mb: null        # e.g. 48.2
+sha256: null         # 64 hex characters, the FreeMyIDSetup.exe line of SHA256SUMS.txt

@@ -1,0 +1,69 @@
+# Questions page and the short FAQ on the home page (home: true). Answers are HTML and may use
+# {{ url('path/') }} for internal links. The FAQPage JSON-LD uses the same text with tags removed.
+# Sources: existing site/faq.html copy (fact-checked by wizard-packager), docs/USER_GUIDE.md section 11,
+# docs/PLAN_V1.md, docs/POSITIONING.md.
+- id: free
+  home: true
+  q: 'Is it really free?'
+  a: |-
+    <p>Yes. The app is free and open source. A paid option with extra help may come later, but the app itself stays free.</p>
+- id: whole-internet
+  home: true
+  q: 'Will this remove me from the whole internet?'
+  a: |-
+    <p>No, and be wary of anyone who promises that. Free My ID asks people-search and data-broker sites to remove your listing, shows you which ones confirmed, and keeps checking. It can't remove news stories, social media posts or government records.</p>
+- id: have-to
+  home: true
+  q: 'Do sites have to remove me?'
+  a: |-
+    <p>It depends on where you live. California and a growing number of states have privacy laws that require these sites to answer removal requests. In states without such a law, the request is a polite one. Many sites honor it anyway, but some don't. Free My ID tells you honestly which sites confirmed and which are still waiting.</p>
+- id: ssn
+  home: true
+  q: 'Will it ask for my Social Security number or bank details?'
+  a: |-
+    <p>No. Free My ID never asks for your Social Security number, bank account, or credit or debit card details. If anything claiming to be Free My ID asks you for these, it isn't us. <a href="{{ url('privacy/') }}">See everything we will never ask for</a>.</p>
+- id: parents
+  home: true
+  q: 'Can I set it up for my parents?'
+  a: |-
+    <p>Yes. It's made for that. You can set it up on their computer, or protect several family members from one computer.</p>
+- id: i-do-not-consent
+  q: 'I posted "I do not consent." Did that work?'
+  a: |-
+    <p>You were right to object. On its own, that post doesn't reach the sites that sell your details. Free My ID sends your wish to them directly. <a href="{{ url('i-do-not-consent/') }}">Read more about the "I do not consent" post</a>.</p>
+- id: facebook
+  q: 'Does it change what Facebook does with my account?'
+  a: |-
+    <p>No. Free My ID works on people-search sites. For Facebook itself, use the privacy settings inside Facebook. A step-by-step guide is planned.</p>
+- id: who-buys
+  q: 'Who buys this information?'
+  a: |-
+    <p>Anyone can: employers, marketers, curious neighbors, and also scammers and stalkers. A U.S. federal consumer agency <a href="https://www.consumerfinance.gov/archive/newsroom/cfpb-proposes-rule-to-stop-data-brokers-from-selling-sensitive-personal-data-to-scammers-stalkers-and-spies/">warned in 2024</a> about data brokers selling sensitive personal data to scammers and stalkers. That's why taking yourself off these sites matters.</p>
+- id: how-long
+  q: 'How long does it take?'
+  a: |-
+    <p>Setup is six short screens. Some sites remove you within days; others take weeks. Free My ID keeps track so you don't have to.</p>
+- id: comes-back
+  q: 'Why would my listing come back?'
+  a: |-
+    <p>Sites buy fresh data from public records and from one another, so listings can reappear. That doesn't mean anything failed. Free My ID checks each site again on a schedule and sends a new request if your listing comes back.</p>
+- id: google
+  q: 'Will this remove me from Google?'
+  a: |-
+    <p>No. Free My ID doesn't contact Google. Once a people-search page is gone, Google usually drops it from its results over the following weeks.</p>
+- id: without-app
+  q: 'Can I do this without the app?'
+  a: |-
+    <p>Yes. Our free <a href="{{ url('guides/') }}">opt-out guides</a> show the steps for some of the best-known sites. Free My ID does the repetitive part for you, keeps track, and keeps checking.</p>
+- id: windows-warning
+  q: 'Why does Windows warn me when I install it?'
+  a: |-
+    <p>Windows shows a blue "Windows protected your PC" box for new programs that haven't bought a publisher certificate. Free My ID hasn't bought one yet. <a href="{{ url('download/#smartscreen') }}">See what to click, with pictures</a>.</p>
+- id: mac
+  q: 'Is there a Mac or phone version?'
+  a: |-
+    <p>Not yet. Free My ID runs on Windows 10 and Windows 11.</p>
+- id: government
+  q: 'Is this a government service?'
+  a: |-
+    <p>No. Free My ID is independent, free software. It isn't connected to any government agency, Facebook/Meta or data broker.</p>

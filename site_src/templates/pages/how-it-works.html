@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block main %}
+<div class="wrap main-pad">
+  {% include "partials/crumbs.html" %}
+  <h1>How Free My ID works</h1>
+  <p class="lead mt-s">Every people-search site has its own way of taking requests. Free My ID knows which way each one uses and handles it for you, or with you.</p>
+
+  <h2 class="mt-l" id="steps">From setup to proof, in four steps</h2>
+  <!-- Sources: docs/PLAN_V1.md D1, D2, D4, D6, D9; docs/USER_GUIDE.md sections 3-5 -->
+  <ol class="steps steps--big mt-m prose" role="list">
+    <li><h3>Tell it who to protect</h3><p>Your name and the towns you've lived in, plus (if you like) your year of birth, phone number, email address and relatives' names, which help it tell you apart from other people with your name. It never asks for your Social Security number or bank details.</p></li>
+    <li><h3>It sends the requests</h3><p>Depending on the site, Free My ID uses one of three ways, shown below. Each site gets only what it already shows about you, plus a removal email address.</p></li>
+    <li><h3>It keeps checking</h3><p>Once a day, in the background, it checks for replies and looks again later in case a site lists you again. You'll get a small notice only when something needs you.</p></li>
+    <li><h3>You see the proof</h3><p>A plain report shows every site, where it stands (asked, confirmed, still waiting), the date it was asked and when it was checked again. You can print it.</p></li>
+  </ol>
+</div>
+
+<section class="section section--alt" aria-labelledby="three-ways">
+  <div class="wrap">
+    <h2 id="three-ways" class="section-head">Three ways to send a request</h2>
+    <p class="prose">Free My ID picks the right way for each site by itself. You don't have to choose.</p>
+    <div class="card-grid card-grid--3 mt-m">
+      <ul role="list">
+        <li class="card" id="email">
+          {{ icon('mail', 'icon card__icon') }}
+          <h3>Email</h3>
+          <p>It writes a proper removal letter for you to approve, then sends it from the separate email address you set up. If you skip that, it opens the message in your own email program for you to send.</p>
+        </li>
+        <li class="card" id="do-it-with-me">
+          {{ icon('pointer', 'icon card__icon') }}
+          <h3>"Do it with me"</h3>
+          <p>It opens the site's removal page in your own browser, with numbered steps and a "copy" button for each box. You click; it keeps track.</p>
+        </li>
+        <li class="card" id="fill-it-in">
+          {{ icon('form', 'icon card__icon') }}
+          <h3>"Fill it in for me"</h3>
+          <p>For sites that allow it, it fills the form in a window you can watch, and stops for you if the site asks "are you a robot?". It never tries to get around those checks.</p>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<div class="wrap section prose">
+  <h2 id="safety">Built to be careful</h2>
+  <div class="callout callout--gold">
+    {{ icon('info') }}
+    <div>
+      <h3>Practice mode first</h3>
+      <p>Free My ID starts in practice mode, so nothing is sent until you say "start sending real requests."</p>
+    </div>
+  </div>
+  <!-- Sources: docs/PLAN_V1.md D1/D9 (no CAPTCHA solving, never pay, no ID or accounts unless the permission is switched on); docs/USER_GUIDE.md section 7 (approve each email by default) -->
+  <ul class="checklist checklist--yes mt-m" role="list">
+    <li>{{ icon('check') }}<span>Emails wait for your approval before they're sent, unless you choose otherwise.</span></li>
+    <li>{{ icon('check') }}<span>It never pays a site. It never creates accounts or sends a photo of your ID unless you switch that on yourself.</span></li>
+    <li>{{ icon('check') }}<span>If a site shows an "I'm not a robot" check, it hands that step to you.</span></li>
+    <li>{{ icon('check') }}<span>When a site says it deleted you, that's for that one site only, and Free My ID says so.</span></li>
+  </ul>
+  <p class="mt-m">Want to do it by hand? Our <a href="{{ url('guides/') }}">free opt-out guides</a> show the steps for some of the best-known sites.</p>
+  <div class="btn-row mt-m">
+    <a class="btn btn--lg" href="{{ url('download/') }}">{{ icon('download') }}Download, free</a>
+  </div>
+</div>
+{% endblock %}
