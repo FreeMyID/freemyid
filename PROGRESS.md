@@ -20,7 +20,7 @@ Models, state machine, encrypted store (AES-GCM blobs, key in keyring, append-on
 ## Blocked / decisions
 - GitHub repo: the old personal repo (private, pushed 2026-11-06). The empty old personal repo can be deleted.
 - Code signing: user decided 2026-11-06 to ship unsigned (close family only; user helps install, SmartScreen warning OK).
-- License: pyproject says MIT but there is no LICENSE file; user to confirm (MIT default).
+- License: AGPL-3.0-or-later for the app (decided 2026-11-06, open-source + paid subscription model). Registry data: separate license, TBD (brokers/LICENSE-DATA.md). Repo stays private until rename + public launch.
 - Outlook.com mailboxes need OAuth (basic auth retired); v1 supports Gmail app password, Proton Bridge, other IMAP providers.
 ## Next
 Integrate wave → qa review → GitHub repo + first CI exe build (user OK needed) → test on a Windows 11 VM → dry run on a family profile.

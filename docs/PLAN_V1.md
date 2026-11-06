@@ -129,3 +129,12 @@ the human, but makes that human's part as small as possible.
   `brokers/state_laws.yaml` has `last_verified` set. Unverified citations from background knowledge
   must never appear in a letter; those states get the generic letter. Today only CA is
   verified. States without a verified privacy law get the generic letter.
+
+## Business model (decided 2026-11-06)
+Open-source app (AGPL-3.0-or-later) plus a paid subscription. Customer PII never leaves their PC.
+Paid parts are the things that need ongoing work: weekly verified registry feed, managed removal
+mailbox, "fill it in for me" scripts for hard sites, family plans, later a staffed agent tier.
+The business plan page lives at https://claude.ai/artifact/PWHBkUkfNLWU78XQ9vQhmF.
+Building blocks, in order: rename (Vanish clashes with Reckitt's brand) → signed registry feed →
+plan/entitlement setting (no payments yet) → opt-in anonymous per-broker outcome reports →
+code signing + public launch.
