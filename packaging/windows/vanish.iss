@@ -46,9 +46,13 @@ Filename: "{app}\vanish-cli.exe"; Parameters: "schedule remove"; Flags: runhidde
 [Code]
 function DataDir: String;
 begin
-  Result := GetEnv('VANISH_HOME');
-  if Result = '' then
-    Result := ExpandConstant('{userappdata}') + '\Vanish';
+  // Never read VANISH_HOME here: a stray value could point at a personal folder.
+  Result := ExpandConstant('{userappdata}') + '\Vanish';
+end;
+
+function IsVanishData: Boolean;
+begin
+  Result := FileExists(DataDir + '\vanish.db') or FileExists(DataDir + '\.vanish-home');
 end;
 
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
@@ -59,13 +63,14 @@ begin
   // delete the encryption key and mailbox passwords from Windows Credential Manager.
   if CurUninstallStep = usUninstall then
   begin
-    if DirExists(DataDir) then
+    if IsVanishData then
       if MsgBox('Do you also want to delete the information Vanish saved on this computer '
                 + '(the people you added, reports and screenshots)?' + #13#10 + #13#10
                 + 'Choose No if you might use Vanish again.', mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDYES then
       begin
         Exec(ExpandConstant('{app}\vanish-cli.exe'), 'wipe --yes', '', SW_HIDE, ewWaitUntilTerminated, RC);
-        if DirExists(DataDir) then
+        // Only remove what is verifiably Vanish's own folder.
+        if IsVanishData then
           DelTree(DataDir, True, True, True);
       end;
   end;

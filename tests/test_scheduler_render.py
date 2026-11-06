@@ -15,7 +15,7 @@ def test_windows_xml_is_valid_and_windowless_and_catches_up():
     root = ET.fromstring(x.replace('encoding="UTF-16"', ""))
     g = lambda p: root.find(p, NS)
     assert g("t:Settings/t:StartWhenAvailable").text == "true"
-    assert g("t:Settings/t:Hidden").text == "true"
+    assert g("t:Settings/t:Hidden").text == "false"
     assert g("t:Settings/t:MultipleInstancesPolicy").text == "IgnoreNew"
     assert g("t:Principals/t:Principal/t:RunLevel").text == "LeastPrivilege"
     assert g("t:Triggers/t:CalendarTrigger/t:ScheduleByDay/t:DaysInterval").text == "1"

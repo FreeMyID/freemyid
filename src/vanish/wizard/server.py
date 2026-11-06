@@ -14,6 +14,7 @@ import logging
 import os
 import secrets as pysecrets
 import socket
+import sys
 import threading
 import webbrowser
 from collections.abc import Callable
@@ -54,6 +55,7 @@ MSGS = {
     "attached": "Authorization attached.", "sched_on": "Automatic checking is on.",
     "sched_off": "Automatic checking is off.", "sched_fail": "Could not change that setting.",
     "saved": "Saved.", "real_on": "Real requests are on.", "real_off": "Practice mode is on.",
+    "no_practice": "Please let a practice check finish first, then look at the results.",
 }
 
 
@@ -329,8 +331,18 @@ def create_app(store, token: str, allowed_hosts: set[str],
     async def outbox(request: Request):
         who = {p.id: p.label for p in store.list_profiles()}
         nm = names()
-        items = [(r, who.get(r.profile_id, "?"), nm.get(r.broker_id, r.broker_id))
-                 for r in store.list_requests(status=RequestStatus.QUEUED_FOR_APPROVAL)]
+        try:
+            from ..engine.outbox import letter_for
+        except ImportError:
+            letter_for = None
+        items = []
+        for r in store.list_requests(status=RequestStatus.QUEUED_FOR_APPROVAL):
+            try:
+                letter = letter_for(store, r) if letter_for else ("", "", "")
+            except Exception:  # noqa: BLE001
+                letter = ("", "", "(the letter could not be read)")
+            items.append((r, who.get(r.profile_id, "?"), nm.get(r.broker_id, r.broker_id),
+                          letter))
         return html(dash.outbox_page(items, csrf_token, flash(request)))
 
     @app.post("/outbox/{rid}/approve")
@@ -390,9 +402,26 @@ def create_app(store, token: str, allowed_hosts: set[str],
                                   "tab.</p>", nav=False))
         return redirect("/settings")
 
+    def _practice_done() -> bool:
+        return (any(st.last_scan_at for st in store.list_statuses())
+                or any(r.dry_run for r in store.list_requests()))
+
+    @app.get("/settings/submissions/confirm")
+    async def submissions_confirm(request: Request):
+        people = store.list_profiles()
+        if not _practice_done():
+            return redirect("/settings", "no_practice")
+        return html(dash.confirm_real_page(people, csrf_token))
+
     @app.post("/settings/submissions/{mode}")
-    async def submissions(mode: str):
+    async def submissions(mode: str, request: Request):
         from .. import config as cfgmod
+        if mode == "on":
+            form = await request.form()
+            if form.get("confirm") != "yes":
+                return redirect("/settings/submissions/confirm")
+            if not _practice_done():
+                return redirect("/settings", "no_practice")
         if mode in ("on", "off"):
             cfg = cfgmod.load()
             cfgmod.save(cfg.model_copy(update={"real_submissions_enabled": mode == "on"}))
@@ -574,7 +603,11 @@ def create_app(store, token: str, allowed_hosts: set[str],
 
 def _bind(port: int) -> socket.socket:
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    if sys.platform == "win32":
+        # REUSEADDR on Windows would let another local process share the port.
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+    else:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     try:
         s.bind(("127.0.0.1", port))
     except OSError:

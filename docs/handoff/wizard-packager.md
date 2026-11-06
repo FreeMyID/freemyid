@@ -17,3 +17,8 @@
    /DFamilyBundle=..., wizard/flows.find_family_bundle, import page uses it.
 6. DONE .github/workflows/build.yml
 7. DONE FAMILY_QUICK_START.md (text screenshots; real screenshots TBD)
+## Wave 2 fixes
+- SEC-20 .iss DONE (no VANISH_HOME; DelTree only if vanish.db/.vanish-home present, after wipe --yes)
+- SEC-27 DONE (GET /settings/submissions/confirm page, confirm=yes POST, needs a completed practice scan/dry request). First-email-per-profile approval needs engine change: CR below.
+- SEC-17 DONE (To/Subject/escaped letter on outbox cards). SEC-24 DONE (list2cmdline, Hidden=false). SEC-25 DONE (0600 + os.replace). SEC-19 DONE (https only). SEC-23 DONE (EXCLUSIVEADDRUSE on win32).
+- CI install test step added to windows-installer job in build.yml (unverified until it runs on GitHub).

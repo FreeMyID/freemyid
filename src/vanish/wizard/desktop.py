@@ -56,9 +56,11 @@ def read_instance() -> dict[str, Any] | None:
 
 def write_instance(port: int, token: str) -> None:
     p = _instance_path()
-    p.write_text(json.dumps({"port": port, "token": token}))
-    with contextlib.suppress(OSError):
-        p.chmod(0o600)
+    tmp = p.with_suffix(".tmp")
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as f:
+        f.write(json.dumps({"port": port, "token": token}))
+    os.replace(tmp, p)
 
 
 def clear_instance(port: int) -> None:

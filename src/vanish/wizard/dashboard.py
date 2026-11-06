@@ -51,7 +51,7 @@ def email_parts(t: Todo) -> tuple[str, str, str]:
 
 
 def open_url_of(t: Todo, index: int = 0) -> str | None:
-    urls = [u for u in t.links if u.startswith(("https://", "http://"))]
+    urls = [u for u in t.links if u.startswith("https://")]
     return urls[index] if 0 <= index < len(urls) else None
 
 
@@ -234,13 +234,15 @@ def profile_page(p: Profile, statuses: list[BrokerStatus], names: dict[str, str]
     return layout(p.label, body)
 
 
-def outbox_page(items: list[tuple[Request, str, str]], csrf: str, flash: str = "") -> str:
+def outbox_page(items: list[tuple[Request, str, str, tuple[str, str, str]]], csrf: str, flash: str = "") -> str:
     body = f'<h1>Emails waiting for your approval</h1>{_flash(flash)}'
     if not items:
         body += "<p>Nothing is waiting.</p>"
-    for r, who, bname in items:
+    for r, who, bname, (to, subj, text) in items:
         body += (f'<div class="card"><b>{esc(who)}</b> to <b>{esc(bname)}</b> '
                  f'<span class="chip">{esc(r.kind.value.replace("_", " "))}</span>'
+                 f'<p><b>To:</b> {esc(to)}<br><b>Subject:</b> {esc(subj)}</p>'
+                 f'<pre class="letter">{esc(text)}</pre>'
                  f'<p class="hint">Drafted {_dt(r.created_at)}. Approving sends this email from '
                  'the removal mailbox.</p>'
                  f'<form method="post" action="/outbox/{esc(r.id)}/approve" class="actions">'
@@ -249,6 +251,26 @@ def outbox_page(items: list[tuple[Request, str, str]], csrf: str, flash: str = "
                  f'<button type="submit" class="secondary" '
                  f'formaction="/outbox/{esc(r.id)}/cancel">Cancel it</button></form></div>')
     return layout("Emails", body)
+
+
+def confirm_real_page(people: list[Profile], csrf: str) -> str:
+    names = ", ".join(esc(p.label) for p in people) or "nobody yet"
+    body = ('<h1>Start sending real requests?</h1>'
+            f'<div class="card"><p>This is for: <b>{names}</b>.</p>'
+            '<p>Vanish will email removal requests to data brokers and, where a broker allows '
+            'it, submit their opt-out forms. Each request names the person and only the details '
+            'the broker already shows, plus the removal mailbox address. Nothing is paid for.</p>'
+            '<p>Emails for people who chose "approve each" wait for your OK first. The first '
+            'email for every person always waits for your OK.</p>'
+            '<p>Some brokers need steps by hand, and listings can come back. You can switch '
+            'back to practice mode in Settings at any time. Requests already sent cannot be '
+            'taken back.</p>'
+            '<form method="post" action="/settings/submissions/on" class="actions">'
+            f'{csrf_field(csrf)}<input type="hidden" name="confirm" value="yes">'
+            '<button type="submit">Yes, start sending real requests</button>'
+            '<a class="btn secondary" href="/settings">No, stay in practice mode</a>'
+            '</form></div>')
+    return layout("Real requests", body)
 
 
 def settings_page(*, people: list[Profile], schedule_status: str, practice: bool, csrf: str,
@@ -266,8 +288,8 @@ def settings_page(*, people: list[Profile], schedule_status: str, practice: bool
                  'does not send any request. When you have looked at the results and are happy, '
                  f'turn on real requests.</p><form method="post" '
                  f'action="/settings/submissions/on" class="actions">{csrf_field(csrf)}'
-                 '<button type="submit" data-confirm="Start sending real removal requests?">'
-                 'Start sending real requests</button></form></div>')
+                 '<a class="btn primary" href="/settings/submissions/confirm">'
+                 'Start sending real requests</a></form></div>')
     else:
         body += ('<div class="card"><h2>Real requests are on</h2>'
                  f'<form method="post" action="/settings/submissions/off" class="actions">'
