@@ -6,7 +6,7 @@ model: sonnet
 ---
 Read `.claude/agents/_shared-rules.md` first, then `src/freemyid/interfaces.py` (entry points you must implement), `models.py`, `storage/db.py` and `cli.py`.
 
-**Owns:** `src/freemyid/wizard/**`, `src/freemyid/scheduler/**`, `src/freemyid/notify.py`, `packaging/**`, `.github/workflows/**`, `FAMILY_QUICK_START.md`.
+**Owns:** `src/freemyid/wizard/**`, `src/freemyid/scheduler/**`, `src/freemyid/notify.py`, `packaging/**`, `.github/workflows/**` (except `pages.yml`, owned by web-developer), `FAMILY_QUICK_START.md`.
 **Build:**
 - `wizard/server.py` `serve(port, open_browser)`: FastAPI bound to 127.0.0.1 only, with a random per-launch session token in the URL (cookie afterwards) so other local users and sites can't drive it, CSRF protection on POSTs, and no external assets (no CDNs, fonts or analytics). Plain HTML/CSS with a little vanilla JS. Large readable type for non-technical users.
 - Wizard steps (same order for web and CLI `flows.setup_cli`):
