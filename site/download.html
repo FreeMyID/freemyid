@@ -7,6 +7,13 @@
 <meta name="description" content="Download Free My ID for Windows 10 and 11. Free. Includes a step-by-step guide for the Windows SmartScreen warning.">
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self'; style-src 'self'; script-src 'none'; form-action 'none'; base-uri 'none'">
+<link rel="canonical" href="https://freemyid.github.io/freemyid/download.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Free My ID">
+<meta property="og:title" content="Download Free My ID">
+<meta property="og:description" content="Download Free My ID for Windows 10 and 11. Free. Includes a step-by-step guide for the Windows SmartScreen warning.">
+<meta property="og:url" content="https://freemyid.github.io/freemyid/download.html">
+<meta name="color-scheme" content="light dark">
 <link rel="stylesheet" href="style.css">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 </head>
@@ -18,7 +25,7 @@
 <h1>Download Free My ID</h1>
 <p class="lead">For Windows 10 and Windows 11. Free. Installs in a few minutes, with no administrator password needed.</p>
 <p><a class="btn" href="https://github.com/FreeMyID/freemyid/releases/latest/download/FreeMyIDSetup.exe">Download FreeMyIDSetup.exe</a></p>
-<p class="note">Mac and phone versions aren't available yet.</p>
+<p class="note">If the button doesn't work, get the newest version from <a href="https://github.com/FreeMyID/freemyid/releases/latest">the releases page</a>. Mac and phone versions aren't available yet.</p>
 <h2>Windows may show a blue warning. Here's why, and what to do</h2>
 <p>Windows shows "Windows protected your PC" for new programs that haven't paid for a publisher certificate yet. Free My ID is free and hasn't bought one yet. The warning doesn't mean anything is wrong.</p>
 <ol class="steps">
@@ -28,6 +35,7 @@
 <li><p>Click <strong>Install</strong>. Free My ID opens by itself and walks you through six simple screens.</p></li>
 </ol>
 <div class="panel"><p><strong>Stay safe:</strong> only download Free My ID from this page or from <a href="https://github.com/FreeMyID/freemyid/releases">our GitHub releases page</a>. We will never email you an installer, and we will never call you.</p></div>
+<details><summary>For helpers: check the download is genuine</summary><p>Each release lists a <strong>SHA256SUMS.txt</strong> file. In PowerShell, run <code>Get-FileHash .\FreeMyIDSetup.exe</code> and check that the long code matches the line for FreeMyIDSetup.exe in that file.</p></details>
 <h2>Removing it</h2>
 <p>Open Windows <strong>Settings → Apps</strong>, find <strong>Free My ID</strong>, and click <strong>Uninstall</strong>. It asks whether to delete your saved records too.</p>
 </main>
