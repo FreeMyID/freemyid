@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block main %}
+{# Living style guide (noindex). Swatches and ratios come from site_src/tokens.yaml at build time. #}
+<div class="wrap main-pad">
+  {% include "partials/crumbs.html" %}
+  <h1>Website style guide</h1>
+  <p class="lead mt-s">Tokens and components for the Free My ID website. Calm, plain, high contrast: more "trusted local bank" than "startup". Full notes in docs/WEBSITE.md.</p>
+
+  <h2 class="mt-l" id="color">Color</h2>
+  <p class="mt-s">Each swatch shows light | dark, with its contrast ratio against the page background in each theme.</p>
+  <ul class="swatches mt-s" role="list">
+  {% for c in swatches %}
+    <li><div class="chipbar"><span class="sw sw--{{ c.name }}-l"></span><span class="sw sw--{{ c.name }}-d"></span></div>
+      <p><strong>--color-{{ c.name }}</strong><br>{{ c.light }} | {{ c.dark }}<br>on bg: {{ c.on_bg[0] }} | {{ c.on_bg[1] }}</p></li>
+  {% endfor %}
+  </ul>
+
+  <h2 class="mt-l" id="type">Type scale</h2>
+  <div class="stack mt-s">
+    <p class="sg-h1">Step 4 / h1: Take your name off the websites that sell it.</p>
+    <p class="sg-h2">Step 3 / h2: That post went to the wrong place</p>
+    <p class="sg-h3">Step 2 / h3: Tell it who to protect</p>
+    <p class="lead">Step 1 / lead: Free My ID asks each one to remove you.</p>
+    <p>Step 0 / body (20px): No account. No cloud. Uninstall anytime.</p>
+    <p class="note">Step -1 / note (17px): Example screen. The person and the numbers are made up.</p>
+  </div>
+
+  <h2 class="mt-l" id="buttons">Buttons</h2>
+  <div class="btn-row mt-s">
+    <a class="btn btn--lg" href="#buttons">{{ icon('download') }}Large primary</a>
+    <a class="btn" href="#buttons">Primary</a>
+    <a class="btn btn--secondary" href="#buttons">Secondary</a>
+    <a class="btn btn--small" href="#buttons">Small</a>
+  </div>
+
+  <h2 class="mt-l" id="callouts">Callouts</h2>
+  <div class="callout">{{ icon('info') }}<div><p>Default (navy): information.</p></div></div>
+  <div class="callout callout--gold">{{ icon('shield') }}<div><p>Gold: safety tips and honest caveats.</p></div></div>
+  <div class="callout callout--myth">{{ icon('x') }}<div><p><span class="label">Myth:</span> red is for myths only, never for alarms.</p></div></div>
+  <div class="callout callout--fact">{{ icon('check') }}<div><p><span class="label">Fact:</span> green for facts and good news.</p></div></div>
+
+  <h2 class="mt-l" id="steps">Steps</h2>
+  <ol class="steps mt-s prose" role="list"><li><h3>First step</h3><p>One idea per step.</p></li><li><h3>Second step</h3><p>Numbers come from CSS counters.</p></li></ol>
+
+  <h2 class="mt-l" id="trust">Trust panel</h2>
+  <div class="mt-s">{% include "partials/trust.html" %}</div>
+
+  <h2 class="mt-l" id="cards">Cards</h2>
+  <div class="card-grid card-grid--3 mt-s"><ul role="list">
+    <li class="card">{{ icon('mail', 'icon card__icon') }}<h3>Card</h3><p>Icon, heading, text.</p></li>
+    <li class="card card--link">{{ icon('search', 'icon card__icon') }}<h3><a href="#cards">Linked card</a></h3><p>The whole card is clickable.</p></li>
+    <li class="card"><span class="chip chip--ok">Site confirmed</span> <span class="chip chip--warn">Waiting</span> <span class="chip">Asked</span></li>
+  </ul></div>
+
+  <h2 class="mt-l" id="faq">FAQ item</h2>
+  <div class="faq mt-s prose"><details><summary>A question?</summary><p>The answer, in plain words.</p></details></div>
+
+  <h2 class="mt-l" id="mockup">Product mockup</h2>
+  <div class="mt-s prose">{% include "partials/mockup.html" %}</div>
+
+  <h2 class="mt-l" id="smartscreen">SmartScreen drawing</h2>
+  {% set ss_step = 2 %}{% include "partials/smartscreen.html" %}
+
+  <h2 class="mt-l" id="icons">Icons</h2>
+  <ul class="guide-list mt-s" role="list">
+  {% for n in icon_names %}<li><span class="card sg-icon">{{ icon(n) }}<code>{{ n }}</code></span></li>{% endfor %}
+  </ul>
+  {% include "partials/star-rule.html" %}
+</div>
+{% endblock %}

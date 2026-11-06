@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free My ID website style guide</title>
+<meta name="description" content="Design tokens and components for the Free My ID website. For contributors.">
+<meta http-equiv="Content-Security-Policy" content="default-src &#39;self&#39;; script-src &#39;none&#39;; style-src &#39;self&#39;; img-src &#39;self&#39;; font-src &#39;self&#39;; connect-src &#39;none&#39;; object-src &#39;none&#39;; frame-src &#39;none&#39;; form-action &#39;none&#39;; base-uri &#39;none&#39;">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#1b2f5b">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://freemyid.github.io/freemyid/styleguide/">
+<link rel="stylesheet" href="../style.css?v=4f211514a3">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Free My ID">
+<meta property="og:locale" content="en_US">
+<meta property="og:title" content="Free My ID website style guide">
+<meta property="og:description" content="Design tokens and components for the Free My ID website. For contributors.">
+<meta property="og:url" content="https://freemyid.github.io/freemyid/styleguide/">
+<meta property="og:image" content="https://freemyid.github.io/freemyid/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Free My ID: take your name off the websites that sell it. Free. No account. No cloud.">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to main content</a>
+<div class="flagbar" aria-hidden="true"><span></span><span></span><span></span></div>
+<header class="site-header">
+  <div class="wrap site-header__inner">
+    <a class="brand" href="../"><svg class="brand-mark" viewBox="0 0 32 32" width="32" height="32" aria-hidden="true" focusable="false"><rect width="32" height="32" rx="7" fill="#1b2f5b"/><path d="M9 17l5 5 9-11" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M25.5 3.2l.9 1.9 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3z" fill="#f2b705"/></svg>
+<span>Free My ID<span class="visually-hidden">, home page</span></span></a>
+    <nav class="nav nav--wide" aria-label="Main">
+      <ul role="list">
+  <li><a href="../how-it-works/">How it works</a></li>
+  <li><a href="../guides/">Opt-out guides</a></li>
+  <li><a href="../privacy/">Your privacy</a></li>
+  <li><a href="../faq/">Questions</a></li>
+  <li><a class="btn btn--small" href="../download/"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>Download</a></li>
+</ul>
+
+    </nav>
+    <details class="menu">
+      <summary><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span class="when-closed">Menu</span><span class="when-open">Close menu</span></summary>
+      <nav class="nav" aria-label="Main">
+        <ul role="list">
+  <li><a href="../how-it-works/">How it works</a></li>
+  <li><a href="../guides/">Opt-out guides</a></li>
+  <li><a href="../privacy/">Your privacy</a></li>
+  <li><a href="../faq/">Questions</a></li>
+  <li><a class="btn btn--small" href="../download/"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>Download</a></li>
+</ul>
+
+      </nav>
+    </details>
+  </div>
+</header>
+<main id="main" tabindex="-1">
+<div class="wrap main-pad">
+<nav class="crumbs" aria-label="Breadcrumb">
+  <ol role="list">
+    <li><a href="../">Home</a></li>
+    <li><span aria-current="page">Style guide</span></li>
+  </ol>
+</nav>
+  <h1>Website style guide</h1>
+  <p class="lead mt-s">Tokens and components for the Free My ID website. Calm, plain, high contrast: more "trusted local bank" than "startup". Full notes in docs/WEBSITE.md.</p>
+
+  <h2 class="mt-l" id="color">Color</h2>
+  <p class="mt-s">Each swatch shows light | dark, with its contrast ratio against the page background in each theme.</p>
+  <ul class="swatches mt-s" role="list">
+    <li><div class="chipbar"><span class="sw sw--bg-l"></span><span class="sw sw--bg-d"></span></div>
+      <p><strong>--color-bg</strong><br>#ffffff | #0f1520<br>on bg: 1.0 | 1.0</p></li>
+    <li><div class="chipbar"><span class="sw sw--bg-alt-l"></span><span class="sw sw--bg-alt-d"></span></div>
+      <p><strong>--color-bg-alt</strong><br>#f7f5ef | #141c29<br>on bg: 1.1 | 1.1</p></li>
+    <li><div class="chipbar"><span class="sw sw--surface-l"></span><span class="sw sw--surface-d"></span></div>
+      <p><strong>--color-surface</strong><br>#f2f4f8 | #1a2331<br>on bg: 1.1 | 1.2</p></li>
+    <li><div class="chipbar"><span class="sw sw--surface-strong-l"></span><span class="sw sw--surface-strong-d"></span></div>
+      <p><strong>--color-surface-strong</strong><br>#e4e9f1 | #243046<br>on bg: 1.2 | 1.4</p></li>
+    <li><div class="chipbar"><span class="sw sw--text-l"></span><span class="sw sw--text-d"></span></div>
+      <p><strong>--color-text</strong><br>#14181f | #f2f4f8<br>on bg: 17.8 | 16.6</p></li>
+    <li><div class="chipbar"><span class="sw sw--muted-l"></span><span class="sw sw--muted-d"></span></div>
+      <p><strong>--color-muted</strong><br>#3d4654 | #c3cad6<br>on bg: 9.5 | 11.1</p></li>
+    <li><div class="chipbar"><span class="sw sw--heading-l"></span><span class="sw sw--heading-d"></span></div>
+      <p><strong>--color-heading</strong><br>#1b2f5b | #c4d5f7<br>on bg: 13.1 | 12.4</p></li>
+    <li><div class="chipbar"><span class="sw sw--brand-l"></span><span class="sw sw--brand-d"></span></div>
+      <p><strong>--color-brand</strong><br>#1b2f5b | #c4d5f7<br>on bg: 13.1 | 12.4</p></li>
+    <li><div class="chipbar"><span class="sw sw--brand-ink-l"></span><span class="sw sw--brand-ink-d"></span></div>
+      <p><strong>--color-brand-ink</strong><br>#ffffff | #0f1520<br>on bg: 1.0 | 1.0</p></li>
+    <li><div class="chipbar"><span class="sw sw--accent-l"></span><span class="sw sw--accent-d"></span></div>
+      <p><strong>--color-accent</strong><br>#a3202e | #f5a3ab<br>on bg: 7.5 | 9.3</p></li>
+    <li><div class="chipbar"><span class="sw sw--link-l"></span><span class="sw sw--link-d"></span></div>
+      <p><strong>--color-link</strong><br>#1a4fa0 | #a8caff<br>on bg: 7.9 | 10.9</p></li>
+    <li><div class="chipbar"><span class="sw sw--ok-l"></span><span class="sw sw--ok-d"></span></div>
+      <p><strong>--color-ok</strong><br>#1e6b3c | #8fd6a6<br>on bg: 6.5 | 10.7</p></li>
+    <li><div class="chipbar"><span class="sw sw--warn-l"></span><span class="sw sw--warn-d"></span></div>
+      <p><strong>--color-warn</strong><br>#7a4f00 | #f0c674<br>on bg: 7.1 | 11.4</p></li>
+    <li><div class="chipbar"><span class="sw sw--line-l"></span><span class="sw sw--line-d"></span></div>
+      <p><strong>--color-line</strong><br>#c5ccd8 | #36435a<br>on bg: 1.6 | 1.8</p></li>
+    <li><div class="chipbar"><span class="sw sw--line-strong-l"></span><span class="sw sw--line-strong-d"></span></div>
+      <p><strong>--color-line-strong</strong><br>#6b778c | #8794ab<br>on bg: 4.5 | 6.0</p></li>
+    <li><div class="chipbar"><span class="sw sw--focus-l"></span><span class="sw sw--focus-d"></span></div>
+      <p><strong>--color-focus</strong><br>#f2b705 | #f2b705<br>on bg: 1.8 | 10.1</p></li>
+    <li><div class="chipbar"><span class="sw sw--focus-inner-l"></span><span class="sw sw--focus-inner-d"></span></div>
+      <p><strong>--color-focus-inner</strong><br>#14181f | #f2f4f8<br>on bg: 17.8 | 16.6</p></li>
+    <li><div class="chipbar"><span class="sw sw--footer-bg-l"></span><span class="sw sw--footer-bg-d"></span></div>
+      <p><strong>--color-footer-bg</strong><br>#1b2f5b | #0a0f18<br>on bg: 13.1 | 1.0</p></li>
+    <li><div class="chipbar"><span class="sw sw--footer-text-l"></span><span class="sw sw--footer-text-d"></span></div>
+      <p><strong>--color-footer-text</strong><br>#e8edf6 | #dfe5ee<br>on bg: 1.2 | 14.4</p></li>
+    <li><div class="chipbar"><span class="sw sw--flag-white-l"></span><span class="sw sw--flag-white-d"></span></div>
+      <p><strong>--color-flag-white</strong><br>#ffffff | #e8edf6<br>on bg: 1.0 | 15.6</p></li>
+  </ul>
+
+  <h2 class="mt-l" id="type">Type scale</h2>
+  <div class="stack mt-s">
+    <p class="sg-h1">Step 4 / h1: Take your name off the websites that sell it.</p>
+    <p class="sg-h2">Step 3 / h2: That post went to the wrong place</p>
+    <p class="sg-h3">Step 2 / h3: Tell it who to protect</p>
+    <p class="lead">Step 1 / lead: Free My ID asks each one to remove you.</p>
+    <p>Step 0 / body (20px): No account. No cloud. Uninstall anytime.</p>
+    <p class="note">Step -1 / note (17px): Example screen. The person and the numbers are made up.</p>
+  </div>
+
+  <h2 class="mt-l" id="buttons">Buttons</h2>
+  <div class="btn-row mt-s">
+    <a class="btn btn--lg" href="#buttons"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>Large primary</a>
+    <a class="btn" href="#buttons">Primary</a>
+    <a class="btn btn--secondary" href="#buttons">Secondary</a>
+    <a class="btn btn--small" href="#buttons">Small</a>
+  </div>
+
+  <h2 class="mt-l" id="callouts">Callouts</h2>
+  <div class="callout"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.2"/></svg><div><p>Default (navy): information.</p></div></div>
+  <div class="callout callout--gold"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l7 3v5.2c0 4.4-2.9 8.1-7 9.8-4.1-1.7-7-5.4-7-9.8V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg><div><p>Gold: safety tips and honest caveats.</p></div></div>
+  <div class="callout callout--myth"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg><div><p><span class="label">Myth:</span> red is for myths only, never for alarms.</p></div></div>
+  <div class="callout callout--fact"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><div><p><span class="label">Fact:</span> green for facts and good news.</p></div></div>
+
+  <h2 class="mt-l" id="steps">Steps</h2>
+  <ol class="steps mt-s prose" role="list"><li><h3>First step</h3><p>One idea per step.</p></li><li><h3>Second step</h3><p>Numbers come from CSS counters.</p></li></ol>
+
+  <h2 class="mt-l" id="trust">Trust panel</h2>
+  <div class="mt-s"><div class="trust">
+  <h2 class="visually-hidden">Our promises</h2>
+  <ul role="list">
+    <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="10" cy="8" r="3.8"/><path d="M3 20.5c0-3.7 3.1-6.3 7-6.3"/><path d="M15.5 15l5 5M20.5 15l-5 5"/></svg><span>No account</span></li>
+    <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M7.5 18h9.5a3.5 3.5 0 0 0 .6-6.95A6 6 0 0 0 6.3 9.4 4.3 4.3 0 0 0 7.5 18z"/><path d="M4 4l16 16"/></svg><span>No cloud</span></li>
+    <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l7 3v5.2c0 4.4-2.9 8.1-7 9.8-4.1-1.7-7-5.4-7-9.8V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg><span>Never asks for your Social Security number, bank or card details</span></li>
+    <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M9 20h6M12 16v4"/></svg><span>Your records stay on your computer</span></li>
+    <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></svg><span>Free and open source</span></li>
+    <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 7h16M9.5 7V4h5v3M6 7l1 13h10l1-13"/></svg><span>Uninstall anytime</span></li>
+  </ul>
+</div>
+</div>
+
+  <h2 class="mt-l" id="cards">Cards</h2>
+  <div class="card-grid card-grid--3 mt-s"><ul role="list">
+    <li class="card"><svg class="icon card__icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 7l8.5 6 8.5-6"/></svg><h3>Card</h3><p>Icon, heading, text.</p></li>
+    <li class="card card--link"><svg class="icon card__icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/></svg><h3><a href="#cards">Linked card</a></h3><p>The whole card is clickable.</p></li>
+    <li class="card"><span class="chip chip--ok">Site confirmed</span> <span class="chip chip--warn">Waiting</span> <span class="chip">Asked</span></li>
+  </ul></div>
+
+  <h2 class="mt-l" id="faq">FAQ item</h2>
+  <div class="faq mt-s prose"><details><summary>A question?</summary><p>The answer, in plain words.</p></details></div>
+
+  <h2 class="mt-l" id="mockup">Product mockup</h2>
+  <div class="mt-s prose"><figure class="mock">
+  <div class="mock__window" role="img" aria-label="Drawing of the Free My ID home screen for an example person, Jane Q Testperson of Springfield, Illinois. It says Free My ID is working, most sites have confirmed, some are still waiting, and one site needs a few minutes of help, with a big Do it with me button.">
+    <div class="mock__bar"><svg class="brand-mark" viewBox="0 0 32 32" width="32" height="32" aria-hidden="true" focusable="false"><rect width="32" height="32" rx="7" fill="#1b2f5b"/><path d="M9 17l5 5 9-11" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M25.5 3.2l.9 1.9 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3z" fill="#f2b705"/></svg>
+<span>Free My ID</span><span class="mock__ctl">&#8211; &#9633; &#215;</span></div>
+    <div class="mock__body">
+      <p class="mock__who">Jane Q Testperson &middot; Springfield, IL</p>
+      <p class="mock__status"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16.2 9.5"/></svg><span>Free My ID is working. 23 sites have confirmed or no longer list you, 12 are still waiting, 1 needs you.</span></p>
+      <div class="mock__todo">
+        <p><strong>Whitepages needs 2 minutes of your help</strong></p>
+        <span class="mock__btn">Do it with me</span>
+      </div>
+      <ul class="mock__list">
+        <li><span>Spokeo</span><span class="chip chip--ok">Site confirmed</span></li>
+        <li><span>BeenVerified</span><span class="chip chip--warn">Waiting for the site to reply</span></li>
+        <li><span>TruePeopleSearch</span><span class="chip">Asked</span></li>
+      </ul>
+    </div>
+  </div>
+  <figcaption>Example screen. The person and the numbers are made up.</figcaption>
+</figure>
+</div>
+
+  <h2 class="mt-l" id="smartscreen">SmartScreen drawing</h2>
+<figure class="ss mt-s">
+  <div class="ss__box" role="img" aria-label="Drawing of the same blue box after clicking More info. It shows App: FreeMyIDSetup.exe and Publisher: Unknown publisher. The Run anyway button is highlighted.">
+    <p class="ss__title">Windows protected your PC</p>
+    <p>Microsoft Defender SmartScreen prevented an unrecognized app from starting. Running this app might put your PC at risk.</p>
+    <p>App: FreeMyIDSetup.exe<br>Publisher: Unknown publisher</p>
+    <div class="ss__btns"><span class="ss__btn ss__btn--hi ss__hint">Run anyway</span><span class="ss__btn">Don't run</span></div>
+  </div>
+  <figcaption>A drawing of what Windows shows after you click More info. Click the highlighted button.</figcaption>
+</figure>
+
+  <h2 class="mt-l" id="icons">Icons</h2>
+  <ul class="guide-list mt-s" role="list">
+<li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"/></svg><code>arrow-right</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 5h16v11H9.5L5 20v-4H4z"/></svg><code>chat</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><code>check</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16.2 9.5"/></svg><code>check-circle</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></svg><code>clock</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M7.5 18h9.5a3.5 3.5 0 0 0 .6-6.95A6 6 0 0 0 6.3 9.4 4.3 4.3 0 0 0 7.5 18z"/><path d="M4 4l16 16"/></svg><code>cloud-off</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></svg><code>code</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M9 20h6M12 16v4"/></svg><code>computer</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 12h12"/></svg><code>dash</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg><code>download</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 4h6v6M20 4l-8.5 8.5M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg><code>external</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="9" cy="8" r="3.4"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17.5 14c2.4 0 4 1.8 4 4.5"/></svg><code>family</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h4"/></svg><code>form</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 20s-7.5-4.4-7.5-10A4.3 4.3 0 0 1 12 7.3 4.3 4.3 0 0 1 19.5 10c0 5.6-7.5 10-7.5 10z"/></svg><code>heart</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.2"/></svg><code>info</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg><code>lock</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 7l8.5 6 8.5-6"/></svg><code>mail</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16"/></svg><code>menu</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 3.5l12 7.2-5.2 1.3 3 5.6-2.4 1.3-3-5.6L6.8 17z"/></svg><code>pointer</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M7 9V3.5h10V9"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M7 14h10v6.5H7z"/></svg><code>printer</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4.5V9h-4.5"/></svg><code>refresh</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg><code>report</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/></svg><code>search</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l7 3v5.2c0 4.4-2.9 8.1-7 9.8-4.1-1.7-7-5.4-7-9.8V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg><code>shield</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path fill="currentColor" stroke="none" d="M12 2.8l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 16.8l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg><code>star</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 7h16M9.5 7V4h5v3M6 7l1 13h10l1-13"/></svg><code>trash</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="10" cy="8" r="3.8"/><path d="M3 20.5c0-3.7 3.1-6.3 7-6.3"/><path d="M15.5 15l5 5M20.5 15l-5 5"/></svg><code>user-off</code></span></li><li><span class="card sg-icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg><code>x</code></span></li>  </ul>
+<div class="star-rule" aria-hidden="true"><svg viewBox="0 0 72 16" width="72" height="16"><g fill="currentColor"><path d="M8 1.5l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.3l-3.8 2 .7-4.3-3.1-3 4.3-.6z"/><path d="M36 1.5l1.9 3.9 4.3.6-3.1 3 .7 4.3-3.8-2-3.8 2 .7-4.3-3.1-3 4.3-.6z"/><path d="M64 1.5l1.9 3.9 4.3.6-3.1 3 .7 4.3-3.8-2-3.8 2 .7-4.3-3.1-3 4.3-.6z"/></g></svg></div>
+</div>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <a class="brand" href="../"><svg class="brand-mark" viewBox="0 0 32 32" width="32" height="32" aria-hidden="true" focusable="false"><rect width="32" height="32" rx="7" fill="#1b2f5b"/><path d="M9 17l5 5 9-11" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M25.5 3.2l.9 1.9 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3z" fill="#f2b705"/></svg>
+<span>Free My ID<span class="visually-hidden">, home page</span></span></a>
+        <p class="mt-s">Take your name off the websites that sell it.</p>
+        <p class="footer-trust">No account. No cloud. Never asks for your Social Security number, bank or card details. Free and open source. Uninstall anytime.</p>
+      </div>
+      <nav aria-label="Free My ID">
+        <h2>The app</h2>
+        <ul role="list">
+          <li><a href="../how-it-works/">How it works</a></li>
+          <li><a href="../download/">Download for Windows</a></li>
+          <li><a href="../privacy/">Your privacy</a></li>
+          <li><a href="../faq/">Questions</a></li>
+        </ul>
+      </nav>
+      <nav aria-label="Help">
+        <h2>Help</h2>
+        <ul role="list">
+<li><a href="../guides/">Free opt-out guides</a></li><li><a href="../i-do-not-consent/">The "I do not consent" post</a></li>          <li><a href="../#helping">Helping a parent</a></li>
+          <li><a href="https://github.com/FreeMyID/freemyid">Source code on GitHub</a></li>
+        </ul>
+      </nav>
+    </div>
+    <div class="footer-legal">
+      <p>Free My ID is free, open-source software that runs on your own computer. It is not a government service and is not affiliated with Facebook/Meta or any data broker.</p>
+      <p>No cookies, no trackers, no analytics on this website. <a href="../privacy/#this-website">How this website treats you</a>.</p>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

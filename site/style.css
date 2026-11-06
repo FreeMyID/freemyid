@@ -123,6 +123,29 @@
     }
   }
 }
+/* Styleguide swatches (generated; the CSP forbids style="" attributes). */
+@layer pages {
+  .sw--bg-l { background: #ffffff; } .sw--bg-d { background: #0f1520; }
+  .sw--bg-alt-l { background: #f7f5ef; } .sw--bg-alt-d { background: #141c29; }
+  .sw--surface-l { background: #f2f4f8; } .sw--surface-d { background: #1a2331; }
+  .sw--surface-strong-l { background: #e4e9f1; } .sw--surface-strong-d { background: #243046; }
+  .sw--text-l { background: #14181f; } .sw--text-d { background: #f2f4f8; }
+  .sw--muted-l { background: #3d4654; } .sw--muted-d { background: #c3cad6; }
+  .sw--heading-l { background: #1b2f5b; } .sw--heading-d { background: #c4d5f7; }
+  .sw--brand-l { background: #1b2f5b; } .sw--brand-d { background: #c4d5f7; }
+  .sw--brand-ink-l { background: #ffffff; } .sw--brand-ink-d { background: #0f1520; }
+  .sw--accent-l { background: #a3202e; } .sw--accent-d { background: #f5a3ab; }
+  .sw--link-l { background: #1a4fa0; } .sw--link-d { background: #a8caff; }
+  .sw--ok-l { background: #1e6b3c; } .sw--ok-d { background: #8fd6a6; }
+  .sw--warn-l { background: #7a4f00; } .sw--warn-d { background: #f0c674; }
+  .sw--line-l { background: #c5ccd8; } .sw--line-d { background: #36435a; }
+  .sw--line-strong-l { background: #6b778c; } .sw--line-strong-d { background: #8794ab; }
+  .sw--focus-l { background: #f2b705; } .sw--focus-d { background: #f2b705; }
+  .sw--focus-inner-l { background: #14181f; } .sw--focus-inner-d { background: #f2f4f8; }
+  .sw--footer-bg-l { background: #1b2f5b; } .sw--footer-bg-d { background: #0a0f18; }
+  .sw--footer-text-l { background: #e8edf6; } .sw--footer-text-d { background: #dfe5ee; }
+  .sw--flag-white-l { background: #ffffff; } .sw--flag-white-d { background: #e8edf6; }
+}
 
 @layer reset {
   *, *::before, *::after { box-sizing: border-box; }
@@ -557,6 +580,15 @@
 @layer components {
   .btn-row--center { justify-content: center; }
   .center .lead { margin-inline: auto; }
+}
+
+@layer pages {
+  /* Styleguide only */
+  .sg-h1 { font: 700 var(--step-4)/1.2 var(--font-display); color: var(--color-heading); }
+  .sg-h2 { font: 700 var(--step-3)/1.2 var(--font-display); color: var(--color-heading); }
+  .sg-h3 { font: 700 var(--step-2)/1.2 var(--font-body); color: var(--color-heading); }
+  .sg-icon { display: flex; align-items: center; gap: var(--space-xs); padding: var(--space-xs); color: var(--color-heading); }
+  .sg-icon svg { inline-size: 1.5rem; block-size: 1.5rem; }
 }
 
 @layer utilities {

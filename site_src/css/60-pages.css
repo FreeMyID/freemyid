@@ -1,0 +1,8 @@
+@layer pages {
+  /* Styleguide only */
+  .sg-h1 { font: 700 var(--step-4)/1.2 var(--font-display); color: var(--color-heading); }
+  .sg-h2 { font: 700 var(--step-3)/1.2 var(--font-display); color: var(--color-heading); }
+  .sg-h3 { font: 700 var(--step-2)/1.2 var(--font-body); color: var(--color-heading); }
+  .sg-icon { display: flex; align-items: center; gap: var(--space-xs); padding: var(--space-xs); color: var(--color-heading); }
+  .sg-icon svg { inline-size: 1.5rem; block-size: 1.5rem; }
+}

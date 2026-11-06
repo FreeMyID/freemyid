@@ -56,6 +56,13 @@
   title: "Does the \"I do not consent\" Facebook post work?"
   description: Your instinct was right. Here is why the "I do not consent" post cannot reach the sites selling your details, and what can.
   jsonld: [breadcrumbs]
+- id: styleguide
+  out: styleguide/
+  template: pages/styleguide.html
+  label: Style guide
+  title: "Free My ID website style guide"
+  description: Design tokens and components for the Free My ID website. For contributors.
+  noindex: true
 - id: "404"
   out: 404.html
   template: pages/404.html

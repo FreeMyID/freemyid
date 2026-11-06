@@ -94,7 +94,12 @@ def tokens_css(tokens: dict) -> str:
         "    :root[data-theme=\"dark\"] {", dark, "    }",
         "  }",
         "}",
+        "/* Styleguide swatches (generated; the CSP forbids style=\"\" attributes). */",
+        "@layer pages {",
     ]
+    lines += [f"  .sw--{n}-l {{ background: {v[0]}; }} .sw--{n}-d {{ background: {v[1]}; }}"
+              for n, v in colors.items()]
+    lines.append("}")
     return "\n".join(lines) + "\n"
 
 
