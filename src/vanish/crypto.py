@@ -104,6 +104,14 @@ def _get_or_create_key() -> bytes:
         raise KeyUnavailable(str(e)) from e
 
 
+def delete_key() -> None:
+    """Remove the data key from the OS keychain (used by `vanish wipe`). Missing key is fine."""
+    try:
+        keyring.delete_password(SERVICE, KEY_NAME)
+    except keyring.errors.PasswordDeleteError:
+        pass
+
+
 class Cipher:
     def __init__(self, key: bytes | None = None) -> None:
         if key is None:

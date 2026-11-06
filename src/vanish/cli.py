@@ -1,6 +1,7 @@
 """`vanish` command line. OWNER: orchestrator. Thin layer: all logic lives in modules."""
 from __future__ import annotations
 
+import logging
 import os
 import sys
 from collections.abc import Callable, Sequence
@@ -31,6 +32,7 @@ for name, sub in (("profile", profile_app), ("schedule", schedule_app),
     app.add_typer(sub, name=name)
 
 con = Console()
+log = logging.getLogger("vanish.cli")
 
 
 def _store():
@@ -254,6 +256,35 @@ def profile_remove(profile: str, yes: Annotated[bool, typer.Option("--yes")] = F
         delete_mailbox_password(p.id, p.mailbox)
     store.delete_profile(p.id)
     con.print("Deleted.")
+
+
+@app.command()
+def wipe(yes: Annotated[bool, typer.Option("--yes")] = False):
+    """Delete everything Vanish saved on this computer: people, evidence, mailbox passwords,
+    the encryption key and the background task. Used by the Windows uninstaller."""
+    import shutil
+
+    from . import crypto
+    if not yes and not typer.confirm("Delete ALL Vanish data on this computer?"):
+        raise typer.Exit()
+    try:
+        from .scheduler import remove as sched_remove
+        sched_remove()
+    except Exception:  # noqa: BLE001  best effort; the task may not exist
+        log.warning("wipe: scheduler removal failed")
+    if paths.db_path().exists():
+        try:
+            from .secrets import delete_mailbox_password
+            store = _store()
+            for p in store.list_profiles():
+                if p.mailbox:
+                    delete_mailbox_password(p.id, p.mailbox)
+            store.close()
+        except Exception:  # noqa: BLE001  key may already be gone; still delete files
+            log.warning("wipe: could not read profiles to remove mailbox passwords")
+    crypto.delete_key()
+    shutil.rmtree(paths.home(), ignore_errors=True)
+    con.print("All Vanish data deleted.")
 
 
 @profile_app.command("export")

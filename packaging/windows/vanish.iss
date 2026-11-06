@@ -52,13 +52,21 @@ begin
 end;
 
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+var
+  RC: Integer;
 begin
-  if CurUninstallStep = usPostUninstall then
+  // usUninstall runs BEFORE files are removed, so vanish-cli.exe still exists and can also
+  // delete the encryption key and mailbox passwords from Windows Credential Manager.
+  if CurUninstallStep = usUninstall then
   begin
     if DirExists(DataDir) then
       if MsgBox('Do you also want to delete the information Vanish saved on this computer '
                 + '(the people you added, reports and screenshots)?' + #13#10 + #13#10
                 + 'Choose No if you might use Vanish again.', mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDYES then
-        DelTree(DataDir, True, True, True);
+      begin
+        Exec(ExpandConstant('{app}\vanish-cli.exe'), 'wipe --yes', '', SW_HIDE, ewWaitUntilTerminated, RC);
+        if DirExists(DataDir) then
+          DelTree(DataDir, True, True, True);
+      end;
   end;
 end;
