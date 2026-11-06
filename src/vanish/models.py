@@ -166,6 +166,13 @@ class EmailMode(StrEnum):
     AUTO = "auto"                   # opt-in; legal demands STILL require approval
 
 
+class Tier(StrEnum):
+    """How Vanish handles a broker for a profile (docs/PLAN_V1.md D1)."""
+    EMAIL = "email"          # automatic privacy-request letter from the removal mailbox
+    ASSISTED = "assisted"    # user does it in their own browser with copy buttons
+    AUTOMATIC = "automatic"  # Playwright, data-driven Broker.search/form, verified brokers only
+
+
 class TodoKind(StrEnum):
     CAPTCHA = "captcha"
     ID_UPLOAD = "id_upload"
@@ -177,6 +184,8 @@ class TodoKind(StrEnum):
     COMPLAINT = "complaint"           # escalate to AG / CPPA
     GOVERNMENT_PORTAL = "government_portal"  # e.g. California DROP
     REVIEW_MATCH = "review_match"     # possible match; user confirms it's them
+    ASSISTED_OPT_OUT = "assisted_opt_out"  # "Do it with me": user fills the form in own browser
+    SEND_EMAIL_MANUALLY = "send_email_manually"  # no mailbox: user sends the prepared letter
     PERMISSION_NEEDED = "permission_needed"  # broker wants ID/account/phone, flag is off
     OTHER = "other"
 
@@ -547,6 +556,7 @@ class BrokerStatus(_Base):
     last_escalated_at: datetime | None = None
     next_check_at: datetime | None = None
     needs_human_reason: str | None = None
+    tier: Tier | None = None      # set by engine.runner each run
 
 
 class Evidence(_Base):
@@ -590,6 +600,9 @@ class Todo(_Base):
     created_at: datetime = Field(default_factory=utcnow)
     done_at: datetime | None = None
     resume_token: str | None = None        # engine uses to resume after human step
+    copy_fields: dict[str, str] = Field(
+        default={}, description="Label -> value shown with a Copy button on Assisted cards. "
+        "Only fields the broker needs (data minimization); never stored in logs.")
 
     _relpath_ok = field_validator("artifact_relpath")(
         classmethod(lambda cls, v: _safe_relpath(v)))
