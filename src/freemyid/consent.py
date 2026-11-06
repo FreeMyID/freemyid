@@ -23,10 +23,10 @@ if TYPE_CHECKING:  # pragma: no cover
     from .storage import Store
 
 #: Version id of the consent text the wizard currently shows.
-CURRENT_TEXT_VERSION = "2026-11-b"
+CURRENT_TEXT_VERSION = "2026-11-c"
 #: Every consent text version a stored profile may have accepted. Add (never remove)
 #: when the wording changes in a way that doesn't need everyone to consent again.
-ACCEPTED_TEXT_VERSIONS: frozenset[str] = frozenset({"2026-11-a", CURRENT_TEXT_VERSION})
+ACCEPTED_TEXT_VERSIONS: frozenset[str] = frozenset({"2026-11-a", "2026-11-b", CURRENT_TEXT_VERSION})
 #: broker_id the wizard uses when it saves the signed authorization as evidence.
 CONSENT_EVIDENCE_BROKER = "_consent"
 
