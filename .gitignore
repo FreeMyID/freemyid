@@ -19,3 +19,5 @@ brokers/registry.yaml
 docs/research/broker_policies.md
 docs/research/broker_candidates.md
 docs/research/success_signals.yaml
+# hashes of private broker hosts (reversible) stay local
+tools/private_host_hashes.txt
