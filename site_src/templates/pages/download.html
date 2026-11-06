@@ -50,6 +50,8 @@
       <li>
         <h3>Check the name, then click "Run anyway"</h3>
         <p>Make sure it says the app is <strong>FreeMyIDSetup.exe</strong>. It will say "Unknown publisher"; that's expected. Then click <strong>Run anyway</strong>.</p>
+        <!-- WR-19: safety line before Run anyway -->
+        <p class="callout"><strong>Only do this if you downloaded the file from this page or from our GitHub releases page. If it came from anywhere else, delete it.</strong></p>
         {% set ss_step = 2 %}{% include "partials/smartscreen.html" %}
       </li>
       <li><h3>Click Install</h3><p>Free My ID opens by itself and walks you through six simple screens.</p></li>
