@@ -9,6 +9,10 @@ Decided by the user 2026-11-06. Replaces "Vanish", which clashed with Reckitt's 
 - Never "FreeMyID™" or "®" until a mark is actually filed.
 - **Required clarifier:** the name can make people think "identity-theft protection". The tagline or first sentence must always say what it really does.
 
+## Logo
+
+Direction **A, star badge** (navy rounded tile, one white star, red bar), picked by the user 2026-11-06 from brand/logo/options.html. Final files in brand/logo/final/ (WR-18).
+
 ## Taglines (pick per context)
 
 1. **Take your name off the websites that sell it.** (default, literal)
