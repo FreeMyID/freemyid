@@ -50,6 +50,7 @@
 - id: google
   q: 'Will this remove me from Google?'
   a: |-
+    <!-- Source: Google Search Help, "Remove outdated content" https://support.google.com/websearch/answer/12719076 (verified by broker-researcher, brokers/SOURCES.md "Website claims") -->
     <p>No. Free My ID doesn't contact Google. Once the site has removed your listing, Google drops the page on its own schedule, which can take a while. Google's "Refresh outdated content" tool can speed it up.</p>
 - id: without-app
   q: 'Can I do this without the app?'
