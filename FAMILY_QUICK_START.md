@@ -53,7 +53,7 @@ Free My ID opens in its own window. Each screen asks one thing. Press **Next** t
 
 Free My ID starts its first check. At the top of the window you will see one sentence, like:
 
-> **Free My ID is working. 23 sites done, 12 waiting, 4 need you.**
+> **Free My ID is working. 23 sites have confirmed or no longer list you, 12 are still waiting, 4 need you.**
 
 Under it are **cards**. Each card is one thing for you to do, with one big button:
 

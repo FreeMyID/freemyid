@@ -146,7 +146,7 @@ def _mailbox(d: dr.Draft) -> None:
         a = {"provider": prov, "address": _ask("Mailbox address", old.get("address", "")),
                  "password": _secret("Password / app password (hidden; blank keeps saved)")}
         if prov == "other":
-            a.update(imap_host=_ask("IMAP server"), smtp_host=_ask("SMTP server"),
+            a.update(imap_host=_ask("Incoming mail server (IMAP)"), smtp_host=_ask("Outgoing mail server (SMTP)"),
                      imap_port=_ask("IMAP port", "993"), smtp_port=_ask("SMTP port", "465"),
                      imap_ssl="1" if _yes("IMAP uses SSL", True) else "",
                      smtp_starttls="1" if _yes("SMTP uses STARTTLS") else "")

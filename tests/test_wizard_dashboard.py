@@ -59,7 +59,7 @@ def test_status_sentence():
     sts = [BrokerStatus(profile_id="a" * 32, broker_id=f"b{i}", state=s) for i, s in enumerate(
         [ListingState.REMOVED, ListingState.REMOVED, ListingState.SUBMITTED])]
     s, good = dash.status_sentence(sts, 2, False)
-    assert s == "Free My ID is working. 2 sites done, 1 waiting, 2 need you." and not good
+    assert s == "Free My ID is working. 2 sites have confirmed or no longer list you, 1 is still waiting, 2 need you." and not good
     assert dash.status_sentence(sts, 0, False)[1]
     assert "checking now" in dash.status_sentence(sts, 0, True)[0]
 

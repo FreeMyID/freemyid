@@ -37,14 +37,16 @@ log = logging.getLogger(__name__)
 CONSENT_VERSION = CURRENT_TEXT_VERSION   # single source of truth (consent.py)
 CONSENT_TEXT = [
     ("Free My ID will look for the information of the person named in this setup on "
-    "\"people-search\" sites (also called data brokers), and ask those sites to remove it."),
+    "people-search sites (websites that publish names, addresses and phone numbers) and "
+    "ask those sites to delete it."),
     ("Everything you type here stays on this computer, encrypted. Nothing is sent to us "
     "or to any server we run. There is no account, no tracking and no cloud."),
-    ("When Free My ID contacts a broker it sends only what that broker already shows about the "
-    "person, plus the removal email address if you set one up. It never pays anyone."),
-    ("Honest limits: some brokers need a manual step from a human, listings can come back "
-    "after they are removed, and \"removed\" only ever means removed from that one broker, "
-    "not from the whole internet."),
+    ("When Free My ID contacts a site it sends only what that site already shows about the "
+    "person, plus the email address for replies if you set one up. It never pays anyone."),
+    ("Honest limits: some sites need a step from a person, details can come back after a "
+    "site has deleted them, and a site saying it deleted your details is true for that one "
+    "site only, not for the whole internet. Free My ID does not change what Facebook, "
+    "Google or any other service does with your account."),
     "You can pause, edit or delete everything at any time.",
 ]
 BASIS_LABELS = {
@@ -59,7 +61,7 @@ STEPS = ["consent", "name", "address", "about", "mailbox", "finish"]
 STEP_TITLES = {
     "consent": "Welcome. Who is this for?", "name": "What is the person's name?",
     "address": "Where do they live?", "about": "A few details to recognize them",
-    "mailbox": "An email address for removal replies", "finish": "Run automatically?",
+    "mailbox": "A separate email address for replies", "finish": "Run automatically?",
 }
 NO_CONSENT_NEEDED = ("consent",)
 

@@ -51,7 +51,7 @@ MSGS = {
     "openfail": "Could not open your browser. Try again.",
     "sent": "Email sent.", "cancelled": "Email cancelled.",
     "sendfail": "Could not send that email. Check the email settings and try again.",
-    "noengine": "The sending engine is not available yet in this install.",
+    "noengine": "Sending is not switched on in this copy of Free My ID yet.",
     "attached": "Authorization attached.", "sched_on": "Automatic checking is on.",
     "sched_off": "Automatic checking is off.", "sched_fail": "Could not change that setting.",
     "saved": "Saved.", "real_on": "Real requests are on.", "real_off": "Practice mode is on.",
@@ -175,8 +175,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
         if not authed:
             return _hardened(html(ui.error_page(
                 "Please open Free My ID from its icon",
-                [("This page can only be opened from the Free My ID app or the link it "
-                  "shows when it starts.")]), 403))
+                ["Please open Free My ID from its icon on your desktop."]), 403))
         if request.method == "POST":
             origin = request.headers.get("origin")
             if origin and urlsplit(origin).netloc.lower() not in allowed_hosts:
@@ -195,9 +194,8 @@ def create_app(store, token: str, allowed_hosts: set[str],
                 sent = str(form.get("csrf", ""))
             if not hmac.compare_digest(sent, csrf_token):
                 return _hardened(html(ui.error_page(
-                    "That page has expired",
-                    [("The page was open for a while, or was opened a second time. "
-                      "Going back and trying again usually fixes it.")]), 403))
+                    "That page timed out",
+                    ["That page timed out. Go back and try again."]), 403))
         return _hardened(await call_next(request))
 
     def _hardened(resp: Response) -> Response:
@@ -597,7 +595,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
         body = ('<h1>Use a family setup file</h1><form class="card" method="post" '
                 'enctype="multipart/form-data" action="/wizard/import">'
                 f'{ui.csrf_field(csrf_token)}{pick}'
-                '<label for="passphrase">Passphrase</label>'
+                '<label for="passphrase">Password for the setup file</label>'
                 '<input id="passphrase" name="passphrase" type="password" required>'
                 '<p class="hint">You will review everything and give your own permission '
                 'before anything is saved.</p><div class="actions"><button type="submit" '

@@ -29,3 +29,8 @@
 - Installer: DisableDirPage/ReadyPage, SetupIconFile, icon on shortcuts + both exes (spec ICON). tools/make_icon.py -> packaging/windows/freemyid.ico.
 - Consent copy: mailbox sentence fixed in draft.py; draft.CONSENT_VERSION now imports consent.CURRENT_TEXT_VERSION. CR pending: bump consent.py to 2026-11-b and keep 2026-11-a in ACCEPTED_TEXT_VERSIONS.
 - D9 Fill it in for me: POST /todo/{id}/fill (thread, one at a time), GET /fill (waiting page, meta refresh), outcomes submitted/fallback+submit_seen/else. Tests tests/test_wizard_polish.py.
+
+## Update 2026-11-06 (positioning change requests 1-8 applied)
+- Items 1-8 from wizard-packager-positioning.md applied: status_sentence, consent text and authorization form (people-search wording, scope sentence, same legal meaning), STEP_TITLES, report.py (sentence-form counts, "Site", no removed count), "Not running yet" banners now `.note` (style.css already had it; no CSS change), server.py / flows.py / firstrun.py strings. Tests and FAMILY_QUICK_START.md updated to the new sentence. Item 10 (declaration step) deferred.
+- Still says "broker" in user-visible text: firstrun is fixed, but cli.py help text (not mine) and the consent hint "also called data brokers" on the welcome screen (intentional, explains the term).
+- site/ fact-check done: see orchestrator report (birthday, ID photo, "never leaves your computer", report contents, browser download exception fixed).

@@ -35,7 +35,7 @@ def ensure_browser(ask=input, run=subprocess.run) -> str:
     if system_browser():
         return "system"
     ans = ask("Free My ID needs a web browser to fill in forms and none was found. Download a "
-              "private copy of Chromium (about 150 MB)? [y/N] ").strip().lower()
+              "small extra browser just for Free My ID (about 150 MB)? [y/N] ").strip().lower()
     if not ans.startswith("y"):
         return "declined"
     run(browser_install_command(), check=True)

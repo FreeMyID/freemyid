@@ -64,10 +64,11 @@ def status_sentence(statuses: list[BrokerStatus], n_todos: int, running: bool,
     waiting = sum(1 for s in statuses if s.state in WAITING_STATES)
     if not statuses and not n_todos:
         return "Free My ID is set up. Nothing to do yet.", True
+    sites = f"{done} site{'s have' if done != 1 else ' has'} confirmed or no longer list{'s' if done == 1 else ''} you"
+    wait = f"{waiting} {'is' if waiting == 1 else 'are'} still waiting"
     if n_todos == 0:
-        return (f"Free My ID is working. {done} sites done, {waiting} waiting. Nothing needs you "
-                "right now."), True
-    return (f"Free My ID is working. {done} sites done, {waiting} waiting, {n_todos} need you."), False
+        return f"Free My ID is working. {sites}, {wait}. Nothing needs you right now.", True
+    return f"Free My ID is working. {sites}, {wait}, {n_todos} need{'s' if n_todos == 1 else ''} you.", False
 
 
 def _steps_list(body: str) -> list[str]:
@@ -155,7 +156,7 @@ def home_page(*, statuses: list[BrokerStatus], todos: list[tuple[Todo, str, str]
                  'ready.</div>')
     for r in people:
         if r["consent_problem"]:
-            body += (f'<div class="error">Not running yet for {esc(r["profile"].label)}: '
+            body += (f'<div class="note">Not running yet for {esc(r["profile"].label)}: '
                      f'{esc(r["consent_problem"])} <a href="/profile/{esc(r["profile"].id)}">'
                      'Fix it</a></div>')
     if outbox_count:
@@ -214,7 +215,7 @@ def profile_page(p: Profile, statuses: list[BrokerStatus], names: dict[str, str]
                  consent_problem: str, flash: str = "", fill: bool = False) -> str:
     body = f'<h1>{esc(p.label)}</h1>{_flash(flash)}'
     if consent_problem:
-        body += f'<div class="error">Not running yet: {esc(consent_problem)}</div>'
+        body += f'<div class="note">Not running yet: {esc(consent_problem)}</div>'
         if "authorization" in consent_problem:
             body += (f'<form class="card" method="post" action="/profile/{esc(p.id)}/authorization"'
                      f' enctype="multipart/form-data">{csrf_field(csrf)}'
