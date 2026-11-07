@@ -39,25 +39,41 @@ def job_command(frozen: bool | None = None, platform: str | None = None) -> list
     """The command the scheduler runs. Arguments let tests render it for any OS."""
     frozen = getattr(sys, "frozen", False) if frozen is None else frozen
     win = (sys.platform == "win32") if platform is None else platform == "windows"
+    # Linux/macOS jobs run `run --headless --scheduled` (no prompts, fails closed).
+    # DEPENDENCY: the --headless flag is added to cli.py by another engineer.
+    tail = ["run", "--scheduled"] if win else ["run", "--headless", "--scheduled"]
     if frozen:
         exe = Path(sys.executable)
         if win:   # the windowed FreeMyID.exe, so no console window flashes
             gui = exe.with_name("FreeMyID.exe")
-            return [str(gui if gui.exists() else exe), "run", "--scheduled"]
-        return [str(exe), "run", "--scheduled"]
+            return [str(gui if gui.exists() else exe), *tail]
+        return [str(exe), *tail]
     if win:
         return [_windowless_python(), "-c", "from freemyid.cli import app; app()",
-                "run", "--scheduled"]
+                *tail]
     exe_path = shutil.which("freemyid")
     if exe_path:
-        return [exe_path, "run", "--scheduled"]
-    return [sys.executable, "-c", "from freemyid.cli import app; app()", "run", "--scheduled"]
+        return [exe_path, *tail]
+    return [sys.executable, "-c", "from freemyid.cli import app; app()", *tail]
 
 
 def _run(args: list[str], input: str | None = None) -> subprocess.CompletedProcess:
     flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0
     return subprocess.run(args, input=input, check=False, capture_output=True, text=True,
                           timeout=60, creationflags=flags)
+
+
+def _job_env() -> dict[str, str]:
+    """Settings the job needs that a systemd/launchd session would not inherit."""
+    return {k: os.environ[k] for k in render.ENV_PASSTHROUGH if os.environ.get(k)}
+
+
+def _uid() -> int:
+    return os.getuid()
+
+
+def _launchd_domain() -> str:
+    return f"gui/{_uid()}"
 
 
 def _systemd_dir() -> Path:
@@ -106,14 +122,15 @@ def install() -> str:
         if _has_systemd_user():
             d = _systemd_dir()
             d.mkdir(parents=True, exist_ok=True)
-            (d / f"{render.UNIT}.service").write_text(render.systemd_service(cmd))
+            (d / f"{render.UNIT}.service").write_text(render.systemd_service(cmd, _job_env()))
             (d / f"{render.UNIT}.timer").write_text(render.systemd_timer())
             _run(["systemctl", "--user", "daemon-reload"])
             r = _run(["systemctl", "--user", "enable", "--now", f"{render.UNIT}.timer"])
             if r.returncode != 0:
                 raise RuntimeError("Could not start the systemd timer.")
             return ("Installed a daily systemd user timer. If the computer was off, the check "
-                    "runs when it next starts.")
+                    "runs when it next starts. On a server nobody logs in to, also run: "
+                    "loginctl enable-linger $USER")
         if shutil.which("crontab"):
             new = _strip_cron(_crontab_get()) + render.cron_lines(cmd)
             if _run(["crontab", "-"], input=new).returncode != 0:
@@ -123,9 +140,11 @@ def install() -> str:
     if plat == "macos":
         p = _plist_path()
         p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(render.launchd_plist(cmd, str(paths.logs_dir() / "scheduler.log")))
-        _run(["launchctl", "unload", str(p)])
-        if _run(["launchctl", "load", "-w", str(p)]).returncode != 0:
+        paths.logs_dir().mkdir(parents=True, exist_ok=True)
+        p.write_text(render.launchd_plist(cmd, str(paths.logs_dir() / "scheduler.log"),
+                                          _job_env()))
+        _run(["launchctl", "bootout", f"{_launchd_domain()}/{render.LABEL}"])  # ok if absent
+        if _run(["launchctl", "bootstrap", _launchd_domain(), str(p)]).returncode != 0:
             raise RuntimeError("Could not load the launchd agent.")
         return "Installed a daily launchd agent. Missed runs happen when the Mac wakes."
     xml = paths.home() / "freemyid-task.xml"
@@ -154,7 +173,7 @@ def remove() -> str:
         return "Background checks removed."
     if plat == "macos":
         p = _plist_path()
-        _run(["launchctl", "unload", str(p)])
+        _run(["launchctl", "bootout", f"{_launchd_domain()}/{render.LABEL}"])
         p.unlink(missing_ok=True)
         return "Background checks removed."
     _run(windows_delete_args())    # fails harmlessly if it was never installed
@@ -168,12 +187,17 @@ def status() -> str:
         return str(e)
     if plat == "linux":
         if (_systemd_dir() / f"{render.UNIT}.timer").exists():
-            r = _run(["systemctl", "--user", "is-active", f"{render.UNIT}.timer"])
-            return f"systemd timer: {r.stdout.strip() or 'unknown'}"
+            en = _run(["systemctl", "--user", "is-enabled", f"{render.UNIT}.timer"])
+            ac = _run(["systemctl", "--user", "is-active", f"{render.UNIT}.timer"])
+            return (f"systemd timer: {ac.stdout.strip() or 'unknown'}, "
+                    f"{en.stdout.strip() or 'unknown'}")
         if shutil.which("crontab") and render.CRON_MARK in _crontab_get():
             return "cron job installed"
         return "not installed"
     if plat == "macos":
-        return "launchd agent installed" if _plist_path().exists() else "not installed"
+        if not _plist_path().exists():
+            return "not installed"
+        r = _run(["launchctl", "print", f"{_launchd_domain()}/{render.LABEL}"])
+        return "launchd agent loaded" if r.returncode == 0 else "launchd agent installed, not loaded"
     r = _run(windows_query_args())
     return "scheduled task installed" if r.returncode == 0 else "not installed"

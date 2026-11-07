@@ -11,9 +11,13 @@ TASK = "Free My ID Recheck"
 DAILY_HOUR = 10
 
 
-def systemd_service(cmd: list[str]) -> str:
+ENV_PASSTHROUGH = ("FREEMYID_HOME", "FREEMYID_PASSPHRASE_FILE")
+
+
+def systemd_service(cmd: list[str], env: dict[str, str] | None = None) -> str:
+    envs = "".join(f"Environment={_sd_quote(f'{k}={v}')}\n" for k, v in (env or {}).items())
     return ("[Unit]\nDescription=Free My ID scheduled re-check (no UI, no email without approval)\n\n"
-            "[Service]\nType=oneshot\nNice=10\n"
+            f"[Service]\nType=oneshot\nNice=10\n{envs}"
             f"ExecStart={' '.join(_sd_quote(c) for c in cmd)}\n")
 
 
@@ -36,13 +40,18 @@ def cron_lines(cmd: list[str]) -> str:
             f"@reboot sleep 120 && {c} {CRON_MARK}\n")
 
 
-def launchd_plist(cmd: list[str], log_path: str) -> str:
+def launchd_plist(cmd: list[str], log_path: str, env: dict[str, str] | None = None) -> str:
+    envx = ""
+    if env:
+        items = "".join(f"    <key>{xesc(k)}</key>\n    <string>{xesc(v)}</string>\n"
+                        for k, v in env.items())
+        envx = f"  <key>EnvironmentVariables</key>\n  <dict>\n{items}  </dict>\n"
     args = "".join(f"    <string>{xesc(c)}</string>\n" for c in cmd)
     # launchd runs a job missed during sleep when the Mac wakes.
     return ('<?xml version="1.0" encoding="UTF-8"?>\n'
             '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" '
             '"http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n'
-            f"  <key>Label</key>\n  <string>{LABEL}</string>\n"
+            f"  <key>Label</key>\n  <string>{LABEL}</string>\n{envx}"
             f"  <key>ProgramArguments</key>\n  <array>\n{args}  </array>\n"
             "  <key>StartCalendarInterval</key>\n  <dict>\n"
             f"    <key>Hour</key>\n    <integer>{DAILY_HOUR}</integer>\n"

@@ -39,7 +39,8 @@ def test_windows_commands_per_user_no_admin():
 def test_job_command_variants():
     c = scheduler.job_command(frozen=False, platform="windows")
     assert c[-2:] == ["run", "--scheduled"] and "from freemyid.cli import app" in c[2]
-    assert scheduler.job_command(frozen=True, platform="linux")[1:] == ["run", "--scheduled"]
+    assert scheduler.job_command(frozen=True, platform="linux")[1:] == [
+        "run", "--headless", "--scheduled"]
 
 
 def test_linux_and_mac_render_unchanged():
