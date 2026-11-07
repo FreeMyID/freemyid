@@ -24,17 +24,37 @@ it at 10:00 and 16:00 local time. Missed runs (machine off or asleep) catch up o
    `bluesky` keyring entry (the `password` and `email` fields are never read). If either one is
    missing, it logs at info level and exits 0.
 4. Takes an exclusive lock (`docs/marketing/seo/.bluesky-queue.md.lock`). If another run holds
-   it, this run logs a skip and exits 0. Then it rewrites the block to
-   `status: posting <UTC ISO>` **before** anything is sent.
+   it, this run logs a skip and exits 0. Then, **before** anything is sent, it appends a
+   `claimed` record to the posted ledger (fsynced, see below) and rewrites the block to
+   `status: posting <UTC ISO>`.
 5. Calls `createSession`, then `createRecord` (`app.bsky.feed.post`) with link facets that use
    UTF-8 byte offsets for every `https://` URL.
 6. On success it rewrites the line to `status: posted <UTC ISO> <at:// uri>` (temp file, then
-   `os.replace`) and appends a row to `docs/marketing/seo/outreach-log.md`.
+   `os.replace`), adds a `posted` record with the uri to the ledger, and appends a row to
+   `docs/marketing/seo/outreach-log.md`.
+
+### The posted ledger (SEC-77)
+
+The queue file is shared and tracked by git, so `git checkout`, a merge or a stale editor buffer
+can put an old `status: queued` line back. The poster therefore keeps its own append-only record
+outside the repo and outside the pinned install: `~/.local/state/freemyid-poster/posted.jsonl`
+(the unit's `StateDirectory=`, the same file when you run it by hand). Each line is
+`{"id", "sha256" (of the post text), "status", "uri", "at"}`, where status is `claimed`,
+`posted`, `unknown` or `released`.
+
+An item whose id **or** text is in the ledger as claimed, posted or unknown is never posted
+again, whatever the queue says. The run logs "... is NOT posted again" and exits 4. Fix the queue
+line to `status: posted ...` by hand. Items already marked posted in the queue are copied into
+the ledger on the next run. A damaged ledger also stops posting (exit 4) until fixed by hand.
 
 Items are also skipped (with a warning, left `queued`) if they contain an invisible or bidi
 character (Unicode category Cf: zero-width space, word joiner, BOM, soft hyphen, RTL/LTR
-overrides). Emoji joiners inside emoji sequences are fine. These characters can make a link look
-like it goes somewhere it doesn't.
+overrides) or another invisible character (variation selectors, U+034F, Hangul fillers). Emoji
+joiners inside emoji sequences, the emoji variation selector after an emoji, and the England,
+Scotland and Wales flags are fine; any other hidden tag text is refused. These characters can make
+a link look like it goes somewhere it doesn't. A link becomes clickable only if it is plain
+printable ASCII: write `https://freemyid.org/%C3%BCber`, not `/über` (the text still posts,
+without a link).
 
 Safety: requests go only to `https://bsky.social` (an allowlist checked before every request,
 full TLS verification, no redirects, 20 s timeouts, proxy env ignored). The app password and
@@ -48,7 +68,14 @@ retried**, and nothing else is posted until you fix it, so a post can never go o
 
 1. Open the Free My ID Bluesky profile and look for that post.
 2. If it's there, change the line to `status: posted <UTC ISO> <at:// uri>` (any text after
-   `posted` is fine). If not, change it back to `status: queued`.
+   `posted` is fine). If not, change it back to `status: queued` **and** release it in the
+   ledger, otherwise the next run refuses it:
+
+       ~/.local/share/freemyid-poster/venv/bin/python -I -B \
+           ~/.local/share/freemyid-poster/poster.py --release Q-012
+
+   `--release` only frees a `claimed`/`unknown` item; a `posted` one is never released (add a
+   new item with new text instead).
 
 A definite failure before anything was created (allowlist refusal, connection refused, a 4xx
 answer such as a bad password, any session error) puts the item back to `queued` automatically.
@@ -56,7 +83,8 @@ answer such as a bad password, any session error) puts the item back to `queued`
 Exit codes: `0` posted, nothing to do, or another run holds the lock · `1` definite failure, item
 back to `queued` · `2` posted, but the queue or log could not be updated (the URI is in the
 journal, so mark the item by hand) · `3` the queue file can't be read or claimed · `4` outcome
-unknown or an item is stuck in `posting`: check the account.
+unknown, an item is stuck in `posting`, the ledger already has a "queued" item, or the ledger
+is damaged: check the account. Any unexpected error after the claim also exits 4.
 
 ## Try it without posting
 
@@ -97,13 +125,16 @@ doesn't change the repo either.
 
 `install.sh` prints the pinned hash. It downloads the pinned wheels from PyPI. To install
 offline, use `--wheelhouse DIR`. The venv uses `/usr/bin/python3`, or pass `--python PATH`
-(needs 3.12 or newer). The repo path is written into the unit, so if the repo moves, run
+(needs 3.12 or newer, and must resolve to a root-owned file in a root-owned directory with a
+root-owned stdlib; pyenv, uv or repo `.venv` interpreters are refused, SEC-81b). The repo path is written into the unit, so if the repo moves, run
 `--update` again.
 
 To get one real post immediately, run `systemctl --user start freemyid-poster.service`, then
 read the log with `journalctl --user -u freemyid-poster.service -n 50`.
 
-The keyring must be unlocked when the timer fires (GNOME Keyring unlocks when you log in). If it's
+The unit sets `PYTHON_KEYRING_BACKEND=keyring.backends.SecretService.Keyring` and poster.py sets
+the same for manual runs, so keyring never reads `~/.config/python_keyring/keyringrc.cfg`
+(SEC-80). The keyring must be unlocked when the timer fires (GNOME Keyring unlocks when you log in). If it's
 locked or missing, the run logs a skip and exits 0.
 
 ## Update (after reviewing a change to tools/social/)
@@ -131,6 +162,9 @@ Uninstall:
     rm -f ~/.config/systemd/user/freemyid-poster.{service,timer}
     systemctl --user daemon-reload
     chmod -R u+w ~/.local/share/freemyid-poster && rm -r ~/.local/share/freemyid-poster
+
+Keep `~/.local/state/freemyid-poster/posted.jsonl` unless you also retire the queue: it is what
+stops old items from posting twice after a reinstall.
 
 If an older install used `ln -sf` links, `install.sh` replaces those links with copies. It never
 touches the files the links pointed to.
