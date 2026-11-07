@@ -120,14 +120,12 @@ def test_sec46_wipe_removes_the_fill_confirmation_marker(store, memkeyring, monk
     assert not any(Path(freemyid_env).rglob("*"))
 
 
-# --------------------------------------------------------------------------- SEC-47 (open)
+# --------------------------------------------------------------------------- SEC-47 (fixed)
 
 def _card(page: str, rid: str) -> str:
     return next(c for c in page.split('<div class="card">') if f"/outbox/{rid}/approve" in c)
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-47: approving the first held AUTO email also "
-                   "sends the other held emails, but the card says it sends 'this email'")
 def test_sec47_approve_card_discloses_every_email_it_sends(wiz, monkeypatch):
     c, store, p, f = wiz
     m = FakeMailer()

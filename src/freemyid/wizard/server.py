@@ -423,7 +423,45 @@ def create_app(store, token: str, allowed_hosts: set[str],
                 letter = ("", "", "(the letter could not be read)")
             items.append((r, who.get(r.profile_id, "?"), nm.get(r.broker_id, r.broker_id),
                           letter))
-        return html(dash.outbox_page(items, csrf_token, flash(request)))
+        page = dash.outbox_page(items, csrf_token, flash(request))
+        return html(_disclose_releases(page, [r for r, *_ in items], nm))
+
+    def _disclose_releases(page: str, reqs: list, nm: dict) -> str:
+        """SEC-47: a card whose approval also sends other held emails (SEC-27 first-email
+        release) says so, and its confirm question counts them.
+        TODO(CR): move into dashboard.outbox_page (left alone: a peer was editing it)."""
+        try:
+            from ..engine.outbox import released_by_approval
+        except ImportError:
+            return page
+        profiles = {p.id: p for p in store.list_profiles()}
+        for r in reqs:
+            prof = profiles.get(r.profile_id)
+            if prof is None:
+                continue
+            others = released_by_approval(store, prof, r)
+            if not others:
+                continue
+            n = len(others)
+            sites = ", ".join(sorted({nm.get(o.broker_id, o.broker_id) for o in others}))
+            note = (f'<p class="note">This is the first email for {ui.esc(prof.label)}. '
+                    f'Approving it also sends the {n} other email{"s" if n != 1 else ""} '
+                    f'waiting for {ui.esc(prof.label)} (to: {ui.esc(sites)}). After that, '
+                    'routine emails go out by themselves. Formal demands still wait for '
+                    'you.</p>')
+            form = f'<form method="post" action="/outbox/{ui.esc(r.id)}/approve"'
+            i = page.find(form)
+            if i < 0:
+                continue
+            ask = 'data-confirm="Send this email now?"'
+            j = page.find(ask, i)
+            tail = page[i:]
+            if j >= 0:
+                k = j - i
+                tail = (tail[:k] + f'data-confirm="Send this email and {n} other'
+                        f'{"s" if n != 1 else ""} now?"' + tail[k + len(ask):])
+            page = page[:i] + note + tail
+        return page
 
     @app.post("/outbox/{rid}/approve")
     async def outbox_approve(rid: str):
