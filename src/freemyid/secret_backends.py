@@ -69,6 +69,18 @@ PENDING_FILE = "migrate.pending"
 MIN_PASSPHRASE_LEN = 8
 MAX_PASSPHRASE_BYTES = 4096
 
+
+class _ReadFailed:
+    """`KeyringBackend._stored()` result when the keychain couldn't be read at all (locked,
+    denied, flaky Secret Service). Not "absent": nothing may be overwritten or deleted on
+    it (SEC-84)."""
+
+    def __repr__(self) -> str:
+        return "READ_FAILED"
+
+
+READ_FAILED = _ReadFailed()
+
 # scrypt cost. 2**17/8/1 is the OWASP minimum (about 128 MiB, ~0.2 s). Stored params are
 # accepted only inside these bounds so a tampered file can't make us burn memory forever
 # or derive with a trivially weak cost.
@@ -154,14 +166,15 @@ class KeyringBackend:
         return crypto._decode_key(stored)
 
     @staticmethod
-    def _stored() -> bytes | None | bool:
+    def _stored() -> bytes | None | bool | _ReadFailed:
         """The keychain's data key: bytes, None if absent, False if the entry is damaged
-        (not a 32-byte key, so no data folder can be using it)."""
+        (not a 32-byte key, so no data folder can be using it), READ_FAILED if the keychain
+        couldn't be read (SEC-84: treat as "maybe another folder's key")."""
         try:
             crypto._check_backend()
             stored = keyring.get_password(crypto.SERVICE, crypto.KEY_NAME)
         except (keyring.errors.KeyringError, crypto.KeyUnavailable):
-            return None
+            return READ_FAILED
         if stored is None:
             return None
         try:
@@ -173,6 +186,11 @@ class KeyringBackend:
         """Put `key` in the keychain. The entry is global (not per data folder), so an
         entry holding a different valid key belongs to another folder: refuse (SEC-72)."""
         existing = self._stored()
+        if existing is READ_FAILED:
+            raise crypto.KeyUnavailable(
+                "the system keychain can't be read right now (it may be locked); unlock it "
+                "and try again"
+            )
         if isinstance(existing, bytes):
             if hmac.compare_digest(existing, key):
                 return
@@ -192,7 +210,7 @@ class KeyringBackend:
         has already proven the entry belongs to this folder."""
         if expected is not None:
             existing = self._stored()
-            if existing is None:
+            if existing is None or existing is READ_FAILED:   # absent, or not provably ours
                 return
             if isinstance(existing, bytes) and not hmac.compare_digest(existing, expected):
                 log.info("keychain holds another folder's key; left in place")
@@ -696,7 +714,9 @@ def wipe_data_keys() -> None:
     missing key or a missing keychain."""
     kr = KeyringBackend()
     stored = kr._stored()
-    if stored is False:
+    if stored is READ_FAILED:
+        log.info("wipe: the keychain can't be read; its key was left in place")
+    elif stored is False:
         kr.delete_data_key()
     elif isinstance(stored, bytes):
         if _keychain_key_is_ours(stored):

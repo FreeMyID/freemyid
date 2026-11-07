@@ -354,7 +354,6 @@ def test_qa_sec76_cache_drops_key_of_recreated_wrap(env, memkeyring):
     assert sb.PassphraseBackend().load_data_key(create=False) == k2
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-84: a failed keychain read skips the SEC-72 guard")
 def test_qa_sec84_store_refuses_when_keychain_read_fails(env, memkeyring, monkeypatch):
     import keyring.errors
     other = base64.b64encode(os.urandom(32)).decode()
