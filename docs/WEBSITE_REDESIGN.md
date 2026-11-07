@@ -91,7 +91,7 @@ commit only your own source files by explicit path, and checkpoint in `docs/hand
 | R2 | IA + chrome: header/nav (D1), footer, cta-download partial (D5), pages.yaml, /safety/ (D2) | web-builder | in-progress |
 | R3 | Home rebuild (D10, D9, D4 without the paid column) | web-builder | in-progress |
 | R4 | Real screenshots (D7) + WR-24 | graphic-designer | in-progress |
-| R5 | Source the comparison "paid services (typical)" rows (D4) | broker-researcher | in-progress |
+| R5 | Source the comparison "paid services (typical)" rows (D4) | broker-researcher | done b3a3fa5: use ONLY rows Price "Yearly or monthly fee", Where details go "Sent to the company", Account "Account required", Who sends "The company, on your behalf", Keeps checking "Yes, on a schedule", Hard cases "Often, on higher plans". DROP open-source and works-on rows from the paid column (open source may appear in the Free My ID column only). No price figures. |
 | R6 | Integrate: rebuild site/, docs/WEBSITE.md, fix seams between R1-R3, commit site/ | web-developer | after R1-R3 |
 | R7 | Verify: site_check extensions, screenshots 360/768/1280 light+dark, keyboard, zoom, claim audit | web-qa | after R6 |
 | R8 | Security/privacy sign-off | qa-security | after R7 |
