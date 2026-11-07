@@ -237,10 +237,11 @@ export function gitDate(paths: string[]): string {
   return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : "";
 }
 
-/** First commit date (YYYY-MM-DD) where `text` appeared in `path`; "" if unknown or shallow. */
-export function gitFirstDate(path: string, text: string): string {
+/** First commit date (YYYY-MM-DD) where `text` appeared in `path` (no text: when the file was added); "" if unknown or shallow. */
+export function gitFirstDate(path: string, text = ""): string {
   if (!gitHistory) return "";
-  const d = git(["log", "--reverse", "--format=%cs", "-S", text, "--", path]).split("\n")[0] ?? "";
+  const how = text ? ["-S", text] : ["--diff-filter=A"];
+  const d = git(["log", "--reverse", "--format=%cs", ...how, "--", path]).split("\n")[0] ?? "";
   return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : "";
 }
 
@@ -257,4 +258,22 @@ export function moreGuides(current: Guide, n = 4): Guide[] {
     if (g.id !== current.id && !pick.includes(g)) pick.push(g);
   }
   return pick.slice(0, n);
+}
+
+// ------------------------------------------------------------------ guide WebPage JSON-LD (WR-41)
+// datePublished = when the guide could first be published: the later of the broker's first appearance in the
+// public sample and the first guide template. dateModified = the "We checked these steps ... on" date, only when
+// verified. No HowTo markup (Google retired HowTo rich results, 13 Sep 2023).
+const GUIDE_TEMPLATE_DATE = gitFirstDate("site_src/templates/pages/guide.html");
+export function guideLd(g: Guide): object {
+  const org = { "@type": "Organization", name: site.name, url: site.base_url };
+  const first = gitFirstDate("brokers/registry.sample.yaml", `- id: ${g.id}`);
+  const published = [first, GUIDE_TEMPLATE_DATE].filter(Boolean).sort().pop() ?? "";
+  const d: Record<string, unknown> = { "@context": "https://schema.org", "@type": "WebPage",
+    name: guideTitle(g), description: guideDescription(g), url: canonical(g.out), inLanguage: "en-US",
+    isPartOf: { "@type": "WebSite", name: site.name, url: site.base_url }, author: org, publisher: org };
+  if (published) d.datePublished = published;
+  // Only the date shown on the page; left out if it is older than datePublished (checked before publishing).
+  if (g.verified && !(published && g.last_verified < published)) d.dateModified = g.last_verified;
+  return d;
 }

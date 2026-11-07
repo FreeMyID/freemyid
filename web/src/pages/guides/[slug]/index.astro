@@ -11,7 +11,7 @@ import CheckList from "@/components/CheckList.astro";
 import Timeline from "@/components/aceternity/Timeline.astro";
 import TimelineItem from "@/components/aceternity/TimelineItem.astro";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { guideDescription, guides, guidesMeta, guideTitle, moreGuides, pages, url, type Crumb, type Guide } from "@/lib/site";
+import { guideDescription, guides, guidesMeta, guideLd, guideTitle, ldJson, moreGuides, pages, url, type Crumb, type Guide } from "@/lib/site";
 
 export function getStaticPaths() {
   return guides.map((g) => ({ params: { slug: g.slug }, props: { g } }));
@@ -26,6 +26,8 @@ const needs = g.required.length > 0 || g.needs_email_verification || g.has_captc
 ---
 <Base title={guideTitle(g)} description={guideDescription(g)} out={g.out} nav="guides" jsonldKinds={["breadcrumbs"]} crumbs={crumbs}>
 <Fragment set:html={`<!-- ${sourceNote} -->`} />
+{/* WR-41: WebPage node beside the BreadcrumbList (in the body; tighten-csp exempts ld+json) */}
+<script type="application/ld+json" is:inline set:html={ldJson(guideLd(g))} />
 <div class="bg-[radial-gradient(ellipse_at_top_right,var(--fmi-color-brand-soft),transparent_55%)] pb-l pt-l">
   <div class="wrap-narrow">
     <Crumbs crumbs={crumbs} />
