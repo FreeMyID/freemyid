@@ -1,0 +1,19 @@
+---
+// Top of an inner page: breadcrumbs, h1, lead. Optional illustration on the right (wide screens).
+import Crumbs from "./Crumbs.astro";
+import type { Crumb } from "@/lib/site";
+interface Props { crumbs: Crumb[]; title: string; lead?: string }
+const { crumbs, title, lead } = Astro.props;
+const hasArt = Astro.slots.has("art");
+---
+<div class="bg-[radial-gradient(ellipse_at_top_right,var(--fmi-color-brand-soft),transparent_55%)] pb-m pt-l">
+  <div class:list={["wrap grid items-center gap-l", hasArt && "min-[56.25em]:grid-cols-[1.4fr_1fr]"]}>
+    <div>
+      <Crumbs crumbs={crumbs} />
+      <h1 class="mt-m">{title}</h1>
+      {lead && <p class="mt-s max-w-measure text-lead text-muted">{lead}</p>}
+      <slot />
+    </div>
+    {hasArt && <div class="mx-auto w-full max-w-[26rem]"><slot name="art" /></div>}
+  </div>
+</div>

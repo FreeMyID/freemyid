@@ -1,0 +1,8 @@
+---
+// Checklist (contract ul.checklist): icon + text rows. kind "yes" = green check, "no" = calm grey x,
+// or pass explicit icons per row via the default slot with <li> elements.
+interface Props { class?: string }
+---
+<ul class:list={["grid gap-s [&>li]:flex [&>li]:gap-xs [&>li>svg]:mt-[0.25em] [&>li>svg]:size-[1.3em] [&>li>svg]:text-brand", Astro.props.class]} role="list">
+  <slot />
+</ul>

@@ -1,0 +1,21 @@
+---
+// Aceternity UI "Timeline", split into static + enhancement: a numbered list with a grey rail
+// (static HTML, works with JS off) and a coloured beam that fills as you scroll.
+//   beam="css"  (default) scroll-driven CSS animation, zero JS; static full beam where unsupported
+//   beam="none" grey rail only
+// The beam is off under prefers-reduced-motion (shown full and still). The motion/React island
+// version was removed (WR-52, SEC-63): it cost ~95 KB gzip and no page used it.
+interface Props { class?: string; beam?: "css" | "none" }
+const { beam = "css" } = Astro.props;
+---
+<div class:list={["timeline relative", Astro.props.class]}>
+  <div class="absolute inset-y-0 start-[calc(1.25rem-2px)] w-1 rounded-full bg-line" aria-hidden="true"></div>
+  {beam === "css" && (
+    <div class="absolute inset-y-0 start-[calc(1.25rem-2px)] w-1 overflow-hidden rounded-full" aria-hidden="true">
+      <div class="timeline__beam h-full w-full origin-top rounded-full bg-gradient-to-b from-brand via-brand to-accent"></div>
+    </div>
+  )}
+  <ol class="relative grid gap-l" role="list">
+    <slot />
+  </ol>
+</div>

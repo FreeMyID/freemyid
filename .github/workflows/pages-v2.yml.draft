@@ -1,0 +1,56 @@
+# v2 site/ publisher (site_src/ -> site/). Inactive while it has the .draft extension; rollback steps: docs/handoff/web-v3.md.
+name: pages
+
+# Publishes site/ to GitHub Pages. site/ is built from site_src/ by tools/build_site.py and
+# committed; this job first verifies that the committed output matches the source and passes
+# tools/site_check.py, so a stale or broken site never ships.
+# Free GitHub Pages needs a PUBLIC repository: while the repo is private the deploy job is skipped.
+on:
+  push:
+    branches: [main]
+    paths: ["site/**", "site_src/**", "tools/build_site.py", "tools/site_check.py",
+            "brokers/registry.sample.yaml", ".github/workflows/pages.yml"]
+  pull_request:
+    paths: ["site/**", "site_src/**", "tools/build_site.py", "tools/site_check.py",
+            "brokers/registry.sample.yaml", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install build deps (jinja2 + PyYAML only)
+        run: python -m pip install --disable-pip-version-check "jinja2>=3.1" "PyYAML>=6"
+      - name: Committed site/ matches site_src/ and passes site_check
+        run: python tools/build_site.py --check
+
+  deploy:
+    needs: check
+    if: ${{ github.event_name != 'pull_request' && !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4

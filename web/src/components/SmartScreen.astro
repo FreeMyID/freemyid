@@ -1,0 +1,30 @@
+---
+// Drawing of the Windows SmartScreen box (not a screenshot). Same text as v2 partials/smartscreen.html.
+// source: dialog wording = Windows Defender SmartScreen "Windows protected your PC" box (text as Windows shows it);
+// "Unknown publisher" because the installer is not code-signed (.github/workflows/build.yml release notes);
+// file name FreeMyIDSetup.exe = build.yml release asset.
+interface Props { step: 1 | 2 }
+const { step } = Astro.props;
+const label = step === 1
+  ? "Drawing of the blue Windows protected your PC box. The small More info link under the message is highlighted."
+  : "Drawing of the same blue box after clicking More info. It shows App: FreeMyIDSetup.exe and Publisher: Unknown publisher. The Run anyway button is highlighted.";
+const hint = "outline outline-[3px] outline-offset-2 outline-[#f2b705]";
+---
+<figure class="my-m w-full min-w-0 max-w-[30rem]">
+  <div class="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-xs rounded-md bg-[#0b5394] p-s [overflow-wrap:anywhere] min-[30em]:p-m text-[0.85rem] leading-snug text-[#fff] shadow-2" role="img" aria-label={label}>
+    <p class="text-lead font-bold text-[#fff]">Windows protected your PC</p>
+    <p>Microsoft Defender SmartScreen prevented an unrecognized app from starting. Running this app might put your PC at risk.</p>
+    {step === 1 ? (
+      <>
+        <p><span class:list={["underline", hint]}>More info</span></p>
+        <div class="flex justify-end gap-xs"><span class="border border-[#fff] px-m py-3xs">Don't run</span></div>
+      </>
+    ) : (
+      <>
+        <p>App: FreeMyIDSetup.exe<br />Publisher: Unknown publisher</p>
+        <div class="flex justify-end gap-xs"><span class:list={["border border-[#fff] bg-[#fff] px-m py-3xs text-[#0b5394]", hint]}>Run anyway</span><span class="border border-[#fff] px-m py-3xs">Don't run</span></div>
+      </>
+    )}
+  </div>
+  <figcaption class="mt-2xs text-small text-muted">A drawing of what Windows shows{step === 1 ? ". Click the highlighted words." : " after you click More info. Click the highlighted button."}</figcaption>
+</figure>

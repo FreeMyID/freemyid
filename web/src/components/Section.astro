@@ -1,0 +1,38 @@
+---
+// Section band (contract: section.band, --alt / --brand / --tight) with an optional header
+// (kicker + h2 + lead). Bands alternate down the page. `reveal` adds the calm CSS fade-in.
+import { cn } from "@/lib/utils";
+interface Props {
+  id?: string;
+  tone?: "plain" | "alt" | "brand";
+  tight?: boolean;
+  narrow?: boolean;
+  title?: string;
+  titleId?: string;
+  kicker?: string;
+  lead?: string;
+  label?: string;
+  class?: string;
+}
+const { id, tone = "plain", tight = false, narrow = false, title, kicker, lead, label, class: cls } = Astro.props;
+const titleId = Astro.props.titleId ?? (title ? (id ?? title.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40)) + "-title" : undefined);
+const hasLead = Astro.slots.has("lead");
+---
+<section id={id} aria-labelledby={title ? titleId : undefined} aria-label={!title ? label : undefined}
+  class={cn(
+    tight ? "py-l" : "py-2xl",
+    tone === "alt" && "bg-bg-alt",
+    tone === "brand" && "bg-band-brand text-band-brand-ink [&_h2]:text-band-brand-ink [&_a]:text-band-brand-ink",
+    cls)}>
+  <div class={narrow ? "wrap-narrow" : "wrap"}>
+    {title && (
+      <div class="reveal mb-l max-w-[44rem]">
+        {kicker && <p class="mb-2xs text-small font-bold uppercase tracking-wide text-brand">{kicker}</p>}
+        <h2 id={titleId}>{title}</h2>
+        {lead && <p class="mt-s text-lead text-muted">{lead}</p>}
+        {hasLead && <div class="mt-s text-lead text-muted"><slot name="lead" /></div>}
+      </div>
+    )}
+    <slot />
+  </div>
+</section>

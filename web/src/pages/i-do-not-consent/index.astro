@@ -1,0 +1,62 @@
+---
+// "Does the I do not consent post work?" Same copy and source comments as
+// site_src/templates/pages/i-do-not-consent.html. Copy rules: POSITIONING.md rule 1 (never mock),
+// rule 6 (scope), legal-accuracy qualifier. No new statistics.
+import Base from "@/layouts/Base.astro";
+import PageHead from "@/components/PageHead.astro";
+import Icon from "@/components/Icon.astro";
+import Card from "@/components/ui/Card.astro";
+import Alert from "@/components/ui/Alert.astro";
+import CtaDownload from "@/components/CtaDownload.astro";
+import CheckList from "@/components/CheckList.astro";
+import Timeline from "@/components/aceternity/Timeline.astro";
+import TimelineItem from "@/components/aceternity/TimelineItem.astro";
+import { buttonVariants } from "@/components/ui/button-variants";
+import { canonical, pageProps, url } from "@/lib/site";
+const p = pageProps("i-do-not-consent");
+const canon = canonical(p.out);
+---
+<Base {...p}>
+<PageHead crumbs={p.crumbs} title={'Does the "I do not consent" post work?'}
+  lead="Short answer: no, but your instinct was right. Here's why the post can't do the job, and what can." />
+{/* source: docs/USER_GUIDE.md section 11 "I posted I do not consent" (approved); POSITIONING.md rule 1 */}
+<div class="wrap-narrow pb-2xl">
+  <Alert icon="check" class="mt-0"><p><strong>You were right to object.</strong> Your name, address and phone number are your information. Wanting a say in who sells them is reasonable.</p></Alert>
+
+  <h2 class="mt-xl" id="the-post">The post you may have seen</h2>
+  <p class="mt-s">Lots of people have posted something like "I do not give permission to use my pictures or information…" on Facebook. It's often shared by caring people who want to protect their friends.</p>
+
+  <h2 class="mt-xl" id="why-not">Why it can't reach the people selling your details</h2>
+  {/* source: USER_GUIDE section 11 (post does not reach the sites); faq.yaml "comes-back" (sites use public records and buy data from one another);
+     PLAN_V1 D1 (each site has its own removal channel, from the registry) */}
+  <CheckList class="mt-s [&>li>svg]:text-muted">
+    <li><Icon name="dash" /><span>A post on your page goes to your friends' feeds. The companies that sell your details don't see it, and they aren't required to read it.</span></li>
+    <li><Icon name="dash" /><span>Those companies are mostly <strong>people-search sites</strong> (also called data brokers). Many of them list people who've never had a Facebook account at all, using public records and purchased data.</span></li>
+    <li><Icon name="dash" /><span>Each site has its own way of taking removal requests. A request only counts when it goes to that site, in the form it processes.</span></li>
+  </CheckList>
+
+  <h2 class="mt-xl" id="what-works">What actually works</h2>
+  {/* source: step 1 = /guides/ (registry); step 2 = POSITIONING.md "Legal accuracy", brokers/state_laws.yaml; step 3 = registry recheck_interval_days (90 to 180 days);
+     step 4 = USER_GUIDE section 11 "Does this change what Facebook does?" */}
+  <Timeline class="mt-m">
+    <TimelineItem n={1} title={'Send your "I do not consent" to each site'}><p>Ask each people-search site to remove your listing, through its own removal process. Our <a href={url("guides/")}>free opt-out guides</a> show you how for some of the best-known sites.</p></TimelineItem>
+    <TimelineItem n={2} title="Use the law where you have it"><p>California and a growing number of states have privacy laws that require these sites to answer removal requests. In other states the request is a polite one. Many sites honor it anyway, but some don't.</p></TimelineItem>
+    <TimelineItem n={3} title="Keep checking"><p>Sites buy fresh data and can list people again. Check back every few months.</p></TimelineItem>
+    <TimelineItem n={4} title="For Facebook itself, use Facebook's own settings"><p>Removing yourself from people-search sites doesn't change what Facebook does with your account. That's done in the privacy settings inside Facebook.</p></TimelineItem>
+  </Timeline>
+
+  <Card as="section" class="reveal mt-xl p-l shadow-2">
+    <h2 id="fmid" class="flex items-center gap-xs"><Icon name="shield" class="size-8 text-brand" />Don't just post it. Send it.</h2>
+    {/* source: PLAN_V1 D1 (CCPA or state-law letter template, each site's own channel) and D4 (keeps checking); LICENSE (free); netpolicy.py (runs locally) */}
+    <p>Free My ID sends your "I do not consent" to the companies that actually sell your name, address and phone number, through each site's own removal process (a formal legal request where a state privacy law applies), and keeps checking that they did. It's free, and it runs on your own computer.</p>
+    <div class="mt-xs flex flex-wrap gap-s">
+      <CtaDownload size="md" />
+      <a class={buttonVariants({ variant: "secondary" })} href={url("how-it-works/")}>See how it works</a>
+    </div>
+  </Card>
+
+  <h2 class="mt-xl" id="share">Pass it on</h2>
+  <p class="mt-s">If a friend shared the post, you could share this page instead. No need to correct anyone: they had the right idea. This page's address is <code class="break-all rounded-sm bg-surface px-3xs">{canon}</code></p>
+  <p class="mt-s"><a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(canon)}`}>Share this page on Facebook</a> (opens Facebook; nothing is sent until you click)</p>
+</div>
+</Base>

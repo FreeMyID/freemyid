@@ -1,0 +1,14 @@
+---
+// Renders a parsed rich-text tree (src/lib/rich.ts) as real elements. No set:html: every text node
+// is escaped by Astro, and only allowlisted tags/attributes can reach this component.
+import type { RNode } from "@/lib/rich";
+import RichText from "./RichText.astro";
+interface Props { nodes: RNode[] }
+const { nodes } = Astro.props;
+---
+{nodes.map((n) => {
+  if (typeof n === "string") return n;
+  const Tag = n.tag as any;
+  if (n.tag === "br") return <br />;
+  return <Tag {...n.attrs}><RichText nodes={n.children} /></Tag>;
+})}

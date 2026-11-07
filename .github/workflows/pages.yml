@@ -1,41 +1,76 @@
+# Site v3: builds web/ (Astro static output) and publishes web/dist to GitHub Pages.
+# Live since the v3 switch-over; the v2 site/ workflow is kept inactive as pages-v2.yml.draft.
+# Rollback to v2: see docs/handoff/web-v3.md (git mv -f pages-v2.yml.draft pages.yml, commit, push)
+# (site_src/ and site/ stay in the repo and are still rebuilt by build.yml after each release).
+# Free GitHub Pages needs a PUBLIC repository: while the repo is private the deploy job is skipped.
 name: pages
 
-# Publishes site/ to GitHub Pages. site/ is built from site_src/ by tools/build_site.py and
-# committed; this job first verifies that the committed output matches the source and passes
-# tools/site_check.py, so a stale or broken site never ships.
-# Free GitHub Pages needs a PUBLIC repository: while the repo is private the deploy job is skipped.
 on:
   push:
     branches: [main]
-    paths: ["site/**", "site_src/**", "tools/build_site.py", "tools/site_check.py",
-            "brokers/registry.sample.yaml", ".github/workflows/pages.yml"]
+    paths: ["web/**", "site_src/**", "brokers/registry.sample.yaml", "tools/site_check.py",
+            ".github/workflows/pages.yml"]
   pull_request:
-    paths: ["site/**", "site_src/**", "tools/build_site.py", "tools/site_check.py",
-            "brokers/registry.sample.yaml", ".github/workflows/pages.yml"]
+    paths: ["web/**", "site_src/**", "brokers/registry.sample.yaml", "tools/site_check.py",
+            ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
   contents: read
+
+# Astro build telemetry off (SEC-60): astro build/dev would otherwise POST to telemetry.astro.build,
+# CI included. web/package.json sets it too; the first build step fails if it is missing.
+env:
+  ASTRO_TELEMETRY_DISABLED: "1"
 
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
-  check:
+  build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      # Actions pinned to full commit SHAs (SEC-61). Update the SHA and the comment together.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
+        with:
+          version: 10.32.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.12"
-      - name: Install build deps (jinja2 + PyYAML only)
-        run: python -m pip install --disable-pip-version-check "jinja2>=3.1" "PyYAML>=6"
-      - name: Committed site/ matches site_src/ and passes site_check
-        run: python tools/build_site.py --check
+      - name: Astro telemetry is off (SEC-60)
+        run: |
+          test "${ASTRO_TELEMETRY_DISABLED:-}" = "1" || { echo "::error::ASTRO_TELEMETRY_DISABLED must be 1"; exit 1; }
+          # Every `astro` call in a package.json script (any form: pnpm exec, npx, after ; or &&) must be
+          # prefixed with ASTRO_TELEMETRY_DISABLED=1 in its own command segment.
+          node -e 'const s=require(process.argv[1]||"./package.json").scripts;const bad=[];for(const[k,c]of Object.entries(s))for(const seg of c.split(/&&|\|\||[;|&]/)){if(/(^|\s)astro(\s|$)/.test(seg)&&!/^\s*ASTRO_TELEMETRY_DISABLED=1\s/.test(seg))bad.push(k)}if(bad.length){console.error("astro run without ASTRO_TELEMETRY_DISABLED=1:",[...new Set(bad)].join(", "));process.exit(1)}'
+      - name: Install (exact versions from the lockfile)
+        run: pnpm install --frozen-lockfile
+      - name: Design tokens are up to date (contrast pairs checked)
+        run: node scripts/gen-tokens.mjs --check
+      - name: Build (astro build + per-page CSP tightening)
+        run: pnpm build
+      - name: Check (meta, CSP, links, anchors, images, sitemap, budgets)
+        run: pnpm check
+      - name: Copy rules and leak scan (tools/site_check.py)
+        run: python scripts/content_check.py dist
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
+        with:
+          path: web/dist
 
   deploy:
-    needs: check
+    needs: build
     if: ${{ github.event_name != 'pull_request' && !github.event.repository.private }}
     runs-on: ubuntu-latest
     permissions:
@@ -46,10 +81,5 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5

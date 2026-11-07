@@ -1,0 +1,22 @@
+---
+// Line icons from site_src/data/icons.yaml (drawn for Free My ID, 24px grid, 2px stroke) plus
+// the brand/v3 lucide-style set (art/icons/*.svg, prefix "v3:"). Always decorative (aria-hidden).
+// The SVG children come from files in this repo, never from user data.
+import { icons } from "@/lib/site";
+import { cn } from "@/lib/utils";
+const v3 = import.meta.glob("../art/icons/*.svg", { query: "?raw", import: "default", eager: true }) as Record<string, string>;
+interface Props { name: string; class?: string }
+const { name, class: cls } = Astro.props;
+let body: string;
+if (name.startsWith("v3:")) {
+  const raw = v3[`../art/icons/${name.slice(3)}.svg`];
+  if (!raw) throw new Error(`unknown v3 icon ${name}`);
+  body = raw.replace(/^[\s\S]*?<svg[^>]*>/, "").replace(/<\/svg>\s*$/, "");
+} else {
+  body = icons[name];
+  if (!body) throw new Error(`unknown icon ${name}`);
+}
+---
+<svg class={cn("inline-block size-[1.2em] shrink-0", cls)} viewBox="0 0 24 24" width="24" height="24" fill="none"
+  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+  focusable="false" set:html={body} />

@@ -59,6 +59,30 @@ AUDIT_JS = """
 """
 
 
+MENU_JS = """
+() => {
+  // v3: popover button (popovertarget) where supported, else the <details> fallback; v2: <details>
+  const vis = (e) => e && getComputedStyle(e).display !== 'none' && e.getClientRects().length;
+  const btn = document.querySelector('header [popovertarget]');
+  let panel = null;
+  if (vis(btn)) { btn.click(); panel = document.getElementById(btn.getAttribute('popovertarget')); }
+  else {
+    const d = [...document.querySelectorAll('header details')].find((x) => vis(x.querySelector('summary')));
+    if (!d) return null;
+    d.querySelector('summary').click(); panel = d;
+  }
+  if (!panel) return 'menu panel not found';
+  const bad = [];
+  for (const a of panel.querySelectorAll('a')) {
+    const r = a.getBoundingClientRect();
+    if (r.width && (r.left < 0 || r.right > innerWidth)) bad.push(`${a.textContent.trim().slice(0,20)} ${Math.round(r.left)}..${Math.round(r.right)}`);
+  }
+  if (![...panel.querySelectorAll('a')].some((a) => a.getBoundingClientRect().width)) return 'menu did not open';
+  return bad.length ? bad.join('; ') : null;
+}
+"""
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="http://localhost:8765")
@@ -69,6 +93,8 @@ def main() -> int:
     ap.add_argument("--prefix", default="", help="URL prefix for every page, e.g. freemyid/ when serving a "
                     "parent folder (the 404 page uses absolute /freemyid/ asset paths)")
     ap.add_argument("--crops", action="store_true", help="also save full-resolution viewport-height slices")
+    ap.add_argument("--reduced-motion", action="store_true",
+                    help="emulate prefers-reduced-motion (scroll-driven reveals render fully in full-page shots)")
     ap.add_argument("--zoom-check", action="store_true", help="also test 320px wide (400%% zoom) for h-scroll")
     args = ap.parse_args()
     from playwright.sync_api import sync_playwright
@@ -87,7 +113,8 @@ def main() -> int:
         browser = p.chromium.launch()
         for theme in args.themes.split(","):
             for w in widths:
-                ctx = browser.new_context(viewport={"width": w, "height": 800}, color_scheme=theme)
+                ctx = browser.new_context(viewport={"width": w, "height": 800}, color_scheme=theme,
+                                          reduced_motion="reduce" if args.reduced_motion else "no-preference")
                 for name, path in pages.items():
                     pg = ctx.new_page()
                     pg.goto(f"{args.base.rstrip('/')}/{args.prefix}{path}", wait_until="networkidle")
@@ -113,6 +140,12 @@ def main() -> int:
                             pg.screenshot(path=str(out / f"{key}-crop{i:02d}.png"),
                                           clip={"x": 0, "y": y, "width": w, "height": min(900, h - y)},
                                           full_page=True)
+                    # open the header menu (if any) and check the panel stays inside the viewport
+                    clip = pg.evaluate(MENU_JS)
+                    if clip:
+                        hard += 1
+                        audit[key]["menu_clipped"] = clip
+                        print(f"[{key}] menu panel outside viewport: {clip}")
                     pg.close()
                 ctx.close()
         browser.close()

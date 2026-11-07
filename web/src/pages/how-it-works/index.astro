@@ -1,0 +1,77 @@
+---
+// How it works. Same copy and source comments as site_src/templates/pages/how-it-works.html.
+import Base from "@/layouts/Base.astro";
+import PageHead from "@/components/PageHead.astro";
+import Section from "@/components/Section.astro";
+import Icon from "@/components/Icon.astro";
+import Art from "@/components/Art.astro";
+import Card from "@/components/ui/Card.astro";
+import Alert from "@/components/ui/Alert.astro";
+import CtaDownload from "@/components/CtaDownload.astro";
+import Timeline from "@/components/aceternity/Timeline.astro";
+import TimelineItem from "@/components/aceternity/TimelineItem.astro";
+import { pageProps, url } from "@/lib/site";
+const p = pageProps("how-it-works");
+const cardIcon = "inline-flex size-12 items-center justify-center rounded-lg bg-brand-soft text-brand [&_svg]:size-7";
+// Sources: docs/PLAN_V1.md D1, D2, D4, D6, D9; docs/USER_GUIDE.md sections 3-5.
+// Step 1 fields: src/freemyid/wizard/draft.py (name, address, birth_year, phones, emails, relatives); never SSN/bank = POSITIONING rule 4.
+// Step 2: shared rule 6 (Listing.shown_fields + removal mailbox). Step 3: PLAN_V1 D4 (daily task, one notification only when there are to-dos).
+// Step 4: src/freemyid/wizard/report.py (site, status, request date, last checked; printable).
+const steps = [
+  ["step-who", "A simple form asking for a name and town.", "Tell it who to protect", "Your name and the towns you've lived in, plus (if you like) your year of birth, phone number, email address and relatives' names, which help it tell you apart from other people with your name. It never asks for your Social Security number or bank details."],
+  ["step-send", "Letters going from a laptop to three web pages.", "It sends the requests", "Depending on the site, Free My ID uses one of three ways, shown below. Each site gets only what it already shows about you, plus a removal email address."],
+  ["", "", "It keeps checking", "Once a day, in the background, it checks for replies and looks again later in case a site lists you again. You'll get a small notice only when something needs you."],
+  ["step-report", "A printable progress report with checked-off rows.", "You see the proof", "A plain report shows every site, where it stands (asked, confirmed, still waiting), the date it was asked and when it was checked again. You can print it."],
+];
+---
+<Base {...p}>
+<PageHead crumbs={p.crumbs} title="How Free My ID works"
+  lead="Every people-search site has its own way of taking requests. Free My ID knows which way each one uses and handles it for you, or with you.">
+  {/* source: PLAN_V1 D1 (three tiers per broker, chosen automatically from the registry) */}
+</PageHead>
+
+<Section id="steps" title="From setup to proof, in four steps">
+  <Timeline class="max-w-[52rem]">
+    {steps.map(([art, alt, h, text], i) => (
+      <TimelineItem n={i + 1} title={h}>
+        <div class="grid items-center gap-m min-[44em]:grid-cols-[1fr_12rem]">
+          <p>{text}</p>
+          {/* step 3 ("keeps checking") has no matching picture in brand/v3 */}
+          {art && <Art src={`sections/${art}`} alt={alt} class="max-w-[12rem] rounded-lg bg-bg-alt max-[44em]:hidden" />}
+        </div>
+      </TimelineItem>
+    ))}
+  </Timeline>
+</Section>
+
+<Section tone="alt" title="Three ways to send a request" titleId="three-ways"
+  lead="Free My ID picks the right way for each site by itself. You don't have to choose.">
+  {/* source: PLAN_V1 D1 tier table (Email / Assisted / Automatic browser), chosen automatically; D9 visible Edge window; shared rule 5 (no CAPTCHA solving).
+     Email fallback = src/freemyid/engine/outbox.py mailto + wizard/draft.py mailbox step text. */}
+  <ul class="grid gap-m min-[56.25em]:grid-cols-3" role="list">
+    <Card as="li" id="email" class="reveal"><span class={cardIcon}><Icon name="mail" /></span><h3>Email</h3><p>It writes a proper removal letter for you to approve, then sends it from the separate email address you set up. If you skip that, it opens the message in your own email program for you to send.</p></Card>
+    <Card as="li" id="do-it-with-me" class="reveal"><span class={cardIcon}><Icon name="pointer" /></span><h3>"Do it with me"</h3><p>It opens the site's removal page in your own browser, with numbered steps and a "copy" button for each box. You click; it keeps track.</p></Card>
+    <Card as="li" id="fill-it-in" class="reveal"><span class={cardIcon}><Icon name="form" /></span><h3>"Fill it in for me"</h3><p>For sites that allow it, it fills the form in a window you can watch, and stops for you if the site asks "are you a robot?". It never tries to get around those checks.</p></Card>
+  </ul>
+</Section>
+
+<Section narrow title="Built to be careful" titleId="safety">
+  {/* source: docs/USER_GUIDE.md section 4 "Practice first (sends nothing)"; Settings "Start sending real requests" */}
+  <Alert variant="note" icon="v3:practice-mode" class="mt-0">
+    <h3 class="text-lead">Practice mode first</h3>
+    <p>Free My ID starts in practice mode, so nothing is sent until you say "start sending real requests."</p>
+  </Alert>
+  {/* Sources: docs/PLAN_V1.md D1/D9 (no CAPTCHA solving, never pay, no ID or accounts unless the permission is switched on); docs/USER_GUIDE.md section 7 and models.py EmailMode.APPROVE_EACH default (approve each email);
+     "that one site only" = docs/USER_GUIDE.md section 1, wizard/dashboard.py hint */}
+  <ul class="mt-m grid gap-xs" role="list">
+    {["Emails wait for your approval before they're sent, unless you choose otherwise.",
+      "It never pays a site. It never creates accounts or sends a photo of your ID unless you switch that on yourself.",
+      "If a site shows an \"I'm not a robot\" check, it hands that step to you.",
+      "When a site says it deleted you, that's for that one site only, and Free My ID says so."]
+      .map((t) => <li class="flex gap-2xs"><Icon name="check" class="mt-[0.25em] text-ok" /><span>{t}</span></li>)}
+  </ul>
+  {/* source: /guides/ pages built from the broker registry */}
+  <p class="mt-m">Want to do it by hand? Our <a href={url("guides/")}>free opt-out guides</a> show the steps for some of the best-known sites.</p>
+  <div class="mt-m"><CtaDownload /></div>
+</Section>
+</Base>

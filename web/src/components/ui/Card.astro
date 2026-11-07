@@ -1,0 +1,9 @@
+---
+// shadcn/ui Card, ported to Astro (same markup and classes, no React runtime).
+import { cn } from "@/lib/utils";
+interface Props { class?: string; as?: "div" | "li" | "article" | "section"; id?: string }
+const { class: cls, as: Tag = "div", id } = Astro.props;
+---
+<Tag data-slot="card" id={id} class={cn("flex flex-col gap-xs rounded-xl border border-line bg-card p-m text-text shadow-1", cls)}>
+  <slot />
+</Tag>
