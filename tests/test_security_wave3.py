@@ -153,3 +153,24 @@ def test_sec47_guard_held_emails_never_leave_before_an_approval(wiz):
     assert m.sent == []
     assert outbox.release_held(store, p, mailer=m, registry=REG) == {"sent": 0, "failed": 0}
     assert m.sent == []
+
+
+# --------------------------------------------------------------------------- SEC-48 (open)
+
+@pytest.mark.xfail(strict=True, reason="SEC-48: /outbox/{rid}/approve runs approve_and_send "
+                   "(now a burst of SMTP sends) on the event loop, freezing the wizard")
+def test_sec48_approve_does_not_send_on_the_event_loop(wiz, monkeypatch):
+    import asyncio
+    c, store, p, f = wiz
+    req = outbox.queue_email(store, p, B1, [], dry_run=False, mailer=FakeMailer())
+    seen: list[bool] = []
+
+    def fake_approve(store, rid, **k):
+        try:
+            asyncio.get_running_loop()
+            seen.append(True)        # called on the server's event loop thread
+        except RuntimeError:
+            seen.append(False)       # called in a worker thread (threadpool / sync route)
+    monkeypatch.setattr(outbox, "approve_and_send", fake_approve)
+    assert c.post(f"/outbox/{req.id}/approve", data=f).status_code == 303
+    assert seen == [False]
