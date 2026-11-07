@@ -87,11 +87,11 @@ commit only your own source files by explicit path, and checkpoint in `docs/hand
 
 | # | Task | Agent | Status |
 |---|---|---|---|
-| R1 | Design system v2 (D6): tokens, type/space scale, all contract components, light+dark, styleguide | web-designer | open |
-| R2 | IA + chrome: header/nav (D1), footer, cta-download partial (D5), pages.yaml, /safety/ (D2) | web-builder | open |
-| R3 | Home rebuild (D10, D9, D4 without the paid column) | web-builder | open |
-| R4 | Real screenshots (D7) + WR-24 | graphic-designer | open |
-| R5 | Source the comparison "paid services (typical)" rows (D4) | broker-researcher | open |
+| R1 | Design system v2 (D6): tokens, type/space scale, all contract components, light+dark, styleguide | web-designer | in-progress |
+| R2 | IA + chrome: header/nav (D1), footer, cta-download partial (D5), pages.yaml, /safety/ (D2) | web-builder | in-progress |
+| R3 | Home rebuild (D10, D9, D4 without the paid column) | web-builder | in-progress |
+| R4 | Real screenshots (D7) + WR-24 | graphic-designer | in-progress |
+| R5 | Source the comparison "paid services (typical)" rows (D4) | broker-researcher | in-progress |
 | R6 | Integrate: rebuild site/, docs/WEBSITE.md, fix seams between R1-R3, commit site/ | web-developer | after R1-R3 |
 | R7 | Verify: site_check extensions, screenshots 360/768/1280 light+dark, keyboard, zoom, claim audit | web-qa | after R6 |
 | R8 | Security/privacy sign-off | qa-security | after R7 |
