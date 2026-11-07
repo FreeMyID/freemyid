@@ -219,3 +219,27 @@ export function pageProps(id: string) {
 export function ldJson(obj: object): string {
   return JSON.stringify(obj).replace(/</g, "\\u003c");
 }
+
+// ------------------------------------------------------------------ dates from git (WR-39, WR-41)
+// Deterministic: a commit date, never the build date. On a shallow clone (CI checkout depth 1) every
+// file would show the same latest commit, which is not accurate, so git dates are left out there.
+import { execFileSync } from "node:child_process";
+function git(args: string[]): string {
+  try { return execFileSync("git", args, { cwd: REPO, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim(); }
+  catch { return ""; }
+}
+export const gitHistory = git(["rev-parse", "--is-shallow-repository"]) === "false";
+
+/** Last commit date (YYYY-MM-DD) touching any of the repo-relative paths; "" if unknown or shallow. */
+export function gitDate(paths: string[]): string {
+  if (!gitHistory) return "";
+  const d = git(["log", "-1", "--format=%cs", "--", ...paths]);
+  return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : "";
+}
+
+/** First commit date (YYYY-MM-DD) where `text` appeared in `path`; "" if unknown or shallow. */
+export function gitFirstDate(path: string, text: string): string {
+  if (!gitHistory) return "";
+  const d = git(["log", "--reverse", "--format=%cs", "-S", text, "--", path]).split("\n")[0] ?? "";
+  return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : "";
+}

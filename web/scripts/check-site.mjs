@@ -135,6 +135,13 @@ for (const f of indexable) {
   locs.delete(u);
 }
 for (const u of locs) err("sitemap.xml", `lists a page that isn't indexable or doesn't exist: ${u}`);
+// WR-39: <lastmod> is optional (left out on shallow clones), but when present it must be a real W3C date, not in the future.
+const todayUtc = new Date().toISOString().slice(0, 10);
+for (const [, d] of sm.matchAll(/<lastmod>([^<]*)<\/lastmod>/g)) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || Number.isNaN(Date.parse(d))) err("sitemap.xml", `bad lastmod ${d}`);
+  else if (d > todayUtc) err("sitemap.xml", `lastmod in the future: ${d}`);
+}
+if (/<(priority|changefreq)>/.test(sm)) err("sitemap.xml", "priority/changefreq are ignored by Google; leave them out");
 if (!existsSync(join(dist, "robots.txt"))) err("robots.txt", "missing");
 
 // --- budgets
