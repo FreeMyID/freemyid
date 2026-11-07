@@ -1,0 +1,33 @@
+# Example only: fake data, practice mode. Copy, edit, then `docker compose up -d`.
+# Run from the repository root:  docker compose -f packaging/docker/compose.example.yaml up
+services:
+  freemyid:
+    build:
+      context: ../..
+      dockerfile: packaging/docker/Dockerfile
+    image: freemyid:local
+    command: ["run", "--headless"]       # looks for listings; sends nothing until you allow it
+    restart: "no"                        # run daily from cron/systemd: `docker compose run --rm freemyid`
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      FREEMYID_HOME: /data
+      # Secrets cannot use a desktop keychain in a container: point at a passphrase file.
+      FREEMYID_PASSPHRASE_FILE: /run/secrets/freemyid_passphrase
+    volumes:
+      - freemyid-data:/data
+      # Fake example profile for trying it out (Jane Q Testperson, Springfield IL). No real data.
+      - ./example-config.yaml:/data/example-config.yaml:ro
+    secrets:
+      - freemyid_passphrase
+
+volumes:
+  freemyid-data:
+
+secrets:
+  freemyid_passphrase:
+    file: ./passphrase.txt               # create it yourself: a long random phrase, chmod 600

@@ -1,0 +1,6 @@
+# Fake person for a trial run. The exact keys follow the `setup --from` YAML schema (schema/), still being finalised; illustrative until then.
+profile:
+  full_name: Jane Q Testperson
+  city: Springfield
+  state: IL
+  removal_email: jane.removals@example.invalid

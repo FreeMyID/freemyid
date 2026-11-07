@@ -1,0 +1,21 @@
+# Keep the full (private) registry, prototypes, research and personal data out of images.
+brokers/registry.yaml
+zzz_legacy
+docs
+site
+site_src
+web
+brand
+.git
+.venv
+**/__pycache__
+.pytest_cache
+.mypy_cache
+.ruff_cache
+dist
+build
+*.freemyid-profile
+local_profiles
+.freemyid
+tests
+tools
