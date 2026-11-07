@@ -1,5 +1,6 @@
 # Free My ID identity-safety checklists (public, citable). Maintained by broker-researcher.
-# Checked 2026-11-07. Written for older, non-technical readers: short steps, plain words.
+# Checked 2026-11-07 (second pass 2026-11-07: TransUnion, ChexSystems, OptOutPrescreen, SSA retried; DMAchoice fee read).
+# Written for older, non-technical readers: short steps, plain words.
 #
 # Each entry: id, title, why, url, cost, time_needed, need_on_hand, steps, how_to_undo,
 # source_urls, date_checked, verification, notes.
@@ -67,7 +68,7 @@ checklists:
     source_urls: [https://consumer.ftc.gov/articles/what-know-about-credit-freezes-fraud-alerts, https://www.experian.com/freeze/center.html]
     date_checked: 2026-11-07
     verification: partial
-    notes: "transunion.com returned HTTP 403 to our checker, so we could not read the steps on TransUnion's own pages. The free cost comes from the FTC page. The phone number 1-800-916-8800 is listed on Experian's freeze page, not on TransUnion's. The steps are generic. Re-check on a normal browser before publishing exact wording."
+    notes: "Retried 2026-11-07: transunion.com/credit-freeze, /credit-freeze/place-credit-freeze and /prescreen-opt-out all returned HTTP 403, so TransUnion's own pages were NOT read (no workaround tried). The free cost comes from the FTC page. The phone number 1-800-916-8800 is listed on Experian's freeze page, not on TransUnion's. The steps are generic. Before publishing exact wording, a person should read the page in a normal browser."
 
   - id: freeze_innovis
     title: "Freeze your credit at Innovis (the fourth bureau)"
@@ -99,12 +100,12 @@ checklists:
       - "Open the ChexSystems security freeze web address above."
       - "Follow the form to place a freeze. You may be asked to make a free account first."
       - "ChexSystems mails you a PIN. Keep it safe."
-      - "Phone option: some sources list 1-800-887-7652. Check the number on the ChexSystems page before you call."
+      - "Phone option: the freeze line is 1-800-887-7652 according to ChexSystems' own freeze pages as shown in a search excerpt (we could not open them). The other number, 1-800-428-9623, is for requests that are not about a freeze."
     how_to_undo: "Use your PIN to lift or remove the freeze on the same site or by phone, before you open a new bank account."
-    source_urls: [https://experian.com/blogs/ask-experian/how-to-freeze-chexsystems-report, https://support.norton.com/sp/en/hk/lifelock-by-norton/current/solutions/v132649189]
+    source_urls: [https://www.consumerfinance.gov/consumer-tools/credit-reports-and-scores/consumer-reporting-companies/companies-list/chex-systems/, https://www.chexsystems.com/security-freeze/information, https://experian.com/blogs/ask-experian/how-to-freeze-chexsystems-report, https://support.norton.com/sp/en/hk/lifelock-by-norton/current/solutions/v132649189]
     date_checked: 2026-11-07
     verification: partial
-    notes: "chexsystems.com returned HTTP 403 to our checker, so the official page was NOT read. The cost, PIN and phone number come from web-search summaries of Experian and Norton help pages. One other source gives 1-800-428-9623, so the phone number is NOT confirmed. Do not publish a phone number until someone reads it on the official page. The exact URL above is the one we tried; it is not confirmed to be the right freeze page."
+    notes: "PHONE CONFLICT, resolved as far as we can: two numbers exist and they are for different things. The CFPB company listing (an official page we DID read, last modified 2025-01-30) gives 800-428-9623 as ChexSystems' general consumer number. ChexSystems' own freeze pages, as quoted in a search result (not opened by us), say 800-887-7652 is the security-freeze line (staffed 7am-11pm Central, Mon-Fri; automated line 24 hours) and say 800-428-9623 is for other requests. Retried 2026-11-07: chexsystems.com/security-freeze/place-freeze, /security-freeze/information and /contact-us all returned HTTP 403, so the freeze steps, cost and PIN rules are still from Experian and Norton help pages. Prefer telling users to use the website; show the phone numbers only with this caveat. The URL above is not confirmed to be the right freeze page; the search result lists https://www.chexsystems.com/security-freeze/place-freeze."
 
   - id: freeze_nctue
     title: "Freeze your NCTUE report (phone, power and utility accounts)"
@@ -160,26 +161,26 @@ checklists:
     source_urls: [https://consumer.ftc.gov/articles/prescreened-credit-insurance-offers, https://www.transunion.com/prescreen-opt-out, https://www.experian.com/privacy/opting_out_preapproved_offers]
     date_checked: 2026-11-07
     verification: partial
-    notes: "optoutprescreen.com returned HTTP 403 to our checker. The 5-year versus permanent rule and the phone number come from the FTC page and the bureau pages as shown in search results. It is run jointly by Experian, TransUnion, Equifax and Innovis, and one request covers all four. It stops only bureau-list offers, not all junk mail."
+    notes: "The FTC page (official, read 2026-11-07) confirms the website optoutprescreen.com, the phone number 1-888-5-OPT-OUT (1-888-567-8688), the five-year option by web or phone, and the permanent option (start online or by phone, then sign and return the Permanent Opt-Out Election form). optoutprescreen.com itself and transunion.com/prescreen-opt-out still return HTTP 403 to our checker, so the site's own wording, what data it asks for and the form's mailing address were NOT read. It is run jointly by the credit bureaus (Experian, TransUnion, Equifax and Innovis), one request covers all of them (per the sources above, not re-read). It stops only bureau-list offers, not all junk mail."
 
   - id: dmachoice
     title: "Cut down on junk mail with DMAchoice"
     why: "Many catalogs and charities mail you because of marketing lists. DMAchoice asks member companies to remove you."
     url: https://www.dmachoice.org/
-    cost: "A small fee set by the site: $8 online or $9 by mail for 10 years, according to search results. Sources disagree and older pages show lower prices. Confirm the price on the site before paying."
+    cost: "A small fee set by the site: $8 online (credit card or PayPal) or $9 by mail (check or money order payable to ANA). Either one covers a 10-year registration. The user decides whether to pay."
     time_needed: "About 15 minutes online."
-    need_on_hand: ["Your name and mailing address", "A debit or credit card (online) or a check (by mail)", "An email address"]
+    need_on_hand: ["Your name and mailing address", "A debit or credit card or PayPal (online) or a check or money order (by mail)", "An email address"]
     steps:
       - "Open the DMAchoice web address above and choose 'New user? Register'."
       - "Fill in your name and address. Choose the kinds of mail you want to stop."
-      - "Pay the fee on the site's own payment page. Check the web address bar says dmachoice.org first."
-      - "Mail option: use the printable form and send a check payable to ANA to DMAchoice Consumer Preferences, P.O. Box 900, Cos Cob, CT 06807."
+      - "Pay the $8 fee on the site's own payment page. Check the web address bar says dmachoice.org first."
+      - "Mail option: print the mail-in form from the site and send it with a $9 check or money order payable to ANA, to the address printed on the form."
       - "Give it a couple of months. It does not stop mail from companies that are not members."
-    how_to_undo: "Log in at dmachoice.org to change your choices, or use the site's Contact Us page. The home page does not describe cancelling, so check the FAQ."
-    source_urls: [https://www.dmachoice.org/, https://dmachoice.org/static/consumer_choice_tools.php, https://www.consumer.ftc.gov/articles/how-stop-junk-mail]
+    how_to_undo: "Log in at dmachoice.org to change your choices, or use the site's Contact Us page. The pages we read do not describe cancelling, so check the FAQ."
+    source_urls: [https://www.dmachoice.org/register.php, https://www.dmachoice.org/, https://dmachoice.org/static/consumer_choice_tools.php, https://www.consumer.ftc.gov/articles/how-stop-junk-mail]
     date_checked: 2026-11-07
-    verification: partial
-    notes: "The home page confirms the service and the 'Register' and 'Renew' links but shows no fee. The fee, 10-year term and mail address come from search summaries of DMAchoice and ANA pages. Free My ID never pays for the user. The user decides whether to pay."
+    verification: official_page
+    notes: "Fee confirmed on the official registration page read 2026-11-07: $8 online, $9 by mail, 10-year term (earlier 'sources disagree' worry is closed). The old mail address (a P.O. box in Cos Cob, CT) came only from search summaries and was NOT confirmed on the page, so it was removed; send people to the address printed on the form. Free My ID never pays for the user."
 
   - id: national_do_not_call
     title: "Join the National Do Not Call Registry"
@@ -237,7 +238,7 @@ checklists:
     source_urls: [https://www.ssa.gov/faqs/en/questions/KA-01687.html, https://www.ssa.gov/pubs/EN-05-10220.pdf, https://www.ssa.gov/blog/en/posts/2021-05-20.html]
     date_checked: 2026-11-07
     verification: partial
-    notes: "ssa.gov/myaccount returned HTTP 403 to our checker. Facts come from SSA pages as returned by search (an SSA FAQ, an SSA leaflet and a 2021 SSA blog post). SSA stopped the old user name and password sign-in on 2025-06-07. The block procedure comes from the older leaflet and blog, so re-check the phone number and wording on ssa.gov before publishing."
+    notes: "Retried 2026-11-07: ssa.gov/myaccount, /faqs/en/questions/KA-01687.html and /pubs/EN-05-10220.pdf all returned HTTP 403, so no SSA page was read (no workaround tried). Facts come from SSA pages as returned by search (an SSA FAQ, an SSA leaflet and a 2021 SSA blog post). SSA stopped the old user name and password sign-in on 2025-06-07. The block procedure comes from the older leaflet and blog, so a person should confirm the phone number and wording on ssa.gov before publishing."
 
   - id: usps_informed_delivery
     title: "Sign up for USPS Informed Delivery"

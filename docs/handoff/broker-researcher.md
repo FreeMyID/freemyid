@@ -1,40 +1,46 @@
 # broker-researcher handoff (v0.3 prep wave, 2026-11-07)
 
-## Tool limits this run (read first)
-No shell and no in-place edit. So: nothing is committed, `registry validate` and the YAML loaders were NOT run, and I could not append to `registry.yaml`, `registry.sample.yaml`, `state_laws.yaml` or `SOURCES.md`. New data went into new files instead. Please run the checks and commit (Priya Shah [freemyid], explicit paths).
+## Tool limits (read first)
+No shell and no in-place edit in either pass. So: nothing is committed, `registry validate` and the YAML loaders were NOT run, and I could not append to `registry.yaml`, `registry.sample.yaml`, `state_laws.yaml` or `SOURCES.md`. Edited files were rewritten whole. Please run a YAML parse check and commit (Priya Shah [freemyid], explicit paths: `brokers/checklists.yaml`, `brokers/state_law_deletion_matrix.yaml`, `docs/handoff/broker-researcher.md`). Do NOT commit `docs/research/exposure_scan_patterns.yaml` (private; add it to .gitignore).
 
-## Files written
-- `brokers/checklists.yaml` (public). 16 entries: Equifax, Experian, TransUnion, Innovis, ChexSystems, NCTUE, LexisNexis freezes, OptOutPrescreen, DMAchoice, Do Not Call, IRS IP PIN, SSA, USPS Informed Delivery, Google Results about you, California DROP. Each has url, cost, time_needed, need_on_hand, steps, how_to_undo, source_urls, date_checked, verification (`official_page` or `partial`), notes. Not loaded by any code. Needs a quick YAML parse check.
-- `brokers/state_law_deletion_matrix.yaml` (public, companion to state_laws.yaml). In-force deletion rights by state, response windows, verification rules, appeal rules, the public-records caveat.
-- `docs/research/exposure_scan_patterns.yaml` (PRIVATE, not covered by .gitignore, add it before any commit). Search and listing patterns for 31 brokers.
+## Second pass (gap closing), 2026-11-07
 
-## Checklist facts that are NOT confirmed (do not ship the wording as certain)
-- TransUnion (403), ChexSystems (403), OptOutPrescreen (403), SSA my account (403): official page not read. Facts come from search summaries of FTC, Experian, Norton, SSA leaflet/blog pages. ChexSystems phone numbers conflict (1-800-887-7652 vs 1-800-428-9623): publish none until read on the official page.
-- DMAchoice fee: $8 online, $9 by mail for 10 years per search results; older pages show lower. Confirm on site.
-- Do Not Call: FTC FAQ page read, donotcall.gov itself not opened.
-- IRS: the page has no general opt-out; how_to_undo says so.
-- California DROP, current status: live since 2026-01-01; brokers had to start processing 2026-08-01 and check at least every 45 days; page says all brokers should finish their first cycle by Nov 2026; status updates up to 90 days; free; over 600 brokers. Page does not say if an email is needed or how to cancel. No dated compliance report found. Note `registry.sample.yaml` ca_drop has `needs_email_verification: true` and `required_fields` including dob, street_address and email. The page does not confirm those; consider relaxing.
+### 1. Statute citations (brokers/state_law_deletion_matrix.yaml)
+Read on official legislature sites. `evidence: statute_text` only where the text was read.
+- Verified, citation correct: DE 6 Del. C. 12D-104(a)(3)/(c)(1); NH RSA 507-H:4 I(c)/III(a); NJ N.J.S.A. 56:8-166.10 a.(3) and 56:8-166.7 (response); KY KRS 367.3615(2)(c)/(3)(a); IA 715D.3(1)(b)/(2)(a); CO C.R.S. 6-1-1306(1)(d)/(2)(a); TX Bus. & Com. 541.051(b)(3)/541.052(b); UT 13-61-201(2)/13-61-203(2); TN 47-18-3203(a)(2)(C)/(b)(1); FL 501.705(2)(c).
+- Citation WAS WRONG and is corrected: MT 30-14-2806 -> 30-14-2808(1)(c)/(4)(a); MD 14-4605 -> 14-4705(b)(4)/(e)(2) (2026 Commercial Law renumbered to subtitle 14-47xx); RI 6-48.1-4 -> 6-48.1-5(e)(2) (delete) and 6-48.1-6(b)(1) (response).
+- Caveats on what was read: CO, TX, UT, TN were read in the enacted or filed bill text on the legislature's site, not a current code page (CO SB21-190, TX HB 4 88R, UT SB 227 2022, TN HB1181). Later amendments not checked. FL 501.705 states no response deadline, so FL's 45 + 15 days stay background (`response_days_evidence: background`).
+- Still background (official site would not give text): IN (iga.in.gov returned only a heading; 24-15-3-1 cite unconfirmed) and CT (cga.ct.gov certificate error twice; CT AG FAQ read but cites no section for delete). NE not on the list, unchanged.
+- Useful findings: Iowa (90 days) and Utah delete rights are limited to data the consumer gave the company, so they are weak against brokers (now confirmed in text). Maryland, Tennessee, Delaware and Utah exclude publicly available information in the definitions (read). KY 367.3615(3)(e) allows the suppression-record route for third-party data.
+- common_rules in the matrix were widened only to points actually read; version bumped to 2026.11.07.2.
 
-## State laws (task 3)
-- Statute text actually read: Virginia 59.1-577 (45+45 days, may decline if cannot verify, appeal 60 days), Minnesota 325M.14 (45+45, verify by commercially reasonable efforts, opt-outs need no verification, appeal 45+60), Oregon 646A.574(1)(c) (delete right reaches data from other sources; the 45-day rule is in 646A.576, not read), California via the AG page.
-- Colorado, Connecticut and Texas statute pages failed to fetch (403, certificate error, empty). Everything else is `evidence: background`.
-- Section-level citations in the matrix for MT, DE, NH, NJ, TN, MD, IN, KY, RI, FL, UT, IA are from memory and may be wrong. They are NOT in the existing state_laws.yaml, which cites chapters only. Do not copy them into a letter until checked.
-- Realism: a deletion right helps only in states with a law in force, only when the site meets the size threshold, and usually not for public-record data (most laws exclude "publicly available information", background). Third-party data may lawfully be suppressed instead of erased (VA and MN confirmed). CA DROP is the one tool aimed at brokers. TX, OR, VT registries are lists only.
-- Newer laws: OK, LA (2027-01-01), AL (2027-05-01), VT (2028-01-01) stay `generic` until effective. Indiana, Kentucky and Rhode Island took effect 2026-01-01 and are already `state_privacy`.
+### 2. Checklists (brokers/checklists.yaml)
+- DMAchoice: UPGRADED to `official_page`. dmachoice.org/register.php read: $8 online (card or PayPal), $9 by mail (check or money order to ANA), both a 10-year registration. I removed the Cos Cob P.O. box (it was never confirmed; tell people to use the address on the form).
+- ChexSystems phone conflict: resolved as two different numbers, not a contradiction. CFPB company listing (official, read; modified 2025-01-30) gives 800-428-9623 as the general number. ChexSystems' own freeze pages, as quoted in a search result (NOT opened by us), say 800-887-7652 is the freeze line and 800-428-9623 is for other requests. Entry stays `partial`; chexsystems.com 403 on three URLs. Recommend: show the website, show the phone numbers only with the caveat.
+- OptOutPrescreen: stays `partial`. optoutprescreen.com and transunion.com/prescreen-opt-out 403. The FTC page (official, read) confirms the site, 1-888-5-OPT-OUT (1-888-567-8688), 5-year by web or phone, and permanent (start online or by phone, then sign and return the Election form).
+- TransUnion: stays `partial`, 403 on /credit-freeze, /credit-freeze/place-credit-freeze, /prescreen-opt-out. Phone number 1-800-916-8800 still comes from Experian's page.
+- SSA: stays `partial`, 403 on /myaccount, the FAQ and the leaflet PDF.
+- I did not use mirrors, proxies or any bot-check workaround.
 
-## Exposure scan (task 1)
-- Most people-search pages return 403 or are refused by the fetch and search tools. URL shapes are from indexed search-result URLs (fake query John Smith, Springfield IL). Confirmed from search: Spokeo, ThatsThem, Nuwber, MyLife, PeopleFinders, InstantCheckmate, TruthFinder, PeopleLooker, FamilyTreeNow, SearchPeopleFree, ClustrMaps, PeekYou, SmartBackgroundChecks, AdvancedBackgroundChecks, CocoFinder, VeriPages, USSearch, 411. From background only, unconfirmed: Whitepages, TruePeopleSearch, FastPeopleSearch, BeenVerified, Intelius, USPhonebook.
-- Whether JS is needed in a real browser was not observed, so it is `unknown`. Plain-fetch access is recorded as `bot_blocked`, `unknown` or `open`.
-- BIG FINDING: radaris.com now shows only an Atlas Data Privacy Corporation transfer notice (court order). No search, no listings. Do not scan it.
-- The file says "11 have no constructible name URL". The real count is 7 (radaris, addresses_com, neighborwho, locatefamily, peoplebyname, peoplewhiz, publicdatadigger). Fix on commit.
-- Short of 40: 31 done. Zabasearch and AnyWho are refused by the search tool; the quota ran out for peoplesearchnow and publicrecordsnow. I did not read the private registry, so the ids are my guesses from the sample and task list. Map them to real ids.
-- Nothing mirrored into `registry.sample.yaml`. Only Spokeo is in the sample and its `listing_url_pattern` is already there. Optional: add its `search_url_pattern` `https://www.spokeo.com/{first}-{last}/{state_name}/{city}`, but check that the engine keeps the capitalised slug.
+### 3. Exposure scan (docs/research/exposure_scan_patterns.yaml, private)
+- zabasearch, anywho: the fetch tool refuses both domains and search returned no URLs from them. No pattern recorded (`not_found`).
+- peoplesearchnow: opens with a plain fetch. URL shapes seen on the page: `/person/<first>-<last>`, `/phone-number`, `/address`, `/names`, `/a`..`/z`. Search form action not visible, so no city/state URL. Opt-out link on page is `/do-not-sell`; third-party guides say `/opt-out`. Check against the registry.
+- publicrecordsnow: opens, but no result URL shape, no opt-out link, placeholder privacy link. May be a thin or unfinished site. No pattern recorded.
+- Fixed the earlier "11 have no constructible URL" to 7 (plus 3 with none seen). Added new evidence value `seen_on_page`.
+- The registry ids for these four are my guesses (I did not read the private registry).
+
+## First-pass notes still true
+- The earlier files: `brokers/checklists.yaml` (16 entries, not loaded by code), `brokers/state_law_deletion_matrix.yaml` (companion to state_laws.yaml), `docs/research/exposure_scan_patterns.yaml` (now 35 brokers).
+- Do Not Call: FTC FAQ page read, donotcall.gov itself not opened. IRS: the page has no general opt-out. California DROP: live since 2026-01-01; processing from 2026-08-01, check every 45 days; free; over 600 brokers; page does not say if an email is needed, so consider relaxing `needs_email_verification: true` and the dob/street_address/email required fields in `registry.sample.yaml`.
+- Realism: a deletion right helps only in states with a law in force, only when the site meets the size threshold, and usually not for public-record data. Third-party data may be suppressed rather than erased (VA, MN, KY confirmed). CA DROP is the one tool aimed at brokers. TX, OR, VT registries are lists only.
+- Newer laws: OK, LA (2027-01-01), AL (2027-05-01), VT (2028-01-01) stay `generic` until effective. Indiana, Kentucky and Rhode Island took effect 2026-01-01.
+- BIG FINDING: radaris.com shows only an Atlas Data Privacy Corporation transfer notice (court order). Do not scan it.
 
 ## CHANGE REQUESTS (orchestrator)
-1. models.py `Broker`: add `search_access` (enum open/js_required/bot_blocked/unknown), `search_access_note`, `search_url_evidence`, `search_url_checked: date`. Add `slug_case` or make the slugifier per-site.
+1. models.py `Broker`: add `search_access` (open/js_required/bot_blocked/unknown), `search_access_note`, `search_url_evidence` (seen_in_search/seen_on_page/background/not_found), `search_url_checked: date`. Add `slug_case` or make the slugifier per-site.
 2. `.gitignore`: add `docs/research/exposure_scan_patterns.yaml`.
-3. Merge `state_law_deletion_matrix.yaml` into `state_laws.yaml` (or add a loader), and add a `Checklist` model plus loader for `checklists.yaml`.
-4. SOURCES.md was not updated. Sources are listed inside each new file with the access date 2026-11-07. Append a one-line pointer per file.
+3. Merge `state_law_deletion_matrix.yaml` into `state_laws.yaml` (or add a loader) and fix the section-level cites in `state_laws.yaml` where it uses chapters only. Add a `Checklist` model plus loader for `checklists.yaml`.
+4. SOURCES.md not updated. Sources are listed inside each new file with the access date 2026-11-07. Append a one-line pointer per file.
 
 ## Still uncertain (carried over)
-Whitepages `suppression_requests` vs `suppression-requests`; BeenVerified live opt-out path; FastPeopleSearch `/removal` vs `/optout`; Cotality portal URL. The earlier re-verify findings (acxiom, liveramp, searchpeoplefree, peoplesearchnow `last_verified` bumps) are still unapplied.
+Whitepages `suppression_requests` vs `suppression-requests`; BeenVerified live opt-out path; FastPeopleSearch `/removal` vs `/optout`; Cotality portal URL. The earlier re-verify findings (acxiom, liveramp, searchpeoplefree, peoplesearchnow `last_verified` bumps) are still unapplied. Still unread in statute: Indiana, Connecticut, Nebraska, the Oregon 45-day section (646A.576).
