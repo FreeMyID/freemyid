@@ -29,7 +29,7 @@ brokers:
     source_urls: [https://privacy.ca.gov/drop/]
     verification_status: verified
     verification_notes: "privacy.ca.gov/drop page fetched 2026-11-05 and matched. The consumer.drop.privacy.ca.gov host is named on that page but was not itself fetched. Identity check happens on the state site; Free My ID must hand off to the human (TodoKind.GOVERNMENT_PORTAL)."
-    last_verified: 2026-11-05
+    last_verified: 2026-11-07
     priority: 95
   - id: spokeo
     name: Spokeo
@@ -410,7 +410,7 @@ brokers:
     source_urls: [https://www.searchpeoplefree.com/opt-out, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
     verification_status: verified
     verification_notes: "Page fetched 2026-11-05 and again 2026-11-06 and matched; visible fields: First Name*, Middle Name, Last Name*, Email*; button 'Begin removal process.'; the page reports the emailed link, captcha, and 3-day processing. Removes only this site. Confirmation link domain is presumed searchpeoplefree.com. The fetch returns rendered text only (no HTML), so no CSS selectors are recorded; the form block is a page check plus a human step. CA registry lists the site under Mississippi Tornado Alley LLC."
-    last_verified: 2026-11-06
+    last_verified: 2026-11-07
     confirmation_domains: [searchpeoplefree.com]
     priority: 60
   - id: peoplesearchnow
@@ -444,7 +444,7 @@ brokers:
     source_urls: [https://www.peoplesearchnow.com/opt-out, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
     verification_status: verified
     verification_notes: "Page fetched 2026-11-05 and again 2026-11-06 and matched; visible: radio 'The subject of the request' / 'An authorized agent of the subject of the request', Subject First Name*, Middle Name, Last Name*, Email*, button 'Begin Removal Process'; a captcha is mentioned. Confirmation link domain is presumed peoplesearchnow.com. Rendered text only, so no CSS selectors recorded. CA registry lists the site under Mississippi Tornado Alley LLC."
-    last_verified: 2026-11-06
+    last_verified: 2026-11-07
     confirmation_domains: [peoplesearchnow.com]
     priority: 50
   - id: acxiom
@@ -475,7 +475,7 @@ brokers:
     source_urls: [https://www.acxiom.com/optout/, https://www.acxiom.com/privacy/]
     verification_status: verified
     verification_notes: "Both pages fetched 2026-11-05 and matched (opt-out, phone, address, two-week processing); opt-out page re-fetched 2026-11-06 (the form itself is not in the fetched text). No email channel: the only registry contact is a named individual's address, not recorded."
-    last_verified: 2026-11-06
+    last_verified: 2026-11-07
     priority: 60
   - id: oracle
     name: Oracle Advertising (Oracle Data Cloud)
@@ -513,7 +513,7 @@ brokers:
     source_urls: [https://liveramp.com/privacy/my-privacy-choices, https://liveramp.com/opt_out/]
     verification_status: verified
     verification_notes: "https://liveramp.com/opt_out/ fetched 2026-11-05 and lists this portal URL. The portal page itself was fetched 2026-11-06: sections Opt Out, Access, Category Access, Correction and Deletion (consumer / parent / agent links to external TrustArc forms, not recorded), phone (844) 678-0045 with service codes (deletion = 4), and the email consumercare@liveramp.com for requests, all shown on the page. No form HTML visible."
-    last_verified: 2026-11-06
+    last_verified: 2026-11-07
     priority: 50
   - id: cotality
     name: Cotality (formerly CoreLogic)
@@ -533,7 +533,7 @@ brokers:
     source_urls: [https://www.cotality.com/legal/privacy-policy]
     verification_status: verified
     verification_notes: "Privacy policy fetched 2026-11-06: deletion via the Online Privacy Portal (no web address given on the page) or by calling 1-866-221-9291 for California residents; privacy@cotality.com is named on the page for marketing opt-out requests and general questions (not explicitly for deletion). /privacy-center returned 404 earlier. Portal URL not recorded because it was not seen."
-    last_verified: 2026-11-06
+    last_verified: 2026-11-07
     priority: 30
   - id: experian
     name: Experian (marketing data opt-outs)
