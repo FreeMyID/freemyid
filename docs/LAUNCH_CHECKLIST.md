@@ -4,7 +4,7 @@
 
 Done items are ticked below. What's left, in order:
 
-1. **History rewrite + force-push** (O, user-approved): waiting on qa-security's hanging-test fix → session 00 pauses its agents → d7 runs scrub.sh → O verifies → force-push → peers re-sync → `git config user.name "Free My ID"` + noreply email in the repo.
+1. **History rewrite → fresh repo** (O, user-approved; old repo renamed freemyid-old, cleaned history pushed to a new FreeMyID/freemyid): waiting on qa-security's hanging-test fix → session 00 pauses its agents → d7 runs scrub.sh → O verifies → force-push → peers re-sync → `git config user.name "Free My ID"` + noreply email in the repo.
 2. **Quality gate** (O + qa-security): suite green with and without brokers/registry.yaml; mypy 0. Open work: move `src/freemyid/engine/_test_drafts/` into tests/ (it would ship inside the package) and fix its 4 mypy errors; confirm every SEC item is closed in docs/SECURITY_REVIEW.md (no strict xfails remain); sign off SEC-38 (accepted as designed).
 3. **CI + v0.1.0** (O): push → CI green → tag `v0.1.0` → release with SHA256SUMS.txt → send version/size/hash to the site (site_src/data/release.yaml).
 4. **VM walkthrough** (O): install the v0.1.0 release on the clean Windows 11 snapshot through SmartScreen; all 6 screens + dashboard + a practice-mode run; real screenshots for the download page. Windows 10 VM still needed (none yet).
@@ -62,6 +62,8 @@ Public means **the whole history is public**, not just the latest files.
 - [ ] Decide what internal files ship: CLAUDE.md, .claude/agents/, docs/handoff/, PROGRESS.md. Recommended: keep the agent setup (it's interesting and harmless once family references are scrubbed), but review each file first. **U decides**
 - [ ] Repo description, topics (`privacy`, `data-brokers`, `opt-out`, `ccpa`, `gdpr`), and the social-preview image. **B**
 - [ ] Branch protection on main (free for public repos). **O**
+- [ ] After the fresh-repo move: old repo renamed `FreeMyID/freemyid-old` (private, archived). It still holds 5 CI artifacts containing the FULL private registry; delete those artifacts or the whole old repo before launch. **U decides, O does it**
+- [ ] New repo settings re-applied: Actions workflow permissions, Pages source, topics, branch protection; collaborator re-invites only if the user wants (the old repo had one besides the owner). **O, U for invites**
 
 ## 6. Accounts and presence (free)
 
