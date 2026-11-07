@@ -186,6 +186,13 @@ def run_doc(rep: RunReport, *, scan_only: bool, headless: bool, exit_code: int,
     }
 
 
+def secrets_doc(backend: str, configured: str | None, usable: bool,
+                keychain_available: bool) -> dict[str, Any]:
+    """Backend names only; never a key, passphrase, path contents or password."""
+    return {"schema": "secrets/1", "backend": backend, "configured": configured,
+            "usable": usable, "keychain_available": keychain_available}
+
+
 def failure_doc(code: int, reason: str) -> dict[str, Any]:
     """What `run --headless --json` prints when it fails closed before running."""
     return {"schema": "error/1", "exit_code": code, "reason": reason}

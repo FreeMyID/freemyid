@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import json
 import sys
-import types
 from datetime import timedelta
 
 import pytest
@@ -71,25 +70,45 @@ def test_home_permissions(freemyid_env):
     assert doctor.check_home().status == "ok"
 
 
-def test_secrets_rejected_keyring_fails(monkeypatch):
-    from freemyid import crypto
+def _no_keychain(monkeypatch):
+    from freemyid import crypto, secret_backends
     monkeypatch.setattr(crypto, "_backend_names", lambda kr: ["keyring.backends.fail.Keyring"])
+    monkeypatch.setattr(secret_backends, "_interactive", lambda: False)
+    monkeypatch.delenv("FREEMYID_PASSPHRASE_FILE", raising=False)
+    monkeypatch.delenv("CREDENTIALS_DIRECTORY", raising=False)
+
+
+def test_secrets_keychain_ok():
     c = doctor.check_secrets()
-    assert c.status == "fail" and "passphrase" in c.fix
+    assert (c.status, c.detail) == ("ok", "keyring")
 
 
-def test_secrets_uses_pluggable_backend_when_present(monkeypatch):
-    mod = types.ModuleType("freemyid.secret_backends")
-    mod.doctor_check = lambda: ("warn", "passphrase file is group-readable", "chmod 600 it")
-    monkeypatch.setitem(sys.modules, "freemyid.secret_backends", mod)
+def test_secrets_no_keychain_no_passphrase_source_fails(monkeypatch):
+    _no_keychain(monkeypatch)
     c = doctor.check_secrets()
-    assert (c.status, c.fix) == ("warn", "chmod 600 it")
+    assert c.status == "fail" and c.detail.startswith("passphrase")
+    assert "FREEMYID_PASSPHRASE_FILE" in c.fix
 
 
-def test_secrets_ignores_backend_module_without_doctor_check(monkeypatch):
-    monkeypatch.setitem(sys.modules, "freemyid.secret_backends",
-                        types.ModuleType("freemyid.secret_backends"))
-    assert doctor.check_secrets().status == "ok"     # in-memory test keyring
+def test_secrets_passphrase_file_ok(monkeypatch, tmp_path):
+    _no_keychain(monkeypatch)
+    monkeypatch.setenv("FREEMYID_PASSPHRASE_FILE", str(tmp_path / "pp"))
+    c = doctor.check_secrets()
+    assert c.status == "ok" and "no system keychain" in c.detail
+
+
+def test_secrets_prompt_only_warns_for_headless(monkeypatch):
+    from freemyid import secret_backends
+    _no_keychain(monkeypatch)
+    monkeypatch.setattr(secret_backends, "_interactive", lambda: True)
+    c = doctor.check_secrets()
+    assert c.status == "warn" and "FREEMYID_PASSPHRASE_FILE" in c.fix
+
+
+def test_secrets_locked_keychain_with_data_fails(store, monkeypatch):
+    _no_keychain(monkeypatch)
+    c = doctor.check_secrets()
+    assert c.status == "fail" and "secrets migrate" in c.fix
 
 
 def test_browser_missing_says_playwright_install(monkeypatch, tmp_path):

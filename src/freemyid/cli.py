@@ -27,9 +27,11 @@ registry_app = typer.Typer(help="Broker registry.", no_args_is_help=True)
 todo_app = typer.Typer(help="Things that need a human.", no_args_is_help=True)
 outbox_app = typer.Typer(help="Emails waiting for your approval.", no_args_is_help=True)
 config_app = typer.Typer(help="Settings.", no_args_is_help=True)
+secrets_app = typer.Typer(help="Where Free My ID keeps its encryption key and passwords.",
+                          no_args_is_help=True)
 for name, sub in (("profile", profile_app), ("schedule", schedule_app),
                   ("registry", registry_app), ("todo", todo_app), ("outbox", outbox_app),
-                  ("config", config_app)):
+                  ("config", config_app), ("secrets", secrets_app)):
     app.add_typer(sub, name=name)
 
 con = Console()
@@ -647,6 +649,42 @@ def outbox_approve(request_id: str):
                   "queued email", lambda r: r.id, lambda r: f"{r.broker_id} · {r.kind.value}")
     approve_and_send(store, r.id)
     con.print("Sent.")
+
+
+# --------------------------------------------------------------------------- secrets
+
+
+@secrets_app.command("status")
+def secrets_status(as_json: JsonOpt = False):
+    """Which backend holds the encryption key (keyring, passphrase or systemd-creds)."""
+    from . import crypto, secret_backends
+    _set_json(as_json)
+    try:
+        be = secret_backends.select()
+    except (ValueError, crypto.KeyUnavailable) as e:
+        _fail(cj.EXIT_NOT_CONFIGURED, f"no usable secrets backend: {e}")
+    if as_json:
+        cj.emit(cj.secrets_doc(be.name, secret_backends.configured_name(), be.usable(),
+                               secret_backends.KeyringBackend().usable()))
+        return
+    con.print(be.name)
+
+
+@secrets_app.command("migrate")
+def secrets_migrate(to: Annotated[str, typer.Option(
+        "--to", help="passphrase | keyring | systemd-creds")]):
+    """Move the encryption key (and saved mailbox passwords) to another backend."""
+    from . import crypto, secret_backends
+    try:
+        r = secret_backends.migrate(to)
+    except (ValueError, crypto.KeyUnavailable) as e:
+        err.print(f"freemyid: {e}", markup=False, highlight=False, soft_wrap=True)
+        raise typer.Exit(cj.EXIT_USAGE) from None
+    if r.changed:
+        con.print(f"Now using {r.to_backend} (was {r.from_backend}); "
+                  f"{r.secrets_moved} saved password(s) moved.")
+    else:
+        con.print("Nothing to change.")
 
 
 # --------------------------------------------------------------------------- config

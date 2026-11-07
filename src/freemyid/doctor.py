@@ -88,51 +88,41 @@ def check_home() -> Check:
 # --------------------------------------------------------------------------- secrets
 
 
-def _normalise(res: Any) -> Check | None:
-    """Accept what an optional secret_backends.doctor_check() returns: a Check, a dict
-    with status/detail/fix, or a (status, detail, fix) tuple."""
-    if isinstance(res, Check):
-        return res
-    if isinstance(res, dict) and res.get("status") in ("ok", "warn", "fail"):
-        return Check("secrets", "Secrets backend", res["status"], str(res.get("detail", "")),
-                     str(res.get("fix", "")))
-    if isinstance(res, tuple) and len(res) >= 2 and res[0] in ("ok", "warn", "fail"):
-        return Check("secrets", "Secrets backend", res[0], str(res[1]),
-                     str(res[2]) if len(res) > 2 else "")
-    return None
-
-
-def _short(name: str) -> str:
-    return name.removeprefix("keyring.backends.")
-
-
 def check_secrets() -> Check:
-    """Pluggable backend (freemyid.secret_backends, v0.2) if present, else the OS keyring."""
+    """Which secrets backend holds the encryption key, and can it be used right now."""
+    from . import secret_backends as sb
+    from .crypto import KeyUnavailable
+    title = "Secrets backend"
+    keychain = sb.KeyringBackend().usable()
     try:
-        mod: Any = importlib.import_module("freemyid.secret_backends")
-    except ImportError:
-        mod = None
-    if mod is not None:
-        fn = getattr(mod, "doctor_check", None)
-        if callable(fn):
-            got = _normalise(fn())
-            if got is not None:
-                return got
-    import keyring
-
-    from . import crypto
-    names_fn = getattr(crypto, "_backend_names", None)
-    kr = keyring.get_keyring()
-    names = names_fn(kr) if callable(names_fn) else [type(kr).__qualname__]
-    rejected: set[str] = set(getattr(crypto, "_REJECTED_BACKENDS", ()))
-    good = [n for n in names if n not in rejected]
-    if not good:
-        return Check("secrets", "Secrets backend", "fail",
-                     "no secure keychain found (" + ", ".join(map(_short, names)) + ")",
-                     "Install and unlock a keychain (GNOME Keyring or KWallet). On a server, "
-                     "use the passphrase backend: see docs/CLI.md, \"Secrets\".")
-    return Check("secrets", "Secrets backend", "ok",
-                 "OS keychain: " + ", ".join(map(_short, good)))
+        be = sb.select()
+    except KeyUnavailable as e:
+        return Check("secrets", title, "fail", str(e),
+                     "Unlock or start the keychain, then consider `freemyid secrets migrate "
+                     "--to passphrase`.")
+    except ValueError as e:   # unknown backend name in config.yaml
+        return Check("secrets", title, "fail", str(e),
+                     "Fix `secrets_backend` in config.yaml (keyring, passphrase or "
+                     "systemd-creds), or remove it for automatic choice.")
+    extra = "" if be.name == "keyring" else (
+        "; system keychain also available" if keychain else "; no system keychain")
+    if be.usable():
+        if be.name == "passphrase" and not os.environ.get(sb.PASSPHRASE_FILE_ENV):
+            return Check("secrets", title, "warn",
+                         f"passphrase, typed at a prompt{extra}",
+                         f"Scheduled and headless runs can't type it: set "
+                         f"{sb.PASSPHRASE_FILE_ENV} to a file only you can read (chmod 600), "
+                         "or use systemd credentials.")
+        return Check("secrets", title, "ok", f"{be.name}{extra}")
+    fixes = {
+        "keyring": "Install and unlock a keychain (GNOME Keyring or KWallet), or run "
+                   "`freemyid secrets migrate --to passphrase`.",
+        "passphrase": f"Set {sb.PASSPHRASE_FILE_ENV} to a file only you can read (chmod 600), "
+                      "or run Free My ID in a terminal.",
+        "systemd-creds": f"Add LoadCredential={sb.CRED_NAME}:<path> to the service.",
+    }
+    return Check("secrets", title, "fail", f"{be.name} is selected but not usable here{extra}",
+                 fixes.get(be.name, "Run `freemyid secrets status`."))
 
 
 # --------------------------------------------------------------------------- data store

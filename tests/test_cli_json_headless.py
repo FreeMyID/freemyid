@@ -273,3 +273,45 @@ def test_headless_key_unavailable_exits_4(store, runner, fake_run, monkeypatch):
     res = runner.invoke(_app(), ["run", "--headless", "--dry-run"])
     assert res.exit_code == cj.EXIT_NOT_CONFIGURED
     assert "encryption key" in res.stderr
+
+
+# ----------------------------------------------------------------------------- secrets
+
+
+def test_secrets_status_plain_and_json(runner):
+    res = runner.invoke(_app(), ["secrets", "status"])
+    assert res.exit_code == 0 and res.stdout.strip() == "keyring"
+    doc = _json(runner.invoke(_app(), ["secrets", "status", "--json"]))
+    assert doc == {"schema": "secrets/1", "backend": "keyring", "configured": None,
+                   "usable": True, "keychain_available": True}
+
+
+def test_secrets_migrate_calls_backend(runner, monkeypatch):
+    from freemyid import secret_backends
+    seen: list[str] = []
+
+    def migrate(to):
+        seen.append(to)
+        return secret_backends.MigrateResult("keyring", to, 2, True)
+    monkeypatch.setattr(secret_backends, "migrate", migrate)
+    res = runner.invoke(_app(), ["secrets", "migrate", "--to", "passphrase"])
+    assert res.exit_code == 0 and seen == ["passphrase"]
+    assert "Now using passphrase (was keyring); 2 saved password(s) moved." in res.stdout
+
+
+@pytest.mark.parametrize("exc", ["value", "key"])
+def test_secrets_migrate_errors_exit_2(runner, monkeypatch, exc):
+    from freemyid import crypto, secret_backends
+
+    def migrate(to):
+        raise ValueError("unknown secrets backend 'x'") if exc == "value" else \
+            crypto.KeyUnavailable("keychain locked")
+    monkeypatch.setattr(secret_backends, "migrate", migrate)
+    res = runner.invoke(_app(), ["secrets", "migrate", "--to", "x"])
+    assert res.exit_code == 2
+    assert ("unknown secrets backend" if exc == "value" else "keychain locked") in res.stderr
+
+
+def test_secrets_migrate_unknown_backend_real(runner):
+    res = runner.invoke(_app(), ["secrets", "migrate", "--to", "floppy"])
+    assert res.exit_code == 2 and "unknown secrets backend" in res.stderr
