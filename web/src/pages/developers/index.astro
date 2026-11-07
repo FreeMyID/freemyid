@@ -1,0 +1,196 @@
+---
+// /developers/ (v0.2 "Every platform", docs/ROADMAP.md 3.8): Linux, macOS, Docker and headless use for tech users.
+// The Windows app stays the main path for everyone else (callout at the top).
+// HONESTY RULE: v0.2 is NOT released. Everything that isn't shipped carries the "Coming in v0.2" badge and
+// future-tense copy. When v0.2 ships, drop the badges section by section, and only for what actually shipped.
+// Copy: headline WR-67, homelab pitch WR-68 (brand). WR-69 (Pro edition line) is on HOLD: no paid tier or prices here.
+// Owner rule (ROADMAP principle 6): this is the only page that links GitHub issues/releases.
+import Base from "@/layouts/Base.astro";
+import PageHead from "@/components/PageHead.astro";
+import Section from "@/components/Section.astro";
+import Icon from "@/components/Icon.astro";
+import Alert from "@/components/ui/Alert.astro";
+import Badge from "@/components/ui/Badge.astro";
+import CtaDownload from "@/components/CtaDownload.astro";
+import { pageProps, site, url } from "@/lib/site";
+const p = pageProps("developers");
+const soon = "Coming in v0.2";
+const cliRef = `${site.repo_url}/blob/main/docs/CLI.md`;
+const pre = "mt-s max-w-full overflow-x-auto rounded-md border border-line bg-surface p-s text-small leading-snug text-text";
+
+// Snippets. Unit name, label and commands from src/freemyid/scheduler/render.py and scheduler/__init__.py
+// (Linux/macOS jobs run `freemyid run --headless --scheduled`); pipx, GHCR image, doctor, setup --from,
+// FREEMYID_PASSPHRASE_FILE and systemd-creds from docs/ROADMAP.md 3.8.
+const pipx = `pipx install freemyid
+freemyid --help`;
+const compose = `# compose.yaml
+services:
+  freemyid:
+    image: ghcr.io/freemyid/freemyid
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    volumes:
+      # your encrypted profile and records
+      - freemyid-data:/data
+    environment:
+      FREEMYID_HOME: /data
+      FREEMYID_PASSPHRASE_FILE: /run/secrets/freemyid_passphrase
+    secrets: [freemyid_passphrase]
+
+secrets:
+  freemyid_passphrase:
+    file: ./passphrase.txt   # chmod 600
+
+volumes:
+  freemyid-data:`;
+// compose matches packaging/docker/compose.example.yaml (in progress for v0.2), with the GHCR image instead of a local build
+const composeRun = `docker compose run --rm freemyid doctor
+docker compose run --rm freemyid run --headless`;
+const source = `git clone ${site.repo_url}.git
+cd freemyid
+python3 -m venv .venv
+.venv/bin/pip install -e .
+.venv/bin/freemyid --help`;
+const firstRun = `# check browser, key store, scheduler and mail
+freemyid doctor
+
+# the Windows wizard's questions, in the terminal
+freemyid setup
+
+# or no questions at all
+freemyid setup --from config.yaml`;
+const sched = `# systemd user timer on Linux, launchd agent on macOS
+freemyid schedule install
+freemyid schedule status
+
+# Linux servers: keep user timers running after you log out
+loginctl enable-linger "$USER"`;
+const timer = `# ~/.config/systemd/user/
+#   freemyid-recheck.timer
+[Timer]
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=15min`;
+const cron = `0 10 * * * freemyid run --headless --scheduled
+@reboot sleep 120 && freemyid run --headless --scheduled`;
+const pass = `install -m 600 /dev/null ~/.config/freemyid/passphrase
+$EDITOR ~/.config/freemyid/passphrase
+export FREEMYID_PASSPHRASE_FILE=~/.config/freemyid/passphrase`;
+const json = `freemyid status --json | jq .
+freemyid run --headless; echo "exit code: $?"`;
+---
+<Base {...p}>
+<PageHead crumbs={p.crumbs} title="Your data-removal tool, on your own machine. Open source."
+  lead="Free My ID is AGPL-licensed, runs locally and keeps your details on your own computer. Read the code, run it, change it.">
+  {/* source: WR-67 (brand headline); LICENSE (GNU AGPL v3); local-first = src/freemyid/netpolicy.py, POSITIONING.md trust panel */}
+  <p class="mt-s max-w-measure">Free My ID takes your name off the websites that sell it. This page is for people who want to run it on Linux, macOS or a home server.</p>
+  {/* source: WR-64 art (graphic-designer), alt from brand/README.md. <picture> swaps light/dark with the system theme. */}
+  <picture slot="art">
+    <source srcset={url("assets/art/developers-dark.svg")} media="(prefers-color-scheme: dark)" />
+    <img src={url("assets/art/developers-light.svg")} width="640" height="480" class="h-auto w-full"
+      alt="A terminal on your own computer connected to a small home server, inside a house outline, with a clock for the schedule." />
+  </picture>
+</PageHead>
+
+<div class="wrap pb-l">
+  {/* Windows stays the main path (docs/PLAN_V1.md); v0.1.2 is the shipped Windows release (data/release.yaml) */}
+  <Alert variant="note" icon="computer" class="mt-0 max-w-[44rem]">
+    <p><strong>Not a developer? You don't need anything on this page.</strong> On Windows 10 or 11, the app does everything with a few clicks, no terminal needed.</p>
+  </Alert>
+  <p class="mt-s"><CtaDownload /></p>
+</div>
+
+<Section id="status" tone="alt" narrow title="What's ready today, and what's coming" titleId="status-title">
+  {/* source: docs/ROADMAP.md 3.8 (shipped: Windows x64 + CLI; Linux/macOS, Docker, PyPI = 0.2) and 6 (v0.2 "Every platform", not released) */}
+  <ul class="mt-xs grid gap-xs">
+    <li class="flex flex-wrap items-center gap-xs"><Badge variant="ok">Available now</Badge><span>The Windows app, with the same engine and command line (<code>freemyid</code>) inside.</span></li>
+    <li class="flex flex-wrap items-center gap-xs"><Badge variant="brand">{soon}</Badge><span>Linux and macOS, pipx, the Docker image, headless runs, JSON output.</span></li>
+  </ul>
+  <p class="mt-s max-w-measure">Version 0.2 isn't out yet. Commands marked "{soon}" show how it's planned to work, and details may still change before release.</p>
+  {/* source: WR-68 (brand homelab pitch; platform list checked against ROADMAP 3.8: Linux/macOS are v0.2, so badged) */}
+  <p class="mt-s max-w-measure">Run it headless on a home server. Same engine as the Windows app, driven from the command line and a schedule, with no account and no cloud. Your profile and records stay on the box you control.</p>
+</Section>
+
+<Section id="install" narrow title="Install" titleId="install-title">
+  <h3 id="pipx" class="mt-m flex flex-wrap items-center gap-xs">With pipx <Badge variant="brand">{soon}</Badge></h3>
+  {/* source: ROADMAP 3.8 (pipx install freemyid; PyPI in the v0.2 release plan) */}
+  <p class="mt-xs max-w-measure">For Linux and macOS. pipx keeps Free My ID in its own environment.</p>
+  <pre class={pre} tabindex="0" aria-label="pipx commands"><code>{pipx}</code></pre>
+
+  <h3 id="docker" class="mt-l flex flex-wrap items-center gap-xs">With Docker <Badge variant="brand">{soon}</Badge></h3>
+  {/* source: ROADMAP 3.8 (GHCR image: non-root, read-only rootfs, Playwright Chromium bundled, volume for data) */}
+  <p class="mt-xs max-w-measure">The image will run as a normal user with a read-only file system, with the browser it needs built in. Your data lives in one volume.</p>
+  <pre class={pre} tabindex="0" aria-label="Example compose.yaml"><code>{compose}</code></pre>
+  <p class="mt-s max-w-measure">Then run it once, or from a timer on the host:</p>
+  <pre class={pre} tabindex="0" aria-label="Docker run commands"><code>{composeRun}</code></pre>
+
+  <h3 id="source" class="mt-l flex flex-wrap items-center gap-xs">From source <Badge variant="brand">{soon}</Badge></h3>
+  {/* source: repo is public (site.yaml repo_url), pyproject.toml (pip-installable package). Linux/macOS support itself is v0.2 (ROADMAP 3.8), hence the badge. */}
+  <p class="mt-xs max-w-measure">The code is public today, but Linux and macOS support isn't finished until v0.2.</p>
+  <pre class={pre} tabindex="0" aria-label="Install from source"><code>{source}</code></pre>
+</Section>
+
+<Section id="first-run" tone="alt" narrow title="First run" titleId="first-run-title">
+  <p class="flex flex-wrap items-center gap-xs"><Badge variant="brand">{soon}</Badge></p>
+  {/* source: ROADMAP 3.8 (doctor checks browser, keychain, scheduler, mail; YAML config alternative to the wizard, schema published) */}
+  <p class="mt-s max-w-measure"><code>freemyid doctor</code> checks that everything Free My ID needs is in place and tells you what to fix. Then set up your profile with questions, or from a file for a box with no one at the keyboard.</p>
+  <pre class={pre} tabindex="0" aria-label="First run commands"><code>{firstRun}</code></pre>
+  <p class="mt-s max-w-measure">The config file format will be published with v0.2. Keep the file private: it holds the details you want removed.</p>
+</Section>
+
+<Section id="scheduling" narrow title="Headless scheduling" titleId="scheduling-title">
+  <p class="flex flex-wrap items-center gap-xs"><Badge variant="brand">{soon}</Badge></p>
+  {/* source: ROADMAP 3.8 (systemd user timer, launchd agent, rendered by scheduler/render.py; install/remove/status made real in 0.2) */}
+  <p class="mt-s max-w-measure">Free My ID checks once a day. One command writes the job for your system: a systemd user timer on Linux, a launchd agent on macOS.</p>
+  <pre class={pre} tabindex="0" aria-label="Scheduling commands"><code>{sched}</code></pre>
+  {/* source: src/freemyid/scheduler/render.py systemd_timer (UNIT freemyid-recheck, Persistent, RandomizedDelaySec), launchd LABEL org.freemyid.recheck */}
+  <p class="mt-s max-w-measure">The timer it writes looks like this. A run missed while the machine was off happens at the next start. On macOS the agent is called <code>org.freemyid.recheck</code>.</p>
+  <pre class={pre} tabindex="0" aria-label="systemd timer"><code>{timer}</code></pre>
+  {/* source: src/freemyid/scheduler/render.py cron_lines (daily at DAILY_HOUR plus @reboot) */}
+  <p class="mt-s max-w-measure">Prefer cron? These two lines do the same job:</p>
+  <pre class={pre} tabindex="0" aria-label="crontab lines"><code>{cron}</code></pre>
+  {/* source: src/freemyid/scheduler/__init__.py (Linux/macOS jobs run `run --headless --scheduled`: no prompts, fails closed) */}
+  <p class="mt-s max-w-measure"><code>run --headless</code> never asks a question. If something needs a person, such as a site's "I'm not a robot" check, it stops and adds it to your to-do list (<code>freemyid todo</code>) instead of guessing.</p>
+</Section>
+
+<Section id="secrets" tone="alt" narrow title="Secrets on a headless box" titleId="secrets-title">
+  <p class="flex flex-wrap items-center gap-xs"><Badge variant="brand">{soon}</Badge></p>
+  {/* source: src/freemyid/secret_backends.py (in progress: passphrase file must be owner-only; $CREDENTIALS_DIRECTORY/freemyid-passphrase); ROADMAP 3.8 (passphrase-derived key (scrypt), FREEMYID_PASSPHRASE_FILE, or systemd-creds, same encrypted store); src/freemyid/crypto.py (AES-256-GCM) */}
+  <p class="mt-s max-w-measure">On Windows the key sits in Windows' own password store. A server often has no desktop key store, so v0.2 adds two other ways to unlock the same encrypted store:</p>
+  <ul class="mt-s grid max-w-measure list-disc gap-2xs ps-l">
+    <li><strong>A passphrase file</strong> that only your user can read (Free My ID refuses a file others can read). The key is derived from it (scrypt).</li>
+    <li><strong>systemd-creds</strong> on Linux, so the passphrase is kept encrypted by the machine itself rather than in a plain file. The timer's service loads it as the credential <code>freemyid-passphrase</code>.</li>
+  </ul>
+  <pre class={pre} tabindex="0" aria-label="Passphrase file commands"><code>{pass}</code></pre>
+</Section>
+
+<Section id="json" narrow title="JSON output and exit codes" titleId="json-title">
+  <p class="flex flex-wrap items-center gap-xs"><Badge variant="brand">{soon}</Badge></p>
+  {/* source: ROADMAP 3.8 (--json on every read command; stable exit codes); docs/CLI.md being written (orchestrator, v0.2) */}
+  <p class="mt-s max-w-measure">Every command that reads data will take <code>--json</code>, and exit codes will be stable, so scripts and monitoring can rely on them.</p>
+  <pre class={pre} tabindex="0" aria-label="JSON and exit code example"><code>{json}</code></pre>
+  <p class="mt-s max-w-measure"><a href={cliRef}>The full command and exit code reference (CLI.md on GitHub)</a></p>
+</Section>
+
+<Section id="contribute" tone="alt" narrow title="Contribute" titleId="contribute-title">
+  {/* source: repo public (site.yaml repo_url); brokers/LICENSE-DATA.md (public sample CC BY-NC 4.0); ROADMAP 3.9 (registry) and 3.8 (submitters/plugins) */}
+  <p class="max-w-measure">The most useful help is keeping the list of people-search sites and their removal steps correct. Sites change their forms often. You can also add or fix a submitter, the code that sends one site's removal request.</p>
+  <ul class="mt-s grid gap-2xs">
+    <li><a href={site.repo_url}>Source code on GitHub</a></li>
+    <li><a href={site.issues_url}>Report a bug or a changed removal page (GitHub issues)</a></li>
+    <li><a href={site.releases_url}>Release history on GitHub</a></li>
+  </ul>
+  <p class="mt-s max-w-measure text-small text-muted">Regular users never need a GitHub account: they can <a href={site.support_mailto}>email us</a> instead.</p>
+</Section>
+
+<Section id="security" narrow title="Security" titleId="security-title">
+  {/* source: site_src/static/.well-known/security.txt (Contact security@freemyid.org, Policy = GitHub security policy); SECURITY.md */}
+  <p class="max-w-measure">Found a security problem? Please report it privately, not in a public issue.</p>
+  <ul class="mt-s grid gap-2xs">
+    <li><a href={url(".well-known/security.txt")}>security.txt (how to reach us)</a></li>
+    <li><a href={`${site.repo_url}/blob/main/SECURITY.md`}>Our security policy (SECURITY.md)</a></li>
+  </ul>
+</Section>
+</Base>

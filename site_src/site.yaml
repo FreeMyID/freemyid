@@ -5,8 +5,12 @@ tagline: Take your name off the websites that sell it.
 base_url: https://freemyid.org/                  # canonical origin + path, trailing slash
 base_path: /                                     # used only by 404.html (served at any depth)
 repo_url: https://github.com/FreeMyID/freemyid
-issues_url: https://github.com/FreeMyID/freemyid/issues/new/choose
-releases_url: https://github.com/FreeMyID/freemyid/releases
+issues_url: https://github.com/FreeMyID/freemyid/issues/new/choose   # /developers/ only (owner rule: users never need an account)
+# User questions go by email, no account needed (ROADMAP principle 6). Subject is prefilled; no body, so no PII.
+support_email: support@freemyid.org
+support_mailto: mailto:support@freemyid.org?subject=Free%20My%20ID%20question
+releases_url: https://github.com/FreeMyID/freemyid/releases   # /developers/ only
+# TODO(devops): switch to https://freemyid.org/get/windows once that redirect to the latest installer exists.
 download_url: https://github.com/FreeMyID/freemyid/releases/latest/download/FreeMyIDSetup.exe
 # Old hand-written URLs that now redirect to clean folder URLs.
 redirects:

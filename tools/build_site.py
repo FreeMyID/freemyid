@@ -318,7 +318,8 @@ class Site:
         files[".nojekyll"] = b""
 
         base = self.cfg["base_url"]
-        pages = [dict(p) for p in self.pages]
+        # v3_only pages (e.g. /developers/) exist only in the Astro site (web/); the v2 build skips them.
+        pages = [dict(p) for p in self.pages if not p.get("v3_only")]
         by_id = {p["id"]: p for p in pages}
         for g in (self.guides if "guides" in by_id else []):
             pages.append({"id": "guide:" + g["id"], "out": g["out"], "template": "pages/guide.html",

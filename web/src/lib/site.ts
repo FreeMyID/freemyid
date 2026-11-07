@@ -37,13 +37,14 @@ function samplePath(): string {
 
 export interface SiteCfg {
   name: string; tagline: string; base_url: string; base_path: string;
-  repo_url: string; releases_url: string; download_url: string; issues_url: string; redirects: Record<string, string>;
+  repo_url: string; releases_url: string; download_url: string; issues_url: string;
+  support_email: string; support_mailto: string; redirects: Record<string, string>;
 }
 export interface PageCfg {
   id: string; out: string; label: string; title: string; description: string;
   nav?: string; jsonld?: string[]; noindex?: boolean;
 }
-export interface Release { version: string | null; date?: string | Date; size_mb?: number; sha256?: string }
+export interface Release { version: string | null; date?: string | Date; size_mb?: number; sha256?: string; notes?: string[] }
 export interface Faq { id: string; q: string; a: string; home?: boolean }
 
 export const site = load<SiteCfg>(resolve(SRC, "site.yaml"));

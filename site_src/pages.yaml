@@ -64,6 +64,14 @@
   title: "Does the \"I do not consent\" Facebook post work?"
   description: Your instinct was right. Here is why the "I do not consent" post cannot reach the sites selling your details, and what can.
   jsonld: [breadcrumbs]
+- id: developers
+  out: developers/
+  template: pages/developers.html   # not used: v3_only (web/src/pages/developers/index.astro)
+  v3_only: true
+  label: For developers
+  title: "Free My ID for developers: Linux, macOS and headless"
+  description: Free My ID on Linux, macOS, Docker and headless servers - pipx, scheduling, secrets, JSON output - coming in v0.2. Windows users, get the app.
+  jsonld: [breadcrumbs]
 - id: styleguide
   out: styleguide/
   template: pages/styleguide.html

@@ -21,7 +21,7 @@ from pathlib import Path
 DEFAULT_PAGES = {
     "home": "", "safety": "safety/", "download": "download/", "how-it-works": "how-it-works/",
     "faq": "faq/", "families": "families/", "guides": "guides/", "guide-spokeo": "guides/spokeo/",
-    "i-do-not-consent": "i-do-not-consent/", "404": "404.html",
+    "i-do-not-consent": "i-do-not-consent/", "developers": "developers/", "404": "404.html",
 }
 
 AUDIT_JS = """
