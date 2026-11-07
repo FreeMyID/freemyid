@@ -21,6 +21,7 @@ Website pages and components (web/), app UI screens and copy (src/freemyid/wizar
 # WO-NNN: <title>
 Status: open | in progress | review | accepted | closed
 Vendor: agy | codex
+Agent: <codex team role file, e.g. web-builder> (codex only)
 Owner contact: Morgan Reyes (check-ins via tools/vendor.sh)
 ## Goal
 ## Acceptance criteria (testable)
