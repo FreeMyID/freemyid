@@ -389,3 +389,28 @@ Notes / open:
   structured status, switch `cli_json.schedule_doc` and `doctor.check_scheduler` to it.
 - Exit 3 after every headless run that leaves Assisted/NEEDS_HUMAN items may be noisy for
   cron users; docs suggest `SuccessExitStatus=3`. Orchestrator call if you want it opt-in.
+
+## 2026-11-07 Theo Park: social poster SEC-57/58/59 fixed (not pushed, not installed)
+- 0dce2a2 SEC-57: flock on `docs/marketing/seo/.bluesky-queue.md.lock`; block claimed as
+  `status: posting <iso>` before createSession. It goes back to `queued` only on a definite
+  not-created failure (allowlist refusal, ConnectError/ConnectTimeout, HTTP 4xx, any session
+  error). A 5xx, a read timeout, a kill, a bad reply or a failed final write leaves `posting`.
+  Any `posting` item blocks all posting (exit 4) until a human edits it. Strict at:// regex
+  (fullmatch, DID must equal the session DID). uri/web_url escaped with `_cell`.
+  Deviation from the literal spec: a createRecord 4xx counts as definite and is put back in the
+  queue (XRPC validates before it writes; the existing qa test expects that).
+- 2f99d19 SEC-58: items with any Cf character are skipped, except ZWJ between emoji and tag
+  characters after U+1F3F4. find_urls never makes a facet for a URL with a Cf character in it.
+- e89f64d SEC-59: tools/social/install.sh, verify.sh, requirements.{in,lock} (uv
+  --generate-hashes, universal). The unit is now a template (@PREFIX@/@REPO@/@SUMS_SHA256@). It
+  pins sha256(SHA256SUMS) and runs three ExecStartPre checks (pin, every file, no added
+  files/symlinks/writable bits). The real pip build was tested once on a scratch HOME with
+  system Python 3.14 (808 files, dry-run OK). Tests use a temp HOME and the
+  FREEMYID_POSTER_TEST_SKIP_PIP seam.
+- c7ba7e0 README: posting recovery, install/update/pause/uninstall; ln -sf steps removed.
+- Tests: the qa strict xfails are removed. The qa-written trigger for queue-write-oserror is
+  narrowed to the final `posted 2026-11-07` write (the old `"status: posted"` match also hit the
+  claim write because Q-001 is already posted). The install tests use a hermetic env, a
+  resolved tmp path and umask=0o022 (lead saw a failure that only showed in the full suite).
+- CHANGE REQUEST (.gitignore, orchestrator): add `docs/marketing/seo/.bluesky-queue.md.lock`.
+- Open: qa re-review of SEC-57..59, then the lead runs install.sh and enables the timer.
