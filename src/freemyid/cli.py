@@ -12,6 +12,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from . import cli_json as cj
 from . import config as cfgmod
 from . import logging_setup, paths
 from .consent import consent_ok
@@ -32,7 +33,23 @@ for name, sub in (("profile", profile_app), ("schedule", schedule_app),
     app.add_typer(sub, name=name)
 
 con = Console()
+err = Console(stderr=True)
 log = logging.getLogger("freemyid.cli")
+
+#: Set by a command running with --json: human messages then go to stderr so stdout is
+#: exactly one JSON document (docs/CLI.md).
+_json_mode = False
+
+JsonOpt = Annotated[bool, typer.Option("--json", help="Machine-readable output (docs/CLI.md)")]
+
+
+def _ui() -> Console:
+    return err if _json_mode else con
+
+
+def _set_json(on: bool) -> None:
+    global _json_mode
+    _json_mode = on
 
 
 def _store():
@@ -67,12 +84,12 @@ def _pick_one(items: Sequence[T], key: str, what: str, ident: Callable[[T], str]
     if len(match) == 1:
         return match[0]
     if not match:
-        con.print(f"[red]No {what} matches {key!r}.[/]")
+        _ui().print(f"[red]No {what} matches {key!r}.[/]")
     else:
-        con.print(f"[red]{key!r} matches {len(match)} {what}s; use more of the id:[/]")
+        _ui().print(f"[red]{key!r} matches {len(match)} {what}s; use more of the id:[/]")
         for x in match:
-            con.print(f"  {ident(x)[:12]}  {describe(x)}")
-    raise typer.Exit(2)
+            _ui().print(f"  {ident(x)[:12]}  {describe(x)}")
+    raise typer.Exit(cj.EXIT_USAGE)
 
 
 def _one_profile(store, key: str) -> Profile:
@@ -88,7 +105,7 @@ def _require_consent(store, p: Profile) -> Profile:
     return p
 
 
-def _select(store, profile: str | None) -> list[Profile]:
+def _select(store, profile: str | None, skipped: list[dict] | None = None) -> list[Profile]:
     ps = [_one_profile(store, profile)] if profile else store.list_profiles()
     ok = []
     for p in ps:
@@ -96,7 +113,9 @@ def _select(store, profile: str | None) -> list[Profile]:
         if good:
             ok.append(p)
         else:
-            con.print(f"[yellow]Skipping {p.label}: {why}[/]")
+            _ui().print(f"[yellow]Skipping {p.label}: {why}[/]")
+            if skipped is not None:
+                skipped.append(cj.skipped_entry(p, why))
     return ok
 
 
@@ -115,6 +134,7 @@ def _harden_home() -> None:
 
 @app.callback()
 def _main(verbose: Annotated[bool, typer.Option("--verbose", "-v")] = False) -> None:
+    _set_json(False)
     _harden_home()
     logging_setup.setup(verbose)
 
@@ -152,28 +172,85 @@ def dashboard():
     serve(cfgmod.load().wizard_port, open_browser=True)
 
 
-def _do_run(profile, broker, scan_only, dry_run, scheduled):
+def _fail(code: int, reason: str) -> None:
+    """Stop with `code` and a one-line reason (stderr; also a JSON document with --json)."""
+    if _json_mode:
+        cj.emit(cj.failure_doc(code, reason))
+    err.print(f"freemyid: {reason}", markup=False, highlight=False, soft_wrap=True)
+    raise typer.Exit(code)
+
+
+def _open_store_or_fail():
+    from .crypto import KeyUnavailable
+    try:
+        return _store()
+    except KeyUnavailable as e:
+        _fail(cj.EXIT_NOT_CONFIGURED,
+              f"not configured: the encryption key is unavailable ({e}); "
+              "run `freemyid doctor` for the fix")
+
+
+def _do_run(profile, broker, scan_only, dry_run, scheduled, headless: bool = False,
+            as_json: bool = False):
+    """Shared body of `scan` and `run`.
+
+    Headless (cron/systemd/Docker): never prompts, never opens a window, and fails closed
+    with exit 4 (not configured) or 3 (needs a person) plus a one-line reason. After a
+    headless run the exit code says how it went (docs/CLI.md).
+    """
     from .engine.runner import run as engine_run
+    _set_json(as_json)
     cfg = cfgmod.load()
     if scheduled and not cfg.real_submissions_enabled:
         dry_run = True   # practice mode: the daily task still runs, just as a dry run (SEC-22)
     if not scan_only and not dry_run and not cfg.real_submissions_enabled:
+        if headless or as_json:
+            _fail(cj.EXIT_NOT_CONFIGURED if headless else cj.EXIT_USAGE,
+                  "real submissions are not enabled (practice mode); use --dry-run, or run "
+                  "`freemyid config enable-submissions` once")
         con.print("[red]Real submissions are not enabled yet.[/] Run a dry run first, then "
                   "`freemyid config enable-submissions`.")
         raise typer.Exit(2)
-    store = _store()
-    rep = engine_run(store, _registry(), _select(store, profile), scan_only=scan_only,
-                     dry_run=dry_run, interactive=not scheduled,
+    if headless and not paths.db_path().exists():
+        _fail(cj.EXIT_NOT_CONFIGURED, "not configured: nobody is set up yet; run "
+              "`freemyid setup` or `freemyid setup --from config.yaml`")
+    store = _open_store_or_fail()
+    skipped: list[dict] = []
+    people = _select(store, profile, skipped)
+    if headless and not people:
+        if not skipped:
+            _fail(cj.EXIT_NOT_CONFIGURED, "not configured: nobody is set up yet; run "
+                  "`freemyid setup` or `freemyid setup --from config.yaml`")
+        _fail(cj.EXIT_NEEDS_HUMAN, f"needs a person: no profile has valid permission "
+              f"({len(skipped)} skipped); open Free My ID to give permission")
+    rep = engine_run(store, _registry(), people, scan_only=scan_only,
+                     dry_run=dry_run, interactive=not (scheduled or headless),
                      broker_ids=broker or None, only_due=scheduled)
-    for line in rep.summary_lines():
-        con.print(line)
+    code = cj.EXIT_OK
+    if headless:
+        if rep.needs_human:
+            code = cj.EXIT_NEEDS_HUMAN
+        elif rep.errors:
+            code = cj.EXIT_ERROR
+    if as_json:
+        cj.emit(cj.run_doc(rep, scan_only=scan_only, headless=headless, exit_code=code,
+                           skipped=skipped))
+    else:
+        for line in rep.summary_lines():
+            con.print(line)
+    if code:
+        raise typer.Exit(code)
 
 
 @app.command()
 def scan(profile: Annotated[str | None, typer.Option("--profile", "-p")] = None,
-         broker: Annotated[list[str] | None, typer.Option("--broker", "-b")] = None):
+         broker: Annotated[list[str] | None, typer.Option("--broker", "-b")] = None,
+         headless: Annotated[bool, typer.Option(
+             "--headless", help="No prompts or windows; fail closed (cron/Docker)")] = False,
+         as_json: JsonOpt = False):
     """Search brokers for listings. Never submits anything."""
-    _do_run(profile, broker or [], scan_only=True, dry_run=True, scheduled=False)
+    _do_run(profile, broker or [], scan_only=True, dry_run=True, scheduled=False,
+            headless=headless, as_json=as_json)
 
 
 @app.command()
@@ -181,9 +258,14 @@ def run(profile: Annotated[str | None, typer.Option("--profile", "-p")] = None,
         broker: Annotated[list[str] | None, typer.Option("--broker", "-b")] = None,
         dry_run: Annotated[bool, typer.Option(
             "--dry-run", help="Search + report, submit nothing")] = False,
+        headless: Annotated[bool, typer.Option(
+            "--headless", help="No prompts or windows; fail closed (cron/systemd/Docker)")
+        ] = False,
+        as_json: JsonOpt = False,
         scheduled: Annotated[bool, typer.Option("--scheduled", hidden=True)] = False):
     """Scan, submit opt-outs, check verifications and escalate ignored requests."""
-    _do_run(profile, broker or [], scan_only=False, dry_run=dry_run, scheduled=scheduled)
+    _do_run(profile, broker or [], scan_only=False, dry_run=dry_run, scheduled=scheduled,
+            headless=headless, as_json=as_json)
 
 
 @app.command()
@@ -205,11 +287,19 @@ def fill(broker: Annotated[str, typer.Argument(help="Broker id")],
 
 
 @app.command()
-def status(profile: Annotated[str | None, typer.Option("--profile", "-p")] = None):
+def status(profile: Annotated[str | None, typer.Option("--profile", "-p")] = None,
+           as_json: JsonOpt = False):
     """Per-broker status for each person."""
-    store, reg = _store(), _registry()
+    _set_json(as_json)
+    store, reg = _open_store_or_fail(), _registry()
     names = {b.id: b.name for b in reg.brokers}
-    for p in _select(store, profile):
+    skipped: list[dict] = []
+    people = _select(store, profile, skipped)
+    if as_json:
+        cj.emit(cj.status_doc([(p, store.list_statuses(p.id), len(store.list_todos(p.id)))
+                               for p in people], names, skipped))
+        return
+    for p in people:
         t = Table(title=f"{p.label}")
         for c in ("Broker", "State", "Updated", "Next check", "Escalation"):
             t.add_column(c)
@@ -228,12 +318,23 @@ def status(profile: Annotated[str | None, typer.Option("--profile", "-p")] = Non
 
 @app.command()
 def report(profile: Annotated[str | None, typer.Option("--profile", "-p")] = None,
-           fmt: Annotated[str, typer.Option("--format", help="html | pdf")] = "html"):
+           fmt: Annotated[str, typer.Option("--format", help="html | pdf")] = "html",
+           as_json: JsonOpt = False):
     """Export a report (HTML or PDF)."""
     from .wizard.report import build_report
-    store, reg = _store(), _registry()
-    for p in _select(store, profile):
-        con.print(f"Wrote {build_report(store, reg, p.id, fmt)}")
+    _set_json(as_json)
+    if fmt not in ("html", "pdf"):
+        raise typer.BadParameter("--format must be html or pdf")
+    store, reg = _open_store_or_fail(), _registry()
+    skipped: list[dict] = []
+    rows = []
+    for p in _select(store, profile, skipped):
+        out = build_report(store, reg, p.id, fmt)
+        rows.append((p, fmt, str(out)))
+        if not as_json:
+            con.print(f"Wrote {out}")
+    if as_json:
+        cj.emit(cj.reports_doc(rows, skipped))
 
 
 # --------------------------------------------------------------------------- profiles
@@ -245,11 +346,17 @@ def profile_add(prefill: Annotated[Path | None, typer.Option()] = None):
 
 
 @profile_app.command("list")
-def profile_list():
+def profile_list(as_json: JsonOpt = False):
+    """Everyone set up on this computer."""
+    _set_json(as_json)
+    store = _open_store_or_fail()
+    if as_json:
+        cj.emit(cj.profiles_doc([(p, consent_ok(p, store)[0]) for p in store.list_profiles()]))
+        return
     t = Table()
     for c in ("ID", "Label", "State", "Consent", "Mailbox"):
         t.add_column(c)
-    for p in _store().list_profiles():
+    for p in store.list_profiles():
         t.add_row(p.id[:8], p.label, p.state_of_residence, p.consent.basis.value,
                   "yes" if p.mailbox else "no")
     con.print(t)
@@ -353,9 +460,17 @@ def schedule_remove():
 
 
 @schedule_app.command("status")
-def schedule_status():
+def schedule_status(as_json: JsonOpt = False):
     from . import scheduler
-    con.print(scheduler.status())
+    detail = scheduler.status()
+    if as_json:
+        try:
+            plat: str | None = scheduler.platform_name()
+        except RuntimeError:
+            plat = None
+        cj.emit(cj.schedule_doc(plat, detail))
+        return
+    con.print(detail)
 
 
 # --------------------------------------------------------------------------- registry
@@ -377,10 +492,14 @@ def registry_validate(path: Annotated[Path | None, typer.Argument()] = None):
 
 
 @registry_app.command("source")
-def registry_source_cmd(plain: Annotated[bool, typer.Option("--plain")] = False):
+def registry_source_cmd(plain: Annotated[bool, typer.Option("--plain")] = False,
+                        as_json: JsonOpt = False):
     """Which broker list is in use: update, family, full or sample."""
     from .registry import load_registry, load_warnings, registry_source
     reg = load_registry()
+    if as_json:
+        cj.emit(cj.registry_source_doc(reg, registry_source(), load_warnings))
+        return
     if plain:
         print(registry_source())
         return
@@ -390,7 +509,13 @@ def registry_source_cmd(plain: Annotated[bool, typer.Option("--plain")] = False)
 
 
 @registry_app.command("show")
-def registry_show():
+def registry_show(as_json: JsonOpt = False):
+    """Every broker in the registry in use, highest priority first."""
+    if as_json:
+        from .registry import load_warnings, registry_source
+        reg = _registry()
+        cj.emit(cj.registry_doc(reg, registry_source(), load_warnings))
+        return
     t = Table()
     for c in ("ID", "Name", "Method", "Verified", "Captcha", "Covered by"):
         t.add_column(c)
@@ -404,11 +529,18 @@ def registry_show():
 
 
 @todo_app.command("list")
-def todo_list(profile: Annotated[str | None, typer.Option("--profile", "-p")] = None):
-    store = _store()
-    for p in _select(store, profile):
-        for t in store.list_todos(p.id):
-            con.print(f"[{t.id[:8]}] {p.label} · {t.kind.value} · {t.title}")
+def todo_list(profile: Annotated[str | None, typer.Option("--profile", "-p")] = None,
+              as_json: JsonOpt = False):
+    """Open to-dos (things that need a person)."""
+    _set_json(as_json)
+    store = _open_store_or_fail()
+    skipped: list[dict] = []
+    rows = [(p, t) for p in _select(store, profile, skipped) for t in store.list_todos(p.id)]
+    if as_json:
+        cj.emit(cj.todos_doc(rows, skipped))
+        return
+    for p, t in rows:
+        con.print(f"[{t.id[:8]}] {p.label} · {t.kind.value} · {t.title}", markup=False)
 
 
 @todo_app.command("done")
@@ -421,9 +553,15 @@ def todo_done(todo_id: str):
 
 
 @outbox_app.command("list")
-def outbox_list():
-    store = _store()
-    for r in store.list_requests(status=RequestStatus.QUEUED_FOR_APPROVAL):
+def outbox_list(as_json: JsonOpt = False):
+    """Emails waiting for your approval."""
+    _set_json(as_json)
+    store = _open_store_or_fail()
+    queued = store.list_requests(status=RequestStatus.QUEUED_FOR_APPROVAL)
+    if as_json:
+        cj.emit(cj.outbox_doc(queued))
+        return
+    for r in queued:
         con.print(f"[{r.id[:8]}] {r.broker_id} · {r.kind.value} · created {r.created_at:%Y-%m-%d}")
 
 
