@@ -25,19 +25,39 @@
 
   var btn = document.getElementById("test-conn");
   if (btn) {
-    btn.addEventListener("click", function () {
-      var out = document.getElementById("test-result");
-      out.textContent = "Testing...";
-      out.className = "";
-      var form = btn.form;
-      fetch("/wizard/test-connection", {
-        method: "POST", credentials: "same-origin",
-        headers: { "X-CSRF": form.csrf.value },
-        body: new FormData(form)
-      }).then(function (r) { return r.json(); }).then(function (j) {
+    var out = document.getElementById("test-result");
+    var box = document.getElementById("trust-box");
+    var form = btn.form;
+    var post = function (url, body) {
+      return fetch(url, { method: "POST", credentials: "same-origin",
+        headers: { "X-CSRF": form.csrf.value }, body: body }).then(function (r) { return r.json(); });
+    };
+    var runTest = function () {
+      out.textContent = "Testing..."; out.className = ""; box.hidden = true;
+      post("/wizard/test-connection", new FormData(form)).then(function (j) {
+        if (j.status === "trust") {
+          out.textContent = "";
+          document.getElementById("trust-text").textContent = j.message;
+          document.getElementById("trust-code").textContent = j.display;
+          document.getElementById("trust-question").firstChild.textContent = j.question;
+          box.hidden = false;
+          document.getElementById("trust-yes").focus();
+          return;
+        }
         out.textContent = j.message;
         out.className = j.ok ? "note" : "error";
       }).catch(function () { out.textContent = "The test did not finish."; out.className = "error"; });
+    };
+    btn.addEventListener("click", runTest);
+    document.getElementById("trust-yes").addEventListener("click", function () {
+      var fd = new FormData(); fd.append("answer", "yes");
+      post("/wizard/trust-certificate", fd).then(function (j) { if (j.ok) { runTest(); } });
+    });
+    document.getElementById("trust-no").addEventListener("click", function () {
+      var fd = new FormData(); fd.append("answer", "no");
+      post("/wizard/trust-certificate", fd).then(function (j) {
+        box.hidden = true; out.textContent = j.message; out.className = "error";
+      });
     });
   }
 

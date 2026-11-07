@@ -79,3 +79,7 @@ button.big, .btn.big { font-size:1.15em; padding:16px 34px; }
 .banner { background:#fff7e0; border:2px solid #e0b64b; border-radius:10px; padding:12px 18px;
   margin:14px 0; }
 p.big { font-size:1.3em; line-height:1.5; }
+
+.code { font-family:Consolas,monospace; font-size:1.05em; font-weight:700; word-break:break-all;
+  background:#fff; border:2px solid #e0b64b; border-radius:8px; padding:10px 14px; }
+[hidden] { display:none !important; }

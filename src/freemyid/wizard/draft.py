@@ -14,6 +14,7 @@ from datetime import date, datetime
 from typing import Any, Protocol
 
 from ..consent import CURRENT_TEXT_VERSION
+from ..engine.mail_tls import TlsPinError, check_peer, client_context, is_loopback
 from ..models import (
     Actor,
     Address,
@@ -97,6 +98,7 @@ class Draft:
     id: str = field(default_factory=new_id)
     editing: bool = False
     imported: bool = False
+    tls_pin: str = ""      # approved certificate fingerprint for a local mail app (Bridge)
     # consent
     basis: str = ConsentBasis.SELF.value
     attested_by: str = ""
@@ -334,7 +336,7 @@ def birth_year_of(d: Draft) -> str:
     return ""
 
 
-def _apply_mailbox(d: Draft, f: FormLike) -> list[str]:
+def _apply_mailbox(d: Draft, f: FormLike, require_trust: bool = False) -> list[str]:
     errs: list[str] = []
     provider = f.get("provider") or d.provider or "other"
     if provider == "outlook":
@@ -372,7 +374,16 @@ def _apply_mailbox(d: Draft, f: FormLike) -> list[str]:
     elif not d.password and not (d.editing and d.mailbox):
         errs.append("Please enter the app password. (It is not your normal email password.)")
     if not errs:
-        d.mailbox = mb
+        if is_loopback(mb["imap_host"]) or is_loopback(mb["smtp_host"]):
+            if d.tls_pin:
+                mb["tls_cert_sha256"] = d.tls_pin
+            elif require_trust:
+                errs.append("Please press \"Test that it works\" and approve the "
+                            "security code first.")
+        else:
+            d.tls_pin = ""
+        if not errs:
+            d.mailbox = mb
     return errs
 
 
@@ -385,56 +396,79 @@ def test_mailbox_connection(mb: dict[str, Any], password: str, timeout: float = 
 
     Returns (ok, plain-language message). The password never appears in the message.
     """
+    ok, msg, _status = check_mailbox(mb, password, timeout)
+    return ok, msg
+
+
+def check_mailbox(mb: dict[str, Any], password: str, timeout: float = 10.0
+                  ) -> tuple[bool, str, str]:
+    """Like `test_mailbox_connection` plus a status: "ok", "fail", "needs_trust" (local mail
+    app with no approved certificate yet) or "cert_changed" (certificate differs from the
+    approved one). The password is only sent after the certificate check passes: a local app
+    without an approved pin is never contacted with credentials."""
     for k in ("imap_host", "smtp_host"):
         if not _HOST_RE.match(str(mb.get(k) or "")):
-            return False, "Please fill in the mail server names first."
+            return False, "Please fill in the mail server names first.", "fail"
     if not password:
-        return False, "Please enter the password first."
-
-    def ctx_for(host: str) -> ssl.SSLContext:
-        c = ssl.create_default_context()
-        if host in ("127.0.0.1", "localhost", "::1"):   # Proton Bridge: local, self-signed
-            c.check_hostname = False
-            c.verify_mode = ssl.CERT_NONE
-        return c
+        return False, "Please enter the password first.", "fail"
+    pin = (mb.get("tls_cert_sha256") or None)
+    local = is_loopback(str(mb["imap_host"])) or is_loopback(str(mb["smtp_host"]))
+    if local and not pin:
+        return False, ("Free My ID needs you to approve this mail app's security code "
+                       "first."), "needs_trust"
 
     user = mb.get("username") or mb.get("address") or ""
     try:
         ih, ip = mb["imap_host"], int(mb["imap_port"])
+        ictx = client_context(ih, pin if is_loopback(ih) else None)
+        ipin = pin if is_loopback(ih) else None
         if mb.get("imap_ssl", True):
-            im: imaplib.IMAP4 = imaplib.IMAP4_SSL(ih, ip, ssl_context=ctx_for(ih), timeout=timeout)
+            im: imaplib.IMAP4 = imaplib.IMAP4_SSL(ih, ip, ssl_context=ictx, timeout=timeout)
         else:
             im = imaplib.IMAP4(ih, ip, timeout=timeout)
             if mb.get("imap_starttls"):
-                im.starttls(ctx_for(ih))
+                im.starttls(ictx)
         try:
+            check_peer(im.sock, ipin)           # before any credential is sent
             im.login(user, password)
         finally:
             try:
                 im.logout()
             except Exception:  # noqa: BLE001
                 log.debug("logout failed")
+    except TlsPinError:
+        return False, _CHANGED_MSG, "cert_changed"
     except (imaplib.IMAP4.error, OSError, ssl.SSLError) as e:
-        return False, f"Could not sign in to the incoming mail server ({type(e).__name__})."
+        return False, f"Could not sign in to the incoming mail server ({type(e).__name__}).", "fail"
     try:
         sh, sp = mb["smtp_host"], int(mb["smtp_port"])
+        spin = pin if is_loopback(sh) else None
+        sctx = client_context(sh, spin)
         if mb.get("smtp_starttls"):
             sm: smtplib.SMTP = smtplib.SMTP(sh, sp, timeout=timeout)
             sm.ehlo()
-            sm.starttls(context=ctx_for(sh))
+            sm.starttls(context=sctx)
             sm.ehlo()
         else:
-            sm = smtplib.SMTP_SSL(sh, sp, timeout=timeout, context=ctx_for(sh))
+            sm = smtplib.SMTP_SSL(sh, sp, timeout=timeout, context=sctx)
         try:
+            check_peer(sm.sock, spin)           # before any credential is sent
             sm.login(user, password)
         finally:
             try:
                 sm.quit()
             except Exception:  # noqa: BLE001
                 log.debug("quit failed")
+    except TlsPinError:
+        return False, _CHANGED_MSG, "cert_changed"
     except (smtplib.SMTPException, OSError, ssl.SSLError) as e:
-        return False, f"Incoming mail works, but the outgoing server failed ({type(e).__name__})."
-    return True, "Connection works. Free My ID can read and send from this mailbox."
+        msg = f"Incoming mail works, but the outgoing server failed ({type(e).__name__})."
+        return False, msg, "fail"
+    return True, "Connection works. Free My ID can read and send from this mailbox.", "ok"
+
+
+_CHANGED_MSG = ("The security code of your mail app is not the one you approved. Nothing was "
+                "sent. This can happen after Proton Mail Bridge is reinstalled or updated.")
 
 
 # --------------------------------------------------------------------------- build + save
@@ -546,6 +580,7 @@ def draft_from_profile(p: Profile, *, keep_consent: bool = True) -> Draft:
     d.mailbox_answered = True
     if p.mailbox:
         d.mailbox = p.mailbox.model_dump(exclude={"keyring_service"})
+        d.tls_pin = p.mailbox.tls_cert_sha256 or ""
     else:
         d.skip_mailbox = True
     return d

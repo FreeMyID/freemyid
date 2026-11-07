@@ -285,6 +285,12 @@ def _mailbox_body(d: Draft) -> str:
               + "</div>")
     creds += ('<div class="actions"><button type="button" class="secondary" id="test-conn">'
               'Test that it works</button></div><div id="test-result" role="status"></div>'
+              '<div id="trust-box" class="note" hidden role="alertdialog" aria-live="polite">'
+              '<p id="trust-text"></p><p class="code" id="trust-code"></p>'
+              '<p id="trust-question"><b></b></p><div class="actions">'
+              '<button type="button" class="big" id="trust-yes">Yes</button>'
+              '<button type="button" class="big secondary" id="trust-no">No</button>'
+              '</div></div>'
               '<p class="hint">The test only talks to your email company. The password is kept '
               "in your computer's protected store, not in Free My ID's files.</p></div>")
     return ('<p class="lead">Free My ID can use a separate email address to send '
