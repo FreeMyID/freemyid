@@ -1,8 +1,11 @@
-"""Mailbox passwords: OS keychain only. OWNER: orchestrator."""
+"""Mailbox passwords, via the selected secrets backend. OWNER: orchestrator.
+
+Keyring backend (default): the OS keychain, as before. Passphrase / systemd-creds backends:
+an encrypted file in FREEMYID_HOME (see secret_backends). Never stored in clear text.
+"""
 from __future__ import annotations
 
-import keyring
-
+from . import secret_backends
 from .models import MailboxConfig
 
 
@@ -11,15 +14,12 @@ def _user(profile_id: str, mb: MailboxConfig) -> str:
 
 
 def set_mailbox_password(profile_id: str, mb: MailboxConfig, password: str) -> None:
-    keyring.set_password(mb.keyring_service, _user(profile_id, mb), password)
+    secret_backends.select().set_secret(mb.keyring_service, _user(profile_id, mb), password)
 
 
 def get_mailbox_password(profile_id: str, mb: MailboxConfig) -> str | None:
-    return keyring.get_password(mb.keyring_service, _user(profile_id, mb))
+    return secret_backends.select().get_secret(mb.keyring_service, _user(profile_id, mb))
 
 
 def delete_mailbox_password(profile_id: str, mb: MailboxConfig) -> None:
-    try:
-        keyring.delete_password(mb.keyring_service, _user(profile_id, mb))
-    except keyring.errors.PasswordDeleteError:
-        pass
+    secret_backends.select().delete_secret(mb.keyring_service, _user(profile_id, mb))

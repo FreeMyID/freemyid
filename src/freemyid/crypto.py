@@ -1,4 +1,6 @@
-"""At-rest encryption. Key lives in the OS keychain. OWNER: orchestrator.
+"""At-rest encryption. Key lives in the OS keychain or a passphrase wrap. OWNER: orchestrator.
+
+Where the key lives is decided by `secret_backends` (keyring | passphrase | systemd-creds).
 
 Field/blob-level AES-256-GCM. Ciphertext format: b"V1" + 12-byte nonce + ct||tag.
 SQLCipher was considered; blob encryption avoids cross-platform native packaging issues.
@@ -87,8 +89,15 @@ def _decode_key(stored: str) -> bytes:
 
 
 def _get_or_create_key() -> bytes:
+    """Test key (pytest only), else the selected secrets backend (secret_backends.select)."""
     if (tk := _test_key()) is not None:
         return tk
+    from . import secret_backends
+    return secret_backends.select().load_data_key()
+
+
+def _keyring_get_or_create_key() -> bytes:
+    """The OS keychain path (default backend; unchanged since 0.1)."""
     try:
         _check_backend()
         stored = keyring.get_password(SERVICE, KEY_NAME)
@@ -105,11 +114,11 @@ def _get_or_create_key() -> bytes:
 
 
 def delete_key() -> None:
-    """Remove the data key from the OS keychain (used by `freemyid wipe`). Missing key is fine."""
-    try:
-        keyring.delete_password(SERVICE, KEY_NAME)
-    except keyring.errors.PasswordDeleteError:
-        pass
+    """Remove the data key from every backend (used by `freemyid wipe`): the OS keychain
+    entry and the passphrase-wrapped key file. Missing key or no keychain at all is fine."""
+    from . import secret_backends
+    secret_backends.KeyringBackend().delete_data_key()
+    secret_backends.PassphraseBackend().delete_data_key()
 
 
 class Cipher:

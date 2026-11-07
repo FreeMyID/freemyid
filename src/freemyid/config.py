@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import sys
+from typing import Literal
 
 import yaml
 from pydantic import BaseModel, ConfigDict
@@ -24,6 +25,9 @@ class Config(BaseModel):
     user_agent_suffix: str = "FreeMyID/0.1 (personal privacy opt-out tool)"
     wizard_port: int = 8765
     real_submissions_enabled: bool = False   # flipped only after explicit user approval
+    # Where the data key and mailbox passwords live (secret_backends). None = auto: OS
+    # keychain if usable, else passphrase. Change with `freemyid secrets migrate`.
+    secrets_backend: Literal["keyring", "passphrase", "systemd-creds"] | None = None
 
 
 def load() -> Config:
