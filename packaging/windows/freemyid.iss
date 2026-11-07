@@ -57,6 +57,13 @@ Type: files; Name: "{app}\registry.yaml"
 Filename: "{app}\freemyid-cli.exe"; Parameters: "schedule remove"; Flags: runhidden; RunOnceId: "RemoveFreeMyIDTask"
 
 [Code]
+// v0.1.0 still showed "Ready to Install" with DisableReadyPage=yes (VM walkthrough, Windows 11):
+// skip it explicitly as well so older people see no extra "Install" step.
+function ShouldSkipPage(PageID: Integer): Boolean;
+begin
+  Result := (PageID = wpReady);
+end;
+
 function DataDir: String;
 begin
   // Never read FREEMYID_HOME here: a stray value could point at a personal folder.

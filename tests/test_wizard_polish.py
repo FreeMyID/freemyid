@@ -47,6 +47,7 @@ def test_icon_and_installer_settings():
     iss = (ROOT / "packaging/windows/freemyid.iss").read_text()
     for k in ("DisableDirPage=yes", "DisableReadyPage=yes", "SetupIconFile=freemyid.ico"):
         assert k in iss
+    assert "ShouldSkipPage" in iss and "wpReady" in iss
     assert "icon=ICON" in (ROOT / "packaging/windows/freemyid.spec").read_text()
 
 

@@ -37,3 +37,11 @@
 
 ## Wave 4 (post v0.1.0)
 - SEC-38 DONE: practice mode, first "Fill it in for me" press -> server-rendered GET /todo/{id}/fill/confirm ("This sends a real request to the site."), POST confirm=yes writes <home>/.fill-confirmed; one-time. Tests in tests/test_wizard_polish.py (file is qa-owned? existing; I added one test + ack in _fill_env).
+- VM walkthrough of v0.1.0 DONE (brand/screenshots/vm-v0.1.0/01..17, fake Pat Testperson, practice mode, no mailbox, no submissions/email). Findings:
+  1. Installer still showed a "Ready to Install ... Click Install" page despite DisableReadyPage=yes (MEDIUM). Fixed in .iss with ShouldSkipPage(wpReady); UNVERIFIED until next CI build (cannot compile Inno here). Until then site copy "Click Install" is correct.
+  2. Window fits (905x~680 inside 1024x768), friendly validation errors OK, scheduled task "Free My ID Recheck" created, practice banner shown.
+  3. Consent screen: Next button is ~4 page-downs below the fold (LOW, UX; possible fix: shorter consent card or sticky button).
+  4. Step 6 never says practice mode is on; dashboard banner is the first mention (LOW).
+  5. Toast uses Python icon (LOW; desktop-notifier default icon, needs icon path).
+  6. Assisted card step 3 says "Type your removal email address" with no mailbox set and no email in Copy list (LOW, content/engine owner).
+  7. Released v0.1.0 lacks the SEC-38 confirm page (ships in next build).
