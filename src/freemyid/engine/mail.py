@@ -292,7 +292,13 @@ class SmtpImapMailer:
     # ------------------------------------------------------------------ IMAP
     def _imap(self, mb: MailboxConfig) -> imaplib.IMAP4:
         """Connected (not logged-in) IMAP. With a pin, the peer certificate is checked here,
-        so `login` is only ever reached on a matching certificate."""
+        so `login` is only ever reached on a matching certificate.
+
+        Plaintext IMAP (no SSL and no STARTTLS) is refused on EVERY host, loopback
+        included, before any socket is opened (SEC-53). The MailboxConfig validator
+        refuses it too, but it can be bypassed (`model_copy`), so this check stands alone."""
+        if not mb.imap_ssl and not mb.imap_starttls:
+            raise MailError("mail connection is not encrypted; refusing to sign in")
         self._check_host(mb.imap_host)
         pin = mb.tls_cert_sha256
         ctx = client_context(mb.imap_host, pin)
