@@ -248,3 +248,22 @@ Drafts: src/freemyid/engine/_test_drafts/ (conftest re-exports tests/conftest; q
 - Still open: SEC-52 (TOFU with a plaintext config uses STARTTLS; now unreachable through a
   validated MailboxConfig, cheap to add the same refusal in trust_on_first_use if wanted).
 - Tests: tests/test_mail_sec50_53.py (new, fakes only, no network).
+
+## 2026-11-07 Scheduled social poster (tools/social/) - DONE, NOT INSTALLED
+- 58eb3f5 / 08ca135: tools/social/poster.py (httpx; stdlib otherwise). One queued item per run
+  from docs/marketing/seo/bluesky-queue.md -> bsky.social createSession + createRecord with
+  link facets (UTF-8 byte offsets). Strict parser (`## Q-NNN`, `status:`, optional `note:` lines,
+  ```text fence); malformed blocks skipped with a warning. >300 graphemes skipped (stdlib grapheme
+  approximation: ZWJ/flags/skin tones/combining marks/VS). Success -> atomic status rewrite
+  (re-parses fresh file, refuses if the block changed) + outreach-log row. Allowlist
+  {bsky.social} checked before every request; verify=True, no redirects, trust_env=False, 20 s.
+  Secrets scrubbed by a logger filter + PosterError messages (scrub before truncation).
+  Exit 0 ok/skip, 1 HTTP (item stays queued), 2 posted but not recorded, 3 unreadable queue.
+  Backend protocol; MastodonBackend stub (not in BACKENDS).
+- c6eb11d: freemyid-poster.service (oneshot, hardened: NoNewPrivileges, PrivateTmp,
+  ProtectSystem=strict, ProtectHome=read-only + ReadWritePaths=docs/marketing/seo,
+  RestrictAddressFamilies, etc.), freemyid-poster.timer (10:00 + 16:00, Persistent,
+  RandomizedDelaySec=300), README with install/pause commands. systemd-analyze verify clean;
+  a transient `systemd-run --user` dry-run with the same sandbox worked and reached the keyring.
+- tests/test_social_poster.py (44). Handle = `user` field of keyring entry `bluesky`.
+- Open: bluesky_token not yet in keyring (runs will skip until it is). Lead installs the timer.
