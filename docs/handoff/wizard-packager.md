@@ -60,3 +60,9 @@
 - CLI `setup_cli`: `_trust_local` shows the same message and asks yes/no for proton_bridge.
 - Saving a Bridge mailbox without a pin is allowed (existing `test_provider_presets` saves one); `_apply_mailbox(require_trust=True)` makes it an error. Suggest qa-security switch it on and update that test.
 - Draft tests: `src/freemyid/wizard/_test_drafts/test_wizard_bridge_trust.py` (reuses the fake bridge from `tests/test_mail_tls_pin.py`).
+
+## SEC-53 form + require_trust default (done)
+- "Other" provider: new "Incoming uses STARTTLS" checkbox (ui.py; CLI asks too). With SSL and STARTTLS both off, `_apply_mailbox` and `check_mailbox` refuse with `draft.UNENCRYPTED_MSG` ("Your password would be sent unprotected. Turn on SSL or STARTTLS for incoming mail. If you are not sure, leave SSL ticked."). `build_profile` turns a MailboxConfig validator error into `SaveError`, never a traceback.
+- `_apply_mailbox(require_trust=True)` is now the default. Callers: draft.apply step "mailbox"/"mailbox_login" (want True), server `/wizard/test-connection` (explicit False: that is where trust is established). Consequence: a Proton Bridge save with no approved pin is refused, so `tests/test_wizard_screens.py::test_provider_presets[proton_bridge-127.0.0.1]` now gets 400. qa-security to update that test to approve a pin first (d.tls_pin / app.state.approved_pin). I did not edit it.
+- CR-W3 done: `trust_on_first_use` callers (server.offer_trust, flows._trust_local) pass `netpolicy=NetPolicy(None, allow_loopback=True)`.
+- Bridge trust tests adopted into `tests/test_wizard_bridge_trust.py` (no sys.path hack) plus both-off tests.

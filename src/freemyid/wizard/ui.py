@@ -281,6 +281,10 @@ def _mailbox_body(d: Draft) -> str:
               + _inp("smtp_host", "Outgoing mail server", mb.get("smtp_host", ""))
               + _inp("smtp_port", "Port", mb.get("smtp_port", 465), typ="number") + "</div>"
               + _check("imap_ssl", "Incoming is secure (SSL)", mb.get("imap_ssl", True))
+              + _check("imap_starttls", "Incoming uses STARTTLS (only if SSL is off)",
+                       mb.get("imap_starttls", False),
+                       "At least one of these two must be on, or your password would be "
+                       "sent unprotected. If unsure, leave SSL ticked.")
               + _check("smtp_starttls", "Outgoing uses STARTTLS", mb.get("smtp_starttls", False))
               + "</div>")
     creds += ('<div class="actions"><button type="button" class="secondary" id="test-conn">'

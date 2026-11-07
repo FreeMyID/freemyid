@@ -618,6 +618,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
         d.password = app.state.draft.password if app.state.draft else ""
         d.tls_pin = (getattr(app.state, "approved_pin", None)
                      or (app.state.draft.tls_pin if app.state.draft else ""))
+        # Test connection is where trust is established, so it must not demand a pin first.
         errs = dr._apply_mailbox(d, form, require_trust=False)
         if errs and not d.mailbox:
             return JSONResponse({"ok": False, "status": "fail", "message": errs[0]})
@@ -634,9 +635,11 @@ def create_app(store, token: str, allowed_hosts: set[str],
         from ..engine.mail_tls import TlsPinError, trust_on_first_use
         from ..models import MailboxConfig
         try:
+            from ..netpolicy import NetPolicy
             res = trust_on_first_use(MailboxConfig(
                 **{k: v for k, v in mb.items() if k != "tls_cert_sha256"},
-                keyring_service="freemyid-mailbox"))
+                keyring_service="freemyid-mailbox"),
+                netpolicy=NetPolicy(None, allow_loopback=True))
         except TlsPinError as e:
             return {"ok": False, "status": "fail", "message": str(e)}
         except ValueError:

@@ -79,12 +79,23 @@ def test_provider_presets(env, prov, host):
     c, store, saved, _, f = env
     c.get("/wizard/consent?new=1")
     _until(c, f, "mailbox")
-    r = c.post("/wizard/mailbox", data=dict(provider=prov, address="v@example.com",
-                                            password="app-pw", **f))
+    form = dict(provider=prov, address="v@example.com", password="app-pw", **f)
+    pin = "ab" * 32
+    if prov == "proton_bridge":
+        # A local mail app is refused until its certificate is approved (require_trust).
+        r = c.post("/wizard/mailbox", data=form)
+        assert r.status_code == 400 and "approve the security code" in r.text
+        # Approve through the real endpoint: the server only accepts a pin it read itself
+        # (pending_pin, set by Test connection); the browser never supplies the fingerprint.
+        c.app.state.pending_pin = pin
+        ok = c.post("/wizard/trust-certificate", data={"answer": "yes", **f}).json()
+        assert ok["ok"]
+    r = c.post("/wizard/mailbox", data=form)
     assert r.status_code == 303
     c.post("/wizard/finish", data={"weekly_recheck": "1", **f})
     [p] = store.list_profiles()
     assert p.mailbox.imap_host == host and "app-pw" in saved.values()
+    assert p.mailbox.tls_cert_sha256 == (pin if prov == "proton_bridge" else None)
 
 
 def test_mailbox_screen_lists_choices_and_help(env):

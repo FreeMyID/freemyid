@@ -336,7 +336,11 @@ def birth_year_of(d: Draft) -> str:
     return ""
 
 
-def _apply_mailbox(d: Draft, f: FormLike, require_trust: bool = False) -> list[str]:
+UNENCRYPTED_MSG = ("Your password would be sent unprotected. Turn on SSL or STARTTLS "
+                   "for incoming mail. If you are not sure, leave SSL ticked.")
+
+
+def _apply_mailbox(d: Draft, f: FormLike, require_trust: bool = True) -> list[str]:
     errs: list[str] = []
     provider = f.get("provider") or d.provider or "other"
     if provider == "outlook":
@@ -358,6 +362,8 @@ def _apply_mailbox(d: Draft, f: FormLike, require_trust: bool = False) -> list[s
                       smtp_starttls=bool(f.get("smtp_starttls")))
         except ValueError:
             errs.append("Ports must be numbers.")
+    if not (mb.get("imap_ssl") or mb.get("imap_starttls")):
+        errs.append(UNENCRYPTED_MSG)
     if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", mb["address"]):
         errs.append("Please enter the removal mailbox's email address.")
     for k in ("imap_host", "smtp_host"):
@@ -409,6 +415,8 @@ def check_mailbox(mb: dict[str, Any], password: str, timeout: float = 10.0
     for k in ("imap_host", "smtp_host"):
         if not _HOST_RE.match(str(mb.get(k) or "")):
             return False, "Please fill in the mail server names first.", "fail"
+    if not (mb.get("imap_ssl", True) or mb.get("imap_starttls")):
+        return False, UNENCRYPTED_MSG, "fail"
     if not password:
         return False, "Please enter the password first.", "fail"
     pin = (mb.get("tls_cert_sha256") or None)
@@ -489,7 +497,13 @@ def build_profile(d: Draft) -> Profile:
         raise SaveError("A parent or guardian must give permission for someone under 18.")
     mailbox = None
     if d.mailbox and not d.skip_mailbox:
-        mailbox = MailboxConfig(**d.mailbox, keyring_service="freemyid-mailbox")
+        try:
+            mailbox = MailboxConfig(**d.mailbox, keyring_service="freemyid-mailbox")
+        except ValueError as e:
+            if not (d.mailbox.get("imap_ssl") or d.mailbox.get("imap_starttls")):
+                raise SaveError(UNENCRYPTED_MSG) from e
+            raise SaveError("The email settings look incomplete; please go back and "
+                            "check them.") from e
     try:
         return Profile(
             id=d.id, label=d.label or d.first, consent=consent,

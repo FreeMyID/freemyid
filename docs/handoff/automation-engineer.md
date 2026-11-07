@@ -224,3 +224,27 @@ Drafts: src/freemyid/engine/_test_drafts/ (conftest re-exports tests/conftest; q
   Replace with mail_tls.client_context(host, pin) + check_peer(sock, pin) before login
   (no pin -> verified context fails for Bridge, which is correct; run TOFU first).
 - Open CR-C1 orchestrator (optional): `freemyid mailbox trust <profile>` CLI wrapper.
+
+## 2026-11-07 SEC-50 / SEC-51 / SEC-53 (engine side) - DONE
+- b631dfe SEC-53: `SmtpImapMailer._imap` refuses plaintext IMAP (imap_ssl and imap_starttls
+  both false) on EVERY host, loopback included, before any socket opens:
+  MailError("mail connection is not encrypted; refusing to sign in"). Independent of the
+  f1167f5 model validator (bypassable via model_copy). qa's strict xfail
+  `test_qa_sec53_plain_imap_without_pin_is_refused` now XPASSes -> qa-security should drop
+  the xfail marker (their file; not touched).
+- c92a9f9 SEC-50: mail_tls.LOOPBACK_PEER_IPS = {127.0.0.1, ::1}; `check_loopback_peer(sock)`
+  (exact match on getpeername()[0], fails closed on any error/shape). Called by
+  `check_peer` whenever a pin is set (so mail.py SMTP+IMAP and wizard draft.py inherit it)
+  and by `fetch_loopback_fingerprint` before reading the cert. LOOPBACK_HOSTS (name-level,
+  incl. `localhost`) unchanged. Bridge preset already stores 127.0.0.1 (wizard/draft.py
+  PRESETS, wizard-owned; no change needed).
+- 678db34 SEC-51: `fetch_loopback_fingerprint(..., netpolicy=None)` and
+  `trust_on_first_use(mb, timeout_s=10.0, *, netpolicy=None)` call `is_allowed(host)` for
+  both hosts before connecting -> TlsPinError("mail host not on allowlist"). None falls back
+  to `NetPolicy(None, allow_loopback=True)` (still loopback-only via is_loopback).
+- CR-W3 wizard-packager: pass the wizard's NetPolicy: `trust_on_first_use(mb,
+  netpolicy=<policy>.with_loopback())` in wizard/server.py offer_trust and wizard/flows.py
+  _trust_local. Backward compatible; optional.
+- Still open: SEC-52 (TOFU with a plaintext config uses STARTTLS; now unreachable through a
+  validated MailboxConfig, cheap to add the same refusal in trust_on_first_use if wanted).
+- Tests: tests/test_mail_sec50_53.py (new, fakes only, no network).

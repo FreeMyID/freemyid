@@ -458,14 +458,15 @@ def test_qa_plain_imap_with_pin_never_sends_credentials(servers):
     assert b"LOGIN" not in srv.received.upper()
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-53 open: unpinned plain IMAP sends LOGIN in "
-                                       "cleartext (pre-existing, mail.py _imap)")
 def test_qa_sec53_plain_imap_without_pin_is_refused(servers):
+    """SEC-53 (fixed in b631dfe): plaintext IMAP is refused before any socket opens.
+    model_copy bypasses the MailboxConfig validator (f1167f5), so this tests _imap alone."""
     make, _fp = servers
     srv = make("imap", starttls=True)
     mb = _mailbox(imap=srv).model_copy(update={"imap_ssl": False, "imap_starttls": False})
-    with contextlib.suppress(MailError):
+    with pytest.raises(MailError, match="not encrypted"):
         _mailer().fetch_since(_profile(mb), SINCE)
+    assert srv.logins == 0
     assert PASSWORD.encode() not in srv.received
 
 
