@@ -1,0 +1,130 @@
+---
+// /protect/<id>/: one page per entry in brokers/checklists.yaml (via lib/protect.ts). Every fact on the
+// page comes from that entry; `notes` is research-internal and is not shown. Written to be printed for a
+// parent: big type, plain numbered list, official address printed after the link (global.css print rules).
+import Base from "@/layouts/Base.astro";
+import Crumbs from "@/components/Crumbs.astro";
+import Icon from "@/components/Icon.astro";
+import Alert from "@/components/ui/Alert.astro";
+import CheckList from "@/components/CheckList.astro";
+import { buttonVariants } from "@/components/ui/button-variants";
+import { canonical, pages, site, url, type Crumb } from "@/lib/site";
+import { longDate, protectMeta, protectPages, type ProtectPage } from "@/lib/protect";
+
+export function getStaticPaths() {
+  return protectPages.map((c) => ({ params: { id: c.id }, props: { c } }));
+}
+const { c } = Astro.props as { c: ProtectPage };
+const crumbs: Crumb[] = [["Home", ""], [pages.protect.label, pages.protect.out], [c.title, c.out]];
+
+const short = (s: string, n: number) => (s.length <= n ? s : s.slice(0, n - 3).replace(/ \S*$/, "") + "...");
+const title = short(c.title.replace(/ \([^)]*\)$/, ""), 60);
+const description = short(`${c.why} Plain steps you can follow yourself${c.free ? ", for free" : ""}. No app needed.`, 155);
+const checked = longDate(c.date_checked);
+const related = protectPages.filter((o) => o.group === c.group && o.id !== c.id);
+const host = (u: string) => new URL(u).hostname.replace(/^www\./, "");
+// HTML comment with the data source (as the broker guides). Only safe characters reach it; "--" can't close it.
+const sourceNote = `Source: brokers/checklists.yaml entry "${c.id}" (CC BY-NC 4.0), version ${protectMeta.version}, checked ${c.date_checked}, verification ${c.verification}.`
+  .replace(/[^A-Za-z0-9 .,:;/_?=&%#@()+"'~-]/g, "").replace(/-{2,}/g, "-");
+// JSON-LD: Article (HowTo rich results are deprecated). Dates are the date the steps were checked.
+const article = {
+  "@context": "https://schema.org", "@type": "Article", headline: title, description,
+  url: canonical(c.out), mainEntityOfPage: canonical(c.out), inLanguage: "en-US",
+  datePublished: c.date_checked, dateModified: c.date_checked, isAccessibleForFree: true,
+  author: { "@type": "Organization", name: site.name, url: site.base_url },
+  publisher: { "@type": "Organization", name: site.name, url: site.base_url },
+  citation: c.source_urls,
+};
+---
+<Base title={title} description={description} out={c.out} nav="protect" jsonldKinds={["breadcrumbs"]} crumbs={crumbs} ld={[article]}>
+<Fragment set:html={`<!-- ${sourceNote} -->`} />
+<article>
+<div class="bg-[radial-gradient(ellipse_at_top_right,var(--fmi-color-brand-soft),transparent_55%)] pb-l pt-l print:bg-none print:pt-0">
+  <div class="wrap-narrow">
+    <Crumbs crumbs={crumbs} />
+    <h1 class="mt-m">{c.title}</h1>
+    <p class="mt-s text-lead">{c.why}</p>
+    {/* source: checklists.yaml cost field (free unless it says otherwise); the steps happen on the official site */}
+    <p class="mt-s text-lead font-semibold">
+      {c.free ? "This is free." : "This service charges its own fee (see Cost below)."} You don't need Free My ID to do it.
+    </p>
+    <p class="mt-s flex items-center gap-2xs text-muted print:hidden"><Icon name="printer" />Printing this for someone? Press Ctrl+P (Cmd+P on a Mac).</p>
+  </div>
+</div>
+
+<div class="wrap-narrow pb-2xl text-lead">
+  {c.verification === "partial" && (
+    <Alert variant="note" icon="info">
+      {/* source: checklists.yaml verification: partial (the official page was blocked or silent on some points on date_checked) */}
+      <p>We couldn't open the official page on {checked}; double-check the steps on the official site.</p>
+    </Alert>
+  )}
+  {c.status_note && (
+    <Alert icon="info">
+      {/* source: checklists.yaml status_note */}
+      <p><strong>Where things stand:</strong> {c.status_note}</p>
+    </Alert>
+  )}
+
+  <dl class="mt-l grid gap-s rounded-xl border border-line bg-card p-m shadow-1 min-[40em]:grid-cols-[auto_1fr] min-[40em]:gap-x-l">
+    <dt class="flex items-center gap-2xs font-bold text-heading"><Icon name="tag" class="text-brand" />Cost</dt>
+    <dd class="m-0">{c.cost}</dd>
+    <dt class="flex items-center gap-2xs font-bold text-heading"><Icon name="clock" class="text-brand" />Time</dt>
+    <dd class="m-0">{c.time_needed}</dd>
+    <dt class="flex items-center gap-2xs font-bold text-heading"><Icon name="external" class="text-brand" />Official site</dt>
+    <dd class="m-0 break-words"><a href={c.url} rel="noopener noreferrer">{c.host}</a></dd>
+  </dl>
+
+  {c.need_on_hand.length > 0 && (
+    <section aria-labelledby="ready">
+      <h2 class="mt-xl" id="ready">What to have ready</h2>
+      <CheckList class="mt-s">
+        {c.need_on_hand.map((n) => <li><Icon name="check" /><span>{n}</span></li>)}
+      </CheckList>
+    </section>
+  )}
+
+  <section aria-labelledby="steps">
+    <h2 class="mt-xl" id="steps">Step by step</h2>
+    <ol class="mt-s grid list-decimal gap-s ps-[1.6em] marker:font-bold marker:text-brand">
+      {c.shownSteps.map((s) => (
+        <li class="ps-2xs">
+          {s.text}
+          {s.phone && <span class="mt-3xs block text-body text-muted">Check this phone number on the official site before you call.</span>}
+        </li>
+      ))}
+    </ol>
+    <p class="mt-m print:hidden">
+      <a class={buttonVariants({ variant: "secondary", size: "lg" })} href={c.url} rel="noopener noreferrer"><Icon name="external" />Open the official page</a>
+    </p>
+    <p class="mt-2xs text-body text-muted print:hidden">Opens {c.host}, the official website.</p>
+  </section>
+
+  <section aria-labelledby="undo">
+    <h2 class="mt-xl" id="undo">How to undo it</h2>
+    <p class="mt-s">{c.how_to_undo}</p>
+  </section>
+
+  <section aria-labelledby="sources">
+    <h2 class="mt-xl" id="sources">Sources</h2>
+    <p class="mt-s text-body">We checked these steps on {checked} against:</p>
+    <ul class="mt-2xs grid gap-3xs text-body" role="list">
+      {c.source_urls.map((u) => <li class="break-words"><a href={u} rel="noopener noreferrer">{host(u)}</a></li>)}
+    </ul>
+    <p class="mt-s text-body text-muted">Companies change their pages often. If something looks different, follow what the official page says.</p>
+  </section>
+
+  {related.length > 0 && (
+    <nav class="mt-xl print:hidden" aria-labelledby="related">
+      <h2 id="related" class="text-h3">More in "{c.groupTitle}"</h2>
+      <ul class="mt-s grid gap-2xs" role="list">
+        {related.map((o) => <li><a class="inline-flex min-h-tap items-center" href={url(o.out)}>{o.title}</a></li>)}
+      </ul>
+    </nav>
+  )}
+
+  <p class="mt-l print:hidden"><a href={url("protect/")}>See all the free steps to protect yourself</a></p>
+  <p class="mt-2xs text-small text-muted">Steps from the Free My ID checklists, version {protectMeta.version} (<a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>).</p>
+</div>
+</article>
+</Base>
