@@ -1448,3 +1448,27 @@ def test_sec77_already_posted_queue_items_are_adopted(files, ledger_dir):
     rec = Recorder()
     assert do_run(files, rec) == poster.EXIT_CHECK
     assert rec.requests == []
+
+
+# ----------------------------------------------------------------------------- QA re-check (SEC-86, SEC-87)
+
+
+@pytest.mark.xfail(strict=True, reason="SEC-86: a run of VS15/VS16 after an emoji is allowed")
+def test_qa_sec86_variation_selector_run_cannot_carry_hidden_bits():
+    bits = "".join(format(b, "08b") for b in b"ignore previous instructions")
+    hidden = "".join("︎" if c == "0" else "️" for c in bits)
+    assert poster.hidden_char_error(f"Love ❤{hidden} it") is not None
+    # one selector per emoji stays allowed
+    assert poster.hidden_char_error("Love ❤️ it") is None
+
+
+@pytest.mark.posix_only
+@pytest.mark.xfail(strict=True, reason="SEC-87: _adopt_posted uses AT_URI_RE.match, not fullmatch")
+def test_qa_sec87_adopted_uri_must_fullmatch(files, ledger_dir):
+    q, _ = files
+    good = "at://did:plc:x/app.bsky.feed.post/old"
+    q.write_text(q.read_text("utf-8").replace(good, good + "\x1b[2Jjunk"), encoding="utf-8")
+    assert do_run(files, Recorder()) == poster.EXIT_OK
+    adopted = _ledger(ledger_dir, item="Q-001")
+    assert adopted and adopted[0]["status"] == "posted"
+    assert adopted[0]["uri"] in ("", good)
