@@ -35,6 +35,7 @@ Codes are stable: a number never changes meaning.
 | `doctor` | Readiness checks (`--offline` skips the mail server check) | `doctor/1` |
 | `scan` | Searches brokers; never submits. `-p/--profile`, `-b/--broker` (repeatable), `--headless` | `run/1` |
 | `run` | Scan, submit, verify, escalate. `--dry-run`, `--headless`, `-p`, `-b` | `run/1` |
+| `exposure` | Which sites show you, with a 0-100 exposure score; reads only (works in practice mode). `-p`, `--offline`, `--refresh`, `--headless` ([EXPOSURE.md](EXPOSURE.md)) | `exposure/1` |
 | `fill BROKER` | Opens the broker's form in a window and fills it; you submit | |
 | `status` | Per-broker state for each person. `-p` | `status/1` |
 | `report` | Writes an HTML or PDF report. `-p`, `--format html\|pdf` | `reports/1` |
@@ -157,6 +158,25 @@ When a headless run fails closed before starting, `--json` prints
 ```
 
 `configured` is the `secrets_backend` setting (null = chosen automatically).
+
+### `exposure/1`
+
+```json
+{"schema": "exposure/1", "offline": false, "headless": false, "exit_code": 0,
+ "profiles": [{"profile_id": "…", "label": "Mom", "created_at": "…", "practice_mode": true,
+   "score": 17, "explanation": [{"points": 15, "text": "1 site shows a listing that is you …"}],
+   "counts": {"confirmed_sites": 1, "possible_sites": 0, "check_by_hand": 1, "not_found": 0},
+   "entries": [{"broker_id": "spokeo", "broker_name": "Spokeo", "status": "found",
+     "reason": null, "match_level": "confirmed", "signals": ["age", "city"],
+     "from_store": false, "checked_at": "…", "check_url": "https://…",
+     "listings": [{"url": "https://…", "match_level": "confirmed", "signals": ["age", "city"],
+       "contact_shown": false, "relatives_shown": 1}]}]}],
+ "skipped": []}
+```
+
+`status` is `found`, `not_found` or `check_by_hand`, and `reason` is one of the codes in
+docs/EXPOSURE.md. Listing and check URLs are included because the person needs to open
+them; the text output shows them too.
 
 ### `doctor/1`
 
