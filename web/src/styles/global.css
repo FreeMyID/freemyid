@@ -37,9 +37,10 @@
   a:hover { text-decoration-thickness: 0.14em; }
   /* Focus: gold outer ring with a contrasting inner ring, visible on any band (3px+). */
   :focus-visible {
-    outline: 3px solid var(--fmi-color-focus);
+    outline: 3px solid var(--fmi-color-focus) !important;
+    transition: none !important; /* no colour fade on the ring */
     outline-offset: 3px;
-    box-shadow: 0 0 0 3px var(--fmi-color-focus-inner);
+    box-shadow: 0 0 0 3px var(--fmi-color-focus-inner) !important; /* beats shadow utilities */
     border-radius: var(--fmi-radius-sm);
   }
   main:focus { outline: none; }
@@ -67,6 +68,7 @@
   /* Prose from data (FAQ answers, guide steps) and long-form page text. */
   .prose-fmid { max-width: var(--fmi-measure); }
   .prose-fmid > * + * { margin-top: var(--fmi-space-s); }
+  .prose-fmid > :first-child { margin-top: 0; }
   .prose-fmid :where(ul, ol) { padding-inline-start: 1.25em; }
   .prose-fmid :where(ul) { list-style: disc; }
   .prose-fmid :where(ol) { list-style: decimal; }

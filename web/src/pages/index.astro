@@ -84,12 +84,12 @@ const cardIcon = "inline-flex size-12 items-center justify-center rounded-lg bg-
   {/* source: teardown 4.3, narrowed to what the shipped report shows: D8 "Printable progress report" with site names, states and dates only (src/freemyid/wizard/report.py) */}
   <p slot="lead">Free My ID keeps a plain list: which site, when it asked, where things stand, and when it last checked. You can print it.</p>
   <div class="grid items-start gap-l min-[56.25em]:grid-cols-2">
-    <figure class="reveal overflow-hidden rounded-xl border border-line bg-card shadow-2">
+    <figure class="reveal mx-auto w-full max-w-[34rem] overflow-hidden rounded-xl border border-line bg-card shadow-2">
       {/* D7: real screenshot, fake persona. Alt text: brand/README.md. WR-35 srcset */}
       <img src={url("assets/screenshots/dashboard-1200.webp")} srcset={`${url("assets/screenshots/dashboard-700.webp")} 700w, ${url("assets/screenshots/dashboard-1200.webp")} 1200w`} sizes="(min-width: 62rem) 30rem, (min-width: 56.25em) 48vw, 100vw" width="1000" height="1045" loading="lazy" decoding="async" alt="The Free My ID home screen. A plain sentence says 7 sites have confirmed or no longer list you, 3 are waiting and 2 need you, followed by a card with copy-and-paste details and large buttons for the one step left.">
       <figcaption class="border-t border-line px-m py-xs text-small text-muted">Example with made-up data</figcaption>
     </figure>
-    <figure class="reveal overflow-hidden rounded-xl border border-line bg-card shadow-2">
+    <figure class="reveal mx-auto w-full max-w-[34rem] overflow-hidden rounded-xl border border-line bg-card shadow-2">
       {/* WR-35: 600w/900w srcset. The link below opens the 900px image. */}
       <img src={url("assets/screenshots/report-900.webp")} srcset={`${url("assets/screenshots/report-600.webp")} 600w, ${url("assets/screenshots/report-900.webp")} 900w`} sizes="(min-width: 62rem) 30rem, (min-width: 56.25em) 48vw, 100vw" width="900" height="1220" loading="lazy" decoding="async" alt="The printable progress report: a table of each people-search site, its status (site confirmed, asked, not listed now, needs you), when it was last checked and when the request was made.">
       <figcaption class="border-t border-line px-m py-xs text-small text-muted">Sample report with made-up data. <a href={url("assets/screenshots/report-900.webp")}>See the sample report full size</a></figcaption>
@@ -111,7 +111,7 @@ const cardIcon = "inline-flex size-12 items-center justify-center rounded-lg bg-
       ["step-report", "It keeps checking.", "Once a day, quietly in the background, while your computer is on and you are signed in. You see who confirmed, who is still waiting, and it asks again if a site lists you again."],
     ].map(([art, h, p], i) => (
       <Card as="li" class="reveal">
-        <Art src={`sections/${art}`} class="mb-xs rounded-lg bg-bg-alt" />
+        <Art src={`sections/${art}`} class="mx-auto mb-xs max-w-[18rem] rounded-lg bg-bg-alt" />
         <span class="inline-flex size-10 items-center justify-center rounded-full bg-brand text-lead font-bold text-brand-ink" aria-hidden="true">{i + 1}</span>
         <h3>{h}</h3>
         <p>{p}</p>
