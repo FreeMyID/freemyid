@@ -1,0 +1,35 @@
+---
+// Inline a brand/v3 illustration (copied to src/art from brand/v3). The file's own <style> block is
+// removed (the CSP forbids inline styles); the same classes live in global.css under .fmi-art, fed
+// from the theme tokens, so the art follows light/dark and the data-theme override.
+// The title/aria ids are replaced with our own label so several pictures can share a page.
+import { cn } from "@/lib/utils";
+const files = import.meta.glob("../art/**/*.svg", { query: "?raw", import: "default", eager: true }) as Record<string, string>;
+interface Props { src: string; alt?: string; class?: string; width?: number; height?: number }
+const { src, alt = "", class: cls } = Astro.props;
+const raw = files[`../art/${src}.svg`];
+if (!raw) throw new Error(`unknown art ${src}`);
+const key = src.replace(/[^a-z0-9]+/gi, "-");
+const viewBox = raw.match(/viewBox="([^"]+)"/)?.[1] ?? "0 0 640 480";
+const [, , w, h] = viewBox.split(/\s+/).map(Number);
+const inner = raw
+  .replace(/^[\s\S]*?<svg[^>]*>/, "")
+  .replace(/<\/svg>\s*$/, "")
+  .replace(/<style>[\s\S]*?<\/style>/g, "")
+  .replace(/<title[^>]*>[\s\S]*?<\/title>/g, "")
+  .replace(/\sid="([^"]+)"/g, ` id="${key}-$1"`)
+  // style="" attributes are blocked by the CSP: turn them into presentation attributes
+  .replace(/<[^>]*\sstyle="[^"]*"[^>]*>/g, (tag) => {
+    const decl = tag.match(/\sstyle="([^"]*)"/)![1];
+    const attrs = decl.split(";").filter((d) => d.includes(":")).map((d) => {
+      const [k, ...v] = d.split(":");
+      return ` ${k.trim()}="${v.join(":").trim()}"`;
+    }).join("");
+    let t = tag.replace(/\sstyle="[^"]*"/, attrs);
+    if (/(^|;)\s*fill:/.test(decl)) t = t.replace(/class="([^"]*)"/, (_, c) => `class="${c.split(/\s+/).filter((x: string) => x !== "n" && !/^f[a-z]+$/.test(x)).join(" ")}"`);
+    return t;
+  });
+const label = alt ? { role: "img", "aria-label": alt } : { "aria-hidden": "true" };
+---
+<svg xmlns="http://www.w3.org/2000/svg" viewBox={viewBox} width={Astro.props.width ?? w} height={Astro.props.height ?? h}
+  class={cn("fmi-art block h-auto w-full", cls)} focusable="false" {...label} set:html={inner} />

@@ -1,0 +1,10 @@
+---
+// shadcn/ui Card, ported to Astro (same markup and classes, no React runtime).
+// Sub-parts are plain elements with the shadcn slot names: use data-slot for styling hooks.
+import { cn } from "@/lib/utils";
+interface Props { class?: string; as?: "div" | "li" | "article" | "section" }
+const { class: cls, as: Tag = "div" } = Astro.props;
+---
+<Tag data-slot="card" class={cn("flex flex-col gap-xs rounded-xl border border-line bg-card p-m text-text shadow-1", cls)}>
+  <slot />
+</Tag>

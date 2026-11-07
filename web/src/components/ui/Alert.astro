@@ -1,0 +1,14 @@
+---
+// shadcn/ui Alert, ported to Astro. Calm info/note callouts only: never a red alarm box.
+import { cn } from "@/lib/utils";
+import Icon from "../Icon.astro";
+interface Props { variant?: "info" | "note"; icon?: string; class?: string }
+const { variant = "info", icon = "info", class: cls } = Astro.props;
+---
+<aside data-slot="alert" class={cn(
+  "my-m flex gap-s rounded-xl border p-m",
+  variant === "info" ? "border-line bg-brand-soft text-text" : "border-line bg-surface text-text",
+  cls)}>
+  <Icon name={icon} class="mt-[0.2em] size-[1.3em] shrink-0 text-brand" />
+  <div class="prose-fmid min-w-0 [&_p]:m-0"><slot /></div>
+</aside>

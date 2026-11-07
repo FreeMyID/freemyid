@@ -1,0 +1,189 @@
+/* Free My ID website v3. Tailwind v4, CSS-first. Theme tokens come from site_src/tokens.yaml
+   (scripts/gen-tokens.mjs -> tokens.css). Motion is calm and only runs with
+   prefers-reduced-motion: no-preference. No web fonts, no data: URIs, no inline styles. */
+@import "tailwindcss";
+@import "./tokens.css";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+    font-size: 125%; /* 1rem = 20px, scales with browser zoom */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  :root[data-theme="light"] { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+  html { scroll-padding-top: 6rem; }
+  body {
+    @apply bg-bg text-text font-sans text-body;
+    line-height: 1.6;
+    min-height: 100dvh;
+    overflow-wrap: break-word;
+  }
+  h1, h2, h3, h4 {
+    @apply text-heading font-bold;
+    line-height: 1.2;
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+  h1 { @apply text-h1; letter-spacing: -0.02em; }
+  h2 { @apply text-h2; }
+  h3 { @apply text-h3; }
+  p, li, dd, figcaption { text-wrap: pretty; }
+  a { @apply text-link underline underline-offset-[0.18em] decoration-[0.08em]; }
+  a:hover { text-decoration-thickness: 0.14em; }
+  /* Focus: gold outer ring with a contrasting inner ring, visible on any band (3px+). */
+  :focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 3px;
+    box-shadow: 0 0 0 3px var(--color-focus-inner);
+    border-radius: var(--radius-sm);
+  }
+  main:focus { outline: none; }
+  img, svg { max-width: 100%; height: auto; }
+  code, kbd { @apply font-mono; font-size: 0.9em; }
+  summary { cursor: pointer; }
+  ::selection { background: var(--color-focus); color: #151b26; }
+}
+
+@layer components {
+  .wrap { @apply mx-auto w-full max-w-wrap px-gutter; }
+  .wrap-narrow { @apply mx-auto w-full px-gutter; max-width: calc(var(--container-measure) + 2 * var(--spacing-gutter) + 6rem); }
+
+  .skip-link {
+    @apply absolute left-s top-s z-50 rounded-md bg-brand px-s py-xs font-bold text-brand-ink;
+    transform: translateY(-200%);
+  }
+  .skip-link:focus { transform: none; }
+
+  .visually-hidden {
+    position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+  }
+
+  /* Prose from data (FAQ answers, guide steps) and long-form page text. */
+  .prose-fmid { max-width: var(--container-measure); }
+  .prose-fmid > * + * { margin-top: var(--spacing-s); }
+  .prose-fmid :where(ul, ol) { padding-inline-start: 1.25em; }
+  .prose-fmid :where(ul) { list-style: disc; }
+  .prose-fmid :where(ol) { list-style: decimal; }
+  .prose-fmid :where(li + li) { margin-top: var(--spacing-2xs); }
+  .prose-fmid :where(h2) { margin-top: var(--spacing-xl); }
+  .prose-fmid :where(h3) { margin-top: var(--spacing-l); }
+  .prose-fmid :where(strong) { @apply text-heading; }
+
+  .flagbar { display: grid; grid-template-columns: 1fr 1fr 1fr; height: 4px; }
+  .flagbar span:nth-child(1) { background: var(--color-band-brand); }
+  .flagbar span:nth-child(2) { background: var(--color-flag-white); }
+  .flagbar span:nth-child(3) { background: var(--color-accent); }
+
+  /* No-JS mobile menu (details/summary). Wide screens show the inline list instead. */
+  .menu > summary { list-style: none; }
+  .menu > summary::-webkit-details-marker { display: none; }
+  .menu .when-open { display: none; }
+  .menu[open] .when-open { display: inline; }
+  .menu[open] .when-closed { display: none; }
+
+  /* FAQ: native details styled like the shadcn/ui Accordion (works with JS off). */
+  .faq-item > summary { list-style: none; }
+  .faq-item > summary::-webkit-details-marker { display: none; }
+  .faq-item[open] .faq-chevron { transform: rotate(180deg); }
+
+  /* Magic UI Marquee (CSS-only port). Pauses on hover/focus and with the visible pause switch. */
+  .marquee { --duration: 60s; --gap: var(--spacing-m); }
+  .marquee__track { display: flex; gap: var(--gap); width: max-content; }
+  .marquee:has(.marquee__pause:checked) .marquee__track,
+  .marquee:hover .marquee__track,
+  .marquee:focus-within .marquee__track { animation-play-state: paused; }
+
+  /* Magic UI BorderBeam (CSS-only port): a slow light travelling around the main CTA's border. */
+  .beam { position: relative; isolation: isolate; }
+  .beam__ring {
+    pointer-events: none; position: absolute; inset: -3px; border-radius: inherit;
+    border: 3px solid transparent; mask-clip: padding-box, border-box; mask-composite: intersect;
+    mask-image: linear-gradient(transparent, transparent), linear-gradient(#000, #000);
+    -webkit-mask-composite: source-in;
+    z-index: -1;
+  }
+  .beam__ring::after {
+    content: ""; position: absolute; aspect-ratio: 1; width: 4.5rem;
+    background: linear-gradient(to left, var(--color-focus), var(--color-accent), transparent);
+    offset-path: rect(0 auto auto 0 round 1rem); offset-anchor: 90% 50%;
+    opacity: 0;
+  }
+}
+
+/* brand/v3 illustrations, inlined by Art.astro without their <style> block. The palette comes
+   from the theme (tokens-notes.md mapping); warm illustration-only tones keep their own light/dark. */
+@layer components {
+  .fmi-art {
+    --i: var(--fmi-ink, var(--color-heading));
+    --p: var(--fmi-paper, var(--color-card));
+    --t: var(--fmi-tint, var(--color-brand-soft));
+    --b: var(--fmi-brand, var(--color-brand));
+    --r: var(--fmi-red, var(--color-accent));
+    --o: var(--fmi-ok, var(--color-ok));
+    --l: var(--fmi-line, var(--color-line-strong));
+    --s: var(--fmi-sun, light-dark(#fbe9c0, #4a3f22));
+    --sk: light-dark(#d9a273, #c98f62);
+    --h: light-dark(#cfd5df, #b8c0cf);
+    --k: light-dark(#4a3a30, #2b221d);
+  }
+  .fmi-art .fi{fill:var(--i)} .fmi-art .ki{stroke:var(--i)}
+  .fmi-art .fp{fill:var(--p)} .fmi-art .kp{stroke:var(--p)}
+  .fmi-art .ft{fill:var(--t)} .fmi-art .kt{stroke:var(--t)}
+  .fmi-art .fb{fill:var(--b)} .fmi-art .kb{stroke:var(--b)}
+  .fmi-art .fr{fill:var(--r)} .fmi-art .kr{stroke:var(--r)}
+  .fmi-art .fo{fill:var(--o)} .fmi-art .ko{stroke:var(--o)}
+  .fmi-art .fl{fill:var(--l)} .fmi-art .kl{stroke:var(--l)}
+  .fmi-art .fs{fill:var(--s)} .fmi-art .ks{stroke:var(--s)}
+  .fmi-art .fsk{fill:var(--sk)} .fmi-art .ksk{stroke:var(--sk)}
+  .fmi-art .fh{fill:var(--h)} .fmi-art .kh{stroke:var(--h)}
+  .fmi-art .fk{fill:var(--k)} .fmi-art .kk{stroke:var(--k)}
+  .fmi-art .n{fill:none}
+  .fmi-art .rc{stroke-linecap:round;stroke-linejoin:round}
+  .fmi-art .g{fill:#f2b705}
+}
+
+@layer utilities {
+  .tap { min-height: var(--spacing-tap); }
+}
+
+/* ---------------------------------------------------------------- motion (calm, opt-in) */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+
+  .marquee__track { animation: marquee var(--duration) linear infinite; }
+  @keyframes marquee { to { transform: translateX(calc(-50% - var(--gap) / 2)); } }
+
+  .beam__ring::after { opacity: 1; animation: beam 9s linear infinite; }
+  @keyframes beam { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+
+  /* Magic UI BlurFade, done with scroll-driven CSS: no JS, and content is visible where unsupported. */
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 35%;
+    }
+    @keyframes reveal { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee__track { flex-wrap: wrap; width: auto; }
+  .marquee [aria-hidden="true"].marquee__dupe { display: none; }
+  .marquee__controls { display: none; }
+}
+
+/* ---------------------------------------------------------------- print: instructions get printed */
+@media print {
+  :root { font-size: 100%; color-scheme: light; }
+  .site-header, .site-footer nav, .flagbar, .skip-link, .no-print, .beam__ring, .marquee__controls { display: none !important; }
+  body { background: #fff; color: #000; }
+  main a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 0.85em; }
+  .reveal { animation: none !important; }
+  details:not([open]) > *:not(summary) { display: block; }
+  section { break-inside: avoid-page; }
+}
