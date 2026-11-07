@@ -55,6 +55,7 @@ CRED_NAME = "freemyid-passphrase"
 WRAP_FILE = "datakey.wrapped.json"
 SECRETS_FILE = "secrets.enc"
 LOCK_FILE = "secrets.enc.lock"
+PENDING_FILE = "migrate.pending"
 MIN_PASSPHRASE_LEN = 8
 MAX_PASSPHRASE_BYTES = 4096
 
@@ -110,7 +111,7 @@ class SecretBackend(Protocol):
     def usable(self) -> bool: ...
     def load_data_key(self, create: bool = True) -> bytes: ...
     def store_data_key(self, key: bytes) -> None: ...
-    def delete_data_key(self) -> None: ...
+    def delete_data_key(self, expected: bytes | None = None) -> None: ...
     def get_secret(self, service: str, user: str) -> str | None: ...
     def set_secret(self, service: str, user: str, value: str) -> None: ...
     def delete_secret(self, service: str, user: str) -> None: ...
@@ -142,14 +143,50 @@ class KeyringBackend:
             raise crypto.KeyUnavailable("no data key in the OS keychain")
         return crypto._decode_key(stored)
 
+    @staticmethod
+    def _stored() -> bytes | None | bool:
+        """The keychain's data key: bytes, None if absent, False if the entry is damaged
+        (not a 32-byte key, so no data folder can be using it)."""
+        try:
+            crypto._check_backend()
+            stored = keyring.get_password(crypto.SERVICE, crypto.KEY_NAME)
+        except (keyring.errors.KeyringError, crypto.KeyUnavailable):
+            return None
+        if stored is None:
+            return None
+        try:
+            return crypto._decode_key(stored)
+        except crypto.KeyUnavailable:
+            return False
+
     def store_data_key(self, key: bytes) -> None:
+        """Put `key` in the keychain. The entry is global (not per data folder), so an
+        entry holding a different valid key belongs to another folder: refuse (SEC-72)."""
+        existing = self._stored()
+        if isinstance(existing, bytes):
+            if hmac.compare_digest(existing, key):
+                return
+            raise crypto.KeyUnavailable(
+                "the system keychain already holds a different Free My ID key (another data "
+                "folder on this computer uses it); this folder can't move its key there"
+            )
         try:
             crypto._check_backend()
             keyring.set_password(crypto.SERVICE, crypto.KEY_NAME, base64.b64encode(key).decode())
         except keyring.errors.KeyringError as e:
             raise crypto.KeyUnavailable(str(e)) from e
 
-    def delete_data_key(self) -> None:
+    def delete_data_key(self, expected: bytes | None = None) -> None:
+        """Delete the keychain key. With `expected`, only if it holds exactly that key (or
+        a damaged entry): another folder's key is left alone (SEC-72). None = the caller
+        has already proven the entry belongs to this folder."""
+        if expected is not None:
+            existing = self._stored()
+            if existing is None:
+                return
+            if isinstance(existing, bytes) and not hmac.compare_digest(existing, expected):
+                log.info("keychain holds another folder's key; left in place")
+                return
         try:
             keyring.delete_password(crypto.SERVICE, crypto.KEY_NAME)
         except keyring.errors.KeyringError:   # missing key or no keychain at all: fine
@@ -466,7 +503,8 @@ class PassphraseBackend:
             _atomic_write(wp, self._wrap(key, self._passphrase(confirm=True)))
         _remember(wp, key)
 
-    def delete_data_key(self) -> None:
+    def delete_data_key(self, expected: bytes | None = None) -> None:
+        """Delete this folder's wrap and secrets file (they are per-folder by path)."""
         wp = self.wrap_path()
         _forget(wp)
         wp.unlink(missing_ok=True)
@@ -603,6 +641,56 @@ def select() -> SecretBackend:
         if _interactive():
             print(_FALLBACK_NOTICE, file=sys.stderr)
     return PassphraseBackend()
+
+
+# ------------------------------------------------------------------------------ wipe
+
+def _db_key_check() -> str | None:
+    """The DB's key_check value, read straight from sqlite (no key needed)."""
+    db = paths.db_path()
+    if not db.exists():
+        return None
+    import sqlite3
+    try:
+        con = sqlite3.connect(f"{db.as_uri()}?mode=ro", uri=True)
+        try:
+            row = con.execute("SELECT v FROM meta WHERE k='key_check'").fetchone()
+        finally:
+            con.close()
+    except sqlite3.Error:
+        return None
+    return row[0] if row else None
+
+
+def _keychain_key_is_ours(kc_key: bytes) -> bool:
+    """Does the (global) keychain key belong to this data folder? Proven by the DB's
+    key_check, else by this folder's wrap holding the same key. Unproven = not ours."""
+    if (kc := _db_key_check()) is not None:
+        return crypto.Cipher(kc_key).verify_key_check(kc)
+    pb = PassphraseBackend()
+    if pb.wrap_path().exists():
+        try:
+            return hmac.compare_digest(pb.load_data_key(create=False), kc_key)
+        except crypto.KeyUnavailable:
+            return False
+    return False
+
+
+def wipe_data_keys() -> None:
+    """`freemyid wipe`: remove this folder's wrap and secrets file, and the keychain key
+    only when it is this folder's key or a damaged entry (SEC-72). Never raises for a
+    missing key or a missing keychain."""
+    kr = KeyringBackend()
+    stored = kr._stored()
+    if stored is False:
+        kr.delete_data_key()
+    elif isinstance(stored, bytes):
+        if _keychain_key_is_ours(stored):
+            kr.delete_data_key(expected=stored)
+        else:
+            log.info("wipe: the keychain key isn't this folder's; left in place")
+    PassphraseBackend().delete_data_key()
+    (paths.home() / PENDING_FILE).unlink(missing_ok=True)
 
 
 # ------------------------------------------------------------------------------ migration

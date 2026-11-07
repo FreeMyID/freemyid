@@ -114,11 +114,12 @@ def _keyring_get_or_create_key() -> bytes:
 
 
 def delete_key() -> None:
-    """Remove the data key from every backend (used by `freemyid wipe`): the OS keychain
-    entry and the passphrase-wrapped key file. Missing key or no keychain at all is fine."""
+    """Remove this folder's data key from every backend (used by `freemyid wipe`): the
+    passphrase-wrapped key file, and the OS keychain entry when it is this folder's key.
+    The keychain entry is global, so another folder's key is left alone (SEC-72).
+    Missing key or no keychain at all is fine."""
     from . import secret_backends
-    secret_backends.KeyringBackend().delete_data_key()
-    secret_backends.PassphraseBackend().delete_data_key()
+    secret_backends.wipe_data_keys()
 
 
 class Cipher:

@@ -110,8 +110,6 @@ def test_qa_sec71_killed_migrate_is_recoverable(env, memkeyring, monkeypatch, ki
 
 # --- SEC-72: KeyringBackend.store_data_key overwrites a different key ----------------------
 
-@pytest.mark.xfail(strict=True, reason="SEC-72: migrate --to keyring overwrites the global "
-                   "freemyid/db-key-v1 entry even when it holds another data folder's key")
 def test_qa_sec72_keyring_store_refuses_different_key(env, memkeyring):
     other = base64.b64encode(os.urandom(32)).decode()
     memkeyring.set_password(*KEY_ID, other)      # e.g. the main install's keychain key
