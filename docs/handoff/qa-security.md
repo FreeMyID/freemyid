@@ -82,3 +82,10 @@ R8 site-v3 (2026-11-07, branch site-v3, web/ at 4533a5c):
 - Build note: `astro build --outDir <scratchpad>` fails with EXDEV (cross-device rename). Build in
   web/dist (gitignored), then copy it.
 Next: re-check SEC-60/61 when the workflow is renamed; clear SEC-62..65 as the WR rows land.
+R8 re-check site-v3 (971b1ec..cd35f9c): PASS, the BLOCK is lifted. SEC-60 (f683e12; egress hook: 0 attempts
+  via `pnpm build`, the control `pnpm exec astro build` tried telemetry.astro.build), SEC-61/64 (845bcd0;
+  6/6 SHAs match their tags via ls-remote, persist-credentials false) and SEC-63 (7808e13; lockfile only
+  removes motion*, the guard catches a planted unreferenced .js) are verified. WR-51 popover: 42 pages still
+  'none', /download/ hashes match, 0 CSP violations. Still open: SEC-62, SEC-65 (LOW) and SEC-66, SEC-67 (INFO).
+  Dev machines: run `pnpm exec astro telemetry disable` (a direct astro run still reports).
+  WR rows were renumbered +11 by 971b1ec (WR-45..49 became WR-56..60).

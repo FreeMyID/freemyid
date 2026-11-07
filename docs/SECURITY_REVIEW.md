@@ -266,7 +266,7 @@ Offline by default: schema + pydantic validation (per broker as well), https-onl
 
 SEC ids SEC-50..59 are reserved for the Proton TLS work on main; this section uses SEC-60 upward.
 
-**Verdict: BLOCK (narrow) on SEC-60 for the switch-over only.** The built site itself passes: CSP, hydration and no third parties are fine. Do not rename `pages-v3.yml.draft` to `pages.yml` until Astro build telemetry is off. SEC-61 (SHA-pin the actions) should land in the same change.
+**Verdict (first pass): BLOCK (narrow) on SEC-60 for the switch-over only. Lifted by the R8 re-check below: PASS.** The built site itself passes: CSP, hydration and no third parties are fine. Do not rename `pages-v3.yml.draft` to `pages.yml` until Astro build telemetry is off. SEC-61 (SHA-pin the actions) should land in the same change.
 
 Verified (build: `pnpm build` in web/, copied to the scratchpad; `pnpm check` OK: 43 HTML files, 37 indexable)
 - CSP is delivered as a `<meta http-equiv>` in all 43 of 43 pages (GitHub Pages can't set headers). 42 pages: `default-src 'self'; img-src 'self'; font-src 'self'; connect-src 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; base-uri 'none'; script-src 'none'; style-src 'self'`. On /download/, `script-src 'self'` has 2 sha256 hashes and `style-src 'self'` has 1. I recomputed all 3 hashes and they match the 2 inline Astro island bootstrap scripts (377 and 4896 bytes) and the one `astro-island{display:contents}` style. No `unsafe-inline` or `unsafe-eval`, no hosts, no `data:`. The other `<script>` tags are `application/ld+json` only. There are no `on*=` handlers, no `style=""` attributes and no `javascript:` URLs. The 5 redirect pages carry the CSP and have no scripts.
