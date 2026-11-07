@@ -1,5 +1,13 @@
 # web-qa handoff
 
+## R7 re-check (site-v3 971b1ec..cd35f9c, rebuilt from HEAD)
+
+PASS on all four items: WR-50, WR-51, WR-52, WR-54 verified (rows updated). With WR-50 fixed the R7 verdict becomes **PASS with P3s** (open P3: WR-53 hero label wrap, WR-55 safety art, and the WR-51 tab-out note).
+- `tools/site_shots.py` at 320/360/390/414/768/1280 x light/dark: 120 combos, 0 hard problems, 0 targets between 24 and 44 px. Leo Hart's edit to the menu check (popover button first, `<details>` fallback, "menu did not open" guard) reviewed: correct, and it exercises the popover path here.
+- Popover keyboard pass (320/360/414): focus the Menu button, Enter opens (links at 31..289 / 329 / 383, inside viewport), Tab goes How it works, Guides, Is it safe?, For families, FAQ, then the header Download, every stop with a visible ring; Escape closes and returns focus to the Menu button; click outside closes; Enter on the button toggles; button hidden at 1280. Fallback `<details>` panel (forced with inline style, no non-popover browser available) stays inside the viewport at 320/360/390.
+- Budgets (KiB, check-site): home first view 21.6; /download/ JS 78.3 KiB (80,053 bytes = 80.1 kB decimal); CSS 8.6 on every page; dist `_assets` now only CSS, client, CopyHash, react (TimelineBeam gone).
+- Copy: home says "29 step-by-step opt-out guides"; no stale text.
+
 ## R7 site-v3 (2026-11-07, Astro site in web/, branch site-v3)
 
 Verdict: **FAIL** (one P1 blocks switch-over). P1: 1 (WR-50), P2: 0, P3: 5 (WR-51 to WR-55). Everything else passes; fix WR-50 and the verdict becomes PASS with P3s.
