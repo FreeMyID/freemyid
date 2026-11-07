@@ -103,6 +103,16 @@ class Recorder:
         return httpx.MockTransport(self)
 
 
+@pytest.fixture(autouse=True)
+def ledger_dir(tmp_path: Path, monkeypatch) -> Path:
+    """Every test gets its own posted ledger; never the real ~/.local/state (SEC-77)."""
+    d = tmp_path / "state" / "freemyid-poster"
+    monkeypatch.setenv("STATE_DIRECTORY", str(d))
+    monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path / "state"))
+    assert poster.default_ledger_path() == d / "posted.jsonl"
+    return d
+
+
 @pytest.fixture
 def files(tmp_path: Path) -> tuple[Path, Path]:
     q = tmp_path / "bluesky-queue.md"
@@ -647,10 +657,12 @@ def _ambiguous_failure(kind: str, monkeypatch):
 
 
 @pytest.mark.parametrize("kind", ["read-timeout", "queue-write-oserror", "bad-uri"])
-def test_qa_sec57_no_repost_after_ambiguous_failure(files, kind, monkeypatch):
-    rec1 = _ambiguous_failure(kind, monkeypatch)
-    assert do_run(files, rec1) != poster.EXIT_OK
-    monkeypatch.undo()
+def test_qa_sec57_no_repost_after_ambiguous_failure(files, kind):
+    # Own MonkeyPatch: undoing the shared one would also drop the ledger_dir env and
+    # send the second run to the real ~/.local/state.
+    with pytest.MonkeyPatch.context() as mp:
+        rec1 = _ambiguous_failure(kind, mp)
+        assert do_run(files, rec1) != poster.EXIT_OK
     rec2 = Recorder()
     do_run(files, rec2)  # the next timer run (or a Persistent=true catch-up)
     q2 = [r for r in rec2.requests if r.url.path.endswith("createRecord")]
@@ -815,6 +827,9 @@ def test_sec57_strict_at_uri(files, uri):
     )
     assert rc == poster.EXIT_CHECK
     assert _status(files[0], "Q-002").startswith("posting ")
+    ledger = files[0].parent / "state" / "freemyid-poster" / "posted.jsonl"
+    assert [json.loads(x)["status"] for x in ledger.read_text().splitlines()] == [
+        "claimed", "unknown"]
     assert files[1].read_text("utf-8") == LOG
 
 
@@ -1100,7 +1115,6 @@ def test_sec59_systemd_analyze_verify(sandbox):
 # ----------------------------------------------------------------------------- QA re-review (SEC-77..81)
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-77: no out-of-repo posted ledger")
 def test_qa_sec77_reverted_status_line_does_not_repost(files):
     q, _ = files
     assert do_run(files, Recorder()) == poster.EXIT_OK
@@ -1152,7 +1166,6 @@ def test_sec80_manual_run_pins_keyring_backend(monkeypatch):
     assert seen["backend"] == "keyring.backends.SecretService.Keyring"
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-81: unexpected exception escapes with exit 1")
 def test_qa_sec81_unexpected_error_after_claim_returns_check(files):
     rec = Recorder()
 
@@ -1167,3 +1180,126 @@ def test_qa_sec81_unexpected_error_after_claim_returns_check(files):
     )
     assert rc == poster.EXIT_CHECK
     assert _status(files[0], "Q-002").startswith("posting ")
+    ledger = files[0].parent / "state" / "freemyid-poster" / "posted.jsonl"
+    assert [json.loads(x)["status"] for x in ledger.read_text().splitlines()] == [
+        "claimed", "unknown"]
+
+
+# ----------------------------------------------------------------------------- SEC-77 ledger
+
+
+def _ledger(ledger_dir: Path) -> list[dict]:
+    path = ledger_dir / "posted.jsonl"
+    if not path.exists():
+        return []
+    return [json.loads(line) for line in path.read_text("utf-8").splitlines()]
+
+
+def test_sec77_ledger_records_claim_then_posted(files, ledger_dir):
+    seen_at_send = []
+
+    rec = Recorder()
+
+    def handler(request):
+        if request.url.path.endswith("createRecord"):
+            seen_at_send.append([r["status"] for r in _ledger(ledger_dir)])
+        return rec(request)
+
+    rc = poster.run(
+        backend=poster.BlueskyBackend(), queue_path=files[0], outreach_path=files[1],
+        kr_get=fake_keyring(FULL_KEYS), transport=httpx.MockTransport(handler), now=lambda: NOW,
+    )
+    assert rc == poster.EXIT_OK
+    assert seen_at_send == [["claimed"]]  # fsynced before the post was sent
+    recs = _ledger(ledger_dir)
+    assert [(r["id"], r["status"]) for r in recs] == [("Q-002", "claimed"), ("Q-002", "posted")]
+    assert recs[1]["uri"] == URI
+    assert recs[0]["sha256"] == poster.text_hash(poster.parse_queue(QUEUE)[1].text)
+    assert ledger_dir.stat().st_mode & 0o777 == 0o700
+    assert (ledger_dir / "posted.jsonl").stat().st_mode & 0o777 == 0o600
+
+
+def test_sec77_reverted_line_exits_check_with_plain_message(files, caplog):
+    assert do_run(files, Recorder()) == poster.EXIT_OK
+    files[0].write_text(QUEUE, encoding="utf-8")
+    rec = Recorder()
+    with caplog.at_level(logging.ERROR):
+        assert do_run(files, rec) == poster.EXIT_CHECK
+    assert rec.requests == []
+    assert "NOT posted again" in caplog.text and "Q-002" in caplog.text
+
+
+def test_sec77_same_text_under_new_id_is_refused(files):
+    q, _ = files
+    assert do_run(files, Recorder()) == poster.EXIT_OK
+    text = poster.parse_queue(QUEUE)[1].text
+    q.write_text(q.read_text("utf-8") + f"\n## Q-099\nstatus: queued\n```text\n{text}\n```\n",
+                 encoding="utf-8")
+    # Q-003 is next in order; post it, then Q-099 (same text as Q-002) must be refused
+    assert do_run(files, Recorder()) == poster.EXIT_OK
+    rec = Recorder()
+    assert do_run(files, rec) == poster.EXIT_CHECK
+    assert rec.requests == []
+
+
+def test_sec77_definite_failure_releases_and_retry_posts(files, ledger_dir):
+    assert do_run(files, Recorder(fail_on="createSession", status=401)) == poster.EXIT_HTTP
+    assert [r["status"] for r in _ledger(ledger_dir)] == ["claimed", "released"]
+    assert _status(files[0], "Q-002") == "queued"
+    assert do_run(files, Recorder()) == poster.EXIT_OK
+    assert _status(files[0], "Q-002").startswith("posted ")
+
+
+def test_sec77_unknown_outcome_then_release(files, ledger_dir, monkeypatch):
+    rec1 = _ambiguous_failure("read-timeout", monkeypatch)
+    assert do_run(files, rec1) == poster.EXIT_CHECK
+    assert [r["status"] for r in _ledger(ledger_dir)] == ["claimed", "unknown"]
+    # A human checks the account, finds nothing, and puts the line back to queued.
+    q = files[0]
+    q.write_text(q.read_text("utf-8").replace(_status(q, "Q-002"), "queued"), encoding="utf-8")
+    assert do_run(files, Recorder()) == poster.EXIT_CHECK  # the ledger still holds it
+    assert poster.main(["--release", "Q-002"]) == poster.EXIT_OK
+    assert do_run(files, Recorder()) == poster.EXIT_OK
+    assert [r["status"] for r in _ledger(ledger_dir)][-2:] == ["claimed", "posted"]
+
+
+def test_sec77_posted_item_is_never_released(files, ledger_dir):
+    assert do_run(files, Recorder()) == poster.EXIT_OK
+    assert poster.main(["--release", "Q-002"]) == poster.EXIT_USAGE
+    assert poster.main(["--release", "Q-777"]) == poster.EXIT_OK  # not held: no-op
+    assert [r["status"] for r in _ledger(ledger_dir)] == ["claimed", "posted"]
+    with pytest.raises(SystemExit):
+        poster.main(["--release", "../x"])
+
+
+def test_sec77_damaged_ledger_blocks_posting(files, ledger_dir):
+    ledger_dir.mkdir(parents=True, mode=0o700)
+    (ledger_dir / "posted.jsonl").write_text('{"id": "Q-1", "status"', encoding="utf-8")
+    (ledger_dir / "posted.jsonl").chmod(0o600)
+    rec = Recorder()
+    assert do_run(files, rec) == poster.EXIT_CHECK
+    assert rec.requests == []
+
+
+def test_sec77_ledger_inside_a_git_repo_is_refused(files, tmp_path):
+    (tmp_path / "repo" / ".git").mkdir(parents=True)
+    rec = Recorder()
+    q, o = files
+    rc = poster.run(
+        backend=poster.BlueskyBackend(), queue_path=q, outreach_path=o,
+        kr_get=fake_keyring(FULL_KEYS), transport=rec.transport(), now=lambda: NOW,
+        ledger_path=tmp_path / "repo" / "state" / "posted.jsonl",
+    )
+    assert rc == poster.EXIT_USAGE and rec.requests == []
+    assert _status(q, "Q-002") == "queued"
+
+
+def test_sec77_dry_run_reads_but_never_creates_the_ledger(files, ledger_dir):
+    assert do_run(files, dry_run=True) == poster.EXIT_OK
+    assert not ledger_dir.exists()
+
+
+def test_sec77_unit_uses_state_directory():
+    unit = (ROOT / "tools/social/freemyid-poster.service").read_text("utf-8")
+    assert "StateDirectory=freemyid-poster" in unit
+    assert "StateDirectoryMode=0700" in unit

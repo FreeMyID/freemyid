@@ -18,22 +18,33 @@ docs/marketing/seo/outreach-log.md. If the outcome is unknown (timeout, kill, ba
 reply, queue write failure) the block stays ``posting``. That state is never retried
 and blocks further posting until a human checks the account and edits the line.
 
+The queue file is shared and git-tracked, so a stale copy can put an old
+``status: queued`` line back. The poster therefore also keeps an append-only ledger
+OUTSIDE the repo, ~/.local/state/freemyid-poster/posted.jsonl ($STATE_DIRECTORY under
+systemd): a fsynced ``claimed`` record before anything is sent, then ``posted`` (with
+the uri), ``unknown`` or ``released`` (certainly not created). An item whose id or
+text hash the ledger holds as claimed/posted/unknown is refused (exit 4), whatever
+the queue says. After checking the account, ``--release ID`` frees a claimed/unknown
+item; a posted one is never released.
+
 Secrets: the app password (keyring service "freemyid-social", entry "bluesky_token")
 and the session accessJwt are never printed, logged or put in exception text.
 Network: only https://bsky.social, checked before every request.
 
-Run:  .venv/bin/python tools/social/poster.py [--dry-run] [--handle HANDLE]
+Run:  .venv/bin/python tools/social/poster.py [--dry-run] [--handle HANDLE] [--release ID]
 Exit: 0 = posted, nothing to do, or another run holds the lock,
       1 = definite failure before anything was created (item back to queued),
       2 = posted but the queue/log could not be updated (fix by hand; URI is logged),
       3 = bad arguments / unreadable or unwritable queue,
-      4 = outcome unknown or an item is stuck in "posting": check the account.
+      4 = outcome unknown, an item is stuck in "posting", the ledger already has a
+          "queued" item, or the ledger is damaged: check the account.
 """
 
 from __future__ import annotations
 
 import argparse
 import fcntl
+import hashlib
 import json
 import logging
 import os
@@ -610,6 +621,156 @@ def append_outreach(path: Path, row: str) -> None:
     atomic_write(path, existing + row)
 
 
+# --------------------------------------------------------------------------- posted ledger
+
+LEDGER_DIRNAME = "freemyid-poster"
+LEDGER_NAME = "posted.jsonl"
+CLAIMED, POSTED, UNKNOWN, RELEASED = "claimed", "posted", "unknown", "released"
+_BLOCKING = frozenset({CLAIMED, POSTED, UNKNOWN})
+_LEDGER_STATUSES = _BLOCKING | {RELEASED}
+_HASH_RE = re.compile(r"^[0-9a-f]{64}$")
+
+
+class LedgerError(Exception):
+    """The ledger is missing, unreadable, damaged or in a bad place. Message has no secrets."""
+
+
+def default_ledger_path() -> Path:
+    """~/.local/state/freemyid-poster/posted.jsonl, by hand or under systemd.
+
+    systemd passes StateDirectory= as $STATE_DIRECTORY, which for a --user unit is
+    the same directory ($XDG_STATE_HOME/freemyid-poster).
+    """
+    state_dir = os.environ.get("STATE_DIRECTORY", "").split(":")[0]
+    if state_dir.startswith("/"):
+        return Path(state_dir) / LEDGER_NAME
+    xdg = os.environ.get("XDG_STATE_HOME", "")
+    base = Path(xdg) if xdg.startswith("/") else Path.home() / ".local" / "state"
+    return base / LEDGER_DIRNAME / LEDGER_NAME
+
+
+def text_hash(text: str) -> str:
+    return hashlib.sha256(unicodedata.normalize("NFC", text.strip()).encode("utf-8")).hexdigest()
+
+
+class Ledger:
+    """Append-only JSON-lines record of every post attempt, kept outside the repo (SEC-77).
+
+    One line per event: {"id", "sha256", "status", "uri", "at"}. An item id or text
+    hash whose latest status is claimed/posted/unknown is never posted again,
+    whatever the queue file says. Only ``released`` (definitely not created, or a
+    human ran --release after checking the account) frees it.
+    """
+
+    def __init__(self, path: Path) -> None:
+        self.path = path
+        self._fd: int | None = None
+        self.ids: dict[str, dict[str, Any]] = {}
+        self.hashes: dict[str, dict[str, Any]] = {}
+
+    def location_error(self) -> str | None:
+        if not self.path.is_absolute():
+            return "the ledger path is not absolute"
+        where = self.path.parent.resolve()
+        own_dir = Path(__file__).resolve().parent
+        if where == own_dir or own_dir in where.parents:
+            return "the ledger is inside the poster's own (hash-pinned) directory"
+        for p in (where, *where.parents):
+            if (p / ".git").exists():
+                return "the ledger is inside a git repository"
+        return None
+
+    def open_locked(self) -> bool:
+        """Create (0700 dir, 0600 file), open for append and take an exclusive flock.
+
+        Returns False if another run holds it. Raises LedgerError or OSError.
+        """
+        problem = self.location_error()
+        if problem:
+            raise LedgerError(problem)
+        self.path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        fd = os.open(
+            self.path,
+            os.O_RDWR | os.O_APPEND | os.O_CREAT | os.O_NOFOLLOW | os.O_CLOEXEC,
+            0o600,
+        )
+        try:
+            st = os.fstat(fd)
+            if st.st_uid != os.getuid() or st.st_mode & 0o022:
+                raise LedgerError("the ledger is not owned by you or is writable by others")
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            os.close(fd)
+            return False
+        except BaseException:
+            os.close(fd)
+            raise
+        self._fd = fd
+        return True
+
+    def close(self) -> None:
+        if self._fd is not None:
+            os.close(self._fd)  # releases the flock
+            self._fd = None
+
+    def load(self) -> None:
+        """Read every record. A missing file is empty (dry run, first run)."""
+        problem = self.location_error()
+        if problem:
+            raise LedgerError(problem)
+        if self._fd is not None:
+            os.lseek(self._fd, 0, os.SEEK_SET)
+            chunks = []
+            while chunk := os.read(self._fd, 65536):
+                chunks.append(chunk)
+            data = b"".join(chunks)
+        else:
+            try:
+                data = self.path.read_bytes()
+            except FileNotFoundError:
+                data = b""
+        self.ids.clear()
+        self.hashes.clear()
+        for n, raw in enumerate(data.split(b"\n"), start=1):
+            if not raw.strip():
+                continue
+            try:
+                rec = json.loads(raw.decode("utf-8"))
+                ok = (
+                    isinstance(rec, dict)
+                    and isinstance(rec.get("id"), str)
+                    and isinstance(rec.get("sha256"), str)
+                    and _HASH_RE.match(rec["sha256"]) is not None
+                    and rec.get("status") in _LEDGER_STATUSES
+                )
+            except (UnicodeDecodeError, ValueError, RecursionError):
+                ok = False
+            if not ok:
+                raise LedgerError(f"ledger line {n} is damaged")
+            self.ids[rec["id"]] = rec
+            self.hashes[rec["sha256"]] = rec
+
+    def blocking(self, item: QueueItem) -> dict[str, Any] | None:
+        """The ledger record that forbids posting this item, else None."""
+        for rec in (self.ids.get(item.item_id), self.hashes.get(text_hash(item.text))):
+            if rec is not None and rec["status"] in _BLOCKING:
+                return rec
+        return None
+
+    def append(self, item_id: str, digest: str, status: str, at: str, uri: str = "") -> None:
+        """Write one record and fsync it. Raises OSError (or LedgerError if not open)."""
+        if self._fd is None:
+            raise LedgerError("the ledger is not open")
+        rec = {"id": item_id, "sha256": digest, "status": status, "uri": uri, "at": at}
+        line = (json.dumps(rec, ensure_ascii=True, sort_keys=True) + "\n").encode("ascii")
+        written = os.write(self._fd, line)
+        if written != len(line):
+            raise OSError("short write to the ledger")
+        os.fsync(self._fd)
+        self.ids[item_id] = rec
+        self.hashes[digest] = rec
+
+
 # --------------------------------------------------------------------------- run
 
 
@@ -636,6 +797,7 @@ def run(
     transport: httpx.BaseTransport | None = None,
     now: Callable[[], datetime] | None = None,
     out: Callable[[str], None] = print,
+    ledger_path: Path | None = None,
 ) -> int:
     scrub = Scrubber()
     filt = ScrubFilter(scrub)
@@ -644,6 +806,7 @@ def run(
         return _run(
             backend, queue_path, outreach_path, dry_run, kr_get or _default_keyring_get,
             transport, now or (lambda: datetime.now(UTC)), out, scrub,
+            Ledger(ledger_path or default_ledger_path()),
         )
     finally:
         log.removeFilter(filt)
@@ -677,14 +840,15 @@ def _run(
     now: Callable[[], datetime],
     out: Callable[[str], None],
     scrub: Scrubber,
+    ledger: Ledger,
 ) -> int:
     if not queue_path.exists():
         log.info("%s: queue file %s not found; nothing to do", backend.name, queue_path.name)
         return EXIT_OK
+    args = (backend, queue_path, outreach_path, dry_run, kr_get, transport, now, out, scrub,
+            ledger)
     if dry_run:
-        return _locked_run(
-            backend, queue_path, outreach_path, True, kr_get, transport, now, out, scrub
-        )
+        return _locked_run(*args)
     try:
         fd = _try_lock(lock_path(queue_path))
     except OSError as exc:
@@ -694,11 +858,26 @@ def _run(
         log.info("%s: another poster run holds the lock; skipping", backend.name)
         return EXIT_OK
     try:
-        return _locked_run(
-            backend, queue_path, outreach_path, False, kr_get, transport, now, out, scrub
-        )
+        try:
+            got = ledger.open_locked()
+        except (OSError, LedgerError) as exc:
+            log.error("%s: cannot open the posted ledger %s: %s. Nothing is posted.",
+                      backend.name, ledger.path, _reason(exc))
+            return EXIT_USAGE
+        if not got:
+            log.info("%s: another poster run holds the ledger; skipping", backend.name)
+            return EXIT_OK
+        try:
+            return _locked_run(*args)
+        finally:
+            ledger.close()
     finally:
         os.close(fd)  # releases the flock
+
+
+def _reason(exc: BaseException) -> str:
+    """LedgerError text is ours and safe; anything else only by type name."""
+    return str(exc) if isinstance(exc, LedgerError) else type(exc).__name__
 
 
 def _locked_run(
@@ -711,6 +890,7 @@ def _locked_run(
     now: Callable[[], datetime],
     out: Callable[[str], None],
     scrub: Scrubber,
+    ledger: Ledger,
 ) -> int:
     try:
         content = queue_path.read_text(encoding="utf-8")
@@ -730,8 +910,25 @@ def _locked_run(
             )
         return EXIT_CHECK
 
+    try:
+        ledger.load()
+    except (OSError, LedgerError) as exc:
+        log.error("%s: cannot read the posted ledger %s: %s. Nothing is posted until it "
+                  "is fixed by hand.", backend.name, ledger.path, _reason(exc))
+        return EXIT_CHECK
+
     candidate: QueueItem | None = None
     for item in next_queued(items):
+        seen = ledger.blocking(item)
+        if seen is not None:
+            log.error(
+                "%s: %s says 'queued' in the queue file, but the posted ledger already has "
+                "it as '%s' (%s). It is NOT posted again. Check the account; if it is "
+                "posted, set its line to 'status: posted ...' by hand. If it is certainly "
+                "not posted, run poster.py --release %s first.",
+                backend.name, item.item_id, seen["status"], seen["at"], item.item_id,
+            )
+            return EXIT_CHECK
         problem = backend.length_error(item.text)
         if problem:
             log.warning("%s: %s too long (%s); skipped", backend.name, item.item_id, problem)
@@ -759,16 +956,68 @@ def _locked_run(
     stamp = now()
     iso = stamp.strftime("%Y-%m-%dT%H:%M:%SZ")
     claim = f"{POSTING} {iso}"
-    # Claim BEFORE anything is sent: a kill, timeout or crash from here on leaves
-    # "posting", which is never retried (SEC-57).
+    digest = text_hash(candidate.text)
+    # Claim BEFORE anything is sent, first in the ledger (fsynced, outside the repo),
+    # then in the queue. A kill, timeout or crash from here on leaves "claimed" and
+    # "posting", which are never retried (SEC-57, SEC-77).
+    try:
+        ledger.append(candidate.item_id, digest, CLAIMED, iso)
+    except (OSError, LedgerError) as exc:
+        log.error("%s: cannot write the posted ledger; nothing sent: %s", backend.name,
+                  _reason(exc))
+        return EXIT_USAGE
     try:
         fresh = queue_path.read_text(encoding="utf-8")
         atomic_write(queue_path, rewrite_status(fresh, candidate, claim))
     except (OSError, UnicodeDecodeError, PosterError) as exc:
         log.error("%s: cannot claim %s; nothing sent: %s", backend.name, candidate.item_id,
                   scrub(exc))
+        if not _ledger_note(backend, ledger, candidate, digest, RELEASED, iso):
+            return EXIT_CHECK
         return EXIT_USAGE
+    try:
+        return _post_claimed(
+            backend, queue_path, outreach_path, transport, scrub, ledger, candidate,
+            stamp, claim, digest,
+        )
+    except Exception as exc:  # noqa: BLE001  any bug after the claim: never "back to queued"
+        log.error("%s: %s outcome unknown after an unexpected %s; left as '%s'. Check the "
+                  "account before the next run.", backend.name, candidate.item_id,
+                  type(exc).__name__, claim)
+        latest = ledger.ids.get(candidate.item_id)
+        if latest is None or latest["status"] != POSTED:
+            _ledger_note(backend, ledger, candidate, digest, UNKNOWN, iso)
+        return EXIT_CHECK
 
+
+def _ledger_note(
+    backend: Backend, ledger: Ledger, item: QueueItem, digest: str, status: str, iso: str,
+    uri: str = "",
+) -> bool:
+    """Append a follow-up ledger record; on failure log it and return False."""
+    try:
+        ledger.append(item.item_id, digest, status, iso, uri)
+    except Exception as exc:  # noqa: BLE001
+        log.error("%s: could not record %s as '%s' in the posted ledger (%s); it stays "
+                  "blocked there. Run poster.py --release %s once the account is checked.",
+                  backend.name, item.item_id, status, _reason(exc), item.item_id)
+        return False
+    return True
+
+
+def _post_claimed(
+    backend: Backend,
+    queue_path: Path,
+    outreach_path: Path,
+    transport: httpx.BaseTransport | None,
+    scrub: Scrubber,
+    ledger: Ledger,
+    candidate: QueueItem,
+    stamp: datetime,
+    claim: str,
+    digest: str,
+) -> int:
+    iso = stamp.strftime("%Y-%m-%dT%H:%M:%SZ")
     http = Http(backend.allowed_hosts, scrub, transport=transport)
     try:
         result = backend.post(http, candidate.text, stamp)
@@ -781,17 +1030,22 @@ def _locked_run(
             log.error("%s: %s left as '%s' (could not put it back: %s). Nothing was "
                       "posted; set it to 'status: queued' by hand.",
                       backend.name, candidate.item_id, claim, scrub(exc2))
+            _ledger_note(backend, ledger, candidate, digest, RELEASED, iso)
+            return EXIT_CHECK
+        if not _ledger_note(backend, ledger, candidate, digest, RELEASED, iso):
             return EXIT_CHECK
         log.info("%s: %s put back in the queue", backend.name, candidate.item_id)
         return EXIT_HTTP
     except PosterError as exc:
         log.error("%s: %s outcome unknown, left as '%s': %s. Check the account before "
                   "the next run.", backend.name, candidate.item_id, claim, scrub(exc))
+        _ledger_note(backend, ledger, candidate, digest, UNKNOWN, iso)
         return EXIT_CHECK
     finally:
         http.close()
 
     log.info("%s: posted %s as %s", backend.name, candidate.item_id, result.uri)
+    recorded = _ledger_note(backend, ledger, candidate, digest, POSTED, iso, result.uri)
     try:
         fresh = queue_path.read_text(encoding="utf-8")
         atomic_write(queue_path, rewrite_status(
@@ -808,7 +1062,40 @@ def _locked_run(
     except OSError as exc:
         log.error("%s: outreach log not updated: %s", backend.name, type(exc).__name__)
         return EXIT_RECORD
-    return EXIT_OK
+    return EXIT_OK if recorded else EXIT_RECORD
+
+
+def release(item_id: str, ledger_path: Path | None = None) -> int:
+    """Human step: free an item the ledger holds as claimed/unknown (never a posted one)."""
+    ledger = Ledger(ledger_path or default_ledger_path())
+    try:
+        if not ledger.open_locked():
+            log.error("a poster run holds the ledger; try again in a minute")
+            return EXIT_USAGE
+    except (OSError, LedgerError) as exc:
+        log.error("cannot open the posted ledger %s: %s", ledger.path, _reason(exc))
+        return EXIT_USAGE
+    try:
+        ledger.load()
+        rec = ledger.ids.get(item_id)
+        if rec is None or rec["status"] == RELEASED:
+            log.info("%s is not held in the ledger; nothing to release", item_id)
+            return EXIT_OK
+        if rec["status"] == POSTED:
+            log.error("%s is recorded as posted (%s); refusing to release it. To post the "
+                      "same idea again, add a new queue item with new text.", item_id,
+                      rec["uri"])
+            return EXIT_USAGE
+        iso = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+        ledger.append(item_id, rec["sha256"], RELEASED, iso)
+        log.info("%s released (was '%s'); set its queue line to 'status: queued' to post it",
+                 item_id, rec["status"])
+        return EXIT_OK
+    except (OSError, LedgerError) as exc:
+        log.error("cannot update the posted ledger: %s", _reason(exc))
+        return EXIT_USAGE
+    finally:
+        ledger.close()
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -818,8 +1105,15 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--handle", help=f"Bluesky handle (else ${HANDLE_ENV} or keyring 'bluesky')")
     ap.add_argument("--queue", type=Path, help="queue file (default docs/marketing/seo/...)")
     ap.add_argument("--outreach-log", type=Path, default=SEO_DIR / "outreach-log.md")
+    ap.add_argument("--release", metavar="ID",
+                    help="after checking the account: free an item the posted ledger holds "
+                    "as claimed/unknown (never a posted one), then exit")
     args = ap.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    if args.release is not None:
+        if not HEADING_RE.match(f"## {args.release}"):
+            ap.error("--release needs an item id such as Q-012")
+        return release(args.release)
     backend = BACKENDS[args.backend](handle_override=args.handle)
     return run(
         backend=backend,
