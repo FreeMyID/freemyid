@@ -85,7 +85,7 @@ S = "0 0 320 240"
 W = 'font-family="system-ui,Segoe UI,Arial,sans-serif"'
 write("sections/step-install.svg", svg(S, blob() + laptop(70, 38, 180, 118,
   mark(132, 56, 56) + '<rect x="100" y="126" width="120" height="10" rx="5" class="fl n" stroke-width="0" style="fill:var(--l);opacity:.4"/><rect x="100" y="126" width="78" height="10" rx="5" class="fo" stroke-width="0"/>') +
-  '<g class="n rc" stroke="var(--b)" stroke-width="5"><path d="M270 36v36m-14-14 14 14 14-14"/></g><path d="M252 82h36" class="n rc" stroke="var(--b)" stroke-width="5"/>',
+  '<circle cx="266" cy="62" r="26" class="fb"/><path d="M266 48v22m-10-9 10 10 10-10" class="n rc" stroke="var(--p)" stroke-width="5"/>',
   "A laptop installing the Free My ID app"))
 write("sections/step-who.svg", svg(S, blob() + '<rect x="64" y="30" width="192" height="180" rx="14" class="fp" stroke="var(--i)" stroke-width="3.5"/>'
   '<circle cx="104" cy="72" r="19" class="ft" stroke="var(--i)" stroke-width="3"/><circle cx="104" cy="66" r="7" class="fb"/><path d="M90 84c3-8 8-10 14-10s11 2 14 10" class="fb"/>'
