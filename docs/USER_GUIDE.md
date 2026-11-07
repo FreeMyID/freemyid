@@ -69,11 +69,9 @@ Pick one of the providers below.
 
 ### Outlook / Hotmail
 
-1. Create a new Outlook.com account.
-2. In the Free My ID setup wizard, choose **Outlook** and follow the on-screen instructions.
-3. Click **Test connection**.
+Outlook.com and Hotmail **can't be used** for the reply mailbox: Microsoft no longer lets programs sign in to those mailboxes with a password, and the setup wizard says so on the mailbox screen. Use a new Gmail address instead (or Yahoo, iCloud, or Proton Mail with Bridge). You can still send the "do it with me" letters from Outlook in your web browser: the app gives you an Outlook button for that.
 
-<!-- TODO verify: Microsoft has been retiring password-based (basic auth) IMAP/SMTP for Outlook.com in favor of OAuth. Confirm Outlook works with a password or app password before release; if not, recommend Gmail or Proton. -->
+<!-- source: src/freemyid/wizard/ui.py ("Not possible", "Why Outlook.com does not work"), wizard/flows.py presets skip Outlook.com; assisted letters link outlook.live.com compose (engine/outbox.py) -->
 
 ### Proton Mail (with Proton Mail Bridge)
 
