@@ -278,6 +278,14 @@ class MailboxConfig(_Base):
             raise ValueError("tls_cert_sha256 must be 64 hex characters (SHA-256)")
         return h
 
+    @model_validator(mode="after")
+    def _imap_encrypted(self) -> MailboxConfig:
+        # SEC-53: never send the mailbox password in cleartext, loopback included
+        # (any local process could listen there). SMTP is always TLS in mail.py.
+        if not (self.imap_ssl or self.imap_starttls):
+            raise ValueError("incoming mail must be encrypted: turn on SSL or STARTTLS")
+        return self
+
 
 class Permissions(_Base):
     """Off by default. If a broker demands one of these and the flag is False, NEEDS_HUMAN.
