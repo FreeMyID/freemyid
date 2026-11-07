@@ -855,8 +855,8 @@ def test_sec57_strict_at_uri(files, uri):
     assert rc == poster.EXIT_CHECK
     assert _status(files[0], "Q-002").startswith("posting ")
     ledger = files[0].parent / "state" / "freemyid-poster" / "posted.jsonl"
-    assert [json.loads(x)["status"] for x in ledger.read_text().splitlines()] == [
-        "claimed", "unknown"]
+    assert [r["status"] for r in map(json.loads, ledger.read_text().splitlines())
+            if r["id"] == "Q-002"] == ["claimed", "unknown"]
     assert files[1].read_text("utf-8") == LOG
 
 
@@ -1234,18 +1234,20 @@ def test_qa_sec81_unexpected_error_after_claim_returns_check(files):
     assert rc == poster.EXIT_CHECK
     assert _status(files[0], "Q-002").startswith("posting ")
     ledger = files[0].parent / "state" / "freemyid-poster" / "posted.jsonl"
-    assert [json.loads(x)["status"] for x in ledger.read_text().splitlines()] == [
-        "claimed", "unknown"]
+    assert [r["status"] for r in map(json.loads, ledger.read_text().splitlines())
+            if r["id"] == "Q-002"] == ["claimed", "unknown"]
 
 
 # ----------------------------------------------------------------------------- SEC-77 ledger
 
 
-def _ledger(ledger_dir: Path) -> list[dict]:
+def _ledger(ledger_dir: Path, item: str | None = "Q-002") -> list[dict]:
+    """Ledger records, by default only Q-002's (Q-001 is adopted as posted on every run)."""
     path = ledger_dir / "posted.jsonl"
     if not path.exists():
         return []
-    return [json.loads(line) for line in path.read_text("utf-8").splitlines()]
+    recs = [json.loads(line) for line in path.read_text("utf-8").splitlines()]
+    return [r for r in recs if item is None or r["id"] == item]
 
 
 @pytest.mark.posix_only
@@ -1433,3 +1435,16 @@ def test_sec79_body_default_ignorables_refused(ch):
 ])
 def test_sec79_non_ascii_link_gets_no_facet(url):
     assert poster.link_facets(f"see {url} now") == []
+
+
+@pytest.mark.posix_only
+def test_sec77_already_posted_queue_items_are_adopted(files, ledger_dir):
+    # Q-001 was posted before the ledger existed; the first real run records it.
+    assert do_run(files, Recorder()) == poster.EXIT_OK
+    recs = _ledger(ledger_dir, item=None)
+    assert recs[0]["id"] == "Q-001" and recs[0]["status"] == "posted"
+    q = files[0]
+    q.write_text(q.read_text("utf-8").replace(_status(q, "Q-001"), "queued"), encoding="utf-8")
+    rec = Recorder()
+    assert do_run(files, rec) == poster.EXIT_CHECK
+    assert rec.requests == []

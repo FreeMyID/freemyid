@@ -960,6 +960,8 @@ def _locked_run(
         log.error("%s: cannot read the posted ledger %s: %s. Nothing is posted until it "
                   "is fixed by hand.", backend.name, ledger.path, _reason(exc))
         return EXIT_CHECK
+    if not dry_run:
+        _adopt_posted(backend, ledger, items)
 
     candidate: QueueItem | None = None
     for item in next_queued(items):
@@ -1032,6 +1034,25 @@ def _locked_run(
         if latest is None or latest["status"] != POSTED:
             _ledger_note(backend, ledger, candidate, digest, UNKNOWN, iso)
         return EXIT_CHECK
+
+
+def _adopt_posted(backend: Backend, ledger: Ledger, items: Iterable[QueueItem]) -> None:
+    """Copy queue items already marked posted (e.g. before the ledger existed) into it.
+
+    Only ever adds blocks, so a later revert of their status line cannot repost them.
+    """
+    for it in items:
+        parts = it.status.split(" ")
+        if parts[0] != "posted" or it.item_id in ledger.ids:
+            continue
+        at = parts[1] if len(parts) > 1 else ""
+        uri = parts[2] if len(parts) > 2 and AT_URI_RE.match(parts[2]) else ""
+        try:
+            ledger.append(it.item_id, text_hash(it.text), POSTED, at[:40], uri)
+        except (OSError, LedgerError) as exc:
+            log.warning("%s: could not add posted %s to the ledger: %s", backend.name,
+                        it.item_id, _reason(exc))
+            return
 
 
 def _ledger_note(
