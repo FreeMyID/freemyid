@@ -16,6 +16,11 @@ Selection: ``secrets_backend`` in config.yaml wins. Otherwise auto: an existing 
 file means passphrase (or systemd-creds when the credential is present), a usable keychain
 means keyring, and an unusable keychain falls back to passphrase with a plain message.
 Never to plaintext. Passphrases and keys are never logged.
+
+Windows note (SEC-76): the owner-only check on ``FREEMYID_PASSPHRASE_FILE`` is POSIX mode
+bits and uid, so on Windows the file gets no ACL or owner check. Windows users normally get
+the ``keyring`` backend (Credential Manager); if you point it at a passphrase file there,
+keep the file inside your own user profile folder.
 """
 from __future__ import annotations
 
@@ -59,18 +64,42 @@ MAX_PASSPHRASE_BYTES = 4096
 SCRYPT_N = 2**17
 SCRYPT_R = 8
 SCRYPT_P = 1
-_N_RANGE = (2**14, 2**20)
-_R_RANGE = (8, 16)
-_P_RANGE = (1, 4)
+# Ceiling 2**18/8/1 (~256 MiB): headroom over the default without letting an edited file
+# demand gigabytes per unwrap (SEC-76).
+_N_RANGE = (2**14, 2**18)
+_R_RANGE = (8, 8)
+_P_RANGE = (1, 1)
 _WRAP_AAD = b"freemyid:datakey-wrap:v1"
 _SECRETS_AAD = b"freemyid:secrets:v1"
 
-# Data keys unwrapped this process, keyed by (home, wrap-file path). Deriving costs ~0.2 s.
+# Data keys unwrapped this process. Deriving costs ~0.2 s. Keyed by the wrap file's path
+# plus inode/mtime/size, so a folder wiped and re-created by another process is re-read
+# instead of serving the old key (SEC-76).
 _key_cache: dict[str, bytes] = {}
+
+
+def _cache_id(wp: Path) -> str | None:
+    try:
+        st = wp.stat()
+    except FileNotFoundError:
+        return None
+    return f"{wp.resolve()}|{st.st_ino}|{st.st_mtime_ns}|{st.st_size}"
 
 
 def clear_cache() -> None:
     _key_cache.clear()
+
+
+def _remember(wp: Path, key: bytes) -> None:
+    _forget(wp)
+    if (cid := _cache_id(wp)) is not None:
+        _key_cache[cid] = key
+
+
+def _forget(wp: Path) -> None:
+    prefix = f"{wp.resolve()}|"
+    for k in [k for k in _key_cache if k.startswith(prefix)]:
+        del _key_cache[k]
 
 
 # ------------------------------------------------------------------------------ protocol
@@ -332,7 +361,9 @@ class PassphraseBackend:
         if self._getter is not None:
             return self._getter(confirm)
         if "FREEMYID_PASSPHRASE" in os.environ:
-            # A secret in a plain env var leaks through /proc, ps and crash dumps. Refuse.
+            # A secret in a plain env var leaks through /proc, ps and crash dumps. Refuse,
+            # and drop it so child processes (browser, mail tools) don't inherit it (SEC-76).
+            os.environ.pop("FREEMYID_PASSPHRASE", None)
             raise crypto.KeyUnavailable(
                 "FREEMYID_PASSPHRASE is not supported. Put the passphrase in a file only you "
                 f"can read (chmod 600) and set {PASSPHRASE_FILE_ENV} to its path"
@@ -401,8 +432,8 @@ class PassphraseBackend:
 
     def load_data_key(self, create: bool = True) -> bytes:
         wp = self.wrap_path()
-        cache_id = str(wp.resolve()) if wp.exists() else ""
-        if cache_id and cache_id in _key_cache:
+        cache_id = _cache_id(wp)
+        if cache_id is not None and cache_id in _key_cache:
             return _key_cache[cache_id]
         if not wp.exists():
             if not create:
@@ -414,12 +445,12 @@ class PassphraseBackend:
             except FileExistsError:
                 pass   # another process created it first; fall through and unwrap theirs
             else:
-                _key_cache[str(wp.resolve())] = key
+                _remember(wp, key)
                 return key
             key = self._unwrap(wp.read_bytes(), pw)
         else:
             key = self._unwrap(wp.read_bytes(), self._passphrase(confirm=False))
-        _key_cache[str(wp.resolve())] = key
+        _remember(wp, key)
         return key
 
     def store_data_key(self, key: bytes) -> None:
@@ -433,11 +464,11 @@ class PassphraseBackend:
                 )
         else:
             _atomic_write(wp, self._wrap(key, self._passphrase(confirm=True)))
-        _key_cache[str(wp.resolve())] = key
+        _remember(wp, key)
 
     def delete_data_key(self) -> None:
         wp = self.wrap_path()
-        _key_cache.pop(str(wp.resolve()), None)
+        _forget(wp)
         wp.unlink(missing_ok=True)
         self.secrets_path().unlink(missing_ok=True)
         (paths.home() / LOCK_FILE).unlink(missing_ok=True)
