@@ -141,7 +141,10 @@ class KeyringBackend:
 def _read_secret_file(path: Path, *, allow_group: bool = False) -> str:
     """Read a passphrase file. POSIX: must be a regular file owned by us with no group/other
     access (0600/0400). Checked on the opened fd (no symlink, no swap after the check)."""
-    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+    # O_NONBLOCK: a FIFO or device node must not block open() before the S_ISREG check
+    # (SEC-73). Regular files ignore it. O_NOCTTY: never adopt a terminal as ctty.
+    flags = (os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+             | getattr(os, "O_NOCTTY", 0))
     try:
         fd = os.open(path, flags)
     except OSError as e:

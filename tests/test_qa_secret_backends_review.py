@@ -127,8 +127,6 @@ def test_qa_sec72_keyring_store_refuses_different_key(env, memkeyring):
 # --- SEC-73: a FIFO at FREEMYID_PASSPHRASE_FILE blocks forever in open() --------------------
 
 @pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="needs mkfifo")
-@pytest.mark.xfail(strict=True, reason="SEC-73: _read_secret_file opens without O_NONBLOCK, "
-                   "so a FIFO hangs before the S_ISREG check")
 def test_qa_sec73_fifo_passphrase_file_does_not_hang(tmp_path):
     fifo = tmp_path / "pass.fifo"
     os.mkfifo(fifo, 0o600)
