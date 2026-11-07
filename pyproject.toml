@@ -77,6 +77,13 @@ include = ["src/freemyid", "brokers/registry.sample.yaml", "brokers/state_laws.y
 testpaths = ["tests"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "windows_only: runs only on Windows",
+    "posix_only: runs only on Linux/macOS",
+    "macos_only: runs only on macOS",
+    "linux_only: runs only on Linux",
+    "browser: needs Playwright Chromium",
+]
 
 [tool.ruff]
 line-length = 100
