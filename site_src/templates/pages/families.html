@@ -4,6 +4,7 @@
   {% include "partials/crumbs.html" %}
   <h1>Helping a parent or grandparent use Free My ID</h1>
   <!-- Sources: docs/marketing/families-page.md (WR-11), which traces every line to docs/HELPER_GUIDE.md, docs/USER_GUIDE.md and docs/assets/fridge-card.html -->
+  {# source: docs/HELPER_GUIDE.md intro ("Allow about half an hour the first time") #}
   <p class="lead mt-s">Free My ID was built so people who aren't comfortable with computers can use it. If you're setting it up for someone you love, this page is for you. Allow about half an hour the first time.</p>
   <div class="btn-row mt-m">
     {% include "partials/cta-download.html" %}
@@ -16,12 +17,14 @@
 
   <h2 class="mt-l">What it doesn't do</h2>
   <ul>
+    {# source: docs/USER_GUIDE.md section 1 limits (Facebook unchanged; news and government records not affected); POSITIONING.md rule 6 #}
     <li>It doesn't change what Facebook itself does with their account.</li>
     <li>It can't remove news stories or government records.</li>
     {# source: response time varies per broker; registry typical_processing_days and docs/POSITIONING.md (no promised timeline) #}
     <li>Some sites take weeks, and some list people again later. That's why it keeps checking.</li>
   </ul>
 
+  {# source: docs/HELPER_GUIDE.md section 1 "Have ready" and section 3 screen 4 ("never sent to anyone"); permission = USER_GUIDE.md section 3 (adult signs a permission form; parent or guardian for under 18), HELPER_GUIDE.md section 3 screen 1 #}
   <h2 class="mt-l">Before you sit down</h2>
   <p>Have ready:</p>
   <ul>
@@ -35,6 +38,7 @@
   </div>
 
   <h2 class="mt-l">A separate email address for replies (optional)</h2>
+  {# source: docs/HELPER_GUIDE.md section 1 (Gmail + app password; Outlook.com/Hotmail can't be used; "Skip, I'll do these by hand"); app password prompt = src/freemyid/wizard/draft.py #}
   <p>Sites reply by email, and some send a "click to confirm" link.</p>
   <ul>
     <li><strong>If you want Free My ID to send the emails and read the replies:</strong> make a new, free Gmail address just for this. It keeps removal mail out of their everyday inbox. Gmail needs an "app password"; the setup screen shows the steps. Outlook.com and Hotmail can't be used for this.</li>
@@ -42,6 +46,7 @@
   </ul>
 
   <h2 class="mt-l" id="setup">Setting it up</h2>
+  {# source: docs/HELPER_GUIDE.md section 2 (download, SmartScreen, Install) and section 3 (six screens, practice mode); packaging/windows/freemyid.iss PrivilegesRequired=lowest; six screens = src/freemyid/wizard/draft.py STEPS; unsigned = .github/workflows/build.yml release notes #}
   <ol class="steps steps--list mt-m" role="list">
     <li class="step"><span class="step__num" aria-hidden="true">1</span><h3>Download</h3><p>On their Windows 10 or 11 computer, use the Download button on this site. Only download from this site{% if release.version %} or our <a href="{{ site.releases_url }}">GitHub releases page</a>{% endif %}.</p></li>
     <li class="step"><span class="step__num" aria-hidden="true">2</span><h3>Open FreeMyIDSetup.exe</h3><p>Windows may show a blue box that says "Windows protected your PC." That happens because Free My ID is free and hasn't bought a publisher certificate yet. Click the small words <strong>More info</strong>, check the name says FreeMyIDSetup.exe, then click <strong>Run anyway</strong>. <a href="{{ url('download/') }}#smartscreen">See it with pictures.</a></p></li>
@@ -60,6 +65,7 @@
   </ol>
 
   <h2 class="mt-l">What they'll see afterward</h2>
+  {# source: docs/HELPER_GUIDE.md section 4 (status words, "Needs you" cards, never does the robot step, approval before sending, notices without personal details, receipts) #}
   <ul>
     <li><strong>A status page in plain words:</strong> listed, asked, waiting for the site, site confirmed, or not listed now.</li>
     <li><strong>"Needs you" cards.</strong> A few sites need a real person. A card appears with one big button.
@@ -73,6 +79,7 @@
   </ul>
 
   <h2 class="mt-l" id="tell-them">Tell them this</h2>
+  {# source: docs/HELPER_GUIDE.md section 4 "Tell them" and section 6 (never asks for, never creates accounts or solves robot checks); no installer emails or calls = policy (docs/marketing/families-page.md) #}
   <blockquote class="callout callout--note">
     {{ icon('shield') }}
     <div><p><strong>If it ever asks for your Social Security number, a bank card or a password for Facebook, it isn't Free My ID. Call me.</strong></p></div>
@@ -80,10 +87,12 @@
   <p class="mt-m">Free My ID never asks for: a Social Security number; bank, credit or debit card details; a photo of an ID card; their Facebook, Google or everyday email password; or money. It never creates accounts, uploads ID or gives out a phone number unless you've explicitly allowed it for that person. It never solves "are you a robot?" checks. We will never email you an installer, and we will never call you.</p>
 
   <h2 class="mt-l" id="fridge-card">Printable card for the fridge</h2>
+  {# source: docs/assets/fridge-card.html (three things to remember, helper name and phone space) #}
   <p>A one-page card with the three things to remember, and a space to write your name and phone number as their helper.</p>
   <p class="mt-s"><a class="btn btn--secondary" href="{{ asset('assets/free-my-id-fridge-card.pdf') }}">Print the fridge card (PDF)</a></p>
 
   <h2 class="mt-l">Pausing, stopping, uninstalling</h2>
+  {# source: docs/HELPER_GUIDE.md section 5; freemyid.iss SuppressibleMsgBox delete-data prompt #}
   <ul>
     <li><strong>Pause the daily checks:</strong> Settings, Run automatically, Turn off.</li>
     <li><strong>Stop sending real requests:</strong> switch back to practice mode in Settings any time.</li>
@@ -94,8 +103,10 @@
   <h3>Is it really free?</h3>
   <p>Yes. <a href="{{ url('faq/') }}">See the answer on our Questions page.</a></p>
   <h3>Is it safe to put on their computer?</h3>
+  {# source: docs/HELPER_GUIDE.md section 6 closing line; USER_GUIDE.md section 1 (no account, no cloud); LICENSE (AGPL) #}
   <p>It runs on their computer only. No account, nothing sent to us. It is free, open-source software. It isn't a government service and isn't connected to Facebook/Meta or any data broker.</p>
   <h3>Can I set it up for several family members?</h3>
+  {# source: docs/HELPER_GUIDE.md section 5 ("when several are set up"); USER_GUIDE.md "For helpers" (profiles) #}
   <p>Yes, from one computer. Each adult gives their own permission.</p>
 
   <div class="btn-row mt-l">
