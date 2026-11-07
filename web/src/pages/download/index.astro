@@ -42,6 +42,8 @@ const v = release.version;
       {v && <><dt class="font-bold text-heading">Version</dt><dd>{v}{releaseDate && ` (${releaseDate})`}</dd></>}
       {release.size_mb && <><dt class="font-bold text-heading">Size</dt><dd>{release.size_mb} MB</dd></>}
     </dl>
+    {/* source: orchestrator decision 2026-11-07 (one installer, x64; runs on Windows 11 ARM via emulation). No download choice, no 32-bit. WR-26: "works on" only with a release. */}
+    {v && <p>Works on 64-bit Windows 10 and 11, including newer Windows 11 laptops with ARM chips.</p>}
     {!v && <p class="text-small text-muted">Version number, size and checksum will show here when the first version is published.</p>}
     {/* source: Windows-only v1 (PLAN_V1); macOS later = project roadmap, no date promised */}
     {v

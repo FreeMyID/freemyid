@@ -1,0 +1,71 @@
+# DRAFT, not active (the .draft extension keeps GitHub from running it).
+# Site v3: builds web/ (Astro static output) and publishes web/dist to GitHub Pages.
+# To switch over (orchestrator, after web-qa and qa-security sign off): rename to pages.yml,
+# replacing the v2 workflow, in the same commit that retires site/ publishing.
+# Free GitHub Pages needs a PUBLIC repository: while the repo is private the deploy job is skipped.
+name: pages-v3
+
+on:
+  push:
+    branches: [main]
+    paths: ["web/**", "site_src/**", "brokers/registry.sample.yaml", "tools/site_check.py",
+            ".github/workflows/pages.yml"]
+  pull_request:
+    paths: ["web/**", "site_src/**", "brokers/registry.sample.yaml", "tools/site_check.py",
+            ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install (exact versions from the lockfile)
+        run: pnpm install --frozen-lockfile
+      - name: Design tokens are up to date (contrast pairs checked)
+        run: node scripts/gen-tokens.mjs --check
+      - name: Build (astro build + per-page CSP tightening)
+        run: pnpm build
+      - name: Check (meta, CSP, links, anchors, images, sitemap, budgets)
+        run: pnpm check
+      - name: Copy rules and leak scan (tools/site_check.py)
+        run: python scripts/content_check.py dist
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist
+
+  deploy:
+    needs: build
+    if: ${{ github.event_name != 'pull_request' && !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

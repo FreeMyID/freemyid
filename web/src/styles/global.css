@@ -186,8 +186,13 @@
 
   /* Magic UI BlurFade, done with scroll-driven CSS: no JS, and content is visible where unsupported. */
   @supports (animation-timeline: view()) {
-    .reveal {
-      animation: reveal linear both;
+    /* Longhands only, in a doubled-class rule: the CSS minifier folds animation-timeline into the
+       shorthand, which browsers reject (the timeline is reset-only in the shorthand). */
+    .reveal.reveal {
+      animation-name: reveal;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-duration: auto;
       animation-timeline: view();
       animation-range: entry 0% entry 35%;
     }
@@ -195,8 +200,11 @@
 
     /* Aceternity Timeline beam, CSS version: fills while the list scrolls through the viewport. */
     .timeline { view-timeline-name: --fmi-timeline; }
-    .timeline__beam {
-      animation: beam-fill linear both;
+    .timeline__beam.timeline__beam {
+      animation-name: beam-fill;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-duration: auto;
       animation-timeline: --fmi-timeline;
       animation-range: cover 10% cover 75%;
     }
