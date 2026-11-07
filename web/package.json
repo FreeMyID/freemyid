@@ -12,7 +12,7 @@
   "scripts": {
     "tokens": "node scripts/gen-tokens.mjs",
     "dev": "node scripts/gen-tokens.mjs && astro dev",
-    "build": "node scripts/gen-tokens.mjs && astro build",
+    "build": "node scripts/gen-tokens.mjs && astro build && node scripts/tighten-csp.mjs dist",
     "check": "node scripts/check-site.mjs dist",
     "preview": "astro preview"
   },
