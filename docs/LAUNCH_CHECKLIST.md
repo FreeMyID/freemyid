@@ -5,7 +5,7 @@
 Done items are ticked below. What's left, in order:
 
 1. **History rewrite → fresh repo** (O, user-approved; old repo renamed freemyid-old, cleaned history pushed to a new FreeMyID/freemyid): waiting on qa-security's hanging-test fix → session 00 pauses its agents → d7 runs scrub.sh → O verifies → force-push → peers re-sync → `git config user.name "Free My ID"` + noreply email in the repo.
-2. **Quality gate** (O + qa-security): suite green with and without brokers/registry.yaml; mypy 0. Open work: move `src/freemyid/engine/_test_drafts/` into tests/ (it would ship inside the package) and fix its 4 mypy errors; confirm every SEC item is closed in docs/SECURITY_REVIEW.md (no strict xfails remain); sign off SEC-38 (accepted as designed).
+2. **Quality gate** (O + qa-security): suite green with and without brokers/registry.yaml; mypy 0. Open work: move `src/freemyid/engine/_test_drafts/` into tests/ (it would ship inside the package) and fix its 4 mypy errors; confirm every SEC item is closed in docs/SECURITY_REVIEW.md (no strict xfails remain); sign off SEC-38 (accepted as designed). **Status 2026-11-07 (qa-security):** suite green with and without brokers/registry.yaml (FREEMYID_TEST_NO_FULL_REGISTRY=1), ruff and mypy clean; engine/_test_drafts adopted into tests/ and removed; SEC-38 signed off (accepted as designed + one-time confirm 8637941); no strict xfails remain (SEC-01..49 closed). At d84ac04: 508 passed (full registry), 505 passed + 3 skipped (without).
 3. **CI + v0.1.0** (O): push → CI green → tag `v0.1.0` → release with SHA256SUMS.txt → send version/size/hash to the site (site_src/data/release.yaml).
 4. **VM walkthrough** (O): install the v0.1.0 release on the clean Windows 11 snapshot through SmartScreen; all 6 screens + dashboard + a practice-mode run; real screenshots for the download page. Windows 10 VM still needed (none yet).
 5. **Repo hygiene** (session 00 / brand-marketing): issue templates (bug, "broker is wrong"), repo description + topics + social preview; README re-read for public visitors. SPDX headers: optional (pyproject + LICENSE already declare AGPL-3.0-or-later).
@@ -35,7 +35,7 @@ Public means **the whole history is public**, not just the latest files.
 - [x] 🔎 **Commit author email is the placeholder `your@email.com`** on all commits. That's harmless, but set a GitHub noreply address for future commits (`git config user.email <id>+<login>@users.noreply.github.com`). Rewriting old commits is optional. **U/O** ✅ all commits rewritten to `Free My ID <242299803+the old personal account@users.noreply.github.com>`; repo-local git config set after the push.
 - [x] 🔎 Done: old personal repo names removed from PROGRESS.md/BRAND.md (and history). Still consider whether PROGRESS.md (an internal log) should ship publicly at all. **O**
 - [x] Full secret and PII scan of the whole history (e.g. `gitleaks detect` or `trufflehog git file://.`, both free) with no findings: real names, addresses, phone numbers, real profile exports (`*.freemyid-profile`), mailbox passwords, `.db` files, screenshots. **O / qa-security** ✅ gitleaks 8.21.2: 0 findings on the rewritten history; fast-export grep for handles/family states/emails: 0.
-- [ ] Test fixtures and dev sites use only obviously fake people (`*.example`, `.invalid`). **qa-security**
+- [x] Test fixtures and dev sites use only obviously fake people (`*.example`, `.invalid`). **qa-security** ✅ (2026-11-07) tests/ and engine/_dev scanned: names are Jane/John/Pat Testperson, street 742 Evergreen Terrace, phones 555-01xx, mail on *.example/example.org; the only real hosts are CAPTCHA/policy test URLs (no people). The VM screenshots use Pat Testperson, Raleigh NC.
 - [x] If the history needs rewriting: do it **before** the first public push, using `git filter-repo` on a fresh clone, then force-push once with the user's approval. Everyone re-clones afterwards. **O, with U approval** ✅ user approved the force-push 2026-11-06.
 
 ## 3. Product truth (site/ and app copy)
@@ -50,7 +50,7 @@ Public means **the whole history is public**, not just the latest files.
 
 ## 4. Security and quality gate
 
-- [ ] All open SEC items in docs/SECURITY_REVIEW.md closed or explicitly accepted. **qa-security, O**
+- [x] All open SEC items in docs/SECURITY_REVIEW.md closed or explicitly accepted. **qa-security, O** ✅ (2026-11-07) SEC-01..49: 45 fixed, 4 accepted (38, 41, 44, 45), 0 open; no strict xfails remain.
 - [ ] Tests, ruff and mypy green on CI; CI installer build and silent install/uninstall test green. **O**
 - [x] `SECURITY.md` with how to report a vulnerability (a GitHub private security advisory is free). **B drafts, O commits**
 - [x] The default config ships in practice mode, with no real submissions until the user turns them on. **O** ✅ `real_submissions_enabled = False` (config.py).
