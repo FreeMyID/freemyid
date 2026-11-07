@@ -725,6 +725,121 @@ def outbox_approve(request_id: str):
     con.print("Sent.")
 
 
+# --------------------------------------------------------------------------- checklists
+
+checklist_app = typer.Typer(help="Identity-safety checklists: credit freezes, opt-out lists "
+                            "and more. Tick them off as you go.", no_args_is_help=True)
+app.add_typer(checklist_app, name="checklist")
+ChecklistProfileOpt = Annotated[str | None, typer.Option(
+    "--profile", "-p", help="Whose list (needed only when more than one person is set up)")]
+
+
+def _checklists_or_fail():
+    from . import checklist_state as cs
+    cf = cs.load_checklists()
+    if cf is None:
+        _fail(cj.EXIT_ERROR, "the checklists file is missing or invalid")
+    return cf
+
+
+def _checklist_profile(store, profile: str | None) -> Profile:
+    if profile:
+        return _one_profile(store, profile)
+    ps = store.list_profiles()
+    if len(ps) == 1:
+        return ps[0]
+    if not ps:
+        _fail(cj.EXIT_NOT_CONFIGURED, "nobody is set up yet; run `freemyid setup` first")
+    _ui().print("More than one person is set up. Pick one with --profile:", markup=False)
+    for p in ps:
+        _ui().print(f"  {p.id[:12]}  {p.label}", markup=False)
+    if _json_mode:
+        cj.emit(cj.failure_doc(cj.EXIT_USAGE, "more than one profile; use --profile"))
+    raise typer.Exit(cj.EXIT_USAGE)
+
+
+def _checklist_context(profile: str | None, cid: str | None = None):
+    cf = _checklists_or_fail()
+    item = None
+    if cid is not None:
+        item = _pick_one(cf.checklists, cid, "checklist", lambda c: c.id, lambda c: c.title)
+    store = _open_store_or_fail()
+    return cf, item, store, _checklist_profile(store, profile)
+
+
+@checklist_app.command("list")
+def checklist_list(profile: ChecklistProfileOpt = None, as_json: JsonOpt = False):
+    """Every checklist, and which ones are done."""
+    from . import checklist_state as cs
+    _set_json(as_json)
+    cf, _item, store, p = _checklist_context(profile)
+    tk = cs.ticks(store, p.id)
+    if as_json:
+        cj.emit(cs.list_doc(cf, tk, p.id))
+        return
+    done = 0
+    for c in cf.checklists:
+        t = tk.get(c.id)
+        mark = "[x]" if t and t.done else "[ ]"
+        done += bool(t and t.done)
+        con.print(f"{mark} {c.id:<24} {c.title}  ({c.cost}; {c.time_needed})", markup=False)
+    con.print(f"\n{p.label}: {done} of {len(cf.checklists)} done. "
+              "See one with: freemyid checklist show ID", markup=False)
+
+
+@checklist_app.command("show")
+def checklist_show(checklist_id: Annotated[str, typer.Argument(help="Checklist id")],
+                   profile: ChecklistProfileOpt = None, as_json: JsonOpt = False):
+    """The steps for one checklist."""
+    from . import checklist_state as cs
+    _set_json(as_json)
+    _cf, c, store, p = _checklist_context(profile, checklist_id)
+    assert c is not None
+    t = cs.ticks(store, p.id).get(c.id)
+    if as_json:
+        cj.emit(cs.show_doc(c, t, p.id))
+        return
+    status = f"done on {t.at.date().isoformat()}" if t and t.done else "not done yet"
+    out = [c.title, "", f"Status: {status}", f"Why: {c.why}", f"Cost: {c.cost}", f"Time: {c.time_needed}", f"Website: {c.url}"]
+    if c.need_on_hand:
+        out += ["", "Have these ready:", *[f"  - {x}" for x in c.need_on_hand]]
+    out += ["", "Steps:", *[f"  {i}. {s}" for i, s in enumerate(c.steps, 1)]]
+    out += ["", f"How to undo: {c.how_to_undo}"]
+    if c.status_note:
+        out += ["", f"Note: {c.status_note}"]
+    out += ["", (f"Checked {c.date_checked.isoformat()}. When finished: "
+                 f"freemyid checklist done {c.id}")]
+    for line in out:
+        con.print(line, markup=False, highlight=False)
+
+
+def _checklist_tick(checklist_id: str, profile: str | None, as_json: bool, done: bool) -> None:
+    from . import checklist_state as cs
+    _set_json(as_json)
+    cf, c, store, p = _checklist_context(profile, checklist_id)
+    assert c is not None
+    if not cs.set_done(store, p.id, c.id, done, cf):
+        _fail(cj.EXIT_ERROR, f"could not record checklist {c.id}")
+    if as_json:
+        cj.emit(cs.show_doc(c, cs.ticks(store, p.id).get(c.id), p.id))
+        return
+    con.print(f"{'Done' if done else 'Not done'}: {c.title}", markup=False)
+
+
+@checklist_app.command("done")
+def checklist_done(checklist_id: Annotated[str, typer.Argument(help="Checklist id")],
+                   profile: ChecklistProfileOpt = None, as_json: JsonOpt = False):
+    """Mark a checklist as done."""
+    _checklist_tick(checklist_id, profile, as_json, True)
+
+
+@checklist_app.command("undo")
+def checklist_undo(checklist_id: Annotated[str, typer.Argument(help="Checklist id")],
+                   profile: ChecklistProfileOpt = None, as_json: JsonOpt = False):
+    """Mark a checklist as not done again."""
+    _checklist_tick(checklist_id, profile, as_json, False)
+
+
 # --------------------------------------------------------------------------- secrets
 
 
