@@ -180,3 +180,26 @@ Drafts: src/freemyid/engine/_test_drafts/ (conftest re-exports tests/conftest; q
    removal email (address)" renders as "an email address you can check", plus a note (own
    address is fine; leave empty if optional). With a mailbox nothing changes. Registry prose
    untouched. Drafts: test_assisted_no_mailbox.py (2).
+4. DONE SEC-48 (coordinator request, wizard/server.py was clean): /outbox/{rid}/approve runs
+   approve_and_send via starlette run_in_threadpool (store is RLock + check_same_thread=False).
+   SEC-47: server._disclose_releases splices a note into the first-email card ("Approving it
+   also sends the N other emails waiting for <label> (to: <sites>)...") and changes its
+   confirm to "Send this email and N others now?", using outbox.released_by_approval.
+   Both strict xfails removed in tests/test_security_wave3.py (coordinator-authorized).
+   dashboard.py NOT edited (peer session had uncommitted changes) -> CR-W1 below.
+5. DONE fixture audit: engine/_dev (registry, site, inbox), tests/fixtures/registry_min.yaml,
+   drafts: only *.example / .invalid / loopback hosts, fake "Jane (Q) Testperson", no real
+   streets or non-555 phones. tests/*.py use example.org/example.com (RFC 2606 reserved, qa).
+
+## Open CRs (this wave)
+- CR-W1 wizard-packager, dashboard.outbox_page: render the SEC-47 note inside the card
+  (call engine.outbox.released_by_approval(store, profile, r) when building items) and
+  delete server._disclose_releases. Same text as now.
+- CR-M1 orchestrator, models.Request: optional `held_reason: str | None = None`
+  ("first_email") so the hold is a field, not inferred (today: AUTO + queued + email + not
+  legal demand, plus the email_held_first_approval Event as audit).
+- CR-M2 orchestrator, interfaces.Mailer: add `async scan_replies(profile, broker, since,
+  timeout_s=0) -> engine.mail.ReplyScan` (both mailers implement it; runner falls back to
+  wait_for_confirmation if missing).
+- CR-R1 broker-researcher: registry steps could say "your email" instead of "removal email";
+  the Assisted card now rewrites it when no mailbox exists, so this is cosmetic only.
