@@ -439,6 +439,15 @@ class Broker(_Base):
         default=None, max_length=200,
         description="Regex matched against a listing page's URL path (listing finder)",
     )
+    # v0.3 exposure scan ("find me first"). Research data, never PII.
+    search_access: Literal["open", "js_required", "bot_blocked", "unknown"] = Field(
+        default="unknown", description="Can the public search page be read by a plain fetch?")
+    search_access_note: str | None = Field(default=None, max_length=300)
+    search_url_checked: date | None = Field(
+        default=None, description="When search_url_pattern was last confirmed")
+    slug_case: Literal["lower", "title", "as_is"] = Field(
+        default="lower", description="How names are cased in search_url_pattern slugs "
+                                     "(e.g. Spokeo uses John-Smith = title)")
     submitter: str | None = Field(
         default=None, description="Optional custom submitter 'module:Class'"
     )
@@ -698,3 +707,36 @@ class SubmitOutcome(_Base):
     evidence: list[Evidence] = []
     todos: list[Todo] = []
     message: str = ""     # non-PII summary for logs
+
+
+# --------------------------------------------------------------------------- checklists (v0.3)
+
+class Checklist(_Base):
+    """One identity-safety step (credit freeze, opt-out list...). Public, citable, no PII."""
+    id: str = Field(pattern=r"^[a-z0-9_]{2,40}$")
+    title: str = Field(max_length=120)
+    why: str
+    url: HttpUrl
+    cost: str
+    time_needed: str
+    need_on_hand: list[str] = []
+    steps: list[str] = Field(min_length=1)
+    how_to_undo: str
+    source_urls: list[HttpUrl] = Field(min_length=1)
+    date_checked: date
+    verification: Literal["official_page", "partial"]
+    notes: str | None = None
+    status_note: str | None = None
+
+
+class ChecklistFile(_Base):
+    version: str
+    updated: date
+    checklists: list[Checklist]
+
+    @model_validator(mode="after")
+    def _unique_ids(self) -> ChecklistFile:
+        ids = [c.id for c in self.checklists]
+        if len(ids) != len(set(ids)):
+            raise ValueError("duplicate checklist id")
+        return self

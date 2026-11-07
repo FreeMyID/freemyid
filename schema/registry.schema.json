@@ -311,6 +311,56 @@
           "description": "Regex matched against a listing page's URL path (listing finder)",
           "title": "Listing Url Pattern"
         },
+        "search_access": {
+          "default": "unknown",
+          "description": "Can the public search page be read by a plain fetch?",
+          "enum": [
+            "open",
+            "js_required",
+            "bot_blocked",
+            "unknown"
+          ],
+          "title": "Search Access",
+          "type": "string"
+        },
+        "search_access_note": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Search Access Note"
+        },
+        "search_url_checked": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "When search_url_pattern was last confirmed",
+          "title": "Search Url Checked"
+        },
+        "slug_case": {
+          "default": "lower",
+          "description": "How names are cased in search_url_pattern slugs (e.g. Spokeo uses John-Smith = title)",
+          "enum": [
+            "lower",
+            "title",
+            "as_is"
+          ],
+          "title": "Slug Case",
+          "type": "string"
+        },
         "submitter": {
           "anyOf": [
             {

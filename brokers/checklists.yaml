@@ -297,7 +297,7 @@ checklists:
     source_urls: [https://privacy.ca.gov/drop/, https://www.malwarebytes.com/blog/news/2026/08/californians-can-tell-data-brokers-to-drop-their-information]
     date_checked: 2026-11-07
     verification: official_page
-    status_as_of_2026_11_07: >-
+    status_note: >-
       Live for residents since 2026-01-01. Registered brokers had to start processing requests on
       2026-08-01 and must check DROP at least every 45 days from then on, then delete data each cycle.
       The page says that by November 2026 all brokers should have finished their first download and
