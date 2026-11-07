@@ -1,0 +1,27 @@
+---
+// Magic UI "Marquee", ported to CSS only (no JS). Slow (60s per loop), plain text, no links
+// (moving targets are hard to tap). WCAG 2.2.2: a visible "Pause" switch (a real checkbox, works
+// with JS off) stops it, as do hover and keyboard focus. The second copy is aria-hidden.
+// Under prefers-reduced-motion it is a static wrapped list with no switch. Edge fade is a mask
+// (no text sits on a gradient).
+interface Props { items: string[]; label: string; id: string }
+const { items, label, id } = Astro.props;
+---
+<div class="marquee mt-m" role="group" aria-label={label}>
+  <div class="overflow-hidden [mask-image:linear-gradient(to_right,transparent,#000_6%,#000_94%,transparent)] motion-reduce:[mask-image:none]">
+    <div class="marquee__track py-2xs">
+      <ul class="flex shrink-0 gap-[var(--gap)]" role="list">
+        {items.map((t) => <li class="whitespace-nowrap rounded-pill border border-line bg-card px-s py-3xs font-semibold text-heading">{t}</li>)}
+      </ul>
+      <ul class="marquee__dupe flex shrink-0 gap-[var(--gap)]" role="list" aria-hidden="true">
+        {items.map((t) => <li class="whitespace-nowrap rounded-pill border border-line bg-card px-s py-3xs font-semibold text-heading">{t}</li>)}
+      </ul>
+    </div>
+  </div>
+  <p class="marquee__controls mt-2xs">
+    <label class="inline-flex min-h-tap cursor-pointer items-center gap-2xs text-small text-muted" for={id}>
+      <input class="marquee__pause size-6 accent-brand" type="checkbox" id={id} />
+      Pause the moving list
+    </label>
+  </p>
+</div>

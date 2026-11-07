@@ -167,6 +167,18 @@
   .marquee__track { animation: marquee var(--duration) linear infinite; }
   @keyframes marquee { to { transform: translateX(calc(-50% - var(--gap) / 2)); } }
 
+  /* Hero picture (brand/v3/hero.svg layers): the three pages, the trail and the name card fade in
+     once on load, opacity only (the groups keep their own SVG transforms). Static when reduced. */
+  .hero-art :is(#hero-page-1, #hero-page-2, #hero-page-3, #hero-trail, #hero-card, #hero-check) {
+    animation: hero-in 0.9s ease-out both;
+  }
+  .hero-art #hero-page-2 { animation-delay: 0.15s; }
+  .hero-art #hero-page-3 { animation-delay: 0.3s; }
+  .hero-art #hero-trail { animation-delay: 0.6s; }
+  .hero-art #hero-card { animation-delay: 0.85s; }
+  .hero-art #hero-check { animation-delay: 1.2s; }
+  @keyframes hero-in { from { opacity: 0; } to { opacity: 1; } }
+
   .beam__ring::after { opacity: 1; animation: beam 9s linear infinite; }
   @keyframes beam { from { offset-distance: 0%; } to { offset-distance: 100%; } }
 

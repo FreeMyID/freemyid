@@ -37,7 +37,7 @@ function samplePath(): string {
 
 export interface SiteCfg {
   name: string; tagline: string; base_url: string; base_path: string;
-  repo_url: string; releases_url: string; download_url: string; redirects: Record<string, string>;
+  repo_url: string; releases_url: string; download_url: string; issues_url: string; redirects: Record<string, string>;
 }
 export interface PageCfg {
   id: string; out: string; label: string; title: string; description: string;
