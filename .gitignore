@@ -43,3 +43,6 @@ docs/research/exposure_scan_patterns.yaml
 
 # poster runtime lock
 docs/marketing/seo/.bluesky-queue.md.lock
+
+# downloaded installers in the repo root
+/FreeMyIDSetup*.exe
