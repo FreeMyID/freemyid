@@ -40,3 +40,6 @@ socialmedialogins*
 
 # private research (exposure scan patterns)
 docs/research/exposure_scan_patterns.yaml
+
+# poster runtime lock
+docs/marketing/seo/.bluesky-queue.md.lock

@@ -93,7 +93,8 @@ def test_macos_status_not_installed(env):
 
 def test_render_snapshots():
     svc = render.systemd_service(CMD, {"FREEMYID_HOME": "/data"})
-    assert svc.splitlines()[-1] == 'ExecStart="/usr/bin/freemyid" "run" "--headless" "--scheduled"'
+    assert svc.splitlines()[-2] == 'ExecStart="/usr/bin/freemyid" "run" "--headless" "--scheduled"'
+    assert svc.splitlines()[-1] == "SuccessExitStatus=3"   # exit 3 = needs you, not a failure
     assert 'Environment="FREEMYID_HOME=/data"' in svc
     p = render.launchd_plist(CMD, "/tmp/x.log", {"FREEMYID_HOME": "/data"})
     assert "<string>--headless</string>" in p and "<key>FREEMYID_HOME</key>" in p

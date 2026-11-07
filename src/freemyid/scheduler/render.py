@@ -18,7 +18,9 @@ def systemd_service(cmd: list[str], env: dict[str, str] | None = None) -> str:
     envs = "".join(f"Environment={_sd_quote(f'{k}={v}')}\n" for k, v in (env or {}).items())
     return ("[Unit]\nDescription=Free My ID scheduled re-check (no UI, no email without approval)\n\n"
             f"[Service]\nType=oneshot\nNice=10\n{envs}"
-            f"ExecStart={' '.join(_sd_quote(c) for c in cmd)}\n")
+            f"ExecStart={' '.join(_sd_quote(c) for c in cmd)}\n"
+            # exit 3 = "something needs you" (docs/CLI.md): a normal outcome, not a unit failure
+            "SuccessExitStatus=3\n")
 
 
 def _sd_quote(s: str) -> str:
