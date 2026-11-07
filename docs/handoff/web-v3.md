@@ -143,3 +143,24 @@ Screenshots (not committed): scratchpad shots/final (360/768/1280 x light/dark, 
   app claims, or exempt protect/); the data and the checker weren't changed to get around it.
 - Screenshots: tools/site_shots.py via a wrapper that sets DEFAULT_PAGES (scratchpad); add protect pages to
   DEFAULT_PAGES when convenient.
+
+## /whats-coming/ + SEO rows WR-39/40/41 (2026-11-07, Owen Brooks; commits b69b319, f957eb2, 96578e2, c7945d0; not pushed)
+- `/whats-coming/` (web/src/pages/whats-coming/index.astro, pages.yaml id `whats-coming`, `v3_only`): public roadmap from
+  docs/ROADMAP.md 6. Now = v0.1 Windows app; Next = v0.2 Linux, Mac, home servers (-> /developers/); Then = v0.3 find-me-first
+  check + score, state-law letters, credit-freeze/opt-out checklists (links /protect/ only while pages.yaml has `protect`),
+  proof report; Later = v0.4 family profiles + helper setup. No prices, no tier names, no dates; "Free stays free";
+  feedback by email only. Art: brand/v3/features copied to site_src/static/assets/art/ (`<picture>` light/dark, alt from
+  brand/README.md). Footer: Project column, after "For developers". In tools/site_shots.py DEFAULT_PAGES.
+  When a version ships: move its section to "Available now", checked against the release notes.
+- WR-39: sitemap `<lastmod>` = git commit date of the page's .astro (+ its data file, PAGE_DATA in sitemap.xml.ts);
+  guides = `last_verified` when verified, else the git date of the guide data. Never the build date. On a shallow clone
+  (`site.ts gitHistory` false) git dates are left out, so CI publishes only guide/protect dates until pages.yml checks out
+  with `fetch-depth: 0` (CHANGE REQUEST to lead/devops). check-site.mjs: lastmod must be YYYY-MM-DD, not in the future;
+  no priority/changefreq.
+- WR-40: "More free guides" nav on every guide (`moreGuides()` in site.ts: Whitepages, Spokeo, TruePeopleSearch,
+  BeenVerified minus the current page, filled from registry order) + "See all opt-out guides". "Popular guides:" line on
+  /i-do-not-consent/ (step 1) and in faq.yaml `without-app` (also in v2).
+- WR-41: guide pages carry a WebPage JSON-LD block (in the body; tighten-csp exempts ld+json): datePublished = later of the
+  broker's first commit in registry.sample.yaml and the guide template's first commit; dateModified = the shown verified
+  date, left out if older than datePublished. Organization author/publisher. No HowTo.
+- WR-61/62/63 left open: both drafts need broker-researcher to clear needs-verify sources first; WR-63's links wait for them.
