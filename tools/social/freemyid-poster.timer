@@ -1,0 +1,13 @@
+# Free My ID social poster: 10:00 and 16:00 local time; catches up after sleep/off.
+[Unit]
+Description=Run the Free My ID social poster at 10:00 and 16:00
+
+[Timer]
+OnCalendar=*-*-* 10:00:00
+OnCalendar=*-*-* 16:00:00
+Persistent=true
+RandomizedDelaySec=300
+Unit=freemyid-poster.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,31 @@
+# Free My ID social poster: posts at most one queued Bluesky item per run.
+# User unit. Install: see tools/social/README.md. Paths assume the repo lives at
+# ~/Documents/CODE/Data_Removal; edit the three %h paths below if it moves.
+[Unit]
+Description=Free My ID social poster (one queued Bluesky post)
+Documentation=file://%h/Documents/CODE/Data_Removal/tools/social/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/Documents/CODE/Data_Removal
+ExecStart=%h/Documents/CODE/Data_Removal/.venv/bin/python tools/social/poster.py
+TimeoutStartSec=120
+Environment=PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+
+# Hardening that works for --user units (needs unprivileged user namespaces).
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+# The only writes: the queue status line and the outreach log.
+ReadWritePaths=%h/Documents/CODE/Data_Removal/docs/marketing/seo
+# AF_UNIX for the session D-Bus (keyring); AF_INET/6 for https://bsky.social.
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+SystemCallArchitectures=native
+UMask=0022
