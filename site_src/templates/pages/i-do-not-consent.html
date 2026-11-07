@@ -5,6 +5,7 @@
 <div class="wrap main-pad prose">
   {% include "partials/crumbs.html" %}
   <h1>Does the "I do not consent" post work?</h1>
+  {# source: docs/USER_GUIDE.md section 11 "I posted I do not consent" (approved); POSITIONING.md rule 1 #}
   <p class="lead mt-s">Short answer: no, but your instinct was right. Here's why the post can't do the job, and what can.</p>
 
   <div class="callout callout--info">
@@ -16,6 +17,8 @@
   <p class="mt-s">Lots of people have posted something like "I do not give permission to use my pictures or information…" on Facebook. It's often shared by caring people who want to protect their friends.</p>
 
   <h2 class="mt-l" id="why-not">Why it can't reach the people selling your details</h2>
+  {# source: USER_GUIDE section 11 (post does not reach the sites); faq.yaml "comes-back" (sites use public records and buy data from one another);
+     PLAN_V1 D1 (each site has its own removal channel, from the registry) #}
   <ul class="checklist checklist--no mt-s" role="list">
     <li>{{ icon('dash') }}<span>A post on your page goes to your friends' feeds. The companies that sell your details don't see it, and they aren't required to read it.</span></li>
     <li>{{ icon('dash') }}<span>Those companies are mostly <strong>people-search sites</strong> (also called data brokers). Many of them list people who've never had a Facebook account at all, using public records and purchased data.</span></li>
@@ -23,6 +26,8 @@
   </ul>
 
   <h2 class="mt-l" id="what-works">What actually works</h2>
+  {# source: step 1 = /guides/ (registry); step 2 = POSITIONING.md "Legal accuracy", brokers/state_laws.yaml; step 3 = registry recheck_interval_days (90 to 180 days);
+     step 4 = USER_GUIDE section 11 "Does this change what Facebook does?" #}
   <ol class="steps steps--list mt-m" role="list">
     <li class="step"><span class="step__num" aria-hidden="true">1</span><h3>Send your "I do not consent" to each site</h3><p>Ask each people-search site to remove your listing, through its own removal process. Our <a href="{{ url('guides/') }}">free opt-out guides</a> show you how for some of the best-known sites.</p></li>
     <li class="step"><span class="step__num" aria-hidden="true">2</span><h3>Use the law where you have it</h3><p>California and a growing number of states have privacy laws that require these sites to answer removal requests. In other states the request is a polite one. Many sites honor it anyway, but some don't.</p></li>
@@ -32,6 +37,7 @@
 
   <section class="card mt-l" aria-labelledby="fmid">
     <h2 id="fmid">{{ icon('shield', 'icon card__icon') }}Don't just post it. Send it.</h2>
+    {# source: PLAN_V1 D1 (CCPA or state-law letter template, each site's own channel) and D4 (keeps checking); LICENSE (free); netpolicy.py (runs locally) #}
     <p class="mt-s">Free My ID sends your "I do not consent" to the companies that actually sell your name, address and phone number, through each site's own removal process (a formal legal request where a state privacy law applies), and keeps checking that they did. It's free, and it runs on your own computer.</p>
     <div class="btn-row mt-m">
       {% with cta_class = "btn--primary" %}{% include "partials/cta-download.html" %}{% endwith %}

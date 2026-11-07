@@ -23,9 +23,10 @@
   {% if not g.covered_by %}
   {% if g.required or g.needs_email_verification or g.has_captcha or g.needs_id_upload %}
   <h2 class="mt-l" id="need">What you'll need</h2>
+  {# source: registry entry fields (required_fields, needs_email_verification, has_captcha, needs_id_upload). WR-27: "A few minutes" dropped (never timed, D8). #}
   <ul class="checklist checklist--yes mt-s" role="list">
     {% for r in g.required %}<li>{{ icon('check') }}<span>{{ r[:1] | upper }}{{ r[1:] }}</span></li>{% endfor %}
-    {% if g.needs_email_verification %}<li>{{ icon('mail') }}<span>A few minutes to open the email {{ g.name }} sends and click its link. If you skip this, the request may not go through.</span></li>{% endif %}
+    {% if g.needs_email_verification %}<li>{{ icon('mail') }}<span>Opening the email {{ g.name }} sends and clicking its link. If you skip this, the request may not go through.</span></li>{% endif %}
     {% if g.has_captcha %}<li>{{ icon('pointer') }}<span>A picture puzzle ("I'm not a robot") you solve yourself</span></li>{% endif %}
     {% if g.needs_id_upload %}<li>{{ icon('info') }}<span>This site may ask for a photo of your ID. Only you can decide whether that's worth it.</span></li>{% endif %}
   </ul>
@@ -67,13 +68,14 @@
   {% if g.group == 'people' %}
   <div class="callout callout--note">
     {{ icon('shield') }}
+    {# source: shared rule 6 (never pay); POSITIONING.md rule 4 #}
     <div><p>You should never have to pay to be removed. If a people-search site asks for money or your Social Security number, stop.</p></div>
   </div>
   {% endif %}
 
   <section class="card mt-l" aria-labelledby="fmid">
     <h2 id="fmid">Or let Free My ID do it</h2>
-    <!-- Sources: docs/PLAN_V1.md D1, D2, D9; docs/USER_GUIDE.md sections 6, 8, 9 -->
+    {# Sources: docs/PLAN_V1.md D1, D2, D9; docs/USER_GUIDE.md sections 6, 8, 9 #}
     <p class="mt-s">
     {% if g.covered_by %}Free My ID sends the {{ g.covered_by.name }} request and later checks whether {{ g.name }} still lists you.
     {% elif g.method == 'email' %}Free My ID writes this email for you. With a removal mailbox set up, it sends it and watches for the reply; without one, it opens the message in your own email program.
