@@ -11,23 +11,29 @@ Queue format, one block per post (text outside blocks is ignored):
     <post text>
     ```
 
-On success the block's status line becomes
-``status: posted <ISO UTC timestamp> <at:// uri>`` (atomic rewrite) and a row is
-appended to docs/marketing/seo/outreach-log.md.
+Before anything is sent the block is claimed as ``status: posting <ISO UTC>``
+(atomic rewrite, under an flock). On success it becomes
+``status: posted <ISO UTC timestamp> <at:// uri>`` and a row is appended to
+docs/marketing/seo/outreach-log.md. If the outcome is unknown (timeout, kill, bad
+reply, queue write failure) the block stays ``posting``. That state is never retried
+and blocks further posting until a human checks the account and edits the line.
 
 Secrets: the app password (keyring service "freemyid-social", entry "bluesky_token")
 and the session accessJwt are never printed, logged or put in exception text.
 Network: only https://bsky.social, checked before every request.
 
 Run:  .venv/bin/python tools/social/poster.py [--dry-run] [--handle HANDLE]
-Exit: 0 = posted or nothing to do, 1 = network/HTTP error (item stays queued),
-      2 = posted but the queue could not be updated (fix by hand; URI is logged),
-      3 = bad arguments / unreadable queue.
+Exit: 0 = posted, nothing to do, or another run holds the lock,
+      1 = definite failure before anything was created (item back to queued),
+      2 = posted but the queue/log could not be updated (fix by hand; URI is logged),
+      3 = bad arguments / unreadable or unwritable queue,
+      4 = outcome unknown or an item is stuck in "posting": check the account.
 """
 
 from __future__ import annotations
 
 import argparse
+import fcntl
 import json
 import logging
 import os
@@ -56,6 +62,9 @@ EXIT_OK = 0
 EXIT_HTTP = 1
 EXIT_RECORD = 2
 EXIT_USAGE = 3
+EXIT_CHECK = 4
+
+POSTING = "posting"
 
 
 # --------------------------------------------------------------------------- secrets
@@ -92,7 +101,11 @@ class ScrubFilter(logging.Filter):
 
 
 class PosterError(Exception):
-    """Raised with an already-scrubbed message."""
+    """Raised with an already-scrubbed message. The post MAY have been created."""
+
+
+class NotCreatedError(PosterError):
+    """A failure where the post was certainly not created (safe to put back in the queue)."""
 
 
 # --------------------------------------------------------------------------- queue parser
@@ -178,13 +191,22 @@ def next_queued(items: Iterable[QueueItem]) -> list[QueueItem]:
     return [it for it in items if it.status == "queued"]
 
 
-def rewrite_status(content: str, item: QueueItem, new_status: str) -> str:
-    """Return content with the item's status line replaced. Re-verifies the block first."""
+def stuck_posting(items: Iterable[QueueItem]) -> list[QueueItem]:
+    return [it for it in items if it.status.split(" ", 1)[0] == POSTING]
+
+
+def rewrite_status(
+    content: str, item: QueueItem, new_status: str, expect: str = "queued"
+) -> str:
+    """Return content with the item's status line replaced. Re-verifies the block first.
+
+    The block must still have the same text and exactly the ``expect`` status.
+    """
     if "\n" in new_status or "\r" in new_status:
         raise PosterError("status must be a single line")
     current = {it.item_id: it for it in parse_queue(content)}
     found = current.get(item.item_id)
-    if found is None or found.status != "queued" or found.text != item.text:
+    if found is None or found.status != expect or found.text != item.text:
         raise PosterError(f"queue block {item.item_id} changed or vanished; not rewritten")
     lines = content.splitlines(keepends=True)
     old = lines[found.status_line]
@@ -236,6 +258,11 @@ def find_urls(text: str) -> list[tuple[int, int, str]]:
         if len(url) > len("https://") and urlsplit(url).hostname:
             out.append((m.start(), m.start() + len(url), url))
     return out
+
+
+def hidden_char_error(text: str) -> str | None:
+    """Reason to refuse a post with invisible or bidi characters, else None (SEC-58)."""
+    return None
 
 
 def link_facets(text: str) -> list[dict[str, Any]]:
@@ -322,7 +349,7 @@ class Http:
             or parts.password is not None
             or parts.port not in (None, 443)
         ):
-            raise PosterError(f"refused: {parts.scheme}://{host} is not on the allowlist")
+            raise NotCreatedError(f"refused: {parts.scheme}://{host} is not on the allowlist")
 
     def post_json(
         self, url: str, payload: dict[str, Any], headers: dict[str, str] | None = None
@@ -330,7 +357,12 @@ class Http:
         self.check_url(url)
         try:
             resp = self._client.post(url, json=payload, headers=headers or {})
+        except (httpx.ConnectError, httpx.ConnectTimeout) as exc:
+            # no connection was made, so the request never reached the server
+            msg = self.scrub(f"network error: {type(exc).__name__}: {exc}")
+            raise NotCreatedError(msg) from None
         except httpx.HTTPError as exc:
+            # timeouts/drops after connecting: the server may have acted on it
             raise PosterError(self.scrub(f"network error: {type(exc).__name__}: {exc}")) from None
         if resp.status_code >= 400:
             detail = ""
@@ -342,7 +374,12 @@ class Http:
                 pass
             # scrub BEFORE truncating, so a cut can never leave part of a secret behind
             detail = self.scrub(detail)[:300]
-            raise PosterError(self.scrub(f"HTTP {resp.status_code} from {url}{detail}"))
+            msg = self.scrub(f"HTTP {resp.status_code} from {url}{detail}")
+            # 4xx: the server answered and refused (XRPC validates before writing).
+            # 5xx: a gateway error may hide a write that went through.
+            if resp.status_code < 500:
+                raise NotCreatedError(msg)
+            raise PosterError(msg)
         try:
             data = resp.json()
         except ValueError:
@@ -358,6 +395,12 @@ class Http:
 # --------------------------------------------------------------------------- backends
 
 KeyringGet = Callable[[str, str], "str | None"]
+
+# Strict: no whitespace, no "|" and nothing after the record key (SEC-57).
+AT_URI_RE = re.compile(
+    r"at://(did:[a-z]+:[A-Za-z0-9._:%-]+)/app\.bsky\.feed\.post/([A-Za-z0-9._~:-]{1,512})",
+    re.ASCII,
+)
 
 
 @dataclass
@@ -439,14 +482,17 @@ class BlueskyBackend:
     def post(self, http: Http, text: str, now: datetime) -> PostResult:
         if not self._handle or not self._password:
             raise PosterError("bluesky: credentials not loaded")
-        session = http.post_json(
-            f"{self.base}/com.atproto.server.createSession",
-            {"identifier": self._handle, "password": self._password},
-        )
+        try:
+            session = http.post_json(
+                f"{self.base}/com.atproto.server.createSession",
+                {"identifier": self._handle, "password": self._password},
+            )
+        except PosterError as exc:
+            raise NotCreatedError(str(exc)) from None  # no post can exist without a session
         jwt = session.get("accessJwt")
         did = session.get("did")
         if not isinstance(jwt, str) or not isinstance(did, str) or not jwt or not did:
-            raise PosterError("bluesky: session response missing accessJwt/did")
+            raise NotCreatedError("bluesky: session response missing accessJwt/did")
         http.scrub.add(jwt)
         refresh = session.get("refreshJwt")
         if isinstance(refresh, str):
@@ -465,10 +511,13 @@ class BlueskyBackend:
             headers={"Authorization": f"Bearer {jwt}"},
         )
         uri = created.get("uri")
-        if not isinstance(uri, str) or not uri.startswith("at://"):
-            raise PosterError("bluesky: createRecord response missing at:// uri")
-        rkey = uri.rsplit("/", 1)[-1]
-        return PostResult(uri=uri, web_url=f"https://bsky.app/profile/{did}/post/{rkey}")
+        m = AT_URI_RE.fullmatch(uri) if isinstance(uri, str) else None
+        if m is None or m.group(1) != did:
+            # it was probably created, so the caller must not retry
+            raise PosterError("bluesky: createRecord reply has no valid at:// uri for our repo")
+        return PostResult(
+            uri=m.group(0), web_url=f"https://bsky.app/profile/{m.group(1)}/post/{m.group(2)}"
+        )
 
 
 @dataclass
@@ -511,7 +560,8 @@ def outreach_row(now: datetime, backend: Backend, item: QueueItem, result: PostR
     excerpt = item.text if len(item.text) <= 80 else item.text[:77] + "..."
     return (
         f"| {now.date().isoformat()} | {backend.label} | post (poster.py) | "
-        f"{_cell(item.item_id + ': ' + excerpt)} | {result.web_url} | posted {result.uri} | 0 |\n"
+        f"{_cell(item.item_id + ': ' + excerpt)} | {_cell(result.web_url)} | "
+        f"posted {_cell(result.uri)} | 0 |\n"
     )
 
 
@@ -560,6 +610,24 @@ def run(
         log.removeFilter(filt)
 
 
+def lock_path(queue_path: Path) -> Path:
+    return queue_path.with_name(f".{queue_path.name}.lock")
+
+
+def _try_lock(path: Path) -> int | None:
+    """Exclusive non-blocking flock. Returns the fd (keep it open) or None if held."""
+    fd = os.open(path, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_CLOEXEC, 0o600)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        os.close(fd)
+        return None
+    except BaseException:
+        os.close(fd)
+        raise
+    return fd
+
+
 def _run(
     backend: Backend,
     queue_path: Path,
@@ -574,17 +642,64 @@ def _run(
     if not queue_path.exists():
         log.info("%s: queue file %s not found; nothing to do", backend.name, queue_path.name)
         return EXIT_OK
+    if dry_run:
+        return _locked_run(
+            backend, queue_path, outreach_path, True, kr_get, transport, now, out, scrub
+        )
+    try:
+        fd = _try_lock(lock_path(queue_path))
+    except OSError as exc:
+        log.error("%s: cannot open lock file: %s", backend.name, type(exc).__name__)
+        return EXIT_USAGE
+    if fd is None:
+        log.info("%s: another poster run holds the lock; skipping", backend.name)
+        return EXIT_OK
+    try:
+        return _locked_run(
+            backend, queue_path, outreach_path, False, kr_get, transport, now, out, scrub
+        )
+    finally:
+        os.close(fd)  # releases the flock
+
+
+def _locked_run(
+    backend: Backend,
+    queue_path: Path,
+    outreach_path: Path,
+    dry_run: bool,
+    kr_get: KeyringGet,
+    transport: httpx.BaseTransport | None,
+    now: Callable[[], datetime],
+    out: Callable[[str], None],
+    scrub: Scrubber,
+) -> int:
     try:
         content = queue_path.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError) as exc:
         log.error("%s: cannot read queue: %s", backend.name, type(exc).__name__)
         return EXIT_USAGE
 
+    items = parse_queue(content)
+    stuck = stuck_posting(items)
+    if stuck:
+        for it in stuck:
+            log.error(
+                "%s: %s is '%s': a post may or may not exist. Check the account, then set "
+                "the line to 'status: posted ...' or 'status: queued' by hand. "
+                "Nothing is posted until then.",
+                backend.name, it.item_id, it.status,
+            )
+        return EXIT_CHECK
+
     candidate: QueueItem | None = None
-    for item in next_queued(parse_queue(content)):
+    for item in next_queued(items):
         problem = backend.length_error(item.text)
         if problem:
             log.warning("%s: %s too long (%s); skipped", backend.name, item.item_id, problem)
+            continue
+        problem = hidden_char_error(item.text)
+        if problem:
+            log.warning("%s: %s has %s; skipped", backend.name, item.item_id, problem)
             continue
         candidate = item
         break
@@ -602,22 +717,48 @@ def _run(
         log.info("%s: no credentials in keyring; skipping", backend.name)
         return EXIT_OK
 
-    http = Http(backend.allowed_hosts, scrub, transport=transport)
     stamp = now()
+    iso = stamp.strftime("%Y-%m-%dT%H:%M:%SZ")
+    claim = f"{POSTING} {iso}"
+    # Claim BEFORE anything is sent: a kill, timeout or crash from here on leaves
+    # "posting", which is never retried (SEC-57).
+    try:
+        fresh = queue_path.read_text(encoding="utf-8")
+        atomic_write(queue_path, rewrite_status(fresh, candidate, claim))
+    except (OSError, UnicodeDecodeError, PosterError) as exc:
+        log.error("%s: cannot claim %s; nothing sent: %s", backend.name, candidate.item_id,
+                  scrub(exc))
+        return EXIT_USAGE
+
+    http = Http(backend.allowed_hosts, scrub, transport=transport)
     try:
         result = backend.post(http, candidate.text, stamp)
-    except PosterError as exc:
-        log.error("%s: %s left queued: %s", backend.name, candidate.item_id, scrub(exc))
+    except NotCreatedError as exc:
+        log.error("%s: %s not posted: %s", backend.name, candidate.item_id, scrub(exc))
+        try:
+            fresh = queue_path.read_text(encoding="utf-8")
+            atomic_write(queue_path, rewrite_status(fresh, candidate, "queued", expect=claim))
+        except (OSError, UnicodeDecodeError, PosterError) as exc2:
+            log.error("%s: %s left as '%s' (could not put it back: %s). Nothing was "
+                      "posted; set it to 'status: queued' by hand.",
+                      backend.name, candidate.item_id, claim, scrub(exc2))
+            return EXIT_CHECK
+        log.info("%s: %s put back in the queue", backend.name, candidate.item_id)
         return EXIT_HTTP
+    except PosterError as exc:
+        log.error("%s: %s outcome unknown, left as '%s': %s. Check the account before "
+                  "the next run.", backend.name, candidate.item_id, claim, scrub(exc))
+        return EXIT_CHECK
     finally:
         http.close()
 
-    iso = stamp.strftime("%Y-%m-%dT%H:%M:%SZ")
     log.info("%s: posted %s as %s", backend.name, candidate.item_id, result.uri)
     try:
         fresh = queue_path.read_text(encoding="utf-8")
-        atomic_write(queue_path, rewrite_status(fresh, candidate, f"posted {iso} {result.uri}"))
-    except (OSError, PosterError) as exc:
+        atomic_write(queue_path, rewrite_status(
+            fresh, candidate, f"posted {iso} {result.uri}", expect=claim
+        ))
+    except (OSError, UnicodeDecodeError, PosterError) as exc:
         log.error(
             "%s: POSTED %s (%s) but queue not updated: %s. Mark it posted by hand.",
             backend.name, candidate.item_id, result.uri, scrub(exc),

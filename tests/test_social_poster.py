@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import logging
+import os
 import sys
 import unicodedata
 from datetime import UTC, datetime
@@ -631,7 +632,7 @@ def _ambiguous_failure(kind: str, monkeypatch):
         real = poster.atomic_write
 
         def flaky(path, content):
-            if path.name == "bluesky-queue.md" and "status: posted" in content:
+            if path.name == "bluesky-queue.md" and "status: posted 2026-11-07" in content:
                 raise OSError("disk full")
             real(path, content)
         monkeypatch.setattr(poster, "atomic_write", flaky)
@@ -645,7 +646,6 @@ def _ambiguous_failure(kind: str, monkeypatch):
     return rec
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-57: an ambiguous post stays 'queued' and is re-posted")
 @pytest.mark.parametrize("kind", ["read-timeout", "queue-write-oserror", "bad-uri"])
 def test_qa_sec57_no_repost_after_ambiguous_failure(files, kind, monkeypatch):
     rec1 = _ambiguous_failure(kind, monkeypatch)
@@ -666,3 +666,162 @@ def test_qa_sec58_invisible_chars_never_reach_a_facet(ch):
     for f in poster.link_facets(text):
         uri = f["features"][0]["uri"]
         assert not any(unicodedata.category(c) == "Cf" for c in uri)
+
+
+# ----------------------------------------------------------------------------- SEC-57 state
+
+
+def _status(q: Path, item_id: str) -> str:
+    return {i.item_id: i for i in poster.parse_queue(q.read_text("utf-8"))}[item_id].status
+
+
+def test_sec57_claim_is_written_before_anything_is_sent(files):
+    q, _ = files
+    seen: list[str] = []
+    rec = Recorder()
+
+    def handler(request):
+        seen.append(_status(q, "Q-002"))
+        return rec(request)
+
+    rc = poster.run(
+        backend=poster.BlueskyBackend(), queue_path=q, outreach_path=files[1],
+        kr_get=fake_keyring(FULL_KEYS), transport=httpx.MockTransport(handler), now=lambda: NOW,
+    )
+    assert rc == poster.EXIT_OK
+    assert seen == ["posting 2026-11-07T15:00:00Z"] * 2
+    assert _status(q, "Q-002") == f"posted 2026-11-07T15:00:00Z {URI}"
+
+
+@pytest.mark.parametrize("status", [500, 502, 503])
+def test_sec57_server_error_on_create_record_stays_posting(files, status):
+    rec = Recorder(fail_on="createRecord", status=status)
+    assert do_run(files, rec) == poster.EXIT_CHECK
+    assert _status(files[0], "Q-002").startswith("posting ")
+    assert files[1].read_text("utf-8") == LOG
+
+
+def test_sec57_connect_error_on_create_record_goes_back_to_queued(files):
+    rec = Recorder()
+
+    def handler(request):
+        if request.url.path.endswith("createRecord"):
+            raise httpx.ConnectError("refused", request=request)
+        return rec(request)
+
+    rc = poster.run(
+        backend=poster.BlueskyBackend(), queue_path=files[0], outreach_path=files[1],
+        kr_get=fake_keyring(FULL_KEYS), transport=httpx.MockTransport(handler), now=lambda: NOW,
+    )
+    assert rc == poster.EXIT_HTTP
+    assert files[0].read_text("utf-8") == QUEUE
+
+
+def test_sec57_kill_during_post_leaves_posting_and_blocks_all_posting(files, caplog):
+    q, _ = files
+    rec = Recorder()
+
+    def handler(request):
+        if request.url.path.endswith("createRecord"):
+            raise KeyboardInterrupt  # stands in for SIGTERM/power loss mid-request
+        return rec(request)
+
+    with pytest.raises(KeyboardInterrupt):
+        poster.run(
+            backend=poster.BlueskyBackend(), queue_path=q, outreach_path=files[1],
+            kr_get=fake_keyring(FULL_KEYS), transport=httpx.MockTransport(handler),
+            now=lambda: NOW,
+        )
+    assert _status(q, "Q-002").startswith("posting ")
+    rec2 = Recorder()
+    with caplog.at_level(logging.ERROR):
+        assert do_run(files, rec2) == poster.EXIT_CHECK
+    assert rec2.requests == []  # Q-003 is not posted either until a human looks
+    assert "Check the account" in caplog.text
+    # dry-run reports the stuck item too, without touching anything
+    assert do_run(files, Recorder(), dry_run=True) == poster.EXIT_CHECK
+
+
+def test_sec57_revert_failure_stays_posting(files, monkeypatch):
+    real = poster.atomic_write
+
+    def flaky(path, content):
+        if "status: queued\n```text\nFree My ID removes" in content:
+            raise OSError("disk full")
+        real(path, content)
+
+    monkeypatch.setattr(poster, "atomic_write", flaky)
+    rec = Recorder(fail_on="createSession", status=401)
+    assert do_run(files, rec) == poster.EXIT_CHECK
+    assert _status(files[0], "Q-002").startswith("posting ")
+
+
+def test_sec57_claim_failure_sends_nothing(files, monkeypatch):
+    def broken(path, content):
+        raise OSError("read-only")
+
+    monkeypatch.setattr(poster, "atomic_write", broken)
+    rec = Recorder()
+    assert do_run(files, rec) == poster.EXIT_USAGE
+    assert rec.requests == []
+    assert files[0].read_text("utf-8") == QUEUE
+
+
+def test_sec57_lock_held_skips_without_sending(files):
+    q, _ = files
+    fd = poster._try_lock(poster.lock_path(q))
+    assert fd is not None
+    try:
+        rec = Recorder()
+        assert do_run(files, rec) == poster.EXIT_OK
+        assert rec.requests == []
+        assert q.read_text("utf-8") == QUEUE
+    finally:
+        os.close(fd)
+    rec = Recorder()
+    assert do_run(files, rec) == poster.EXIT_OK
+    assert len(rec.requests) == 2
+
+
+def test_sec57_dry_run_creates_no_lock_file(files):
+    q, _ = files
+    assert do_run(files, Recorder(), dry_run=True) == poster.EXIT_OK
+    assert not poster.lock_path(q).exists()
+
+
+@pytest.mark.parametrize(
+    "uri",
+    [
+        URI + "\n",
+        URI + "|x",
+        URI + " ",
+        "at://did:plc:someoneelse/app.bsky.feed.post/3kfakerkey",
+        f"at://{DID}/app.bsky.feed.like/3kfakerkey",
+        f"at://{DID}/app.bsky.feed.post/",
+        f"at://{DID}/app.bsky.feed.post/" + "a" * 513,
+        f"at://{DID}/app.bsky.feed.post/rkаy",
+    ],
+)
+def test_sec57_strict_at_uri(files, uri):
+    rec = Recorder()
+
+    def handler(request):
+        if request.url.path.endswith("createRecord"):
+            return httpx.Response(200, json={"uri": uri})
+        return rec(request)
+
+    rc = poster.run(
+        backend=poster.BlueskyBackend(), queue_path=files[0], outreach_path=files[1],
+        kr_get=fake_keyring(FULL_KEYS), transport=httpx.MockTransport(handler), now=lambda: NOW,
+    )
+    assert rc == poster.EXIT_CHECK
+    assert _status(files[0], "Q-002").startswith("posting ")
+    assert files[1].read_text("utf-8") == LOG
+
+
+def test_sec57_outreach_row_escapes_uri_and_url():
+    item = poster.parse_queue(QUEUE)[1]
+    row = poster.outreach_row(
+        NOW, poster.BlueskyBackend(), item, poster.PostResult(uri="at://a|b", web_url="https://x|y")
+    )
+    assert "a\\|b" in row and "x\\|y" in row
