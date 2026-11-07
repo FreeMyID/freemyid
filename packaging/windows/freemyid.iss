@@ -65,6 +65,14 @@ begin
   Result := (PageID = wpReady);
 end;
 
+// The 90e160a build still showed "Ready to Install" even with the skip above (VM re-check):
+// press Install for the person as soon as that page appears.
+procedure CurPageChanged(CurPageID: Integer);
+begin
+  if CurPageID = wpReady then
+    WizardForm.NextButton.OnClick(WizardForm.NextButton);
+end;
+
 function DataDir: String;
 begin
   // Never read FREEMYID_HOME here: a stray value could point at a personal folder.

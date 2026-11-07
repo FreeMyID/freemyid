@@ -221,8 +221,10 @@ def _screen_body(step: str, d: Draft) -> str:
                 '<p class="hint">Websites often show old addresses too. Add up to three.</p>'
                 + row(1, False) + row(2, False) + row(3, False) + "</details>")
     if step == "about":
-        return ('<div class="note">All of this is only used to tell the right person apart '
-                'from people with the same name. It is never sent to anyone.</div>'
+        return ('<div class="note">These details help Free My ID pick out the right listings. A site '
+                'is only sent what its own listing already shows, plus the removal email address '
+                'if you set one up. A birth year, relatives and personal email addresses are '
+                'never sent.</div>'
                 + _inp("birth_year", "Year of birth", birth_year_of(d), typ="number",
                        hint="Four digits, like 1952.", extra='min="1900" max="2100"')
                 + _inp("phones", "Phone number", ", ".join(d.phones), hint=_AREA_HINT)
