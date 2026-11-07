@@ -1,5 +1,3 @@
-<!-- Status: done all sections (first draft) / next: lead review; resolve TODO verify markers as engine, wizard and scheduler land -->
-
 # Free My ID
 
 **Take your name off the websites that sell it.**
@@ -10,9 +8,17 @@ No account. No cloud. It never asks for your Social Security number, bank or car
 
 It runs on your own computer. There is no AI or cloud service at runtime: every step is deterministic Python driven by a broker registry (YAML) and a per-listing state machine. Your personal data stays in an encrypted database on your machine.
 
-> **Status:** pre-release (0.1.0). The contracts and storage layer are in place. The engine, wizard, scheduler and packaging are still being built, so sections that describe them are planned behavior and are marked `TODO verify`. See [PROGRESS.md](PROGRESS.md).
+It works on people-search and data-broker sites only. It does not change what Facebook or Google does with your account.
 
-Non-technical users should start with the [User Guide](docs/USER_GUIDE.md) or `FAMILY_QUICK_START.md`.
+**[Download for Windows](https://freemyid.github.io/freemyid/download/)** | **[Website and plain-English guide](https://freemyid.github.io/freemyid/)**
+
+> **Status:** pre-release (0.1.0). The first Windows installer is not out yet; the download page will link it when it is.
+
+Not a developer? You can stop reading here and use the [website](https://freemyid.github.io/freemyid/) or the [User Guide](docs/USER_GUIDE.md).
+
+## About the broker list
+
+This public repository includes `brokers/registry.sample.yaml`, a sample list of brokers (CC BY-NC 4.0). The full, maintained list ships with the Windows app. If you run from source, the sample is a starting point, not the same coverage.
 
 ## What it does, and what it doesn't
 
@@ -37,16 +43,16 @@ Non-technical users should start with the [User Guide](docs/USER_GUIDE.md) or `F
 
 ## Install
 
-Requires Python 3.11+ (development uses 3.12). Free My ID drives your installed Chrome or Edge first. It only downloads Playwright's bundled browser if neither is present, and it asks before doing so. <!-- TODO verify: first-run browser prompt is wizard-packager work -->
+Requires Python 3.11+ (development uses 3.12). Free My ID drives your installed Chrome or Edge first. It only downloads Playwright's bundled browser if neither is present, and it asks before doing so.
 
 ### With pipx (users)
 
 ```bash
-pipx install git+https://github.com/<OWNER>/freemyid.git   # <!-- TODO verify: repo URL not set yet -->
+pipx install git+https://github.com/FreeMyID/freemyid.git   #
 freemyid setup
 ```
 
-Prebuilt installers (PyInstaller) for Linux, macOS and Windows are planned. They will ship unsigned for now; see `FAMILY_QUICK_START.md` for how to open an unsigned app. <!-- TODO verify -->
+The Windows installer is offered on the [download page](https://freemyid.github.io/freemyid/download/). It is unsigned for now, so Windows shows a blue SmartScreen box the first time; the download page shows what to click. Linux and macOS builds are not offered yet; run from source instead.
 
 ### Dev environment
 
@@ -159,7 +165,7 @@ For each consenting profile, the runner goes through enabled brokers by `priorit
 5. **Escalate** if the request has been ignored. Each rung becomes due `typical_processing_days + 15` days after the last submission or escalation: resubmit → follow-up email → legal demand (always approved by you) → complaint to-do. A removal resets the ladder.
 6. **Schedule the next check:** every 3–14 days while a request is pending, every `recheck_interval_days` once removed or not found, and at least weekly while something needs attention.
 
-A failure at one broker never stops the run. CAPTCHAs and other challenges go to `HumanHandoff`. An interactive run opens a visible browser window and waits for you. A scheduled run creates a to-do and sends a notification without blocking. <!-- TODO verify: engine not yet implemented -->
+A failure at one broker never stops the run. CAPTCHAs and other challenges go to `HumanHandoff`. An interactive run opens a visible browser window and waits for you. A scheduled run creates a to-do and sends a notification without blocking.
 
 Listing states: `unknown`, `not_found`, `found`, `submitted`, `awaiting_verification`, `confirmed`, `removed`, `reappeared`, `needs_human`, `error`. Allowed transitions are in `state.TRANSITIONS`.
 
@@ -171,12 +177,12 @@ Listing states: `unknown`, `not_found`, `found`, `submitted`, `awaiting_verifica
 |---|---|---|
 | `freemyid.db` | Profiles, statuses, listings, requests, to-dos, append-only event log | SQLite. Only ids, enums and timestamps are in clear text. Every model is an AES-256-GCM blob with AAD bound to (table, id). |
 | `evidence/` | Screenshots, HTML, sent/received emails | Encrypted files. The dashboard decrypts them in memory only. |
-| `artifacts/` | Generated letters, call scripts, reports | <!-- TODO verify: encrypted at rest vs. plain after export --> |
+| `artifacts/` | Generated letters, call scripts, reports | |
 | `logs/` | Rotating logs | PII-redacted: known profile values plus email/phone patterns. Code logs ids and enums only. |
 | `config.yaml` | Non-PII settings | Mode `0600` |
 | `registry.yaml` | Cached registry update | Public data |
 
-**Keys and passwords.** The database key is a random 256-bit key stored in the OS keychain (service `freemyid`) through `keyring`. Mailbox passwords also live only in the keychain (service `freemyid-mailbox`), never in the database or config. If the keychain is locked or unavailable (for example, in a headless session), Free My ID raises `KeyUnavailable` and surfaces it as needing a person; it does not fall back to plaintext. <!-- TODO verify: surfacing behavior in scheduled runs -->
+**Keys and passwords.** The database key is a random 256-bit key stored in the OS keychain (service `freemyid`) through `keyring`. Mailbox passwords also live only in the keychain (service `freemyid-mailbox`), never in the database or config. If the keychain is locked or unavailable (for example, in a headless session), Free My ID raises `KeyUnavailable` and surfaces it as needing a person; it does not fall back to plaintext.
 
 **Family bundles.** `profile export` encrypts a profile with a passphrase (scrypt, then AES-GCM). Share the passphrase by phone, not in the same channel as the file. The family member reviews the imported data and gives their own consent.
 
@@ -192,13 +198,13 @@ Browser requests go through a Playwright route that aborts anything off the list
 
 **No telemetry.** No analytics, crash reporting or update pings. The wizard and dashboard load no external assets (no CDNs or web fonts).
 
-**Local web UI.** The wizard and dashboard bind to `127.0.0.1` only, use a random per-launch session token, and have CSRF protection on every POST. <!-- TODO verify: wizard not yet implemented -->
+**Local web UI.** The wizard and dashboard bind to `127.0.0.1` only, use a random per-launch session token, and have CSRF protection on every POST.
 
 **Data minimization.** A broker receives only the fields its listing already shows (`Listing.shown_fields`) plus the removal mailbox address. DOB, relatives and personal emails are used only for matching and are never sent. Phone numbers, ID documents and account creation each need their own permission flag.
 
 **Registry updates** come only from your configured `registry_url`. They are validated against the Pydantic model and the JSON Schema, can be pinned to a `.sha256` file, and are swapped in atomically. An update that fails validation never replaces the working copy.
 
-Security review findings are in `docs/SECURITY_REVIEW.md` (owned by qa-security). <!-- TODO verify: file not created yet -->
+Security review findings are in `docs/SECURITY_REVIEW.md` (owned by qa-security).
 
 ## Adding a broker
 
@@ -287,7 +293,7 @@ class ExamplePeopleSubmitter(Submitter):
         ...  # optional
 ```
 
-The engine looks a submitter up in this order <!-- TODO verify: interfaces.py says engine/registry_plugins.py, automation-engineer.md says engine/plugins.py -->:
+The engine looks a submitter up in this order:
 
 1. `submitter: "module:Class"` in the registry entry
 2. an entry point in the `freemyid.submitters` group, keyed by broker id (for third-party packages)
@@ -329,4 +335,5 @@ Free My ID is built by an orchestrator session plus four specialist Claude Code 
 
 ## License
 
-MIT (see `pyproject.toml`). <!-- TODO verify: no LICENSE file yet -->
+- **Code:** GNU AGPL v3 or later (see [LICENSE](LICENSE)).
+- **Broker data in `brokers/`** (`registry.sample.yaml`, `state_laws.yaml`): CC BY-NC 4.0, non-commercial use with credit. See [brokers/LICENSE-DATA.md](brokers/LICENSE-DATA.md).
