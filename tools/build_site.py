@@ -32,6 +32,7 @@ from markupsafe import Markup
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "site_src"
 OUT = ROOT / "site"
+PREVIEW_MARKER = ".fmid-site-preview"
 # public sample ONLY. FMID_SAMPLE_REGISTRY lets a builder pin a committed copy (never the full registry).
 SAMPLE_REGISTRY = Path(os.environ.get("FMID_SAMPLE_REGISTRY") or ROOT / "brokers" / "registry.sample.yaml")
 
@@ -447,14 +448,23 @@ def main(argv: list[str] | None = None) -> int:
             errors += site_check.check_site(Path(tmp), s.cfg["base_url"], s.cfg["base_path"])
     else:
         out = args.out.resolve() if args.out else OUT
-        if out != OUT and out.is_relative_to(ROOT):
-            print("ERROR: --out must be outside the repo (use your scratchpad)")
-            return 2
+        marker = out / PREVIEW_MARKER
+        if out != OUT:
+            # SEC-40: --out replaces only an empty dir or an earlier preview (marker file), never
+            # the repo, an ancestor of it, home or a drive root.
+            if out.is_relative_to(ROOT) or ROOT.is_relative_to(out):
+                print("ERROR: --out must be outside the repo (use your scratchpad)")
+                return 2
+            if out.exists() and (not out.is_dir() or (any(out.iterdir()) and not marker.is_file())):
+                print(f"ERROR: --out {out} exists and is not an earlier preview; refusing to delete it")
+                return 2
         with tempfile.TemporaryDirectory() as tmp:
             write_tree(files, Path(tmp))
             if out.exists():
                 shutil.rmtree(out)
             shutil.copytree(tmp, out)
+        if out != OUT:
+            marker.write_text("Free My ID site preview (tools/build_site.py --out); safe to delete.\n")
         errors += site_check.check_site(out, s.cfg["base_url"], s.cfg["base_path"])
 
     for e in errors:

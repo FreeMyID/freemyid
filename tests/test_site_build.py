@@ -41,13 +41,20 @@ def test_out_inside_repo_is_refused(build_site, capsys):
     assert "outside the repo" in capsys.readouterr().out
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-W2-01: --out rmtree's any existing path outside the repo")
 def test_out_never_deletes_a_non_site_directory(build_site, tmp_path):
     victim = tmp_path / "Documents"
     victim.mkdir()
     (victim / "taxes.txt").write_text("not a site build")
-    build_site.main(["--out", str(victim)])
+    assert build_site.main(["--out", str(victim)]) == 2
     assert (victim / "taxes.txt").exists()
+
+
+def test_out_refuses_repo_ancestor_and_reuses_own_preview(build_site, tmp_path):
+    assert build_site.main(["--out", str(build_site.ROOT.parent)]) == 2
+    prev = tmp_path / "prev"
+    assert build_site.main(["--out", str(prev)]) == 0
+    assert (prev / build_site.PREVIEW_MARKER).is_file()
+    assert build_site.main(["--out", str(prev)]) == 0   # an earlier preview may be replaced
 
 
 def test_string_templates_autoescape(build_site):
