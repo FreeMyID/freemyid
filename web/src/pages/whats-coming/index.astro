@@ -49,30 +49,42 @@ const art = (name: string) => ({ light: url(`assets/art/${name}-light.svg`), dar
   <p class="mt-s"><a href={url("developers/")}>Read the plans for Linux, Mac and home servers</a></p>
 </Section>
 
-<Section id="then" tone="alt" narrow title="Then: see where you're listed, and get proof" titleId="then-title">
+<Section id="then" tone="alt" narrow title="Then: find listings, review them and check results" titleId="then-title">
   {/* source: docs/ROADMAP.md 6 (v0.3 "See it, fix it") */}
   <p><Badge variant="brand">Planned for version 0.3</Badge></p>
+  {/* source: docs/ROADMAP.md 6 (v0.3 journey); 3.2 marks basic matching/review as shipped.
+      This section describes the planned joined-up journey, not a new release of every underlying feature. */}
+  <p class="mt-s max-w-measure">We're planning one clear path from finding a listing to checking what happened after a removal request.</p>
   <div class="mt-m grid gap-m">
     <Card as="article">
-      {/* source: ROADMAP 3.1 ("find me first" scan before any removal) and 3.2 (exposure score with what drives it) */}
-      <h3>A "find me first" check</h3>
-      <p>Before anything is sent, see which sites list you, with a simple score that shows what makes you easy to find. Then decide what to remove.</p>
+      {/* source: docs/ROADMAP.md 3.1, 3.2 and 6 (scan, score with coverage). */}
+      <h3>1. Find possible listings</h3>
+      <p>A "find me first" check will look for listings before you request removal. The score will explain what makes your details easy to find on the sites checked. It will also show how many sites were checked, which need checking by hand and which results are uncertain. A low score will not mean your details are gone everywhere.</p>
     </Card>
     <Card as="article">
-      {/* source: ROADMAP 3.3 (state-law request letters per state, statute cited); POSITIONING.md "Legal accuracy" qualifier */}
-      <h3>Letters that name your state's privacy law</h3>
-      <p>If your state has a privacy law that covers these sites, Free My ID will write the request with that law named in it. In other states, it sends a polite request, which many sites still honor.</p>
+      {/* source: docs/ROADMAP.md 3.2 (confirmed/possible/no-match, human review) and 6 ("Is this you?" reviews). */}
+      <h3>2. Review uncertain matches</h3>
+      <p>A possible match may belong to someone else. The planned journey will ask you to review uncertain listings with an "Is this you?" question. It will keep possible matches separate from confirmed matches to your details. A confirmed match means the listing is yours, not that it has been removed.</p>
     </Card>
     <Card as="article">
-      {/* source: ROADMAP 2 (credit-freeze guides and opt-out checklists free for everyone) and 3.3/3.4 (credit freeze, suppression lists) */}
-      <h3>Credit-freeze and opt-out checklists</h3>
-      <p>Step-by-step lists for freezing your credit and for getting off junk-mail and pre-approved credit offer lists, inside the app.</p>
-      {hasProtect && <p><a href={url("protect/")}>Read the free protection guides you can use today</a></p>}
+      {/* source: docs/ROADMAP.md 3.3 and 6 (state-law letters); principle 4 (user approval);
+          docs/POSITIONING.md, Legal accuracy (polite requests where no applicable law). */}
+      <h3>3. Choose what to request</h3>
+      <p>You will decide which listings to ask sites to remove. Where a state privacy law applies, the planned letters will name that law. Otherwise, the app will make a polite request. Sending a request will not mean removal is confirmed.</p>
     </Card>
     <Card as="article">
-      {/* source: ROADMAP 3.5 (proof vault per site; one-page "what we did for you" report, printable); principle 5 (requested/confirmed/relisted) */}
-      <h3>A proof report</h3>
-      <p>One printable page that shows each site that was asked, the date, what it answered, and when it was checked again. Useful if you're helping a parent.</p>
+      {/* source: docs/ROADMAP.md principles 5, 3.5 and 6 (printable summary).
+          SOURCE CONFLICT: 3.5 assigns proof vault + PDF to v0.3; the newer re-scoped release plan
+          in section 6 moves both to v0.4. Follow section 6: only a printable summary here. */}
+      <h3>4. Check the results</h3>
+      <p>A planned printable summary will show requests and confirmed results separately, so you can see what is still waiting. It will help you follow what happened after each request, rather than treating a request as proof of removal.</p>
+    </Card>
+    <Card as="article">
+      {/* source: docs/ROADMAP.md 3.3, 3.4 and 6 (planned app checklists);
+          docs/handoff/web-v3.md, /protect/ guides (available website pages). */}
+      <h3>Protection guides and planned app checklists</h3>
+      <p>Credit-freeze and opt-out checklists are planned inside the app. The website already has step-by-step protection guides you can use without the app.</p>
+      {hasProtect && <p><a href={url("protect/")}>Read the free website protection guides available now</a></p>}
     </Card>
   </div>
   <picture class="mx-auto mt-l block w-full max-w-[20rem]">
