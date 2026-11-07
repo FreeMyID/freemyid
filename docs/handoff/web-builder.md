@@ -15,3 +15,10 @@ Preview: `.venv/bin/python tools/build_site.py --out <scratchpad>/builder/site` 
 - lead: site.yaml redirects `privacy.html: safety` + a `privacy/index.html` stub, then drop the temporary pages.yaml `privacy` entry.
 - designer: header CTA not visible at 360px (no Download/Coming soon in the small-screen header or menu).
 - marketing: source "past addresses" / "email addresses" cards; family-member limit item for the $0 card; helper time + printable sheet claims.
+
+## Round 2 (R9): WR-25..28, 30, 35 + .section -> .band. Status: done, waiting on lead.
+Preview: `--out scratchpad/builder2/site` -> OK. Shots: scratchpad/builder2/shots (home/safety/download/how-it-works, 360+1280).
+- 0cbb72e WR-25, 9ece257 WR-26, 141a488 8f6f4ad 482fe57 4325ffd c785df4 WR-27, a7e9b02 WR-28, c4982ad WR-30, 98da0c4 WR-35,
+  d5583d9 band migration (download, how-it-works; safety already used bands), 5d812cd comparison `data-label` (WR-31 request), 65369d9 board.
+- Dropped as unsourced: install time (download), "A few minutes" (guide email item), "A step-by-step guide is planned" (faq facebook).
+- Open: WR-29 (lead), full-size report link text differs from the orchestrator's "Tap to see it full size" (a11y).
