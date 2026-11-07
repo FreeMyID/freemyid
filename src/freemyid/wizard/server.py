@@ -706,6 +706,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
             found = find_family_bundle()
             data = found.read_bytes() if found and not hasattr(up, "read") else await up.read()  # type: ignore[union-attr]
             app.state.draft = load_bundle(data, str(form.get("passphrase", "")))
+            app.state.pending_pin = None  # SEC-56: no stale trust prompt for the new draft
         except Exception:  # noqa: BLE001
             return html(ui.layout("Import", ui.errors_html(
                 ["That file or passphrase did not work."]) + '<a href="/wizard/import">Back</a>'),

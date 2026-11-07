@@ -265,3 +265,24 @@ def test_edit_without_new_approval_keeps_saved_pin(web, bridge):
     c.get(f"/settings/{a}/mailbox")
     assert _post_mailbox(c, f, a, imap, smtp).status_code == 303
     assert store.get_profile(a).mailbox.tls_cert_sha256 == PIN_A
+
+
+def test_import_drops_pending_pin_and_old_prompt_cannot_pin_imported_draft(web):
+    """SEC-56: importing a bundle replaces the draft, so a stale pending pin must go too."""
+    import json
+
+    from freemyid.crypto import export_with_passphrase
+    from freemyid.wizard.flows import BUNDLE_VERSION
+    c, f = web
+    c.get("/wizard/consent?new=1")
+    c.app.state.pending_pin = PIN_A
+    blob = export_with_passphrase(json.dumps({
+        "freemyid_bundle": BUNDLE_VERSION,
+        "profile": {"label": "Test", "name": {"first": "Test", "last": "Person"},
+                    "addresses": [{"city": "Testville", "state": "NC", "current": True}]}}).encode(), "pw-test-1234")
+    r = c.post("/wizard/import", data={"passphrase": "pw-test-1234", **f},
+               files={"bundle": ("a.freemyid-profile", blob)})
+    assert r.status_code == 303, r.text
+    assert c.app.state.pending_pin is None
+    r = c.post("/wizard/trust-certificate", data={"answer": "yes", **f}).json()
+    assert not r["ok"] and not c.app.state.draft.tls_pin

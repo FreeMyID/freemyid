@@ -71,3 +71,7 @@
 - Removed global `app.state.approved_pin`. The approved fingerprint lives only on the draft (`Draft.tls_pin`, set by `/wizard/trust-certificate` from the server-side `pending_pin`; the browser never supplies it).
 - Settings mailbox GET makes `draft_from_profile(p)` the app draft (replacing any other) and clears `pending_pin`. POST applies a draft pin only if the app draft's id equals that profile id; otherwise the profile's saved pin is kept. After a successful save, wizard finish, new draft or edit start, `pending_pin` is cleared and the draft dropped.
 - Tests added to `tests/test_wizard_bridge_trust.py` (A vs B, direct POST to B, cleared after save, new draft drops pending, edit keeps saved pin). Existing trust test now reads `app.state.draft.tls_pin`.
+
+## SEC-56 import clears pending_pin (done)
+- `POST /wizard/import` now sets `app.state.pending_pin = None` right after `load_bundle` replaces the draft. All other `app.state.draft` assignments (init, get_draft new, edit start, settings GET, finish, cancel) already cleared it.
+- Test: `tests/test_wizard_bridge_trust.py::test_import_drops_pending_pin_and_old_prompt_cannot_pin_imported_draft`.
