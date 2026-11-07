@@ -35,6 +35,9 @@
   :where(p, ul, ol, dl, details, figure, table, blockquote) + :where(p, ul, ol, dl, details, figure, table, blockquote) {
     margin-block-start: var(--space-s);
   }
+  :where(h2, h3, h4) + :where(p, ul, ol, dl) { margin-block-start: var(--space-2xs); }
+  :where(p, ul, ol, dl, figure, table) + :where(h2, h3, h4) { margin-block-start: var(--space-l); }
+  :where(p, ul, ol, dl) + :where(.btn-row) { margin-block-start: var(--space-s); }
   :where(ul, ol):not([role="list"]) { padding-inline-start: 1.4em; }
   li + li { margin-block-start: var(--space-2xs); }
   a {

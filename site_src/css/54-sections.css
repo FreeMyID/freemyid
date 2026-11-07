@@ -1,5 +1,10 @@
 /* Contract components (docs/WEBSITE_REDESIGN.md). Class names are the contract: restyle, never rename. */
 @layer components {
+  /* Breathing room between block components and whatever follows them inside a section. */
+  :where(.dodont, .cards, .steps, .table-scroll, .trustbar, .faq, .price-card, .proof, .checklist) + :where(*),
+  :where(*) + :where(.dodont, .cards, .steps, .table-scroll, .trustbar, .faq, .price-card, .proof) {
+    margin-block-start: var(--space-m);
+  }
   /* ---------- Deep navy surfaces: brand band and final CTA flip the color roles ---------- */
   .band--brand, .cta-final {
     background: var(--color-band-brand); color: var(--color-band-brand-ink);
@@ -52,6 +57,10 @@
     display: flex; align-items: center; gap: var(--space-xs); margin: 0;
     min-block-size: var(--tap); padding: var(--space-2xs) var(--space-xs);
     font-size: 0.9rem; font-weight: 600; line-height: 1.35; color: var(--color-text);
+  }
+  .trustbar__item > a {   /* the whole item may be the link */
+    display: flex; align-items: center; gap: var(--space-xs); min-block-size: var(--tap); inline-size: 100%;
+    border-radius: var(--radius-md);
   }
   .trustbar__item svg {
     inline-size: 2.4rem; block-size: 2.4rem; padding: 0.5rem; flex: none;
@@ -148,7 +157,8 @@
   }
   .dodont__col--dont { border-block-start-color: var(--color-line-strong); }
   .dodont__col > h3 { font-size: var(--step-1); margin-block-end: var(--space-xs); }
-  .dodont__col > ul:not(.checklist) { padding-inline-start: 1.2em; }
+  .dodont__col > ul:not(.checklist) { list-style: disc; padding-inline-start: 1.2em; }
+  .dodont__col > ul:not(.checklist) > li::marker { font-size: 1.2em; }
   .dodont__col--do > ul:not(.checklist) > li::marker { color: var(--color-ok); }
   .dodont__col--dont > ul:not(.checklist) > li::marker { color: var(--color-muted); }
 

@@ -56,6 +56,7 @@
   }
   .btn--ghost:hover { box-shadow: none; text-decoration-thickness: 0.14em; }
   .btn--large, .btn--lg { font-size: var(--step-1); padding: 0.7em 1.5em; min-block-size: 3.5rem; }
+  .btn--ghost.btn--large { padding-inline: 0.6em; }
   .btn--small { font-size: 0.9rem; padding: 0.4em 1em; min-block-size: 2.5rem; }
   .btn-row { display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-s); align-items: center; }
   .btn-row--center { justify-content: center; }
