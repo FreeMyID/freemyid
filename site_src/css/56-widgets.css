@@ -1,0 +1,84 @@
+/* Widgets: drawn product mockup, Windows SmartScreen drawing, download card, guide list, styleguide swatches. */
+@layer components {
+  /* ---------- Product mockup (drawn in HTML, fake data) ---------- */
+  .mock { margin: 0; }
+  .mock__window {
+    background: var(--color-card); border: 1px solid var(--color-line-strong); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-2); overflow: hidden; font-size: 0.85rem; line-height: 1.45;
+  }
+  .mock__bar {
+    display: flex; align-items: center; gap: 0.6em; padding: 0.5em 0.9em;
+    background: var(--color-surface-strong); border-block-end: 1px solid var(--color-line);
+    font-weight: 700; color: var(--color-heading);
+  }
+  .mock__bar svg { inline-size: 1.2em; block-size: 1.2em; }
+  .mock__bar .mock__ctl { margin-inline-start: auto; letter-spacing: 0.6em; color: var(--color-muted); font-weight: 400; }
+  .mock__body { padding: 1em; display: grid; gap: 0.8em; }
+  .mock__who { font-weight: 700; color: var(--color-heading); font-size: 1rem; }
+  .mock__status {
+    display: flex; gap: 0.6em; align-items: flex-start; padding: 0.7em 0.8em;
+    background: var(--color-surface); border-radius: var(--radius-md); border: 1px solid var(--color-line);
+  }
+  .mock__status svg { inline-size: 1.3em; block-size: 1.3em; flex: none; color: var(--color-ok); }
+  .mock__todo {
+    border: 2px solid var(--color-brand); border-radius: var(--radius-md); padding: 0.8em;
+    display: grid; gap: 0.6em;
+  }
+  .mock__btn {
+    justify-self: start; background: var(--color-brand); color: var(--color-brand-ink);
+    border-radius: var(--radius-sm); padding: 0.4em 1em; font-weight: 700;
+  }
+  .mock__list { list-style: none; padding: 0; display: grid; gap: 0.4em; }
+  .mock__list li { display: flex; justify-content: space-between; gap: 0.6em; flex-wrap: wrap; margin: 0;
+    padding-block-end: 0.4em; border-block-end: 1px solid var(--color-line); }
+  .mock figcaption, figure.mock > figcaption { margin-block-start: var(--space-2xs); font-size: var(--step--1); color: var(--color-muted); }
+
+  /* ---------- Windows SmartScreen drawing ---------- */
+  .ss { margin: 0; }
+  .ss__box {
+    background: #0b5cad; color: #ffffff; padding: 1.1em 1.2em; border-radius: 4px;
+    font-family: "Segoe UI", system-ui, sans-serif; font-size: 0.85rem; line-height: 1.45;
+    display: grid; gap: 0.7em; max-inline-size: 30rem; box-shadow: var(--shadow-2);
+  }
+  .ss__title { font-size: 1.35rem; font-weight: 300; line-height: 1.2; }
+  .ss__link { text-decoration: underline; font-weight: 600; }
+  .ss__btns { display: flex; justify-content: flex-end; gap: 0.6em; flex-wrap: wrap; }
+  .ss__btn { border: 2px solid #ffffff; padding: 0.3em 1em; }
+  .ss__btn--hi { background: #ffffff; color: #0b3f78; font-weight: 700; }
+  .ss__hint { outline: 3px dashed #f2b705; outline-offset: 3px; }
+  .ss figcaption { margin-block-start: var(--space-2xs); font-size: var(--step--1); color: var(--color-muted); }
+
+  /* ---------- Download card ---------- */
+  .download-card {
+    background: var(--color-card); border: 1px solid var(--color-line); border-radius: var(--radius-lg);
+    padding: var(--space-m); box-shadow: var(--shadow-2); display: grid; gap: var(--space-s);
+  }
+  .facts { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-3xs) var(--space-s); font-size: var(--step--1); }
+  .facts dt { font-weight: 700; color: var(--color-muted); }
+  .facts dd { margin: 0; overflow-wrap: anywhere; }
+  .hash { font-family: var(--font-mono); font-size: 0.85rem; overflow-wrap: anywhere; }
+
+  /* ---------- Guide list ---------- */
+  .guide-list { display: grid; gap: var(--space-xs); list-style: none; padding: 0;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr)); }
+  .guide-list li { margin: 0; }
+  .guide-list a {
+    display: flex; flex-direction: column; justify-content: center; min-block-size: var(--tap); block-size: 100%;
+    padding: var(--space-xs) var(--space-s); border: 1px solid var(--color-line); border-radius: var(--radius-md);
+    background: var(--color-card); font-weight: 700; text-decoration: none;
+  }
+  .guide-list a:hover { border-color: var(--color-line-strong); text-decoration: underline; }
+  .guide-list small { display: block; font-weight: 400; color: var(--color-muted); font-size: 0.8rem; }
+
+  /* ---------- Swatches (styleguide only) ---------- */
+  .swatches { display: grid; gap: var(--space-xs); grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr)); list-style: none; padding: 0; }
+  .swatches li { margin: 0; border: 1px solid var(--color-line); border-radius: var(--radius-md); overflow: hidden; font-size: 0.8rem; }
+  .swatches .chipbar { display: grid; grid-template-columns: 1fr 1fr; block-size: 3rem; }
+  .swatches p { padding: 0.4em 0.6em; margin: 0; }
+
+}
+@layer components {
+  /* 320px / 400% zoom: let long words (file names, email addresses) break. */
+  .btn, .steps > li, .download-card, .callout > div, .card, .trustbar__item { min-inline-size: 0; overflow-wrap: anywhere; }
+  .two-col > *, .grid-auto > *, .hero > * { min-inline-size: 0; }
+}
