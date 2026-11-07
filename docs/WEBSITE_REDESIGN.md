@@ -68,7 +68,7 @@ Need a new component? Add it here in the same commit as its first use and tell t
 | Checklist | `ul.checklist` > `li` | check icon via CSS mask-free SVG background is not allowed (no data: URIs): use `{{ icon('check') }}` |
 | FAQ | `.faq` > `details.faq__item` > `summary` + `.faq__body` | first two `open` on home |
 | Final CTA | `section.cta-final` > h2, p, D5 CTA, `p.cta-final__note` | |
-| Header | `header.site-header` > `.brand`, `nav.site-nav` (no-JS menu via `details.menu`), `.site-header__cta` | sticky, D1 |
+| Header | `header.site-header` > `.wrap.site-header__inner` > `.brand`, `nav.site-nav` (> `ul.site-nav__list` for wide screens + no-JS `details.menu` > `summary` + `ul.menu__list` for small), `.site-header__cta` (D5 CTA, `.btn--small`) | sticky, D1. CSS shows one of the two lists per width; `aria-current="page"` on the active link |
 | Footer | `footer.site-footer` > `.footer-cols` (Product, Learn, Trust, Project) + `.footer-legal` | "No account. No login. No tracking, no cookies." line |
 
 ## Crew (agents in `.claude/agents/`; the orchestrator dispatches, the web lead integrates)
