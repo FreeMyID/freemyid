@@ -217,7 +217,7 @@ def test_facets_ascii():
 
 
 def test_facets_byte_offsets_with_emoji_and_non_ascii():
-    text = "Café 🇺🇸 👨‍👩‍👧 privacy — https://freemyid.org/über?a=1 and (https://example.org/x)!"
+    text = "Café 🇺🇸 👨\u200d👩\u200d👧 privacy — https://freemyid.org/über?a=1 and (https://example.org/x)!"
     facets = poster.link_facets(text)
     raw = text.encode("utf-8")
     got = [raw[f["index"]["byteStart"] : f["index"]["byteEnd"]].decode() for f in facets]
@@ -234,7 +234,7 @@ def test_facets_ignore_http_and_bare_scheme():
 def test_grapheme_count():
     assert poster.grapheme_count("abc") == 3
     assert poster.grapheme_count("🇺🇸") == 1
-    assert poster.grapheme_count("👨‍👩‍👧") == 1
+    assert poster.grapheme_count("👨\u200d👩\u200d👧") == 1
     assert poster.grapheme_count("👍🏽") == 1
     assert poster.grapheme_count("é") == 1
     assert poster.grapheme_count("❤️") == 1
@@ -659,7 +659,6 @@ def test_qa_sec57_no_repost_after_ambiguous_failure(files, kind, monkeypatch):
     assert _create_record_count(rec1) == 1 and reposted == []
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-58: invisible/bidi characters are accepted in links")
 @pytest.mark.parametrize("ch", ["\u200b", "\u202e", "\u2060", "\ufeff"])
 def test_qa_sec58_invisible_chars_never_reach_a_facet(ch):
     text = f"Visit https://freemyid.org{ch}.evil.example/ today"
@@ -825,3 +824,49 @@ def test_sec57_outreach_row_escapes_uri_and_url():
         NOW, poster.BlueskyBackend(), item, poster.PostResult(uri="at://a|b", web_url="https://x|y")
     )
     assert "a\\|b" in row and "x\\|y" in row
+
+
+# ----------------------------------------------------------------------------- SEC-58
+
+
+@pytest.mark.parametrize(
+    "ch", ["\u200b", "\u200c", "\u200e", "\u202a", "\u202e", "\u2060", "\u2066", "\u2069",
+           "\ufeff", "\u00ad"],
+)
+def test_sec58_item_with_hidden_char_is_skipped_and_next_posted(files, ch, caplog):
+    q, _ = files
+    q.write_text(QUEUE.replace("https://freemyid.org", f"https://freemyid.org{ch}.evil.example/"),
+                 "utf-8")
+    rec = Recorder()
+    with caplog.at_level(logging.WARNING):
+        assert do_run(files, rec) == poster.EXIT_OK
+    assert "Q-002 has an invisible/bidi character" in caplog.text
+    assert json.loads(rec.requests[-1].content)["record"]["text"] == "Second queued post."
+    assert _status(q, "Q-002") == "queued"
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Family \U0001f468\u200d\U0001f469\u200d\U0001f467 https://freemyid.org/über",
+        "Pride \U0001f3f3️\u200d\U0001f308 flag",
+        "Wales \U0001f3f4\U000e0067\U000e0062\U000e0077\U000e006c\U000e0073\U000e007f",
+        "Skin \U0001f44d\U0001f3fd\u200d♂️ ok",
+        "Plain text https://github.com/FreeMyID/freemyid (über)",
+    ],
+)
+def test_sec58_emoji_sequences_and_idn_paths_still_allowed(text):
+    assert poster.hidden_char_error(text) is None
+
+
+@pytest.mark.parametrize(
+    "text",
+    ["a\u200db", "\u200d\U0001f468", "x\U000e0067\U000e007f", "\U0001f468\u200d", "\u2067rtl"],
+)
+def test_sec58_stray_joiners_and_tags_refused(text):
+    assert poster.hidden_char_error(text) is not None
+
+
+def test_sec58_url_followed_by_hidden_char_gets_no_facet():
+    assert poster.link_facets("see https://freemyid.org\u200b now") == []
+    assert len(poster.link_facets("see https://freemyid.org/über now")) == 1

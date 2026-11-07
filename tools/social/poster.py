@@ -248,6 +248,10 @@ def find_urls(text: str) -> list[tuple[int, int, str]]:
     out = []
     for m in URL_RE.finditer(text):
         url = m.group(0)
+        if any(unicodedata.category(c) == "Cf" for c in url):
+            # invisible/bidi char inside or right after the link: never make a facet (SEC-58)
+            log.warning("link with an invisible/bidi character ignored")
+            continue
         while url:
             last = url[-1]
             unbalanced = last in ")]}" and url.count(last) > url.count(OPENER[last])
@@ -260,8 +264,39 @@ def find_urls(text: str) -> list[tuple[int, int, str]]:
     return out
 
 
+TAG_CHARS = range(0xE0020, 0xE0080)
+BLACK_FLAG = "\U0001f3f4"
+
+
+def _is_emoji_side(ch: str) -> bool:
+    return unicodedata.category(ch) in ("So", "Sk") or 0xFE00 <= ord(ch) <= 0xFE0F
+
+
+def _allowed_format_char(text: str, i: int) -> bool:
+    """Cf characters that are part of an emoji: ZWJ between emoji, flag tag sequences."""
+    ch = text[i]
+    if ch == ZWJ:
+        return 0 < i < len(text) - 1 and _is_emoji_side(text[i - 1]) and (
+            unicodedata.category(text[i + 1]) == "So"
+        )
+    if ord(ch) in TAG_CHARS:
+        j = i
+        while j > 0 and ord(text[j - 1]) in TAG_CHARS:
+            j -= 1
+        return j > 0 and text[j - 1] == BLACK_FLAG
+    return False
+
+
 def hidden_char_error(text: str) -> str | None:
-    """Reason to refuse a post with invisible or bidi characters, else None (SEC-58)."""
+    """Reason to refuse a post with invisible or bidi characters, else None (SEC-58).
+
+    Any Unicode format character (category Cf: zero-width spaces, word joiner, BOM,
+    soft hyphen, bidi embeddings/overrides/isolates) can make what a reader sees
+    differ from what a link points to, so the whole item is refused.
+    """
+    for i, ch in enumerate(text):
+        if unicodedata.category(ch) == "Cf" and not _allowed_format_char(text, i):
+            return f"an invisible/bidi character U+{ord(ch):04X} at position {i}"
     return None
 
 
