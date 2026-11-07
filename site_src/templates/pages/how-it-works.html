@@ -59,7 +59,7 @@
   </ul>
   <p class="mt-m">Want to do it by hand? Our <a href="{{ url('guides/') }}">free opt-out guides</a> show the steps for some of the best-known sites.</p>
   <div class="btn-row mt-m">
-    <a class="btn btn--lg" href="{{ url('download/') }}">{{ icon('download') }}Download, free</a>
+    {% include "partials/cta-download.html" %}
   </div>
 </div>
 {% endblock %}
