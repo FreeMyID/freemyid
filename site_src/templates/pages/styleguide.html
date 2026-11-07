@@ -1,70 +1,243 @@
 {% extends "base.html" %}
 {% block main %}
-{# Living style guide (noindex). Swatches and ratios come from site_src/tokens.yaml at build time. #}
+{# Living style guide v2 (noindex). Every component in the contract table of docs/WEBSITE_REDESIGN.md, by its
+   exact class names, with made-up content (Jane Q Testperson, Springfield IL). Swatches and contrast ratios
+   come from site_src/tokens.yaml at build time. Copy here is sample text, not approved site copy. #}
 <div class="wrap main-pad">
   {% include "partials/crumbs.html" %}
   <h1>Website style guide</h1>
-  <p class="lead mt-s">Tokens and components for the Free My ID website. Calm, plain, high contrast: more "trusted local bank" than "startup". Full notes in docs/WEBSITE.md.</p>
-
-  <h2 class="mt-l" id="color">Color</h2>
-  <p class="mt-s">Each swatch shows light | dark, with its contrast ratio against the page background in each theme.</p>
-  <ul class="swatches mt-s" role="list">
-  {% for c in swatches %}
-    <li><div class="chipbar"><span class="sw sw--{{ c.name }}-l"></span><span class="sw sw--{{ c.name }}-d"></span></div>
-      <p><strong>--color-{{ c.name }}</strong><br>{{ c.light }} | {{ c.dark }}<br>on bg: {{ c.on_bg[0] }} | {{ c.on_bg[1] }}</p></li>
-  {% endfor %}
-  </ul>
-
-  <h2 class="mt-l" id="type">Type scale</h2>
-  <div class="stack mt-s">
-    <p class="sg-h1">Step 4 / h1: Take your name off the websites that sell it.</p>
-    <p class="sg-h2">Step 3 / h2: That post went to the wrong place</p>
-    <p class="sg-h3">Step 2 / h3: Tell it who to protect</p>
-    <p class="lead">Step 1 / lead: Free My ID asks each one to remove you.</p>
-    <p>Step 0 / body (20px): No account. No cloud. Uninstall anytime.</p>
-    <p class="note">Step -1 / note (17px): Example screen. The person and the numbers are made up.</p>
-  </div>
-
-  <h2 class="mt-l" id="buttons">Buttons</h2>
-  <div class="btn-row mt-s">
-    <a class="btn btn--lg" href="#buttons">{{ icon('download') }}Large primary</a>
-    <a class="btn" href="#buttons">Primary</a>
-    <a class="btn btn--secondary" href="#buttons">Secondary</a>
-    <a class="btn btn--small" href="#buttons">Small</a>
-  </div>
-
-  <h2 class="mt-l" id="callouts">Callouts</h2>
-  <div class="callout">{{ icon('info') }}<div><p>Default (navy): information.</p></div></div>
-  <div class="callout callout--gold">{{ icon('shield') }}<div><p>Gold: safety tips and honest caveats.</p></div></div>
-  <div class="callout callout--myth">{{ icon('x') }}<div><p><span class="label">Myth:</span> red is for myths only, never for alarms.</p></div></div>
-  <div class="callout callout--fact">{{ icon('check') }}<div><p><span class="label">Fact:</span> green for facts and good news.</p></div></div>
-
-  <h2 class="mt-l" id="steps">Steps</h2>
-  <ol class="steps mt-s prose" role="list"><li><h3>First step</h3><p>One idea per step.</p></li><li><h3>Second step</h3><p>Numbers come from CSS counters.</p></li></ol>
-
-  <h2 class="mt-l" id="trust">Trust panel</h2>
-  <div class="mt-s">{% include "partials/trust.html" %}</div>
-
-  <h2 class="mt-l" id="cards">Cards</h2>
-  <div class="card-grid card-grid--3 mt-s"><ul role="list">
-    <li class="card">{{ icon('mail', 'icon card__icon') }}<h3>Card</h3><p>Icon, heading, text.</p></li>
-    <li class="card card--link">{{ icon('search', 'icon card__icon') }}<h3><a href="#cards">Linked card</a></h3><p>The whole card is clickable.</p></li>
-    <li class="card"><span class="chip chip--ok">Site confirmed</span> <span class="chip chip--warn">Waiting</span> <span class="chip">Asked</span></li>
-  </ul></div>
-
-  <h2 class="mt-l" id="faq">FAQ item</h2>
-  <div class="faq mt-s prose"><details><summary>A question?</summary><p>The answer, in plain words.</p></details></div>
-
-  <h2 class="mt-l" id="mockup">Product mockup</h2>
-  <div class="mt-s prose">{% include "partials/mockup.html" %}</div>
-
-  <h2 class="mt-l" id="smartscreen">SmartScreen drawing</h2>
-  {% set ss_step = 2 %}{% include "partials/smartscreen.html" %}
-
-  <h2 class="mt-l" id="icons">Icons</h2>
-  <ul class="guide-list mt-s" role="list">
-  {% for n in icon_names %}<li><span class="card sg-icon">{{ icon(n) }}<code>{{ n }}</code></span></li>{% endfor %}
-  </ul>
-  {% include "partials/star-rule.html" %}
+  <p class="lead mt-s">Design system v2: a calm, plain product look. One sans-serif system font, 20px body text, soft cards, red only as a small accent. Every block below uses the class names from the component contract.</p>
+  <nav aria-label="Style guide sections" class="mt-m">
+    <ul class="cluster" role="list">
+      <li><a href="#color">Color</a></li><li><a href="#type">Type</a></li><li><a href="#buttons">Buttons</a></li>
+      <li><a href="#hero">Hero</a></li><li><a href="#trustbar">Trust bar</a></li><li><a href="#steps">Steps</a></li>
+      <li><a href="#cards">Cards</a></li><li><a href="#proof">Proof</a></li><li><a href="#compare">Compare</a></li>
+      <li><a href="#callouts">Callouts</a></li><li><a href="#dodont">Does / doesn't</a></li><li><a href="#price">Price card</a></li>
+      <li><a href="#faq">FAQ</a></li><li><a href="#cta">Final CTA</a></li><li><a href="#chrome">Header and footer</a></li>
+      <li><a href="#widgets">Widgets</a></li><li><a href="#icons">Icons</a></li>
+    </ul>
+  </nav>
 </div>
+
+<section class="band band--alt" id="color" aria-labelledby="sg-color">
+  <div class="wrap">
+    <div class="section-head"><p class="kicker">Tokens</p><h2 id="sg-color">Color</h2>
+      <p class="lead">Each swatch shows light | dark and its contrast against the page background. The build fails if a checked pair drops under 7:1 (body) or 4.5:1 (other).</p></div>
+    <ul class="swatches" role="list">
+    {% for c in swatches %}
+      <li><div class="chipbar"><span class="sw sw--{{ c.name }}-l"></span><span class="sw sw--{{ c.name }}-d"></span></div>
+        <p><strong>--color-{{ c.name }}</strong><br>{{ c.light }} | {{ c.dark }}<br>on bg: {{ c.on_bg[0] }} | {{ c.on_bg[1] }}</p></li>
+    {% endfor %}
+    </ul>
+  </div>
+</section>
+
+<section class="band" id="type" aria-labelledby="sg-type">
+  <div class="wrap wrap--narrow">
+    <div class="section-head"><h2 id="sg-type">Type scale</h2><p class="lead">Fluid steps with clamp(), 1rem = 20px. Headings and body share the system sans-serif stack.</p></div>
+    <div class="stack">
+      <p class="sg-h1">Step 4 / h1: Take your name off the websites that sell it.</p>
+      <p class="sg-h2">Step 3 / h2: How it works, in three steps</p>
+      <p class="sg-h3">Step 2 / h3: Tell it who to protect</p>
+      <p class="lead">Step 1 / lead: Free My ID asks each site to remove you, then keeps checking.</p>
+      <p>Step 0 / body (20px): No account. No cloud. Uninstall anytime. <a href="#type">A link looks like this.</a></p>
+      <p class="note">Step -1 / note (17px): Example screen. The person and the numbers are made up.</p>
+      <p class="kicker">{{ icon('shield') }}Kicker: small, brand blue</p>
+    </div>
+  </div>
+</section>
+
+<section class="band band--alt" id="buttons" aria-labelledby="sg-buttons">
+  <div class="wrap">
+    <div class="section-head"><h2 id="sg-buttons">Buttons</h2><p class="lead">One primary button per screen. Every button is at least 48px tall.</p></div>
+    <div class="btn-row btn-row--center">
+      <a class="btn btn--primary btn--large" href="#buttons">{{ icon('download') }}Primary large</a>
+      <a class="btn btn--primary" href="#buttons">Primary</a>
+      <a class="btn btn--secondary" href="#buttons">Secondary</a>
+      <a class="btn btn--ghost" href="#buttons">Ghost</a>
+      <a class="btn btn--primary btn--small" href="#buttons">Small</a>
+    </div>
+  </div>
+</section>
+
+<section class="hero" id="hero" aria-labelledby="sg-hero">
+  <div class="hero__text">
+    <p class="kicker">Free. Open source. For Windows.</p>
+    <h2 id="sg-hero" class="sg-h1">Take your name off the websites that sell it.</h2>
+    <p class="hero__lead">Sample hero text. On a real page this is the h1 and the lead. It sits next to a product picture from 900px wide and stacks on phones.</p>
+    <div class="hero__actions">
+      <a class="btn btn--primary btn--large" href="#hero">{{ icon('download') }}Download Free My ID</a>
+      <a class="btn btn--secondary btn--large" href="#steps">See how it works</a>
+    </div>
+    <p class="hero__note">Free for Windows 10 and 11. Sample note line.</p>
+  </div>
+  <figure class="hero__media">
+    {% include "partials/mockup.html" %}
+  </figure>
+</section>
+
+<section class="band" id="trustbar" aria-labelledby="sg-trustbar">
+  <div class="wrap">
+    <div class="section-head"><h2 id="sg-trustbar">Trust bar</h2><p class="lead">Four items, each linking to a /safety/ anchor.</p></div>
+    <ul class="trustbar" role="list">
+      <li class="trustbar__item">{{ icon('no-account') }}<span><a href="#trustbar">No account, no sign-up</a></span></li>
+      <li class="trustbar__item">{{ icon('computer') }}<span><a href="#trustbar">Runs on your PC. Nothing sent to us</a></span></li>
+      <li class="trustbar__item">{{ icon('lock') }}<span><a href="#trustbar">Never asks for your Social Security number</a></span></li>
+      <li class="trustbar__item">{{ icon('code') }}<span><a href="#trustbar">Free and open source</a></span></li>
+    </ul>
+  </div>
+</section>
+
+<section class="band band--alt" id="steps" aria-labelledby="sg-steps">
+  <div class="wrap">
+    <div class="section-head"><p class="kicker">How it works</p><h2 id="sg-steps">Steps</h2><p class="lead">Three steps side by side when there is room.</p></div>
+    <ol class="steps" role="list">
+      <li class="step"><span class="step__num" aria-hidden="true">1</span><h3>Tell it who to protect</h3><p>Sample: a name and the towns lived in, like Jane Q Testperson in Springfield IL.</p></li>
+      <li class="step"><span class="step__num" aria-hidden="true">2</span><h3>It sends the requests</h3><p>Sample: by email, with you, or by filling the form while you watch.</p></li>
+      <li class="step"><span class="step__num" aria-hidden="true">3</span><h3>It keeps checking</h3><p>Sample: quietly in the background, and shows you who replied.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section class="band" id="cards" aria-labelledby="sg-cards">
+  <div class="wrap">
+    <div class="section-head"><h2 id="sg-cards">Card grid</h2><p class="lead"><code>ul.cards.cards--3</code> and <code>.cards--4</code>: auto-fit, never more columns than the modifier.</p></div>
+    <ul class="cards cards--4" role="list">
+      <li class="card"><span class="card__icon">{{ icon('home') }}</span><h3>Home address</h3><p>Sample card text, one or two short lines.</p></li>
+      <li class="card"><span class="card__icon">{{ icon('phone') }}</span><h3>Phone numbers</h3><p>Sample card text, one or two short lines.</p></li>
+      <li class="card"><span class="card__icon">{{ icon('family') }}</span><h3>Relatives</h3><p>Sample card text, one or two short lines.</p></li>
+      <li class="card"><span class="card__icon">{{ icon('calendar') }}</span><h3>Age</h3><p>Sample card text, one or two short lines.</p></li>
+    </ul>
+    <ul class="cards cards--3 mt-l" role="list">
+      <li class="card">{{ icon('computer', 'icon card__icon') }}<h3>Icon as the svg itself</h3><p><code>icon('computer', 'icon card__icon')</code> works too.</p></li>
+      <li class="card"><span class="card__icon">{{ icon('lock') }}</span><h3>Stored encrypted</h3><p>Sample text.</p></li>
+      <li class="card"><span class="card__icon">{{ icon('report') }}</span><h3>Printable report</h3><p>Sample text.</p></li>
+    </ul>
+  </div>
+</section>
+
+<section class="band band--alt" id="proof" aria-labelledby="sg-proof">
+  <div class="wrap">
+    <div class="section-head"><h2 id="sg-proof">Proof figure</h2><p class="lead">A real product picture with the mandatory made-up-data caption.</p></div>
+    <figure class="proof">
+      {% include "partials/mockup.html" %}
+      <figcaption class="caption">Sample report with made-up data.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="band" id="compare" aria-labelledby="sg-compare">
+  <div class="wrap">
+    <div class="section-head"><h2 id="sg-compare">Comparison table</h2><p class="lead">Scrolls inside its own box on small screens; the row headers stay put.</p></div>
+    <div class="table-scroll" role="region" aria-labelledby="sg-compare" tabindex="0">
+      <table class="compare">
+        <thead><tr><th scope="col"><span class="visually-hidden">Feature</span></th><th scope="col">Free My ID</th><th scope="col">By hand</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Price</th><td class="yes">{{ icon('check') }}Free</td><td class="yes">{{ icon('check') }}Free, your time</td></tr>
+          <tr><th scope="row">Account</th><td class="yes">{{ icon('check') }}None</td><td class="yes">{{ icon('check') }}None</td></tr>
+          <tr><th scope="row">Keeps checking</th><td class="partial">Daily, when the PC is on (sample)</td><td class="no">{{ icon('dash') }}Only if you remember</td></tr>
+          <tr><th scope="row">Phone or Mac</th><td class="no">{{ icon('x') }}Not yet</td><td class="yes">{{ icon('check') }}Yes</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="band band--alt" id="callouts" aria-labelledby="sg-callouts">
+  <div class="wrap wrap--narrow">
+    <div class="section-head"><h2 id="sg-callouts">Callouts</h2><p class="lead">Calm, never a red alarm. The icon is optional.</p></div>
+    <aside class="callout callout--info">{{ icon('info') }}<p><strong>Info:</strong> sample helpful fact in brand blue.</p></aside>
+    <aside class="callout callout--note">{{ icon('shield') }}<h3>Note</h3><p>Sample caveat with a gold edge, for "Windows may warn you" style messages.</p></aside>
+    <aside class="callout"><p>Plain callout without an icon or modifier.</p></aside>
+  </div>
+</section>
+
+<section class="band" id="dodont" aria-labelledby="sg-dodont">
+  <div class="wrap">
+    <div class="section-head"><h2 id="sg-dodont">Does / doesn't</h2></div>
+    <div class="dodont">
+      <div class="dodont__col dodont__col--do"><h3>Free My ID does</h3>
+        <ul class="checklist" role="list"><li>{{ icon('check') }}<span>Sample: asks sites to remove your listing</span></li><li>{{ icon('check') }}<span>Sample: checks again later</span></li></ul></div>
+      <div class="dodont__col dodont__col--dont"><h3>Free My ID does not</h3>
+        <ul class="checklist checklist--no" role="list"><li>{{ icon('dash') }}<span>Sample: remove you from every website</span></li><li>{{ icon('dash') }}<span>Sample: ask for your bank details</span></li></ul></div>
+    </div>
+    <div class="dodont mt-l">
+      <div class="dodont__col dodont__col--do"><h3>Plain list variant</h3><ul><li>A plain ul gets green markers</li><li>Second item</li></ul></div>
+      <div class="dodont__col dodont__col--dont"><h3>Plain list variant</h3><ul><li>A plain ul gets grey markers</li><li>Second item</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section class="band band--alt" id="price" aria-labelledby="sg-price">
+  <div class="wrap">
+    <div class="section-head"><h2 id="sg-price">Price card</h2><p class="lead">One card, centered (D9). No second column.</p></div>
+    <div class="price-card">
+      <p class="price-card__label">Free My ID</p>
+      <p class="price-card__price">$0</p>
+      <p class="price-card__sub">Free. No trial. No card.</p>
+      <ul class="checklist" role="list">
+        <li>{{ icon('check') }}<span>Sample feature line</span></li>
+        <li>{{ icon('check') }}<span>Printable progress report</span></li>
+        <li>{{ icon('check') }}<span>Uninstall anytime</span></li>
+      </ul>
+      <a class="btn btn--primary btn--large" href="#price">{{ icon('download') }}Download Free My ID</a>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="faq" aria-labelledby="sg-faq">
+  <div class="wrap">
+    <div class="section-head"><h2 id="sg-faq">FAQ</h2></div>
+    <div class="faq">
+      <details class="faq__item" open><summary>Sample question, open by default?</summary><div class="faq__body"><p>Sample answer in plain words.</p></div></details>
+      <details class="faq__item"><summary>Another sample question?</summary><div class="faq__body"><p>Sample answer.</p><p>A second paragraph.</p></div></details>
+    </div>
+  </div>
+</section>
+
+<section class="cta-final" id="cta" aria-labelledby="sg-cta">
+  <h2 id="sg-cta">Your information. Off the market.</h2>
+  <p>Sample closing line for the final call to action.</p>
+  <a class="btn btn--primary btn--large" href="#cta">{{ icon('download') }}Download Free My ID</a>
+  <p class="cta-final__note">No account. No cloud. Uninstall anytime.</p>
+</section>
+
+<section class="band band--brand" aria-labelledby="sg-brand">
+  <div class="wrap">
+    <div class="section-head"><p class="kicker">Band modifier</p><h2 id="sg-brand">.band--brand</h2><p class="lead">The deep navy band. Text, links and buttons only, no cards inside.</p></div>
+    <div class="btn-row btn-row--center"><a class="btn btn--primary" href="#chrome">Primary</a><a class="btn btn--secondary" href="#chrome">Secondary</a></div>
+  </div>
+</section>
+
+<section class="band" id="chrome" aria-labelledby="sg-chrome">
+  <div class="wrap wrap--narrow">
+    <div class="section-head"><h2 id="sg-chrome">Header and footer</h2><p class="lead">The real header and footer on this page are the live components. Recommended header markup:</p></div>
+    <pre><code>&lt;header class="site-header"&gt;&lt;div class="wrap"&gt;
+  &lt;a class="brand"&gt;…&lt;/a&gt;
+  &lt;nav class="site-nav" aria-label="Main"&gt;&lt;ul&gt;…&lt;/ul&gt;&lt;/nav&gt;
+  &lt;details class="menu"&gt;&lt;summary&gt;…Menu&lt;/summary&gt;
+    &lt;nav class="site-nav" aria-label="Main"&gt;&lt;ul&gt;… + Download&lt;/ul&gt;&lt;/nav&gt;&lt;/details&gt;
+  &lt;a class="btn btn--primary btn--small site-header__cta"&gt;Download&lt;/a&gt;
+&lt;/div&gt;&lt;/header&gt;</code></pre>
+    <p class="mt-s">Below 62em the wide nav and <code>.site-header__cta</code> hide and the menu shows, so put Download in the menu list too. Footer: <code>.footer-cols</code> holds four <code>nav</code> columns (h2 + ul), then <code>.footer-legal</code>.</p>
+  </div>
+</section>
+
+<section class="band band--alt" id="widgets" aria-labelledby="sg-widgets">
+  <div class="wrap">
+    <div class="section-head"><h2 id="sg-widgets">Widgets</h2></div>
+    <p><span class="chip chip--ok">Site confirmed</span> <span class="chip chip--warn">Waiting</span> <span class="chip">Asked</span> <span class="chip chip--brand">New</span></p>
+    <h3 class="mt-l">SmartScreen drawing</h3>
+    <div class="mt-s">{% set ss_step = 2 %}{% include "partials/smartscreen.html" %}</div>
+  </div>
+</section>
+
+<section class="band" id="icons" aria-labelledby="sg-icons">
+  <div class="wrap">
+    <div class="section-head"><h2 id="sg-icons">Icons</h2><p class="lead">24px line icons, 2px stroke, from site_src/data/icons.yaml: <code>{% raw %}{{ icon('name') }}{% endraw %}</code>.</p></div>
+    <ul class="guide-list" role="list">
+    {% for n in icon_names %}<li><span class="card sg-icon">{{ icon(n) }}<code>{{ n }}</code></span></li>{% endfor %}
+    </ul>
+  </div>
+</section>
 {% endblock %}

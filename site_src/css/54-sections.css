@@ -208,5 +208,6 @@
   .cta-final h2 { font-size: var(--step-4); }
   .cta-final > .btn, .cta-final > .wrap > .btn { margin-block-start: var(--space-m); }
   .cta-final > .wrap > * + * { margin-block-start: var(--space-s); }
+  .cta-final > p:not(.cta-final__note) { font-size: var(--step-1); }
   .cta-final__note { font-size: var(--step--1); }
 }
