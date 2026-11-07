@@ -53,10 +53,10 @@
   a: |-
     <p>No. Free My ID works on people-search sites. For Facebook itself, use the privacy settings inside Facebook.</p>
 - id: who-buys
-  # source: CFPB press release, 2024 (URL in the answer, verified copy from the old site FAQ)
+  # source: ODNI Senior Advisory Group report on commercially available information, dated 27 Jan 2022, released June 2023, section 2.6.3; verified 2026-11-07, docs/MARKETING_COPY.md Sources (WR-37; replaces the withdrawn CFPB 2024 proposed rule)
   q: 'Who buys this information?'
   a: |-
-    <p>Anyone can: employers, marketers, curious neighbors, and also scammers and stalkers. A U.S. federal consumer agency <a href="https://www.consumerfinance.gov/archive/newsroom/cfpb-proposes-rule-to-stop-data-brokers-from-selling-sensitive-personal-data-to-scammers-stalkers-and-spies/">warned in 2024</a> about data brokers selling sensitive personal data to scammers and stalkers. That's why taking yourself off these sites matters.</p>
+    <p>Anyone can: employers, marketers, curious neighbors, strangers. People-search sites sell what they collect to whoever pays. A report to the Director of National Intelligence, <a href="https://www.odni.gov/files/ODNI/documents/assessments/ODNI-Declassified-Report-on-CAI-January2022.pdf">made public in 2023</a>, warned that this kind of data can "facilitate blackmail, stalking, harassment, and public shaming." That's why taking yourself off these sites matters.</p>
 - id: how-long
   home: true
   # source: six screens = src/freemyid/wizard/draft.py STEPS; brokers/SOURCES.md "Website claims" and registry typical_processing_days: varies by broker, no guaranteed timeline
