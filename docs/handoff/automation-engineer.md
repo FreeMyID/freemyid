@@ -219,6 +219,8 @@ Drafts: src/freemyid/engine/_test_drafts/ (conftest re-exports tests/conftest; q
 - Open CR-W2 wizard-packager: on the proton_bridge mailbox screen, call
   trust_on_first_use(mb), show .message with Yes/No, store .fingerprint in
   mb.tls_cert_sha256 on Yes; on MailError containing "certificate changed" offer re-trust.
-  Also wizard/draft.py:395 "Test connection" uses ssl.create_default_context() directly and
-  will still fail for Bridge; it should use mail_tls.client_context + check_peer.
+  SECURITY: wizard/draft.py ~L394 ctx_for() "Test connection" sets CERT_NONE +
+  check_hostname=False for loopback WITHOUT a pin and then logs in with the Bridge password.
+  Replace with mail_tls.client_context(host, pin) + check_peer(sock, pin) before login
+  (no pin -> verified context fails for Bridge, which is correct; run TOFU first).
 - Open CR-C1 orchestrator (optional): `freemyid mailbox trust <profile>` CLI wrapper.
