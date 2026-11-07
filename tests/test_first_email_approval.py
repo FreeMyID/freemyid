@@ -1,4 +1,4 @@
-"""Draft tests (qa to adopt): SEC-27 first real email per profile needs explicit approval.
+"""SEC-27 (adopted from engine/_test_drafts): first real email per profile needs explicit approval.
 
 Fake people, fake brokers (*.example), FakeMailer only. Nothing leaves the machine.
 """
