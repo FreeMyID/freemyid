@@ -4,6 +4,8 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 
+from fastapi import HTTPException
+
 from ..models import (
     ChecklistFile,
     EvidenceKind,
@@ -73,6 +75,8 @@ def _kind_words(kind: str) -> str:
 
 def broker_page(p: Profile, broker, bid: str, status, listings: list, requests: list,
                 evidence: list, events: list, todos: list) -> str:
+    if bid.startswith("_"):
+        raise HTTPException(status_code=404, detail="Not found")
     name = broker.name if broker else bid
     body = (f'<p><a href="/profile/{esc(p.id)}">All sites for {esc(p.label)}</a></p>'
             f'<h1>{esc(name)}</h1><p>{chip(status.state)} <span class="hint">'
@@ -174,6 +178,7 @@ def _checklist_item(c, done: bool, pid: str, csrf: str) -> str:
     state = "done" if done else "to do"
     need = ("".join(f"<li>{esc(x)}</li>" for x in c.need_on_hand))
     steps = "".join(f"<li>{esc(x)}</li>" for x in c.steps)
+    tips = "".join(f"<li>{esc(x)}</li>" for x in (getattr(c, "tips", None) or []))
     partial = (f'<p class="note calm">{esc(PARTIAL_NOTE)}</p>'
                if c.verification == "partial" else "")
     extra = f'<p class="note calm">{esc(c.status_note)}</p>' if c.status_note else ""
@@ -185,7 +190,8 @@ def _checklist_item(c, done: bool, pid: str, csrf: str) -> str:
         f'{partial}{extra}'
         + (f"<h3>Have these ready</h3><ul>{need}</ul>" if need else "")
         + f"<h3>Steps</h3><ol>{steps}</ol>"
-        f'<p><b>To undo it:</b> {esc(c.how_to_undo)}</p>'
+        + (f"<h3>Good to know</h3><ul>{tips}</ul>" if tips else "")
+        + f'<p><b>To undo it:</b> {esc(c.how_to_undo)}</p>'
         f'<p class="hint">Checked on {_dt(datetime.combine(c.date_checked, datetime.min.time()))}.</p>'
         f'<div class="actions"><form method="post" action="/protect/{esc(pid)}/{cid}/open" '
         f'class="inline">{csrf_field(csrf)}<button type="submit" class="secondary">'
@@ -227,6 +233,7 @@ def summary_page(p: Profile, statuses: list, names: dict[str, str], n_todos: int
     def nm(bid: str) -> str:
         return names.get(bid, bid).split(" (")[0]
 
+    statuses = [s for s in statuses if not s.broker_id.startswith("_")]
     good = [s for s in statuses if s.state in _GOOD]
     waiting = [s for s in statuses if s.state in (ListingState.SUBMITTED,
                                                   ListingState.AWAITING_VERIFICATION)]

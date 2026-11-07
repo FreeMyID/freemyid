@@ -118,6 +118,8 @@ def test_broker_page(env):
     assert c.get(f"/profile/{p.id}/site/../x").status_code in (404, 307, 308)
     assert c.get(f"/profile/{p.id}/site/Bad%20Id").status_code == 404
     assert c.get("/profile/nope/site/examplebroker").status_code == 404
+    assert c.get(f"/profile/{p.id}/site/_checklist").status_code == 404
+    assert c.get(f"/profile/{p.id}/site/_consent").status_code == 404
     assert f"/profile/{p.id}/site/examplebroker" in c.get(f"/profile/{p.id}").text
 
 
