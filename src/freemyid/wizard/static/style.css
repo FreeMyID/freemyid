@@ -28,8 +28,9 @@ header.top a[aria-current="page"] { border-bottom-color: currentColor; }
 header.top a:focus-visible { outline-color: var(--fmi-color-focus); }
 header.top .brand { font-size: 1.3rem; font-weight: 800; gap: .5rem; }
 header.top .brand img { width: 1.9rem; height: 1.9rem; border-radius: var(--fmi-radius-sm); }
-header.top nav { display: flex; gap: .1rem 1.1rem; flex-wrap: wrap; flex: 1 1 auto; }
-button.theme { margin-left: auto; background: transparent; color: var(--fmi-color-band-brand-ink);
+header.top .brand { order: 1; }
+header.top nav { order: 3; display: flex; gap: .1rem 1.1rem; flex-wrap: wrap; flex: 1 1 100%; }
+button.theme { order: 2; margin-left: auto; background: transparent; color: var(--fmi-color-band-brand-ink);
   border: 2px solid currentColor; padding: .3rem .8rem; min-height: var(--fmi-tap);
   font-weight: 600; font-size: 1rem; }
 button.theme:hover { background: rgb(255 255 255 / .12); }
@@ -93,7 +94,8 @@ p.big { font-size: 1.3rem; line-height: 1.5; }
 .sr { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 
 /* messages */
-.error, .note, .banner { border-radius: var(--fmi-radius-md); padding: .7rem 1rem; margin: 12px 0;
+.error, .note, .banner { border-radius: var(--fmi-radius-md); padding: .5rem .9rem; margin: 8px 0;
+  font-size: 1rem;
   border: 2px solid var(--fmi-color-line-strong); background: var(--fmi-color-card); }
 .error { border-color: var(--fmi-color-accent); }
 .note, .banner { border-color: var(--fmi-color-warn); }
@@ -158,13 +160,12 @@ details.more summary { cursor: pointer; font-weight: 600; color: var(--fmi-color
 :root[data-theme="dark"] .theme .ico { --ico: url(/static/icons/sun.svg); }
 
 /* protect-yourself checklists */
-.cl { padding: 0; }
+.cl { padding: .25rem var(--fmi-space-m); }
 .cl summary { cursor: pointer; display: flex; gap: .75rem; align-items: center; min-height: var(--fmi-tap);
   font-weight: 700; font-size: 1.15rem; color: var(--fmi-color-heading); }
 .cl .meta { display: flex; gap: .4rem 1rem; flex-wrap: wrap; color: var(--fmi-color-muted);
   font-size: .95rem; margin: .3rem 0; }
-.cl-body { padding-top: .5rem; }
-.cl.done > summary .tick { color: var(--fmi-color-ok); }
+.cl-body { padding: .25rem 0 var(--fmi-space-s); }
 .tick { width: 1.8rem; height: 1.8rem; border-radius: 50%; border: 2px solid var(--fmi-color-line-strong);
   display: inline-flex; align-items: center; justify-content: center; flex: none; }
 .cl.done .tick { background: var(--fmi-color-ok); border-color: var(--fmi-color-ok);
@@ -178,7 +179,14 @@ progress { width: 100%; height: 1rem; accent-color: var(--fmi-color-ok); }
 
 @media (max-width: 40rem) {
   body { font-size: 1.125rem; }
-  header.top .brand { width: 100%; }
+  header.top { padding-block: .25rem; }
+  header.top nav { gap: 0 .9rem; }
+  header.top a { padding-block: .35rem; }
+  .hero-card { padding: var(--fmi-space-s) var(--fmi-space-m); }
+}
+@media (min-width: 52rem) {
+  header.top nav { flex: 1 1 auto; order: 2; margin-left: 1rem; }
+  button.theme { order: 3; }
 }
 @media print {
   header.top, .noprint, .skip, footer { display: none !important; }

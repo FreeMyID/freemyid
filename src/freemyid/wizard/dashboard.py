@@ -222,7 +222,8 @@ def home_page(*, statuses: list[BrokerStatus], todos: list[tuple[Todo, str, str]
         body += (f'<p><a class="btn secondary" href="/profile/{esc(p.id)}">All the details for '
                  f'{esc(p.label)}</a> <a class="btn secondary" '
                  f'href="/profile/{esc(p.id)}/summary">What we did for {esc(p.label)}</a></p>')
-    body += ('<p class="hint">A site that says it deleted you has done that for that one site only. '
+    body += ('<p><a class="btn secondary" href="/wizard/consent?new=1">Add a person</a></p>'
+             '<p class="hint">A site that says it deleted you has done that for that one site only. '
              'Details can reappear, which is why Free My ID keeps checking. Free My ID does '
              'not change anything on Facebook or Google.</p></div>')
     return layout("Today", body, refresh=6 if running else 0, current="/")

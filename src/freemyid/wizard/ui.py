@@ -39,8 +39,8 @@ def chip(state: ListingState) -> str:
     return f'<span class="chip {esc(state.value)}">{esc(CHIP_LABEL.get(state, state.value))}</span>'
 
 
-NAV = (("/", "Today"), ("/protect", "Protect yourself"), ("/outbox", "Emails to approve"),
-       ("/wizard/consent?new=1", "Add a person"), ("/settings", "Settings"))
+NAV = (("/", "Today"), ("/protect", "Protect yourself"), ("/outbox", "Emails"),
+       ("/settings", "Settings"))
 
 
 def layout(title: str, body: str, nav: bool = True, refresh: int = 0, current: str = "") -> str:

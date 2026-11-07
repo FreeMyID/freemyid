@@ -242,9 +242,9 @@ def summary_page(p: Profile, statuses: list, names: dict[str, str], n_todos: int
              f'<th scope="col">Date</th></tr>{rows}</table>' if rows else
              "<p>No site has needed a request so far.</p>")
     body = (
-        '<div class="summary wrap-narrow"><p class="noprint"><button type="button" class="primary" '
+        '<div class="summary wrap-narrow"><div class="actions noprint"><button type="button" class="primary" '
         'data-print="1"><span class="ico ico-report" aria-hidden="true"></span> Print this page'
-        '</button> <a class="btn secondary" href="/">Back</a></p>'
+        '</button> <a class="btn secondary" href="/">Back</a></div>'
         f"<h1>What Free My ID did for {esc(p.label)}</h1>"
         f"<p>Written on {_dt(utcnow())}.</p>"
         f"<p class=\"lead\">Free My ID has sent {sent} request{'' if sent == 1 else 's'} asking "
