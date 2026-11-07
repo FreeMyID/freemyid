@@ -4,8 +4,8 @@
 // (no 'unsafe-inline'/'unsafe-eval'; script hashes match the inline scripts present), no style=""
 // attributes, no inline event handlers, no third-party asset URLs, every <img> has alt/width/height,
 // internal links and #anchors resolve, sitemap lists every indexable page and nothing else,
-// no mention of the private registry file. Then budgets (gzip): home first view < 300 KB,
-// JS on home < 80 KB, CSS < 20 KB.
+// no mention of the private registry file, no deployed .js that no page loads. Then budgets
+// (gzip, KiB = 1024 bytes): home first view < 300 KiB, JS on home < 80 KiB, CSS < 20 KiB.
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
@@ -129,12 +129,10 @@ for (const u of locs) err("sitemap.xml", `lists a page that isn't indexable or d
 if (!existsSync(join(dist, "robots.txt"))) err("robots.txt", "missing");
 
 // --- budgets
-function pageWeight(f) {
-  const html = read(f);
-  const css = [...html.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map((m) => resolveLocal(f, m[1])[0]);
+// every script a page loads, following static imports (island chunks)
+function pageScripts(f, html) {
   const js = new Set();
   for (const m of html.matchAll(/(?:component-url|renderer-url|src)="([^"]+\.js)"/g)) js.add(resolveLocal(f, m[1])[0]);
-  // follow static imports one level deep and beyond (island chunks)
   const queue = [...js];
   while (queue.length) {
     const j = queue.pop();
@@ -144,26 +142,36 @@ function pageWeight(f) {
       if (!js.has(dep)) { js.add(dep); queue.push(dep); }
     }
   }
+  return js;
+}
+function pageWeight(f) {
+  const html = read(f);
+  const css = [...html.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map((m) => resolveLocal(f, m[1])[0]);
+  const js = pageScripts(f, html);
   // first-view images: eager <img> (no loading="lazy") and inline art is already in the HTML
   const imgs = [...html.matchAll(/<img\b[^>]*>/g)].filter((m) => !/loading="lazy"/.test(m[0]))
     .map((m) => resolveLocal(f, m[0].match(/\ssrc="([^"]+)"/)[1])[0]);
   const size = (list) => list.reduce((n, p) => n + gz(readFileSync(join(dist, p))), 0);
   return { html: gz(Buffer.from(html)), css: size(css), js: size([...js]), img: imgs.reduce((n, p) => n + statSync(join(dist, p)).size, 0) };
 }
+// no deployed script that no page loads (SEC-63: an unused chunk is still a same-origin script gadget)
+const usedJs = new Set();
+for (const f of htmlFiles) for (const j of pageScripts(f, read(f))) usedJs.add(j);
+for (const f of files) if (f.endsWith(".js") && !usedJs.has(f)) err(f, "script that no page loads (remove it from the build)");
 const rows = [];
 for (const f of ["index.html", "download/index.html", "how-it-works/index.html", "safety/index.html", "faq/index.html",
   "families/index.html", "guides/index.html", "guides/spokeo/index.html", "i-do-not-consent/index.html", "404.html"]) {
   if (!files.includes(f)) continue;
   const w = pageWeight(f);
   const total = w.html + w.css + w.js + w.img;
-  rows.push(`${f.padEnd(28)} html ${(w.html / 1024).toFixed(1).padStart(5)}  css ${(w.css / 1024).toFixed(1).padStart(5)}  js ${(w.js / 1024).toFixed(1).padStart(5)}  img ${(w.img / 1024).toFixed(1).padStart(5)}  first view ${(total / 1024).toFixed(1).padStart(6)} KB`);
+  rows.push(`${f.padEnd(28)} html ${(w.html / 1024).toFixed(1).padStart(5)}  css ${(w.css / 1024).toFixed(1).padStart(5)}  js ${(w.js / 1024).toFixed(1).padStart(5)}  img ${(w.img / 1024).toFixed(1).padStart(5)}  first view ${(total / 1024).toFixed(1).padStart(6)} KiB`);
   if (f === "index.html") {
-    if (total > 300 * 1024) err(f, `first-view transfer ${(total / 1024).toFixed(1)} KB > 300 KB`);
-    if (w.js > 80 * 1024) err(f, `JS ${(w.js / 1024).toFixed(1)} KB gzip > 80 KB`);
+    if (total > 300 * 1024) err(f, `first-view transfer ${(total / 1024).toFixed(1)} KiB > 300 KiB`);
+    if (w.js > 80 * 1024) err(f, `JS ${(w.js / 1024).toFixed(1)} KiB gzip > 80 KiB`);
   }
-  if (w.css > 20 * 1024) err(f, `CSS ${(w.css / 1024).toFixed(1)} KB gzip > 20 KB`);
+  if (w.css > 20 * 1024) err(f, `CSS ${(w.css / 1024).toFixed(1)} KiB gzip > 20 KiB`);
 }
-console.log("Page weights (gzip; images as stored):\n" + rows.join("\n"));
+console.log("Page weights (KiB = 1024 bytes, gzip -9; images as stored):\n" + rows.join("\n"));
 for (const e of errors) console.log("ERROR:", e);
 console.log(`${htmlFiles.length} HTML files, ${indexable.length} indexable. ${errors.length ? errors.length + " problem(s)" : "OK"}`);
 process.exit(errors.length ? 1 : 0);

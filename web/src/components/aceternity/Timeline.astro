@@ -1,12 +1,11 @@
 ---
 // Aceternity UI "Timeline", split into static + enhancement: a numbered list with a grey rail
 // (static HTML, works with JS off) and a coloured beam that fills as you scroll.
-//   beam="css"    (default) scroll-driven CSS animation, zero JS; static full beam where unsupported
-//   beam="island" the Aceternity motion version as a React island (TimelineBeam.tsx, client:visible).
-//                 Costs ~95 KB gzip (React + motion), so it is used on /how-it-works/ only.
-// Both are off under prefers-reduced-motion (the beam is shown full and still).
-import TimelineBeam from "./TimelineBeam.tsx";
-interface Props { class?: string; beam?: "css" | "island" | "none" }
+//   beam="css"  (default) scroll-driven CSS animation, zero JS; static full beam where unsupported
+//   beam="none" grey rail only
+// The beam is off under prefers-reduced-motion (shown full and still). The motion/React island
+// version was removed (WR-52, SEC-63): it cost ~95 KB gzip and no page used it.
+interface Props { class?: string; beam?: "css" | "none" }
 const { beam = "css" } = Astro.props;
 ---
 <div class:list={["timeline relative", Astro.props.class]}>
@@ -16,7 +15,6 @@ const { beam = "css" } = Astro.props;
       <div class="timeline__beam h-full w-full origin-top rounded-full bg-gradient-to-b from-brand via-brand to-accent"></div>
     </div>
   )}
-  {beam === "island" && <TimelineBeam client:visible />}
   <ol class="relative grid gap-l" role="list">
     <slot />
   </ol>
