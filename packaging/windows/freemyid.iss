@@ -58,20 +58,8 @@ Type: files; Name: "{app}\registry.yaml"
 Filename: "{app}\freemyid-cli.exe"; Parameters: "schedule remove"; Flags: runhidden; RunOnceId: "RemoveFreeMyIDTask"
 
 [Code]
-// v0.1.0 still showed "Ready to Install" with DisableReadyPage=yes (VM walkthrough, Windows 11):
-// skip it explicitly as well so older people see no extra "Install" step.
-function ShouldSkipPage(PageID: Integer): Boolean;
-begin
-  Result := (PageID = wpReady);
-end;
-
-// The 90e160a build still showed "Ready to Install" even with the skip above (VM re-check):
-// press Install for the person as soon as that page appears.
-procedure CurPageChanged(CurPageID: Integer);
-begin
-  if CurPageID = wpReady then
-    WizardForm.NextButton.OnClick(WizardForm.NextButton);
-end;
+// "Ready to Install" stays on purpose: with every earlier page disabled, Inno Setup shows it anyway so a
+// double-click never installs without one deliberate click (VM checks 2026-11-07). Site copy says "Click Install".
 
 function DataDir: String;
 begin
