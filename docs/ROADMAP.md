@@ -1,0 +1,237 @@
+# Free My ID: product roadmap
+
+Owner/PM: Morgan Reyes (orchestrator). Written 2026-11-07, after v0.1.2. This is the master list. `docs/PLAN_V1.md` stays the spec for the shipped v1 core, `docs/POSITIONING.md` governs every word users see, and `docs/AUTONOMY.md` governs what agents may do alone.
+
+Legend. **Tier:** F = Free, P = Plus, Fam = Family, Pro = Pro/self-host, B = Business/Partner. **Phase:** 0.2, 0.3, 0.4, 0.5, 1.0, Later, Dream.
+
+---
+
+## 1. What Free My ID is
+
+A program that runs on your own computer and takes your name, address, phone and relatives off the websites that sell them, then keeps checking so the listings stay gone. It is free for individuals, open source (AGPL), and never sends your details to us.
+
+**The promise, in one breath:** your data never leaves your computer, nobody pays with their privacy, and we never scare you into buying.
+
+### Principles (they decide every tie)
+1. **Local-first.** Personal data lives only on the user's device, encrypted. Our servers hold no PII, ever. Anything we host (registry feed, licence check, crash reports) is PII-free by design and test.
+2. **Grandma-proof first, power-user second.** Every feature ships with the non-technical path working before the terminal path is polished. The terminal path is never removed to make the simple path simpler.
+3. **Honest by default.** No fear pop-ups, fake counters, auto-renew traps or bundled junk. Free means free forever, not a trial.
+4. **The user is in charge.** Nothing goes out in their name without consent; practice mode is the default until they say "go".
+5. **Evidence over claims.** Every removal has proof attached, and we say "requested", "confirmed" or "relisted", never "erased".
+6. **Open engine, paid freshness.** The code is free and forkable. What we sell is the constantly updated broker knowledge and the convenience around it (the McAfee "virus definitions" model).
+
+### Who it is for
+| Persona | Needs | Edition |
+|---|---|---|
+| **Pat, 72, Windows 10**, sent the link by a grandchild | Big buttons, one decision per screen, never a terminal | Windows app |
+| **Dana, 45, does it for both parents** | Several people in one app, sees progress, approves things remotely | Family |
+| **Sam, 30, Linux homelab** | pipx/Docker, headless, cron, JSON, no GUI | Developer/Pro |
+| **Judge, nurse, cop, survivor** | Higher-risk exposure, faster re-checks, legal letters, proof for court | Plus / via employer |
+| **Credit union / MSP / employer** | Offer it to members/staff under their brand, without holding their PII | Business/Partner |
+
+---
+
+## 2. Editions and pricing (owner decisions, 2026-11-07)
+
+| | **Free** | **Plus** | **Family** | **Pro (self-host)** | **Business / Partner** |
+|---|---|---|---|---|---|
+| Who | Every individual, forever | People who want it fully hands-off | A household, up to 6 people | Tech users running headless | Employers, credit unions, MSPs, insurers |
+| Price (draft, verify vs market first) | $0 | ~$5/mo or ~$49/yr | ~$89/yr | ~$49/yr (same feed as Plus) | per seat / per member, volume |
+| App, wizard, dashboard, CLI | yes | yes | yes | yes | yes, white-label option |
+| Email + assisted removals | yes | yes | yes | yes | yes |
+| Brokers | core set (~60 biggest, updated monthly) | full feed (400+), updated daily | full | full | full |
+| Automatic browser removals | top ~10 | all verified | all verified | all verified | all verified |
+| Re-checks | every 90 days | every 7-30 days, smart | same | configurable | policy-set |
+| Proof vault + PDF report | basic | full + legal letters | full | full | full + aggregate (PII-free) admin view |
+| Profiles | 1 + practice | 1 | 6 | unlimited (local) | per seat |
+| Support | community | email, 2 business days | email | community + issues | SLA |
+
+**Decisions made:**
+- **The free/paid line is freshness and convenience, never safety.** Credit-freeze guides, breach checks and opt-out checklists are free for everyone. Paying buys the full, daily-updated broker feed, faster re-checks, more automation and family/business management.
+- **Forks may self-build the feed** (the code is AGPL). The *data* (full registry) is our product under its own licence; the public sample stays CC BY-NC.
+- **No human "we do it for you" service in v1.** It would mean holding customer PII and break principle 1. Revisit only as an opt-in partner service under a separate brand (Dream list).
+- **Business is pursued from 0.5**, through partners who distribute (the McAfee site-licence and OEM channel), with the PII still staying on each person's device.
+- **Payments:** Stripe or Paddle (merchant of record, handles sales tax) + licence keys verified offline (signed tokens), so the app never needs an account login to work.
+
+---
+
+## 3. Feature catalogue
+
+Each line: feature, tier, phase. Status: **shipped** items are in v0.1.x.
+
+### 3.1 Getting started (onboarding)
+- **Shipped:** one-click Windows installer; 6-screen wizard; consent screen with typed signature; practice mode by default; prefill from a file.
+- "Find me first" scan before any removal: shows which sites list you, with blurred previews ("we found you on 14 sites") - F - 0.3
+- Plain-language "what happens next" timeline after setup - F - 0.3
+- Import from a family member's export bundle (encrypted, for helpers) - F - shipped (import) / UX polish 0.4
+- Read-aloud and large-text mode across the wizard - F - 0.4
+- Spanish UI (then Vietnamese, Tagalog, Chinese) - F - 0.5
+- Video walkthrough embedded offline (no YouTube tracking) - F - 0.4
+- "Set it up for someone else" flow (helper prepares a bundle, relative double-clicks) - Fam - 0.4
+
+### 3.2 Finding listings (discovery)
+- **Shipped:** listing finder for supported brokers; matcher with confirmed/possible/no-match levels; human review of "possible" matches.
+- Exposure scan across the full registry, cached and rate-limited, per-broker search adapters - F (core) / P (full) - 0.3
+- Exposure score (0-100) with what drives it, trend over time - F - 0.3
+- Relatives-and-associates view: which listings expose family members - P - 0.4
+- Old-address and maiden-name variants, nickname expansion - F - 0.3
+- Photo/face exposure check on people-search sites (local face matching, opt-in) - P - Later
+- Search-engine exposure: Google/Bing results about you, with removal request links (Google "Results about you") - F - 0.3
+- Dark-web / breach exposure via Have I Been Pwned k-anonymity API (email only, hashed) - F - 0.3
+
+### 3.3 Removing (the engine)
+- **Shipped:** 3 tiers (email, assisted "do it with me", automatic browser for verified forms); "fill it in for me"; first-email approval gate; reply matcher; escalation timers; ID-request goes to a human to-do.
+- Automatic browser removals for every verified web-form broker, with success signals - P - 0.3 onward (continuous)
+- State-law request letters generated per state (CCPA/CPRA, Virginia, Colorado, Texas, Oregon...) with the right statute cited - F - 0.3
+- California DROP integration (one request covers all registered CA brokers) - F - 0.3
+- Legal escalation pack: complaint to the state AG / CPPA prefilled when a broker ignores a lawful request - P - 0.4
+- Smart re-check: relist detection with per-broker cadence learned from history - P - 0.4
+- Suppression lists: marketing (DMAchoice), prescreened credit offers (OptOutPrescreen), Do Not Call - F - 0.3
+- Data-broker registry states (CA, VT, OR, TX) cross-checked so unknown brokers are found automatically - P (feed) - 0.5
+- Phone number and email-only removals (for people who want just those gone) - F - 0.4
+- Address confidentiality program helper (state ACP enrolment guidance for survivors) - F - 0.4
+
+### 3.4 Beyond brokers (identity-safety checklists)
+- Credit freeze at Equifax, Experian, TransUnion, plus Innovis, ChexSystems, NCTUE, LexisNexis - guided, with reminders - F - 0.3
+- IRS Identity Protection PIN, SSA account lock-in, USPS Informed Delivery claim - F - 0.4
+- Property-record and voter-record exposure guidance by county/state - F - 0.5
+- "Lock down your accounts" checklist (2FA, recovery codes, password manager) - F - 0.4
+- Annual "privacy check-up" reminder that walks the list again - F - 0.4
+
+### 3.5 Proof and reporting
+- **Shipped:** evidence screenshots; status and report commands; basic report.
+- Proof vault: per broker, every email, screenshot and confirmation, dated and hashed - F (basic) / P (full) - 0.3
+- One-page PDF "what we did for you" report (plain English, printable for a parent) - F - 0.3
+- Court/attorney packet: chronological evidence bundle with hashes - P - 0.4
+- Monthly progress email or toast ("3 new removals confirmed, 1 relisted, handled") - F - 0.4
+
+### 3.6 Dashboard and UI
+- **Shipped:** server-rendered dashboard; to-do cards; first-run copy; toasts; practice banner.
+- Redesign on the v3 look (shared tokens, type, icons, illustrations; still server-rendered, no React runtime in the app) - F - 0.3
+- "Today" view: one big card, the next thing to do, nothing else - F - 0.3
+- Broker detail page: what they hold, what we sent, what came back, next check - F - 0.3
+- Map of exposure (which sites, grouped by type) - F - 0.4
+- Accessibility AA throughout, keyboard-only, screen-reader tested, 200% zoom - F - 0.3
+- Dark mode in the app - F - 0.3
+- Tray/menu-bar icon with status and "check now" - F - 0.4
+
+### 3.7 Family and helpers
+- Multiple profiles in one install, each separately consented - Fam - 0.4
+- Helper mode: a relative's app sends PII-free progress and approval requests to the helper's app via end-to-end encrypted relay; helper approves; the relative's data never leaves their machine - Fam - 0.5
+- Shared family to-do list ("Mom has 2 things that need her signature") - Fam - 0.5
+- Elder-safety tie-in: scam-call and mail-fraud tips, notify helper if a new listing appears - Fam - 0.5
+
+### 3.8 Platforms and power users
+- **Shipped:** Windows x64 (also runs on Windows 11 ARM); CLI with setup/scan/run/fill/status/report/profile/schedule/registry/todo.
+- **Linux and macOS, headless or with dashboard** - F - **0.2**
+  - `pipx install freemyid`, plus `freemyid doctor` (checks browser, keychain, scheduler, mail)
+  - Secrets backend that works without a desktop keychain: passphrase-derived key (scrypt), `FREEMYID_PASSPHRASE_FILE`, or systemd-creds - all with the same encrypted store
+  - Schedulers: systemd user timer (Linux), launchd agent (macOS), already rendered by `scheduler/render.py`; make install/remove/status real and tested
+  - `--json` on every read command; stable exit codes; `freemyid run --headless` (no prompts, fails closed)
+  - YAML config alternative to the wizard (`freemyid setup --from config.yaml`), schema published
+- Docker image on GHCR (non-root, read-only rootfs, Playwright Chromium bundled, volume for data) - Pro - 0.2
+- Developer page freemyid.org/developers: install for Linux/macOS/Docker, CLI reference, config schema, broker-contribution guide - F - 0.2
+- Homebrew tap, AUR, Flatpak, Nix flake - F - 0.3 to Later
+- Signed macOS .app with notarization (owner decision: Apple Developer $99/yr) - F - Later
+- Native Linux desktop packages (.deb/.rpm/AppImage) with the app window - F - 0.4
+- Plugin API for community submitters (sandboxed, reviewed, signed in the feed) - F - 0.5
+- Home Assistant / Prometheus exporter for homelabs - Pro - Later
+- Self-hosted multi-profile server for a household (one Docker box, many people, each with own key) - Pro - Later
+
+### 3.9 Broker knowledge (the "virus definitions")
+- **Shipped:** 400+ broker registry (private full, public sample), state laws, schema validation, update with signature/size caps, registry health check weekly.
+- Signed daily feed for Plus (ed25519 signature, token that is PII-free, CDN-served) - P - 1.0
+- Automated broker monitoring: weekly headless check that each opt-out page still works, auto-flag changes - internal - 0.3
+- Community broker reports ("this opt-out changed") with review queue - F - 0.5
+- New-broker discovery from state registries and web crawl - internal - 0.5
+
+### 3.10 Mail
+- **Shipped:** IMAP/SMTP with Gmail app password, Proton Bridge (pinned TLS), other IMAP; reply matching.
+- Outlook/Microsoft 365 via OAuth (device code flow) - F - 0.3
+- Gmail via OAuth (no app password) - F - 0.4 (needs Google verification)
+- Built-in alias addresses (requests sent from a relay address so the user's real email isn't exposed) - P - Later (needs PII-free relay design)
+
+### 3.11 Trust, security, privacy
+- Reproducible builds and published SBOM - F - 0.3
+- Code signing: SignPath (pending) or Azure fallback - F - 0.2/0.3
+- Opt-in, PII-free crash reports (scrubbed locally, user previews before send) - F - 0.4
+- Independent security audit before 1.0 - 1.0
+- Transparency page: what we host, what we never see, warrant canary - F - 1.0
+
+### 3.12 Business and partners
+- White-label build (partner name/logo, our engine), separate installer per partner - B - 0.5
+- Partner portal: licence seats, PII-free aggregate stats (number of removals, not names) - B - 1.0
+- Employer benefit landing page and onboarding emails (sent by the employer) - B - 1.0
+- High-risk professions programme (judges, healthcare, law enforcement, DV advocates): faster cadence, Daniel's-Law-style state statutes - B/P - 1.0
+- Public API for partners (licence, feed, aggregate stats; never PII) - B - Later
+
+---
+
+## 4. UX north star
+
+- **One decision per screen.** If a screen asks two things, split it.
+- **Every wait has a reason.** "This takes about a minute" on every spinner; never a silent pause (the installer still has a 10-second silent gap: fix in 0.3).
+- **Never a dead end.** Every error says what happened in plain words and offers one button to fix it or one person to ask.
+- **Numbers people trust:** "14 requests sent, 9 confirmed, 2 need you" beats any percentage.
+- **The terminal is a first-class citizen, not a second app.** Same verbs in CLI and dashboard (`scan`, `run`, `status`, `report`, `todo`).
+- **Design system:** one token set shared by site, app and installer (decision 2026-11-07).
+- Test every release with the "Pat test": a non-technical person installs and finishes setup unaided, on 1024x768, at 150% scaling.
+
+---
+
+## 5. Engineering roadmap
+
+| Area | Now | Next |
+|---|---|---|
+| Secrets | OS keyring only (fails on headless Linux) | pluggable backend: keyring, passphrase (scrypt), systemd-creds; same AES-GCM store (0.2) |
+| Scheduling | Windows schtasks real; systemd/launchd rendered only | install/remove/status real on all three, tested in CI (0.2) |
+| CI | Linux tests + Windows installer | matrix: ubuntu, macos, windows; Docker image build + smoke; pipx install smoke (0.2) |
+| Packaging | PyInstaller + Inno Setup | + PyPI wheel, GHCR image (0.2); .deb/.rpm/AppImage (0.4); notarized .app (Later) |
+| Config | wizard + prefill | versioned YAML schema in `schema/`, `setup --from` (0.2) |
+| Output | human text | `--json` everywhere, exit codes documented (0.2) |
+| Engine | runner, tiers, outbox, matcher | exposure scan service, relist detector, per-broker cadence (0.3-0.4) |
+| Feed | bundled + update with caps | signed feed, licence tokens, CDN (1.0) |
+| Sync | none | E2E-encrypted helper relay, PII-free payloads (0.5) |
+| Payments | none | Paddle/Stripe + offline-verifiable licence tokens (1.0) |
+| Quality | 650+ tests, ruff, mypy | e2e on all OSes, accessibility tests, fuzzing of parsers, audit (1.0) |
+
+---
+
+## 6. Release plan
+
+- **v0.2 "Every platform"** (now): Linux/macOS headless and CLI, secrets fallback, real schedulers, `--json`, YAML config, `doctor`, Docker image, PyPI, developer page, CI matrix. Also: Bluesky poster fixes (SEC-57/58/59) and v0.1.3 installer fixes (uninstall while running, calm Bridge copy, Ready page, password wording).
+- **v0.3 "See it, fix it"**: exposure scan + score, state-law letters, DROP, suppression lists, credit-freeze checklist, proof vault + PDF report, app redesign on the v3 look, Outlook OAuth, broker monitoring.
+- **v0.4 "For the family"**: multi-profile, helper bundle flow, relist detection, legal escalation pack, monthly summary, tray icon, Linux desktop packages.
+- **v0.5 "Together"**: helper relay, white-label build, plugin API, community broker reports, Spanish UI.
+- **v1.0 "Sustainable"**: Plus/Family/Pro tiers live, signed daily feed, payments, partner portal, independent audit, transparency page.
+
+---
+
+## 7. Dream list (no promises; the team's wish list)
+
+- Removal that happens *before* listing: monitor new broker scrapes and request suppression the day a record appears.
+- A "privacy will" for after death: instructions and requests so a relative can remove a deceased person's listings (identity theft of the deceased is common).
+- Browser extension that warns "this site sells people's data; opt out?" and starts the flow.
+- Phone app (Android first) for scanning and approving, PII still on the user's own devices.
+- Local AI helper (runs on-device, no cloud) that reads broker replies and drafts the right follow-up.
+- Automatic letters by real mail for brokers that only accept postal requests (print-and-mail partner, opt-in, PII sent only for that letter).
+- Collective action: anonymous, aggregated stats on which brokers ignore the law, published for regulators and press.
+- Insurance partnership: lower identity-theft premiums for users with a clean exposure score.
+- "Privacy score" badge an employer or school can offer as a benefit, with zero PII collected.
+- Opt-in alias identity kit (alias email, alias phone, PO box guidance) for survivors.
+- Partnerships with state ACPs and DV shelters to ship it free to survivors.
+- A kiosk/library edition volunteers can run for seniors at a community centre, wiped after each session.
+
+---
+
+## 8. How we measure success (PII-free only)
+- Installs and active installs (from the feed check, anonymous counter).
+- Median time from install to first request sent.
+- Share of users who finish the wizard (local, opt-in telemetry only, previewed).
+- Confirmed removals per user (self-reported in the opt-in summary).
+- Free-to-paid conversion and churn (from the payment processor, never joined to app data).
+
+## 9. Open questions for the owner
+- Apple Developer account ($99/yr) for a signed Mac app: when?
+- Final prices after a sourced competitor check (brand-marketing).
+- Business entity, payment processor account, and terms of service: needed before 1.0 payments.
