@@ -44,6 +44,8 @@ td, th { text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); 
 .gallery { display:flex; flex-wrap:wrap; gap:12px; }
 .gallery img { max-width:240px; border:1px solid var(--line); border-radius:6px; }
 .actions { display:flex; gap:12px; margin-top:22px; flex-wrap:wrap; }
+form.card > .actions { position:sticky; bottom:0; background:var(--card); padding:12px 0;
+  border-top:1px solid var(--line); }
 .printable { background:#fff; padding:30px; }
 @media print { header, .noprint { display:none; } body { background:#fff; font-size:12pt; } }
 

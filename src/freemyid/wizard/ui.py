@@ -185,8 +185,9 @@ def _screen_body(step: str, d: Draft) -> str:
                 'Uninstall anytime.</b></p></div>'
                 '<p class="hint">Free My ID works on people-search sites. It does not change '
                 'what Facebook itself does with your account.</p>'
-                '<div class="card soft">' + paras
-                + '</div><h2>Who is this for?</h2>' + radios + up
+                '<details class="more"><summary>Read the full wording</summary>'
+                '<div class="card soft">' + paras + '</div></details>'
+                '<h2>Who is this for?</h2>' + radios + up
                 + _inp("attested_by", "Type your full name to sign", d.attested_by,
                        req=True)
                 + _check("ack", "I have read this and I agree.", d.consent_ack)
@@ -245,7 +246,12 @@ def _screen_body(step: str, d: Draft) -> str:
             "This adds one small Free My ID task to Windows (Task Scheduler) that runs once a "
             "day, even when this window is closed. If the computer was off, it runs when "
             "it is next on. Quiet unless it needs you. You can turn it off in Settings."))
-        return (f'<div class="card soft"><p><b>What happens next</b></p><ol class="big-list">'
+        from .. import config as cfgmod
+        practice = ("" if d.editing or cfgmod.load().real_submissions_enabled else
+                    '<div class="note"><b>Practice mode is on.</b> Free My ID will look for '
+                    'listings but will not send anything to any site until you turn that on '
+                    'in Settings.</div>')
+        return (practice + f'<div class="card soft"><p><b>What happens next</b></p><ol class="big-list">'
                 f'{lis}</ol></div>' + auto)
     return ""
 

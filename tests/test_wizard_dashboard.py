@@ -126,3 +126,11 @@ def test_csrf_required_on_todo_post(env):
     t = _assisted(p)
     store.save_todo(t)
     assert c.post(f"/todo/{t.id}/done").status_code == 403
+
+
+def test_status_sentence_first_run_is_gentle():
+    sts = [BrokerStatus(profile_id="a" * 32, broker_id=f"b{i}", state=ListingState.FOUND)
+           for i in range(3)]
+    s, good = dash.status_sentence(sts, 3, False)
+    assert s.startswith("Free My ID has made a list of sites") and "need" not in s and not good
+    assert dash.status_sentence(sts, 0, False)[1]

@@ -64,6 +64,12 @@ def status_sentence(statuses: list[BrokerStatus], n_todos: int, running: bool,
     waiting = sum(1 for s in statuses if s.state in WAITING_STATES)
     if not statuses and not n_todos:
         return "Free My ID is set up. Nothing to do yet.", True
+    if done == 0 and not any(s.state in (ListingState.SUBMITTED, ListingState.AWAITING_VERIFICATION,
+                                         ListingState.REAPPEARED) for s in statuses):
+        return ("Free My ID has made a list of sites to work through. Start with the first one "
+                "below when you have a few minutes." if n_todos else
+                "Free My ID has made a list of sites to work through. Nothing needs you yet.",
+                n_todos == 0)
     sites = f"{done} site{'s have' if done != 1 else ' has'} confirmed or no longer list{'s' if done == 1 else ''} you"
     wait = f"{waiting} {'is' if waiting == 1 else 'are'} still waiting"
     if n_todos == 0:
