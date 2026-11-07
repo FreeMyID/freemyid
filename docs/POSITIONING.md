@@ -25,7 +25,7 @@ Secondary market: anyone who doesn't want their personal details sold online.
 |---|---|
 | "Your name, address and phone number are for sale. Anyone can buy them." | This is literally the broker business model. |
 | "Take yourself off the market." | That is exactly what the opt-outs do. |
-| "No cloud. No account. Nothing sent to us. Your information never leaves your computer." | True by architecture (local-first, `netpolicy`). This is the strongest pitch for people who distrust tech companies. |
+| "No cloud. No account. Nothing sent to us. Your details are kept on your computer and go only to the sites you ask to remove you." | True by architecture (local-first, `netpolicy`). Never say "never leaves your computer": removal requests carry the person's details to those sites. This is the strongest pitch for people who distrust tech companies. |
 | "A report to the Director of National Intelligence, made public in 2023, says US intelligence agencies buy commercially available data about Americans, and warns it can enable blackmail, stalking and harassment." | Verified 2026-11-07: ODNI report dated 27 Jan 2022, released June 2023 (source and caveats in docs/MARKETING_COPY.md, Sources). Do not add "instead of a warrant". |
 | "A 2024 federal law bars data brokers from selling Americans' sensitive data to foreign adversaries, and a DOJ rule has restricted bulk transfers to countries of concern since April 2025." | Verified 2026-11-07: PADFA (Pub. L. 118-50, signed 24 Apr 2024); DOJ 28 CFR Part 202, effective 8 Apr 2025. Sources in docs/MARKETING_COPY.md. Never imply Free My ID stops overseas access; it removes listings from sites. |
 | "Built so your grandparents can use it." | This is the actual design goal. |
