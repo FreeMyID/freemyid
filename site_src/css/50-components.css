@@ -52,11 +52,11 @@
   .btn--secondary:hover { border-color: var(--color-heading); box-shadow: none; }
   .btn--ghost {
     background: transparent; color: var(--color-link); border-color: transparent; box-shadow: none;
-    padding-inline: 0.6em; text-decoration: underline; text-underline-offset: 0.2em;
+    padding-inline: 0.15em; text-decoration: underline; text-underline-offset: 0.2em;
   }
   .btn--ghost:hover { box-shadow: none; text-decoration-thickness: 0.14em; }
   .btn--large, .btn--lg { font-size: var(--step-1); padding: 0.7em 1.5em; min-block-size: 3.5rem; }
-  .btn--ghost.btn--large { padding-inline: 0.6em; }
+  .btn--ghost.btn--large { padding-inline: 0.15em; }
   .btn--small { font-size: 0.9rem; padding: 0.4em 1em; min-block-size: 2.5rem; }
   .btn-row { display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-s); align-items: center; }
   .btn-row--center { justify-content: center; }
