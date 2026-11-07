@@ -41,16 +41,6 @@
   title: "Is Free My ID safe? No account, no cloud, open source"
   description: Free My ID keeps your details on your own computer, encrypted. What it stores, what it never asks for, how to check the download, and how to uninstall.
   jsonld: [breadcrumbs]
-# TEMPORARY: keeps privacy/ working until the lead adds privacy/ -> safety/ to the site.yaml redirects
-# (site.yaml "privacy.html: privacy" also needs this id until then). Remove this entry in that change.
-- id: privacy
-  out: privacy/
-  template: redirect.html
-  label: Is it safe?
-  title: "Moved: Is it safe?"
-  description: This page moved to the Free My ID "Is it safe?" page.
-  noindex: true
-  target: {out: safety/, label: "Is it safe?"}
 - id: faq
   out: faq/
   template: pages/faq.html

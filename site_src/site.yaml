@@ -12,4 +12,5 @@ redirects:
   download.html: download
   faq.html: faq
   how-it-works.html: how-it-works
-  privacy.html: privacy
+  privacy.html: safety
+  privacy/index.html: safety
