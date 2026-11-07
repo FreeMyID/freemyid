@@ -417,6 +417,8 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--check", action="store_true", help="fail if site/ differs from a fresh build or checks fail")
     ap.add_argument("--selftest", action="store_true", help="test that the registry-path guard refuses unsafe paths")
+    ap.add_argument("--out", type=Path, default=None,
+                    help="write the preview here instead of site/ (parallel agents; never commit it)")
     args = ap.parse_args(argv)
     if args.selftest:
         return selftest()
@@ -443,12 +445,16 @@ def main(argv: list[str] | None = None) -> int:
             write_tree(files, Path(tmp))
             errors += site_check.check_site(Path(tmp), s.cfg["base_url"], s.cfg["base_path"])
     else:
+        out = args.out.resolve() if args.out else OUT
+        if out != OUT and out.is_relative_to(ROOT):
+            print("ERROR: --out must be outside the repo (use your scratchpad)")
+            return 2
         with tempfile.TemporaryDirectory() as tmp:
             write_tree(files, Path(tmp))
-            if OUT.exists():
-                shutil.rmtree(OUT)
-            shutil.copytree(tmp, OUT)
-        errors += site_check.check_site(OUT, s.cfg["base_url"], s.cfg["base_path"])
+            if out.exists():
+                shutil.rmtree(out)
+            shutil.copytree(tmp, out)
+        errors += site_check.check_site(out, s.cfg["base_url"], s.cfg["base_path"])
 
     for e in errors:
         print("ERROR:", e)
