@@ -1,26 +1,34 @@
 # Free My ID social poster: posts at most one queued Bluesky item per run.
-# User unit. Install: see tools/social/README.md. Paths assume the repo lives at
-# ~/Documents/CODE/Data_Removal; edit the three %h paths below if it moves.
+# TEMPLATE. Do not copy or link this file by hand: tools/social/install.sh fills in
+# the @...@ values and installs a read-only copy (0444) in ~/.config/systemd/user.
+# It runs a read-only copy of poster.py and its own venv in @PREFIX@, never
+# code from the repo. Every start re-checks a SHA-256 manifest of that copy against
+# the hash pinned below; any change refuses to run. Re-pin with install.sh --update.
 [Unit]
 Description=Free My ID social poster (one queued Bluesky post)
-Documentation=file://%h/Documents/CODE/Data_Removal/tools/social/README.md
+Documentation=file://@REPO@/tools/social/README.md
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=oneshot
-WorkingDirectory=%h/Documents/CODE/Data_Removal
-ExecStart=%h/Documents/CODE/Data_Removal/.venv/bin/python tools/social/poster.py
+WorkingDirectory=@PREFIX@
+# 1. The manifest is the one that was reviewed and pinned at install time.
+ExecStartPre=/usr/bin/sh -c 'cd @PREFIX@ && echo "@SUMS_SHA256@  SHA256SUMS" | /usr/bin/sha256sum --check --strict --quiet -'
+# 2. Every listed file (poster.py, verify.sh, the whole venv) still matches it.
+ExecStartPre=/usr/bin/sh -c 'cd @PREFIX@ && /usr/bin/sha256sum --check --strict --quiet SHA256SUMS'
+# 3. No files or symlinks were added (e.g. a .pth file in site-packages).
+ExecStartPre=/usr/bin/sh @PREFIX@/verify.sh @PREFIX@
+ExecStart=@PREFIX@/venv/bin/python -I -B @PREFIX@/poster.py --queue @REPO@/docs/marketing/seo/bluesky-queue.md --outreach-log @REPO@/docs/marketing/seo/outreach-log.md
 TimeoutStartSec=120
-Environment=PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 
 # Hardening that works for --user units (needs unprivileged user namespaces).
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=read-only
-# The only writes: the queue status line and the outreach log.
-ReadWritePaths=%h/Documents/CODE/Data_Removal/docs/marketing/seo
+# The only writes: the queue status line, its lock file and the outreach log.
+ReadWritePaths=@REPO@/docs/marketing/seo
 # AF_UNIX for the session D-Bus (keyring); AF_INET/6 for https://bsky.social.
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
 RestrictNamespaces=true
@@ -28,4 +36,4 @@ RestrictRealtime=true
 RestrictSUIDSGID=true
 LockPersonality=true
 SystemCallArchitectures=native
-UMask=0022
+UMask=0077

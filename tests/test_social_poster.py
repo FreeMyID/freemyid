@@ -870,3 +870,206 @@ def test_sec58_stray_joiners_and_tags_refused(text):
 def test_sec58_url_followed_by_hidden_char_gets_no_facet():
     assert poster.link_facets("see https://freemyid.org\u200b now") == []
     assert len(poster.link_facets("see https://freemyid.org/über now")) == 1
+
+
+# ----------------------------------------------------------------------------- SEC-59 install.sh
+
+SOCIAL = ROOT / "tools" / "social"
+INSTALL_FILES = ("install.sh", "poster.py", "verify.sh", "requirements.lock",
+                 "freemyid-poster.service", "freemyid-poster.timer")
+
+
+@pytest.fixture
+def sandbox(tmp_path: Path):
+    """A fake repo and a temp HOME. Nothing outside tmp_path is touched."""
+    import shutil
+    import stat
+
+    repo = tmp_path / "repo"
+    (repo / "tools" / "social").mkdir(parents=True)
+    (repo / "docs" / "marketing" / "seo").mkdir(parents=True)
+    for name in INSTALL_FILES:
+        shutil.copy2(SOCIAL / name, repo / "tools" / "social" / name)
+    home = tmp_path / "home"
+    home.mkdir()
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    calls = tmp_path / "systemctl-calls"
+    fake = bin_dir / "systemctl"
+    fake.write_text(f"#!/bin/sh\necho \"$@\" >> {calls}\n")
+    fake.chmod(0o755)
+    yield repo, home, bin_dir, calls
+    for p in [tmp_path, *tmp_path.rglob("*")]:  # read-only tree: let pytest clean it up
+        if not p.is_symlink():
+            p.chmod(p.stat().st_mode | stat.S_IWUSR)
+
+
+def run_install(sandbox, *args: str, uid0: bool = False):
+    import subprocess
+
+    repo, home, bin_dir, _ = sandbox
+    if uid0:
+        fake_id = bin_dir / "id"
+        fake_id.write_text("#!/bin/sh\necho 0\n")
+        fake_id.chmod(0o755)
+    env = {
+        "HOME": str(home),
+        "PATH": f"{bin_dir}:/usr/bin:/bin",
+        "FREEMYID_POSTER_TEST_SKIP_PIP": "1",
+        "LC_ALL": "C",
+    }
+    return subprocess.run(
+        ["bash", str(repo / "tools" / "social" / "install.sh"), "--python", sys.executable,
+         *args],
+        check=False, env=env, capture_output=True, text=True, timeout=120,
+    )
+
+
+def _paths(home: Path) -> tuple[Path, Path, Path]:
+    prefix = home / ".local" / "share" / "freemyid-poster"
+    units = home / ".config" / "systemd" / "user"
+    return prefix, units / "freemyid-poster.service", units / "freemyid-poster.timer"
+
+
+def _pre_checks(unit: Path) -> list[int]:
+    """Run each ExecStartPre the way systemd would (shell-like word splitting)."""
+    import shlex
+    import subprocess
+
+    rcs = []
+    for line in unit.read_text().splitlines():
+        if line.startswith("ExecStartPre="):
+            argv = shlex.split(line.removeprefix("ExecStartPre="))
+            res = subprocess.run(argv, check=False, capture_output=True, timeout=60)
+            rcs.append(res.returncode)
+    return rcs
+
+
+def _pinned(unit: Path) -> str:
+    import re
+
+    m = re.search(r'echo "([0-9a-f]{64})  SHA256SUMS"', unit.read_text())
+    assert m
+    return m.group(1)
+
+
+def test_sec59_install_layout_permissions_and_pin(sandbox):
+    import hashlib
+    import re
+    import stat
+
+    repo, home, _, calls = sandbox
+    res = run_install(sandbox)
+    assert res.returncode == 0, res.stderr
+    prefix, service, timer = _paths(home)
+    assert stat.S_IMODE(prefix.stat().st_mode) == 0o555
+    assert stat.S_IMODE((prefix / "poster.py").stat().st_mode) == 0o444
+    for p in prefix.rglob("*"):
+        if not p.is_symlink():
+            assert p.stat().st_mode & 0o222 == 0, p
+    for unit in (service, timer):
+        assert not unit.is_symlink()
+        assert stat.S_IMODE(unit.stat().st_mode) == 0o444
+        assert not re.search(r"@[A-Z_0-9]+@", unit.read_text())
+    assert timer.read_text() == (repo / "tools/social/freemyid-poster.timer").read_text()
+    text = service.read_text()
+    assert f"ExecStart={prefix}/venv/bin/python -I -B {prefix}/poster.py" in text
+    assert f"ReadWritePaths={repo}/docs/marketing/seo" in text
+    assert str(ROOT) not in text  # never points at the real repo
+    sums = hashlib.sha256((prefix / "SHA256SUMS").read_bytes()).hexdigest()
+    assert _pinned(service) == sums and sums in res.stdout
+    assert (prefix / "poster.py").read_bytes() == (SOCIAL / "poster.py").read_bytes()
+    assert _pre_checks(service) == [0, 0, 0]
+    assert not calls.exists()  # never runs systemctl, never enables the timer
+    assert "enable --now freemyid-poster.timer" in res.stdout  # only printed
+
+
+@pytest.mark.parametrize("tamper", ["poster", "pth", "symlink", "sums", "writable"])
+def test_sec59_any_change_to_the_copy_refuses_to_start(sandbox, tamper):
+    _, home, _, _ = sandbox
+    assert run_install(sandbox).returncode == 0
+    prefix, service, _ = _paths(home)
+    site = next(prefix.glob("venv/lib/python3*/site-packages"))
+    if tamper == "poster":
+        target = prefix / "poster.py"
+        target.chmod(0o644)
+        target.write_text(target.read_text() + "\n# changed\n")
+        target.chmod(0o444)
+    elif tamper == "pth":
+        site.chmod(0o755)
+        (site / "evil.pth").write_text("import os\n")
+        (site / "evil.pth").chmod(0o444)
+        site.chmod(0o555)
+    elif tamper == "symlink":
+        site.chmod(0o755)
+        (site / "keyring").symlink_to("/tmp")
+        site.chmod(0o555)
+    elif tamper == "sums":
+        prefix.chmod(0o755)
+        (prefix / "SHA256SUMS").chmod(0o644)
+        with (prefix / "SHA256SUMS").open("a") as fh:
+            fh.write("0" * 64 + "  extra\n")
+        (prefix / "SHA256SUMS").chmod(0o444)
+        prefix.chmod(0o555)
+    elif tamper == "writable":
+        (prefix / "poster.py").chmod(0o644)
+    assert any(rc != 0 for rc in _pre_checks(service))
+
+
+def test_sec59_update_repins_and_install_refuses_twice(sandbox):
+    repo, home, _, _ = sandbox
+    assert run_install(sandbox).returncode == 0
+    prefix, service, _ = _paths(home)
+    first = _pinned(service)
+    again = run_install(sandbox)
+    assert again.returncode != 0 and "--update" in again.stderr
+    src = repo / "tools/social/poster.py"
+    src.write_text(src.read_text() + "\n# reviewed change\n")
+    res = run_install(sandbox, "--update")
+    assert res.returncode == 0, res.stderr
+    assert _pinned(service) != first and _pinned(service) in res.stdout
+    assert (prefix / "poster.py").read_text().endswith("# reviewed change\n")
+    assert _pre_checks(service) == [0, 0, 0]
+
+
+def test_sec59_update_needs_existing_install(sandbox):
+    res = run_install(sandbox, "--update")
+    assert res.returncode != 0 and "nothing installed" in res.stderr
+
+
+def test_sec59_refuses_root(sandbox):
+    _, home, _, _ = sandbox
+    res = run_install(sandbox, uid0=True)
+    assert res.returncode != 0 and "root" in res.stderr
+    assert not (home / ".local").exists() and not (home / ".config").exists()
+
+
+def test_sec59_replaces_old_symlinked_unit_not_its_target(sandbox, tmp_path):
+    _, home, _, _ = sandbox
+    target = tmp_path / "old-target.service"
+    target.write_text("old\n")
+    units = home / ".config" / "systemd" / "user"
+    units.mkdir(parents=True)
+    (units / "freemyid-poster.service").symlink_to(target)
+    assert run_install(sandbox).returncode == 0
+    assert not (units / "freemyid-poster.service").is_symlink()
+    assert target.read_text() == "old\n"
+
+
+def test_sec59_systemd_analyze_verify(sandbox):
+    import shutil
+    import subprocess
+
+    if not shutil.which("systemd-analyze"):
+        pytest.skip("systemd-analyze not available")
+    _, home, _, _ = sandbox
+    assert run_install(sandbox).returncode == 0
+    _, service, timer = _paths(home)
+    res = subprocess.run(
+        ["systemd-analyze", "--user", "verify", str(service), str(timer)],
+        check=False, capture_output=True, text=True, timeout=60,
+    )
+    if res.returncode != 0 and "Failed to" in res.stderr and "bus" in res.stderr.lower():
+        pytest.skip("no user systemd instance")
+    assert res.returncode == 0, res.stderr
+    assert "freemyid-poster" not in res.stderr

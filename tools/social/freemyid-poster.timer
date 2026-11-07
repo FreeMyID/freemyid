@@ -1,4 +1,5 @@
 # Free My ID social poster: 10:00 and 16:00 local time; catches up after sleep/off.
+# Installed as a 0444 copy by tools/social/install.sh. Enabling it is a manual step.
 [Unit]
 Description=Run the Free My ID social poster at 10:00 and 16:00
 
