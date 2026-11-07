@@ -1,0 +1,101 @@
+---
+// Download. Same copy and source comments as site_src/templates/pages/download.html (WR-9/10/19/26/29).
+// Islands: TimelineBeam (decorative) and CopyHash (copy button for the fingerprint), both client:visible.
+import Base from "@/layouts/Base.astro";
+import PageHead from "@/components/PageHead.astro";
+import Section from "@/components/Section.astro";
+import Icon from "@/components/Icon.astro";
+import Art from "@/components/Art.astro";
+import Card from "@/components/ui/Card.astro";
+import Alert from "@/components/ui/Alert.astro";
+import SmartScreen from "@/components/SmartScreen.astro";
+import Timeline from "@/components/aceternity/Timeline.astro";
+import TimelineItem from "@/components/aceternity/TimelineItem.astro";
+import BorderBeam from "@/components/magicui/BorderBeam.astro";
+import CopyHash from "@/components/CopyHash.tsx";
+import { buttonVariants } from "@/components/ui/button-variants";
+import { pageProps, release, releaseDate, site, url } from "@/lib/site";
+const p = pageProps("download");
+const v = release.version;
+---
+<Base {...p} ogImage="assets/og-download.png" ogAlt="Download Free My ID for Windows.">
+<PageHead crumbs={p.crumbs} title="Download Free My ID"
+  lead="For Windows 10 and Windows 11. Free, with no administrator password needed.">
+  {/* source: PLAN_V1 (Windows 10/11 target); LICENSE (free, AGPL); packaging/windows/freemyid.iss PrivilegesRequired=lowest (per-user install, no admin). WR-27: install time dropped (never timed, D8). */}
+  <Art slot="art" src="sections/step-install" alt="A laptop installing the Free My ID app." />
+</PageHead>
+<div class="wrap -mt-l pb-xl">
+  <Card class="max-w-[36rem] gap-s p-m shadow-2 min-[30em]:p-l">
+    {v ? (
+      // source: .github/workflows/build.yml release job publishes FreeMyIDSetup.exe + SHA256SUMS.txt
+      <BorderBeam class="self-start">
+        <a class={buttonVariants({ size: "lg", class: "max-[30em]:px-s max-[30em]:text-body" })} href={site.download_url}><Icon name="download" /><span>Download <span class="whitespace-nowrap">FreeMyIDSetup.exe</span></span></a>
+      </BorderBeam>
+    ) : (
+      // WR-9: no release yet, so no link (releases/latest would 404)
+      <Alert icon="calendar" class="my-0"><p><strong>Download opens soon</strong></p><p>Not published yet. We'll show the download button here the day the first version is ready.</p></Alert>
+    )}
+    <dl class="grid grid-cols-[auto_1fr] gap-x-m gap-y-2xs">
+      {/* WR-26: "works on" only once a release exists; source: PLAN_V1 (Windows 10/11 target) */}
+      <dt class="font-bold text-heading">{v ? "Works on" : "Made for"}</dt><dd>Windows 10 and 11</dd>
+      <dt class="font-bold text-heading">Price</dt><dd>Free</dd>
+      {v && <><dt class="font-bold text-heading">Version</dt><dd>{v}{releaseDate && ` (${releaseDate})`}</dd></>}
+      {release.size_mb && <><dt class="font-bold text-heading">Size</dt><dd>{release.size_mb} MB</dd></>}
+    </dl>
+    {!v && <p class="text-small text-muted">Version number, size and checksum will show here when the first version is published.</p>}
+    {/* source: Windows-only v1 (PLAN_V1); macOS later = project roadmap, no date promised */}
+    {v
+      ? <p class="text-small text-muted">If the button doesn't work, get the newest version from <a href={`${site.releases_url}/latest`}>the releases page</a>. Mac and phone versions aren't available yet.</p>
+      : <p class="text-small text-muted">Mac and phone versions aren't available yet.</p>}
+  </Card>
+</div>
+
+<Section id="smartscreen" tone="alt" title="Windows may show a blue warning. Here's why, and what to do" titleId="ss-title">
+  {/* source: installer is not code-signed (.github/workflows/build.yml release notes "not code-signed yet"); SmartScreen wording = Windows dialog text */}
+  <p class="max-w-measure">Windows shows "Windows protected your PC" for new programs that haven't paid for a publisher certificate yet. Free My ID is free and hasn't bought one yet. The warning doesn't mean anything is wrong.</p>
+  {/* WR-10; families page = /families/ */}
+  <p class="mt-s max-w-measure">Not sure about this step? Ask a family member to sit with you. <a href={url("families/")}>Here's a one-page guide for them.</a></p>
+  <Timeline class="mt-l max-w-[44rem]">
+    {/* source: file name from .github/workflows/build.yml (cp to FreeMyIDSetup.exe); Downloads folder = browser default */}
+    <TimelineItem n={1} title="Open the file you downloaded"><p>It's called <strong>FreeMyIDSetup.exe</strong>. You'll usually find it in your <strong>Downloads</strong> folder, or at the bottom or top-right of your web browser.</p></TimelineItem>
+    <TimelineItem n={2} title={'Click the small words "More info"'}>
+      <p>If a blue box says <strong>"Windows protected your PC"</strong>, don't click "Don't run". Click <strong>More info</strong> instead.</p>
+      <SmartScreen step={1} />
+    </TimelineItem>
+    <TimelineItem n={3} title={'Check the name, then click "Run anyway"'}>
+      <p>Make sure it says the app is <strong>FreeMyIDSetup.exe</strong>. It will say "Unknown publisher"; that's expected. Then click <strong>Run anyway</strong>.</p>
+      {/* WR-19: safety line before Run anyway. WR-29: name the releases page only once a release exists */}
+      <Alert variant="note" icon="shield"><p><strong>Only do this if you downloaded the file from this page{v && " or from our GitHub releases page"}. If it came from anywhere else, delete it.</strong></p></Alert>
+      <SmartScreen step={2} />
+    </TimelineItem>
+    {/* source: freemyid.iss (Ready page with Install; [Run] postinstall "Start Free My ID now"); six screens = src/freemyid/wizard/draft.py STEPS */}
+    <TimelineItem n={4} title="Click Install"><p>Free My ID opens by itself and walks you through six simple screens.</p></TimelineItem>
+  </Timeline>
+</Section>
+
+<Section narrow title="How to know it's really us" titleId="genuine">
+  {/* source: policy, not code: we never email installers or phone users (docs/marketing/families-page.md "never asks for" block); download sources = site.yaml download/releases URLs */}
+  <Alert variant="note" icon="shield" class="mt-0">
+    <p><strong>Stay safe:</strong> only download Free My ID from this page{v && <> or from <a href={site.releases_url}>our GitHub releases page</a></>}. We will never email you an installer, and we will never call you.</p>
+  </Alert>
+  <details id="checksum" class="faq-item mt-m rounded-xl border border-line bg-card shadow-1">
+    <summary class="flex min-h-tap items-center justify-between gap-s px-m py-s text-lead font-bold text-heading">
+      <span>For helpers: check the download is genuine</span><Icon name="chevron-down" class="faq-chevron size-6 text-brand" />
+    </summary>
+    <div class="prose-fmid px-m pb-m">
+      {/* source: .github/workflows/build.yml (sha256sum > SHA256SUMS.txt, attached to the release); Get-FileHash defaults to SHA256 */}
+      <p>{v ? <>Each release lists a <strong>SHA256SUMS.txt</strong> file.</> : <>Each release will come with a <strong>SHA256SUMS.txt</strong> file (no version is published yet).</>} In PowerShell, run <code>Get-FileHash .\FreeMyIDSetup.exe</code> and check that the long code matches the line for FreeMyIDSetup.exe in that file.</p>
+      {release.sha256 && (
+        <>
+          <p>For version {v}, the code is: <code class="block break-all rounded-md bg-surface p-xs text-text">{release.sha256}</code></p>
+          <CopyHash client:visible value={release.sha256} />
+        </>
+      )}
+    </div>
+  </details>
+
+  <h2 class="mt-xl" id="remove">Removing it</h2>
+  {/* source: freemyid.iss UninstallDisplayName (Settings > Apps entry), [UninstallRun] "schedule remove", SuppressibleMsgBox delete-data prompt */}
+  <p class="mt-s">Open Windows <strong>Settings → Apps</strong>, find <strong>Free My ID</strong>, and click <strong>Uninstall</strong>. It asks whether to delete your saved records too.</p>
+</Section>
+</Base>

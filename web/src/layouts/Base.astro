@@ -19,7 +19,7 @@ interface Props {
   ogAlt?: string;
 }
 const { title, description, out, nav = null, noindex = false, jsonldKinds = [], crumbs = [],
-  ogImage = "og.png", ogAlt = "Free My ID. Take your name off the websites that sell it." } = Astro.props;
+  ogImage = "assets/og-home.png", ogAlt = "Free My ID: take your name off the websites that sell it." } = Astro.props;
 const blocks = jsonldKinds.map((k) => ldJson(jsonld(k, crumbs, renderPlain)));
 const canon = canonical(out);
 ---

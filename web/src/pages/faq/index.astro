@@ -1,0 +1,40 @@
+---
+// Questions. Same copy and source comments as site_src/templates/pages/faq.html; answers from
+// site_src/data/faq.yaml (per-entry source comments there).
+import Base from "@/layouts/Base.astro";
+import PageHead from "@/components/PageHead.astro";
+import Section from "@/components/Section.astro";
+import Icon from "@/components/Icon.astro";
+import FaqList from "@/components/FaqList.astro";
+import CtaDownload from "@/components/CtaDownload.astro";
+import { faq, pageProps } from "@/lib/site";
+const p = pageProps("faq");
+// source: myth/fact card = docs/POSITIONING.md product ideas table; Fact 1 = docs/USER_GUIDE.md section 1 and section 11;
+// "must answer ... many still honor it" = POSITIONING.md "Legal accuracy" (qualifier kept), brokers/state_laws.yaml.
+// Fact 2 = docs/USER_GUIDE.md section 1; faq.yaml "comes-back". WR-36: softened to the logical consequence.
+const myths = [
+  ['Posting "I do not give Facebook permission…" on my page protects my information.',
+   "That post doesn't reach the companies that sell your details, and they aren't required to honor it. A removal request sent to each site, through the process that site uses, is what works. That's what Free My ID sends. In states with a privacy law, sites must answer; elsewhere many still honor it."],
+  ["If I'm not on social media, I'm not online.",
+   "People-search sites build listings from public records and purchased data. You can be listed, with address, age and relatives, without ever having a Facebook account."],
+];
+---
+<Base {...p}>
+<PageHead crumbs={p.crumbs} title="Questions" lead="Plain answers about Free My ID. Tap a question to see the answer." />
+
+<Section id="myths" narrow title="Myth vs. fact" class="pt-l">
+  <div class="grid gap-m">
+    {myths.map(([myth, fact]) => (
+      <div class="reveal grid overflow-hidden rounded-xl border border-line bg-card shadow-1">
+        <p class="flex gap-xs bg-surface p-m"><Icon name="x" class="mt-[0.25em] text-muted" /><span><strong class="text-heading">Myth:</strong> {myth}</span></p>
+        <p class="flex gap-xs p-m"><Icon name="check" class="mt-[0.25em] text-ok" /><span><strong class="text-heading">Fact:</strong> {fact}</span></p>
+      </div>
+    ))}
+  </div>
+</Section>
+
+<Section id="common" tone="alt" narrow title="Common questions">
+  <FaqList items={faq} />
+  <div class="mt-l"><CtaDownload /></div>
+</Section>
+</Base>
