@@ -65,6 +65,7 @@ CRED_NAME = "freemyid-passphrase"
 WRAP_FILE = "datakey.wrapped.json"
 SECRETS_FILE = "secrets.enc"
 LOCK_FILE = "secrets.enc.lock"
+LOCK_ATTEMPTS_WIN = 6   # msvcrt LK_LOCK itself retries ~10 s, so about a minute in total
 PENDING_FILE = "migrate.pending"
 MIN_PASSPHRASE_LEN = 8
 MAX_PASSPHRASE_BYTES = 4096
@@ -382,18 +383,26 @@ def _exclusive_create(path: Path, data: bytes) -> None:
 @contextmanager
 def _file_lock(path: Path) -> Iterator[None]:
     """Exclusive inter-process lock on `path` (created if missing) for read-modify-write
-    of secrets.enc (SEC-74). flock on POSIX, msvcrt byte lock on Windows."""
+    of secrets.enc (SEC-74). flock on POSIX, msvcrt byte lock on Windows (gives up after
+    about a minute with a plain error instead of waiting forever, SEC-85c).
+
+    The lock file is never deleted while the folder is in use: a writer blocked on the old
+    inode and a new one on a fresh file would not exclude each other (SEC-85a)."""
     path.parent.mkdir(parents=True, exist_ok=True)
     fd = os.open(path, os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0), 0o600)
     try:
         if sys.platform == "win32":
             import msvcrt
-            while True:
+            for attempt in range(LOCK_ATTEMPTS_WIN):
                 try:
                     msvcrt.locking(fd, msvcrt.LK_LOCK, 1)   # retries for ~10 s itself
                     break
                 except OSError:
-                    continue
+                    if attempt == LOCK_ATTEMPTS_WIN - 1:
+                        raise crypto.KeyUnavailable(
+                            "another Free My ID window is busy saving passwords; close it "
+                            "or wait a minute, then try again"
+                        ) from None
             try:
                 yield
             finally:
@@ -537,7 +546,7 @@ class PassphraseBackend:
         _forget(wp)
         wp.unlink(missing_ok=True)
         self.secrets_path().unlink(missing_ok=True)
-        (paths.home() / LOCK_FILE).unlink(missing_ok=True)
+        # secrets.enc.lock stays: another writer may hold it (SEC-85a). wipe removes it.
 
     # --- secrets: one encrypted JSON map {service: {user: value}} ----------------------
     def _cipher(self) -> crypto.Cipher:
@@ -725,6 +734,7 @@ def wipe_data_keys() -> None:
             log.info("wipe: the keychain key isn't this folder's; left in place")
     PassphraseBackend().delete_data_key()
     (paths.home() / PENDING_FILE).unlink(missing_ok=True)
+    (paths.home() / LOCK_FILE).unlink(missing_ok=True)   # wipe ends the folder's use
 
 
 # ------------------------------------------------------------------------------ migration

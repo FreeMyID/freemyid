@@ -498,3 +498,30 @@ xfails removed: SEC-77, SEC-78, SEC-79 x3, SEC-80, SEC-81. Gate: full `.venv/bin
 src/tests/tools/social clean, `mypy --strict tools/social/poster.py` clean, shellcheck clean.
 `systemd-analyze --user verify` passes on units rendered by install.sh in a temp HOME (scratchpad).
 Not done: I didn't edit docs/SECURITY_REVIEW.md (qa owns it), and I didn't install anything.
+
+## 2026-11-07 SEC-82..85 (secrets migrate re-check), Theo Park
+
+Orchestrator granted permission for secret_backends.py (and cli.py for the flag).
+- ee216b9 SEC-84: `KeyringBackend._stored()` returns `READ_FAILED` (not None) when the keychain
+  can't be read. `store_data_key` refuses ("keychain can't be read right now"),
+  `delete_data_key(expected=...)` and `wipe_data_keys` leave the entry. `_has_data_key` counts
+  it as "exists", so a rollback never deletes it.
+- 6a05955 SEC-83: `_rollback` always runs `restore_config`, which writes `pend["orig"]` only
+  if config differs (safe to repeat). `config_switched` removed.
+- 7323d46 SEC-82: moving off the keychain deletes this folder's mailbox passwords but keeps the
+  data key. `MigrateResult.notice` (new, default "") tells the user, and the CLI prints it.
+  Opt-in `migrate(to, remove_keychain_key=True)` / `freemyid secrets migrate --to X
+  --remove-keychain-key` (stderr warning) deletes it, still only if it equals this folder's
+  key. Using the flag after a finished move just removes the old copy. Using it with
+  `--to keyring` is a usage error. The wipe confirmation now says other keychain folders stop
+  working. Updated 2 existing asserts that expected the key to be gone, added 2 tests in
+  tests/test_secret_backends.py.
+- SEC-85: (a) `PassphraseBackend.delete_data_key` no longer unlinks secrets.enc.lock;
+  `wipe_data_keys` removes it at the end. (c) Windows lock gives up after 6 LK_LOCK rounds
+  (about 60 s) with KeyUnavailable "another Free My ID window is busy". (b) documented in the
+  `migrate` docstring (don't migrate while the wizard is open), not fixed.
+
+xfails removed: SEC-82, SEC-83, SEC-84 (the recheck file now has none).
+CHANGE REQUEST (paths.py): add "secrets.enc.lock" (and "migrate.pending") to `OWNED_ENTRIES`
+so wipe's folder sweep covers them, instead of relying on `wipe_data_keys`.
+Not done: docs/SECURITY_REVIEW.md (qa owns it); the Windows lock cap isn't tested on Windows.
