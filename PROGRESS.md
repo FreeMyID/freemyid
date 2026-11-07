@@ -58,3 +58,8 @@ Integrate wave → qa review → GitHub repo + first CI exe build (user OK neede
 - Registry hardening 42d44ee (alias bomb, fallback chain, opt-in full bundling + CI sample assert, family registry via iscc define).
 - BLOCKER for v0.1.0: SEC-39 fill-for-me freezes on normal form-POST submit (automation-engineer fixing). qa test fixes (hang guard, browser probe, 13 registry tests, adopted _test_drafts) applied in tree, to commit after a green run; then delete src/freemyid/engine/_test_drafts/.
 - Next: SEC-39 fix -> qa commit -> CI green (add playwright install + FREEMYID_REQUIRE_BROWSER=1) -> tag v0.1.0 -> release.yaml for site -> VM walkthrough. User: social preview upload, old-repo artifacts, collaborator re-invite, trademark.
+
+## Wave 2026-11-07 (orchestrator data-removal-5e): post-v0.1.0 polish
+- Baseline: 432 passed, ruff + mypy clean, v0.1.0 released, CI green. 92 local commits unpushed (website v2 from peer data-removal-46): push needs user OK.
+- Rulings: SEC-38 accepted as designed + one-time practice-mode "real request" confirm; SEC-41 accepted (peer) + reshoot from sample-only brokers anyway.
+- Running: wizard-packager (SEC-38, Windows VM walkthrough of v0.1.0 + real screenshots, "Click Install" check), automation-engineer (SEC-27 first-email approval, reply-matcher edge cases), broker-researcher (sample re-verify, web-form success signals, state laws), web-developer (release 0.1.0 info + checksum, WR-8, leftovers), brand-marketing (claims audit, README, launch-week drafts), graphic-designer (SEC-41 reshoot, social preview), qa-security (SEC status table, tools/registry_health.py, review of this wave).
