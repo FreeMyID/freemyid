@@ -46,8 +46,8 @@ def test_icon_and_installer_settings():
     assert (ROOT / "packaging/windows/freemyid.ico").stat().st_size > 1000
     iss = (ROOT / "packaging/windows/freemyid.iss").read_text()
     for k in ("DisableDirPage=yes", "SetupIconFile=freemyid.ico"):
-    assert "DisableReadyPage" not in iss  # Ready page stays on purpose (v0.1.3)
         assert k in iss
+    assert "DisableReadyPage" not in iss  # Ready page stays on purpose (v0.1.3)
     assert "ArchitecturesAllowed=x64compatible" in iss
     assert "NextButton.OnClick" not in iss  # never auto-press Install for the person
     assert "icon=ICON" in (ROOT / "packaging/windows/freemyid.spec").read_text()
