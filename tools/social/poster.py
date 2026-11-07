@@ -261,9 +261,11 @@ def find_urls(text: str) -> list[tuple[int, int, str]]:
     out = []
     for m in URL_RE.finditer(text):
         url = m.group(0)
-        if any(unicodedata.category(c) == "Cf" for c in url):
-            # invisible/bidi char inside or right after the link: never make a facet (SEC-58)
-            log.warning("link with an invisible/bidi character ignored")
+        if not all("!" <= c <= "~" for c in url):
+            # Only printable ASCII in a link: no invisible, bidi, variation-selector,
+            # filler or look-alike characters can change what a reader sees (SEC-58,
+            # SEC-79). Non-ASCII paths must be %-encoded; otherwise no facet is made.
+            log.warning("link with a non-ASCII or invisible character ignored (no facet)")
             continue
         while url:
             last = url[-1]
@@ -279,6 +281,25 @@ def find_urls(text: str) -> list[tuple[int, int, str]]:
 
 TAG_CHARS = range(0xE0020, 0xE0080)
 BLACK_FLAG = "\U0001f3f4"
+TAG_CANCEL = "\U000e007f"
+RGI_TAG_FLAGS = frozenset(
+    "".join(chr(0xE0000 + ord(c)) for c in sub) + TAG_CANCEL for sub in ("gbeng", "gbsct", "gbwls")
+)
+# Emoji whose base character is punctuation, not a symbol: ‼ ⁉ 〰 〽
+EMOJI_PUNCT = "\u203c\u2049\u3030\u303d"
+# Default_Ignorable_Code_Point characters that are NOT category Cf (those are refused
+# already): combining grapheme joiner, Hangul fillers, Khmer inherent vowels,
+# Mongolian variation selectors, variation selectors, halfwidth filler, reserved.
+_IGNORABLE_RANGES = (
+    (0x034F, 0x034F), (0x115F, 0x1160), (0x17B4, 0x17B5), (0x180B, 0x180F),
+    (0x3164, 0x3164), (0xFE00, 0xFE0F), (0xFFA0, 0xFFA0), (0xFFF0, 0xFFF8),
+    (0xE0000, 0xE0FFF),
+)
+
+
+def _is_ignorable(ch: str) -> bool:
+    cp = ord(ch)
+    return any(lo <= cp <= hi for lo, hi in _IGNORABLE_RANGES)
 
 
 def _is_emoji_side(ch: str) -> bool:
@@ -296,8 +317,22 @@ def _allowed_format_char(text: str, i: int) -> bool:
         j = i
         while j > 0 and ord(text[j - 1]) in TAG_CHARS:
             j -= 1
-        return j > 0 and text[j - 1] == BLACK_FLAG
+        k = i
+        while k < len(text) and ord(text[k]) in TAG_CHARS:
+            k += 1
+        # only the three RGI subdivision flags; any other tag run can hide text (SEC-78)
+        return j > 0 and text[j - 1] == BLACK_FLAG and text[j:k] in RGI_TAG_FLAGS
     return False
+
+
+def _allowed_ignorable(text: str, i: int) -> bool:
+    """VS15/VS16 straight after a character that can be shown as emoji (SEC-79)."""
+    if text[i] not in "\ufe0e\ufe0f" or i == 0:
+        return False
+    prev = text[i - 1]
+    return _is_emoji_side(prev) or prev in EMOJI_PUNCT or (
+        prev in "0123456789#*" and text[i + 1 : i + 2] == "\u20e3"  # keycap
+    )
 
 
 def hidden_char_error(text: str) -> str | None:
@@ -305,11 +340,17 @@ def hidden_char_error(text: str) -> str | None:
 
     Any Unicode format character (category Cf: zero-width spaces, word joiner, BOM,
     soft hyphen, bidi embeddings/overrides/isolates) can make what a reader sees
-    differ from what a link points to, so the whole item is refused.
+    differ from what a link points to, so the whole item is refused. So can other
+    default-ignorable characters (variation selectors, U+034F, Hangul fillers), except
+    VS15/VS16 right after an emoji. Tag characters pass only as the three RGI
+    subdivision flags (SEC-78, SEC-79).
     """
     for i, ch in enumerate(text):
-        if unicodedata.category(ch) == "Cf" and not _allowed_format_char(text, i):
-            return f"an invisible/bidi character U+{ord(ch):04X} at position {i}"
+        if unicodedata.category(ch) == "Cf":
+            if not _allowed_format_char(text, i):
+                return f"an invisible/bidi character U+{ord(ch):04X} at position {i}"
+        elif _is_ignorable(ch) and not _allowed_ignorable(text, i):
+            return f"an invisible character U+{ord(ch):04X} at position {i}"
     return None
 
 
