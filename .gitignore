@@ -32,3 +32,8 @@ zzz_legacy/
 socialmedialogins*
 *.env
 .env*
+
+# account recovery codes: never commit
+*Recovery-Codes*
+*recovery-codes*
+*recovery_codes*
