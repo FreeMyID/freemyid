@@ -16,12 +16,13 @@ The owner wants the team to work independently and keep him in the loop. These r
 - Website deploys, including the v3 switch-over once web-qa and qa-security pass.
 - Infra changes with a clear rollback: Cloudflare settings, workers, headers, Resend config.
 - New free tooling or CI jobs.
+- **Public marketing by seo-growth only** (owner approved 2026-11-07, "fully autonomous"): posting from official Free My ID accounts the owner created, free directory/listing submissions, awesome-list and catalog PRs, and one-to-one personalized outreach (bloggers, list maintainers, journalists), capped at 10 new contacts a day. Log every action in `docs/marketing/seo/` (outreach log, listings tracker) and summarize it in each wave report. Always as "Free My ID", never as the owner or a made-up person. Email outreach waits for the team-mail gateway to pass qa-security. Never (no tier allows it): fake personas or sockpuppets, fake reviews, astroturfing, bought or spam backlinks, mass unsolicited email, paid ads, platform ToS breaches, fake urgency or fear claims. Creating accounts (phone/CAPTCHA) is the owner's job. Any reply mentioning legal action, press or money goes to escalation.
 
 ## Tier 3: ask first (stop and escalate)
 - **Real people:** the first real opt-out submission or email for any real person; anything involving the owner's or family's real personal data.
 - **Money:** any purchase, paid plan, or anything that could bill.
 - **Irreversible or public:** force-push or history rewrite (main is protected, including admins), deleting repos/branches/releases/data, changing repo visibility, minor/major releases (`vX.Y+1.0`).
-- **Mail routing:** MX changes or anything that could drop inbound mail; cold outreach to new recipients.
+- **Mail routing:** MX changes or anything that could drop inbound mail; cold outreach to new recipients (except seo-growth's capped one-to-one outreach in Tier 2).
 - **Legal and identity:** license changes, trademark, privacy-policy meaning, anything signed or submitted as the owner, new third-party services that receive our data.
 - **Security boundaries:** system-wide installs, scheduler jobs on the owner's machine, editing `.claude/settings.json` permissions or this file, widening any token's scope.
 - **Anything a safety check blocked.** Report it; never route around it.
