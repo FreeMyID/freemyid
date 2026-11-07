@@ -343,7 +343,7 @@ def _hand_check_url(broker: Broker, profile: Profile) -> str:
 def _check_one(store: Store, profile: Profile, broker: Broker, url: str, fetch: Fetcher,
                now: datetime) -> ExposureEntry:
     from .browser import detect_challenge
-    from .runner import merge_listings
+    from .runner import merge_listings, review_todo
     entry = ExposureEntry(broker_id=broker.id, broker_name=broker.name, status="check_by_hand",
                           check_url=url, checked_at=now)
     page = fetch(broker, url)
@@ -365,6 +365,9 @@ def _check_one(store: Store, profile: Profile, broker: Broker, url: str, fetch: 
             raise FetchFailed("page_unrecognized")
         found = matcher.score_all(profile, broker.id, cands, now.date())
     saved = merge_listings(store, profile, broker, found, now)
+    possible = [li for li in saved if li.match_level == MatchLevel.POSSIBLE]
+    if possible and not any(li.match_level == MatchLevel.CONFIRMED for li in saved):
+        review_todo(store, profile, broker, possible[0], len(possible))
     entry.status = "found" if saved else "not_found"
     return _fill(entry, saved)
 
