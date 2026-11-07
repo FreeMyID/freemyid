@@ -9,6 +9,8 @@
 #
 # The vendor only ever sees a fresh git worktree (gitignored private files never exist there),
 # runs with --sandbox, never gets git or push, and its work is reviewed like an outside PR.
+# VENDOR_WATCH=1 tools/vendor.sh ...  also opens a remote connection so the owner can watch the
+# session live in the Antigravity app.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SCRATCH="${VENDOR_DIR:-${TMPDIR:-/tmp}/freemyid-vendor}"
@@ -30,7 +32,7 @@ runs the tests, then sends you the results at the next check-in. Write the tests
 run_vendor() {   # $1 worktree, $2 prompt
   cd "$1" && agy -p "$NO_SHELL
 
-$2" --mode accept-edits --sandbox --print-timeout 3600s
+$2" --mode accept-edits --sandbox --print-timeout 3600s ${VENDOR_WATCH:+--remote-control}
   git -C "$1" add -A
   git -C "$1" -c user.name="Vendor Antigravity [freemyid-vendor]" commit -q -m "vendor session $(date -u +%FT%TZ)" || true
 }
