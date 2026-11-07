@@ -17,7 +17,7 @@ These protect our users and keep the project legal and trustworthy. Pull request
 ## Licensing
 
 - **Code:** GNU AGPL-3.0-or-later (see `LICENSE`). By contributing code you agree it's licensed under the same terms.
-- **Broker registry data** (`brokers/registry.yaml`, `brokers/state_laws.yaml`): the data license **hasn't been decided yet** (see `brokers/LICENSE-DATA.md`). Corrections are very welcome, but please understand that registry contributions may end up under a different license from the code. We'll state it clearly before accepting registry pull requests at scale.
+- **Broker data:** the public sample list (`brokers/registry.sample.yaml`) and `brokers/state_laws.yaml` are CC BY-NC 4.0; the full maintained registry is private. See `brokers/LICENSE-DATA.md`. Corrections are very welcome.
 
 ## Ways to help
 
