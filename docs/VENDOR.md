@@ -35,3 +35,10 @@ Owner contact: Morgan Reyes (check-ins via tools/vendor.sh)
 - **Antigravity (`agy`)**: file tools only; it cannot run commands in hands-off mode, so the owner runs the tests at each check-in.
 - **Codex (`codex exec -s workspace-write`)**: Codex reads code through small shell commands, so it may run read-only commands and the tests inside its worktree. Its sandbox blocks writes outside the worktree and all network; AGENTS.md and the prompt forbid reading outside the worktree.
 - Pick per work order with the `Vendor:` line (or `VENDOR=codex tools/vendor.sh ...`). Give each vendor different paths so their branches never conflict.
+
+## Autonomous mode (owner decision 2026-11-07)
+The vendor teams know the roadmap, so they choose their own work. `tools/vendor.sh auto [N]` runs the Codex lead (Elena Vasquez) with write access to `docs/vendor/` only. She picks up to N pieces of work for the current release, writes the work orders herself and names a specialist for each. The script then runs each specialist and opens a pull request for each. No owner approval is needed before work starts: control sits at the pull request, where the in-house team reviews, edits, merges or rejects.
+Hard limits that hold in every mode, enforced by the script:
+- The in-house-only list (`DENY_PREFIXES` in tools/vendor.sh: security, secrets, storage, mail, consent, network policy, server security, CI, packaging, release, tools/social, private data, and the vendor rules themselves) can never be changed by a vendor. A work order that lists such a path is skipped, and a branch that touches one gets no pull request.
+- Changes outside the work order's own allowed paths block its pull request.
+- Vendors never push or hold credentials; nothing reaches main without in-house review.

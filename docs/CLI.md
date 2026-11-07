@@ -178,6 +178,41 @@ When a headless run fails closed before starting, `--json` prints
 docs/EXPOSURE.md. Listing and check URLs are included because the person needs to open
 them; the text output shows them too.
 
+### `checklists/1`
+
+`freemyid checklist list --json`:
+
+```json
+{"schema": "checklists/1", "version": "…", "profile_id": "…", "done": 0, "total": 1,
+ "checklists": [{"id": "example_checklist", "title": "Example checklist", "done": false,
+   "done_at": null, "url": "https://example.com/", "cost": "Free",
+   "time_needed": "10 minutes"}]}
+```
+
+`done` at the top level counts completed checklists; each item's `done` is a boolean.
+`done_at` is an ISO timestamp when done, otherwise null. `profile_id` is always the selected person (the command asks for `--profile` when more than one is set up). `version` is the checklist
+file version.
+
+### `checklist/1`
+
+`freemyid checklist show ID --json` (also returned by `checklist done` and `checklist undo`
+with `--json`):
+
+```json
+{"schema": "checklist/1", "profile_id": "…", "id": "example_checklist",
+ "title": "Example checklist", "done": false, "done_at": null,
+ "url": "https://example.com/", "cost": "Free", "time_needed": "10 minutes",
+ "why": "Why this step helps", "need_on_hand": ["What you need"],
+ "steps": ["Open the page"], "how_to_undo": "How to change it back",
+ "source_urls": ["https://example.com/help"], "date_checked": "2026-11-07",
+ "verification": "official_page", "notes": null, "status_note": null}
+```
+
+Includes the list item's fields plus the full instructions. `need_on_hand`, `steps` and
+`source_urls` are arrays of strings; `date_checked` is an ISO date. `profile_id` and
+`done_at` have the same meaning as in `checklists/1`.
+`verification` is `official_page` or `partial`; `notes` and `status_note` may be null.
+
 ### `doctor/1`
 
 ```json
