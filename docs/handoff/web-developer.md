@@ -86,3 +86,18 @@ while brokers/registry.yaml exists locally; hashes only). Remember to ship SHA25
 - To untrack a file: `git rm --cached`, check that `git diff --cached` shows only that file, then a plain commit.
 - Pin the registry for builds with FMID_SAMPLE_REGISTRY if a peer has uncommitted registry edits.
 - Never weaken the claims or privacy rules, whatever look the redesign takes (no trackers, third-party assets or fake social proof; POSITIONING copy rules apply). Competitor sites are for benchmarking only: don't copy their copy, art or claims, and in particular don't copy SaaS dark patterns such as countdowns or "X people protected" counters.
+
+## R6 integration (2026-11-07, web lead dispatched alone): DONE
+
+Commits: f23f88d privacy.html + privacy/ -> safety/ in site.yaml (temporary pages.yaml entry gone) |
+dcf235f home paid-services line per ruling | v1 -> contract migration (steps--list, cards, section-head,
+callout--note/info), table-scroll region a11y, 51-legacy.css + star-rule.html + hero-stars.svg deleted |
+5b026bc home visual pass (proof capped 40rem x 30rem with fade, hero 0.9fr/1.1fr, bands xl, band--tight
+trust strip, compact does/doesn't, stronger trust bar, home/phone/calendar icons) | site/ rebuild | docs.
+Checks: build --check OK (60 files), site_check 44 pages OK, ruff tools clean, no horizontal scroll on any
+page at 320 or 1280 (light+dark). Home 1280: 12,037 -> 10,591px. Home weight ~280 KB (263 KB WebP).
+New contract pieces (board updated): `.steps--list`, `.band--tight`, table-scroll attributes.
+Screenshots + scripts: scratchpad lead/ (shots.py, sweep.py; before-*/after-* home, mig-* other pages).
+Next: R7 web-qa verify; R8 qa-security. Open: `.section`/`.section--alt` v1 layout helpers are still used
+by how-it-works/download/safety bodies (not in the R6 list; migrate to `.band` next round). Compare table
+Free My ID column is wide relative to the others at 1280 (cosmetic, designer).

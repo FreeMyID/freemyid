@@ -26,8 +26,8 @@ site_src/
   data/icons.yaml  hand-drawn 24px line icons
   data/guide_intros.yaml  first sentence for "other"-category guides
   templates/       base.html, redirect.html, partials/, pages/
-  static/          copied verbatim (favicon.svg, og.png)
-  og.html          source for static/og.png (regenerate command inside)
+  static/          copied verbatim (favicons, og.png = brand/social/og-default.png, assets/screenshots/*.webp)
+  og.html          old interim source for og.png (superseded by the brand image; kept for reference)
 ```
 
 Add a page: write `templates/pages/<name>.html` (extend `base.html`, fill `{% block main %}`, start with
@@ -47,84 +47,91 @@ connect-src 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; bas
 Not possible via meta: `frame-ancestors` (clickjacking protection), `report-uri`, HSTS. Pages serves HTTPS.
 External links (broker removal pages, GitHub, a Facebook share link) are plain links: nothing loads until clicked.
 
-## Design tokens (source of truth: `site_src/tokens.yaml`; swatches at `/styleguide/`)
+## Design system v2 (redesign 2026-11-07; decisions D1-D10 and the component contract: `docs/WEBSITE_REDESIGN.md`)
+
+Direction (D6): a clean product look. One system sans-serif stack, 20px base, navy family with red only as a
+small accent, one thin flag bar as the only flag motif (no star rows, stripes or hero stars), calm
+white/off-white bands, soft-elevation cards, real product screenshots with made-up data. No web fonts, no JS.
+
+### Tokens (source of truth: `site_src/tokens.yaml`; swatches at `/styleguide/`)
 
 | Token | Light | Dark | Use |
 |---|---|---|---|
-| bg / bg-alt | #ffffff / #f7f5ef | #0f1520 / #141c29 | page / warm "parchment" bands |
-| surface / surface-strong | #f2f4f8 / #e4e9f1 | #1a2331 / #243046 | panels, card icon tiles, chips |
-| text / muted | #14181f / #3d4654 | #f2f4f8 / #c3cad6 | body (17.8:1) / secondary (>= 8.6:1) |
-| heading = brand | #1b2f5b | #c4d5f7 | headings, primary buttons |
-| brand-ink | #ffffff | #0f1520 | text on brand (13:1) |
-| accent | #a3202e | #f5a3ab | flag red: kickers, myth borders, stars. Never alarm UI |
+| bg / bg-alt | #ffffff / #f4f6f9 | #0d131d / #121a26 | page / calm alternate bands |
+| card | #ffffff | #172131 | raised cards, trust bar, FAQ items, price card |
+| surface / surface-strong | #eef2f7 / #e1e8f2 | #1a2434 / #25334b | quiet panels, table header / icon tiles, chips |
+| text / muted | #151b26 / #414b5c | #eef1f6 / #c0c8d5 | body / secondary, both >= 7:1 on every background |
+| heading | #14264a | #dde7fb | headings |
+| brand / brand-ink / brand-soft | #1b3366 / #fff / #e6edf8 | #a9c3f3 / #0d131d / #1d2b45 | primary buttons, step numbers / text on brand / icon tiles, info callout |
+| band-brand / band-brand-ink | #1b2f5b / #fff | #162543 / #eef1f6 | the one deep navy band (final CTA) |
+| accent | #a3202e | #f5a3ab | flag red, small accents only. Never alarm UI |
 | link | #17488f | #a8caff | >= 7:1 on every background |
-| ok / warn | #1e6b3c / #7a4f00 | #8fd6a6 / #f0c674 | mockup status chips, fact callouts |
-| line / line-strong | #c5ccd8 / #6b778c | #36435a / #8794ab | decorative / 3:1 borders |
-| focus / focus-inner | #f2b705 / #14181f | #f2b705 / #f2f4f8 | 3px gold outline + 2px contrasting inner ring |
-| footer-bg / footer-text | #1b2f5b / #e8edf6 | #0a0f18 / #dfe5ee | navy civic footer |
+| ok / warn | #1c6639 / #7a4f00 | #8fd6a6 / #f0c674 | "yes" cells, ticks, does-column / "partial" cells |
+| line / line-strong | #dbe1ea / #6b778c | #2a374d / #8794ab | hairlines / borders that must meet 3:1 |
+| focus / focus-inner | #f2b705 / #151b26 | #f2b705 / #eef1f6 | 3px gold outline + contrasting inner ring |
+| footer-bg / footer-text | #0f1c38 / #e8edf6 | #080c14 / #dfe5ee | footer |
 
-Contrast pairs and minimums live in `tokens.yaml` `pairs` (body text 7:1, everything else >= 4.5:1, borders
-3:1) and are checked on every build in both themes.
+All 39 contrast pairs in `tokens.yaml` `pairs` (body 7:1, other text 4.5:1, borders 3:1) are checked on every
+build in both themes.
 
-- Type: base `html { font-size: 125% }` = 20px, follows browser zoom. Scale steps -1 (17px) to 4
-  (`clamp(1.8rem, 1.35rem + 2.2vw, 2.85rem)`). Body: system UI stack. h1/h2: system serif stack
-  (Charter, Sitka, Cambria, Georgia, Noto Serif) for a dignified "civic" feel. No web fonts.
-- Space: 3xs .25rem to 2xl `clamp(3rem, 2rem + 4vw, 5rem)`. Radius 6/10/16px/pill. Shadows: two soft levels.
-- Layout: `--wrap` 60rem container, `--measure` 36rem prose, `--tap` 3rem (60px) minimum control height.
-- Theme: `light-dark()` + `color-scheme`; `data-theme="light|dark"` on `<html>` overrides the system
-  setting. Browsers without `light-dark()` get an `@supports not` fallback with the same values.
-- Motif: flag bar (navy/white/red thirds), small red star in kickers, a three-star rule between sections,
-  a large faint star in the hero. No stock photos.
+- Type: `html { font-size: 125% }` = 20px, follows browser zoom. Steps -1 (0.85rem) to 5
+  (`clamp(2.1rem, 1.5rem + 3vw, 3.4rem)`, the hero h1). One family for headings and body (system-ui, Segoe UI,
+  Roboto, ...).
+- Space: 3xs .25rem, 2xs .5, xs .75, s 1, m 1.5, l/xl/2xl/3xl fluid (`clamp`). Bands use `xl` (R6 tightened
+  them from `2xl`; home went from ~12,000px to ~10,600px tall at 1280px). Section-head gap below: `l`.
+- Radius sm 6 / md 10 / lg 16 / xl 24px / pill. Shadows 1-3 (soft, navy-tinted).
+- Layout: `--wrap` 62rem, `--measure` 36rem, `--tap` 3rem (60px) minimum control height, fluid `--gutter`.
+- Theme: `light-dark()` + `color-scheme`; `data-theme="light|dark"` on `<html>` overrides; `@supports not`
+  fallback with the same values.
 
 ## CSS architecture
 
-`@layer reset, tokens, base, layout, components, pages, utilities;` then a print block. Logical properties
-throughout; container queries for card grids and the trust panel; `:has()` for whole-card links;
-`:focus-visible`; `text-wrap: balance` (headings) / `pretty` (body); cross-document View Transitions only
-under `prefers-reduced-motion: no-preference`; reduced motion disables all animation.
-Native CSS nesting is deliberately **not** used: older iPhones (iOS 16) are common in this audience and
-would drop nested rules. Revisit when iOS 16 traffic is negligible.
+`@layer reset, tokens, base, layout, components, pages, utilities;` then print. Files in `site_src/css/`
+are concatenated in name order: 10 reset, 30 base, 40 layout (wrap, bands, section-head), 50 base
+components (kicker, buttons), 52 header/footer, 54 contract sections, 56 widgets (SmartScreen drawing,
+download card, mockup), 60 pages, 80 utilities, 90 print. `51-legacy.css` (v1 classes) was deleted in R6
+after every page moved to the contract. Logical properties, `:has()`, `:focus-visible`, `text-wrap`,
+View Transitions under `prefers-reduced-motion: no-preference`. No native nesting (iOS 16).
 
-## Components (live examples at `/styleguide/`)
+## Components
 
-| Component | Class / partial | Notes |
-|---|---|---|
-| Skip link | `.skip-link` | first focusable element |
-| Flag bar | `.flagbar` | decorative, aria-hidden |
-| Header + nav | `partials/header.html` | wide nav >= 62em; below that a no-JS `<details class="menu">` |
-| Brand | `.brand`, `partials/brand-mark.svg` | check-in-square mark + gold star |
-| Buttons | `.btn`, `--secondary`, `--lg`, `--small`, `.btn-row` | >= 60px tall; primary is navy, never red |
-| Kicker | `.kicker` | red eyebrow line with a star icon |
-| Hero | `.hero`, `partials/hero-stars.svg`, `partials/mockup.html` | mockup = HTML drawing, fake data, role="img" |
-| Cards | `.card`, `.card-grid(--3)`, `.card--link`, `.card__icon` | container-query columns |
-| Trust panel | `partials/trust.html` | wording from docs/BRAND.md |
-| Steps | `.steps(--big)` | CSS counters, one idea per step |
-| Callouts | `.callout`, `--gold`, `--myth`, `--fact` | gold = safety/caveat |
-| Checklists | `.checklist--yes/--no` | does / doesn't |
-| Breadcrumbs | `partials/crumbs.html` | plus BreadcrumbList JSON-LD |
-| FAQ | `.faq details` | native disclosure, works without JS |
-| SmartScreen drawing | `partials/smartscreen.html` | drawing, not a screenshot; real screenshots are a launch item |
-| Download card | `.download-card`, `.facts`, `.hash` | version/size/SHA256 from `data/release.yaml` |
-| Guide list | `.guide-list` | guides index |
-| Footer | `partials/footer.html` | trust panel, "not a government service", no-tracking line |
+The class names are a contract (table in `docs/WEBSITE_REDESIGN.md`); live examples at `/styleguide/`.
+Summary: `section.band` (`--alt`, `--brand`, `--tight`) > `.wrap(--narrow)`; `.section-head` (kicker, h2,
+lead; centered, left-aligned inside `.wrap--narrow`); `.hero` (text + `figure.hero__media`, 0.9fr/1.1fr
+from 900px); `.btn--primary/--secondary/--ghost` + `--large/--small`; `ul.trustbar` (4 items, icon above
+text from 60em, list below 30em); `ol.steps` > `li.step` > `span.step__num[aria-hidden]` (3 across) and
+`ol.steps.steps--list` (vertical instructions, any content per step); `ul.cards(--3/--4)`; `figure.proof`
+(max 40rem wide, image cropped to the top 30rem with a fade so it reads as a picture; width/height attributes
+kept for CLS); `.table-scroll[tabindex=0][role=region][aria-labelledby]` > `table.compare`;
+`aside.callout--info/--note`; `.dodont`; `.price-card` + `ul.checklist`; `.faq` > `details.faq__item`;
+`section.cta-final`; header (`header.site-header`, `nav.site-nav`, no-JS `details.menu`, D5 CTA kept visible
+on phones) and footer (four columns + legal row).
+Other partials: `cta-download.html` (D5: one place decides "Download" vs "coming soon"), `crumbs.html`,
+`smartscreen.html` (drawing, `ss_step` 1|2), `mockup.html` (fallback drawing), `brand-mark.svg`.
+Callout mapping from v1: gold -> `--note`, fact -> `--info`, myth -> `--note` (with the x icon and "Myth:" label).
 
 ## Page inventory
 
 | URL | Status | Notes |
 |---|---|---|
-| `/` | built | hero + mockup, promises, the post, 3 steps, does/doesn't, helping a parent, short FAQ, CTA |
-| `/how-it-works/` | built | four steps, three tiers, safety list |
-| `/download/` | built | download card, SmartScreen steps with drawings, genuine-download check, uninstall |
-| `/privacy/` | built | never-ask list, where data lives, update feed, this website (why no cookie banner) |
-| `/faq/` | built | myth vs. fact + all questions, FAQPage JSON-LD |
+| `/` | built (v2) | D10 order: hero + dashboard screenshot, trust bar, proof (report screenshot), 3 steps, what it removes, the post, comparison (R5 paid column), safety + does/doesn't, $0 card, helpers, 8 FAQs, final CTA |
+| `/how-it-works/` | built | four steps (`steps--list`), three ways (cards), safety notes |
 | `/guides/` + `/guides/<name>/` | built | 29 guides from the public sample registry |
+| `/safety/` | built (v2, D2) | "Is it safe?": local + encrypted, never asks, open source, updates, verify, uninstall, limits, this website |
+| `/families/` | built | helper guide, setup steps, fridge-card PDF |
+| `/faq/` | built | myth vs. fact + all questions, FAQPage JSON-LD |
+| `/download/` | built | "opens soon" state until `data/release.yaml` has a version; SmartScreen steps with drawings |
 | `/i-do-not-consent/` | built | explainer, plain Facebook share link |
-| `/styleguide/` | built, noindex | living style guide |
+| `/styleguide/` | built, noindex | living style guide (every contract component) |
 | `/404.html` | built, noindex | absolute links (served at any depth) |
-| `/download.html`, `/faq.html`, `/how-it-works.html`, `/privacy.html` | redirect stubs | meta refresh + canonical, noindex |
-| For families and helpers | not built | needs HELPER_GUIDE / fridge-card content decisions |
+| Redirect stubs (noindex, meta refresh + canonical) | built | `download.html`, `faq.html`, `how-it-works.html` -> their folders; `privacy.html` **and** `privacy/` -> `safety/` (both from `site.yaml` `redirects`; keys are output file paths, values page ids) |
 | Who's buying your data? | not built | citations not verified yet |
+| /free/, /compare/, /open-source/ | not built (D3) | live on home and /safety/ this round |
 | Pricing | do not build | paid tier not announced |
+
+Images: `site_src/static/assets/screenshots/*.webp` (copied from `brand/screenshots/`, alt text from
+`brand/README.md`, captioned "Example with made-up data"). Home is the heaviest page: about 280 KB total
+(7 KB HTML + 10 KB CSS gzip + 263 KB of WebP; the report image is lazy-loaded).
 
 ## Checks (`tools/site_check.py`)
 
