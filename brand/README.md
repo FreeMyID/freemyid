@@ -5,6 +5,7 @@ Sources live in `brand/src/`; re-render with `.venv/bin/python brand/src/render_
 | File | Size | Use | Alt text |
 |---|---|---|---|
 | `social/og-default.png` | 1200x630, ~13 KB | Open Graph / Facebook link preview (WR-2). Web-developer copies to `site/og.png`. | Free My ID. Take your name off the websites that sell it. |
+| `social/repo-preview.png` | 1280x640, ~14 KB | GitHub repository social preview (Settings > Social preview). Source `src/repo-preview.html`, render `src/render_repo_preview.py`. | Free My ID. Take your name off the websites that sell it. Free, open source, runs on your own computer. |
 | `logo/options.html` | page | Three logo/wordmark proposals (A star badge, B ID card, C open ring) at favicon, nav and hero size, light and dark (WR-1). Proposal only until the user picks. | n/a |
 | `logo/options-preview.png` | ~1384 px wide | Static preview of the options page for review. | Three logo directions for Free My ID shown on light and dark backgrounds. |
 | `logo/final/mark.svg` | 24-unit viewBox, 0.3 KB | Final logo A (star badge), light pages: nav brand (WR-18). | Free My ID |
