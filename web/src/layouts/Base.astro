@@ -17,10 +17,11 @@ interface Props {
   crumbs?: Crumb[];
   ogImage?: string;         // site-relative path of a 1200x630 PNG
   ogAlt?: string;
+  ld?: object[];            // extra JSON-LD objects built by the page (e.g. Article on /protect/ pages)
 }
 const { title, description, out, nav = null, noindex = false, jsonldKinds = [], crumbs = [],
-  ogImage = "assets/og-home.png", ogAlt = "Free My ID: take your name off the websites that sell it." } = Astro.props;
-const blocks = jsonldKinds.map((k) => ldJson(jsonld(k, crumbs, renderPlain)));
+  ogImage = "assets/og-home.png", ogAlt = "Free My ID: take your name off the websites that sell it.", ld = [] } = Astro.props;
+const blocks = [...jsonldKinds.map((k) => ldJson(jsonld(k, crumbs, renderPlain))), ...ld.map(ldJson)];
 const canon = canonical(out);
 ---
 <!doctype html>
