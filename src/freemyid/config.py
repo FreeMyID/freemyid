@@ -1,11 +1,14 @@
 """App config (non-PII) in FREEMYID_HOME/config.yaml. OWNER: orchestrator."""
 from __future__ import annotations
 
+import os
 import sys
+import tempfile
+from pathlib import Path
 from typing import Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, ValidationError
 
 from . import paths
 
@@ -30,14 +33,65 @@ class Config(BaseModel):
     secrets_backend: Literal["keyring", "passphrase", "systemd-creds"] | None = None
 
 
+class ConfigError(ValueError):
+    """config.yaml can't be read. The message names the file and the bad fields, never
+    the values."""
+
+
 def load() -> Config:
     p = paths.config_path()
-    if p.exists():
-        return Config.model_validate(yaml.safe_load(p.read_text()) or {})
-    return Config()
+    if not p.exists():
+        return Config()
+    try:
+        data = yaml.safe_load(p.read_text(encoding="utf-8"))
+    except (yaml.YAMLError, UnicodeDecodeError) as e:
+        raise ConfigError(
+            f"{p} is damaged and can't be read. Fix it, or delete it to go back to the "
+            "default settings"
+        ) from e
+    if data is None:
+        data = {}
+    if not isinstance(data, dict):
+        raise ConfigError(f"{p} is damaged: expected 'name: value' settings")
+    try:
+        return Config.model_validate(data)
+    except ValidationError as e:
+        fields = sorted({".".join(str(x) for x in err["loc"]) or "?" for err in e.errors()})
+        raise ConfigError(
+            f"{p} has invalid settings: {', '.join(fields)}. Fix them, or delete the file "
+            "to go back to the default settings"
+        ) from e
 
 
 def save(cfg: Config) -> None:
+    """Atomic: a temp file in the same folder (0600 before it gets the real name), fsync,
+    os.replace. A crash leaves the old or the new config, never a truncated one."""
     p = paths.config_path()
-    p.write_text(yaml.safe_dump(cfg.model_dump(), sort_keys=False))
-    p.chmod(0o600)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    data = yaml.safe_dump(cfg.model_dump(), sort_keys=False).encode("utf-8")
+    fd, tmp_name = tempfile.mkstemp(dir=p.parent, prefix=".config.", suffix=".tmp")
+    tmp = Path(tmp_name)
+    try:
+        try:
+            if hasattr(os, "fchmod"):
+                os.fchmod(fd, 0o600)
+            view = memoryview(data)
+            while view:
+                view = view[os.write(fd, view):]
+            os.fsync(fd)
+        finally:
+            os.close(fd)
+        os.replace(tmp, p)
+    finally:
+        tmp.unlink(missing_ok=True)
+    if sys.platform != "win32":
+        try:
+            dfd = os.open(p.parent, os.O_RDONLY)
+        except OSError:
+            return
+        try:
+            os.fsync(dfd)
+        except OSError:
+            pass
+        finally:
+            os.close(dfd)
