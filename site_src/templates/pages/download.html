@@ -19,7 +19,8 @@
       </div>
       {% endif %}
       <dl class="facts">
-        <dt>Works on</dt><dd>Windows 10 and 11</dd>
+        {# WR-26: "works on" only once a release exists; source: PLAN_V1 (Windows 10/11 target) #}
+        <dt>{% if release.version %}Works on{% else %}Made for{% endif %}</dt><dd>Windows 10 and 11</dd>
         <dt>Price</dt><dd>Free</dd>
         {% if release.version %}
         <dt>Version</dt><dd>{{ release.version }}{% if release.date %} ({{ release.date }}){% endif %}</dd>
