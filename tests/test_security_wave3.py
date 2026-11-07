@@ -153,10 +153,8 @@ def test_sec47_guard_held_emails_never_leave_before_an_approval(wiz):
     assert m.sent == []
 
 
-# --------------------------------------------------------------------------- SEC-48 (open)
+# --------------------------------------------------------------------------- SEC-48 (fixed)
 
-@pytest.mark.xfail(strict=True, reason="SEC-48: /outbox/{rid}/approve runs approve_and_send "
-                   "(now a burst of SMTP sends) on the event loop, freezing the wizard")
 def test_sec48_approve_does_not_send_on_the_event_loop(wiz, monkeypatch):
     import asyncio
     c, store, p, f = wiz

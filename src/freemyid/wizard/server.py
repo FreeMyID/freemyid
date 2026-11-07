@@ -435,7 +435,10 @@ def create_app(store, token: str, allowed_hosts: set[str],
         except ImportError:
             return redirect("/outbox", "noengine")
         try:
-            approve_and_send(store, rid)
+            # SEC-48: approving can send a burst of emails (SEC-27 release); never block
+            # the event loop with SMTP. The store is thread-safe (RLock).
+            from starlette.concurrency import run_in_threadpool
+            await run_in_threadpool(approve_and_send, store, rid)
         except Exception as e:  # noqa: BLE001
             log.warning("approve_and_send failed: %s", type(e).__name__)
             return redirect("/outbox", "sendfail")
