@@ -21,7 +21,7 @@
       {% if release.version %}
       {# WR-38: brand-marketing copy for an early (0.x) release #}
       {% if release.version.startswith("0.") %}
-      <p class="hero__note">Free for Windows 10 and 11. Version {{ release.version }} is an early release, so tell us what confuses you.</p>
+      <p class="hero__note">Free for Windows 10 and 11. Version {{ release.version }} is an early release, so <a href="{{ site.issues_url }}">tell us what confuses you</a> (a free GitHub account is needed).</p>
       {% else %}
       <p class="hero__note">Free for Windows 10 and 11. Version {{ release.version }}{% if release.size_mb %}, {{ release.size_mb }} MB{% endif %}.</p>
       {% endif %}
