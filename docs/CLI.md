@@ -190,8 +190,7 @@ them; the text output shows them too.
 ```
 
 `done` at the top level counts completed checklists; each item's `done` is a boolean.
-`done_at` is an ISO timestamp when done, otherwise null. `profile_id` may be null when
-no person is selected; the list then shows no saved progress. `version` is the checklist
+`done_at` is an ISO timestamp when done, otherwise null. `profile_id` is always the selected person (the command asks for `--profile` when more than one is set up). `version` is the checklist
 file version.
 
 ### `checklist/1`

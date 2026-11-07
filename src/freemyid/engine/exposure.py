@@ -48,7 +48,6 @@ if TYPE_CHECKING:
     from ..models import Profile, Registry
     from ..netpolicy import NetPolicy
     from ..storage import Store
-    from .runner import Runner
 
 log = logging.getLogger(__name__)
 
@@ -342,9 +341,9 @@ def _hand_check_url(broker: Broker, profile: Profile) -> str:
 
 
 def _check_one(store: Store, profile: Profile, broker: Broker, url: str, fetch: Fetcher,
-               now: datetime, runner: Runner) -> ExposureEntry:
+               now: datetime) -> ExposureEntry:
     from .browser import detect_challenge
-    from .runner import merge_listings
+    from .runner import merge_listings, review_todo
     entry = ExposureEntry(broker_id=broker.id, broker_name=broker.name, status="check_by_hand",
                           check_url=url, checked_at=now)
     page = fetch(broker, url)
@@ -368,7 +367,7 @@ def _check_one(store: Store, profile: Profile, broker: Broker, url: str, fetch: 
     saved = merge_listings(store, profile, broker, found, now)
     possible = [li for li in saved if li.match_level == MatchLevel.POSSIBLE]
     if possible and not any(li.match_level == MatchLevel.CONFIRMED for li in saved):
-        runner._review_todo(profile, broker, possible[0], len(possible))
+        review_todo(store, profile, broker, possible[0], len(possible))
     entry.status = "found" if saved else "not_found"
     return _fill(entry, saved)
 
@@ -388,7 +387,6 @@ def scan_exposure(store: Store, profile_id: str, *, registry: Registry | None = 
     from ..consent import consent_ok
     from ..netpolicy import NetPolicy
     from .outbox import dev_fixture_base
-    from .runner import Runner
     cfg = cfg or cfgmod.load()
     now = now or utcnow()
     profile = store.get_profile(profile_id)
@@ -412,15 +410,13 @@ def scan_exposure(store: Store, profile_id: str, *, registry: Registry | None = 
     fast = bool(fixture) or cfg.max_delay_s <= 0
     entries: list[ExposureEntry] = []
     pace = {"fetched": False}
-    runner = Runner(store, registry, scan_only=True, dry_run=True, interactive=False,
-                    broker_ids=broker_ids, only_due=False, state_laws={}, now=now, cfg=cfg)
     try:
         for broker in scan_brokers(registry):
             if broker_ids and broker.id not in broker_ids:
                 continue
             entries.append(_scan_broker(store, profile, broker, now, offline,
                                         prev.get(broker.id), fetch, browser_fetch, cfg, fast,
-                                        sleep, pace, runner))
+                                        sleep, pace))
     finally:
         if own_browser is not None:
             own_browser.close()
@@ -435,8 +431,7 @@ def scan_exposure(store: Store, profile_id: str, *, registry: Registry | None = 
 def _scan_broker(store: Store, profile: Profile, broker: Broker, now: datetime, offline: bool,
                  prev: ExposureEntry | None, fetch: Fetcher | None,
                  browser_fetch: Fetcher | None, cfg: cfgmod.Config, fast: bool,
-                 sleep: Callable[[float], None], pace: dict[str, bool],
-                 runner: Runner) -> ExposureEntry:
+                 sleep: Callable[[float], None], pace: dict[str, bool]) -> ExposureEntry:
     from ..submitters.web_form import search_url
     url = search_url(broker, profile)
 
@@ -472,7 +467,7 @@ def _scan_broker(store: Store, profile: Profile, broker: Broker, now: datetime, 
         sleep(random.uniform(max(0.0, cfg.min_delay_s), max(cfg.min_delay_s, cfg.max_delay_s)))
     pace["fetched"] = True
     try:
-        entry = _check_one(store, profile, broker, url, fetcher, now, runner)
+        entry = _check_one(store, profile, broker, url, fetcher, now)
     except FetchFailed as e:
         entry = hand(e.reason)
     except Exception as e:  # noqa: BLE001 - one broker never stops the scan
