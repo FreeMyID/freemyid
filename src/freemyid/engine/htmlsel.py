@@ -66,7 +66,7 @@ class Node:
                 parts.append("\n")
             for c in n.children:
                 if isinstance(c, str):
-                    parts.append(c)
+                    parts.append(re.sub(r"\s+", " ", c))   # source newlines are spaces
                 else:
                     walk(c)
             if block:

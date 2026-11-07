@@ -393,6 +393,78 @@ def status(profile: Annotated[str | None, typer.Option("--profile", "-p")] = Non
 
 
 @app.command()
+def exposure(profile: Annotated[str | None, typer.Option("--profile", "-p")] = None,
+             offline: Annotated[bool, typer.Option(
+                 "--offline", help="Fetch nothing; use what earlier runs found")] = False,
+             refresh: Annotated[bool, typer.Option(
+                 "--refresh", help="Check every site again, even if checked today")] = False,
+             headless: Annotated[bool, typer.Option(
+                 "--headless", help="No prompts or windows; fail closed (cron/Docker)")
+             ] = False,
+             as_json: JsonOpt = False):
+    """Find me first: which people-search sites show you, with a 0-100 exposure score.
+
+    Reads only (never submits), so it also runs in practice mode. Sites that block
+    automatic checks are listed with the link to open yourself (docs/EXPOSURE.md)."""
+    from rich.markup import escape
+
+    from .engine import exposure as ex
+    _set_json(as_json)
+    if headless and not paths.db_path().exists():
+        _fail(cj.EXIT_NOT_CONFIGURED, "not configured: nobody is set up yet; run "
+              "`freemyid setup` or `freemyid setup --from config.yaml`")
+    store = _open_store_or_fail()
+    skipped: list[dict] = []
+    people = _select(store, profile, skipped)
+    if not people:
+        if not skipped:
+            _fail(cj.EXIT_NOT_CONFIGURED, "not configured: nobody is set up yet; run "
+                  "`freemyid setup` or `freemyid setup --from config.yaml`")
+        _fail(cj.EXIT_NEEDS_HUMAN, f"needs a person: no profile has valid permission "
+              f"({len(skipped)} skipped); open Free My ID to give permission")
+    reg = _registry()
+    rows = []
+    for p in people:
+        try:
+            rows.append((p, ex.scan_exposure(store, p.id, registry=reg, offline=offline,
+                                             refresh=refresh, use_browser=not offline)))
+        except ex.ExposureRefused as refused:
+            skipped.append(cj.skipped_entry(p, refused.reason))
+    if as_json:
+        cj.emit(cj.exposure_doc(rows, offline=offline, headless=headless,
+                                exit_code=cj.EXIT_OK, skipped=skipped))
+        return
+    from .exposure_models import HAND_REASONS
+    for p, r in rows:
+        con.print(f"[bold]{escape(p.label)}[/]: exposure score [bold]{r.score}[/] / 100"
+                  + (" (practice mode)" if r.practice_mode else ""))
+        for ln in r.explanation:
+            sign = f"+{ln.points}" if ln.points > 0 else str(ln.points) if ln.points else "  "
+            con.print(f"  {sign:>4}  {escape(ln.text)}")
+        for e in r.by_status("found"):
+            lvl = "is you" if e.match_level and e.match_level.value == "confirmed" \
+                else "may be you"
+            con.print(f"  [red]Found[/] {escape(e.broker_name)}: {len(e.listings)} listing(s) "
+                      f"that {lvl}")
+            for li in e.listings:
+                con.print(f"      {li.url}", markup=False, highlight=False, soft_wrap=True)
+        hand = r.by_status("check_by_hand")
+        if hand:
+            con.print("  [yellow]Please check these yourself[/] (open the link, look for "
+                      "your name):")
+            for e in hand:
+                why = HAND_REASONS.get(e.reason or "", "")
+                con.print(f"    {escape(e.broker_name)}: {escape(why)}")
+                if e.check_url:
+                    con.print(f"      {e.check_url}", markup=False, highlight=False,
+                              soft_wrap=True)
+        clean = r.by_status("not_found")
+        if clean:
+            con.print(f"  [green]Not found[/] on {len(clean)} site(s): "
+                      + escape(", ".join(e.broker_name for e in clean)))
+
+
+@app.command()
 def report(profile: Annotated[str | None, typer.Option("--profile", "-p")] = None,
            fmt: Annotated[str, typer.Option("--format", help="html | pdf")] = "html",
            as_json: JsonOpt = False):

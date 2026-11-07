@@ -58,6 +58,8 @@ MAX_BYTES = 2_000_000
 MAX_REDIRECTS = 2
 TIMEOUT_S = 20.0
 CACHE_HOURS = 24
+_HEADERS = {"User-Agent": USER_AGENT, "Accept": "text/html,application/xhtml+xml",
+            "Accept-Language": "en-US,en;q=0.8"}
 _MAX_RESULTS = 25
 
 # score weights (docs/EXPOSURE.md; change both together)
@@ -117,10 +119,7 @@ def http_fetcher(policy: NetPolicy, fixture_base: str | None = None,
     from .browser import fixture_url
 
     def fetch(broker: Broker, url: str) -> Fetched:
-        cl = client or httpx.Client(timeout=TIMEOUT_S, follow_redirects=False,
-                                    headers={"User-Agent": USER_AGENT,
-                                             "Accept": "text/html,application/xhtml+xml",
-                                             "Accept-Language": "en-US,en;q=0.8"})
+        cl = client or httpx.Client(timeout=TIMEOUT_S, follow_redirects=False)
         try:
             cur = url
             for _hop in range(MAX_REDIRECTS + 1):
@@ -128,7 +127,7 @@ def http_fetcher(policy: NetPolicy, fixture_base: str | None = None,
                     raise FetchFailed("blocked_by_policy")
                 real = fixture_url(fixture_base, cur) if fixture_base else cur
                 try:
-                    with cl.stream("GET", real) as r:
+                    with cl.stream("GET", real, headers=_HEADERS) as r:
                         if r.status_code in (301, 302, 303, 307, 308):
                             loc = r.headers.get("location")
                             if not loc:

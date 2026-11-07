@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:  # pragma: no cover
     from .engine.runner import RunReport
+    from .exposure_models import ExposureResult
     from .models import BrokerStatus, Profile, Registry, Request, Todo
 
 # Exit codes (docs/CLI.md). Never reuse a number for something else.
@@ -196,3 +197,42 @@ def secrets_doc(backend: str, configured: str | None, usable: bool,
 def failure_doc(code: int, reason: str) -> dict[str, Any]:
     """What `run --headless --json` prints when it fails closed before running."""
     return {"schema": "error/1", "exit_code": code, "reason": reason}
+
+
+def exposure_doc(rows: list[tuple[Profile, ExposureResult]], *, offline: bool,
+                 headless: bool, exit_code: int,
+                 skipped: list[dict[str, Any]]) -> dict[str, Any]:
+    """`freemyid exposure --json` (docs/CLI.md, docs/EXPOSURE.md). Listing and check URLs
+    are shown because the human output shows them too (they are what the person opens)."""
+    return {
+        "schema": "exposure/1",
+        "offline": offline,
+        "headless": headless,
+        "exit_code": exit_code,
+        "profiles": [{
+            "profile_id": p.id,
+            "label": p.label,
+            "created_at": _ts(r.created_at),
+            "practice_mode": r.practice_mode,
+            "score": r.score,
+            "explanation": [{"points": ln.points, "text": ln.text} for ln in r.explanation],
+            "counts": {"confirmed_sites": r.confirmed_sites, "possible_sites": r.possible_sites,
+                       "check_by_hand": len(r.by_status("check_by_hand")),
+                       "not_found": len(r.by_status("not_found"))},
+            "entries": [{
+                "broker_id": e.broker_id,
+                "broker_name": e.broker_name,
+                "status": e.status,
+                "reason": e.reason,
+                "match_level": e.match_level.value if e.match_level else None,
+                "signals": e.signals,
+                "from_store": e.from_store,
+                "checked_at": _ts(e.checked_at),
+                "check_url": e.check_url,
+                "listings": [{"url": li.url, "match_level": li.match_level.value,
+                              "signals": li.signals, "contact_shown": li.contact_shown,
+                              "relatives_shown": li.relatives_shown} for li in e.listings],
+            } for e in r.entries],
+        } for p, r in rows],
+        "skipped": skipped,
+    }
