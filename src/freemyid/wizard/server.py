@@ -159,6 +159,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
     def get_draft(new: bool = False) -> dr.Draft:
         if new or app.state.draft is None:
             app.state.draft = dr.Draft()
+            app.state.pending_pin = None
         return app.state.draft
 
     @app.middleware("http")
@@ -538,6 +539,9 @@ def create_app(store, token: str, allowed_hosts: set[str],
         if not p:
             return redirect("/settings")
         d = dr.draft_from_profile(p)
+        # The pin lives on this draft only; replacing the draft drops any other pin/pending one.
+        app.state.draft = d
+        app.state.pending_pin = None
         return html(dash.mailbox_settings_page(p, ui._mailbox_body(d), csrf_token, []))
 
     @app.post("/settings/{pid}/mailbox")
@@ -546,7 +550,9 @@ def create_app(store, token: str, allowed_hosts: set[str],
         if not p:
             return redirect("/settings")
         d = dr.draft_from_profile(p)
-        d.tls_pin = getattr(app.state, "approved_pin", None) or d.tls_pin
+        cur = app.state.draft
+        if cur is not None and cur.id == p.id and cur.editing and cur.tls_pin:
+            d.tls_pin = cur.tls_pin  # approved for this very profile in this session
         errs = dr.apply_step(d, "mailbox", await request.form())
         if not errs:
             try:
@@ -555,6 +561,8 @@ def create_app(store, token: str, allowed_hosts: set[str],
                 errs = [str(e)]
         if errs:
             return html(dash.mailbox_settings_page(p, ui._mailbox_body(d), csrf_token, errs), 400)
+        app.state.draft = None
+        app.state.pending_pin = None
         return redirect("/settings", "saved")
 
     @app.post("/schedule/{action}")
@@ -602,6 +610,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
         if not p:
             return redirect("/")
         app.state.draft = dr.draft_from_profile(p)
+        app.state.pending_pin = None
         return redirect("/wizard/name")
 
     # ---------------------------------------------------------------- wizard
@@ -616,8 +625,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
         form = await request.form()
         d = dr.Draft(editing=True)
         d.password = app.state.draft.password if app.state.draft else ""
-        d.tls_pin = (getattr(app.state, "approved_pin", None)
-                     or (app.state.draft.tls_pin if app.state.draft else ""))
+        d.tls_pin = app.state.draft.tls_pin if app.state.draft else ""
         # Test connection is where trust is established, so it must not demand a pin first.
         errs = dr._apply_mailbox(d, form, require_trust=False)
         if errs and not d.mailbox:
@@ -666,7 +674,6 @@ def create_app(store, token: str, allowed_hosts: set[str],
             app.state.pending_pin = None
             return JSONResponse({"ok": False, "message": (
                 "Not trusted. Nothing was saved and no password was sent.")})
-        app.state.approved_pin = pending
         if app.state.draft is not None:
             app.state.draft.tls_pin = pending
         app.state.pending_pin = None
@@ -738,6 +745,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
             return html(ui.step_page("finish", d, csrf_token, [str(e)]), 400)
         was_edit, sched_on = d.editing, d.weekly_recheck and d.schedule_consent
         app.state.draft = None
+        app.state.pending_pin = None
         if was_edit:
             return redirect("/", "updated")
         (on_finish or (lambda p, on: _default_finish(app, registry_loader, p, on)))(prof, sched_on)

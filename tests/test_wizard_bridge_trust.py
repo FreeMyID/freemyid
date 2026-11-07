@@ -96,7 +96,7 @@ def test_trust_flow_yes_then_connects_and_changed_then_retrust(web, bridge):
 
     # No: nothing saved, still no password sent.
     no = c.post("/wizard/trust-certificate", data={"answer": "no", **f}).json()
-    assert not no["ok"] and not getattr(c.app.state, "approved_pin", None)
+    assert not no["ok"] and not c.app.state.draft.tls_pin
 
     c.post("/wizard/test-connection", data={**_form(imap, smtp), **f})
     assert c.post("/wizard/trust-certificate", data={"answer": "yes", **f}).json()["ok"]
@@ -104,13 +104,13 @@ def test_trust_flow_yes_then_connects_and_changed_then_retrust(web, bridge):
     assert r["ok"] and r["status"] == "ok" and imap.logins == 1
 
     # Certificate changes (pin differs): plain-language prompt, offer to trust the new one.
-    c.app.state.approved_pin = WRONG_PIN
+    c.app.state.draft.tls_pin = WRONG_PIN
     before = imap.logins
     r = c.post("/wizard/test-connection", data={**_form(imap, smtp), **f}).json()
     assert r["status"] == "trust" and r["changed"] and "changed" in r["message"]
     assert imap.logins == before
     assert c.post("/wizard/trust-certificate", data={"answer": "yes", **f}).json()["ok"]
-    assert c.app.state.approved_pin == fp
+    assert c.app.state.draft.tls_pin == fp
 
 
 def test_trust_yes_without_pending_is_refused(web):
@@ -183,3 +183,85 @@ def test_require_trust_is_default_for_local_mail_app():
     errs = dr._apply_mailbox(d, f)
     assert errs and "security code" in errs[0]
     assert dr._apply_mailbox(dr.Draft(), f, require_trust=False) == []
+
+
+# ---- SEC-55: an approved pin belongs to one draft/profile, never to the whole app ----
+PIN_A = "a" * 64
+PIN_B = "b" * 64
+
+
+def _two_profiles(c, imap, smtp):
+    from .conftest import make_profile
+    store = c.app.state.store if hasattr(c.app.state, "store") else Store()
+    from freemyid.models import MailboxConfig
+    out = []
+    for label, pin in (("A", PIN_A), ("B", PIN_B)):
+        mb = MailboxConfig(**_mb(imap, smtp, pin), keyring_service="freemyid-mailbox")
+        p = make_profile(label=label, mailbox=mb)
+        store.save_profile(p)
+        out.append(p.id)
+    return store, out
+
+
+def _post_mailbox(c, f, pid, imap, smtp):
+    form = {k: v for k, v in _form(imap, smtp).items() if k != "password"}
+    return c.post(f"/settings/{pid}/mailbox", data={**form, **f})
+
+
+def _approve_for(c, f, pid, imap, smtp, fp):
+    """Open the settings page for pid, run test-connection, say yes."""
+    assert c.get(f"/settings/{pid}/mailbox").status_code == 200
+    c.app.state.draft.tls_pin = ""  # as if this profile had no pin yet
+    r = c.post("/wizard/test-connection", data={**_form(imap, smtp), **f}).json()
+    assert r["status"] == "trust"
+    assert c.post("/wizard/trust-certificate", data={"answer": "yes", **f}).json()["ok"]
+    assert c.app.state.draft.tls_pin == fp
+
+
+def test_pin_approved_for_a_does_not_change_b(web, bridge):
+    c, f = web
+    imap, smtp, fp = bridge
+    store, (a, b) = _two_profiles(c, imap, smtp)
+    _approve_for(c, f, a, imap, smtp, fp)
+    assert not hasattr(c.app.state, "approved_pin")
+    assert _post_mailbox(c, f, a, imap, smtp).status_code == 303
+    assert store.get_profile(a).mailbox.tls_cert_sha256 == fp
+    # Now edit B without approving anything: B keeps its own pin.
+    c.get(f"/settings/{b}/mailbox")
+    assert _post_mailbox(c, f, b, imap, smtp).status_code == 303
+    assert store.get_profile(b).mailbox.tls_cert_sha256 == PIN_B
+
+
+def test_pin_approved_for_a_is_not_applied_when_posting_b_directly(web, bridge):
+    c, f = web
+    imap, smtp, fp = bridge
+    store, (a, b) = _two_profiles(c, imap, smtp)
+    _approve_for(c, f, a, imap, smtp, fp)
+    assert _post_mailbox(c, f, b, imap, smtp).status_code == 303  # no GET for B first
+    assert store.get_profile(b).mailbox.tls_cert_sha256 == PIN_B
+    assert store.get_profile(a).mailbox.tls_cert_sha256 == PIN_A
+
+
+def test_pin_is_cleared_after_save(web, bridge):
+    c, f = web
+    imap, smtp, fp = bridge
+    _store, (a, _b) = _two_profiles(c, imap, smtp)
+    _approve_for(c, f, a, imap, smtp, fp)
+    assert _post_mailbox(c, f, a, imap, smtp).status_code == 303
+    assert c.app.state.draft is None and c.app.state.pending_pin is None
+
+
+def test_new_draft_drops_pending_pin(web):
+    c, _f = web
+    c.app.state.pending_pin = PIN_A
+    c.get("/wizard/consent?new=1")
+    assert c.app.state.pending_pin is None
+
+
+def test_edit_without_new_approval_keeps_saved_pin(web, bridge):
+    c, f = web
+    imap, smtp, _fp = bridge
+    store, (a, _b) = _two_profiles(c, imap, smtp)
+    c.get(f"/settings/{a}/mailbox")
+    assert _post_mailbox(c, f, a, imap, smtp).status_code == 303
+    assert store.get_profile(a).mailbox.tls_cert_sha256 == PIN_A
