@@ -103,7 +103,8 @@ case "$cmd" in
     wo_check "${1:-}"; wo="$1"; file="$(wo_file "$wo")"; wt="$(wt_of "$wo")"
     VENDOR="${VENDOR:-$(vendor_of "$file")}"; VENDOR="${VENDOR:-agy}"; AGENT="$(agent_of "$file")"; need_agy
     [ -e "$wt" ] && { echo "$wt exists: use checkin" >&2; exit 2; }
-    git -C "$ROOT" worktree add -q -b "$(branch_of "$wo")" "$wt" main
+    git -C "$ROOT" fetch -q origin main
+    git -C "$ROOT" worktree add -q -b "$(branch_of "$wo")" "$wt" origin/main   # always from current GitHub main
     run_vendor "$wt" "You are in BUILDER mode for work order $wo. Read GEMINI.md and docs/VENDOR.md first.
 Change ONLY the allowed paths. End by updating VENDOR_STATUS.md (Done / Next / Questions for the owner / How to test).
 
@@ -151,7 +152,7 @@ $1" >/dev/null
     ( cd "$wt/web" && pnpm -s build >/dev/null && pnpm -s check && cd "$wt" && "$ROOT/.venv/bin/python" web/scripts/content_check.py web/dist ) ;;
   auto)   # Codex team runs itself: the lead picks work from the roadmap, specialists build, PRs open
     VENDOR=codex; need_agy; n="${1:-3}"
-    pw="$SCRATCH/plan.$(date +%s)"; git -C "$ROOT" worktree add -q --detach "$pw" main
+    pw="$SCRATCH/plan.$(date +%s)"; git -C "$ROOT" fetch -q origin main; git -C "$ROOT" worktree add -q --detach "$pw" origin/main
     trap 'git -C "$ROOT" worktree remove --force "$pw" >/dev/null 2>&1 || true' EXIT
     existing="$(command ls "$ROOT/docs/vendor" | sed -nE 's/^(WO-[0-9]{3})\.md$/\1/p' | tr '\n' ' ')"
     last="$(echo "$existing" | tr ' ' '\n' | sed -nE 's/WO-0*([0-9]+)/\1/p' | sort -n | tail -1)"
