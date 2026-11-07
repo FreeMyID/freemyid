@@ -3,10 +3,14 @@
 <div class="wrap main-pad">
   {% include "partials/crumbs.html" %}
   <h1>How Free My ID works</h1>
+  {# source: PLAN_V1 D1 (three tiers per broker, chosen automatically from the registry) #}
   <p class="lead mt-s">Every people-search site has its own way of taking requests. Free My ID knows which way each one uses and handles it for you, or with you.</p>
 
   <h2 class="mt-l" id="steps">From setup to proof, in four steps</h2>
-  <!-- Sources: docs/PLAN_V1.md D1, D2, D4, D6, D9; docs/USER_GUIDE.md sections 3-5 -->
+  {# Sources: docs/PLAN_V1.md D1, D2, D4, D6, D9; docs/USER_GUIDE.md sections 3-5.
+     Step 1 fields: src/freemyid/wizard/draft.py (name, address, birth_year, phones, emails, relatives); never SSN/bank = POSITIONING rule 4.
+     Step 2: shared rule 6 (Listing.shown_fields + removal mailbox). Step 3: PLAN_V1 D4 (daily task, one notification only when there are to-dos).
+     Step 4: src/freemyid/wizard/report.py (site, status, request date, last checked; printable). #}
   <ol class="steps steps--list mt-m prose" role="list">
     <li class="step"><span class="step__num" aria-hidden="true">1</span><h3>Tell it who to protect</h3><p>Your name and the towns you've lived in, plus (if you like) your year of birth, phone number, email address and relatives' names, which help it tell you apart from other people with your name. It never asks for your Social Security number or bank details.</p></li>
     <li class="step"><span class="step__num" aria-hidden="true">2</span><h3>It sends the requests</h3><p>Depending on the site, Free My ID uses one of three ways, shown below. Each site gets only what it already shows about you, plus a removal email address.</p></li>
@@ -17,6 +21,8 @@
 
 <section class="section section--alt" aria-labelledby="three-ways">
   <div class="wrap">
+    {# source: PLAN_V1 D1 tier table (Email / Assisted / Automatic browser), chosen automatically; D9 visible Edge window; shared rule 5 (no CAPTCHA solving).
+       Email fallback = src/freemyid/engine/outbox.py mailto + wizard/draft.py mailbox step text. #}
     <div class="section-head">
       <h2 id="three-ways">Three ways to send a request</h2>
       <p class="lead">Free My ID picks the right way for each site by itself. You don't have to choose.</p>
@@ -45,18 +51,21 @@
   <h2 id="safety">Built to be careful</h2>
   <div class="callout callout--note">
     {{ icon('info') }}
+    {# source: docs/USER_GUIDE.md section 4 "Practice first (sends nothing)"; Settings "Start sending real requests" #}
     <div>
       <h3>Practice mode first</h3>
       <p>Free My ID starts in practice mode, so nothing is sent until you say "start sending real requests."</p>
     </div>
   </div>
-  <!-- Sources: docs/PLAN_V1.md D1/D9 (no CAPTCHA solving, never pay, no ID or accounts unless the permission is switched on); docs/USER_GUIDE.md section 7 (approve each email by default) -->
+  {# Sources: docs/PLAN_V1.md D1/D9 (no CAPTCHA solving, never pay, no ID or accounts unless the permission is switched on); docs/USER_GUIDE.md section 7 and models.py EmailMode.APPROVE_EACH default (approve each email);
+     "that one site only" = docs/USER_GUIDE.md section 1, wizard/dashboard.py hint #}
   <ul class="checklist checklist--yes mt-m" role="list">
     <li>{{ icon('check') }}<span>Emails wait for your approval before they're sent, unless you choose otherwise.</span></li>
     <li>{{ icon('check') }}<span>It never pays a site. It never creates accounts or sends a photo of your ID unless you switch that on yourself.</span></li>
     <li>{{ icon('check') }}<span>If a site shows an "I'm not a robot" check, it hands that step to you.</span></li>
     <li>{{ icon('check') }}<span>When a site says it deleted you, that's for that one site only, and Free My ID says so.</span></li>
   </ul>
+  {# source: /guides/ pages built from the broker registry #}
   <p class="mt-m">Want to do it by hand? Our <a href="{{ url('guides/') }}">free opt-out guides</a> show the steps for some of the best-known sites.</p>
   <div class="btn-row mt-m">
     {% include "partials/cta-download.html" %}
