@@ -15,7 +15,8 @@ ENV PYTHONUNBUFFERED=1 \
 WORKDIR /src
 COPY pyproject.toml README.md LICENSE ./
 COPY src ./src
-COPY brokers/registry.sample.yaml brokers/state_laws.yaml brokers/LICENSE-DATA.md ./brokers/
+COPY brokers/registry.sample.yaml brokers/state_laws.yaml brokers/LICENSE-DATA.md \
+     brokers/state_law_deletion_matrix.yaml brokers/checklists.yaml ./brokers/
 COPY schema ./schema
 
 # Install the package, then Chromium with its system libraries (needs root, build time only).

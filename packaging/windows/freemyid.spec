@@ -25,7 +25,8 @@ datas = [
 # GitHub Actions tag build (those become public Releases).
 import os
 BROKERS = ROOT / "brokers"
-for _name in ("registry.sample.yaml", "state_laws.yaml", "LICENSE-DATA.md"):
+for _name in ("registry.sample.yaml", "state_laws.yaml", "LICENSE-DATA.md",
+              "state_law_deletion_matrix.yaml", "checklists.yaml"):
     _f = BROKERS / _name
     if not _f.exists():
         raise SystemExit(f"missing required data file: {_f}")

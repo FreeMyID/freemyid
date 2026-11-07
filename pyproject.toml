@@ -67,11 +67,14 @@ packages = ["src/freemyid"]
 "brokers/registry.sample.yaml" = "freemyid/_data/brokers/registry.sample.yaml"
 "brokers/state_laws.yaml" = "freemyid/_data/brokers/state_laws.yaml"
 "brokers/LICENSE-DATA.md" = "freemyid/_data/brokers/LICENSE-DATA.md"
+"brokers/state_law_deletion_matrix.yaml" = "freemyid/_data/brokers/state_law_deletion_matrix.yaml"
+"brokers/checklists.yaml" = "freemyid/_data/brokers/checklists.yaml"
 "schema" = "freemyid/_data/schema"
 
 [tool.hatch.build.targets.sdist]
 include = ["src/freemyid", "brokers/registry.sample.yaml", "brokers/state_laws.yaml",
-  "brokers/LICENSE-DATA.md", "schema", "README.md", "LICENSE", "pyproject.toml"]
+  "brokers/LICENSE-DATA.md", "brokers/state_law_deletion_matrix.yaml",
+  "brokers/checklists.yaml", "schema", "README.md", "LICENSE", "pyproject.toml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
