@@ -50,6 +50,26 @@ jobs:
       - name: Playwright Chromium (CI runner only)
         if: runner.os != 'Linux'
         run: python -m playwright install chromium
+      - name: Locate the headless shell for the real-browser test
+        # tests/test_security_wave2.py only looks in ~/.cache/ms-playwright (Linux layout);
+        # macOS and Windows keep browsers elsewhere, so hand it the exact path.
+        shell: bash
+        run: |
+          python - <<'PY' >> "$GITHUB_ENV"
+          import glob, os
+          roots = [os.environ.get("PLAYWRIGHT_BROWSERS_PATH"),
+                   os.path.expanduser("~/.cache/ms-playwright"),
+                   os.path.expanduser("~/Library/Caches/ms-playwright"),
+                   os.path.join(os.environ.get("LOCALAPPDATA", ""), "ms-playwright")]
+          for r in filter(None, roots):
+              for pat in ("chrome-headless-shell", "chrome-headless-shell.exe"):
+                  hits = sorted(glob.glob(os.path.join(r, "chromium_headless_shell-*", "**", pat), recursive=True))
+                  hits = [h for h in hits if os.path.isfile(h)]
+                  if hits:
+                      print("FREEMYID_BROWSER_EXECUTABLE=" + hits[-1])
+                      raise SystemExit
+          raise SystemExit("chrome-headless-shell not found after playwright install")
+          PY
       - name: Tests
         timeout-minutes: 25
         env:

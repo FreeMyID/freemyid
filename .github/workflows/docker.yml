@@ -49,11 +49,12 @@ jobs:
         if: steps.has.outputs.present == 'true'
         run: |
           set -euo pipefail
-          docker run --rm freemyid:ci freemyid --help > /dev/null
-          docker run --rm freemyid:ci freemyid doctor --json > doctor.json || echo "doctor exit code $? (checks may warn in a bare container)"
+          # the image ENTRYPOINT is already `freemyid`, so pass only the subcommand
+          docker run --rm freemyid:ci --help > /dev/null
+          docker run --rm freemyid:ci doctor --json > doctor.json || echo "doctor exit code $? (checks may warn in a bare container)"
           python3 -c "import json; json.load(open('doctor.json')); print('doctor --json is valid JSON')"
           # hardening expectations: non-root user
-          uid=$(docker run --rm freemyid:ci id -u); [ "$uid" != "0" ] || { echo "image runs as root"; exit 1; }
+          uid=$(docker run --rm --entrypoint id freemyid:ci -u); [ "$uid" != "0" ] || { echo "image runs as root"; exit 1; }
 
   publish:
     if: startsWith(github.ref, 'refs/tags/v')
