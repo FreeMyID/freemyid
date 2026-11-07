@@ -1,0 +1,33 @@
+---
+// D5: every Download button goes through this component, so none can lead nowhere.
+// release.version set  -> "Download Free My ID" straight to the release asset (site.download_url).
+// release.version null -> "Windows download: coming soon" to download/ (keeps the WR-9 "opens soon" state).
+// beam: wrap the button in the Magic UI BorderBeam (CSS only, off under reduced motion). Use on the hero only.
+import { release, site, url } from "@/lib/site";
+import { buttonVariants } from "./ui/button-variants";
+import { cn } from "@/lib/utils";
+import Icon from "./Icon.astro";
+import BorderBeam from "./magicui/BorderBeam.astro";
+interface Props {
+  variant?: "main" | "header";
+  look?: "primary" | "secondary" | "onBrand";
+  size?: "sm" | "md" | "lg";
+  beam?: boolean;
+  class?: string;
+}
+const { variant = "main", look = "primary", beam = false, class: cls } = Astro.props;
+const header = variant === "header";
+const size = Astro.props.size ?? (header ? "sm" : "lg");
+const classes = cn(buttonVariants({ variant: look, size }), cls);
+---
+{release.version ? (
+  beam ? (
+    <BorderBeam>
+      <a class={classes} href={site.download_url}><Icon name="download" />Download Free My ID</a>
+    </BorderBeam>
+  ) : (
+    <a class={classes} href={site.download_url}><Icon name="download" />{header ? <>Download<span class="visually-hidden"> Free My ID for Windows</span></> : "Download Free My ID"}</a>
+  )
+) : (
+  <a class={classes} href={url("download/")}>{header ? <><span class="visually-hidden">Windows download: </span>Coming soon</> : "Windows download: coming soon"}</a>
+)}

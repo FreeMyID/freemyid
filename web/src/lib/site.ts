@@ -1,12 +1,22 @@
 // Build-time data for the v3 site. Reads the SAME files as tools/build_site.py, so there is one
 // source of truth: site_src/site.yaml, pages.yaml, data/*.yaml and the PUBLIC sample registry.
 // Never point this at brokers/registry.yaml (the full registry is private).
-import { readFileSync, realpathSync } from "node:fs";
-import { basename, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { existsSync, readFileSync, realpathSync } from "node:fs";
+import { basename, dirname, resolve } from "node:path";
 import { parse } from "yaml";
 
-const REPO = resolve(fileURLToPath(new URL("../../..", import.meta.url)));
+// The repo root is the nearest folder above the working dir (web/) that holds site_src/.
+// (import.meta.url points into the build cache once Astro bundles this module.)
+function findRepo(): string {
+  let d = process.cwd();
+  while (!existsSync(resolve(d, "site_src/site.yaml"))) {
+    const up = dirname(d);
+    if (up === d) throw new Error("site_src/ not found above " + process.cwd());
+    d = up;
+  }
+  return d;
+}
+const REPO = findRepo();
 const SRC = resolve(REPO, "site_src");
 
 function load<T = any>(path: string): T {
@@ -192,6 +202,16 @@ export function jsonld(kind: string, crumbs: Crumb[], renderText: (html: string)
         ([label, out], i) => ({ "@type": "ListItem", position: i + 1, name: label, item: base + out })) };
   }
   throw new Error(`unknown jsonld kind ${kind}`);
+}
+
+/** Props for Base.astro from the pages.yaml entry `id` (one manifest for both builds). */
+export function pageProps(id: string) {
+  const p = pages[id];
+  if (!p) throw new Error(`page ${id} not in site_src/pages.yaml`);
+  const crumbs: Crumb[] = [["Home", ""]];
+  if (id !== "home") crumbs.push([p.label, p.out]);
+  return { title: p.title, description: p.description, out: p.out, nav: p.nav ?? null,
+    noindex: Boolean(p.noindex), jsonldKinds: p.jsonld ?? [], crumbs };
 }
 
 /** JSON for a <script type="application/ld+json"> block; "<" is escaped so data can't close the tag. */

@@ -1,0 +1,62 @@
+---
+// Page shell: SEO meta, Open Graph, JSON-LD, skip link, header, footer. Port of
+// site_src/templates/base.html. The CSP <meta> is written by Astro (astro.config.mjs security.csp)
+// and tightened per page by scripts/tighten-csp.mjs after the build.
+import "@/styles/global.css";
+import { canonical, jsonld, ldJson, url, type Crumb } from "@/lib/site";
+import { renderPlain } from "@/lib/rich";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+interface Props {
+  title: string;
+  description: string;
+  out: string;              // output path: "" home, "faq/", "guides/spokeo/", "404.html"
+  nav?: string | null;
+  noindex?: boolean;
+  jsonldKinds?: string[];
+  crumbs?: Crumb[];
+  ogImage?: string;         // site-relative path of a 1200x630 PNG
+  ogAlt?: string;
+}
+const { title, description, out, nav = null, noindex = false, jsonldKinds = [], crumbs = [],
+  ogImage = "og.png", ogAlt = "Free My ID. Take your name off the websites that sell it." } = Astro.props;
+const blocks = jsonldKinds.map((k) => ldJson(jsonld(k, crumbs, renderPlain)));
+const canon = canonical(out);
+---
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{title}</title>
+<meta name="description" content={description}>
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#1b2f5b">
+{noindex && <meta name="robots" content="noindex">}
+<link rel="canonical" href={canon}>
+<link rel="icon" href={url("favicon.svg")} type="image/svg+xml">
+<link rel="icon" href={url("favicon.ico")} sizes="48x48">
+<link rel="apple-touch-icon" href={url("apple-touch-icon.png")}>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Free My ID">
+<meta property="og:locale" content="en_US">
+<meta property="og:title" content={title}>
+<meta property="og:description" content={description}>
+<meta property="og:url" content={canon}>
+<meta property="og:image" content={canonical(ogImage)}>
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content={ogAlt}>
+<meta name="twitter:card" content="summary_large_image">
+{blocks.map((b) => <script type="application/ld+json" is:inline set:html={b} />)}
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to main content</a>
+<Header nav={nav} />
+<main id="main" tabindex="-1">
+<slot />
+</main>
+<Footer />
+</body>
+</html>

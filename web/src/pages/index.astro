@@ -1,5 +1,7 @@
 ---
-import "@/styles/global.css";
+import Base from "@/layouts/Base.astro";
+import { pageProps } from "@/lib/site";
 ---
-<html lang="en"><head><meta charset="utf-8"><title>Free My ID</title></head>
-<body><main class="wrap"><h1>Take your name off the websites that sell it.</h1></main></body></html>
+<Base {...pageProps("home")}>
+  <section class="wrap py-2xl"><h1>Take your name off the websites that sell it.</h1></section>
+</Base>

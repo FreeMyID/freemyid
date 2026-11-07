@@ -1,0 +1,47 @@
+---
+// Site header, D1: logo | How it works | Guides | Is it safe? | For families | FAQ | [Download].
+// Wide screens show the inline list; small screens show a no-JS <details> menu. The Download
+// button goes through CtaDownload (D5) and is the only filled button here.
+import { pages, url } from "@/lib/site";
+import BrandMark from "./BrandMark.astro";
+import CtaDownload from "./CtaDownload.astro";
+import Icon from "./Icon.astro";
+interface Props { nav?: string | null }
+const { nav } = Astro.props;
+const items = [
+  ["how-it-works/", "How it works", "how-it-works"],
+  ["guides/", "Guides", "guides"],
+  ["safety/", "Is it safe?", "safety"],
+  ["families/", "For families", "families"],
+  ["faq/", "FAQ", "faq"],
+].filter(([, , key]) => key in pages);
+const link = "flex min-h-tap items-center rounded-md px-xs font-semibold text-text no-underline hover:bg-brand-soft hover:text-heading aria-[current=page]:text-heading aria-[current=page]:underline aria-[current=page]:decoration-accent aria-[current=page]:decoration-[0.12em] aria-[current=page]:underline-offset-[0.4em]";
+---
+<div class="flagbar" aria-hidden="true"><span></span><span></span><span></span></div>
+<header class="site-header sticky top-0 z-40 border-b border-line bg-bg/95 supports-[backdrop-filter]:bg-bg/85 supports-[backdrop-filter]:backdrop-blur">
+  <div class="wrap flex min-h-[4rem] items-center gap-s">
+    <a class="flex min-h-tap items-center gap-2xs whitespace-nowrap text-lead font-bold text-heading no-underline" href={url("")}>
+      <BrandMark /><span>Free My ID<span class="visually-hidden">, home page</span></span>
+    </a>
+    <nav class="ms-auto" aria-label="Main">
+      <ul class="hidden items-center gap-3xs lg:flex" role="list">
+        {items.map(([href, label, key]) => (
+          <li><a class={link} href={url(href)} aria-current={nav === key ? "page" : undefined}>{label}</a></li>
+        ))}
+      </ul>
+      <details class="menu relative lg:hidden">
+        <summary class="flex min-h-tap items-center gap-2xs rounded-md border-2 border-line-strong px-s font-bold text-heading">
+          <Icon name="menu" /><span class="when-closed">Menu</span><span class="when-open">Close</span>
+        </summary>
+        <ul class="absolute end-0 top-full z-50 mt-2xs grid min-w-[14rem] gap-3xs rounded-xl border border-line bg-card p-2xs shadow-3" role="list">
+          {items.map(([href, label, key]) => (
+            <li><a class={link} href={url(href)} aria-current={nav === key ? "page" : undefined}>{label}</a></li>
+          ))}
+        </ul>
+      </details>
+    </nav>
+    <div class="max-[30em]:hidden">
+      <CtaDownload variant="header" />
+    </div>
+  </div>
+</header>

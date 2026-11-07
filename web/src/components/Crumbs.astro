@@ -1,0 +1,18 @@
+---
+// Breadcrumbs (matches the BreadcrumbList JSON-LD).
+import { url, type Crumb } from "@/lib/site";
+interface Props { crumbs: Crumb[] }
+const { crumbs } = Astro.props;
+---
+<nav class="text-small" aria-label="Breadcrumb">
+  <ol class="flex flex-wrap items-center gap-x-2xs gap-y-3xs" role="list">
+    {crumbs.map(([label, out], i) => (
+      <li class="flex items-center gap-2xs">
+        {i > 0 && <span aria-hidden="true" class="text-muted">/</span>}
+        {i === crumbs.length - 1
+          ? <span aria-current="page" class="text-muted">{label}</span>
+          : <a class="inline-flex min-h-[2.4rem] items-center" href={url(out)}>{label}</a>}
+      </li>
+    ))}
+  </ol>
+</nav>
