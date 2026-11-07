@@ -8,7 +8,22 @@ version = "0.1.2"
 description = "Local-first personal data broker opt-out tool with scheduled re-checks."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "AGPL-3.0-or-later" }
+license = "AGPL-3.0-or-later"
+license-files = ["LICENSE"]
+authors = [{ name = "Free My ID" }]
+keywords = ["privacy", "data-broker", "opt-out", "people-search", "gdpr", "ccpa"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Environment :: Web Environment",
+  "Intended Audience :: End Users/Desktop",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Security",
+  "Topic :: Internet :: WWW/HTTP",
+]
 dependencies = [
   "pydantic>=2.7",
   "pyyaml>=6.0",
@@ -29,9 +44,14 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.2", "pytest-asyncio>=0.23", "ruff>=0.5", "mypy>=1.10", "types-PyYAML", "pillow>=10"]
+dev = ["pytest>=8.2", "pytest-asyncio>=0.23", "ruff>=0.5", "mypy>=1.10", "types-PyYAML", "pillow>=10", "build>=1.2"]
 pdf = ["weasyprint>=62"]
 package = ["pyinstaller>=6.8", "pywebview>=5.0"]
+
+[project.urls]
+Homepage = "https://freemyid.org"
+Source = "https://github.com/FreeMyID/freemyid"
+Issues = "https://github.com/FreeMyID/freemyid/issues"
 
 [project.scripts]
 freemyid = "freemyid.cli:app"
@@ -43,8 +63,15 @@ freemyid = "freemyid.cli:app"
 packages = ["src/freemyid"]
 
 [tool.hatch.build.targets.wheel.force-include]
-"brokers" = "freemyid/_data/brokers"
+# Public sample registry only. The full registry (brokers/registry.yaml) never ships in a wheel.
+"brokers/registry.sample.yaml" = "freemyid/_data/brokers/registry.sample.yaml"
+"brokers/state_laws.yaml" = "freemyid/_data/brokers/state_laws.yaml"
+"brokers/LICENSE-DATA.md" = "freemyid/_data/brokers/LICENSE-DATA.md"
 "schema" = "freemyid/_data/schema"
+
+[tool.hatch.build.targets.sdist]
+include = ["src/freemyid", "brokers/registry.sample.yaml", "brokers/state_laws.yaml",
+  "brokers/LICENSE-DATA.md", "schema", "README.md", "LICENSE", "pyproject.toml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
