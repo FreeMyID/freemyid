@@ -40,9 +40,9 @@ fed from the theme. style="" attributes in the SVGs are turned into presentation
 | Border Beam | Magic UI (CSS-only port) | components/magicui/BorderBeam.astro | hero Download, download page button |
 | Marquee | Magic UI (CSS-only port, Pause checkbox, hover/focus pause) | components/magicui/Marquee.astro | home "What it removes" (guide site names, plain text) |
 | Blur Fade | Magic UI idea, done as scroll-driven CSS (`.reveal`) | global.css | cards and section heads |
-| Timeline | Aceternity UI (static list + beam) | components/aceternity/Timeline*.astro, TimelineBeam.tsx | CSS beam: download, families, I-do-not-consent, guides. React+motion island: /how-it-works/ only |
+| Timeline | Aceternity UI (static list + beam) | components/aceternity/Timeline*.astro | CSS scroll-driven beam on how it works, download, families, I-do-not-consent, guides. The motion island (TimelineBeam.tsx, `beam="island"`) is kept in source but unused (orchestrator ruling: not worth ~95 KB JS) |
 | CopyHash | own island with shadcn Button | components/CopyHash.tsx | download checksum panel (loads only when the panel opens) |
-Islands: only `client:visible`. Home has zero JS. All motion is off under prefers-reduced-motion and in print.
+Islands: only `client:visible`, and only CopyHash ships (lazy, inside the closed checksum panel). Every other page has zero JS. All motion is off under prefers-reduced-motion and in print.
 
 ## Dependencies (exact, pnpm 10.32.1, node 24)
 astro 7.4.7, @astrojs/react 7.1.4, react 19.3.1, react-dom 19.3.1, tailwindcss 4.3.5, @tailwindcss/vite 4.3.5,
@@ -50,25 +50,30 @@ motion 14.10.1, clsx 2.1.1, tailwind-merge 3.7.0, class-variance-authority 0.7.1
 
 ## Security / privacy
 - CSP meta from Astro `security.csp`, then `scripts/tighten-csp.mjs` rewrites each page: `script-src 'none'` on pages with no
-  scripts (all but two), `'self'` + the exact sha256 of Astro's inline island bootstrap on /download/ and /how-it-works/;
+  scripts (all but one), `'self'` + the exact sha256 of Astro's inline island bootstrap on /download/;
   `style-src 'self'` + hash of Astro's one `astro-island{display:contents}` style. No unsafe-inline/eval. check-site.mjs verifies.
 - Redirect pages (privacy.html, privacy/, *.html) are hand-built with the v2 CSP and `script-src 'none'`.
 - No third-party requests (Playwright logged zero non-local requests on every page), no forms, no cookies, system fonts.
 - JSON-LD via `set:html` of our own JSON.stringify output with `<` escaped; the guide HTML source comment is filtered to safe chars.
 
 ## Budgets (gzip, measured by pnpm check)
-Home: HTML 12.9 KB + CSS 8.3 KB + JS 0 = 21.2 KB first view (screenshots are lazy). CSS 8.3 KB on every page.
-/download/: JS 78.6 KB but only after the checksum panel is opened. /how-it-works/: JS 99.1 KB (React 64 + motion beam 31).
+Home: HTML 12.9 KB + CSS 8.5 KB + JS 0 = 21.4 KB first view (screenshots are lazy). CSS 8.5 KB on every page.
+/download/: JS 78.6 KB (React + CopyHash), loaded only after the checksum panel is opened (0 KB before). /how-it-works/: 14.6 KB, no JS.
+All other pages 11-15 KB, no JS.
 
-## Open items
-1. /how-it-works/ ships ~95 KB JS for a decorative beam. Recommend `beam="css"` there too (one-word change) unless the
-   orchestrator wants one live React+motion island as a showcase.
-2. Leak scan in CI is OFF unless tools/private_host_hashes.txt is available to the job (same as v2).
-3. Switch-over: rename `.github/workflows/pages-v3.yml.draft` to pages.yml (replacing v2) after web-qa + qa-security pass;
-   v2 `styleguide/` page is not ported (noindex, contributors only).
+## Header on phones
+Port of v2 52-chrome.css (WR/D1): the Download button always stays in the header. Under 34em the menu toggle is
+icon-only (50x50, label kept for screen readers) and the CTA is compact (102x50, "Download" + hidden "Free My ID for
+Windows"); at 336px or below the brand is logo-only (accessible name kept). Rules are unlayered at the end of global.css.
+
+## Open items (orchestrator rulings 2026-11-07)
+1. DONE: /how-it-works/ uses the CSS beam; React only in the lazy checksum island.
+2. Leak scan in CI: same as v2, leave it.
+3. Switch-over: rename `.github/workflows/pages-v3.yml.draft` to pages.yml after web-qa + qa-security pass. Styleguide not needed.
 4. Base path is set in astro.config.mjs (`site`, `base`) and site.yaml base_url: change both when freemyid.org exists.
-5. `astro check` / TypeScript strict pass not run (no @astrojs/check dependency added); build succeeds.
+5. astro check: skipped for now.
 6. og-download.png already carries the "Nothing is sent to us" wording; re-copy from brand/v3/og if it is re-rendered again.
+7. DONE: header Download visible on phones (see above).
 
-Screenshots (not committed): scratchpad shots/final (360/768/1280 x light/dark, full page, reduced motion), shots/nojs,
-shots/motion, shots/keys (focus ring, no-JS menu, copy button).
+Screenshots (not committed): scratchpad shots/final (360/768/1280 x light/dark, full page, reduced motion), shots/hdr
+(header at 320/336/360/544), shots/w320, shots/nojs, shots/keys.

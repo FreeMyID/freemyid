@@ -19,9 +19,9 @@ const link = "flex min-h-tap items-center rounded-md px-xs font-semibold text-te
 ---
 <div class="flagbar" aria-hidden="true"><span></span><span></span><span></span></div>
 <header class="site-header sticky top-0 z-40 border-b border-line bg-bg/95 supports-[backdrop-filter]:bg-bg/85 supports-[backdrop-filter]:backdrop-blur">
-  <div class="wrap flex min-h-[4rem] items-center gap-xs">
-    <a class="flex min-h-tap items-center gap-2xs whitespace-nowrap text-lead font-bold text-heading no-underline max-[24em]:text-body" href={url("")}>
-      <BrandMark /><span>Free My ID<span class="visually-hidden">, home page</span></span>
+  <div class="header-row wrap flex min-h-[4rem] items-center gap-xs">
+    <a class="brand flex min-h-tap items-center gap-2xs whitespace-nowrap text-lead font-bold text-heading no-underline" href={url("")}>
+      <BrandMark /><span><span class="brand-text">Free My ID</span><span class="visually-hidden">, home page</span></span>
     </a>
     <nav class="ms-auto" aria-label="Main">
       <ul class="hidden items-center gap-3xs lg:flex" role="list">
@@ -30,8 +30,8 @@ const link = "flex min-h-tap items-center rounded-md px-xs font-semibold text-te
         ))}
       </ul>
       <details class="menu relative lg:hidden">
-        <summary class="flex min-h-tap items-center gap-2xs rounded-md border-2 border-line-strong px-s font-bold text-heading max-[24em]:px-xs">
-          <Icon name="menu" /><span class="when-closed">Menu</span><span class="when-open">Close</span>
+        <summary class="flex min-h-tap min-w-tap items-center justify-center gap-2xs rounded-md border-2 border-line-strong px-s font-bold text-heading max-[34em]:px-xs">
+          <Icon name="menu" /><span class="menu-label"><span class="when-closed">Menu</span><span class="when-open">Close</span></span>
         </summary>
         <ul class="absolute end-0 top-full z-50 mt-2xs grid min-w-[14rem] gap-3xs rounded-xl border border-line bg-card p-2xs shadow-3" role="list">
           {items.map(([href, label, key]) => (
@@ -40,7 +40,7 @@ const link = "flex min-h-tap items-center rounded-md px-xs font-semibold text-te
         </ul>
       </details>
     </nav>
-    <div class="max-[30em]:hidden">
+    <div class="header-cta shrink-0">
       <CtaDownload variant="header" />
     </div>
   </div>
