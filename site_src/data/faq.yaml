@@ -22,7 +22,7 @@
   home: true
   q: 'Will it ask for my Social Security number or bank details?'
   a: |-
-    <p>No. Free My ID never asks for your Social Security number, bank account, or credit or debit card details. If anything claiming to be Free My ID asks you for these, it isn't us. <a href="{{ url('privacy/') }}">See everything we will never ask for</a>.</p>
+    <p>No. Free My ID never asks for your Social Security number, bank account, or credit or debit card details. If anything claiming to be Free My ID asks you for these, it isn't us. <a href="{{ url('safety/#never-asks') }}">See everything we will never ask for</a>.</p>
 - id: parents
   home: true
   q: 'Can I set it up for my parents?'

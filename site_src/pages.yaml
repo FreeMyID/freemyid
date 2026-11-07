@@ -29,17 +29,28 @@
   out: families/
   template: pages/families.html
   label: Helping a parent
+  nav: families
   title: "Helping a parent or grandparent use Free My ID"
   description: A plain-language guide for family members setting up Free My ID for someone else, with a printable card for the fridge.
   jsonld: [breadcrumbs]
+- id: safety
+  out: safety/
+  template: pages/safety.html
+  label: Is it safe?
+  nav: safety
+  title: "Is Free My ID safe? No account, no cloud, open source"
+  description: Free My ID keeps your details on your own computer, encrypted. What it stores, what it never asks for, how to check the download, and how to uninstall.
+  jsonld: [breadcrumbs]
+# TEMPORARY: keeps privacy/ working until the lead adds privacy/ -> safety/ to the site.yaml redirects
+# (site.yaml "privacy.html: privacy" also needs this id until then). Remove this entry in that change.
 - id: privacy
   out: privacy/
-  template: pages/privacy.html
-  label: Your privacy
-  nav: privacy
-  title: "Your privacy with Free My ID: no account, no cloud"
-  description: Free My ID has no account, no cloud and no tracking. Here is exactly what it stores, what it sends and what it never asks for.
-  jsonld: [breadcrumbs]
+  template: redirect.html
+  label: Is it safe?
+  title: "Moved: Is it safe?"
+  description: This page moved to the Free My ID "Is it safe?" page.
+  noindex: true
+  target: {out: safety/, label: "Is it safe?"}
 - id: faq
   out: faq/
   template: pages/faq.html
