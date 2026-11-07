@@ -78,6 +78,7 @@
   q: 'Can I do this without the app?'
   a: |-
     <p>Yes. Our free <a href="{{ url('guides/') }}">opt-out guides</a> show the steps for some of the best-known sites. Free My ID does the repetitive part for you, keeps track, and keeps checking.</p>
+    <p>Popular guides: <a href="{{ url('guides/whitepages/') }}">Whitepages</a>, <a href="{{ url('guides/spokeo/') }}">Spokeo</a>, <a href="{{ url('guides/truepeoplesearch/') }}">TruePeopleSearch</a>, <a href="{{ url('guides/beenverified/') }}">BeenVerified</a>.</p>
 - id: windows-warning
   home: true
   # source: installer not code-signed (.github/workflows/build.yml release notes)

@@ -11,7 +11,7 @@ import CheckList from "@/components/CheckList.astro";
 import Timeline from "@/components/aceternity/Timeline.astro";
 import TimelineItem from "@/components/aceternity/TimelineItem.astro";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { guideDescription, guides, guidesMeta, guideTitle, pages, url, type Crumb, type Guide } from "@/lib/site";
+import { guideDescription, guides, guidesMeta, guideTitle, moreGuides, pages, url, type Crumb, type Guide } from "@/lib/site";
 
 export function getStaticPaths() {
   return guides.map((g) => ({ params: { slug: g.slug }, props: { g } }));
@@ -116,7 +116,14 @@ const needs = g.required.length > 0 || g.needs_email_verification || g.has_captc
     <div class="mt-xs"><CtaDownload size="md" /></div>
   </Card>
 
-  <p class="mt-l"><a href={url("guides/")}>See all opt-out guides</a></p>
+  <nav class="mt-xl" aria-labelledby="more-guides">
+    {/* WR-40: internal links to guides people often search for (keywords.md rows 3-6). No new claims. */}
+    <h2 id="more-guides">More free guides</h2>
+    <ul class="mt-xs grid gap-2xs">
+      {moreGuides(g).map((o) => <li><a href={url(o.out)}>How to remove yourself from {o.name}</a></li>)}
+      <li><a href={url("guides/")}>See all opt-out guides</a></li>
+    </ul>
+  </nav>
   <p class="mt-2xs text-small text-muted">Guide data updated {guidesMeta.updated} from the Free My ID sample broker registry (<a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>).</p>
 </div>
 </Base>

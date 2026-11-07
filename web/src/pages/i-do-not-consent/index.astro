@@ -12,7 +12,7 @@ import CheckList from "@/components/CheckList.astro";
 import Timeline from "@/components/aceternity/Timeline.astro";
 import TimelineItem from "@/components/aceternity/TimelineItem.astro";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { canonical, pageProps, url } from "@/lib/site";
+import { canonical, pageProps, popularGuides, url } from "@/lib/site";
 const p = pageProps("i-do-not-consent");
 const canon = canonical(p.out);
 ---
@@ -39,7 +39,9 @@ const canon = canonical(p.out);
   {/* source: step 1 = /guides/ (registry); step 2 = POSITIONING.md "Legal accuracy", brokers/state_laws.yaml; step 3 = registry recheck_interval_days (90 to 180 days);
      step 4 = USER_GUIDE section 11 "Does this change what Facebook does?" */}
   <Timeline class="mt-m">
-    <TimelineItem n={1} title={'Send your "I do not consent" to each site'}><p>Ask each people-search site to remove your listing, through its own removal process. Our <a href={url("guides/")}>free opt-out guides</a> show you how for some of the best-known sites.</p></TimelineItem>
+    <TimelineItem n={1} title={'Send your "I do not consent" to each site'}><p>Ask each people-search site to remove your listing, through its own removal process. Our <a href={url("guides/")}>free opt-out guides</a> show you how for some of the best-known sites.</p>
+      {/* WR-40: the queries people type (keywords.md rows 3-6) */}
+      <p class="mt-xs">Popular guides: {popularGuides.map((g, i) => <><a href={url(g.out)}>{g.name}</a>{i < popularGuides.length - 1 ? ", " : "."}</>)}</p></TimelineItem>
     <TimelineItem n={2} title="Use the law where you have it"><p>California and a growing number of states have privacy laws that require these sites to answer removal requests. In other states the request is a polite one. Many sites honor it anyway, but some don't.</p></TimelineItem>
     <TimelineItem n={3} title="Keep checking"><p>Sites buy fresh data and can list people again. Check back every few months.</p></TimelineItem>
     <TimelineItem n={4} title="For Facebook itself, use Facebook's own settings"><p>Removing yourself from people-search sites doesn't change what Facebook does with your account. That's done in the privacy settings inside Facebook.</p></TimelineItem>

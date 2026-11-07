@@ -243,3 +243,18 @@ export function gitFirstDate(path: string, text: string): string {
   const d = git(["log", "--reverse", "--format=%cs", "-S", text, "--", path]).split("\n")[0] ?? "";
   return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : "";
 }
+
+// ------------------------------------------------------------------ internal links (WR-40)
+// Sites people often search for (docs/marketing/seo/keywords.md rows 3-6; our guess until Search Console data).
+export const POPULAR_GUIDE_SLUGS = ["whitepages", "spokeo", "truepeoplesearch", "beenverified"];
+export const popularGuides = POPULAR_GUIDE_SLUGS.map((s) => guides.find((g) => g.slug === s))
+  .filter((g): g is Guide => Boolean(g));
+/** 4 guides to suggest on a guide page: the popular ones minus the current page, filled from the list order. */
+export function moreGuides(current: Guide, n = 4): Guide[] {
+  const pick = popularGuides.filter((g) => g.id !== current.id);
+  for (const g of guides) {
+    if (pick.length >= n) break;
+    if (g.id !== current.id && !pick.includes(g)) pick.push(g);
+  }
+  return pick.slice(0, n);
+}
