@@ -10,7 +10,7 @@
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#1b2f5b">
 <link rel="canonical" href="https://freemyid.github.io/freemyid/">
-<link rel="stylesheet" href="style.css?v=9cb550681c">
+<link rel="stylesheet" href="style.css?v=57761acd2a">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -27,7 +27,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Free My ID","url":"https://freemyid.github.io/freemyid/","sameAs":["https://github.com/FreeMyID/freemyid"],"description":"Free, open-source software that asks people-search sites to remove your listing."}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Free My ID","url":"https://freemyid.github.io/freemyid/","inLanguage":"en-US"}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Free My ID","operatingSystem":"Windows 10, Windows 11","applicationCategory":"UtilitiesApplication","description":"Take your name off the websites that sell it. Free, open source, runs on your own computer.","url":"https://freemyid.github.io/freemyid/","downloadUrl":"https://github.com/FreeMyID/freemyid/releases/latest/download/FreeMyIDSetup.exe","isAccessibleForFree":true,"license":"https://www.gnu.org/licenses/agpl-3.0.html","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Free My ID","operatingSystem":"Windows 10, Windows 11","applicationCategory":"UtilitiesApplication","description":"Take your name off the websites that sell it. Free, open source, runs on your own computer.","url":"https://freemyid.github.io/freemyid/","isAccessibleForFree":true,"license":"https://www.gnu.org/licenses/agpl-3.0.html","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to main content</a>
@@ -78,7 +78,7 @@
       <p class="hero__note">Windows may show a blue "protected your PC" box the first time. <a href="download/#smartscreen">That's expected. Here's what to click.</a></p>
     </div>
     <figure class="hero__media">
-      <img src="assets/screenshots/dashboard.webp" width="1000" height="1045" fetchpriority="high" alt="The Free My ID home screen. A plain sentence says 7 sites have confirmed or no longer list you, 3 are waiting and 2 need you, followed by a card with copy-and-paste details and large buttons for the one step left.">
+      <img src="assets/screenshots/dashboard-1200.webp" srcset="assets/screenshots/dashboard-700.webp 700w, assets/screenshots/dashboard-1200.webp 1200w" sizes="(min-width: 62rem) 33rem, (min-width: 56.25em) 52vw, 100vw" width="1000" height="1045" fetchpriority="high" alt="The Free My ID home screen. A plain sentence says 7 sites have confirmed or no longer list you, 3 are waiting and 2 need you, followed by a card with copy-and-paste details and large buttons for the one step left.">
       <figcaption class="caption">Example with made-up data</figcaption>
     </figure>
   </div>
@@ -102,8 +102,8 @@
       <p class="lead">Free My ID keeps a plain list: which site, when it asked, where things stand, and when it last checked. You can print it.</p>
     </div>
     <figure class="proof">
-      <img src="assets/screenshots/report.webp" width="900" height="1220" loading="lazy" alt="The printable progress report: a table of each people-search site, its status (site confirmed, asked, not listed now, needs you), when it was last checked and when the request was made.">
-      <figcaption class="caption">Sample report with made-up data</figcaption>
+      <img src="assets/screenshots/report-900.webp" srcset="assets/screenshots/report-600.webp 600w, assets/screenshots/report-900.webp 900w" sizes="(min-width: 42rem) 40rem, 100vw" width="900" height="1220" loading="lazy" alt="The printable progress report: a table of each people-search site, its status (site confirmed, asked, not listed now, needs you), when it was last checked and when the request was made.">
+      <figcaption class="caption">Sample report with made-up data. <a href="assets/screenshots/report-900.webp">See the sample report full size</a></figcaption>
     </figure>
     <p>Some sites remove you in days. Some take weeks. Some ignore the request, and the report shows those too.</p>
   </div>
@@ -167,17 +167,17 @@
           </tr>
         </thead>
         <tbody>
-          <tr><th scope="row">Price</th><td class="yes">Free</td><td>Yearly or monthly fee</td><td>Free, your time</td></tr>
-          <tr><th scope="row">Where your details go</th><td class="yes">Stay on your computer</td><td>Sent to the company</td><td>Stay on your computer</td></tr>
-          <tr><th scope="row">Account</th><td class="yes">None</td><td>Account required</td><td>None</td></tr>
-          <tr><th scope="row">Who sends the requests</th><td>Your own computer, as you</td><td>The company, on your behalf</td><td>You</td></tr>
-          <tr><th scope="row">Keeps checking</th><td class="yes">Yes, daily on your PC (your computer must be on and you must be signed in to Windows at the time)</td><td>Yes, on a schedule</td><td class="no">Only if you remember</td></tr>
-          <tr><th scope="row">Company staff handle hard cases</th><td class="partial">No. Some sites need you to do a step, and it shows you how</td><td>Often, on higher plans</td><td>You</td></tr>
+          <tr><th scope="row">Price</th><td data-label="Free My ID" class="yes">Free</td><td data-label="Paid removal services (typical)">Yearly or monthly fee</td><td data-label="By hand">Free, your time</td></tr>
+          <tr><th scope="row">Where your details go</th><td data-label="Free My ID" class="yes">Only to the sites you ask to remove you</td><td data-label="Paid removal services (typical)">Sent to the company</td><td data-label="By hand">Only to the sites you contact</td></tr>
+          <tr><th scope="row">Account</th><td data-label="Free My ID" class="yes">None</td><td data-label="Paid removal services (typical)">Account required</td><td data-label="By hand">None</td></tr>
+          <tr><th scope="row">Who sends the requests</th><td data-label="Free My ID">Your own computer, as you</td><td data-label="Paid removal services (typical)">The company, on your behalf</td><td data-label="By hand">You</td></tr>
+          <tr><th scope="row">Keeps checking</th><td data-label="Free My ID" class="yes">Yes, daily on your PC (your computer must be on and you must be signed in to Windows at the time)</td><td data-label="Paid removal services (typical)">Yes, on a schedule</td><td data-label="By hand" class="no">Only if you remember</td></tr>
+          <tr><th scope="row">Company staff handle hard cases</th><td data-label="Free My ID" class="partial">No. Some sites need you to do a step, and it shows you how</td><td data-label="Paid removal services (typical)">Often, on higher plans</td><td data-label="By hand">You</td></tr>
         </tbody>
       </table>
     </div>
     <p class="caption">"Typical" describes the category, not any one company. Features and prices vary by service. Reviewed 2026-11-07.</p>
-    <p>Free My ID is open source, so you can read it, and works on Windows 10 and 11 today.</p>
+    <p>Free My ID is open source, so you can read it. Made for Windows 10 and 11. The first version is coming soon.</p>
     <p>If you'd rather have a company handle it for you, a paid service may suit you better. We'll say so plainly.</p>
   </div>
 </section>
@@ -185,12 +185,12 @@
 <section class="band" aria-labelledby="safety-title">
   <div class="wrap">
     <div class="section-head">
-      <h2 id="safety-title">Built so you do not have to trust us.</h2>
+      <h2 id="safety-title">Built so you can check our work.</h2>
     </div>
     <ul class="cards cards--3" role="list">
-      <li class="card"><span class="card__icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg></span><h3>Nothing leaves your computer.</h3><p>Your details are stored encrypted on your computer. The app talks only to the sites you are asking to remove you, your own email account, and our public list of those sites.</p></li>
+      <li class="card"><span class="card__icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg></span><h3>Your details stay on your computer. Nothing is sent to us.</h3><p>Your details are stored encrypted on your computer. The app talks only to the sites you are asking to remove you, your own email account, and our public list of those sites.</p></li>
       <li class="card"><span class="card__icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l7 3v5.2c0 4.4-2.9 8.1-7 9.8-4.1-1.7-7-5.4-7-9.8V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg></span><h3>It never asks for the wrong things.</h3><p>Never your Social Security number. Never bank or card details. Never a payment. Never a phone number or ID unless you choose to.</p></li>
-      <li class="card"><span class="card__icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></svg></span><h3>You can check the work.</h3><p>The code is public. Every download has a fingerprint you can compare. Uninstalling removes the program and its daily check.</p></li>
+      <li class="card"><span class="card__icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></svg></span><h3>You can check the work.</h3><p>The code is public. Each download will come with a fingerprint you can compare. Uninstalling removes the program and its daily check.</p></li>
     </ul>
     <aside class="callout callout--info">
       <svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.2"/></svg>
@@ -271,13 +271,13 @@
     </div>
     <div class="faq">
       <details class="faq__item" id="q-free" open><summary>Is it really free?</summary><div class="faq__body"><p>Yes. There is no trial, no card and no account. The app is free and open source.</p></div></details>
-      <details class="faq__item" id="q-scam" open><summary>Is this a scam? How do I know?</summary><div class="faq__body"><p>We never ask for your Social Security number, bank or card details, and the app never asks for a payment. The code is public, and you can check the download's fingerprint. <a href="safety/#open-source">How to check that Free My ID is genuine</a>.</p></div></details>
-      <details class="faq__item" id="q-where-data"><summary>Where does my information go?</summary><div class="faq__body"><p>It stays on your computer. The app contacts only the sites you are asking to remove you, your own email and our public list of sites. <a href="safety/#local">What Free My ID stores, and where</a>.</p></div></details>
+      <details class="faq__item" id="q-scam" open><summary>Is this a scam? How do I know?</summary><div class="faq__body"><p>We never ask for your Social Security number, bank or card details, and the app never asks for a payment. The code is public, and each download will come with a fingerprint you can check. <a href="safety/#open-source">How to check that Free My ID is genuine</a>.</p></div></details>
+      <details class="faq__item" id="q-where-data"><summary>Where does my information go?</summary><div class="faq__body"><p>Your details stay on your computer. Nothing is sent to us. The app contacts only the sites you are asking to remove you, your own email and our public list of sites. <a href="safety/#local">What Free My ID stores, and where</a>.</p></div></details>
       <details class="faq__item" id="q-whole-internet"><summary>Will this remove me from the whole internet?</summary><div class="faq__body"><p>No, and be wary of anyone who promises that. Free My ID asks people-search and data-broker sites to remove your listing, shows you which ones confirmed, and keeps checking. It can't remove news stories, social media posts or government records.</p></div></details>
       <details class="faq__item" id="q-i-do-not-consent"><summary>I posted &#34;I do not consent.&#34; Did that work?</summary><div class="faq__body"><p>You were right to object. On its own, that post doesn't reach the sites that sell your details. Free My ID sends your wish to them directly. <a href="i-do-not-consent/">Read more about the "I do not consent" post</a>.</p></div></details>
       <details class="faq__item" id="q-how-long"><summary>How long does it take?</summary><div class="faq__body"><p>Setup is six short screens. Some sites remove you within days; others take weeks. Free My ID keeps track so you don't have to.</p></div></details>
       <details class="faq__item" id="q-windows-warning"><summary>Why does Windows warn me when I install it?</summary><div class="faq__body"><p>Windows shows a blue "Windows protected your PC" box for new programs that haven't bought a publisher certificate. Free My ID hasn't bought one yet. <a href="download/#smartscreen">See what to click, with pictures</a>.</p></div></details>
-      <details class="faq__item" id="q-mac"><summary>Is there a Mac or phone version?</summary><div class="faq__body"><p>Not yet. Free My ID runs on Windows 10 and Windows 11.</p></div></details>
+      <details class="faq__item" id="q-mac"><summary>Is there a Mac or phone version?</summary><div class="faq__body"><p>Not yet. Free My ID is made for Windows 10 and Windows 11.</p></div></details>
     </div>
     <p><a href="faq/">See all questions</a></p>
   </div>

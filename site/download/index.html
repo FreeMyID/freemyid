@@ -10,7 +10,7 @@
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#1b2f5b">
 <link rel="canonical" href="https://freemyid.github.io/freemyid/download/">
-<link rel="stylesheet" href="../style.css?v=9cb550681c">
+<link rel="stylesheet" href="../style.css?v=57761acd2a">
 <link rel="icon" href="../favicon.svg" type="image/svg+xml">
 <link rel="icon" href="../favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
@@ -25,7 +25,7 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Free My ID. Take your name off the websites that sell it.">
 <meta name="twitter:card" content="summary_large_image">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Free My ID","operatingSystem":"Windows 10, Windows 11","applicationCategory":"UtilitiesApplication","description":"Take your name off the websites that sell it. Free, open source, runs on your own computer.","url":"https://freemyid.github.io/freemyid/","downloadUrl":"https://github.com/FreeMyID/freemyid/releases/latest/download/FreeMyIDSetup.exe","isAccessibleForFree":true,"license":"https://www.gnu.org/licenses/agpl-3.0.html","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Free My ID","operatingSystem":"Windows 10, Windows 11","applicationCategory":"UtilitiesApplication","description":"Take your name off the websites that sell it. Free, open source, runs on your own computer.","url":"https://freemyid.github.io/freemyid/","isAccessibleForFree":true,"license":"https://www.gnu.org/licenses/agpl-3.0.html","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://freemyid.github.io/freemyid/"},{"@type":"ListItem","position":2,"name":"Download","item":"https://freemyid.github.io/freemyid/download/"}]}</script>
 </head>
 <body>
@@ -72,17 +72,15 @@
   <div class="two-col">
     <div class="prose">
       <h1>Download Free My ID</h1>
-      <!-- Source: docs/PLAN_V1.md D5 (per-user install, no admin); install time VM-measured (commit 891452e) -->
-      <p class="lead mt-s">For Windows 10 and Windows 11. Free. Installs in a few minutes, with no administrator password needed.</p>
+      <p class="lead mt-s">For Windows 10 and Windows 11. Free, with no administrator password needed.</p>
     </div>
     <div class="download-card">
-      <!-- WR-9: no release yet, so no link (releases/latest would 404). Set release.version in data/release.yaml to switch this on. -->
       <div class="callout callout--info">
         <svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
         <div><p><strong>Download opens soon</strong></p><p>Not published yet. We'll show the download button here the day the first version is ready.</p></div>
       </div>
       <dl class="facts">
-        <dt>Works on</dt><dd>Windows 10 and 11</dd>
+        <dt>Made for</dt><dd>Windows 10 and 11</dd>
         <dt>Price</dt><dd>Free</dd>
       </dl>
       <p class="note">Version number, size and checksum will show here when the first version is published.</p>
@@ -90,13 +88,12 @@
   </div>
 </div>
 
-<section class="section section--alt" id="smartscreen" aria-labelledby="ss-title">
+<section class="band band--alt" id="smartscreen" aria-labelledby="ss-title">
   <div class="wrap">
     <div class="section-head">
       <h2 id="ss-title">Windows may show a blue warning. Here's why, and what to do</h2>
     </div>
     <p class="prose">Windows shows "Windows protected your PC" for new programs that haven't paid for a publisher certificate yet. Free My ID is free and hasn't bought one yet. The warning doesn't mean anything is wrong.</p>
-    <!-- WR-10 -->
     <p class="prose mt-s">Not sure about this step? Ask a family member to sit with you. <a href="../families/">Here's a one-page guide for them.</a></p>
     <ol class="steps steps--list mt-l" role="list">
       <li class="step"><span class="step__num" aria-hidden="true">1</span><h3>Open the file you downloaded</h3><p>It's called <strong>FreeMyIDSetup.exe</strong>. You'll usually find it in your <strong>Downloads</strong> folder, or at the bottom or top-right of your web browser.</p></li>
@@ -116,8 +113,7 @@
       <li class="step"><span class="step__num" aria-hidden="true">3</span>
         <h3>Check the name, then click "Run anyway"</h3>
         <p>Make sure it says the app is <strong>FreeMyIDSetup.exe</strong>. It will say "Unknown publisher"; that's expected. Then click <strong>Run anyway</strong>.</p>
-        <!-- WR-19: safety line before Run anyway -->
-        <p class="callout"><strong>Only do this if you downloaded the file from this page or from our GitHub releases page. If it came from anywhere else, delete it.</strong></p>
+        <p class="callout"><strong>Only do this if you downloaded the file from this page. If it came from anywhere else, delete it.</strong></p>
 <figure class="ss mt-s">
   <div class="ss__box" role="img" aria-label="Drawing of the same blue box after clicking More info. It shows App: FreeMyIDSetup.exe and Publisher: Unknown publisher. The Run anyway button is highlighted.">
     <p class="ss__title">Windows protected your PC</p>
@@ -133,21 +129,23 @@
   </div>
 </section>
 
-<div class="wrap section prose">
+<section class="band" aria-labelledby="genuine">
+  <div class="wrap wrap--narrow">
   <h2 id="genuine">How to know it's really us</h2>
   <div class="callout callout--note">
     <svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l7 3v5.2c0 4.4-2.9 8.1-7 9.8-4.1-1.7-7-5.4-7-9.8V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg>
-    <div><p><strong>Stay safe:</strong> only download Free My ID from this page or from <a href="https://github.com/FreeMyID/freemyid/releases">our GitHub releases page</a>. We will never email you an installer, and we will never call you.</p></div>
+    <div><p><strong>Stay safe:</strong> only download Free My ID from this page. We will never email you an installer, and we will never call you.</p></div>
   </div>
   <div class="faq mt-m">
     <details id="checksum"><summary>For helpers: check the download is genuine</summary>
-      <p>Each release lists a <strong>SHA256SUMS.txt</strong> file. In PowerShell, run <code>Get-FileHash .\FreeMyIDSetup.exe</code> and check that the long code matches the line for FreeMyIDSetup.exe in that file.</p>
+      <p>Each release will come with a <strong>SHA256SUMS.txt</strong> file (no version is published yet). In PowerShell, run <code>Get-FileHash .\FreeMyIDSetup.exe</code> and check that the long code matches the line for FreeMyIDSetup.exe in that file.</p>
     </details>
   </div>
 
   <h2 class="mt-l" id="remove">Removing it</h2>
   <p class="mt-s">Open Windows <strong>Settings → Apps</strong>, find <strong>Free My ID</strong>, and click <strong>Uninstall</strong>. It asks whether to delete your saved records too.</p>
-</div>
+  </div>
+</section>
 </main>
 <footer class="site-footer">
   <div class="wrap">

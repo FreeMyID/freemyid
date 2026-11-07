@@ -11,7 +11,7 @@
 <meta name="theme-color" content="#1b2f5b">
 <meta name="robots" content="noindex">
 <link rel="canonical" href="https://freemyid.github.io/freemyid/styleguide/">
-<link rel="stylesheet" href="../style.css?v=9cb550681c">
+<link rel="stylesheet" href="../style.css?v=57761acd2a">
 <link rel="icon" href="../favicon.svg" type="image/svg+xml">
 <link rel="icon" href="../favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
@@ -279,15 +279,15 @@
 
 <section class="band" id="compare" aria-labelledby="sg-compare">
   <div class="wrap">
-    <div class="section-head"><h2 id="sg-compare">Comparison table</h2><p class="lead">Scrolls inside its own box on small screens; the row headers stay put.</p></div>
+    <div class="section-head"><h2 id="sg-compare">Comparison table</h2><p class="lead">On phones, rows stack into cards when every cell has a <code>data-label</code> naming its column; without it the table scrolls inside its own box, with an edge shadow while there is more to the right.</p></div>
     <div class="table-scroll" role="region" aria-labelledby="sg-compare" tabindex="0">
       <table class="compare">
         <thead><tr><th scope="col"><span class="visually-hidden">Feature</span></th><th scope="col">Free My ID</th><th scope="col">By hand</th></tr></thead>
         <tbody>
-          <tr><th scope="row">Price</th><td class="yes"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Free</td><td class="yes"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Free, your time</td></tr>
-          <tr><th scope="row">Account</th><td class="yes"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>None</td><td class="yes"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>None</td></tr>
-          <tr><th scope="row">Keeps checking</th><td class="partial">Daily, when the PC is on (sample)</td><td class="no"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 12h12"/></svg>Only if you remember</td></tr>
-          <tr><th scope="row">Phone or Mac</th><td class="no"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>Not yet</td><td class="yes"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Yes</td></tr>
+          <tr><th scope="row">Price</th><td data-label="Free My ID" class="yes"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Free</td><td data-label="By hand" class="yes"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Free, your time</td></tr>
+          <tr><th scope="row">Account</th><td data-label="Free My ID" class="yes"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>None</td><td data-label="By hand" class="yes"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>None</td></tr>
+          <tr><th scope="row">Keeps checking</th><td data-label="Free My ID" class="partial">Daily, when the PC is on (sample)</td><td data-label="By hand" class="no"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 12h12"/></svg>Only if you remember</td></tr>
+          <tr><th scope="row">Phone or Mac</th><td data-label="Free My ID" class="no"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>Not yet</td><td data-label="By hand" class="yes"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Yes</td></tr>
         </tbody>
       </table>
     </div>
