@@ -163,3 +163,11 @@ Drafts: src/freemyid/engine/_test_drafts/ (conftest re-exports tests/conftest; q
    pauses new submissions to that site (_id_hold); handoff.mark_resolved on that todo ->
    SUBMITTED (clocks restart). Event mail_replies_skipped(duplicates, stale).
    Drafts: test_reply_matcher.py (13).
+   (qa adopted test_first_email_approval.py + test_reply_matcher.py into tests/.)
+2b. DONE escalation timers (runner._escalate): a rung whose letter FAILED keeps the level and
+   retries one window later (escalation_failed event) instead of skipping to the next rung;
+   an unapproved queued request or an open manual_email:<broker>:* to-do blocks the next
+   rung (escalation_waiting, why=awaiting_approval|awaiting_manual_letter); _ladder_view
+   anchors the wait on the latest real SENT time (a follow-up approved 40 days late no longer
+   lets the legal demand come 5 days after it). outbox.released_by_approval(store, profile,
+   req) for the SEC-47 approve card. Drafts: test_escalation_timers.py (6).

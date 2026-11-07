@@ -668,8 +668,14 @@ class Runner:
             return st                 # the parent's own ladder covers this site
         if not scanned and st.state == S.CONFIRMED:
             return st                 # blind + confirmed: no sign it is still listed
-        dec = next_escalation(st, broker, self.now)
+        dec = next_escalation(self._ladder_view(profile, broker, st), broker, self.now)
         if dec.action == Escalation.NONE:
+            return st
+        waiting = self._escalation_waiting(profile, broker)
+        if waiting:
+            # the previous rung has not actually gone out yet: never climb past it
+            self._event(profile, broker.id, "escalation_waiting", rung=dec.action.value,
+                        why=waiting)
             return st
         if self.dry_run:
             self._event(profile, broker.id, "escalation_due", rung=dec.action.value,
@@ -699,10 +705,38 @@ class Runner:
                 hmod.persist_todo(self.store, self._complaint_todo(profile, broker, law))
         except OutboxError as e:
             done = f"failed:{str(e)[:40]}"
+        if done.startswith("failed:"):
+            # retry this same rung one window from now; never skip to the next one
+            self._event(profile, broker.id, "escalation_failed", rung=dec.action.value,
+                        level=st.escalation_level, result=done)
+            return st.model_copy(update={"last_escalated_at": self.now})
         self._event(profile, broker.id, "escalated", rung=dec.action.value,
                     level=dec.new_level, result=done)
         return st.model_copy(update={"escalation_level": dec.new_level,
                                      "last_escalated_at": self.now})
+
+    def _ladder_view(self, profile: Profile, broker: Broker, st: Any) -> Any:
+        """Status as the ladder should see it: a letter approved (and sent) long after it
+        was queued restarts the wait from its real send time, so the next rung never comes
+        days after the previous one went out."""
+        sent = [r.sent_at for r in self.store.list_requests(profile.id, broker.id,
+                                                            status=RequestStatus.SENT)
+                if r.sent_at is not None and not r.dry_run]
+        latest = max(sent, default=None)
+        if latest is None or (st.last_escalated_at and st.last_escalated_at >= latest):
+            return st
+        if st.last_submitted_at and st.last_submitted_at >= latest:
+            return st
+        return st.model_copy(update={"last_escalated_at": latest})
+
+    def _escalation_waiting(self, profile: Profile, broker: Broker) -> str | None:
+        if any(not r.dry_run for r in self.store.list_requests(
+                profile.id, broker.id, status=RequestStatus.QUEUED_FOR_APPROVAL)):
+            return "awaiting_approval"
+        tok = f"manual_email:{broker.id}:"
+        if any((t.resume_token or "").startswith(tok) for t in self.store.list_todos(profile.id)):
+            return "awaiting_manual_letter"
+        return None
 
     def _letter(self, profile: Profile, broker: Broker, listings: list[Listing],
                 law: StateLaw | None, kind: RequestKind, original: Request | None) -> str:

@@ -228,6 +228,17 @@ def _auto_releasable(profile: Profile, req: Request) -> bool:
             and req.kind != RequestKind.LEGAL_DEMAND)
 
 
+def released_by_approval(store, profile: Profile, req: Request) -> list[Request]:
+    """SEC-47: the OTHER queued emails that approving `req` would also send (AUTO profile,
+    first approval). The approve card must list or count these. Empty when approving `req`
+    sends only `req` (approve_each, gate already open, legal demand, dry run)."""
+    if (req.kind == RequestKind.LEGAL_DEMAND or req.dry_run
+            or profile.email_mode != EmailMode.AUTO or email_sent_before(store, profile.id)):
+        return []
+    return [r for r in store.list_requests(profile.id, status=RequestStatus.QUEUED_FOR_APPROVAL)
+            if r.id != req.id and _auto_releasable(profile, r)]
+
+
 def first_email_pending(store, profile: Profile) -> Request | None:
     """The oldest email held for the profile's first approval (dashboard: "approve this one
     and the rest go out by themselves"), or None."""
