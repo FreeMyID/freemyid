@@ -25,6 +25,15 @@
   title: "Free opt-out guides for people-search sites"
   description: Step-by-step, plain-English guides to remove yourself from Spokeo, Whitepages, BeenVerified and other people-search sites. Free, no app needed.
   jsonld: [breadcrumbs]
+- id: protect
+  out: protect/
+  template: pages/protect.html   # not used: v3_only (web/src/pages/protect/index.astro, from brokers/checklists.yaml)
+  v3_only: true
+  label: Protect yourself
+  nav: protect
+  title: "Protect yourself: free credit freezes and opt-outs"
+  description: Free, plain-English steps to freeze your credit, stop pre-approved offers, and lock down your IRS, Social Security and USPS accounts. No app needed.
+  jsonld: [breadcrumbs]
 - id: families
   out: families/
   template: pages/families.html
