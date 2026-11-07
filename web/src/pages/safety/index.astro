@@ -10,7 +10,7 @@ import Icon from "@/components/Icon.astro";
 import Art from "@/components/Art.astro";
 import Alert from "@/components/ui/Alert.astro";
 import CheckList from "@/components/CheckList.astro";
-import { pageProps, release, site, url } from "@/lib/site";
+import { pageProps, release, url } from "@/lib/site";
 const p = pageProps("safety");
 const v = release.version;
 ---
@@ -60,11 +60,12 @@ const v = release.version;
 
 <Section id="open-source" narrow title="You can check the work" titleId="open-source-title"
   lead="Free My ID is open source, so anyone can read exactly what it does. The code is public under the GNU AGPL license.">
-  {/* source: teardown section 8 column 3; LICENSE (GNU AGPL v3) */}
-  <p><a href={site.repo_url}>See the Free My ID code on GitHub</a></p>
+  {/* source: teardown section 8 column 3; LICENSE (GNU AGPL v3). Owner rule (ROADMAP principle 6): users never land on
+      github.com from a page like this; the code link lives on /developers/ and in the footer ("Source code"). */}
+  <p class="max-w-measure">You don't need to read code yourself. It's published so that people who do can check it for everyone. <a href={url("developers/")}>Where developers find the code</a></p>
   <h3 id="verify" class="mt-l">Check that your download is genuine</h3>
   {/* source: download page "How to know it's really us" (approved copy) */}
-  <p class="mt-xs max-w-measure">Only download Free My ID from <a href={url("download/")}>our download page</a> {v ? <>or from <a href={site.releases_url}>our GitHub releases page</a></> : "(no version is published yet)"}. We will never email you an installer, and we will never call you.</p>
+  <p class="mt-xs max-w-measure">Only download Free My ID from <a href={url("download/")}>our download page</a>{v ? "" : " (no version is published yet)"}. We will never email you an installer, and we will never call you.</p>
   {/* WR-29: conditional wording until the first release (build.yml publishes SHA256SUMS.txt) */}
   <p class="mt-s max-w-measure">{v ? "Every release comes" : "Each release will come"} with a fingerprint (a long code) you can compare with the file you downloaded. <a href={url("download/#checksum")}>How to check the download's fingerprint</a></p>
   {/* source: teardown section 8 callout; faq.yaml "Why does Windows warn me" (published copy); installer ships unsigned */}

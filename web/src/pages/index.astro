@@ -39,8 +39,9 @@ const cardIcon = "inline-flex size-12 items-center justify-center rounded-lg bg-
       {/* source: release values from data/release.yaml; PLAN_V1 D5 per-user install */}
       {v ? (
         String(v).startsWith("0.") ? (
-          // WR-38: brand-marketing copy for an early (0.x) release; issues link per user decision (site.yaml issues_url)
-          <p class="mt-m text-small text-muted">Free for Windows 10 and 11. Version {v} is an early release, so <a href={site.issues_url}>tell us what confuses you</a> (a free GitHub account is needed).</p>
+          // WR-38: brand-marketing copy for an early (0.x) release. Owner rule (ROADMAP principle 6): users never need an
+          // account and never land on github.com, so feedback goes by email (site.yaml support_mailto, subject only, no body)
+          <p class="mt-m text-small text-muted">Free for Windows 10 and 11. Version {v} is an early release, so <a href={site.support_mailto}>tell us what confuses you</a>. No account needed: just send an email.</p>
         ) : (
           <p class="mt-m text-small text-muted">Free for Windows 10 and 11. Version {v}{release.size_mb ? `, ${release.size_mb} MB` : ""}.</p>
         )
@@ -303,7 +304,7 @@ const cardIcon = "inline-flex size-12 items-center justify-center rounded-lg bg-
   <div class="wrap-narrow grid justify-items-center gap-m">
     <h2 id="cta-title" class="text-band-brand-ink">Your information. Off the market.</h2>
     {/* source: old home final CTA (approved copy); once a day = D8; WR-8 source link (repo public) */}
-    <p class="text-lead">Free, open source, and it runs on your own computer, checking once a day. <a class="text-band-brand-ink" href={site.repo_url}>Read the source code</a>.</p>
+    <p class="text-lead">Free, open source, and it runs on your own computer, checking once a day. <a class="text-band-brand-ink" href={url("safety/#open-source")}>How you can check our work</a>.</p>
     <CtaDownload look="onBrand" />
     {/* source: teardown 4.12; BRAND.md trust panel */}
     <p class="text-small">No account. No cloud. Never asks for your Social Security number. Uninstall any time.</p>

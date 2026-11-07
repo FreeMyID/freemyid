@@ -10,7 +10,7 @@ import CtaDownload from "@/components/CtaDownload.astro";
 import Timeline from "@/components/aceternity/Timeline.astro";
 import TimelineItem from "@/components/aceternity/TimelineItem.astro";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { pageProps, release, site, url } from "@/lib/site";
+import { pageProps, release, url } from "@/lib/site";
 const p = pageProps("families");
 const v = release.version;
 const card = url("assets/free-my-id-fridge-card.pdf");
@@ -66,7 +66,7 @@ const h2 = "mt-xl";
   </div>
   {/* source: docs/HELPER_GUIDE.md section 2 (download, SmartScreen, Install) and section 3 (six screens, practice mode); packaging/windows/freemyid.iss PrivilegesRequired=lowest; six screens = src/freemyid/wizard/draft.py STEPS; unsigned = .github/workflows/build.yml release notes */}
   <Timeline class="mt-m">
-    <TimelineItem n={1} title="Download"><p>On their Windows 10 or 11 computer, use the Download button on this site. Only download from this site{v && <> or our <a href={site.releases_url}>GitHub releases page</a></>}.</p></TimelineItem>
+    <TimelineItem n={1} title="Download"><p>On their Windows 10 or 11 computer, use the Download button on this site. Only download from this site.</p></TimelineItem>
     <TimelineItem n={2} title="Open FreeMyIDSetup.exe"><p>Windows may show a blue box that says "Windows protected your PC." That happens because Free My ID is free and hasn't bought a publisher certificate yet. Click the small words <strong>More info</strong>, check the name says FreeMyIDSetup.exe, then click <strong>Run anyway</strong>. <a href={url("download/#smartscreen")}>See it with pictures.</a></p></TimelineItem>
     <TimelineItem n={3} title="Click Install"><p>No administrator password is needed. Free My ID opens by itself.</p></TimelineItem>
     <TimelineItem n={4} title="Go through the six setup screens">
