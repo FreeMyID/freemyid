@@ -201,6 +201,9 @@ def mark_resolved(store: Store, todo: Todo) -> None:
     SUBMITTED so the re-check and escalation clocks start. Follow-up/demand letters sent by
     hand do not restart the clock. Other kinds just get closed by the caller.
     """
+    if todo.broker_id and (todo.resume_token or "").startswith("id_requested:"):
+        _resume_after_id_request(store, todo)
+        return
     if not todo.broker_id or todo.kind.value not in _SUBMIT_KINDS:
         return
     tok = todo.resume_token or ""
@@ -216,3 +219,19 @@ def mark_resolved(store: Store, todo: Todo) -> None:
     if st.state in (S.UNKNOWN, S.NOT_FOUND):
         return      # nothing was found to remove; just close the to-do
     mark_manual_submitted(store, todo.profile_id, todo.broker_id, todo.request_id)
+
+
+def _resume_after_id_request(store: Store, todo: Todo) -> None:
+    """The person dealt with a site's request for ID themselves: the site goes back to
+    SUBMITTED, so the re-check and escalation clocks restart from today."""
+    from ..models import utcnow
+    from ..state import transition
+    assert todo.broker_id is not None
+    st = store.get_status(todo.profile_id, todo.broker_id)
+    if st.state != S.NEEDS_HUMAN or st.last_submitted_at is None:
+        return
+    new = transition(st, S.SUBMITTED, utcnow())
+    store.save_status(new.model_copy(update={"needs_human_reason": None}))
+    store.log(Event(profile_id=todo.profile_id, broker_id=todo.broker_id, actor=Actor.USER,
+                    action="id_request_resolved", from_state=st.state, to_state=S.SUBMITTED,
+                    detail={"todo_kind": todo.kind.value}))

@@ -151,3 +151,15 @@ Drafts: src/freemyid/engine/_test_drafts/ (conftest re-exports tests/conftest; q
    one failure doesn't stop the rest; RELEASE_ACTION event with counts). queue_email also
    sends an existing held AUTO request once the gate is open (was stuck forever before).
    Drafts: test_first_email_approval.py (7).
+2a. DONE reply matcher (mail.py): pure scan_replies(raws, broker, since) -> ReplyScan(links,
+   id_requested, messages, duplicates, stale). Dedupe by Message-ID (else bytes); mail dated
+   before last_submitted_at - 1h is stale (old confirmation never clicked for a new
+   submission); newest message's links first (broker answering twice); any reply asking for
+   an ID document (asks_for_id: gov/state-issued, photo ID, driver's licence, passport, SSN,
+   last 4 digits, notarized, utility bill, proof of identity/address) contributes NO links.
+   Both mailers have async scan_replies(); wait_for_confirmation returns [] on an ID request.
+   Runner._verify: ID request -> ID_UPLOAD todo (resume_token id_requested:<broker>), state
+   NEEDS_HUMAN reason id_requested, nothing clicked/sent (dry run: event only); open ID todo
+   pauses new submissions to that site (_id_hold); handoff.mark_resolved on that todo ->
+   SUBMITTED (clocks restart). Event mail_replies_skipped(duplicates, stale).
+   Drafts: test_reply_matcher.py (13).

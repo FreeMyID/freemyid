@@ -65,6 +65,7 @@ from ..submitters import assisted
 from ..submitters import base as sbase
 from . import handoff as hmod
 from . import plugins, tiers
+from .mail import ReplyScan
 from .outbox import OutboxError, dev_fixture_base
 
 if TYPE_CHECKING:
@@ -74,6 +75,7 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 _SUBMITTED_STATES = (S.SUBMITTED, S.AWAITING_VERIFICATION, S.CONFIRMED)
+ID_REQUEST_REASON = "id_requested"
 CPPA_COMPLAINT_URL = "https://cppa.ca.gov/webapplications/complaint"
 AG_DIRECTORY_URL = "https://www.usa.gov/state-attorney-general"
 
@@ -348,7 +350,10 @@ class Runner:
         listings, scanned = await self._scan(ctx, st, tier)
         st = self._apply_scan(profile, broker, st, listings, scanned)
 
-        # 4. submit
+        # 4. submit (paused while the site's request for ID waits on a person)
+        if should_submit(st.state) and not self.scan_only and self._id_hold(profile, target):
+            st = self._set(profile, st, S.NEEDS_HUMAN, "id_request_open")
+            st = st.model_copy(update={"needs_human_reason": ID_REQUEST_REASON})
         if should_submit(st.state) and not self.scan_only:
             st = await self._submit(profile, broker, target, st, tier,
                                     sbase.confirmed(listings) or
@@ -566,12 +571,23 @@ class Runner:
             return st
         if target.id != broker.id:
             return st         # the parent's own status handles its confirmation mail
+        mailer = self.mailer_for(profile)
         try:
-            links = await self.mailer_for(profile).wait_for_confirmation(
-                profile, target, st.last_submitted_at, timeout_s=0)
+            if hasattr(mailer, "scan_replies"):
+                scan = await mailer.scan_replies(profile, target, st.last_submitted_at,
+                                                 timeout_s=0)
+            else:   # a Mailer that only implements the interfaces.py protocol
+                scan = ReplyScan(links=await mailer.wait_for_confirmation(
+                    profile, target, st.last_submitted_at, timeout_s=0))
         except Exception as e:  # noqa: BLE001
             self._event(profile, broker.id, "mail_check_failed", error=type(e).__name__)
             return st
+        if scan.duplicates or scan.stale:
+            self._event(profile, broker.id, "mail_replies_skipped",
+                        duplicates=scan.duplicates, stale=scan.stale)
+        if scan.id_requested:
+            return self._id_requested(profile, broker, st)
+        links = scan.links
         if not links:
             return st
         if self.dry_run:
@@ -586,6 +602,30 @@ class Runner:
             return self._set(profile, st, S.CONFIRMED, "confirmed", links=len(links),
                              clicked=clicked)
         return self._set(profile, st, S.AWAITING_VERIFICATION, "confirmation_pending")
+
+    def _id_requested(self, profile: Profile, broker: Broker, st: Any) -> Any:
+        """The broker's reply asks for an ID document. Free My ID never sends ID and never
+        clicks anything in that mail: a person decides (ID_UPLOAD to-do)."""
+        if self.dry_run:
+            self._event(profile, broker.id, ID_REQUEST_REASON, todo=False)
+            return st
+        hmod.persist_todo(self.store, Todo(
+            profile_id=profile.id, broker_id=broker.id, kind=TodoKind.ID_UPLOAD,
+            title=f"{broker.name} asked for a copy of {profile.label}'s ID",
+            body=("The site wrote back asking for an ID document before it will remove the "
+                  "listing. Free My ID never sends ID for you. Read their email in your "
+                  "removal mailbox and decide yourself. Many sites remove listings without "
+                  "ID if you reply that you only want your data deleted. When you have "
+                  "dealt with it, press \"I did it\"."),
+            resume_token=f"{ID_REQUEST_REASON}:{broker.id}"))
+        new = self._set(profile, st, S.NEEDS_HUMAN, ID_REQUEST_REASON, todo=True)
+        return new.model_copy(update={"needs_human_reason": ID_REQUEST_REASON})
+
+    def _id_hold(self, profile: Profile, target: Broker) -> bool:
+        """An open ID-request to-do pauses every new letter/form to that site."""
+        return any(t.kind == TodoKind.ID_UPLOAD and t.broker_id == target.id
+                   and (t.resume_token or "").startswith(ID_REQUEST_REASON)
+                   for t in self.store.list_todos(profile.id))
 
     async def _click(self, profile: Profile, broker: Broker, url: str) -> bool:
         from ..netpolicy import host_of

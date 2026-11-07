@@ -19,9 +19,9 @@ import re
 import smtplib
 import ssl
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 from email.message import EmailMessage
-from email.utils import formatdate, make_msgid
+from email.utils import formatdate, make_msgid, parsedate_to_datetime
 from html import unescape
 from typing import TYPE_CHECKING
 
@@ -42,6 +42,16 @@ _AVOID = re.compile(r"cancel|unsubscribe|opt.?in|not (you|me)|did ?n.?t (request
                     r"did not (request|ask)|report|preferences|privacy|terms|login|sign.?in",
                     re.IGNORECASE)
 _CONFIRM = re.compile(r"confirm|verif|validate|activate|complete", re.IGNORECASE)
+# A broker reply that asks for an identity document. Such mail is never auto-handled: no link
+# in it is clicked and the runner opens an ID_UPLOAD to-do (Free My ID never sends ID).
+_ID_REQUEST = re.compile(
+    r"(government|state)[- ]issued|photo (id\b|identification)|driver'?s?[- ]licen[cs]e|"
+    r"passport|(copy|scan|photo|picture|image) of (your |a )?(valid )?"
+    r"(photo )?(id\b|identification|identity|license|licence)|social security (number|card)|"
+    r"\bssn\b|last (4|four) digits|notari[sz]ed|utility bill|"
+    r"proof of (identity|address|residency)|identity document|id document",
+    re.IGNORECASE)
+DATE_SLACK = timedelta(hours=1)     # broker clock skew vs. our last_submitted_at
 MAX_MESSAGES = 50            # per poll; we only need recent broker mail
 MAX_MESSAGE_BYTES = 2_000_000
 
@@ -132,6 +142,99 @@ def sender_domain(raw: bytes) -> str | None:
     return m.group(1).lower().rstrip(".") if m else None
 
 
+@dataclass
+class ReplyScan:
+    """What the broker's replies say, PII-free (links are confirmation URLs only)."""
+    links: list[str] = field(default_factory=list)   # newest message first, ranked inside
+    id_requested: bool = False      # some reply asks for an ID document -> human to-do
+    messages: int = 0               # distinct broker messages considered
+    duplicates: int = 0             # same Message-ID (or same bytes) seen again
+    stale: int = 0                  # older than the submission this reply would answer
+
+
+def message_date(raw: bytes) -> datetime | None:
+    msg = email.message_from_bytes(raw[:65536], policy=email.policy.default)
+    try:
+        d = parsedate_to_datetime(str(msg.get("Date", "")))
+    except (TypeError, ValueError, IndexError):
+        return None
+    if d is None:
+        return None
+    return d if d.tzinfo else d.replace(tzinfo=UTC)
+
+
+def _message_key(raw: bytes) -> str:
+    msg = email.message_from_bytes(raw[:65536], policy=email.policy.default)
+    mid = str(msg.get("Message-ID", "")).strip()
+    if mid:
+        return mid
+    import hashlib
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _plain_text(raw: bytes) -> str:
+    msg = email.message_from_bytes(raw, policy=email.policy.default)
+    parts: list[str] = [str(msg.get("Subject", ""))]
+    for part in msg.walk():
+        if part.get_content_maintype() != "text":
+            continue
+        try:
+            parts.append(unescape(re.sub(r"<[^>]+>", " ", part.get_content())))
+        except (LookupError, ValueError):
+            continue
+    return " ".join(" ".join(parts).split())
+
+
+def asks_for_id(raw: bytes) -> bool:
+    """Pure: does this message ask for an identity document (ID, licence, SSN, ...)?"""
+    if len(raw) > MAX_MESSAGE_BYTES:
+        return False
+    return bool(_ID_REQUEST.search(_plain_text(raw)))
+
+
+def scan_replies(raws: list[bytes], broker: Broker, since: datetime | None = None, *,
+                 check_sender: bool = True) -> ReplyScan:
+    """Pure reply matcher.
+
+    * only mail From a broker/confirmation domain (unless check_sender=False);
+    * the same message twice (Message-ID, else bytes) counts once;
+    * mail dated before `since` (minus DATE_SLACK) answers an earlier request: ignored, so
+      an old confirmation link is never clicked for a new submission;
+    * a message that asks for ID sets id_requested and contributes no links;
+    * links come newest message first (a broker that answers twice: its latest link wins).
+    """
+    allowed = confirmation_hosts(broker)
+    out = ReplyScan()
+    seen: set[str] = set()
+    msgs: list[tuple[datetime | None, int, bytes]] = []
+    for i, raw in enumerate(raws):
+        if check_sender and not _host_in(sender_domain(raw), [*broker.domains, *allowed]):
+            continue
+        key = _message_key(raw)
+        if key in seen:
+            out.duplicates += 1
+            continue
+        seen.add(key)
+        d = message_date(raw)
+        if since is not None and d is not None:
+            ref = since if since.tzinfo else since.replace(tzinfo=UTC)
+            if d < ref - DATE_SLACK:
+                out.stale += 1
+                continue
+        msgs.append((d, i, raw))
+    out.messages = len(msgs)
+    floor = datetime.min.replace(tzinfo=UTC)
+    msgs.sort(key=lambda m: (m[0] or floor, m[1]), reverse=True)
+    for _d, _i, raw in msgs:
+        if asks_for_id(raw):
+            out.id_requested = True
+            continue
+        for u in extract_links(raw, allowed):
+            if u not in out.links:
+                out.links.append(u)
+    return out
+
+
 class SmtpImapMailer:
     """Real mailer. Never used in dev/tests (they use FakeMailer)."""
 
@@ -219,26 +322,23 @@ class SmtpImapMailer:
         return out
 
     def links_from(self, raws: list[bytes], broker: Broker) -> list[str]:
-        allowed = confirmation_hosts(broker)
-        links: list[str] = []
-        for raw in raws:
-            if not _host_in(sender_domain(raw), [*broker.domains, *allowed]):
-                continue
-            for u in extract_links(raw, allowed):
-                if u not in links:
-                    links.append(u)
-        return links          # each message's links are already filtered + ranked (SEC-18)
+        return scan_replies(raws, broker).links   # filtered + ranked (SEC-18)
 
-    async def wait_for_confirmation(self, profile: Profile, broker: Broker, since: datetime,
-                                    timeout_s: int = 600) -> list[str]:
+    async def scan_replies(self, profile: Profile, broker: Broker, since: datetime,
+                           timeout_s: int = 0) -> ReplyScan:
         loop = asyncio.get_running_loop()
         deadline = loop.time() + timeout_s
         while True:
             raws = await asyncio.to_thread(self.fetch_since, profile, since)
-            links = self.links_from(raws, broker)
-            if links or loop.time() >= deadline:
-                return links
+            scan = scan_replies(raws, broker, since)
+            if scan.links or scan.id_requested or loop.time() >= deadline:
+                return scan
             await asyncio.sleep(min(self.poll_interval_s, max(0.0, deadline - loop.time())))
+
+    async def wait_for_confirmation(self, profile: Profile, broker: Broker, since: datetime,
+                                    timeout_s: int = 600) -> list[str]:
+        scan = await self.scan_replies(profile, broker, since, timeout_s)
+        return [] if scan.id_requested else scan.links
 
 
 @dataclass
@@ -269,13 +369,14 @@ class FakeMailer:
         self.sent.append(SentMail(profile.id, to, subject, body, request_id, mid))
         return mid
 
+    async def scan_replies(self, profile: Profile, broker: Broker, since: datetime,
+                           timeout_s: int = 0) -> ReplyScan:
+        return scan_replies(self.inbox.get(broker.id, []), broker, since)
+
     async def wait_for_confirmation(self, profile: Profile, broker: Broker, since: datetime,
                                     timeout_s: int = 600) -> list[str]:
-        allowed = confirmation_hosts(broker)
-        out: list[str] = []
-        for raw in self.inbox.get(broker.id, []):
-            out += [u for u in extract_links(raw, allowed) if u not in out]
-        return out
+        scan = await self.scan_replies(profile, broker, since, timeout_s)
+        return [] if scan.id_requested else scan.links
 
 
 def now() -> datetime:
