@@ -37,7 +37,7 @@ A program that runs on your own computer and takes your name, address, phone and
 | | **Free** | **Plus** | **Family** | **Pro (self-host)** | **Business / Partner** |
 |---|---|---|---|---|---|
 | Who | Every individual, forever | People who want it fully hands-off | A household, up to 6 people | Tech users running headless | Employers, credit unions, MSPs, insurers |
-| Price (draft, verify vs market first) | $0 | ~$5/mo or ~$49/yr | ~$89/yr | ~$49/yr (same feed as Plus) | per seat / per member, volume |
+| Price (decided 2026-11-07, see docs/marketing/competitor-pricing.md) | $0 | $4.99/mo or $39/yr | $69/yr | included in Plus (same licence) | quoted per seat / per member |
 | App, wizard, dashboard, CLI | yes | yes | yes | yes | yes, white-label option |
 | Email + assisted removals | yes | yes | yes | yes | yes |
 | Brokers | core set (~60 biggest, updated monthly) | full feed (400+), updated daily | full | full | full |
@@ -52,6 +52,7 @@ A program that runs on your own computer and takes your name, address, phone and
 - **Forks may self-build the feed** (the code is AGPL). The *data* (full registry) is our product under its own licence; the public sample stays CC BY-NC.
 - **No human "we do it for you" service in v1.** It would mean holding customer PII and break principle 1. Revisit only as an opt-in partner service under a separate brand (Dream list).
 - **Business is pursued from 0.5**, through partners who distribute (the McAfee site-licence and OEM channel), with the PII still staying on each person's device.
+- **Honest terms (decided):** 30-day no-questions refund; reminder email 14 days before any renewal; cancel inside the app in two clicks; your price is locked for as long as you stay subscribed. Prices are not public until the paid tier is announced.
 - **Payments:** Stripe or Paddle (merchant of record, handles sales tax) + licence keys verified offline (signed tokens), so the app never needs an account login to work.
 
 ---
