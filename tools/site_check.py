@@ -317,6 +317,66 @@ def check_site(site: Path, base_url: str, base_path: str) -> list[str]:
         if f.is_file() and f.suffix == ".html" and re.search(r"registry\.yaml\b",
                                                               f.read_text(encoding="utf-8")):
             errors.append(f"{f.relative_to(site)}: mentions registry.yaml (link the sample only)")
+    errors += content_rules(site)
+    return errors
+
+
+# Copy rules (POSITIONING.md, WEBSITE_REDESIGN.md D5/D7/D8). Visible text only; the noindex styleguide is skipped.
+BANNED_PHRASES = [
+    (r"\bguarantee[sd]?\b", "guarantee"), (r"\b100\s?%", "100%"), (r"\berase[sd]?\b", "erase"),
+    (r"\bforever\b", "forever"), (r"\balways free\b", "always free"),
+    (r"\b(fifteen|15)[ -]minutes?\b", "fifteen minutes (never timed, D8)"),
+    (r"\baudited\b", "audited (D8)"), (r"\btrusted by\b", "trusted by (D8)"),
+    (r"[\u2605\u2606\u2B50]", "star glyph (ratings, D8)"), (r"\b\d(\.\d)?\s*(/|out of)\s*5\b", "x out of 5 rating"),
+    (r"\b(five|5)[ -]stars?\b", "star rating"), (r"\b\d[\d,]*\s+(customers|users|reviews|downloads)\b", "counter or social proof"),
+    (r"\bhackers\b", "fear selling (POSITIONING rule 3)"), (r"\bidentity theft\b", "fear selling"),
+    (r"\bthey have to answer\b|\bthe law makes them\b", "state-law qualifier missing (POSITIONING)"),
+]
+
+
+def visible_text(html: str) -> str:
+    import html as htmllib
+    html = re.sub(r"<(script|style|head)\b.*?</\1>", " ", html, flags=re.DOTALL | re.IGNORECASE)
+    html = re.sub(r"<!--.*?-->", " ", html, flags=re.DOTALL)
+    return re.sub(r"\s+", " ", htmllib.unescape(re.sub(r"<[^>]+>", " ", html)))
+
+
+def release_is_null() -> bool:
+    f = ROOT / "site_src" / "data" / "release.yaml"
+    if not f.exists():
+        return True
+    m = re.search(r"^version:\s*(\S+)", f.read_text(encoding="utf-8"), re.MULTILINE)
+    return not m or m.group(1) in ("null", "~", "''", '""')
+
+
+def content_rules(site: Path) -> list[str]:
+    errors: list[str] = []
+    no_release = release_is_null()
+    for f in sorted(site.rglob("*.html")):
+        rel = f.relative_to(site).as_posix()
+        raw = f.read_text(encoding="utf-8")
+        if rel.startswith("styleguide/"):
+            continue
+        text = visible_text(raw)
+        for pat, label in BANNED_PHRASES:
+            m = re.search(pat, text, re.IGNORECASE)
+            if m:
+                errors.append(f"{rel}: banned phrase [{label}]: ...{text[max(0, m.start() - 40):m.end() + 40]}...")
+        # Product pictures must say they are made-up data, inside the same <figure>.
+        for im in re.finditer(r"<img\b[^>]*assets/screenshots/[^>]*>", raw):
+            fig = [m for m in re.finditer(r"<figure\b.*?</figure>", raw, re.DOTALL) if m.start() < im.start() < m.end()]
+            if not fig:
+                errors.append(f"{rel}: screenshot not inside a <figure> with a caption: {im.group(0)[:80]}")
+            elif "made-up data" not in visible_text(fig[0].group(0)).lower():
+                errors.append(f"{rel}: screenshot caption lacks 'made-up data': {im.group(0)[:80]}")
+        # D5: no download CTA to a release while release.yaml has no version.
+        if no_release:
+            for m in re.finditer(r"<a\b[^>]*\bhref=\"([^\"]*)\"[^>]*>", raw):
+                href, tag = m.group(1), m.group(0)
+                if re.search(r"/releases/(latest|download)|\.exe($|[?#])", href):
+                    errors.append(f"{rel}: link to a release asset while release.yaml version is null: {href}")
+                elif re.search(r"/releases/?$", href) and re.search(r'class="[^"]*\bbtn\b', tag):
+                    errors.append(f"{rel}: button to the releases page while release.yaml version is null: {href}")
     return errors
 
 
