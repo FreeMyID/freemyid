@@ -10,6 +10,7 @@ brokers:
     category: people_search
     domains: [devauto.example]
     search_url_pattern: "https://devauto.example/name/{first}-{last}/{state}"
+    search_access: open
     search:
       result_selector: ".result"
       name_selector: ".name"
@@ -46,6 +47,7 @@ brokers:
     category: people_search
     domains: [devblocked.example]
     search_url_pattern: "https://devblocked.example/name/{first}-{last}/{state}"
+    search_access: open   # the registry thinks so, but the page shows a challenge
     search: {result_selector: ".result", name_selector: ".name"}
     opt_out_url: https://devblocked.example/optout
     method: web_form

@@ -34,6 +34,7 @@ HAND_REASONS = {
     "no_parser": "We cannot read this site's results automatically yet.",
     "offline": "Offline mode: nothing was fetched.",
     "too_large": "The page was too large to read safely.",
+    "missing_details": "This site's search needs details we do not have for you.",
 }
 
 
