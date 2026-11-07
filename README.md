@@ -10,11 +10,11 @@ It runs on your own computer. There is no AI or cloud service at runtime: every 
 
 It works on people-search and data-broker sites only. It does not change what Facebook or Google does with your account.
 
-**[Download for Windows](https://freemyid.github.io/freemyid/download/)** | **[Website and plain-English guide](https://freemyid.github.io/freemyid/)** | **[Version 0.1.0 on GitHub](https://github.com/FreeMyID/freemyid/releases/tag/v0.1.0)**
+**[Download for Windows](https://freemyid.org/download/)** | **[Website and plain-English guide](https://freemyid.org/)** | **[Version 0.1.0 on GitHub](https://github.com/FreeMyID/freemyid/releases/tag/v0.1.0)**
 
 > **Status:** early release (0.1.0) for Windows 10 and 11. It is new, so expect rough edges, and please tell us what confuses you. The installer is not code-signed yet, so Windows shows a blue SmartScreen box the first time; the download page shows what to click. Each release lists a SHA256 checksum so you can confirm your download.
 
-Not a developer? You can stop reading here and use the [website](https://freemyid.github.io/freemyid/) or the [User Guide](docs/USER_GUIDE.md).
+Not a developer? You can stop reading here and use the [website](https://freemyid.org/) or the [User Guide](docs/USER_GUIDE.md).
 
 **Helping a parent or grandparent?** Install it with them, sit beside them for the six setup screens, and use the website's plain-English guide. Most of the rest of this page is for developers.
 
@@ -45,7 +45,7 @@ This public repository includes `brokers/registry.sample.yaml`, a sample list of
 
 ## Install
 
-**Windows 10 or 11:** The installer is offered on the [download page](https://freemyid.github.io/freemyid/download/). It is unsigned for now, so Windows shows a blue SmartScreen box the first time; the download page shows what to click. Linux and macOS builds are not offered yet; run from source instead.
+**Windows 10 or 11:** The installer is offered on the [download page](https://freemyid.org/download/). It is unsigned for now, so Windows shows a blue SmartScreen box the first time; the download page shows what to click. Linux and macOS builds are not offered yet; run from source instead.
 
 **From source (developers):** Requires Python 3.11+ (development uses 3.12). Free My ID drives your installed Chrome or Edge first. It only downloads Playwright's bundled browser if neither is present, and it asks before doing so.
 

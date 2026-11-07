@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check a built Free My ID site folder. Stdlib only.
 
-    python3 tools/site_check.py site [--base-url https://freemyid.github.io/freemyid/] [--base-path /freemyid/]
+    python3 tools/site_check.py site [--base-url https://freemyid.org/] [--base-path /]
 
 Every HTML page must have: lang, CSP meta (script-src 'none', no unsafe-*), referrer meta, a title of
 60 characters or less, a meta description of 155 or less, a canonical link, exactly one <h1>.
@@ -383,8 +383,8 @@ def content_rules(site: Path) -> list[str]:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Check a built Free My ID site folder.")
     ap.add_argument("site", nargs="?", default=str(ROOT / "site"))
-    ap.add_argument("--base-url", default="https://freemyid.github.io/freemyid/")
-    ap.add_argument("--base-path", default="/freemyid/")
+    ap.add_argument("--base-url", default="https://freemyid.org/")
+    ap.add_argument("--base-path", default="/")
     args = ap.parse_args(argv)
     errors = check_site(Path(args.site), args.base_url, args.base_path)
     for e in errors:

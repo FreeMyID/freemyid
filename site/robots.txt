@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://freemyid.github.io/freemyid/sitemap.xml
+Sitemap: https://freemyid.org/sitemap.xml
