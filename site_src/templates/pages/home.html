@@ -141,7 +141,7 @@
         </thead>
         <tbody>
           <tr><th scope="row">Price</th><td class="yes">Free</td><td>Yearly or monthly fee</td><td>Free, your time</td></tr>
-          <tr><th scope="row">Where your details go</th><td class="yes">Stay on your computer</td><td>Sent to the company</td><td>Stay on your computer</td></tr>
+          <tr><th scope="row">Where your details go</th><td class="yes">Only to the sites you ask to remove you</td><td>Sent to the company</td><td>Only to the sites you contact</td></tr>
           <tr><th scope="row">Account</th><td class="yes">None</td><td>Account required</td><td>None</td></tr>
           <tr><th scope="row">Who sends the requests</th><td>Your own computer, as you</td><td>The company, on your behalf</td><td>You</td></tr>
           <tr><th scope="row">Keeps checking</th><td class="yes">Yes, daily on your PC (your computer must be on and you must be signed in to Windows at the time)</td><td>Yes, on a schedule</td><td class="no">Only if you remember</td></tr>
@@ -165,8 +165,8 @@
       <h2 id="safety-title">Built so you do not have to trust us.</h2>
     </div>
     <ul class="cards cards--3" role="list">
-      {# source: teardown 4.8; D8 encrypted (crypto.py, storage/db.py) and "Nothing is sent to us" (netpolicy.py) #}
-      <li class="card"><span class="card__icon">{{ icon('lock') }}</span><h3>Nothing leaves your computer.</h3><p>Your details are stored encrypted on your computer. The app talks only to the sites you are asking to remove you, your own email account, and our public list of those sites.</p></li>
+      {# source: teardown 4.8; D8 encrypted (crypto.py, storage/db.py) and "Nothing is sent to us" (netpolicy.py); headline per WR-25 (web-qa) #}
+      <li class="card"><span class="card__icon">{{ icon('lock') }}</span><h3>Your details stay on your computer. Nothing is sent to us.</h3><p>Your details are stored encrypted on your computer. The app talks only to the sites you are asking to remove you, your own email account, and our public list of those sites.</p></li>
       {# source: teardown 4.8; POSITIONING.md rule 4; shared rule 6 (never pay; phone/ID only with permission) #}
       <li class="card"><span class="card__icon">{{ icon('shield') }}</span><h3>It never asks for the wrong things.</h3><p>Never your Social Security number. Never bank or card details. Never a payment. Never a phone number or ID unless you choose to.</p></li>
       {# source: teardown 4.8; LICENSE; download page SHA256SUMS; freemyid.iss [UninstallRun] removes the daily task #}
