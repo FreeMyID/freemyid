@@ -47,7 +47,8 @@ def test_icon_and_installer_settings():
     iss = (ROOT / "packaging/windows/freemyid.iss").read_text()
     for k in ("DisableDirPage=yes", "DisableReadyPage=yes", "SetupIconFile=freemyid.ico"):
         assert k in iss
-    assert "ShouldSkipPage" in iss and "wpReady" in iss
+    assert "ArchitecturesAllowed=x64compatible" in iss
+    assert "NextButton.OnClick" not in iss  # never auto-press Install for the person
     assert "icon=ICON" in (ROOT / "packaging/windows/freemyid.spec").read_text()
 
 
@@ -152,3 +153,12 @@ def test_fill_first_time_needs_confirm_page(env, monkeypatch):  # noqa: F811
         time.sleep(0.05)
     r = c.post(f"/todo/{t.id}/fill", data=f)
     assert r.headers["location"] == "/fill"
+
+
+def test_about_step_copy_is_not_an_absolute_never_sent():
+    from freemyid.wizard import ui
+    from freemyid.wizard.draft import Draft
+
+    body = ui._screen_body("about", Draft())
+    assert "never sent to anyone" not in body
+    assert "only sent what its own listing already shows" in body

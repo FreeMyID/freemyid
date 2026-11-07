@@ -1,9 +1,9 @@
-# Site-wide settings for tools/build_site.py. Change base_url/base_path when freemyid.org exists
-# (and only then add a CNAME file; the orchestrator decides).
+# Site-wide settings for tools/build_site.py. Custom domain freemyid.org (Cloudflare DNS -> GitHub Pages; the
+# domain is set in the repo Pages settings, Actions deploys ignore a CNAME file).
 name: Free My ID
 tagline: Take your name off the websites that sell it.
-base_url: https://freemyid.github.io/freemyid/   # canonical origin + path, trailing slash
-base_path: /freemyid/                            # used only by 404.html (served at any depth)
+base_url: https://freemyid.org/                  # canonical origin + path, trailing slash
+base_path: /                                     # used only by 404.html (served at any depth)
 repo_url: https://github.com/FreeMyID/freemyid
 issues_url: https://github.com/FreeMyID/freemyid/issues/new/choose
 releases_url: https://github.com/FreeMyID/freemyid/releases

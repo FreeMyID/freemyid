@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from pathlib import Path
 
 log = logging.getLogger(__name__)
 
@@ -14,10 +15,25 @@ class LogNotifier:
         log.info("notification: %s - %s", title, body)
 
 
+def _app_icon() -> Path | None:
+    """The Free My ID icon, found next to the package (installed exe) or in the repo."""
+    here = Path(__file__).resolve().parent
+    for p in (here / "wizard" / "static" / "freemyid.png", here / "wizard" / "static" / "freemyid.ico",
+              here.parents[1] / "packaging" / "windows" / "freemyid.ico"):
+        if p.is_file():
+            return p
+    return None
+
+
 class DesktopNotifier:
     def __init__(self) -> None:
         from desktop_notifier import DesktopNotifier as _DN
-        self._dn = _DN(app_name="Free My ID")
+        icon = _app_icon()
+        if icon is not None:
+            from desktop_notifier import Icon
+            self._dn = _DN(app_name="Free My ID", app_icon=Icon(path=icon))
+        else:
+            self._dn = _DN(app_name="Free My ID")
         self._fallback = LogNotifier()
 
     def notify(self, title: str, body: str, url: str | None = None) -> None:

@@ -120,14 +120,12 @@ def test_sec46_wipe_removes_the_fill_confirmation_marker(store, memkeyring, monk
     assert not any(Path(freemyid_env).rglob("*"))
 
 
-# --------------------------------------------------------------------------- SEC-47 (open)
+# --------------------------------------------------------------------------- SEC-47 (fixed)
 
 def _card(page: str, rid: str) -> str:
     return next(c for c in page.split('<div class="card">') if f"/outbox/{rid}/approve" in c)
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-47: approving the first held AUTO email also "
-                   "sends the other held emails, but the card says it sends 'this email'")
 def test_sec47_approve_card_discloses_every_email_it_sends(wiz, monkeypatch):
     c, store, p, f = wiz
     m = FakeMailer()
@@ -153,10 +151,8 @@ def test_sec47_guard_held_emails_never_leave_before_an_approval(wiz):
     assert m.sent == []
 
 
-# --------------------------------------------------------------------------- SEC-48 (open)
+# --------------------------------------------------------------------------- SEC-48 (fixed)
 
-@pytest.mark.xfail(strict=True, reason="SEC-48: /outbox/{rid}/approve runs approve_and_send "
-                   "(now a burst of SMTP sends) on the event loop, freezing the wizard")
 def test_sec48_approve_does_not_send_on_the_event_loop(wiz, monkeypatch):
     import asyncio
     c, store, p, f = wiz
@@ -174,10 +170,8 @@ def test_sec48_approve_does_not_send_on_the_event_loop(wiz, monkeypatch):
     assert seen == [False]
 
 
-# --------------------------------------------------------------------------- SEC-49 (open)
+# --------------------------------------------------------------------------- SEC-49 (fixed)
 
-@pytest.mark.xfail(strict=True, reason="SEC-49: /safety/ says the printable report holds "
-                   "'only site names, statuses and dates', but it is headed with the person's label")
 def test_sec49_safety_report_claim_mentions_the_persons_name():
     from tests.conftest import ROOT
     tpl = (ROOT / "site_src/templates/pages/safety.html").read_text(encoding="utf-8")

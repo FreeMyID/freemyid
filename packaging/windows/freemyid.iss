@@ -1,8 +1,8 @@
 ; Inno Setup script. Build after PyInstaller:
-;   iscc /DAppVersion=0.1.0 packaging\windows\freemyid.iss
+;   iscc /DAppVersion=0.1.1 packaging\windows\freemyid.iss
 ; Optional family installer: add /DFamilyBundle=C:\path\Mom.freemyid-profile
 #ifndef AppVersion
-  #define AppVersion "0.1.0"
+  #define AppVersion "0.1.1"
 #endif
 
 [Setup]
@@ -17,6 +17,7 @@ DisableDirPage=yes
 DisableReadyPage=yes
 SetupIconFile=freemyid.ico
 PrivilegesRequired=lowest
+ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir=..\..\dist
 OutputBaseFilename=FreeMyIDSetup-{#AppVersion}
@@ -57,12 +58,8 @@ Type: files; Name: "{app}\registry.yaml"
 Filename: "{app}\freemyid-cli.exe"; Parameters: "schedule remove"; Flags: runhidden; RunOnceId: "RemoveFreeMyIDTask"
 
 [Code]
-// v0.1.0 still showed "Ready to Install" with DisableReadyPage=yes (VM walkthrough, Windows 11):
-// skip it explicitly as well so older people see no extra "Install" step.
-function ShouldSkipPage(PageID: Integer): Boolean;
-begin
-  Result := (PageID = wpReady);
-end;
+// "Ready to Install" stays on purpose: with every earlier page disabled, Inno Setup shows it anyway so a
+// double-click never installs without one deliberate click (VM checks 2026-11-07). Site copy says "Click Install".
 
 function DataDir: String;
 begin

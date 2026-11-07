@@ -12,7 +12,7 @@ Says what it does (the BRAND.md clarifier), names the scope (people-search and d
 
 ## (b) Homepage
 
-https://freemyid.github.io/freemyid/
+https://freemyid.org/
 
 ## (c) Topics (11)
 
@@ -33,7 +33,7 @@ Alt text (also use if the image is embedded anywhere):
 ```bash
 gh repo edit FreeMyID/freemyid \
   --description "Free Windows app that asks people-search and data-broker sites to delete your listing. Runs locally, no account. AGPL." \
-  --homepage "https://freemyid.github.io/freemyid/" \
+  --homepage "https://freemyid.org/" \
   --add-topic privacy,data-brokers,opt-out,people-search,data-removal,personal-data,ccpa,local-first,windows,open-source,agpl \
   --enable-issues
 ```

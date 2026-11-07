@@ -17,7 +17,6 @@ import imaplib
 import logging
 import re
 import smtplib
-import ssl
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from email.message import EmailMessage
@@ -27,6 +26,7 @@ from typing import TYPE_CHECKING
 
 from ..models import Broker, MailboxConfig, Profile, utcnow
 from ..netpolicy import host_of
+from .mail_tls import TlsPinError, check_peer, client_context
 
 if TYPE_CHECKING:
     from ..netpolicy import NetPolicy
@@ -267,18 +267,23 @@ class SmtpImapMailer:
         self._check_host(mb.smtp_host)
         msg = build_message(mb, to, subject, body, request_id)
         pw = self._password(profile)
-        ctx = ssl.create_default_context()
+        pin = mb.tls_cert_sha256
         try:
+            ctx = client_context(mb.smtp_host, pin)
             if mb.smtp_starttls:
                 with smtplib.SMTP(mb.smtp_host, mb.smtp_port, timeout=self.timeout_s) as s:
                     s.starttls(context=ctx)
+                    check_peer(s.sock, pin)          # before any credential is sent
                     s.login(mb.username, pw)
                     s.send_message(msg)
             else:
                 with smtplib.SMTP_SSL(mb.smtp_host, mb.smtp_port, context=ctx,
                                       timeout=self.timeout_s) as s:
+                    check_peer(s.sock, pin)
                     s.login(mb.username, pw)
                     s.send_message(msg)
+        except TlsPinError as e:
+            raise MailError(f"smtp refused: {e}") from None
         except (smtplib.SMTPException, OSError) as e:
             raise MailError(f"smtp failed: {type(e).__name__}") from None
         self.last_raw = msg.as_bytes()
@@ -286,14 +291,30 @@ class SmtpImapMailer:
 
     # ------------------------------------------------------------------ IMAP
     def _imap(self, mb: MailboxConfig) -> imaplib.IMAP4:
+        """Connected (not logged-in) IMAP. With a pin, the peer certificate is checked here,
+        so `login` is only ever reached on a matching certificate.
+
+        Plaintext IMAP (no SSL and no STARTTLS) is refused on EVERY host, loopback
+        included, before any socket is opened (SEC-53). The MailboxConfig validator
+        refuses it too, but it can be bypassed (`model_copy`), so this check stands alone."""
+        if not mb.imap_ssl and not mb.imap_starttls:
+            raise MailError("mail connection is not encrypted; refusing to sign in")
         self._check_host(mb.imap_host)
-        ctx = ssl.create_default_context()
+        pin = mb.tls_cert_sha256
+        ctx = client_context(mb.imap_host, pin)
         if mb.imap_ssl and not mb.imap_starttls:
-            return imaplib.IMAP4_SSL(mb.imap_host, mb.imap_port, ssl_context=ctx,
-                                     timeout=self.timeout_s)
-        conn = imaplib.IMAP4(mb.imap_host, mb.imap_port, timeout=self.timeout_s)
-        if mb.imap_starttls:
-            conn.starttls(ssl_context=ctx)
+            conn: imaplib.IMAP4 = imaplib.IMAP4_SSL(mb.imap_host, mb.imap_port,
+                                                    ssl_context=ctx, timeout=self.timeout_s)
+        else:
+            conn = imaplib.IMAP4(mb.imap_host, mb.imap_port, timeout=self.timeout_s)
+            if mb.imap_starttls:
+                conn.starttls(ssl_context=ctx)
+        try:
+            check_peer(conn.sock, pin)
+        except TlsPinError:
+            with contextlib.suppress(Exception):
+                conn.shutdown()
+            raise
         return conn
 
     def fetch_since(self, profile: Profile, since: datetime) -> list[bytes]:
@@ -317,6 +338,8 @@ class SmtpImapMailer:
             finally:
                 with contextlib.suppress(Exception):
                     conn.logout()
+        except TlsPinError as e:
+            raise MailError(f"imap refused: {e}") from None
         except (imaplib.IMAP4.error, OSError) as e:
             raise MailError(f"imap failed: {type(e).__name__}") from None
         return out

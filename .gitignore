@@ -24,3 +24,11 @@ tools/private_host_hashes.txt
 # legacy prototype: local reference only, never tracked
 zzz_legacy/
 .claude/worktrees/
+
+# editor workspaces
+*.code-workspace
+
+# credentials: never commit
+socialmedialogins*
+*.env
+.env*

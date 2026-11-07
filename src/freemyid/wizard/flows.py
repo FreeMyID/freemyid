@@ -113,7 +113,8 @@ def _addresses(d: dr.Draft) -> None:
 
 
 def _details(d: dr.Draft) -> None:
-    _say("\n== Other details (used only for matching, never sent to brokers) ==")
+    _say("\n== Other details (used to find the right listings; birth year, relatives and "
+         "personal emails are never sent) ==")
     _loop(d, "details", lambda: {
         "birth_year": _ask("Year of birth, 4 digits (or blank)", dr.birth_year_of(d)),
         "phones": _split(_ask("Phones, separated by ;", _lines_default(d.phones))),
@@ -131,6 +132,25 @@ def _permissions(d: dr.Draft) -> None:
         "allow_phone_disclosure": "1" if _yes("Allow giving a phone number if required") else ""})
 
 
+def _trust_local(d: dr.Draft, a: dict) -> None:
+    """Ask the user to approve the local mail app's security code (no password is sent)."""
+    from ..engine.mail_tls import TlsPinError, trust_on_first_use
+    from ..models import MailboxConfig
+    pre = dr.PRESETS["proton_bridge"]
+    try:
+        res = trust_on_first_use(MailboxConfig(
+            provider="proton_bridge", address=a.get("address") or "x@example.org",
+            username="x", keyring_service="freemyid-mailbox", **pre))
+    except (TlsPinError, ValueError) as e:
+        _say(f"Could not read the mail app's security code: {e}")
+        return
+    _say("\n" + res.message)
+    if _yes("Do you trust this code", False):
+        d.tls_pin = res.fingerprint
+    else:
+        _say("Not trusted. Free My ID will not sign in to this mail app.")
+
+
 def _mailbox(d: dr.Draft) -> None:
     _say("\n== Dedicated removal mailbox ==")
     if not _yes("Set it up now", True):
@@ -144,6 +164,8 @@ def _mailbox(d: dr.Draft) -> None:
         prov = _ask(f"Provider ({'/'.join(provs)})", old.get("provider", "gmail"))
         a = {"provider": prov, "address": _ask("Mailbox address", old.get("address", "")),
                  "password": _secret("Password / app password (hidden; blank keeps saved)")}
+        if prov == "proton_bridge":
+            _trust_local(d, a)
         if prov == "other":
             a.update(imap_host=_ask("Incoming mail server (IMAP)"), smtp_host=_ask("Outgoing mail server (SMTP)"),
                      imap_port=_ask("IMAP port", "993"), smtp_port=_ask("SMTP port", "465"),

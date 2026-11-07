@@ -1,0 +1,53 @@
+{
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "deny": [
+      "Bash(sudo *)",
+      "Bash(su *)",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~*)",
+      "Bash(rm -rf $HOME*)",
+      "Bash(rm -rf ..*)",
+      "Bash(rm -rf .)",
+      "Bash(rm -rf .git*)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git push * --force*)",
+      "Bash(git push * -f *)",
+      "Bash(git push * --force-with-lease*)",
+      "Bash(git push --mirror https://github.com/FreeMyID/freemyid.git*)",
+      "Bash(git push --delete*)",
+      "Bash(git push * --delete *)",
+      "Bash(git push origin :*)",
+      "Bash(git filter-repo*)",
+      "Bash(git filter-branch*)",
+      "Bash(git reset --hard origin*)",
+      "Bash(git clean -fdx*)",
+      "Bash(gh repo delete*)",
+      "Bash(gh repo edit * --visibility*)",
+      "Bash(gh repo archive*)",
+      "Bash(gh api -X DELETE*)",
+      "Bash(gh api --method DELETE*)",
+      "Bash(gh release delete*)",
+      "Bash(gh secret *)",
+      "Bash(curl * | sh*)",
+      "Bash(curl * | bash*)",
+      "Bash(wget * | sh*)",
+      "Bash(wget * | bash*)",
+      "Bash(dd *)",
+      "Bash(mkfs*)",
+      "Bash(chmod -R 777*)",
+      "Bash(chown -R *)",
+      "Bash(secret-tool clear*)",
+      "Bash(cat ~/.config/freemyid/*)",
+      "Bash(cat /home/geekedsilicon/.config/freemyid/*)",
+      "Bash(crontab -r*)",
+      "Read(~/.config/freemyid/**)",
+      "Read(~/.ssh/**)"
+    ]
+  }
+}

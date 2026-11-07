@@ -1,4 +1,4 @@
-"""Draft test (qa to adopt): VM walkthrough finding 7. Without a removal mailbox the
+"""Adopted from engine/_test_drafts: VM walkthrough finding 7. Without a removal mailbox the
 Assisted card must not ask for "your removal email"."""
 from __future__ import annotations
 
@@ -13,8 +13,8 @@ B = Broker.model_validate({
     "steps": ["Open the opt-out page.", "Find your listing and copy its web address.",
               "Type your removal email address.",
               "Paste it on the opt-out page and type your removal email."]})
-MB = MailboxConfig(address="removals@example.org", imap_host="imap.example.org",
-                   smtp_host="smtp.example.org", username="removals@example.org")
+MB = MailboxConfig(address="removals@mail.example", imap_host="imap.mail.example",
+                   smtp_host="smtp.mail.example", username="removals@mail.example")
 
 
 def test_no_mailbox_steps_point_to_an_email_you_can_check():

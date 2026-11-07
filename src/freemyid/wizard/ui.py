@@ -185,8 +185,9 @@ def _screen_body(step: str, d: Draft) -> str:
                 'Uninstall anytime.</b></p></div>'
                 '<p class="hint">Free My ID works on people-search sites. It does not change '
                 'what Facebook itself does with your account.</p>'
-                '<div class="card soft">' + paras
-                + '</div><h2>Who is this for?</h2>' + radios + up
+                '<details class="more"><summary>Read the full wording</summary>'
+                '<div class="card soft">' + paras + '</div></details>'
+                '<h2>Who is this for?</h2>' + radios + up
                 + _inp("attested_by", "Type your full name to sign", d.attested_by,
                        req=True)
                 + _check("ack", "I have read this and I agree.", d.consent_ack)
@@ -220,8 +221,10 @@ def _screen_body(step: str, d: Draft) -> str:
                 '<p class="hint">Websites often show old addresses too. Add up to three.</p>'
                 + row(1, False) + row(2, False) + row(3, False) + "</details>")
     if step == "about":
-        return ('<div class="note">All of this is only used to tell the right person apart '
-                'from people with the same name. It is never sent to anyone.</div>'
+        return ('<div class="note">These details help Free My ID pick out the right listings. A site '
+                'is only sent what its own listing already shows, plus the removal email address '
+                'if you set one up. A birth year, relatives and personal email addresses are '
+                'never sent.</div>'
                 + _inp("birth_year", "Year of birth", birth_year_of(d), typ="number",
                        hint="Four digits, like 1952.", extra='min="1900" max="2100"')
                 + _inp("phones", "Phone number", ", ".join(d.phones), hint=_AREA_HINT)
@@ -245,7 +248,12 @@ def _screen_body(step: str, d: Draft) -> str:
             "This adds one small Free My ID task to Windows (Task Scheduler) that runs once a "
             "day, even when this window is closed. If the computer was off, it runs when "
             "it is next on. Quiet unless it needs you. You can turn it off in Settings."))
-        return (f'<div class="card soft"><p><b>What happens next</b></p><ol class="big-list">'
+        from .. import config as cfgmod
+        practice = ("" if d.editing or cfgmod.load().real_submissions_enabled else
+                    '<div class="note"><b>Practice mode is on.</b> Free My ID will look for '
+                    'listings but will not send anything to any site until you turn that on '
+                    'in Settings.</div>')
+        return (practice + f'<div class="card soft"><p><b>What happens next</b></p><ol class="big-list">'
                 f'{lis}</ol></div>' + auto)
     return ""
 
@@ -277,6 +285,12 @@ def _mailbox_body(d: Draft) -> str:
               + "</div>")
     creds += ('<div class="actions"><button type="button" class="secondary" id="test-conn">'
               'Test that it works</button></div><div id="test-result" role="status"></div>'
+              '<div id="trust-box" class="note" hidden role="alertdialog" aria-live="polite">'
+              '<p id="trust-text"></p><p class="code" id="trust-code"></p>'
+              '<p id="trust-question"><b></b></p><div class="actions">'
+              '<button type="button" class="big" id="trust-yes">Yes</button>'
+              '<button type="button" class="big secondary" id="trust-no">No</button>'
+              '</div></div>'
               '<p class="hint">The test only talks to your email company. The password is kept '
               "in your computer's protected store, not in Free My ID's files.</p></div>")
     return ('<p class="lead">Free My ID can use a separate email address to send '

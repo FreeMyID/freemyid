@@ -423,7 +423,18 @@ def create_app(store, token: str, allowed_hosts: set[str],
                 letter = ("", "", "(the letter could not be read)")
             items.append((r, who.get(r.profile_id, "?"), nm.get(r.broker_id, r.broker_id),
                           letter))
-        return html(dash.outbox_page(items, csrf_token, flash(request)))
+        releases: dict[str, list[str]] = {}
+        try:
+            from ..engine.outbox import released_by_approval
+            profiles = {p.id: p for p in store.list_profiles()}
+            for r, *_ in items:
+                prof = profiles.get(r.profile_id)
+                others = released_by_approval(store, prof, r) if prof else []
+                if others:
+                    releases[r.id] = [nm.get(o.broker_id, o.broker_id) for o in others]
+        except ImportError:
+            pass
+        return html(dash.outbox_page(items, csrf_token, flash(request), releases))
 
     @app.post("/outbox/{rid}/approve")
     async def outbox_approve(rid: str):
@@ -435,7 +446,10 @@ def create_app(store, token: str, allowed_hosts: set[str],
         except ImportError:
             return redirect("/outbox", "noengine")
         try:
-            approve_and_send(store, rid)
+            # SEC-48: approving can send a burst of emails (SEC-27 release); never block
+            # the event loop with SMTP. The store is thread-safe (RLock).
+            from starlette.concurrency import run_in_threadpool
+            await run_in_threadpool(approve_and_send, store, rid)
         except Exception as e:  # noqa: BLE001
             log.warning("approve_and_send failed: %s", type(e).__name__)
             return redirect("/outbox", "sendfail")
@@ -532,6 +546,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
         if not p:
             return redirect("/settings")
         d = dr.draft_from_profile(p)
+        d.tls_pin = getattr(app.state, "approved_pin", None) or d.tls_pin
         errs = dr.apply_step(d, "mailbox", await request.form())
         if not errs:
             try:
@@ -601,11 +616,58 @@ def create_app(store, token: str, allowed_hosts: set[str],
         form = await request.form()
         d = dr.Draft(editing=True)
         d.password = app.state.draft.password if app.state.draft else ""
-        errs = dr._apply_mailbox(d, form)
+        d.tls_pin = (getattr(app.state, "approved_pin", None)
+                     or (app.state.draft.tls_pin if app.state.draft else ""))
+        errs = dr._apply_mailbox(d, form, require_trust=False)
         if errs and not d.mailbox:
-            return JSONResponse({"ok": False, "message": errs[0]})
-        ok, msg = dr.test_mailbox_connection(d.mailbox, d.password)
-        return JSONResponse({"ok": ok, "message": msg})
+            return JSONResponse({"ok": False, "status": "fail", "message": errs[0]})
+        mb = dict(d.mailbox or {})
+        if d.tls_pin:
+            mb["tls_cert_sha256"] = d.tls_pin
+        ok, msg, status = dr.check_mailbox(mb, d.password)
+        if status in ("needs_trust", "cert_changed"):
+            return JSONResponse(offer_trust(mb, status))
+        return JSONResponse({"ok": ok, "status": status, "message": msg})
+
+    def offer_trust(mb: dict, status: str) -> dict:
+        """Read (without any password) the local mail app's certificate and ask the user."""
+        from ..engine.mail_tls import TlsPinError, trust_on_first_use
+        from ..models import MailboxConfig
+        try:
+            res = trust_on_first_use(MailboxConfig(
+                **{k: v for k, v in mb.items() if k != "tls_cert_sha256"},
+                keyring_service="freemyid-mailbox"))
+        except TlsPinError as e:
+            return {"ok": False, "status": "fail", "message": str(e)}
+        except ValueError:
+            return {"ok": False, "status": "fail",
+                    "message": "Those mail settings are not complete yet."}
+        app.state.pending_pin = res.fingerprint
+        changed = status == "cert_changed"
+        if changed:
+            text = ("The security code of your mail app has changed since you last approved "
+                    "it. This is normal if you just reinstalled or updated Proton Mail "
+                    "Bridge. If you did not, say No.")
+        else:
+            text = ("Free My ID found your mail app on this computer. Please check that "
+                    "the code below matches the one in Proton Mail Bridge.")
+        return {"ok": False, "status": "trust", "changed": changed, "message": text,
+                "display": res.display, "question": (
+                    "Do you trust the new code?" if changed else "Do you trust this code?")}
+
+    @app.post("/wizard/trust-certificate")
+    async def trust_cert(request: Request):
+        form = await request.form()
+        pending = getattr(app.state, "pending_pin", None)
+        if form.get("answer") != "yes" or not pending:
+            app.state.pending_pin = None
+            return JSONResponse({"ok": False, "message": (
+                "Not trusted. Nothing was saved and no password was sent.")})
+        app.state.approved_pin = pending
+        if app.state.draft is not None:
+            app.state.draft.tls_pin = pending
+        app.state.pending_pin = None
+        return JSONResponse({"ok": True, "message": "Saved. Testing again..."})
 
     @app.get("/wizard/import")
     async def import_form():

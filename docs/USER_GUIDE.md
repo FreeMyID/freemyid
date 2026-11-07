@@ -81,9 +81,14 @@ Proton encrypts your mail, so other programs can only reach it through the free 
 2. Install **Proton Mail Bridge** from Proton's website and sign in.
 3. In Bridge, open the mailbox settings and copy the **Bridge password** it shows you. This is different from your Proton password.
 4. In the Free My ID setup wizard, choose **Proton Bridge**. The settings are filled in for you (server `127.0.0.1`, ports 1143 and 1025). Paste the Bridge password.
-5. Click **Test connection**.
+5. Free My ID shows you Bridge's **security code** (a long row of letters and numbers). Bridge makes its own security certificate, so Free My ID asks you once whether to trust it. If you just installed and started Bridge yourself, click **Yes**. <!-- TODO verify: wizard confirm screen (helper freemyid.engine.mail_tls.trust_on_first_use exists; wizard hook pending) -->
+6. Click **Test connection**.
 
-Bridge has to be running whenever Free My ID checks mail, including scheduled background checks. <!-- TODO verify: STARTTLS on IMAP needs support in MailboxConfig -->
+Free My ID remembers that security code. If it ever changes, Free My ID won't sign in and tells you instead. That usually just means Bridge was reinstalled or reset: run the setup's mailbox step again to trust the new code. If you didn't change anything, don't trust it, and ask someone you trust to check your computer.
+
+This trust step only works for a mail app on your own computer. For Gmail, Yahoo, iCloud and other providers, Free My ID always uses the normal security check and never asks you.
+
+Bridge has to be running whenever Free My ID checks mail, including scheduled background checks.
 
 ## 3. Setting up
 

@@ -180,3 +180,47 @@ Drafts: src/freemyid/engine/_test_drafts/ (conftest re-exports tests/conftest; q
    removal email (address)" renders as "an email address you can check", plus a note (own
    address is fine; leave empty if optional). With a mailbox nothing changes. Registry prose
    untouched. Drafts: test_assisted_no_mailbox.py (2).
+4. DONE SEC-48 (coordinator request, wizard/server.py was clean): /outbox/{rid}/approve runs
+   approve_and_send via starlette run_in_threadpool (store is RLock + check_same_thread=False).
+   SEC-47: server._disclose_releases splices a note into the first-email card ("Approving it
+   also sends the N other emails waiting for <label> (to: <sites>)...") and changes its
+   confirm to "Send this email and N others now?", using outbox.released_by_approval.
+   Both strict xfails removed in tests/test_security_wave3.py (coordinator-authorized).
+   dashboard.py NOT edited (peer session had uncommitted changes) -> CR-W1 below.
+5. DONE fixture audit: engine/_dev (registry, site, inbox), tests/fixtures/registry_min.yaml,
+   drafts: only *.example / .invalid / loopback hosts, fake "Jane (Q) Testperson", no real
+   streets or non-555 phones. tests/*.py use example.org/example.com (RFC 2606 reserved, qa).
+
+## Open CRs (this wave)
+- CR-W1 wizard-packager, dashboard.outbox_page: render the SEC-47 note inside the card
+  (call engine.outbox.released_by_approval(store, profile, r) when building items) and
+  delete server._disclose_releases. Same text as now.
+- CR-M1 orchestrator, models.Request: optional `held_reason: str | None = None`
+  ("first_email") so the hold is a field, not inferred (today: AUTO + queued + email + not
+  legal demand, plus the email_held_first_approval Event as audit).
+- CR-M2 orchestrator, interfaces.Mailer: add `async scan_replies(profile, broker, since,
+  timeout_s=0) -> engine.mail.ReplyScan` (both mailers implement it; runner falls back to
+  wait_for_confirmation if missing).
+- CR-R1 broker-researcher: registry steps could say "your email" instead of "removal email";
+  the Assisted card now rewrites it when no mailbox exists, so this is cosmetic only.
+
+## 2026-11-07 TLS pinning for Proton Bridge (PROGRESS ticket)
+- models.MailboxConfig.tls_cert_sha256 (orchestrator-approved single field): lowercase hex
+  SHA-256 of the DER leaf cert; colons/spaces/uppercase normalised; else ValidationError.
+  Schemas unchanged (gen_schema covers Registry/StateLaws only).
+- engine/mail_tls.py: client_context(host, pin) (no pin -> ssl.create_default_context(),
+  unchanged; pin + non-loopback -> TlsPinError; loopback = exactly 127.0.0.1, ::1,
+  localhost), check_peer(sock, pin) (hmac.compare_digest on sha256 of the DER peer cert),
+  fetch_loopback_fingerprint / trust_on_first_use(mb) -> TrustResult(fingerprint, display,
+  plain-language message). TOFU never sends credentials.
+- engine/mail.py: SMTP (STARTTLS + SSL) and IMAP (STARTTLS + SSL) check the pin right after
+  the handshake, before login; mismatch -> MailError("... refused: ...").
+- tests/test_mail_tls_pin.py (17): fake self-signed IMAP/SMTP server on 127.0.0.1.
+- Open CR-W2 wizard-packager: on the proton_bridge mailbox screen, call
+  trust_on_first_use(mb), show .message with Yes/No, store .fingerprint in
+  mb.tls_cert_sha256 on Yes; on MailError containing "certificate changed" offer re-trust.
+  SECURITY: wizard/draft.py ~L394 ctx_for() "Test connection" sets CERT_NONE +
+  check_hostname=False for loopback WITHOUT a pin and then logs in with the Bridge password.
+  Replace with mail_tls.client_context(host, pin) + check_peer(sock, pin) before login
+  (no pin -> verified context fails for Bridge, which is correct; run TOFU first).
+- Open CR-C1 orchestrator (optional): `freemyid mailbox trust <profile>` CLI wrapper.

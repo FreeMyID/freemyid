@@ -62,7 +62,12 @@ Post-v0.1.0 wave (2026-11-07):
 - CR (orchestrator, .github/workflows): weekly job `python tools/registry_health.py --report
   registry-health.md` (offline; add --online only if the runner's egress is acceptable), upload
   the report as an artifact.
-Next: remove xfail markers as SEC-47/48/49 land; adopt test_search_guard.py.
+- Later in the wave: SEC-47 (1fd51c2, d84ac04), SEC-48 (f2783ee) and SEC-49 (c27463b) fixed by their owners, markers
+  removed. Also adopted test_search_guard.py (3) and test_assisted_no_mailbox.py (2); engine/_test_drafts gone.
+  SEC-01..49: 45 Fixed, 4 Accepted, 0 Open; no strict xfails. LAUNCH_CHECKLIST lines 38 and 53 ticked, line 8 annotated.
+- Final runs at d84ac04: 508 passed (full registry); 505 passed, 3 skipped (FREEMYID_TEST_NO_FULL_REGISTRY=1);
+  ruff and mypy clean. v0.1.1 verdict: PASS.
+Next: weekly registry_health CI job (CR to O); adopt any new _test_drafts; review the next wave.
 R8 site-v3 (2026-11-07, branch site-v3, web/ at 4533a5c):
 - Verdict: BLOCK (narrow), for the switch-over only, on SEC-60. Astro build telemetry is on (no
   ASTRO_TELEMETRY_DISABLED; CI runs are still reported as `CI.<name>`). The built site passes.

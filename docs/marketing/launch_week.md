@@ -2,7 +2,7 @@
 
 Status: DRAFT, 2026-11-07. Nothing here has been posted, sent or submitted. The user approves each piece and posts it themselves. Follows docs/POSITIONING.md and the never-use list in docs/MARKETING_COPY.md. Facts: v0.1.0 for Windows 10 and 11, free, open source (AGPL), unsigned installer (blue SmartScreen box), no account, nothing sent to us. No pricing. No counts of people helped (we have none).
 
-Before posting anything: open https://freemyid.github.io/freemyid/ and the download page on a clean machine, and confirm the button works. Until the redesign is deployed (WR-38), the live site may still say the download is "opening soon"; hold the posts until it does not.
+Before posting anything: open https://freemyid.org/ and the download page on a clean machine, and confirm the button works. Until the redesign is deployed (WR-38), the live site may still say the download is "opening soon"; hold the posts until it does not.
 
 Rules for every post: no countdown or "act now", no screenshots of anyone's real profile, no tagging real people, no mention of Meta's logo, no claim about what happens to a person's Facebook account. Link goes in the first comment if the user prefers (Facebook often shows fewer people a post with a link in it).
 
@@ -68,7 +68,7 @@ Subject: Something I'd like to set up for you, free and quick
 > - It only deals with those lookup websites. It doesn't change anything about Facebook or your email.
 > - It can't promise a site will agree or that nobody ever lists you again. It keeps asking.
 >
-> The website is https://freemyid.github.io/freemyid/ if you'd like to look first. Does Sunday work?
+> The website is https://freemyid.org/ if you'd like to look first. Does Sunday work?
 >
 > Love,
 > [Your name]

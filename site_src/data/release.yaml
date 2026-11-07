@@ -1,8 +1,8 @@
-# Filled in by the orchestrator for each published release (from the release's SHA256SUMS.txt).
-# Leave values null until a release exists; the download page then says so plainly.
-# v0.1.0: https://github.com/FreeMyID/freemyid/releases/tag/v0.1.0 (published 2026-11-07).
-# sha256 checked by hashing the downloaded FreeMyIDSetup.exe; it matches SHA256SUMS.txt.
-version: "0.1.0"
+# Filled in automatically by .github/workflows/build.yml (site-release-info job) after each v* release,
+# from the published FreeMyIDSetup.exe. Leave values null until a release exists; the download page then
+# says so plainly.
+# v0.1.1: https://github.com/FreeMyID/freemyid/releases/tag/v0.1.1 (published 2026-11-07).
+version: "0.1.1"
 date: 2026-11-07
-size_mb: 64.0        # 67,113,842 bytes = 64.0 MB the way Windows File Explorer counts (1 MB = 1,048,576 bytes)
-sha256: bb4a36153a1a99955bbe4d224d505f43ade678763f2c8b38ee43e203099b7bbe
+size_mb: 64.0        # 67,149,673 bytes = 64.0 MB the way Windows File Explorer counts (1 MB = 1,048,576 bytes)
+sha256: c4b08e7ac683becc9e6b57a9b2fa00c9a70f496ab5d21791968f89267d952667
