@@ -171,3 +171,8 @@ Drafts: src/freemyid/engine/_test_drafts/ (conftest re-exports tests/conftest; q
    anchors the wait on the latest real SENT time (a follow-up approved 40 days late no longer
    lets the legal demand come 5 days after it). outbox.released_by_approval(store, profile,
    req) for the SEC-47 approve card. Drafts: test_escalation_timers.py (6).
+2c. DONE search guard (submitters/web_form.search_listings): HTTP >= 400 on the search page,
+   or a page with neither results nor the configured no_results_text, raises UnexpectedPage
+   (runner: scan_failed -> treated as blind) instead of recording a false NOT_FOUND.
+   Fixtures _dev/site/devauto.example/name/jane-testperson/{nc,oh}.html. Drafts:
+   test_search_guard.py (3).

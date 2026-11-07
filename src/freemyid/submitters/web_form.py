@@ -134,12 +134,18 @@ async def search_listings(ctx: RunContext) -> list[Listing]:
     bctx = await bm.new_context(ctx.broker.domains)
     try:
         page = await bctx.new_page()
-        await bm.goto(page, url)
+        resp = await bm.goto(page, url)
+        if resp is not None and resp.status >= 400:
+            # an error page is not "no results": never record NOT_FOUND from it
+            raise UnexpectedPage(f"search_http_{resp.status}")
         spec = ctx.broker.search
         html = await page.content()
         if spec and spec.no_results_text and spec.no_results_text.lower() in html.lower():
             return []
         cands = await parse_results(page, ctx.broker)
+        if not cands and spec and spec.no_results_text:
+            # neither results nor the site's "no results" text: the page changed
+            raise UnexpectedPage("search_page_unrecognized")
         listings = matcher.score_all(ctx.profile, ctx.broker.id, cands,
                                      (ctx.now or utcnow()).date())
         if listings:
