@@ -51,3 +51,10 @@ Integrate wave → qa review → GitHub repo + first CI exe build (user OK neede
 - Old repo handles removed at HEAD. History scrub dry run by peer d7: 0 gitleaks findings; family states found in OLD history and rewritten; handles, example email and research files added to the rules.
 - Full suite hung in a Playwright test (no browser launched); qa-security fixing in tests/.
 - Next: qa green (with and without full registry) -> commit split -> d7 re-runs scrub -> force-push (user OK) -> CI -> tag v0.1.0.
+
+## LAUNCH 2026-11-06 ~19:19 EST: repo PUBLIC
+- Fresh repo FreeMyID/freemyid (cleaned history: no full registry, zzz_legacy, family states, handles, private host hashes; all commits "Free My ID" + noreply; gitleaks 0). Old repo = FreeMyID/freemyid-old (private, archived; still holds 5 CI artifacts WITH the full registry -> delete).
+- Pages live: https://freemyid.github.io/freemyid/. README license fixed (AGPL code, CC BY-NC data). Topics/description/labels set.
+- Registry hardening 42d44ee (alias bomb, fallback chain, opt-in full bundling + CI sample assert, family registry via iscc define).
+- BLOCKER for v0.1.0: SEC-39 fill-for-me freezes on normal form-POST submit (automation-engineer fixing). qa test fixes (hang guard, browser probe, 13 registry tests, adopted _test_drafts) applied in tree, to commit after a green run; then delete src/freemyid/engine/_test_drafts/.
+- Next: SEC-39 fix -> qa commit -> CI green (add playwright install + FREEMYID_REQUIRE_BROWSER=1) -> tag v0.1.0 -> release.yaml for site -> VM walkthrough. User: social preview upload, old-repo artifacts, collaborator re-invite, trademark.
