@@ -121,3 +121,25 @@ That fallback doesn't close on Escape or outside click. tools/site_shots.py's me
 
 Screenshots (not committed): scratchpad shots/final (360/768/1280 x light/dark, full page, reduced motion), shots/hdr
 (header at 320/336/360/544), shots/w320, shots/nojs, shots/keys.
+
+## /protect/ "Protect yourself" guides (2026-11-07, Owen Brooks; commits 6635660..0f9f45e; not pushed)
+- Data: `web/src/lib/protect.ts` reads brokers/checklists.yaml at build time and re-checks the Checklist/ChecklistFile
+  model rules (extra keys forbidden, id pattern, verification literal, http(s) URLs, dates, unique ids, 512 KiB cap).
+  It fails the build if a YAML id is not in one of the five PROTECT_GROUPS (credit, junk, government, search,
+  california), so new entries must be grouped there. `notes` is research-internal and is never rendered.
+- Pages: `/protect/` (pages.yaml id `protect`, v3_only) and `/protect/<id>/` (literal YAML id, underscores kept, so the
+  app can link by id). Each shows why, a free/fee line + "You don't need Free My ID", cost/time/official site, what to
+  have ready, numbered steps (plain `<ol>`, prints cleanly), how to undo, sources + the date checked, and a Ctrl+P hint
+  (print:hidden). `verification: partial` adds "We couldn't open the official page on <date>; double-check the steps
+  on the official site." and a "check this phone number" line under any step with a phone number. status_note is shown.
+- ChexSystems: steps containing a phone number are dropped (HIDE_PHONE_STEPS), whatever the YAML says.
+- HOLD: freeze_lexisnexis is not built: its host is in the private registry and the leak scan flags it. Orchestrator
+  ruling needed (publish it and accept that host, or keep it off). One line in protect.ts (HOLD set) to release it.
+- JSON-LD: Article (datePublished/dateModified = date_checked, citation = source_urls) via Base's new `ld` prop, plus
+  breadcrumbs. Sitemap lastmod = date_checked. Linked from the footer (Learn) and a home card under the guides line.
+  Not in the header: a sixth item wraps every label onto two lines at 1280 (lead/designer call).
+- Gate: pnpm build OK, pnpm check OK. content_check: 3 hits of the D8 "15 minutes" rule on protect/ (DMAchoice, USPS,
+  hub badge), quoting third-party time estimates from checklists.yaml. Left as is pending a ruling (scope the rule to
+  app claims, or exempt protect/); the data and the checker weren't changed to get around it.
+- Screenshots: tools/site_shots.py via a wrapper that sets DEFAULT_PAGES (scratchpad); add protect pages to
+  DEFAULT_PAGES when convenient.
