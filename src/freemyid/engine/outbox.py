@@ -13,8 +13,8 @@ to the request, so what the user approves is exactly what gets sent.
 dashboard). It refuses unless `config.real_submissions_enabled` (or a mailer is injected,
 e.g. the dev fixture run's FakeMailer).
 
-The letter template follows the person's state: CA -> ccpa, a state with a privacy statute
--> state_privacy, else generic_removal. Only fields the listings already show go in
+The letter template follows the person's state: CA -> ccpa, a state whose deletion law is
+verified in statute text (engine.law_matrix) -> state_privacy, else generic_removal. Only fields the listings already show go in
 (`letters.letter_vars`).
 """
 from __future__ import annotations
@@ -45,7 +45,7 @@ from ..models import (
 )
 from ..models import ListingState as S
 from ..state import can_transition, mark_submitted, transition
-from . import letters
+from . import law_matrix, letters
 
 log = logging.getLogger(__name__)
 
@@ -87,48 +87,74 @@ class OutboxError(RuntimeError):
 # --------------------------------------------------------------------------- composing
 
 
-def law_in_effect(state_law: StateLaw | None, today: date | None = None) -> bool:
-    """A verified (`last_verified` set) statute with a deletion right already in effect."""
-    if state_law is None or not state_law.statute_name or state_law.last_verified is None:
+def law_in_effect(state_law: StateLaw | None, today: date | None = None,
+                  matrix: law_matrix.Matrix | None = None) -> bool:
+    """A statute we may cite: the deletion matrix entry for its state has
+    `evidence: statute_text`, is in force and gives a deletion right (law_matrix), and the
+    state_laws entry names the law, lists a deletion right and is already in effect."""
+    if state_law is None or not state_law.statute_name:
+        return False
+    today = today or date.today()
+    entry = (matrix if matrix is not None else law_matrix.default()).get(state_law.state)
+    if entry is None or not entry.citable(today):
         return False
     if not any("delet" in r.lower() for r in state_law.rights):
         return False
-    return state_law.effective_date is None or state_law.effective_date <= (today or date.today())
+    return state_law.effective_date is None or state_law.effective_date <= today
 
 
 def effective_law(profile: Profile, state_law: StateLaw | None,
-                  today: date | None = None) -> StateLaw | None:
-    """The law to cite: only the CURRENT address's state, only if verified and in effect.
-    Anything else -> None (generic voluntary request, no citations). PLAN_V1."""
+                  today: date | None = None,
+                  matrix: law_matrix.Matrix | None = None) -> StateLaw | None:
+    """The law to cite: only the CURRENT address's state, only if `law_in_effect`.
+    Anything else -> None (generic voluntary request, no citations). PLAN_V1.
+
+    The returned copy carries the matrix's VERIFIED citation (never the background one
+    from state_laws.yaml) and a response window only if that window is verified too."""
     if state_law is None or state_law.state.upper() != profile.state_of_residence:
         return None
-    return state_law if law_in_effect(state_law, today) else None
+    m = matrix if matrix is not None else law_matrix.default()
+    if not law_in_effect(state_law, today, m):
+        return None
+    entry = m.get(state_law.state)
+    assert entry is not None
+    ok_days = entry.deadline_verified()
+    return state_law.model_copy(update={
+        "citation": entry.citation,
+        "response_days": entry.response_days if ok_days else None,
+        "extension_days": entry.extension_days if ok_days else None,
+    })
 
 
 def initial_template(profile: Profile, state_law: StateLaw | None,
-                     today: date | None = None) -> str:
-    """ccpa for CA / state_privacy elsewhere, only with a verified law in effect for the
-    current address's state; otherwise generic_removal."""
-    law = effective_law(profile, state_law, today)
+                     today: date | None = None,
+                     matrix: law_matrix.Matrix | None = None) -> str:
+    """ccpa for CA / state_privacy elsewhere, only with a citable law (`effective_law`)
+    for the current address's state; otherwise generic_removal."""
+    law = effective_law(profile, state_law, today, matrix)
     if law is None:
         return "generic_removal"
     return "ccpa" if law.state.upper() == "CA" else "state_privacy"
 
 
 def template_for(kind: RequestKind, profile: Profile, state_law: StateLaw | None) -> str:
+    """`state_law` must already be the `effective_law` result (or None)."""
     if kind == RequestKind.FOLLOW_UP:
         return "follow_up"
     if kind == RequestKind.LEGAL_DEMAND:
         return "legal_demand"
-    return initial_template(profile, state_law)
+    if state_law is None:
+        return "generic_removal"
+    return "ccpa" if state_law.state.upper() == "CA" else "state_privacy"
 
 
 def compose(profile: Profile, broker: Broker, listings: list[Listing],
             state_law: StateLaw | None, kind: RequestKind = RequestKind.OPT_OUT, *,
-            original: Request | None = None) -> tuple[str, str]:
+            original: Request | None = None, today: date | None = None,
+            matrix: law_matrix.Matrix | None = None) -> tuple[str, str]:
     """(subject, body) for a request letter. Data-minimized via letters.letter_vars.
     Statutes are cited only when `effective_law` says so."""
-    law = effective_law(profile, state_law)
+    law = effective_law(profile, state_law, today, matrix)
     v = letters.letter_vars(
         profile, broker, listings, law,
         original_request_date=(original.sent_at or original.created_at) if original else None,

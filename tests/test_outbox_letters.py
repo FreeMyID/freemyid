@@ -16,24 +16,33 @@ def law(state, **kw):
     return StateLaw(state=state, **kw)
 
 
+def _matrix(state):
+    from freemyid.engine import law_matrix
+    return law_matrix.parse({"version": "t", "states": [
+        {"state": state, "in_force": True, "deletion_right": "yes", "citation": "Fake 1",
+         "evidence": "statute_text"}]})
+
+
 def test_ccpa_only_with_verified_ca_law():
+    from freemyid.engine import law_matrix
     p = make_profile(addresses=[Address(city="Fresno", state="CA", current=True)])
     assert initial_template(p, None) == "generic_removal"
-    ca = law("CA", statute_name="CCPA", rights=["delete"], last_verified=date(2026, 11, 1))
-    assert initial_template(p, ca) == "ccpa"
-    assert initial_template(p, ca.model_copy(update={"last_verified": None})) == \
-        "generic_removal"
+    ca = law("CA", statute_name="CCPA", rights=["delete"])
+    assert initial_template(p, ca, matrix=_matrix("CA")) == "ccpa"
+    assert initial_template(p, ca, matrix=law_matrix.EMPTY) == "generic_removal"
 
 
 def test_state_privacy_only_when_deletion_right_in_effect():
     p = make_profile()      # IL
+    m = _matrix("IL")
     in_force = law("IL", statute_name="Fake Privacy Act", rights=["delete"],
-                   effective_date=date(2020, 1, 1), last_verified=date(2026, 11, 1))
-    assert initial_template(p, in_force) == "state_privacy"
+                   effective_date=date(2020, 1, 1))
+    assert initial_template(p, in_force, matrix=m) == "state_privacy"
     future = in_force.model_copy(update={"effective_date": date(2099, 1, 1)})
-    assert initial_template(p, future) == "generic_removal"
+    assert initial_template(p, future, matrix=m) == "generic_removal"
     no_delete = in_force.model_copy(update={"rights": ["opt_out_sale"]})
-    assert initial_template(p, no_delete) == "generic_removal"
+    assert initial_template(p, no_delete, matrix=m) == "generic_removal"
+    assert initial_template(p, in_force) == "generic_removal"   # no matrix entry for IL
     assert initial_template(p, None) == "generic_removal"
 
 

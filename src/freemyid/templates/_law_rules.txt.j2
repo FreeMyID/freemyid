@@ -1,0 +1,18 @@
+{# Deadline and verification rules in plain words. Only for a cited, verified law. #}
+{% if response_days %}
+Deadline: the law gives you {{ response_days }} days from receiving this request to respond.
+{% if extension_days %}
+If you need more time, you may extend this once by {{ extension_days }} more days, but
+you must tell me before the first {{ response_days }} days are up.
+{% endif %}
+
+{% endif %}
+{% if verification_rules %}
+Verifying this request:
+{% for r in verification_rules %}
+  - {{ r }}
+{% endfor %}
+
+{% endif %}
+Please use the details above to find my records, and do not ask for more information
+than you need to do that.

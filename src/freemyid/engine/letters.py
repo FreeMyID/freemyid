@@ -45,9 +45,36 @@ def render(template: str, **vars: Any) -> str:
         "original_request_date": None, "response_deadline": None, "reference": None,
         "broker_postal": None, "complaint_urls": [], "today": date.today().isoformat(),
         "is_agent": False, "agent_name": None, "street_address": None, "zip": None,
+        "extension_days": None, "verification_rules": [], "state_name": None,
     }
     defaults.update(vars)
     return _env.get_template(_resolve(template)).render(**defaults)
+
+
+# Plain-words verification rules, per state, quoted in a letter ONLY when that state's law
+# is cited (the letter_vars state_law is already engine.outbox.effective_law's result).
+# Source: brokers/state_law_deletion_matrix.yaml common_rules.verification and
+# .data_obtained_from_third_parties, both `evidence: statute_text` (2026-11-07):
+# Va. Code 59.1-577; Minn. Stat. 325M.14 subd. 4(h), 4(k); KRS 367.3615(3)(d), (3)(e)
+# (matrix 2026.11.07.2); oag.ca.gov/privacy/ccpa.
+# Keep this in step with the matrix; never add a state whose text was not checked.
+_VERIFY_LIMIT = ("If you cannot confirm who I am with reasonable effort, the law does not "
+                 "require you to act until you can. If you need more to confirm it, please "
+                 "ask me only for the information you reasonably need.")
+_SUPPRESS_OK = ("If you got my data from someone else, you may keep a minimal record "
+                "only so that it stays deleted.")
+_MN_OPT_OUT = ("My request to stop selling my data and using it for targeted advertising "
+               "generally does not need to be verified. You may refuse it only if you have "
+               "a documented, good-faith belief that it is fraudulent.")
+VERIFICATION_RULES: dict[str, list[str]] = {
+    "VA": [_VERIFY_LIMIT, _SUPPRESS_OK],
+    "MN": [_VERIFY_LIMIT, _MN_OPT_OUT, _SUPPRESS_OK],
+    "KY": [_VERIFY_LIMIT, _SUPPRESS_OK],
+}
+AGENT_RULES: dict[str, str] = {
+    "CA": "California lets an authorized agent make this request for me. The agent can "
+          "be a person or a business registered with the California Secretary of State.",
+}
 
 
 def split_subject(text: str) -> tuple[str, str]:
@@ -109,6 +136,12 @@ def letter_vars(profile: Profile, broker: Broker, listings: list[Listing],
         v["statute_name"] = state_law.statute_name
         v["citation"] = state_law.citation
         v["response_days"] = state_law.response_days
+        v["extension_days"] = state_law.extension_days
+        st = state_law.state.upper()
+        rules = list(VERIFICATION_RULES.get(st, []))
+        if profile.consent.basis.value == "authorized_agent" and st in AGENT_RULES:
+            rules.append(AGENT_RULES[st])
+        v["verification_rules"] = rules
         v["state_name"] = STATE_NAMES.get(state_law.state, state_law.state)
         v["complaint_urls"] = [str(u) for u in [state_law.ag_complaint_url,
                                                 *state_law.other_complaint_urls] if u]

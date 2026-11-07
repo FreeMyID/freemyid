@@ -1,16 +1,19 @@
 Subject: CCPA/CPRA request to delete and to opt out of sale/sharing
 To {{ broker_name or "the privacy team" }},
 
-I am a California resident. Under the {{ statute_name or "California Consumer Privacy Act, as amended by the CPRA" }}
-({{ citation or "Cal. Civ. Code §§ 1798.105, 1798.120" }}), I request that you:
+I am a California resident. Under the {{ statute_name or "California Consumer Privacy Act, as amended by the CPRA"  }},
+I request that you:
 
   1. Delete all personal information you hold about me (right to delete); and
   2. Stop selling and sharing my personal information (right to opt out of sale/sharing).
 
+{% if citation %}Legal basis: {{ citation }}.
+
+{% endif %}
 {% include "_identity.txt.j2" %}
 
 Please also direct any service providers and contractors to delete this information.
-You must respond within {{ response_days or 45 }} days of receiving this request.
-Please do not ask for more information than is needed to locate the records above.
+
+{% include "_law_rules.txt.j2" %}
 
 {% include "_signature.txt.j2" %}
