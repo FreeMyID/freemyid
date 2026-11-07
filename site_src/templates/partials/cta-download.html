@@ -1,0 +1,13 @@
+{# D5: every Download button on the site goes through this partial, so none can lead nowhere.
+   Optional variables (set them with {% with %} around the include):
+     cta_variant  "main" (default) or "header" (short label)
+     cta_class    button modifier classes (default "btn--primary btn--large"; header: "btn--primary btn--small")
+   release.version set   -> "Download Free My ID" straight to the release asset (site.download_url).
+   release.version null  -> "Windows download: coming soon" to download/, which keeps the WR-9 "opens soon" state. #}
+{% set _header = (cta_variant | default('main')) == 'header' %}
+{% set _cls = cta_class | default('btn--primary btn--small' if _header else 'btn--primary btn--large') %}
+{% if release.version %}
+<a class="btn {{ _cls }}" href="{{ site.download_url }}">{{ icon('download') }}{% if _header %}Download<span class="visually-hidden"> Free My ID for Windows</span>{% else %}Download Free My ID{% endif %}</a>
+{% else %}
+<a class="btn {{ _cls }}" href="{{ url('download/') }}">{% if _header %}<span class="visually-hidden">Windows download: </span>Coming soon{% else %}Windows download: coming soon{% endif %}</a>
+{% endif %}
