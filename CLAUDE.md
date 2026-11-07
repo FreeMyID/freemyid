@@ -8,4 +8,5 @@ Agents and ownership: `.claude/agents/*.md` (broker-researcher, automation-engin
 Target user: non-technical older relatives on Windows 10/11. Weigh every UX/packaging choice against that.
 Dev: `.venv/bin/python`, `.venv/bin/pytest -q`, `.venv/bin/ruff check src tests`, `.venv/bin/freemyid`. Regenerate schemas after model changes: `.venv/bin/python tools/gen_schema.py`.
 Windows exe is built only on GitHub Actions `windows-latest` (can't cross-build from Linux).
+No AI attribution ever (no Co-Authored-By/Claude lines). Agents commit under their staff names: `.claude/agents/_shared-rules.md` rule 14. Orchestrator = Morgan Reyes.
 Ask the user before: system-wide installs (scheduler jobs, browsers), the first real submission, any real email, any git push.
