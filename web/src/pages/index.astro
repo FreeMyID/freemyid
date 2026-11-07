@@ -127,8 +127,8 @@ const cardIcon = "inline-flex size-12 items-center justify-center rounded-lg bg-
   {/* source (WR-37): the card list is what the people-search sites themselves list (address, phone, age, relatives, as on the
      old approved home page); sample registry search/opt-out fields cover address, phone and age. Not the CFPB 2024 proposed rule
      (withdrawn 15 May 2025, 90 FR 20568). Teardown's "past addresses" and "email addresses" cards left out until sourced. */}
-  <ul class="grid grid-cols-2 gap-s min-[56.25em]:grid-cols-4" role="list">
-    {[["home", "Home address"], ["phone", "Phone numbers"], ["family", "Names of relatives"], ["calendar", "Age or birth year"]].map(([icon, h]) => (
+  <ul class="grid grid-cols-2 gap-s min-[56.25em]:grid-cols-3" role="list">
+    {[["home", "Home address"], ["phone", "Phone numbers"], ["calendar", "Age or birth year"]].map(([icon, h]) => (
       <Card as="li" class="reveal items-start">
         <span class={cardIcon}><Icon name={icon} /></span>
         <h3 class="text-lead">{h}</h3>
