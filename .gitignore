@@ -46,3 +46,6 @@ docs/marketing/seo/.bluesky-queue.md.lock
 
 # downloaded installers in the repo root
 /FreeMyIDSetup*.exe
+
+# vendor session artefacts
+.vendor-last-message.txt

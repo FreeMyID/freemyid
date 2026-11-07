@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Google Antigravity (`agy`) as an outside vendor team. Process: docs/VENDOR.md.
+# Outside vendor teams: Google Antigravity (`agy`) and OpenAI Codex (`codex`). Process: docs/VENDOR.md.
+# Pick the vendor with VENDOR=agy|codex (default: the work order's 'Vendor:' line, else agy).
 #
 #   tools/vendor.sh ask "question"                 read-only advisor answer
 #   tools/vendor.sh start   WO-NNN                 vendor starts the work order (builder mode)
@@ -15,7 +16,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SCRATCH="${VENDOR_DIR:-${TMPDIR:-/tmp}/freemyid-vendor}"
 mkdir -p "$SCRATCH"
-need_agy() { command -v agy >/dev/null || { echo "agy not installed" >&2; exit 4; }; }
+need_agy() { command -v "${VENDOR:-agy}" >/dev/null || { echo "${VENDOR:-agy} not installed" >&2; exit 4; }; }
+vendor_of() { sed -nE "s/^Vendor: *(agy|codex).*/\1/p" "$1" | head -1; }
 wo_file() { local f="$ROOT/docs/vendor/$1.md"; [ -f "$f" ] || { echo "no work order $f" >&2; exit 2; }; echo "$f"; }
 wo_check() { [[ "$1" =~ ^WO-[0-9]{3}$ ]] || { echo "work order id must look like WO-001" >&2; exit 2; }; }
 wt_of() { echo "$SCRATCH/$(echo "$1" | tr 'A-Z' 'a-z')"; }
@@ -29,10 +31,23 @@ NO_SHELL="IMPORTANT: shell/terminal commands are NOT available to you in this en
 (no ls, cat, pytest, ruff, git). Use only your file read, search and edit tools. The owner reads your diff and
 runs the tests, then sends you the results at the next check-in. Write the tests anyway."
 
+CODEX_RULES="You run inside OpenAI Codex's workspace-write sandbox (no network). You MAY run read-only shell
+commands and the project's tests INSIDE THIS FOLDER ONLY, using the owner's virtualenv:
+PYTHONPATH=src $ROOT/.venv/bin/pytest -q <tests>   and   $ROOT/.venv/bin/ruff check <files>.
+Never read, list or print anything outside this folder (no ~, no /home, no /etc, no keyrings, no env dumps).
+Never run git, never install packages, never try to reach the network."
+
 run_vendor() {   # $1 worktree, $2 prompt
-  cd "$1" && agy -p "$NO_SHELL
+  if [ "${VENDOR:-agy}" = codex ]; then
+    codex exec -s workspace-write -C "$1" -o "$1/.vendor-last-message.txt" "$CODEX_RULES
+
+$2"
+  else
+    cd "$1" && agy -p "$NO_SHELL
 
 $2" --mode accept-edits --sandbox --print-timeout 3600s ${VENDOR_WATCH:+--remote-control}
+  fi
+  rm -f "$1/.vendor-last-message.txt.lock" 2>/dev/null || true
   git -C "$1" add -A
   git -C "$1" -c user.name="Vendor Antigravity [freemyid-vendor]" commit -q -m "vendor session $(date -u +%FT%TZ)" || true
 }
@@ -60,7 +75,8 @@ case "$cmd" in
     trap 'git -C "$ROOT" worktree remove --force "$wt" >/dev/null 2>&1 || true' EXIT
     cd "$wt" && agy -p "You are in ADVISOR mode (read-only). $1" --mode plan --sandbox --print-timeout 900s ;;
   start)
-    need_agy; wo_check "${1:-}"; wo="$1"; file="$(wo_file "$wo")"; wt="$(wt_of "$wo")"
+    wo_check "${1:-}"; wo="$1"; file="$(wo_file "$wo")"; wt="$(wt_of "$wo")"
+    VENDOR="${VENDOR:-$(vendor_of "$file")}"; VENDOR="${VENDOR:-agy}"; need_agy
     [ -e "$wt" ] && { echo "$wt exists: use checkin" >&2; exit 2; }
     git -C "$ROOT" worktree add -q -b "$(branch_of "$wo")" "$wt" main
     run_vendor "$wt" "You are in BUILDER mode for work order $wo. Read GEMINI.md and docs/VENDOR.md first.
@@ -69,8 +85,9 @@ Change ONLY the allowed paths. End by updating VENDOR_STATUS.md (Done / Next / Q
 $(cat "$file")"
     scope_report "$wo" || true ;;
   checkin)
-    need_agy; wo_check "${1:-}"; wo="$1"; [ $# -ge 2 ] || { echo 'usage: checkin WO-NNN "notes"' >&2; exit 2; }
-    file="$(wo_file "$wo")"; wt="$(wt_of "$wo")"; [ -d "$wt" ] || { echo "not started" >&2; exit 2; }
+    wo_check "${1:-}"; wo="$1"; [ $# -ge 2 ] || { echo 'usage: checkin WO-NNN "notes"' >&2; exit 2; }
+    file="$(wo_file "$wo")"; wt="$(wt_of "$wo")"
+    VENDOR="${VENDOR:-$(vendor_of "$file")}"; VENDOR="${VENDOR:-agy}"; need_agy; [ -d "$wt" ] || { echo "not started" >&2; exit 2; }
     run_vendor "$wt" "BUILDER mode, work order $wo, owner check-in. Re-read VENDOR_STATUS.md and the work order below,
 then act on the owner's notes. Change ONLY the allowed paths. Update VENDOR_STATUS.md at the end.
 
