@@ -6,7 +6,7 @@
   .flagbar, .site-header nav, .menu, .site-header__cta, .skip-link, .btn-row .btn--secondary,
   .hero__actions .btn--secondary, .no-print { display: none !important; }
   .site-header { position: static !important; }
-  .site-header, .hero, .band, .section--alt, .band--brand, .cta-final {
+  .site-header, .hero, .band, .band--brand, .cta-final {
     background: none !important; color: #000 !important; border: 0 !important; padding-block: 0.5rem !important;
   }
   .site-footer { background: none !important; color: #000 !important; border-block-start: 1px solid #000; padding-block: 0.5rem; }

@@ -30,10 +30,7 @@
   .wrap--narrow .section-head .kicker { justify-content: flex-start; }
   .wrap--narrow .section-head .lead { margin-inline: 0; }
 
-  /* v1 layout helpers, still used by pages web-builder has not rebuilt yet. */
-  .section { padding-block: var(--space-xl); }
-  .section--alt { background: var(--color-bg-alt); }
-  .section > .wrap > h2:first-child { margin-block-end: var(--space-s); }
+  /* Stack helpers. */
   .stack > * + * { margin-block-start: var(--space-s); }
   .stack-l > * + * { margin-block-start: var(--space-l); }
   .cluster { display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-s); align-items: center; }
