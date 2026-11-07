@@ -176,3 +176,7 @@ Drafts: src/freemyid/engine/_test_drafts/ (conftest re-exports tests/conftest; q
    (runner: scan_failed -> treated as blind) instead of recording a false NOT_FOUND.
    Fixtures _dev/site/devauto.example/name/jane-testperson/{nc,oh}.html. Drafts:
    test_search_guard.py (3).
+3. DONE VM finding 7 (submitters/assisted.py): without a mailbox, registry steps' "your/the
+   removal email (address)" renders as "an email address you can check", plus a note (own
+   address is fine; leave empty if optional). With a mailbox nothing changes. Registry prose
+   untouched. Drafts: test_assisted_no_mailbox.py (2).

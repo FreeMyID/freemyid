@@ -11,6 +11,8 @@ Nothing here touches the network. Todos are deduplicated by `handoff.persist_tod
 """
 from __future__ import annotations
 
+import re
+
 from ..engine import letters
 from ..interfaces import RunContext, Submitter
 from ..models import (
@@ -37,7 +39,19 @@ DROP_STEPS = [
 ]
 
 
-def _steps(broker: Broker, reason: str | None) -> str:
+_REMOVAL_EMAIL = re.compile(r"\b(?:your |the )?removal email(?: address)?\b", re.IGNORECASE)
+OWN_EMAIL = "an email address you can check"
+NO_MAILBOX_NOTE = ("About the email box: use an email address you can check (your own is "
+                   "fine). If the site says email is optional, you can leave it empty.")
+
+
+def no_mailbox_step(step: str) -> str:
+    """Registry steps say "removal email" (the dedicated mailbox). Without one, point the
+    person at an address they can actually check (VM walkthrough finding 7)."""
+    return _REMOVAL_EMAIL.sub(OWN_EMAIL, step)
+
+
+def _steps(broker: Broker, reason: str | None, has_mailbox: bool = True) -> str:
     lines: list[str] = []
     if reason == "challenge":
         lines.append("Free My ID stopped because the site asked for a human check. "
@@ -49,10 +63,14 @@ def _steps(broker: Broker, reason: str | None) -> str:
         "Find your listing and follow the site's removal steps.",
         "Use the Copy buttons to fill in the form.",
     ]
+    if not has_mailbox:
+        steps = [no_mailbox_step(st) for st in steps]
     lines += [f"{i}. {s}" for i, s in enumerate(steps, 1)]
     if broker.needs_email_verification:
         lines.append(f"{len(steps) + 1}. Open the confirmation email the site sends and "
                      "click its link.")
+    if not has_mailbox and any(OWN_EMAIL in st for st in steps):
+        lines.append(NO_MAILBOX_NOTE)
     lines.append("Never pay. Removal is free.")
     return "\n".join(lines)
 
@@ -68,7 +86,7 @@ def assisted_todo(profile: Profile, broker: Broker, listings: list[Listing], *,
         title = f"Ask {broker.name} again to remove {profile.label}"
     return Todo(profile_id=profile.id, broker_id=broker.id, kind=TodoKind.ASSISTED_OPT_OUT,
                 title=title,
-                body=_steps(broker, reason), links=[opt_out_link(broker)],
+                body=_steps(broker, reason, has_mailbox=profile.mailbox is not None), links=[opt_out_link(broker)],
                 copy_fields=base.copy_fields(profile, broker, listings),
                 resume_token=f"assisted:{broker.id}")
 
