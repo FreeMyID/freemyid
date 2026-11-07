@@ -8,6 +8,7 @@
 #   tools/vendor.sh status  WO-NNN                 VENDOR_STATUS.md + diff + scope check
 #   tools/vendor.sh pr      WO-NNN                 push vendor/wo-NNN and open/update a draft PR (owner tooling)
 #   tools/vendor.sh close   WO-NNN                 remove the worktree (branch kept)
+#   tools/vendor.sh lead    "message"              talk to the Codex team lead (plans, proposes work orders)
 #
 # The vendor only ever sees a fresh git worktree (gitignored private files never exist there),
 # runs with --sandbox, never gets git or push, and its work is reviewed like an outside PR.
@@ -19,6 +20,17 @@ SCRATCH="${VENDOR_DIR:-${TMPDIR:-/tmp}/freemyid-vendor}"
 mkdir -p "$SCRATCH"
 need_agy() { command -v "${VENDOR:-agy}" >/dev/null || { echo "${VENDOR:-agy} not installed" >&2; exit 4; }; }
 vendor_of() { sed -nE "s/^Vendor: *(agy|codex).*/\1/p" "$1" | head -1; }
+TEAM_DIR="$ROOT/docs/vendor/codex-team"
+agent_of() { sed -nE "s/^Agent: *([a-z-]+).*/\1/p" "$1" | head -1; }
+role_prompt() {   # codex team charter + the named member's role file
+  local a="${AGENT:-}"; [ -n "$a" ] && [ -f "$TEAM_DIR/$a.md" ] || return 0
+  printf '%s\n\nYOUR ROLE:\n%s\n' "$(cat "$TEAM_DIR/TEAM.md")" "$(cat "$TEAM_DIR/$a.md")"
+}
+author_of() {     # commit author for the session
+  local a="${AGENT:-}" n=""
+  [ -n "$a" ] && [ -f "$TEAM_DIR/$a.md" ] && n="$(sed -nE 's/^Name: *(.+)$/\1/p' "$TEAM_DIR/$a.md" | head -1)"
+  if [ -n "$n" ]; then echo "$n [freemyid-codex]"; elif [ "${VENDOR:-agy}" = codex ]; then echo "Codex team [freemyid-codex]"; else echo "Antigravity team [freemyid-vendor]"; fi
+}
 wo_file() { local f="$ROOT/docs/vendor/$1.md"; [ -f "$f" ] || { echo "no work order $f" >&2; exit 2; }; echo "$f"; }
 wo_check() { [[ "$1" =~ ^WO-[0-9]{3}$ ]] || { echo "work order id must look like WO-001" >&2; exit 2; }; }
 wt_of() { echo "$SCRATCH/$(echo "$1" | tr 'A-Z' 'a-z')"; }
@@ -40,7 +52,8 @@ Never run git, never install packages, never try to reach the network."
 
 run_vendor() {   # $1 worktree, $2 prompt
   if [ "${VENDOR:-agy}" = codex ]; then
-    codex exec -s workspace-write -C "$1" -o "$1/.vendor-last-message.txt" "$CODEX_RULES
+    codex exec -s workspace-write -C "$1" -o "$1/.vendor-last-message.txt" "$(role_prompt)
+$CODEX_RULES
 
 $2"
   else
@@ -50,7 +63,7 @@ $2" --mode accept-edits --sandbox --print-timeout 3600s ${VENDOR_WATCH:+--remote
   fi
   rm -f "$1/.vendor-last-message.txt.lock" 2>/dev/null || true
   git -C "$1" add -A
-  git -C "$1" -c user.name="Vendor Antigravity [freemyid-vendor]" commit -q -m "vendor session $(date -u +%FT%TZ)" || true
+  git -C "$1" -c user.name="$(author_of)" commit -q -m "vendor session $(date -u +%FT%TZ)" || true
 }
 
 scope_report() {   # $1 WO id
@@ -77,7 +90,7 @@ case "$cmd" in
     cd "$wt" && agy -p "You are in ADVISOR mode (read-only). $1" --mode plan --sandbox --print-timeout 900s ;;
   start)
     wo_check "${1:-}"; wo="$1"; file="$(wo_file "$wo")"; wt="$(wt_of "$wo")"
-    VENDOR="${VENDOR:-$(vendor_of "$file")}"; VENDOR="${VENDOR:-agy}"; need_agy
+    VENDOR="${VENDOR:-$(vendor_of "$file")}"; VENDOR="${VENDOR:-agy}"; AGENT="$(agent_of "$file")"; need_agy
     [ -e "$wt" ] && { echo "$wt exists: use checkin" >&2; exit 2; }
     git -C "$ROOT" worktree add -q -b "$(branch_of "$wo")" "$wt" main
     run_vendor "$wt" "You are in BUILDER mode for work order $wo. Read GEMINI.md and docs/VENDOR.md first.
@@ -88,7 +101,7 @@ $(cat "$file")"
   checkin)
     wo_check "${1:-}"; wo="$1"; [ $# -ge 2 ] || { echo 'usage: checkin WO-NNN "notes"' >&2; exit 2; }
     file="$(wo_file "$wo")"; wt="$(wt_of "$wo")"
-    VENDOR="${VENDOR:-$(vendor_of "$file")}"; VENDOR="${VENDOR:-agy}"; need_agy; [ -d "$wt" ] || { echo "not started" >&2; exit 2; }
+    VENDOR="${VENDOR:-$(vendor_of "$file")}"; VENDOR="${VENDOR:-agy}"; AGENT="$(agent_of "$file")"; need_agy; [ -d "$wt" ] || { echo "not started" >&2; exit 2; }
     run_vendor "$wt" "BUILDER mode, work order $wo, owner check-in. Re-read VENDOR_STATUS.md and the work order below,
 then act on the owner's notes. Change ONLY the allowed paths. Update VENDOR_STATUS.md at the end.
 
@@ -99,6 +112,16 @@ WORK ORDER:
 $(cat "$file")"
     scope_report "$wo" || true ;;
   status) wo_check "${1:-}"; scope_report "$1" ;;
+  lead)   # Codex team lead: read-only planning conversation with the owner
+    VENDOR=codex; AGENT=lead; need_agy; [ $# -ge 1 ] || { echo 'usage: tools/vendor.sh lead "message"' >&2; exit 2; }
+    wt="$(mktemp -d "$SCRATCH/lead.XXXXXX")"; rmdir "$wt"
+    git -C "$ROOT" worktree add -q --detach "$wt" HEAD
+    trap 'git -C "$ROOT" worktree remove --force "$wt" >/dev/null 2>&1 || true' EXIT
+    codex exec -s read-only -C "$wt" -o "$SCRATCH/lead-last-reply.md" "$(role_prompt)
+
+MESSAGE FROM MORGAN REYES (owner/engineer):
+$1" >/dev/null
+    cat "$SCRATCH/lead-last-reply.md" ;;
   pr)   # the OWNER's credentials push the vendor branch; vendors never get push access
     wo_check "${1:-}"; wo="$1"; file="$(wo_file "$wo")"; br="$(branch_of "$wo")"; wt="$(wt_of "$wo")"
     scope_report "$wo" || { echo "refusing to open a PR with out-of-scope changes" >&2; exit 3; }
