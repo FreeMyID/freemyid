@@ -27,7 +27,9 @@ import logging
 import os
 import stat
 import sys
-from collections.abc import Callable
+import tempfile
+from collections.abc import Callable, Iterator
+from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
@@ -47,6 +49,7 @@ PASSPHRASE_FILE_ENV = "FREEMYID_PASSPHRASE_FILE"
 CRED_NAME = "freemyid-passphrase"
 WRAP_FILE = "datakey.wrapped.json"
 SECRETS_FILE = "secrets.enc"
+LOCK_FILE = "secrets.enc.lock"
 MIN_PASSPHRASE_LEN = 8
 MAX_PASSPHRASE_BYTES = 4096
 
@@ -218,24 +221,99 @@ def _derive(passphrase: str, salt: bytes, n: int, r: int, p: int) -> bytes:
     return Scrypt(salt=salt, length=32, n=n, r=r, p=p).derive(passphrase.encode("utf-8"))
 
 
+def _fsync_dir(d: Path) -> None:
+    """Make a rename durable (POSIX). Windows can't open directories; NTFS journals it."""
+    if sys.platform == "win32":
+        return
+    try:
+        fd = os.open(d, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+    except OSError:
+        return
+    try:
+        os.fsync(fd)
+    except OSError:
+        pass
+    finally:
+        os.close(fd)
+
+
+def _write_all(fd: int, data: bytes) -> None:
+    view = memoryview(data)
+    while view:
+        view = view[os.write(fd, view):]
+
+
 def _atomic_write(path: Path, data: bytes, *, exclusive: bool = False) -> None:
     """Write via a 0600 temp file. exclusive=True never overwrites an existing file
     (first-run race: the loser re-reads the winner's key)."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
-    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    # mkstemp: O_CREAT|O_EXCL, mode 0600, unique name, so two writers never share a temp
+    # file (SEC-74).
+    fd, tmp_name = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
+    tmp = Path(tmp_name)
     try:
-        os.write(fd, data)
-        os.fsync(fd)
-    finally:
-        os.close(fd)
-    try:
+        try:
+            _write_all(fd, data)
+            os.fsync(fd)
+        finally:
+            os.close(fd)
         if exclusive:
-            os.link(tmp, path)   # raises FileExistsError if someone else won
+            try:
+                os.link(tmp, path)   # raises FileExistsError if someone else won
+            except FileExistsError:
+                raise
+            except OSError:
+                # No hard links here (exFAT/FAT, some SMB/NFS): an O_EXCL create is still
+                # exclusive, just not atomic against a crash mid-write (SEC-75).
+                _exclusive_create(path, data)
         else:
             os.replace(tmp, path)
     finally:
         tmp.unlink(missing_ok=True)
+    _fsync_dir(path.parent)
+
+
+def _exclusive_create(path: Path, data: bytes) -> None:
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_BINARY", 0), 0o600)
+    try:
+        _write_all(fd, data)
+        os.fsync(fd)
+    except BaseException:
+        os.close(fd)
+        path.unlink(missing_ok=True)
+        raise
+    os.close(fd)
+
+
+@contextmanager
+def _file_lock(path: Path) -> Iterator[None]:
+    """Exclusive inter-process lock on `path` (created if missing) for read-modify-write
+    of secrets.enc (SEC-74). flock on POSIX, msvcrt byte lock on Windows."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(path, os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0), 0o600)
+    try:
+        if sys.platform == "win32":
+            import msvcrt
+            while True:
+                try:
+                    msvcrt.locking(fd, msvcrt.LK_LOCK, 1)   # retries for ~10 s itself
+                    break
+                except OSError:
+                    continue
+            try:
+                yield
+            finally:
+                os.lseek(fd, 0, os.SEEK_SET)
+                msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(fd, fcntl.LOCK_EX)
+            try:
+                yield
+            finally:
+                fcntl.flock(fd, fcntl.LOCK_UN)
+    finally:
+        os.close(fd)
 
 
 class PassphraseBackend:
@@ -362,6 +440,7 @@ class PassphraseBackend:
         _key_cache.pop(str(wp.resolve()), None)
         wp.unlink(missing_ok=True)
         self.secrets_path().unlink(missing_ok=True)
+        (paths.home() / LOCK_FILE).unlink(missing_ok=True)
 
     # --- secrets: one encrypted JSON map {service: {user: value}} ----------------------
     def _cipher(self) -> crypto.Cipher:
@@ -387,20 +466,24 @@ class PassphraseBackend:
     def get_secret(self, service: str, user: str) -> str | None:
         return self._read_secrets().get(service, {}).get(user)
 
+    def _lock(self) -> AbstractContextManager[None]:
+        return _file_lock(paths.home() / LOCK_FILE)
+
     def set_secret(self, service: str, user: str, value: str) -> None:
-        data = self._read_secrets()
-        data.setdefault(service, {})[user] = value
-        self._write_secrets(data)
+        with self._lock():
+            data = self._read_secrets()
+            data.setdefault(service, {})[user] = value
+            self._write_secrets(data)
 
     def delete_secret(self, service: str, user: str) -> None:
-        sp = self.secrets_path()
-        if not sp.exists():
+        if not self.secrets_path().exists():
             return
-        data = self._read_secrets()
-        if data.get(service, {}).pop(user, None) is not None:
-            if not data[service]:
-                del data[service]
-            self._write_secrets(data)
+        with self._lock():
+            data = self._read_secrets()
+            if data.get(service, {}).pop(user, None) is not None:
+                if not data[service]:
+                    del data[service]
+                self._write_secrets(data)
 
 
 class SystemdCredsBackend(PassphraseBackend):
