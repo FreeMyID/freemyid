@@ -60,7 +60,8 @@
         <h3>Check the name, then click "Run anyway"</h3>
         <p>Make sure it says the app is <strong>FreeMyIDSetup.exe</strong>. It will say "Unknown publisher"; that's expected. Then click <strong>Run anyway</strong>.</p>
         {# WR-19: safety line before Run anyway. "Unknown publisher": unsigned installer (build.yml release notes) #}
-        <p class="callout"><strong>Only do this if you downloaded the file from this page or from our GitHub releases page. If it came from anywhere else, delete it.</strong></p>
+        {# WR-29: name the releases page only once a release exists #}
+        <p class="callout"><strong>Only do this if you downloaded the file from this page{% if release.version %} or from our GitHub releases page{% endif %}. If it came from anywhere else, delete it.</strong></p>
         {% set ss_step = 2 %}{% include "partials/smartscreen.html" %}
       </li>
       {# source: freemyid.iss (dir/group pages off, so the Ready page with Install shows; [Run] postinstall "Start Free My ID now"); six screens = src/freemyid/wizard/draft.py STEPS #}
@@ -75,12 +76,13 @@
   {# source: policy, not code: we never email installers or phone users (docs/marketing/families-page.md "never asks for" block); download sources = site.yaml download/releases URLs #}
   <div class="callout callout--note">
     {{ icon('shield') }}
-    <div><p><strong>Stay safe:</strong> only download Free My ID from this page or from <a href="{{ site.releases_url }}">our GitHub releases page</a>. We will never email you an installer, and we will never call you.</p></div>
+    {# WR-29: no link to the empty releases page until release.version is set #}
+    <div><p><strong>Stay safe:</strong> only download Free My ID from this page{% if release.version %} or from <a href="{{ site.releases_url }}">our GitHub releases page</a>{% endif %}. We will never email you an installer, and we will never call you.</p></div>
   </div>
   <div class="faq mt-m">
     <details id="checksum"><summary>For helpers: check the download is genuine</summary>
       {# source: .github/workflows/build.yml (sha256sum > SHA256SUMS.txt, attached to the release); Get-FileHash defaults to SHA256 #}
-      <p>Each release lists a <strong>SHA256SUMS.txt</strong> file. In PowerShell, run <code>Get-FileHash .\FreeMyIDSetup.exe</code> and check that the long code matches the line for FreeMyIDSetup.exe in that file.</p>
+      <p>{% if release.version %}Each release lists a <strong>SHA256SUMS.txt</strong> file.{% else %}Each release will come with a <strong>SHA256SUMS.txt</strong> file (no version is published yet).{% endif %} In PowerShell, run <code>Get-FileHash .\FreeMyIDSetup.exe</code> and check that the long code matches the line for FreeMyIDSetup.exe in that file.</p>
       {% if release.sha256 %}
       <p>For version {{ release.version }}, the code is: <span class="hash">{{ release.sha256 }}</span></p>
       {% endif %}

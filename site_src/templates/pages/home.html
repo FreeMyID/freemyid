@@ -178,7 +178,7 @@
       {# source: teardown 4.8; POSITIONING.md rule 4; shared rule 6 (never pay; phone/ID only with permission) #}
       <li class="card"><span class="card__icon">{{ icon('shield') }}</span><h3>It never asks for the wrong things.</h3><p>Never your Social Security number. Never bank or card details. Never a payment. Never a phone number or ID unless you choose to.</p></li>
       {# source: teardown 4.8; LICENSE; download page SHA256SUMS; freemyid.iss [UninstallRun] removes the daily task #}
-      <li class="card"><span class="card__icon">{{ icon('code') }}</span><h3>You can check the work.</h3><p>The code is public. Every download has a fingerprint you can compare. Uninstalling removes the program and its daily check.</p></li>
+      <li class="card"><span class="card__icon">{{ icon('code') }}</span><h3>You can check the work.</h3><p>The code is public. {% if release.version %}Every download has{% else %}Each download will come with{% endif %} a fingerprint you can compare. Uninstalling removes the program and its daily check.</p></li>
     </ul>
     <aside class="callout callout--info">
       {{ icon('info') }}

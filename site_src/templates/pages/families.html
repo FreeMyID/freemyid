@@ -43,7 +43,7 @@
 
   <h2 class="mt-l" id="setup">Setting it up</h2>
   <ol class="steps steps--list mt-m" role="list">
-    <li class="step"><span class="step__num" aria-hidden="true">1</span><h3>Download</h3><p>On their Windows 10 or 11 computer, use the Download button on this site. Only download from this site or our <a href="{{ site.releases_url }}">GitHub releases page</a>.</p></li>
+    <li class="step"><span class="step__num" aria-hidden="true">1</span><h3>Download</h3><p>On their Windows 10 or 11 computer, use the Download button on this site. Only download from this site{% if release.version %} or our <a href="{{ site.releases_url }}">GitHub releases page</a>{% endif %}.</p></li>
     <li class="step"><span class="step__num" aria-hidden="true">2</span><h3>Open FreeMyIDSetup.exe</h3><p>Windows may show a blue box that says "Windows protected your PC." That happens because Free My ID is free and hasn't bought a publisher certificate yet. Click the small words <strong>More info</strong>, check the name says FreeMyIDSetup.exe, then click <strong>Run anyway</strong>. <a href="{{ url('download/') }}#smartscreen">See it with pictures.</a></p></li>
     <li class="step"><span class="step__num" aria-hidden="true">3</span><h3>Click Install</h3><p>No administrator password is needed. Free My ID opens by itself.</p></li>
     <li class="step"><span class="step__num" aria-hidden="true">4</span><h3>Go through the six setup screens</h3>

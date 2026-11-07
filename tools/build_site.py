@@ -271,17 +271,18 @@ def jsonld_for(kind: str, ctx: dict, page: dict) -> dict:
         d = {"@context": "https://schema.org", "@type": "SoftwareApplication", "name": site["name"],
              "operatingSystem": "Windows 10, Windows 11", "applicationCategory": "UtilitiesApplication",
              "description": site["tagline"] + " Free, open source, runs on your own computer.",
-             "url": base, "downloadUrl": site["download_url"], "isAccessibleForFree": True,
+             "url": base, "isAccessibleForFree": True,
              "license": "https://www.gnu.org/licenses/agpl-3.0.html",
              "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}}
         rel = ctx["release"]
-        if rel.get("version"):
+        if rel.get("version"):  # WR-29: no downloadUrl to an empty releases page
+            d["downloadUrl"] = site["download_url"]
             d["softwareVersion"] = str(rel["version"])
         return d
     if kind == "faq":
         return {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": strip_tags(q["q"]),
-             "acceptedAnswer": {"@type": "Answer", "text": strip_tags(q["a"])}} for q in ctx["faq"]]}
+             "acceptedAnswer": {"@type": "Answer", "text": strip_tags(ctx["render"](q["a"]))}} for q in ctx["faq"]]}
     if kind == "breadcrumbs":
         return {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
             {"@type": "ListItem", "position": i + 1, "name": label, "item": base + out}
@@ -390,7 +391,7 @@ class Site:
                 f'aria-hidden="true" focusable="false">{body}</svg>')
 
         def render(src: str) -> Markup:
-            return Markup(self.env.from_string(src).render(url=url))
+            return Markup(self.env.from_string(src).render(url=url, release=self.release))
 
         swatches = [{"name": n, "light": v[0], "dark": v[1],
                      "on_bg": (round(contrast(v[0], self.tokens["color"]["bg"][0]), 1),

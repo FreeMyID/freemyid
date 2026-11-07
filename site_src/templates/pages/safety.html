@@ -71,8 +71,9 @@
     <p><a href="{{ site.repo_url }}">See the Free My ID code on GitHub</a></p>
     <h3 id="verify">Check that your download is genuine</h3>
     {# source: download page "How to know it's really us" (approved copy) #}
-    <p>Only download Free My ID from <a href="{{ url('download/') }}">our download page</a> or from <a href="{{ site.releases_url }}">our GitHub releases page</a>. We will never email you an installer, and we will never call you.</p>
-    <p>Every release comes with a fingerprint (a long code) you can compare with the file you downloaded. <a href="{{ url('download/#checksum') }}">How to check the download's fingerprint</a></p>
+    <p>Only download Free My ID from <a href="{{ url('download/') }}">our download page</a> {% if release.version %}or from <a href="{{ site.releases_url }}">our GitHub releases page</a>{% else %}(no version is published yet){% endif %}. We will never email you an installer, and we will never call you.</p>
+    {# WR-29: conditional wording until the first release (build.yml publishes SHA256SUMS.txt) #}
+    <p>{% if release.version %}Every release comes{% else %}Each release will come{% endif %} with a fingerprint (a long code) you can compare with the file you downloaded. <a href="{{ url('download/#checksum') }}">How to check the download's fingerprint</a></p>
     <aside class="callout callout--info">
       {{ icon('info') }}
       {# source: teardown section 8 callout; faq.yaml "Why does Windows warn me" (published copy); installer ships unsigned #}
