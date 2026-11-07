@@ -27,8 +27,9 @@
       <p class="hero__note">Windows may show a blue "protected your PC" box the first time. <a href="{{ url('download/#smartscreen') }}">That's expected. Here's what to click.</a></p>
     </div>
     <figure class="hero__media">
-      {# D7: real screenshot, fake persona. Alt text: brand/README.md. 2x image, so half size here. #}
-      <img src="{{ url('assets/screenshots/dashboard.webp') }}" width="1000" height="1045" fetchpriority="high" alt="The Free My ID home screen. A plain sentence says 7 sites have confirmed or no longer list you, 3 are waiting and 2 need you, followed by a card with copy-and-paste details and large buttons for the one step left.">
+      {# D7: real screenshot, fake persona. Alt text: brand/README.md. WR-35: 700w/1200w srcset; sizes follow the hero grid
+         (one column under 56.25em, 1.1fr of the 62rem wrap above it). width/height keep the aspect ratio for CLS. #}
+      <img src="{{ url('assets/screenshots/dashboard-1200.webp') }}" srcset="{{ url('assets/screenshots/dashboard-700.webp') }} 700w, {{ url('assets/screenshots/dashboard-1200.webp') }} 1200w" sizes="(min-width: 62rem) 33rem, (min-width: 56.25em) 52vw, 100vw" width="1000" height="1045" fetchpriority="high" alt="The Free My ID home screen. A plain sentence says 7 sites have confirmed or no longer list you, 3 are waiting and 2 need you, followed by a card with copy-and-paste details and large buttons for the one step left.">
       <figcaption class="caption">Example with made-up data</figcaption>
     </figure>
   </div>
@@ -59,8 +60,9 @@
       <p class="lead">Free My ID keeps a plain list: which site, when it asked, where things stand, and when it last checked. You can print it.</p>
     </div>
     <figure class="proof">
-      <img src="{{ url('assets/screenshots/report.webp') }}" width="900" height="1220" loading="lazy" alt="The printable progress report: a table of each people-search site, its status (site confirmed, asked, not listed now, needs you), when it was last checked and when the request was made.">
-      <figcaption class="caption">Sample report with made-up data</figcaption>
+      {# WR-35: 600w/900w srcset; .proof is at most 40rem wide. Illustrative at 360px; the link below opens the 900px image. #}
+      <img src="{{ url('assets/screenshots/report-900.webp') }}" srcset="{{ url('assets/screenshots/report-600.webp') }} 600w, {{ url('assets/screenshots/report-900.webp') }} 900w" sizes="(min-width: 42rem) 40rem, 100vw" width="900" height="1220" loading="lazy" alt="The printable progress report: a table of each people-search site, its status (site confirmed, asked, not listed now, needs you), when it was last checked and when the request was made.">
+      <figcaption class="caption">Sample report with made-up data. <a href="{{ url('assets/screenshots/report-900.webp') }}">See the sample report full size</a></figcaption>
     </figure>
     {# source: teardown 4.3 caveat; brokers/SOURCES.md "Website claims" (no guaranteed timeline) #}
     <p>Some sites remove you in days. Some take weeks. Some ignore the request, and the report shows those too.</p>
