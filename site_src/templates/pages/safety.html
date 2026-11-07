@@ -22,7 +22,7 @@
       {# source: old privacy page "Where your information lives" (approved copy) #}
       <li>{{ icon('computer') }}<span><strong>Only on your computer.</strong> There's no account and no cloud. We have no servers holding your data.</span></li>
       {# source: D8, src/freemyid/crypto.py (AES-256-GCM), storage/db.py; key in the Windows credential store #}
-      <li>{{ icon('lock') }}<span><strong>Locked.</strong> Your details are stored encrypted on your computer, and the key is kept in Windows' own secure password store.</span></li>
+      <li>{{ icon('lock') }}<span><strong>Locked.</strong> Your details are stored encrypted on your computer, and the key is kept in Windows' own secure password store. The printable progress report you can make is a normal file, so it holds only site names, statuses and dates, never your address or phone number.{# source: SEC-43 ruling; wizard/report.py docstring (PII-light: label, site names, states, dates) #}</span></li>
       {# source: src/freemyid/netpolicy.py; old privacy page "Fenced in" (approved copy) #}
       <li>{{ icon('shield') }}<span><strong>Fenced in.</strong> The app may only contact the removal sites themselves and your removal mailbox. Everything else is blocked. The only exception is a one-time, optional download of a small extra browser, and only if your computer has no Chrome or Edge, and it asks you first.</span></li>
       {# source: shared rule 6 (Listing.shown_fields); old privacy page (approved copy) #}
