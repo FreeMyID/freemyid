@@ -142,3 +142,10 @@ code signing + public launch.
 ## Registry distribution (decided 2026-11-06)
 - Public repo ships `brokers/registry.sample.yaml` only (CC BY-NC 4.0). Full registry is private: family bundle and the paid update feed, both via the validated `registry_url` update path.
 - Paid-feed constraint: the update download sends nothing about the user or the people they protect. The entitlement token is an opaque random subscription key with no name, email, profile or device data, so site/privacy.html stays true.
+
+## Platforms roadmap (user, 2026-11-07)
+v0.1.0 ships the Windows installer only. macOS and Linux installers are wanted next:
+- macOS: `macos-latest` CI job, PyInstaller .app + .dmg, launchd agent for the daily run, Keychain via keyring. Signing/notarization needs a paid Apple Developer account (user decision); unsigned apps need a right-click → Open walkthrough.
+- Linux: AppImage or .deb plus a systemd user timer; Secret Service via keyring.
+- Keep new code platform-neutral (paths.py, scheduler/ abstraction, no Windows-only APIs outside packaging/).
+- Website copy may say "Windows now. Mac and Linux are on the roadmap." No dates.
