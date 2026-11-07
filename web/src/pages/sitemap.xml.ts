@@ -5,6 +5,7 @@
 // file that fills them). Left out when unknown (e.g. a shallow clone), which Google accepts.
 import type { APIRoute } from "astro";
 import { gitDate, guides, pagesList, site } from "@/lib/site";
+import { protectPages } from "@/lib/protect";
 
 const W = "web/src/pages/";
 // Data files that change what a page says, beside its own .astro file.
@@ -13,6 +14,7 @@ const PAGE_DATA: Record<string, string[]> = {
   faq: ["site_src/data/faq.yaml"],
   download: ["site_src/data/release.yaml"],
   guides: ["brokers/registry.sample.yaml", "site_src/data/guide_intros.yaml"],
+  protect: ["brokers/checklists.yaml"],
 };
 const pageSource = (out: string) => `${W}${out}index.astro`;
 const guideData = ["brokers/registry.sample.yaml", "site_src/data/guide_intros.yaml"];
@@ -24,6 +26,8 @@ export const GET: APIRoute = () => {
       [site.base_url + p.out, gitDate([pageSource(p.out), ...(PAGE_DATA[p.id] ?? [])])]),
     ...guides.map((g): [string, string] =>
       [site.base_url + g.out, g.verified ? g.last_verified : gitDate(guideData)]),
+    // /protect/<id>/: the date the steps were checked (shown on the page)
+    ...protectPages.map((c): [string, string] => [site.base_url + c.out, c.date_checked]),
   ].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
   const xml = (s: string) => s.replace(/&/g, "&amp;");
   const body = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
