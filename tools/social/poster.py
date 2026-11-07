@@ -43,7 +43,6 @@ Exit: 0 = posted, nothing to do, or another run holds the lock,
 from __future__ import annotations
 
 import argparse
-import fcntl
 import hashlib
 import json
 import logging
@@ -685,6 +684,8 @@ class Ledger:
 
         Returns False if another run holds it. Raises LedgerError or OSError.
         """
+        import fcntl  # see _try_lock
+
         problem = self.location_error()
         if problem:
             raise LedgerError(problem)
@@ -818,6 +819,8 @@ def lock_path(queue_path: Path) -> Path:
 
 def _try_lock(path: Path) -> int | None:
     """Exclusive non-blocking flock. Returns the fd (keep it open) or None if held."""
+    import fcntl  # Linux-only tool; imported here so the module loads anywhere (tests)
+
     fd = os.open(path, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_CLOEXEC, 0o600)
     try:
         fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)

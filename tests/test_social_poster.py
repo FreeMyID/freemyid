@@ -203,6 +203,7 @@ def test_parser_multiline_text_and_crlf():
     assert out.splitlines(keepends=True)[1] == "status: posted X at://y\r\n"
 
 
+@pytest.mark.posix_only
 def test_empty_queue_and_missing_file(tmp_path, caplog):
     assert poster.parse_queue("") == []
     q = tmp_path / "bluesky-queue.md"
@@ -250,6 +251,7 @@ def test_grapheme_count():
     assert poster.grapheme_count("❤️") == 1
 
 
+@pytest.mark.posix_only
 def test_too_long_item_is_skipped_and_next_posted(files, caplog):
     q, _ = files
     q.write_text(QUEUE.replace("Free My ID removes", "é" * 301 + " Free My ID removes"), "utf-8")
@@ -267,6 +269,7 @@ def test_too_long_item_is_skipped_and_next_posted(files, caplog):
 # ----------------------------------------------------------------------------- run
 
 
+@pytest.mark.posix_only
 def test_posts_exactly_one_and_rewrites_status(files):
     q, o = files
     rec = Recorder()
@@ -307,6 +310,7 @@ def test_posts_exactly_one_and_rewrites_status(files):
     assert json.loads(rec2.requests[1].content)["record"]["text"] == "Second queued post."
 
 
+@pytest.mark.posix_only
 def test_no_facets_key_when_no_links(files):
     q, _ = files
     q.write_text(QUEUE.replace(" https://freemyid.org", ""), "utf-8")
@@ -324,6 +328,7 @@ def test_rewrite_refuses_if_block_changed():
         poster.rewrite_status(QUEUE, items[2], "posted\nstatus: queued")
 
 
+@pytest.mark.posix_only
 def test_queue_edited_during_post_returns_record_error(files, caplog):
     q, _ = files
     rec = Recorder()
@@ -349,6 +354,7 @@ def test_queue_edited_during_post_returns_record_error(files, caplog):
     [{}, {"bluesky": FULL_KEYS["bluesky"]}, {"bluesky_token": SECRET}],
     ids=["no-keys", "no-token", "no-handle"],
 )
+@pytest.mark.posix_only
 def test_missing_key_is_silent_skip(files, keys, caplog, capsys, monkeypatch):
     monkeypatch.delenv(poster.HANDLE_ENV, raising=False)
     rec = Recorder()
@@ -361,6 +367,7 @@ def test_missing_key_is_silent_skip(files, keys, caplog, capsys, monkeypatch):
     assert SECRET not in caplog.text and SECRET not in capsys.readouterr().out
 
 
+@pytest.mark.posix_only
 def test_handle_override_and_env(files, monkeypatch):
     rec = Recorder()
     monkeypatch.setenv(poster.HANDLE_ENV, "@env.bsky.social")
@@ -372,6 +379,7 @@ def test_handle_override_and_env(files, monkeypatch):
     assert json.loads(rec.requests[0].content)["identifier"] == "env.bsky.social"
 
 
+@pytest.mark.posix_only
 def test_dry_run_no_calls_no_writes(files, monkeypatch):
     q, o = files
     lines: list[str] = []
@@ -398,6 +406,7 @@ def test_dry_run_no_calls_no_writes(files, monkeypatch):
     assert facets[0]["index"] == {"byteStart": 49, "byteEnd": 69}
 
 
+@pytest.mark.posix_only
 def test_main_dry_run_cli(files, capsys):
     q, o = files
     assert poster.main(["--dry-run", "--queue", str(q), "--outreach-log", str(o)]) == 0
@@ -427,6 +436,7 @@ def test_non_bsky_url_refused_before_request(url):
     http.check_url("https://bsky.social/xrpc/ok")  # allowed one passes
 
 
+@pytest.mark.posix_only
 def test_backend_base_pointing_elsewhere_is_refused(files, caplog):
     rec = Recorder()
     backend = poster.BlueskyBackend(base="https://evil.example/xrpc")
@@ -449,6 +459,7 @@ def test_http_client_verifies_tls_and_no_redirects():
 # ----------------------------------------------------------------------------- errors / secrets
 
 
+@pytest.mark.posix_only
 @pytest.mark.parametrize("fail_on", ["createSession", "createRecord"])
 def test_http_error_leaves_item_queued_and_hides_secrets(files, fail_on, caplog, capsys):
     rec = Recorder(fail_on=fail_on, status=401)
@@ -464,6 +475,7 @@ def test_http_error_leaves_item_queued_and_hides_secrets(files, fail_on, caplog,
         assert s not in captured.out and s not in captured.err
 
 
+@pytest.mark.posix_only
 def test_network_exception_is_scrubbed(files, caplog):
     def explode(request):
         raise httpx.ConnectError(f"boom {SECRET} {request.headers.get('authorization', '')}")
@@ -504,6 +516,7 @@ def test_poster_error_message_scrubbed_directly():
     assert ei.value.__cause__ is None and ei.value.__context__ is None
 
 
+@pytest.mark.posix_only
 def test_secrets_absent_from_success_logs(files, caplog, capsys):
     with caplog.at_level(logging.DEBUG):
         assert do_run(files, Recorder()) == 0
@@ -514,6 +527,7 @@ def test_secrets_absent_from_success_logs(files, caplog, capsys):
         assert s not in blob
 
 
+@pytest.mark.posix_only
 def test_backend_repr_hides_credentials(files):
     b = poster.BlueskyBackend()
     assert b.load_credentials(fake_keyring(FULL_KEYS), poster.Scrubber())
@@ -535,6 +549,7 @@ def _create_record_count(rec: Recorder) -> int:
     return sum(r.url.path.endswith("createRecord") for r in rec.requests)
 
 
+@pytest.mark.posix_only
 def test_qa_never_reads_password_or_email_fields(files, monkeypatch):
     accessed: list[str] = []
 
@@ -618,6 +633,7 @@ def test_qa_network_error_has_no_exception_context():
     assert ei.value.__cause__ is None and ei.value.__suppress_context__ is True
 
 
+@pytest.mark.posix_only
 def test_qa_all_loggers_debug_hold_no_secrets(files, caplog, capsys):
     with caplog.at_level(logging.DEBUG, logger=""):
         for name in ("httpx", "httpcore"):
@@ -656,6 +672,7 @@ def _ambiguous_failure(kind: str, monkeypatch):
     return rec
 
 
+@pytest.mark.posix_only
 @pytest.mark.parametrize("kind", ["read-timeout", "queue-write-oserror", "bad-uri"])
 def test_qa_sec57_no_repost_after_ambiguous_failure(files, kind):
     # Own MonkeyPatch: undoing the shared one would also drop the ledger_dir env and
@@ -686,6 +703,7 @@ def _status(q: Path, item_id: str) -> str:
     return {i.item_id: i for i in poster.parse_queue(q.read_text("utf-8"))}[item_id].status
 
 
+@pytest.mark.posix_only
 def test_sec57_claim_is_written_before_anything_is_sent(files):
     q, _ = files
     seen: list[str] = []
@@ -704,6 +722,7 @@ def test_sec57_claim_is_written_before_anything_is_sent(files):
     assert _status(q, "Q-002") == f"posted 2026-11-07T15:00:00Z {URI}"
 
 
+@pytest.mark.posix_only
 @pytest.mark.parametrize("status", [500, 502, 503])
 def test_sec57_server_error_on_create_record_stays_posting(files, status):
     rec = Recorder(fail_on="createRecord", status=status)
@@ -712,6 +731,7 @@ def test_sec57_server_error_on_create_record_stays_posting(files, status):
     assert files[1].read_text("utf-8") == LOG
 
 
+@pytest.mark.posix_only
 def test_sec57_connect_error_on_create_record_goes_back_to_queued(files):
     rec = Recorder()
 
@@ -728,6 +748,7 @@ def test_sec57_connect_error_on_create_record_goes_back_to_queued(files):
     assert files[0].read_text("utf-8") == QUEUE
 
 
+@pytest.mark.posix_only
 def test_sec57_kill_during_post_leaves_posting_and_blocks_all_posting(files, caplog):
     q, _ = files
     rec = Recorder()
@@ -753,6 +774,7 @@ def test_sec57_kill_during_post_leaves_posting_and_blocks_all_posting(files, cap
     assert do_run(files, Recorder(), dry_run=True) == poster.EXIT_CHECK
 
 
+@pytest.mark.posix_only
 def test_sec57_revert_failure_stays_posting(files, monkeypatch):
     real = poster.atomic_write
 
@@ -767,6 +789,7 @@ def test_sec57_revert_failure_stays_posting(files, monkeypatch):
     assert _status(files[0], "Q-002").startswith("posting ")
 
 
+@pytest.mark.posix_only
 def test_sec57_claim_failure_sends_nothing(files, monkeypatch):
     def broken(path, content):
         raise OSError("read-only")
@@ -778,6 +801,7 @@ def test_sec57_claim_failure_sends_nothing(files, monkeypatch):
     assert files[0].read_text("utf-8") == QUEUE
 
 
+@pytest.mark.posix_only
 def test_sec57_lock_held_skips_without_sending(files):
     q, _ = files
     fd = poster._try_lock(poster.lock_path(q))
@@ -794,6 +818,7 @@ def test_sec57_lock_held_skips_without_sending(files):
     assert len(rec.requests) == 2
 
 
+@pytest.mark.posix_only
 def test_sec57_dry_run_creates_no_lock_file(files):
     q, _ = files
     assert do_run(files, Recorder(), dry_run=True) == poster.EXIT_OK
@@ -813,6 +838,7 @@ def test_sec57_dry_run_creates_no_lock_file(files):
         f"at://{DID}/app.bsky.feed.post/rkаy",
     ],
 )
+@pytest.mark.posix_only
 def test_sec57_strict_at_uri(files, uri):
     rec = Recorder()
 
@@ -848,6 +874,7 @@ def test_sec57_outreach_row_escapes_uri_and_url():
     "ch", ["\u200b", "\u200c", "\u200e", "\u202a", "\u202e", "\u2060", "\u2066", "\u2069",
            "\ufeff", "\u00ad"],
 )
+@pytest.mark.posix_only
 def test_sec58_item_with_hidden_char_is_skipped_and_next_posted(files, ch, caplog):
     q, _ = files
     q.write_text(QUEUE.replace("https://freemyid.org", f"https://freemyid.org{ch}.evil.example/"),
@@ -882,6 +909,7 @@ def test_sec58_stray_joiners_and_tags_refused(text):
     assert poster.hidden_char_error(text) is not None
 
 
+@pytest.mark.linux_only
 def test_sec58_url_followed_by_hidden_char_gets_no_facet():
     assert poster.link_facets("see https://freemyid.org\u200b now") == []
     assert len(poster.link_facets("see https://freemyid.org/über now")) == 1
@@ -891,7 +919,8 @@ def test_sec58_url_followed_by_hidden_char_gets_no_facet():
 
 SOCIAL = ROOT / "tools" / "social"
 # systemd-analyze --user needs a short real runtime dir; captured before any fixture runs
-_RUNTIME_DIR = os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}"
+_UID = os.getuid() if hasattr(os, "getuid") else 0  # module must import on Windows
+_RUNTIME_DIR = os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{_UID}"
 INSTALL_FILES = ("install.sh", "poster.py", "verify.sh", "requirements.lock",
                  "freemyid-poster.service", "freemyid-poster.timer")
 
@@ -985,6 +1014,7 @@ def _pinned(unit: Path) -> str:
     return m.group(1)
 
 
+@pytest.mark.linux_only
 def test_sec59_install_layout_permissions_and_pin(sandbox):
     import hashlib
     import re
@@ -1017,6 +1047,7 @@ def test_sec59_install_layout_permissions_and_pin(sandbox):
     assert "enable --now freemyid-poster.timer" in res.stdout  # only printed
 
 
+@pytest.mark.linux_only
 @pytest.mark.parametrize("tamper", ["poster", "pth", "symlink", "sums", "writable"])
 def test_sec59_any_change_to_the_copy_refuses_to_start(sandbox, tamper):
     _, home, _, _ = sandbox
@@ -1049,6 +1080,7 @@ def test_sec59_any_change_to_the_copy_refuses_to_start(sandbox, tamper):
     assert any(rc != 0 for rc in _pre_checks(service))
 
 
+@pytest.mark.linux_only
 def test_sec59_update_repins_and_install_refuses_twice(sandbox):
     repo, home, _, _ = sandbox
     assert run_install(sandbox).returncode == 0
@@ -1065,11 +1097,13 @@ def test_sec59_update_repins_and_install_refuses_twice(sandbox):
     assert _pre_checks(service) == [0, 0, 0]
 
 
+@pytest.mark.linux_only
 def test_sec59_update_needs_existing_install(sandbox):
     res = run_install(sandbox, "--update")
     assert res.returncode != 0 and "nothing installed" in res.stderr
 
 
+@pytest.mark.linux_only
 def test_sec59_refuses_root(sandbox):
     _, home, _, _ = sandbox
     res = run_install(sandbox, uid0=True)
@@ -1077,6 +1111,7 @@ def test_sec59_refuses_root(sandbox):
     assert not (home / ".local").exists() and not (home / ".config").exists()
 
 
+@pytest.mark.linux_only
 def test_sec59_replaces_old_symlinked_unit_not_its_target(sandbox, tmp_path):
     _, home, _, _ = sandbox
     target = tmp_path / "old-target.service"
@@ -1089,6 +1124,7 @@ def test_sec59_replaces_old_symlinked_unit_not_its_target(sandbox, tmp_path):
     assert target.read_text() == "old\n"
 
 
+@pytest.mark.linux_only
 def test_sec59_systemd_analyze_verify(sandbox):
     import shutil
     import subprocess
@@ -1115,6 +1151,7 @@ def test_sec59_systemd_analyze_verify(sandbox):
 # ----------------------------------------------------------------------------- QA re-review (SEC-77..81)
 
 
+@pytest.mark.posix_only
 def test_qa_sec77_reverted_status_line_does_not_repost(files):
     q, _ = files
     assert do_run(files, Recorder()) == poster.EXIT_OK
@@ -1166,6 +1203,7 @@ def test_sec80_manual_run_pins_keyring_backend(monkeypatch):
     assert seen["backend"] == "keyring.backends.SecretService.Keyring"
 
 
+@pytest.mark.posix_only
 def test_qa_sec81_unexpected_error_after_claim_returns_check(files):
     rec = Recorder()
 
@@ -1195,6 +1233,7 @@ def _ledger(ledger_dir: Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text("utf-8").splitlines()]
 
 
+@pytest.mark.posix_only
 def test_sec77_ledger_records_claim_then_posted(files, ledger_dir):
     seen_at_send = []
 
@@ -1219,6 +1258,7 @@ def test_sec77_ledger_records_claim_then_posted(files, ledger_dir):
     assert (ledger_dir / "posted.jsonl").stat().st_mode & 0o777 == 0o600
 
 
+@pytest.mark.posix_only
 def test_sec77_reverted_line_exits_check_with_plain_message(files, caplog):
     assert do_run(files, Recorder()) == poster.EXIT_OK
     files[0].write_text(QUEUE, encoding="utf-8")
@@ -1229,6 +1269,7 @@ def test_sec77_reverted_line_exits_check_with_plain_message(files, caplog):
     assert "NOT posted again" in caplog.text and "Q-002" in caplog.text
 
 
+@pytest.mark.posix_only
 def test_sec77_same_text_under_new_id_is_refused(files):
     q, _ = files
     assert do_run(files, Recorder()) == poster.EXIT_OK
@@ -1242,6 +1283,7 @@ def test_sec77_same_text_under_new_id_is_refused(files):
     assert rec.requests == []
 
 
+@pytest.mark.posix_only
 def test_sec77_definite_failure_releases_and_retry_posts(files, ledger_dir):
     assert do_run(files, Recorder(fail_on="createSession", status=401)) == poster.EXIT_HTTP
     assert [r["status"] for r in _ledger(ledger_dir)] == ["claimed", "released"]
@@ -1250,6 +1292,7 @@ def test_sec77_definite_failure_releases_and_retry_posts(files, ledger_dir):
     assert _status(files[0], "Q-002").startswith("posted ")
 
 
+@pytest.mark.posix_only
 def test_sec77_unknown_outcome_then_release(files, ledger_dir, monkeypatch):
     rec1 = _ambiguous_failure("read-timeout", monkeypatch)
     assert do_run(files, rec1) == poster.EXIT_CHECK
@@ -1263,6 +1306,7 @@ def test_sec77_unknown_outcome_then_release(files, ledger_dir, monkeypatch):
     assert [r["status"] for r in _ledger(ledger_dir)][-2:] == ["claimed", "posted"]
 
 
+@pytest.mark.posix_only
 def test_sec77_posted_item_is_never_released(files, ledger_dir):
     assert do_run(files, Recorder()) == poster.EXIT_OK
     assert poster.main(["--release", "Q-002"]) == poster.EXIT_USAGE
@@ -1272,6 +1316,7 @@ def test_sec77_posted_item_is_never_released(files, ledger_dir):
         poster.main(["--release", "../x"])
 
 
+@pytest.mark.posix_only
 def test_sec77_damaged_ledger_blocks_posting(files, ledger_dir):
     ledger_dir.mkdir(parents=True, mode=0o700)
     (ledger_dir / "posted.jsonl").write_text('{"id": "Q-1", "status"', encoding="utf-8")
@@ -1281,6 +1326,7 @@ def test_sec77_damaged_ledger_blocks_posting(files, ledger_dir):
     assert rec.requests == []
 
 
+@pytest.mark.posix_only
 def test_sec77_ledger_inside_a_git_repo_is_refused(files, tmp_path):
     (tmp_path / "repo" / ".git").mkdir(parents=True)
     rec = Recorder()
@@ -1294,6 +1340,7 @@ def test_sec77_ledger_inside_a_git_repo_is_refused(files, tmp_path):
     assert _status(q, "Q-002") == "queued"
 
 
+@pytest.mark.posix_only
 def test_sec77_dry_run_reads_but_never_creates_the_ledger(files, ledger_dir):
     assert do_run(files, dry_run=True) == poster.EXIT_OK
     assert not ledger_dir.exists()
