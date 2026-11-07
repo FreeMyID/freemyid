@@ -16,12 +16,13 @@
     <p>We never ask for your Social Security number, bank or card details, and the app never asks for a payment. The code is public, and you can check the download's fingerprint. <a href="{{ url('safety/#open-source') }}">How to check that Free My ID is genuine</a>.</p>
 - id: where-data
   home: true
-  # source: teardown section 11 Q4; D8 "Nothing is sent to us" (src/freemyid/netpolicy.py, shared rule 4)
+  # source: teardown section 11 Q4; opening per WR-25 (web-qa); D8 "Nothing is sent to us" (src/freemyid/netpolicy.py, shared rule 4)
   q: 'Where does my information go?'
   a: |-
-    <p>It stays on your computer. The app contacts only the sites you are asking to remove you, your own email and our public list of sites. <a href="{{ url('safety/#local') }}">What Free My ID stores, and where</a>.</p>
+    <p>Your details stay on your computer. Nothing is sent to us. The app contacts only the sites you are asking to remove you, your own email and our public list of sites. <a href="{{ url('safety/#local') }}">What Free My ID stores, and where</a>.</p>
 - id: whole-internet
   home: true
+  # source: docs/USER_GUIDE.md section 1 (one site only; not news, social media or government records); POSITIONING.md (no whole-internet promise)
   q: 'Will this remove me from the whole internet?'
   a: |-
     <p>No, and be wary of anyone who promises that. Free My ID asks people-search and data-broker sites to remove your listing, shows you which ones confirmed, and keeps checking. It can't remove news stories, social media posts or government records.</p>
@@ -31,33 +32,39 @@
   a: |-
     <p>It depends on where you live. California and a growing number of states have privacy laws that require these sites to answer removal requests. In states without such a law, the request is a polite one. Many sites honor it anyway, but some don't. Free My ID tells you honestly which sites confirmed and which are still waiting.</p>
 - id: ssn
+  # source: POSITIONING.md rule 4; /safety/ never-asks list
   q: 'Will it ask for my Social Security number or bank details?'
   a: |-
     <p>No. Free My ID never asks for your Social Security number, bank account, or credit or debit card details. If anything claiming to be Free My ID asks you for these, it isn't us. <a href="{{ url('safety/#never-asks') }}">See everything we will never ask for</a>.</p>
 - id: parents
+  # source: docs/USER_GUIDE.md section 3 "Setting up a family member" (family setup file) and "-p Mom" (several people per install)
   q: 'Can I set it up for my parents?'
   a: |-
     <p>Yes. It's made for that. You can set it up on their computer, or protect several family members from one computer.</p>
 - id: i-do-not-consent
   home: true
+  # source: teardown section 11; /i-do-not-consent/ page (POSITIONING.md rule 1)
   q: 'I posted "I do not consent." Did that work?'
   a: |-
     <p>You were right to object. On its own, that post doesn't reach the sites that sell your details. Free My ID sends your wish to them directly. <a href="{{ url('i-do-not-consent/') }}">Read more about the "I do not consent" post</a>.</p>
 - id: facebook
+  # source: POSITIONING.md rule 6 (scope: people-search sites only). WR-27: dropped "A step-by-step guide is planned" (no plan on record)
   q: 'Does it change what Facebook does with my account?'
   a: |-
-    <p>No. Free My ID works on people-search sites. For Facebook itself, use the privacy settings inside Facebook. A step-by-step guide is planned.</p>
+    <p>No. Free My ID works on people-search sites. For Facebook itself, use the privacy settings inside Facebook.</p>
 - id: who-buys
+  # source: CFPB press release, 2024 (URL in the answer, verified copy from the old site FAQ)
   q: 'Who buys this information?'
   a: |-
     <p>Anyone can: employers, marketers, curious neighbors, and also scammers and stalkers. A U.S. federal consumer agency <a href="https://www.consumerfinance.gov/archive/newsroom/cfpb-proposes-rule-to-stop-data-brokers-from-selling-sensitive-personal-data-to-scammers-stalkers-and-spies/">warned in 2024</a> about data brokers selling sensitive personal data to scammers and stalkers. That's why taking yourself off these sites matters.</p>
 - id: how-long
   home: true
-  # source: brokers/SOURCES.md "Website claims" and registry typical_processing_days: varies by broker, no guaranteed timeline
+  # source: six screens = src/freemyid/wizard/draft.py STEPS; brokers/SOURCES.md "Website claims" and registry typical_processing_days: varies by broker, no guaranteed timeline
   q: 'How long does it take?'
   a: |-
     <p>Setup is six short screens. Some sites remove you within days; others take weeks. Free My ID keeps track so you don't have to.</p>
 - id: comes-back
+  # source: state.py REAPPEARED transitions (REMOVED -> REAPPEARED -> SUBMITTED); PLAN_V1 D4 re-scan on recheck_interval_days
   q: 'Why would my listing come back?'
   a: |-
     <p>Sites buy fresh data from public records and from one another, so listings can reappear. That doesn't mean anything failed. Free My ID checks each site again on a schedule and sends a new request if your listing comes back.</p>
@@ -67,20 +74,24 @@
     <!-- Source: Google Search Help, "Remove outdated content" https://support.google.com/websearch/answer/12719076 (verified by broker-researcher, brokers/SOURCES.md "Website claims") -->
     <p>No. Free My ID doesn't contact Google. Once the site has removed your listing, Google drops the page on its own schedule, which can take a while. Google's "Refresh outdated content" tool can speed it up.</p>
 - id: without-app
+  # source: /guides/ pages built from the broker registry; PLAN_V1 D4 (keeps checking)
   q: 'Can I do this without the app?'
   a: |-
     <p>Yes. Our free <a href="{{ url('guides/') }}">opt-out guides</a> show the steps for some of the best-known sites. Free My ID does the repetitive part for you, keeps track, and keeps checking.</p>
 - id: windows-warning
   home: true
+  # source: installer not code-signed (.github/workflows/build.yml release notes)
   q: 'Why does Windows warn me when I install it?'
   a: |-
     <p>Windows shows a blue "Windows protected your PC" box for new programs that haven't bought a publisher certificate. Free My ID hasn't bought one yet. <a href="{{ url('download/#smartscreen') }}">See what to click, with pictures</a>.</p>
 - id: mac
   home: true
+  # source: PLAN_V1 (Windows 10/11 only in v1); "made for" until a release exists (WR-26)
   q: 'Is there a Mac or phone version?'
   a: |-
-    <p>Not yet. Free My ID runs on Windows 10 and Windows 11.</p>
+    <p>Not yet. Free My ID is made for Windows 10 and Windows 11.</p>
 - id: government
+  # source: project fact: independent open-source project (LICENSE, AGPL); no agency, Meta or broker affiliation
   q: 'Is this a government service?'
   a: |-
     <p>No. Free My ID is independent, free software. It isn't connected to any government agency, Facebook/Meta or data broker.</p>
