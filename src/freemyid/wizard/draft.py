@@ -261,8 +261,8 @@ def apply_step(d: Draft, step: str, f: FormLike, files: dict[str, tuple[str, byt
     elif step in ("about", "details", "birth", "phones", "emails", "relatives"):
         if f.get("birth_year") is not None:
             _apply_birth_year(d, str(f.get("birth_year")).strip(), errs)
-        if f.get("dob") is not None or f.get("age") is not None:
-            d.dob = (f.get("dob") or "").strip()
+        # A posted "dob" is deliberately ignored (SEC-42): only a year is collected.
+        if f.get("age") is not None and f.get("birth_year") is None:
             d.age = (f.get("age") or "").strip()
         if f.get("phones") is not None:
             d.phones = _lines(f.get("phones"))

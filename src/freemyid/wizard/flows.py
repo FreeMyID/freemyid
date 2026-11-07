@@ -115,8 +115,7 @@ def _addresses(d: dr.Draft) -> None:
 def _details(d: dr.Draft) -> None:
     _say("\n== Other details (used only for matching, never sent to brokers) ==")
     _loop(d, "details", lambda: {
-        "dob": _ask("Date of birth YYYY-MM-DD (or blank)", d.dob),
-        "age": _ask("Age (if no date of birth)", d.age),
+        "birth_year": _ask("Year of birth, 4 digits (or blank)", dr.birth_year_of(d)),
         "phones": _split(_ask("Phones, separated by ;", _lines_default(d.phones))),
         "emails": _split(_ask("Personal emails, separated by ;", _lines_default(d.emails))),
         "relatives": _split(_ask("Relatives (full names), separated by ;",
