@@ -57,8 +57,6 @@ KEY_ID = (crypto.SERVICE, crypto.KEY_NAME)
 
 # --- SEC-70: the post-write check in migrate() reads the in-process cache, not the disk ------
 
-@pytest.mark.xfail(strict=True, reason="SEC-70: migrate() verifies the wrap via _key_cache, "
-                   "so a bad wrap on disk passes and the keychain key is deleted")
 def test_qa_sec70_migrate_verifies_wrap_on_disk(env, memkeyring, monkeypatch):
     _seed()
     real = secret_backends._atomic_write
@@ -83,8 +81,6 @@ def test_qa_sec70_migrate_verifies_wrap_on_disk(env, memkeyring, monkeypatch):
 # --- SEC-71: a migrate() killed half-way strands the mailbox password --------------------
 
 @pytest.mark.parametrize("kill_at", ["config-save", "secret-copy"])
-@pytest.mark.xfail(strict=True, reason="SEC-71: killed migrate leaves passwords in the old "
-                   "backend while auto/config already point at the new one; re-run is a no-op")
 def test_qa_sec71_killed_migrate_is_recoverable(env, memkeyring, monkeypatch, kill_at):
     p = _seed()
     if kill_at == "config-save":

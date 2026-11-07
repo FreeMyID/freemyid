@@ -25,6 +25,7 @@ keep the file inside your own user profile folder.
 from __future__ import annotations
 
 import base64
+import functools
 import getpass
 import hmac
 import json
@@ -37,7 +38,7 @@ from collections.abc import Callable, Iterator
 from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol
+from typing import Any, Protocol
 
 import keyring
 import keyring.errors
@@ -615,7 +616,11 @@ def configured_name() -> str | None:
 
 
 def select() -> SecretBackend:
-    """The backend to use now. Explicit config wins; otherwise auto-detect (see module doc)."""
+    """The backend to use now. An unfinished migration wins (see migrate), then explicit
+    config; otherwise auto-detect (see module doc)."""
+    if (pend := _read_pending()) is not None:
+        # "copy": the source still holds everything. "cleanup": the target does.
+        return make(pend["from"] if pend["phase"] == "copy" else pend["to"])
     if (name := configured_name()) is not None:
         return make(name)
     creds = SystemdCredsBackend()
@@ -722,46 +727,181 @@ def _known_secret_ids(src: SecretBackend, key: bytes) -> list[tuple[str, str]]:
     return sorted(ids)
 
 
+def _pending_path() -> Path:
+    return paths.home() / PENDING_FILE
+
+
+def _read_pending() -> dict[str, Any] | None:
+    """The migrate.pending marker, or None. Written atomically, so damage means tampering
+    or a broken disk: fail closed with a plain message."""
+    pp = _pending_path()
+    try:
+        raw = pp.read_bytes()
+    except FileNotFoundError:
+        return None
+    try:
+        d = json.loads(raw)
+        if (isinstance(d, dict) and d.get("from") in BACKENDS and d.get("to") in BACKENDS
+                and d.get("phase") in ("copy", "cleanup")
+                and (d.get("orig") is None or d.get("orig") in BACKENDS)
+                and isinstance(d.get("target_existed"), bool)):
+            return d
+    except ValueError:
+        pass
+    raise crypto.KeyUnavailable(
+        f"{pp} (left by an unfinished 'freemyid secrets migrate') is damaged. Your data is "
+        "safe; ask for help before deleting it"
+    )
+
+
+def _write_pending(d: dict[str, Any]) -> None:
+    _atomic_write(_pending_path(), json.dumps(d).encode())
+
+
+def _has_data_key(b: SecretBackend) -> bool:
+    if isinstance(b, PassphraseBackend):
+        return b.wrap_path().exists()
+    if isinstance(b, KeyringBackend):
+        return b._stored() is not None
+    return False
+
+
+def _with_memo_passphrase(b: SecretBackend) -> SecretBackend:
+    """Ask a passphrase target for its passphrase once per migrate, so the from-disk
+    verify doesn't prompt a second time. Kept in this closure only."""
+    if not isinstance(b, PassphraseBackend) or b._getter is not None:
+        return b
+    raw = type(b)()
+    memo: list[str] = []
+
+    def getter(confirm: bool) -> str:
+        if not memo:
+            memo.append(raw._passphrase(confirm))
+        return memo[0]
+    return type(b)(getter)
+
+
+def _verify_on_disk(target: SecretBackend, key: bytes) -> None:
+    """SEC-70: read the key back from where it now lives, not from this process's cache."""
+    clear_cache()
+    fresh: SecretBackend = (type(target)(target._getter) if isinstance(target, PassphraseBackend)
+                            else type(target)())
+    try:
+        got = fresh.load_data_key(create=False)
+    except crypto.KeyUnavailable as e:
+        raise crypto.KeyUnavailable(
+            "migration check failed: the new copy of the key can't be read back; "
+            "nothing was moved"
+        ) from e
+    if not hmac.compare_digest(got, key):
+        raise crypto.KeyUnavailable("migration check failed: the new copy of the key differs")
+
+
+def _cleanup_source(source: SecretBackend, key: bytes, ids: list[tuple[str, str]]) -> None:
+    if isinstance(source, PassphraseBackend):
+        source.delete_data_key()   # wrap and secrets.enc are this folder's files
+        return
+    for svc, user in ids:
+        source.delete_secret(svc, user)
+    source.delete_data_key(expected=key)   # never another folder's keychain key (SEC-72)
+
+
+def _rollback(target: SecretBackend, key: bytes | None, ids: list[tuple[str, str]],
+              pend: dict[str, Any], config_switched: bool) -> None:
+    """Undo a copy-phase failure: original config value (None = auto stays None), target
+    copies removed, marker removed. Each step is best effort; if this is interrupted the
+    marker stays and select() keeps reading from the intact source."""
+    from . import config
+    steps: list[Callable[[], None]] = []
+    if config_switched:
+        def restore_config() -> None:
+            cfg = config.load()
+            cfg.secrets_backend = pend["orig"]
+            config.save(cfg)
+        steps.append(restore_config)
+    for svc, user in ids:
+        steps.append(functools.partial(target.delete_secret, svc, user))
+    if not pend["target_existed"] and key is not None:
+        steps.append(lambda: target.delete_data_key(expected=key))
+    steps.append(lambda: _pending_path().unlink(missing_ok=True))
+    for step in steps:
+        try:
+            step()
+        except Exception:  # noqa: BLE001  keep going; the source is untouched
+            log.warning("secrets migrate: a rollback step failed")
+    clear_cache()
+
+
 def migrate(to: str) -> MigrateResult:
-    """Re-wrap the data key (and move mailbox passwords) into backend `to`. No data loss:
-    the target is written and verified, config is switched, and only then is the old copy
-    removed. Encrypted data in the store is untouched (same data key)."""
+    """Re-wrap the data key (and copy mailbox passwords) into backend `to`. No data loss:
+
+    1. write migrate.pending (phase "copy"): select() keeps using the source;
+    2. store the key in the target and re-read it from disk (SEC-70), copy the passwords;
+    3. switch config, set the marker to "cleanup": select() now uses the target;
+    4. delete the source copies, delete the marker.
+
+    A failure (any BaseException) in 1-3 rolls back to the original config value. A kill
+    leaves the marker, and running the same migrate again resumes (SEC-71). Encrypted
+    data in the store is untouched (same data key)."""
     target = make(to)
     from . import config
     cfg = config.load()
-    source = select()
-    if source.name == target.name or (
-        isinstance(source, PassphraseBackend) and isinstance(target, PassphraseBackend)
-    ):
-        # Passphrase and systemd-creds share one wrap file; only the setting changes.
-        changed = cfg.secrets_backend != target.name
-        if changed:
+    pend = _read_pending()
+    if pend is not None:
+        if pend["to"] != target.name:
+            raise crypto.KeyUnavailable(
+                f"an earlier move to '{pend['to']}' didn't finish; run 'freemyid secrets "
+                f"migrate --to {pend['to']}' first"
+            )
+        source = make(pend["from"])
+    else:
+        source = select()
+        if source.name == target.name or (
+            isinstance(source, PassphraseBackend) and isinstance(target, PassphraseBackend)
+        ):
+            # Passphrase and systemd-creds share one wrap file; only the setting changes.
+            changed = cfg.secrets_backend != target.name
+            if changed:
+                cfg.secrets_backend = target.name  # type: ignore[assignment]
+                config.save(cfg)
+            return MigrateResult(source.name, target.name, 0, changed)
+        pend = {"from": source.name, "to": target.name, "orig": cfg.secrets_backend,
+                "target_existed": _has_data_key(target), "phase": "copy"}
+        _write_pending(pend)
+
+    target = _with_memo_passphrase(target)
+    key: bytes | None = None
+    ids: list[tuple[str, str]] = []
+    values: dict[tuple[str, str], str] = {}
+    config_switched = False
+    if pend["phase"] == "copy":
+        try:
+            key = source.load_data_key(create=False)
+            ids = _known_secret_ids(source, key)
+            values = {i: v for i in ids if (v := source.get_secret(*i)) is not None}
+            target.store_data_key(key)
+            _verify_on_disk(target, key)
+            for (svc, user), val in values.items():
+                target.set_secret(svc, user, val)
+                if target.get_secret(svc, user) != val:
+                    raise crypto.KeyUnavailable("migration check failed for a saved password")
             cfg.secrets_backend = target.name  # type: ignore[assignment]
             config.save(cfg)
-        return MigrateResult(source.name, target.name, 0, changed)
-
-    key = source.load_data_key(create=False)
-    ids = _known_secret_ids(source, key)
-    values = {i: v for i in ids if (v := source.get_secret(*i)) is not None}
-
-    target.store_data_key(key)
-    if not hmac.compare_digest(target.load_data_key(create=False), key):
-        raise crypto.KeyUnavailable("migration check failed: the new copy of the key differs")
-    # Target secrets are encrypted with the data key; route Cipher() to the target now.
-    cfg.secrets_backend = target.name  # type: ignore[assignment]
-    config.save(cfg)
-    try:
-        for (svc, user), val in values.items():
-            target.set_secret(svc, user, val)
-            if target.get_secret(svc, user) != val:
-                raise crypto.KeyUnavailable("migration check failed for a saved password")
-    except Exception:
-        cfg.secrets_backend = source.name  # type: ignore[assignment]
-        config.save(cfg)
-        raise
-    for svc, user in values:
-        source.delete_secret(svc, user)
-    source.delete_data_key()
+            config_switched = True
+            pend["phase"] = "cleanup"
+            _write_pending(pend)
+        except BaseException:
+            _rollback(target, key, list(values), pend, config_switched)
+            raise
+    else:
+        # Killed during cleanup: the target is complete and authoritative.
+        key = target.load_data_key(create=False)
+        ids = _known_secret_ids(source, key) if isinstance(source, KeyringBackend) else []
+        if cfg.secrets_backend != target.name:
+            cfg.secrets_backend = target.name  # type: ignore[assignment]
+            config.save(cfg)
+    _cleanup_source(source, key, ids)
+    _pending_path().unlink(missing_ok=True)
     log.info("secrets migrated from %s to %s (%d saved passwords)",
              source.name, target.name, len(values))
     return MigrateResult(source.name, target.name, len(values), True)
