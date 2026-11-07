@@ -111,7 +111,6 @@ def test_qa_sec71_rollback_restores_auto_config(env, memkeyring, monkeypatch):
     assert get_mailbox_password(p.id, MB) == APP_PW
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-83: rollback restores config only if this run switched it")
 def test_qa_sec83_failed_resume_restores_original_config(env, memkeyring, monkeypatch):
     """Killed after config.save but before the phase flip (config already says passphrase,
     marker says copy). A resume that then fails must still put config back to `orig`."""

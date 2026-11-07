@@ -836,18 +836,21 @@ def _cleanup_source(source: SecretBackend, key: bytes, ids: list[tuple[str, str]
 
 
 def _rollback(target: SecretBackend, key: bytes | None, ids: list[tuple[str, str]],
-              pend: dict[str, Any], config_switched: bool) -> None:
+              pend: dict[str, Any]) -> None:
     """Undo a copy-phase failure: original config value (None = auto stays None), target
-    copies removed, marker removed. Each step is best effort; if this is interrupted the
-    marker stays and select() keeps reading from the intact source."""
+    copies removed, marker removed. Each step is best effort and safe to repeat; if this
+    is interrupted the marker stays and select() keeps reading from the intact source.
+
+    Config is restored to `orig` whenever it differs, not only when this run switched it:
+    a resumed run may find config already switched by the killed run (SEC-83)."""
     from . import config
-    steps: list[Callable[[], None]] = []
-    if config_switched:
-        def restore_config() -> None:
-            cfg = config.load()
+
+    def restore_config() -> None:
+        cfg = config.load()
+        if cfg.secrets_backend != pend["orig"]:
             cfg.secrets_backend = pend["orig"]
             config.save(cfg)
-        steps.append(restore_config)
+    steps: list[Callable[[], None]] = [restore_config]
     for svc, user in ids:
         steps.append(functools.partial(target.delete_secret, svc, user))
     if not pend["target_existed"] and key is not None:
@@ -902,7 +905,6 @@ def migrate(to: str) -> MigrateResult:
     key: bytes | None = None
     ids: list[tuple[str, str]] = []
     values: dict[tuple[str, str], str] = {}
-    config_switched = False
     if pend["phase"] == "copy":
         try:
             key = source.load_data_key(create=False)
@@ -916,11 +918,10 @@ def migrate(to: str) -> MigrateResult:
                     raise crypto.KeyUnavailable("migration check failed for a saved password")
             cfg.secrets_backend = target.name  # type: ignore[assignment]
             config.save(cfg)
-            config_switched = True
             pend["phase"] = "cleanup"
             _write_pending(pend)
         except BaseException:
-            _rollback(target, key, list(values), pend, config_switched)
+            _rollback(target, key, list(values), pend)
             raise
     else:
         # Killed during cleanup: the target is complete and authoritative.
