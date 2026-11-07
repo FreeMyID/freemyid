@@ -17,6 +17,7 @@ from .models import Broker, Listing, Profile, SubmitOutcome, Todo
 if TYPE_CHECKING:  # avoid importing playwright at import time
     from playwright.async_api import BrowserContext, Page
 
+    from .engine.mail import ReplyScan
     from .netpolicy import NetPolicy
     from .storage import Store
 
@@ -58,6 +59,12 @@ class Mailer(Protocol):
                                     since: datetime, timeout_s: int = 600) -> list[str]:
         """Return confirmation links found in mail from broker; ONLY links whose host is in
         broker.confirmation_domains (or broker.domains if empty)."""
+        ...
+
+    async def scan_replies(self, profile: Profile, broker: Broker, since: datetime,
+                           timeout_s: int = 0) -> ReplyScan:
+        """Like wait_for_confirmation, but also reports duplicates, ID-document requests and the
+        newest reply (see engine.mail.ReplyScan). Links obey the same confirmation-domain rule."""
         ...
 
 
