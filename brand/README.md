@@ -30,3 +30,12 @@ Real app, fake persona only (Jane Q Testperson, Springfield IL), 2x, cropped to 
 | `screenshots/report.webp` | 1800x2440 | 143 KB | The printable progress report: a table of each people-search site, its status (site confirmed, asked, not listed now, needs you), when it was last checked and when the request was made. |
 
 Social images (`og-default.png`, `repo-preview.png`) now use the official logo A dark mark (`logo/final/mark-dark.svg`, WR-24).
+
+## v0.2 additions (Iris Novak)
+Built by `brand/src/build_platform_art.py`. Platform app icons: `brand/icons/platforms/` (see its README). Illustrations (light and dark SVG + PNG each):
+| File | Size | Use | Alt |
+|---|---|---|---|
+| v3/developers/developers-{light,dark}.svg/.png | 640x480 | /developers/ | A terminal on your own computer connected to a small home server, inside a house outline, with a clock for the schedule. |
+| v3/features/find-me-first-{light,dark} | 320x250 | "find me first" scan page | A magnifying glass over a web page, finding a person's listing. |
+| v3/features/proof-report-{light,dark} | 320x250 | proof report page | A progress report with checked rows and a star seal. |
+| v3/features/family-helper-{light,dark} | 320x250 | family helper mode page | A grown child and a parent sharing one laptop with two name cards. |
