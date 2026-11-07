@@ -33,6 +33,10 @@ from ..models import (
     utcnow,
 )
 
+# Never announce this computer's hostname (often the owner's name) in EHLO; also avoids a
+# slow reverse lookup on macOS.
+_EHLO_NAME = "localhost"
+
 log = logging.getLogger(__name__)
 
 CONSENT_VERSION = CURRENT_TEXT_VERSION   # single source of truth (consent.py)
@@ -457,12 +461,12 @@ def check_mailbox(mb: dict[str, Any], password: str, timeout: float = 10.0
         spin = pin if is_loopback(sh) else None
         sctx = client_context(sh, spin)
         if mb.get("smtp_starttls"):
-            sm: smtplib.SMTP = smtplib.SMTP(sh, sp, timeout=timeout)
+            sm: smtplib.SMTP = smtplib.SMTP(sh, sp, timeout=timeout, local_hostname=_EHLO_NAME)
             sm.ehlo()
             sm.starttls(context=sctx)
             sm.ehlo()
         else:
-            sm = smtplib.SMTP_SSL(sh, sp, timeout=timeout, context=sctx)
+            sm = smtplib.SMTP_SSL(sh, sp, timeout=timeout, context=sctx, local_hostname=_EHLO_NAME)
         try:
             check_peer(sm.sock, spin)           # before any credential is sent
             sm.login(user, password)

@@ -28,6 +28,10 @@ from ..models import Broker, MailboxConfig, Profile, utcnow
 from ..netpolicy import host_of
 from .mail_tls import TlsPinError, check_peer, client_context
 
+# Never announce this computer's hostname (often the owner's name) in EHLO; also avoids a
+# slow reverse lookup on macOS.
+_EHLO_NAME = "localhost"
+
 if TYPE_CHECKING:
     from ..netpolicy import NetPolicy
 
@@ -271,14 +275,14 @@ class SmtpImapMailer:
         try:
             ctx = client_context(mb.smtp_host, pin)
             if mb.smtp_starttls:
-                with smtplib.SMTP(mb.smtp_host, mb.smtp_port, timeout=self.timeout_s) as s:
+                with smtplib.SMTP(mb.smtp_host, mb.smtp_port, timeout=self.timeout_s, local_hostname=_EHLO_NAME) as s:
                     s.starttls(context=ctx)
                     check_peer(s.sock, pin)          # before any credential is sent
                     s.login(mb.username, pw)
                     s.send_message(msg)
             else:
                 with smtplib.SMTP_SSL(mb.smtp_host, mb.smtp_port, context=ctx,
-                                      timeout=self.timeout_s) as s:
+                                      timeout=self.timeout_s, local_hostname=_EHLO_NAME) as s:
                     check_peer(s.sock, pin)
                     s.login(mb.username, pw)
                     s.send_message(msg)

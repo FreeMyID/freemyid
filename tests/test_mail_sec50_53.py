@@ -121,7 +121,7 @@ class _FakeImap:
     peer: tuple = ("127.0.0.1", 1143)
     logged_out = 0
 
-    def __init__(self, host, port, timeout=None):
+    def __init__(self, host, port, timeout=None, local_hostname=None):
         self.sock = _Sock(type(self).peer)
 
     def starttls(self, ssl_context=None):
@@ -134,7 +134,7 @@ class _FakeImap:
 class _FakeSmtp:
     peer: tuple = ("127.0.0.1", 1025)
 
-    def __init__(self, host, port, timeout=None):
+    def __init__(self, host, port, timeout=None, local_hostname=None):
         self.sock = _Sock(type(self).peer)
 
     def starttls(self, context=None):

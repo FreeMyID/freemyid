@@ -23,6 +23,10 @@ import ssl
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal
 
+# Never announce this computer's hostname (often the owner's name) in EHLO; also avoids a
+# slow reverse lookup on macOS.
+_EHLO_NAME = "localhost"
+
 if TYPE_CHECKING:
     from ..models import MailboxConfig
     from ..netpolicy import NetPolicy
@@ -143,10 +147,10 @@ def fetch_loopback_fingerprint(host: str, port: int, protocol: Literal["imap", "
                     conn.logout()
         else:
             if starttls:
-                s = smtplib.SMTP(host, port, timeout=timeout_s)
+                s = smtplib.SMTP(host, port, timeout=timeout_s, local_hostname=_EHLO_NAME)
                 s.starttls(context=ctx)
             else:
-                s = smtplib.SMTP_SSL(host, port, context=ctx, timeout=timeout_s)
+                s = smtplib.SMTP_SSL(host, port, context=ctx, timeout=timeout_s, local_hostname=_EHLO_NAME)
             try:
                 check_loopback_peer(s.sock)
                 der = s.sock.getpeercert(binary_form=True)  # type: ignore[union-attr]

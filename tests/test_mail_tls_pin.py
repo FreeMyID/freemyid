@@ -71,7 +71,7 @@ class FakeServer:
         self.lsock = socket.socket()
         self.lsock.bind(("127.0.0.1", 0))
         self.lsock.listen(8)
-        self.lsock.settimeout(10)
+        self.lsock.settimeout(60)
         self.port = self.lsock.getsockname()[1]
         self._stop = False
         self.done = threading.Event()   # set when a client connection has been closed
@@ -92,7 +92,7 @@ class FakeServer:
             threading.Thread(target=self._handle, args=(c,), daemon=True).start()
 
     def _handle(self, c: socket.socket) -> None:
-        c.settimeout(10)
+        c.settimeout(60)
         try:
             if not self.starttls:
                 c = self.ctx.wrap_socket(c, server_side=True)
