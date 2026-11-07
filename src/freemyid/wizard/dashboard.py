@@ -148,14 +148,27 @@ def todo_card(t: Todo, who: str, bname: str, csrf: str, show_who: bool = False,
             f'<p class="hint">{esc(t.body)}</p><div class="actions">{opener}{primary}</div></div>')
 
 
+def progress_line(statuses: list[BrokerStatus], sent: int, need_you: int) -> str:
+    """'14 requests sent, 9 confirmed, 2 need you' (plain numbers, no percentages)."""
+    done = sum(1 for s in statuses if s.state in DONE_STATES)
+    return (f"{sent} request{'' if sent == 1 else 's'} sent, {done} confirmed, "
+            f"{need_you} need{'s' if need_you == 1 else ''} you")
+
+
+def _hero(inner: str, kicker: str = "Next for you") -> str:
+    return (f'<section class="card hero-card" aria-labelledby="next-h"><p class="kicker">'
+            f'{esc(kicker)}</p>{inner}</section>')
+
+
 def home_page(*, statuses: list[BrokerStatus], todos: list[tuple[Todo, str, str]],
               people: list[dict], outbox_count: int, csrf: str, flash: str = "",
               practice: bool = False, running: bool = False, fill: bool = False,
-              filling: bool = False) -> str:
-    """todos = (todo, person label, broker name)."""
-    sentence, good = status_sentence(statuses, len(todos), running)
-    body = (f'{_flash(flash)}<p class="status-line{" ok" if good else ""}" role="status">'
-            f'{esc(sentence)}</p>')
+              filling: bool = False, sent: int = 0, exposure: str = "",
+              protect: tuple[int, int] = (0, 0)) -> str:
+    """The Today view: one big card with the next thing to do, then one progress line.
+    todos = (todo, person label, broker name). `exposure` is ready-made HTML (views.exposure_card)."""
+    need = len(todos) + (1 if outbox_count else 0)
+    body = _flash(flash)
     if practice:
         body += ('<div class="banner"><b>Practice mode.</b> Free My ID is looking but is not sending '
                  'anything yet. <a href="/settings">Change this in Settings</a> when you are '
@@ -165,27 +178,54 @@ def home_page(*, statuses: list[BrokerStatus], todos: list[tuple[Todo, str, str]
             body += (f'<div class="note">Not running yet for {esc(r["profile"].label)}: '
                      f'{esc(r["consent_problem"])} <a href="/profile/{esc(r["profile"].id)}">'
                      'Fix it</a></div>')
-    if outbox_count:
-        body += (f'<div class="card todo"><h2>{outbox_count} email(s) waiting for your OK</h2>'
-                 '<p>Look at each one, then press Approve. Nothing is sent until you do.</p><div class="actions">'
-                 '<a class="btn primary" href="/outbox">Look at them</a></div></div>')
     if filling:
         body += ('<div class="banner">A form is being filled in. <a href="/fill">'
                  'Go to that window</a></div>')
     multi = len({w for _, w, _ in todos}) > 1
-    for t, who, bname in todos:
-        body += todo_card(t, who, bname, csrf, multi, fill and not filling)
-    if not todos and not outbox_count and not running:
-        body += '<div class="card"><p>You have nothing to do right now. That is good.</p></div>'
-    body += '<h2>More</h2><div class="card">'
+    rest = list(todos)
+    if outbox_count:
+        body += _hero(
+            f'<h1 id="next-h">{outbox_count} email{"" if outbox_count == 1 else "s"} '
+            'waiting for your OK</h1><p class="lead">Look at each one, then press Approve. '
+            'Nothing is sent until you do.</p><div class="actions">'
+            '<a class="btn primary big" href="/outbox">Look at them</a></div>')
+    elif rest:
+        t, who, bname = rest.pop(0)
+        card = todo_card(t, who, bname, csrf, multi, fill and not filling)
+        body += _hero(card.replace("<h2>", '<h1 id="next-h">', 1).replace("</h2>", "</h1>", 1)
+                      .replace('class="card todo"', 'class="hero-body"', 1))
+    elif running:
+        body += _hero('<h1 id="next-h">Free My ID is checking now</h1><p class="lead">This takes '
+                      'about a minute. This page updates by itself.</p>', "Working")
+    else:
+        body += ('<section class="card hero-card calm" aria-labelledby="next-h">'
+                 '<img src="/static/img/safety-local.svg" alt="" width="240" height="180">'
+                 '<div class="txt"><p class="kicker">Today</p><h1 id="next-h">Nothing needs you '
+                 'today</h1><p class="lead">Free My ID keeps checking in the background and '
+                 'will tell you if that changes.</p></div></section>')
+    body += (f'<p class="progress" role="status">{esc(progress_line(statuses, sent, need))}</p>')
+    if rest:
+        body += f'<h2>Also waiting ({len(rest)})</h2>'
+        for t, who, bname in rest:
+            body += todo_card(t, who, bname, csrf, multi, fill and not filling)
+    body += '<div class="cols">'
+    done, total = protect
+    if total:
+        body += ('<section class="card"><h2><span class="ico ico-shield" aria-hidden="true"></span> '
+                 f'Protect yourself</h2><p>{done} of {total} steps done: credit freezes, opt-out '
+                 'lists and more.</p><p><a class="btn secondary" href="/protect">Open the list</a>'
+                 '</p></section>')
+    body += exposure
+    body += '</div><h2>More</h2><div class="card">'
     for r in people:
         p = r["profile"]
         body += (f'<p><a class="btn secondary" href="/profile/{esc(p.id)}">All the details for '
-                 f'{esc(p.label)}</a></p>')
+                 f'{esc(p.label)}</a> <a class="btn secondary" '
+                 f'href="/profile/{esc(p.id)}/summary">What we did for {esc(p.label)}</a></p>')
     body += ('<p class="hint">A site that says it deleted you has done that for that one site only. '
              'Details can reappear, which is why Free My ID keeps checking. Free My ID does '
              'not change anything on Facebook or Google.</p></div>')
-    return layout("Home", body, refresh=6 if running else 0)
+    return layout("Today", body, refresh=6 if running else 0, current="/")
 
 
 FILL_WAIT = ("A window opened. Free My ID filled in the form. Tick the \"I'm not a robot\" box "
@@ -242,6 +282,7 @@ def profile_page(p: Profile, statuses: list[BrokerStatus], names: dict[str, str]
                      'required><div class="actions"><button type="submit">Attach</button></div>'
                      '</form>')
     body += (f'<p><a class="btn secondary" href="/profile/{esc(p.id)}/edit">Edit details</a> '
+             f'<a class="btn secondary" href="/profile/{esc(p.id)}/summary">What we did for you</a> '
              f'<a class="btn secondary" href="/profile/{esc(p.id)}/report">Download report</a></p>')
     # todos
     body += "<h2>Needs you</h2><div>"
@@ -256,7 +297,8 @@ def profile_page(p: Profile, statuses: list[BrokerStatus], names: dict[str, str]
     for st in sorted(statuses, key=lambda s: (names.get(s.broker_id, s.broker_id)).lower()):
         extra = (f'<br><span class="hint">{esc(st.needs_human_reason)}</span>'
                  if st.needs_human_reason else "")
-        body += (f'<tr><td>{esc(names.get(st.broker_id, st.broker_id))}</td>'
+        body += (f'<tr><td><a href="/profile/{esc(p.id)}/site/{esc(st.broker_id)}">'
+                 f'{esc(names.get(st.broker_id, st.broker_id))}</a></td>'
                  f'<td>{chip(st.state)}{extra}</td><td>{_dt(st.updated_at)}</td>'
                  f'<td>{_dt(st.next_check_at)}</td></tr>')
     if not statuses:
@@ -319,7 +361,7 @@ def outbox_page(items: list[tuple[Request, str, str, tuple[str, str, str]]], csr
                  f'Approve and send</button>'
                  f'<button type="submit" class="secondary" '
                  f'formaction="/outbox/{esc(r.id)}/cancel">Cancel it</button></form></div>')
-    return layout("Emails", body)
+    return layout("Emails", body, current="/outbox")
 
 
 def confirm_real_page(people: list[Profile], csrf: str) -> str:
@@ -388,7 +430,7 @@ def settings_page(*, people: list[Profile], schedule_status: str, practice: bool
         body += (f'<div class="card"><h2>Close Free My ID</h2><form method="post" action="/quit" '
                  f'class="actions">{csrf_field(csrf)}<button type="submit" class="secondary" '
                  'data-confirm="Close Free My ID now?">Close Free My ID</button></form></div>')
-    return layout("Settings", body)
+    return layout("Settings", body, current="/settings")
 
 
 def mailbox_settings_page(p: Profile, body_html: str, csrf: str, errs: list[str]) -> str:

@@ -12,6 +12,7 @@ import hashlib
 import hmac
 import logging
 import os
+import re
 import secrets as pysecrets
 import socket
 import sys
@@ -35,7 +36,7 @@ from ..models import (
 )
 from . import dashboard as dash
 from . import draft as dr
-from . import ui
+from . import protect, ui, views
 
 log = logging.getLogger(__name__)
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -230,7 +231,10 @@ def create_app(store, token: str, allowed_hosts: set[str],
             outbox_count=len(queued), csrf=csrf_token, flash=flash(request),
             practice=not cfgmod.load().real_submissions_enabled,
             running=bool(app.state.running), fill=True,
-            filling=bool(app.state.fill["running"])))
+            filling=bool(app.state.fill["running"]),
+            sent=sum(1 for r in store.list_requests(status=RequestStatus.SENT) if not r.dry_run),
+            exposure=views.exposure_card(store, profiles[0]),
+            protect=protect.counts(store, profiles[0].id)))
 
     @app.get("/profile/{pid}")
     async def profile_view(pid: str, request: Request):
@@ -244,6 +248,55 @@ def create_app(store, token: str, allowed_hosts: set[str],
         return html(dash.profile_page(p, store.list_statuses(pid), names(), store.list_todos(pid),
                                       ev, csrf_token, _consent_problem(p), flash(request),
                                       fill=not app.state.fill["running"]))
+
+    @app.get("/profile/{pid}/site/{bid}")
+    async def broker_view(pid: str, bid: str):
+        p = store.get_profile(pid)
+        if not p or not re.fullmatch(r"[a-z0-9_]{1,64}", bid):
+            return html(ui.layout("Not found", "<h1>Not found</h1>"), 404)
+        reg = registry_loader()
+        broker = next((b for b in reg.brokers if b.id == bid), None) if reg else None
+        return html(views.broker_page(
+            p, broker, bid, store.get_status(pid, bid), store.list_listings(pid, bid),
+            store.list_requests(pid, bid), store.list_evidence(pid, bid),
+            store.events(pid, bid, limit=40), [t for t in store.list_todos(pid)
+                                               if t.broker_id == bid]))
+
+    @app.get("/profile/{pid}/summary")
+    async def summary_view(pid: str):
+        p = store.get_profile(pid)
+        if not p:
+            return html(ui.layout("Not found", "<h1>Not found</h1>"), 404)
+        sent = sum(1 for r in store.list_requests(pid, status=RequestStatus.SENT)
+                   if not r.dry_run)
+        return html(views.summary_page(p, store.list_statuses(pid), names(),
+                                       len(store.list_todos(pid)), sent))
+
+    @app.get("/protect")
+    async def protect_view(request: Request):
+        people = store.list_profiles()
+        if not people:
+            return redirect("/wizard/consent?new=1")
+        want = request.query_params.get("p", "")
+        cur = next((x for x in people if x.id == want), people[0])
+        return html(views.protect_page(protect.load_checklists(), people, cur,
+                                       protect.progress(store, cur.id), csrf_token, flash(request)))
+
+    @app.post("/protect/{pid}/{cid}/{action}")
+    async def protect_act(pid: str, cid: str, action: str):
+        if (not store.get_profile(pid) or action not in ("done", "undo", "open")
+                or not re.fullmatch(r"[a-z0-9_]{2,40}", cid)):
+            return redirect("/protect")
+        back = f"/protect?p={pid}"
+        if action == "open":
+            cf = protect.load_checklists()
+            c = next((x for x in cf.checklists if x.id == cid), None) if cf else None
+            url = str(c.url) if c else ""
+            if url.startswith("https://"):
+                open_url(url)
+            return redirect(back + (f"#c-{cid}" if c else ""))
+        protect.set_done(store, pid, cid, action == "done")
+        return redirect(back + f"#c-{cid}")
 
     @app.get("/evidence/{pid}/{eid}")
     async def evidence(pid: str, eid: str):

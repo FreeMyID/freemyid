@@ -47,8 +47,9 @@ def layout(title: str, body: str, nav: bool = True, refresh: int = 0, current: s
     """`current` is the nav path of this page (marks it for screen readers and sighted users)."""
     links = ""
     if nav:
+        cur = ' aria-current="page"'
         links = "".join(
-            f'<a href="{href}"{" aria-current=\"page\"" if href == current else ""}>{label}</a>'
+            f'<a href="{href}"{cur if href == current else ""}>{label}</a>'
             for href, label in NAV)
         links = f'<nav aria-label="Main">{links}</nav>'
     toggle = ('<button type="button" class="theme secondary" id="theme-toggle" hidden '

@@ -169,8 +169,7 @@ details.more summary { cursor: pointer; font-weight: 600; color: var(--fmi-color
   display: inline-flex; align-items: center; justify-content: center; flex: none; }
 .cl.done .tick { background: var(--fmi-color-ok); border-color: var(--fmi-color-ok);
   color: var(--fmi-color-bg); }
-.bar { height: .8rem; border-radius: var(--fmi-radius-pill); background: var(--fmi-color-surface-strong);
-  overflow: hidden; } .bar > i { display: block; height: 100%; background: var(--fmi-color-ok); }
+progress { width: 100%; height: 1rem; accent-color: var(--fmi-color-ok); }
 
 /* summary report page */
 .summary { background: var(--fmi-color-card); border: 1px solid var(--fmi-color-line);

@@ -119,3 +119,10 @@
     show();
   });
 })();
+
+(function () {
+  // "Print this page" buttons (inline handlers are blocked by the page policy).
+  document.querySelectorAll("[data-print]").forEach(function (b) {
+    b.addEventListener("click", function () { window.print(); });
+  });
+})();
