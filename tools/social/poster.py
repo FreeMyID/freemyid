@@ -6,6 +6,7 @@ Queue format, one block per post (text outside blocks is ignored):
 
     ## Q-001
     status: queued
+    note: optional editor comment (zero or more lines, never posted)
     ```text
     <post text>
     ```
@@ -98,6 +99,7 @@ class PosterError(Exception):
 
 HEADING_RE = re.compile(r"^## ([A-Z]{1,4}-\d{1,6})\s*$")
 STATUS_RE = re.compile(r"^status: (\S.*?)\s*$")
+NOTE_RE = re.compile(r"^note: .*$")
 FENCE_OPEN = "```text"
 FENCE_CLOSE = "```"
 
@@ -139,6 +141,8 @@ def parse_queue(content: str) -> list[QueueItem]:
         status_idx = i
         status = sm.group(1)
         i += 1
+        while i < n and NOTE_RE.match(_strip_eol(lines[i])):
+            i += 1  # optional "note: ..." lines (editor comments, never posted)
         if i >= n or _strip_eol(lines[i]) != FENCE_OPEN:
             log.warning("queue %s (line %d): missing ```text fence; skipped", item_id, start + 1)
             continue

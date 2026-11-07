@@ -154,6 +154,16 @@ def test_parser_skips_malformed_blocks(block, caplog):
     assert any("Q-010" in r.getMessage() for r in caplog.records)
 
 
+def test_parser_allows_note_lines_between_status_and_fence():
+    text = "## Q-001\nstatus: queued\nnote: intro\nnote: day 1\n```text\nhello\n```\n"
+    (item,) = poster.parse_queue(text)
+    assert item.text == "hello" and item.status_line == 1
+    bad = "## Q-001\nstatus: queued\nnotes: x\n```text\nhello\n```\n"
+    assert poster.parse_queue(bad) == []
+    before_status = "## Q-001\nnote: x\nstatus: queued\n```text\nhello\n```\n"
+    assert poster.parse_queue(before_status) == []
+
+
 def test_parser_recovers_next_block_after_unclosed_one():
     text = "## Q-010\nstatus: queued\n```text\nhalf\n## Q-011\nstatus: queued\n```text\nok\n```\n"
     items = poster.parse_queue(text)
