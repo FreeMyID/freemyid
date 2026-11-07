@@ -287,19 +287,35 @@ def profile_page(p: Profile, statuses: list[BrokerStatus], names: dict[str, str]
     return layout(p.label, body)
 
 
-def outbox_page(items: list[tuple[Request, str, str, tuple[str, str, str]]], csrf: str, flash: str = "") -> str:
+def outbox_page(items: list[tuple[Request, str, str, tuple[str, str, str]]], csrf: str, flash: str = "",
+                releases: dict[str, list[str]] | None = None) -> str:
+    """`releases` maps a request id to the site names of the OTHER emails its approval would
+    also send (SEC-47, first-email release). Every value is escaped here."""
+    releases = releases or {}
     body = f'<h1>Emails waiting for your approval</h1>{_flash(flash)}'
     if not items:
         body += "<p>Nothing is waiting.</p>"
     for r, who, bname, (to, subj, text) in items:
+        others = releases.get(r.id) or []
+        n = len(others)
+        note = ""
+        ask = "Send this email now?"
+        if n:
+            s_ = "s" if n != 1 else ""
+            note = (f'<p class="note">This is the first email for {esc(who)}. Approving it also '
+                    f'sends the {n} other email{s_} waiting (to: {esc(", ".join(sorted(set(others))))}). '
+                    'After that, routine emails go out by themselves. Formal demands still wait '
+                    'for you.</p>')
+            ask = f"Send this email and {n} other{s_} now?"
         body += (f'<div class="card"><b>{esc(who)}</b> to <b>{esc(bname)}</b> '
                  f'<span class="chip">{esc(r.kind.value.replace("_", " "))}</span>'
                  f'<p><b>To:</b> {esc(to)}<br><b>Subject:</b> {esc(subj)}</p>'
                  f'<pre class="letter">{esc(text)}</pre>'
                  f'<p class="hint">Drafted {_dt(r.created_at)}. Approving sends this email from '
                  'the removal mailbox.</p>'
+                 f'{note}'
                  f'<form method="post" action="/outbox/{esc(r.id)}/approve" class="actions">'
-                 f'{csrf_field(csrf)}<button type="submit" data-confirm="Send this email now?">'
+                 f'{csrf_field(csrf)}<button type="submit" data-confirm="{esc(ask)}">'
                  f'Approve and send</button>'
                  f'<button type="submit" class="secondary" '
                  f'formaction="/outbox/{esc(r.id)}/cancel">Cancel it</button></form></div>')

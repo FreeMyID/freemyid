@@ -134,3 +134,18 @@ def test_status_sentence_first_run_is_gentle():
     s, good = dash.status_sentence(sts, 3, False)
     assert s.startswith("Free My ID has made a list of sites") and "need" not in s and not good
     assert dash.status_sentence(sts, 0, False)[1]
+
+
+def test_outbox_page_discloses_released_emails_escaped():
+    from freemyid.models import Method, Request, RequestKind
+
+    r = Request(profile_id="a" * 32, broker_id="b1", kind=RequestKind.OPT_OUT,
+                method=Method.EMAIL)
+    items = [(r, "Jane <b>", "Site", ("to@x.test", "S", "body"))]
+    page = dash.outbox_page(items, "tok", releases={r.id: ["A<script>", "B"]})
+    assert "This is the first email for Jane &lt;b&gt;. Approving it also sends the 2 other emails" in page
+    assert "(to: A&lt;script&gt;, B)" in page
+    assert 'data-confirm="Send this email and 2 others now?"' in page
+    assert "<script>" not in page
+    plain = dash.outbox_page(items, "tok")
+    assert 'data-confirm="Send this email now?"' in plain and "first email for" not in plain
