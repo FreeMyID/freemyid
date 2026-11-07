@@ -43,9 +43,9 @@ Public means **the whole history is public**, not just the latest files.
 - [ ] Each site/ claim matches the shipping build (wizard-packager is checking): per-user install with no admin; "six screens" (✅ confirmed: wizard/draft.py STEPS has 6); the uninstall prompt asking whether to delete records; keyring = Windows Credential Manager; network allowlist; practice mode on by default; never asks for SSN, bank or card details. **O (wizard-packager)**
 - [ ] SmartScreen walkthrough checked on a clean Windows 10 and 11 VM, with real screenshots added. **O**
 - [ ] On the VM, confirm the installer still shows a page with an **Install** button (the site's download steps say "Click Install"; freemyid.iss has DisableReadyPage=yes). If not, fix the site copy. **O**
-- [ ] The download link `releases/latest/download/FreeMyIDSetup.exe` resolves (needs the first release). **O**
+- [x] The download link `releases/latest/download/FreeMyIDSetup.exe` resolves (needs the first release). **O** ✅ (2026-11-07) 302 -> v0.1.0 asset, SHA256SUMS matches.
 - [x] SHA256SUMS published with the release and mentioned on the download page. **O, B for copy** ✅ build.yml release job uploads SHA256SUMS.txt.
-- [ ] **Site claims re-checked on launch day**, especially "open source" and "source code" links (true only once the repo is public), the install time and the legal wording ("must answer" only where a state law applies). **B**
+- [x] **Site claims re-checked on launch day**, especially "open source" and "source code" links (true only once the repo is public), the install time and the legal wording ("must answer" only where a state law applies). **B** ✅ (2026-11-07) R13 re-check; open: "relatives" home card needs a source.
 - [ ] The site works with no scripts, on a phone at 360 px width, in dark mode, and reads well at 200% zoom. **B**
 
 ## 4. Security and quality gate
