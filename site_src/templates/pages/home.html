@@ -19,7 +19,12 @@
       </div>
       {# source: release values from data/release.yaml (null today); PLAN_V1 D5 per-user install #}
       {% if release.version %}
+      {# WR-38: brand-marketing copy for an early (0.x) release #}
+      {% if release.version.startswith("0.") %}
+      <p class="hero__note">Free for Windows 10 and 11. Version {{ release.version }} is an early release, so tell us what confuses you.</p>
+      {% else %}
       <p class="hero__note">Free for Windows 10 and 11. Version {{ release.version }}{% if release.size_mb %}, {{ release.size_mb }} MB{% endif %}.</p>
+      {% endif %}
       {% else %}
       <p class="hero__note">Free for Windows 10 and 11. The first version is not published yet.</p>
       {% endif %}
@@ -95,8 +100,9 @@
       <h2 id="removes-title">What people-search sites are selling about you.</h2>
       <p class="lead">People-search sites, also called data brokers, collect public records and sell them to anyone. Here is what they commonly list:</p>
     </div>
-    {# source: U.S. CFPB press release, 3 Dec 2024 https://www.consumerfinance.gov/archive/newsroom/cfpb-proposes-rule-to-stop-data-brokers-from-selling-sensitive-personal-data-to-scammers-stalkers-and-spies/
-       (address, phone, age, relatives as on the old home page). Teardown's "past addresses" and "email addresses" cards left out until sourced. #}
+    {# source (WR-37): the card list is what the people-search sites themselves list (address, phone, age, relatives, as on the
+       old approved home page); sample registry search/opt-out fields cover address, phone and age. Not the CFPB 2024 proposed rule
+       (withdrawn 15 May 2025, 90 FR 20568). Open CR: broker-researcher to add a brokers/SOURCES.md "Website claims" entry for these four. Teardown's "past addresses" and "email addresses" cards left out until sourced. #}
     <ul class="cards cards--4" role="list">
       <li class="card"><span class="card__icon">{{ icon('home') }}</span><h3>Home address</h3></li>
       <li class="card"><span class="card__icon">{{ icon('phone') }}</span><h3>Phone numbers</h3></li>
@@ -156,7 +162,8 @@
     {# source: LICENSE (AGPL); PLAN_V1 (Windows only in v1). Free My ID side only, per R5 notes for rows 5 and 7. #}
     {# WR-26: "works on" only once a release exists (data/release.yaml) #}
     {% if release.version %}
-    <p>Free My ID is open source, so you can read it, and works on Windows 10 and 11.</p>
+    {# WR-38: brand-marketing copy once a release exists #}
+    <p>Free My ID is open source, so you can read it. Made for Windows 10 and 11. Version {{ release.version }} is out now.</p>
     {% else %}
     <p>Free My ID is open source, so you can read it. Made for Windows 10 and 11. The first version is coming soon.</p>
     {% endif %}
