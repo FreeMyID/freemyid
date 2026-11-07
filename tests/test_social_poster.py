@@ -6,6 +6,7 @@ import importlib.util
 import json
 import logging
 import sys
+import unicodedata
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -514,3 +515,154 @@ def test_mastodon_stub_interface():
     with pytest.raises(NotImplementedError):
         m.load_credentials(fake_keyring({}), poster.Scrubber())
     assert "mastodon" not in poster.BACKENDS
+
+
+# ----------------------------------------------------------------------------- qa-security (SEC-57..59)
+
+
+def _create_record_count(rec: Recorder) -> int:
+    return sum(r.url.path.endswith("createRecord") for r in rec.requests)
+
+
+def test_qa_never_reads_password_or_email_fields(files, monkeypatch):
+    accessed: list[str] = []
+
+    class Tracking(dict):
+        def __getitem__(self, key):
+            accessed.append(key)
+            return super().__getitem__(key)
+
+        def get(self, key, default=None):
+            accessed.append(key)
+            return super().get(key, default)
+
+    monkeypatch.delenv(poster.HANDLE_ENV, raising=False)
+    real_loads = json.loads
+    def loads(s, *a, **k):
+        data = real_loads(s, *a, **k)
+        return Tracking(data) if s == FULL_KEYS["bluesky"] else data
+
+    monkeypatch.setattr(poster.json, "loads", loads)
+    rec = Recorder()
+    assert do_run(files, rec) == 0
+    assert accessed and set(accessed) <= {"handle", "user"}
+    session = json.loads(rec.requests[0].content)
+    assert session == {"identifier": HANDLE, "password": SECRET}
+    for r in rec.requests:
+        assert b"nope" not in r.content and b"x@example.invalid" not in r.content
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "See https://freemyid.org/faq/ (and https://github.com/FreeMyID/freemyid).",
+        "\U0001f1fa\U0001f1f8 café https://freemyid.org/a_(b) next https://freemyid.org!",
+        "https://freemyid.org/x?y=1&z=2#frag, done",
+    ],
+)
+def test_qa_facet_uri_equals_visible_bytes(text):
+    raw = text.encode("utf-8")
+    facets = poster.link_facets(text)
+    assert facets
+    for f in facets:
+        idx, feat = f["index"], f["features"]
+        assert len(feat) == 1 and feat[0]["$type"] == "app.bsky.richtext.facet#link"
+        assert raw[idx["byteStart"]:idx["byteEnd"]].decode("utf-8") == feat[0]["uri"]
+
+
+def test_qa_redirect_is_not_followed():
+    rec_hosts: list[str] = []
+
+    def handler(request):
+        rec_hosts.append(request.url.host)
+        return httpx.Response(302, headers={"Location": "https://evil.example/xrpc/x"})
+
+    http = poster.Http(frozenset({"bsky.social"}), poster.Scrubber(),
+                       transport=httpx.MockTransport(handler))
+    with pytest.raises(poster.PosterError):
+        http.post_json("https://bsky.social/xrpc/x", {})
+    assert rec_hosts == ["bsky.social"]
+
+
+def test_qa_proxy_env_ignored(monkeypatch):
+    monkeypatch.setenv("HTTPS_PROXY", "http://127.0.0.1:9")
+    monkeypatch.setenv("ALL_PROXY", "http://127.0.0.1:9")
+    http = poster.Http(frozenset({"bsky.social"}), poster.Scrubber())
+    assert http._client._trust_env is False
+    assert not http._client._mounts  # no env-derived proxy mounts
+    http.close()
+
+
+def test_qa_network_error_has_no_exception_context():
+    scrub = poster.Scrubber()
+    scrub.add(SECRET)
+
+    def explode(request):
+        raise httpx.ReadTimeout(f"t {SECRET}", request=request)
+
+    http = poster.Http(frozenset({"bsky.social"}), scrub, transport=httpx.MockTransport(explode))
+    with pytest.raises(poster.PosterError) as ei:
+        http.post_json("https://bsky.social/xrpc/x", {"password": SECRET})
+    assert SECRET not in str(ei.value)
+    assert ei.value.__cause__ is None and ei.value.__suppress_context__ is True
+
+
+def test_qa_all_loggers_debug_hold_no_secrets(files, caplog, capsys):
+    with caplog.at_level(logging.DEBUG, logger=""):
+        for name in ("httpx", "httpcore"):
+            logging.getLogger(name).setLevel(logging.DEBUG)
+        assert do_run(files, Recorder()) == 0
+    blob = caplog.text + "".join(capsys.readouterr())
+    for s in (SECRET, JWT, REFRESH):
+        assert s not in blob
+
+
+def _ambiguous_failure(kind: str, monkeypatch):
+    """Make run 1 fail after createRecord reached the server; return a Recorder for run 1."""
+    rec = Recorder()
+    if kind == "read-timeout":
+        def handler(request):
+            resp = rec(request)
+            if request.url.path.endswith("createRecord"):
+                raise httpx.ReadTimeout("server created it, reply lost", request=request)
+            return resp
+        rec.transport = lambda: httpx.MockTransport(handler)  # type: ignore[method-assign]
+    elif kind == "queue-write-oserror":
+        real = poster.atomic_write
+
+        def flaky(path, content):
+            if path.name == "bluesky-queue.md" and "status: posted" in content:
+                raise OSError("disk full")
+            real(path, content)
+        monkeypatch.setattr(poster, "atomic_write", flaky)
+    elif kind == "bad-uri":
+        def handler(request):
+            if request.url.path.endswith("createRecord"):
+                rec.requests.append(request)
+                return httpx.Response(200, json={"uri": URI + "\nstatus: queued"})
+            return rec(request)
+        rec.transport = lambda: httpx.MockTransport(handler)  # type: ignore[method-assign]
+    return rec
+
+
+@pytest.mark.xfail(strict=True, reason="SEC-57: an ambiguous post stays 'queued' and is re-posted")
+@pytest.mark.parametrize("kind", ["read-timeout", "queue-write-oserror", "bad-uri"])
+def test_qa_sec57_no_repost_after_ambiguous_failure(files, kind, monkeypatch):
+    rec1 = _ambiguous_failure(kind, monkeypatch)
+    assert do_run(files, rec1) != poster.EXIT_OK
+    monkeypatch.undo()
+    rec2 = Recorder()
+    do_run(files, rec2)  # the next timer run (or a Persistent=true catch-up)
+    q2 = [r for r in rec2.requests if r.url.path.endswith("createRecord")]
+    first_text = "Free My ID removes you"
+    reposted = [r for r in q2 if first_text in r.content.decode()]
+    assert _create_record_count(rec1) == 1 and reposted == []
+
+
+@pytest.mark.xfail(strict=True, reason="SEC-58: invisible/bidi characters are accepted in links")
+@pytest.mark.parametrize("ch", ["\u200b", "\u202e", "\u2060", "\ufeff"])
+def test_qa_sec58_invisible_chars_never_reach_a_facet(ch):
+    text = f"Visit https://freemyid.org{ch}.evil.example/ today"
+    for f in poster.link_facets(text):
+        uri = f["features"][0]["uri"]
+        assert not any(unicodedata.category(c) == "Cf" for c in uri)
