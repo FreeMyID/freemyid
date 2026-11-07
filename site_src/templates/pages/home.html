@@ -167,7 +167,8 @@
 <section class="band" aria-labelledby="safety-title">
   <div class="wrap">
     <div class="section-head">
-      <h2 id="safety-title">Built so you do not have to trust us.</h2>
+      {# WR-28: not absolute; the installer is unsigned and most readers cannot read code #}
+      <h2 id="safety-title">Built so you can check our work.</h2>
     </div>
     <ul class="cards cards--3" role="list">
       {# source: teardown 4.8; D8 encrypted (crypto.py, storage/db.py) and "Nothing is sent to us" (netpolicy.py); headline per WR-25 (web-qa) #}
