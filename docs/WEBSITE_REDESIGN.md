@@ -98,7 +98,7 @@ commit only your own source files by explicit path, and checkpoint in `docs/hand
 | R10 | Round 2: WR-31..34 + comparison column balance + delete .section CSS | web-designer | done ed89017..ce44224 (.section CSS deleted in R11) |
 | R11 | WR-29 (empty releases-page links) + rebuild/commit site/ | web-developer | done efc7997, d58dad5, site/ ab9b709 |
 | R12 | Re-verify | web-qa | next |
-| R8 | Security/privacy sign-off | qa-security | after R12 |
+| R8 | Security/privacy sign-off | qa-security | PASS 02e363c (+ tests 84d0caf); R12 web-qa PASS e8b2a9b |
 
 ## Follow-ups seen during round 1 (not web)
 
@@ -122,3 +122,16 @@ commit only your own source files by explicit path, and checkpoint in `docs/hand
   clean Windows VM at first release.
 - **Fingerprint promise / releases links** (WR-29): while `release.version` is null, pages say "will come with a
   fingerprint" and never link the empty GitHub releases page; JSON-LD `downloadUrl` appears only with a version.
+
+## Orchestrator rulings (security review, 2026-11-07)
+
+- **SEC-40** (build_site `--out` could rmtree any outside path): fixed 072a892. `--out` now replaces only an empty
+  dir or an earlier preview (`.fmid-site-preview` marker), never the repo or an ancestor. Old marker-less scratch
+  folders are refused: pick a fresh folder.
+- **SEC-41** (report screenshot shows CheckPeople, USPhonebook, Addresses.com, which aren't in the sample registry):
+  **accepted.** Bare public brand names in an illustrative screenshot reveal none of the private registry's value
+  (URLs, selectors, procedures). Rule for later screenshots: prefer sample-registry brokers.
+- **SEC-42** (CLI setup still asks for a full date of birth): dispatched to wizard-packager. The site claim stays;
+  it is true for the wizard users actually run.
+- **SEC-43** (printable report is plaintext): the site claim is kept, plus a qualifier on /safety/ that the report is
+  a normal file with site names, statuses and dates only (d8b61a3).
