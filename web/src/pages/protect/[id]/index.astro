@@ -100,6 +100,16 @@ const article = {
     <p class="mt-2xs text-body text-muted print:hidden">Opens {c.host}, the official website.</p>
   </section>
 
+  {c.tips.length > 0 && (
+    <section aria-labelledby="tips">
+      {/* source: checklists.yaml tips (reader-facing; notes stay internal) */}
+      <h2 class="mt-xl" id="tips">Good to know</h2>
+      <ul class="mt-s grid gap-2xs list-disc pl-m" role="list">
+        {c.tips.map((t) => <li>{t}</li>)}
+      </ul>
+    </section>
+  )}
+
   <section aria-labelledby="undo">
     <h2 class="mt-xl" id="undo">How to undo it</h2>
     <p class="mt-s">{c.how_to_undo}</p>

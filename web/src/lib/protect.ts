@@ -22,11 +22,11 @@ const MAX_BYTES = 512 * 1024; // same cap as src/freemyid/checklists.py
 export interface Checklist {
   id: string; title: string; why: string; url: string; cost: string; time_needed: string;
   need_on_hand: string[]; steps: string[]; how_to_undo: string; source_urls: string[];
-  date_checked: string; verification: "official_page" | "partial"; notes: string | null; status_note: string | null;
+  date_checked: string; verification: "official_page" | "partial"; notes: string | null; tips: string[]; status_note: string | null;
 }
 
 const FIELDS = ["id", "title", "why", "url", "cost", "time_needed", "need_on_hand", "steps", "how_to_undo",
-  "source_urls", "date_checked", "verification", "notes", "status_note"];
+  "source_urls", "date_checked", "verification", "notes", "tips", "status_note"];
 const REQUIRED = ["id", "title", "why", "url", "cost", "time_needed", "steps", "how_to_undo", "source_urls",
   "date_checked", "verification"];
 
@@ -66,7 +66,7 @@ function validate(raw: any): Checklist {
     how_to_undo: str(raw.how_to_undo, `${where}.how_to_undo`),
     source_urls: strList(raw.source_urls, `${where}.source_urls`, 1).map((u, i) => httpUrl(u, `${where}.source_urls[${i}]`)),
     date_checked: isoDate(raw.date_checked, `${where}.date_checked`), verification: raw.verification,
-    notes: raw.notes ?? null, status_note: raw.status_note ?? null,
+    notes: raw.notes ?? null, tips: strList(raw.tips ?? [], `${where}.tips`), status_note: raw.status_note ?? null,
   };
 }
 
@@ -94,7 +94,7 @@ export const PROTECT_GROUPS: { key: string; title: string; ids: string[] }[] = [
 // Entries held back from the public site until the orchestrator rules. freeze_lexisnexis: its official
 // host is in the private registry, so the leak scan (tools/site_check.py private_host_hashes) flags it.
 // The page is not built and the hub doesn't link it; nothing is obfuscated to get past the scan.
-const HOLD = new Set(["freeze_lexisnexis"]);
+const HOLD = new Set<string>([]);   // freeze_lexisnexis released 2026-11-07 (PUBLIC_OK_HOSTS)
 
 // Entries whose phone numbers are unverified and must never be shown (orchestrator brief: ChexSystems).
 const HIDE_PHONE_STEPS = new Set(["freeze_chexsystems"]);

@@ -725,7 +725,8 @@ class Checklist(_Base):
     source_urls: list[HttpUrl] = Field(min_length=1)
     date_checked: date
     verification: Literal["official_page", "partial"]
-    notes: str | None = None
+    notes: str | None = None          # internal research notes, never shown to users
+    tips: list[str] = []              # short reader-facing tips (web + app show these)
     status_note: str | None = None
 
 
