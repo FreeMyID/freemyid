@@ -219,7 +219,8 @@ const cardIcon = "inline-flex size-12 items-center justify-center rounded-lg bg-
 <Section tone="alt" title="Built so you can check our work." titleId="safety-title">
   <ul class="grid gap-m min-[56.25em]:grid-cols-3" role="list">
     {/* source: teardown 4.8; D8 encrypted (crypto.py, storage/db.py) and "Nothing is sent to us" (netpolicy.py); headline per WR-25 */}
-    <Card as="li" class="reveal"><span class={cardIcon}><Icon name="lock" /></span><h3>Your details stay on your computer. Nothing is sent to us.</h3><p>Your details are stored encrypted on your computer. The app talks only to the sites you are asking to remove you, your own email account, and our public list of those sites.</p></Card>
+{/* source: docs/ROADMAP.md section 1 privacy promise; docs/POSITIONING.md privacy scope (WR-70) */}
+    <Card as="li" class="reveal"><span class={cardIcon}><Icon name="lock" /></span><h3>Your details are stored on your computer. Nothing is sent to us.</h3><p>Your details are stored only on your computer. They go out only in a removal request you approve, sent straight to that one site. Your stored details are encrypted. The app talks only to the sites you are asking to remove you, your own email account, and our public list of those sites.</p></Card>
     {/* source: teardown 4.8; POSITIONING.md rule 4; shared rule 6 (never pay; phone/ID only with permission) */}
     <Card as="li" class="reveal"><span class={cardIcon}><Icon name="shield" /></span><h3>It never asks for the wrong things.</h3><p>Never your Social Security number. Never bank or card details. Never a payment. Never a phone number or ID unless you choose to.</p></Card>
     {/* source: teardown 4.8; LICENSE; download page SHA256SUMS; freemyid.iss [UninstallRun] removes the daily task */}
