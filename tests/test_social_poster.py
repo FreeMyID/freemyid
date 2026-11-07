@@ -875,16 +875,34 @@ def test_sec58_url_followed_by_hidden_char_gets_no_facet():
 # ----------------------------------------------------------------------------- SEC-59 install.sh
 
 SOCIAL = ROOT / "tools" / "social"
+# systemd-analyze --user needs a short real runtime dir; captured before any fixture runs
+_RUNTIME_DIR = os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}"
 INSTALL_FILES = ("install.sh", "poster.py", "verify.sh", "requirements.lock",
                  "freemyid-poster.service", "freemyid-poster.timer")
 
 
+def _hermetic_env(home: Path, bin_dir: Path, tmp: Path) -> dict[str, str]:
+    """Minimal env for every subprocess: nothing leaks in from the caller or other tests."""
+    return {
+        "HOME": str(home),
+        "PATH": f"{bin_dir}:/usr/bin:/bin",
+        "TMPDIR": str(tmp),
+        "LC_ALL": "C",
+        "FREEMYID_POSTER_TEST_SKIP_PIP": "1",
+    }
+
+
 @pytest.fixture
-def sandbox(tmp_path: Path):
+def sandbox(tmp_path: Path, monkeypatch):
     """A fake repo and a temp HOME. Nothing outside tmp_path is touched."""
     import shutil
     import stat
 
+    tmp_path = tmp_path.resolve()  # install.sh uses pwd -P; compare like with like
+    for key in list(os.environ):
+        if key.startswith(("XDG_", "PYTHON", "FREEMYID_", "VIRTUAL_ENV", "PIP_")):
+            monkeypatch.delenv(key, raising=False)
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
     repo = tmp_path / "repo"
     (repo / "tools" / "social").mkdir(parents=True)
     (repo / "docs" / "marketing" / "seo").mkdir(parents=True)
@@ -898,6 +916,7 @@ def sandbox(tmp_path: Path):
     fake = bin_dir / "systemctl"
     fake.write_text(f"#!/bin/sh\necho \"$@\" >> {calls}\n")
     fake.chmod(0o755)
+    (tmp_path / "tmp").mkdir()
     yield repo, home, bin_dir, calls
     for p in [tmp_path, *tmp_path.rglob("*")]:  # read-only tree: let pytest clean it up
         if not p.is_symlink():
@@ -912,16 +931,11 @@ def run_install(sandbox, *args: str, uid0: bool = False):
         fake_id = bin_dir / "id"
         fake_id.write_text("#!/bin/sh\necho 0\n")
         fake_id.chmod(0o755)
-    env = {
-        "HOME": str(home),
-        "PATH": f"{bin_dir}:/usr/bin:/bin",
-        "FREEMYID_POSTER_TEST_SKIP_PIP": "1",
-        "LC_ALL": "C",
-    }
     return subprocess.run(
-        ["bash", str(repo / "tools" / "social" / "install.sh"), "--python", sys.executable,
-         *args],
-        check=False, env=env, capture_output=True, text=True, timeout=120,
+        ["/bin/bash", str(repo / "tools" / "social" / "install.sh"),
+         "--python", sys.executable, *args],
+        check=False, env=_hermetic_env(home, bin_dir, home.parent / "tmp"),
+        capture_output=True, text=True, timeout=120, cwd=home, umask=0o022,
     )
 
 
@@ -936,11 +950,14 @@ def _pre_checks(unit: Path) -> list[int]:
     import shlex
     import subprocess
 
+    home = unit.parents[3]  # <home>/.config/systemd/user/<unit>
+    env = _hermetic_env(home, home.parent / "bin", home.parent / "tmp")
     rcs = []
     for line in unit.read_text().splitlines():
         if line.startswith("ExecStartPre="):
             argv = shlex.split(line.removeprefix("ExecStartPre="))
-            res = subprocess.run(argv, check=False, capture_output=True, timeout=60)
+            res = subprocess.run(argv, check=False, capture_output=True, timeout=60, env=env,
+                                 cwd="/", umask=0o022)
             rcs.append(res.returncode)
     return rcs
 
@@ -960,7 +977,7 @@ def test_sec59_install_layout_permissions_and_pin(sandbox):
 
     repo, home, _, calls = sandbox
     res = run_install(sandbox)
-    assert res.returncode == 0, res.stderr
+    assert res.returncode == 0, res.stdout + res.stderr
     prefix, service, timer = _paths(home)
     assert stat.S_IMODE(prefix.stat().st_mode) == 0o555
     assert stat.S_IMODE((prefix / "poster.py").stat().st_mode) == 0o444
@@ -975,7 +992,8 @@ def test_sec59_install_layout_permissions_and_pin(sandbox):
     text = service.read_text()
     assert f"ExecStart={prefix}/venv/bin/python -I -B {prefix}/poster.py" in text
     assert f"ReadWritePaths={repo}/docs/marketing/seo" in text
-    assert str(ROOT) not in text  # never points at the real repo
+    for real in (ROOT / "tools", ROOT / ".venv", ROOT / "docs"):
+        assert f"{real}/" not in text  # never points at the real repo
     sums = hashlib.sha256((prefix / "SHA256SUMS").read_bytes()).hexdigest()
     assert _pinned(service) == sums and sums in res.stdout
     assert (prefix / "poster.py").read_bytes() == (SOCIAL / "poster.py").read_bytes()
@@ -1065,9 +1083,13 @@ def test_sec59_systemd_analyze_verify(sandbox):
     _, home, _, _ = sandbox
     assert run_install(sandbox).returncode == 0
     _, service, timer = _paths(home)
+    if not Path(_RUNTIME_DIR).is_dir():
+        pytest.skip("no XDG_RUNTIME_DIR for systemd-analyze --user")
+    env = {"HOME": str(home), "XDG_RUNTIME_DIR": _RUNTIME_DIR, "PATH": "/usr/bin:/bin",
+           "LC_ALL": "C"}
     res = subprocess.run(
         ["systemd-analyze", "--user", "verify", str(service), str(timer)],
-        check=False, capture_output=True, text=True, timeout=60,
+        check=False, capture_output=True, text=True, timeout=60, env=env,
     )
     if res.returncode != 0 and "Failed to" in res.stderr and "bus" in res.stderr.lower():
         pytest.skip("no user systemd instance")
