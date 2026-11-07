@@ -1,0 +1,136 @@
+---
+// For families. Same copy and source comments as site_src/templates/pages/families.html.
+// Sources: docs/marketing/families-page.md (WR-11), which traces every line to docs/HELPER_GUIDE.md,
+// docs/USER_GUIDE.md and docs/assets/fridge-card.html.
+import Base from "@/layouts/Base.astro";
+import PageHead from "@/components/PageHead.astro";
+import Art from "@/components/Art.astro";
+import Alert from "@/components/ui/Alert.astro";
+import CtaDownload from "@/components/CtaDownload.astro";
+import Timeline from "@/components/aceternity/Timeline.astro";
+import TimelineItem from "@/components/aceternity/TimelineItem.astro";
+import { buttonVariants } from "@/components/ui/button-variants";
+import { pageProps, release, site, url } from "@/lib/site";
+const p = pageProps("families");
+const v = release.version;
+const card = url("assets/free-my-id-fridge-card.pdf");
+const h2 = "mt-xl";
+---
+<Base {...p}>
+<PageHead crumbs={p.crumbs} title="Helping a parent or grandparent use Free My ID"
+  lead="Free My ID was built so people who aren't comfortable with computers can use it. If you're setting it up for someone you love, this page is for you. Allow about half an hour the first time.">
+  {/* source: docs/HELPER_GUIDE.md intro ("Allow about half an hour the first time") */}
+  <div class="mt-m flex flex-wrap gap-s">
+    <CtaDownload />
+    <a class={buttonVariants({ variant: "secondary", size: "lg" })} href={card}>Print the fridge card (PDF)</a>
+  </div>
+  <Art slot="art" src="sections/families-help" alt="A grown child helping a parent at a laptop." />
+</PageHead>
+
+<div class="wrap-narrow pb-2xl">
+  <div class="prose-fmid">
+    <h2>What you're setting up, in one sentence</h2>
+    {/* source: docs/POSITIONING.md "Legal accuracy": only some states require an answer; elsewhere a polite request */}
+    <p>Free My ID asks people-search sites (websites that publish names, addresses and phone numbers, also called data brokers) to delete a person's details, using each site's own removal process, and then keeps checking. In states with a privacy law, covered sites must answer. Elsewhere, many honor the request but don't have to.</p>
+
+    <h2>What it doesn't do</h2>
+    <ul>
+      {/* source: docs/USER_GUIDE.md section 1 limits (Facebook unchanged; news and government records not affected); POSITIONING.md rule 6 */}
+      <li>It doesn't change what Facebook itself does with their account.</li>
+      <li>It can't remove news stories or government records.</li>
+      {/* source: response time varies per broker; registry typical_processing_days and docs/POSITIONING.md (no promised timeline) */}
+      <li>Some sites take weeks, and some list people again later. That's why it keeps checking.</li>
+    </ul>
+
+    {/* source: docs/HELPER_GUIDE.md section 1 "Have ready" and section 3 screen 4 ("never sent to anyone"); permission = USER_GUIDE.md section 3, HELPER_GUIDE.md section 3 screen 1 */}
+    <h2>Before you sit down</h2>
+    <p>Have ready:</p>
+    <ul>
+      <li>Their full name, and any maiden or earlier names</li>
+      <li>The towns they've lived in over the last 10 years</li>
+      <li>Optional: year of birth, phone number, relatives' names. These only help Free My ID recognize the right listing. They are never sent to anyone.</li>
+    </ul>
+  </div>
+  <Alert variant="note" icon="shield"><p><strong>Permission comes first.</strong> Each adult gives their own permission. If you're helping an adult, they sign a short permission form, and Free My ID won't work on them without it. For a child under 18, a parent or guardian sets it up.</p></Alert>
+
+  <div class="prose-fmid">
+    <h2>A separate email address for replies (optional)</h2>
+    {/* source: docs/HELPER_GUIDE.md section 1 (Gmail + app password; Outlook.com/Hotmail can't be used; "Skip, I'll do these by hand"); app password prompt = src/freemyid/wizard/draft.py */}
+    <p>Sites reply by email, and some send a "click to confirm" link.</p>
+    <ul>
+      <li><strong>If you want Free My ID to send the emails and read the replies:</strong> make a new, free Gmail address just for this. It keeps removal mail out of their everyday inbox. Gmail needs an "app password"; the setup screen shows the steps. Outlook.com and Hotmail can't be used for this.</li>
+      <li><strong>If you'd rather keep it simple:</strong> choose "Skip, I'll do these by hand." Free My ID prepares each message and opens their email program, and they press Send.</li>
+    </ul>
+
+    <h2 id="setup">Setting it up</h2>
+  </div>
+  {/* source: docs/HELPER_GUIDE.md section 2 (download, SmartScreen, Install) and section 3 (six screens, practice mode); packaging/windows/freemyid.iss PrivilegesRequired=lowest; six screens = src/freemyid/wizard/draft.py STEPS; unsigned = .github/workflows/build.yml release notes */}
+  <Timeline class="mt-m">
+    <TimelineItem n={1} title="Download"><p>On their Windows 10 or 11 computer, use the Download button on this site. Only download from this site{v && <> or our <a href={site.releases_url}>GitHub releases page</a></>}.</p></TimelineItem>
+    <TimelineItem n={2} title="Open FreeMyIDSetup.exe"><p>Windows may show a blue box that says "Windows protected your PC." That happens because Free My ID is free and hasn't bought a publisher certificate yet. Click the small words <strong>More info</strong>, check the name says FreeMyIDSetup.exe, then click <strong>Run anyway</strong>. <a href={url("download/#smartscreen")}>See it with pictures.</a></p></TimelineItem>
+    <TimelineItem n={3} title="Click Install"><p>No administrator password is needed. Free My ID opens by itself.</p></TimelineItem>
+    <TimelineItem n={4} title="Go through the six setup screens">
+      <p>A row of dots at the top shows where you are.</p>
+      <ul>
+        <li>Welcome and permission</li>
+        <li>Their name</li>
+        <li>Where they live (city and state are enough)</li>
+        <li>A few optional details to recognize them</li>
+        <li>The optional reply email</li>
+        <li>Whether to keep checking automatically (leave it ticked: one small daily task, quiet unless they're needed)</li>
+      </ul>
+    </TimelineItem>
+    <TimelineItem n={5} title="Start in practice mode"><p>Free My ID first looks for listings but sends nothing. Look over what it found together. When you're ready, go to Settings and turn on real requests. Requests already sent can't be taken back.</p></TimelineItem>
+  </Timeline>
+
+  <div class="prose-fmid">
+    <h2 class={h2}>What they'll see afterward</h2>
+    {/* source: docs/HELPER_GUIDE.md section 4 (status words, "Needs you" cards, never does the robot step, approval before sending, notices without personal details, receipts) */}
+    <ul>
+      <li><strong>A status page in plain words:</strong> listed, asked, waiting for the site, site confirmed, or not listed now.</li>
+      <li><strong>"Needs you" cards.</strong> A few sites need a real person. A card appears with one big button.
+        <ul>
+          <li>"Fill it in for me" opens the site's removal page and fills in the boxes. If the site asks "I'm not a robot," the person ticks the box and presses Submit themselves. Free My ID never does that step.</li>
+          <li>"Do it with me" opens the site in their own browser with numbered steps and a Copy button for each box.</li>
+        </ul></li>
+      <li><strong>Emails waiting for approval,</strong> if a reply mailbox is set up. Nothing is sent until they press OK.</li>
+      <li><strong>Small desktop notices</strong> like "Mom: 2 sites need you." They never include personal details.</li>
+      <li><strong>Receipts:</strong> a printable list of every site, when it was asked, what it replied, and when it was checked again.</li>
+    </ul>
+
+    <h2 id="tell-them">Tell them this</h2>
+  </div>
+  {/* source: docs/HELPER_GUIDE.md section 4 "Tell them" and section 6; no installer emails or calls = policy (docs/marketing/families-page.md) */}
+  <blockquote><Alert variant="note" icon="shield"><p><strong>If it ever asks for your Social Security number, a bank card or a password for Facebook, it isn't Free My ID. Call me.</strong></p></Alert></blockquote>
+  <div class="prose-fmid">
+    <p>Free My ID never asks for: a Social Security number; bank, credit or debit card details; a photo of an ID card; their Facebook, Google or everyday email password; or money. It never creates accounts, uploads ID or gives out a phone number unless you've explicitly allowed it for that person. It never solves "are you a robot?" checks. We will never email you an installer, and we will never call you.</p>
+
+    <h2 id="fridge-card">Printable card for the fridge</h2>
+    {/* source: docs/assets/fridge-card.html (three things to remember, helper name and phone space) */}
+    <p>A one-page card with the three things to remember, and a space to write your name and phone number as their helper.</p>
+    <p><a class={buttonVariants({ variant: "secondary" })} href={card}>Print the fridge card (PDF)</a></p>
+
+    <h2>Pausing, stopping, uninstalling</h2>
+    {/* source: docs/HELPER_GUIDE.md section 5; freemyid.iss SuppressibleMsgBox delete-data prompt */}
+    <ul>
+      <li><strong>Pause the daily checks:</strong> Settings, Run automatically, Turn off.</li>
+      <li><strong>Stop sending real requests:</strong> switch back to practice mode in Settings any time.</li>
+      <li><strong>Uninstall:</strong> Windows Settings, Apps, Free My ID, Uninstall. It asks whether to delete the saved records too. Answer Yes to remove everything Free My ID stored on that computer.</li>
+    </ul>
+
+    <h2>Questions helpers ask</h2>
+    <h3>Is it really free?</h3>
+    <p>Yes. <a href={url("faq/")}>See the answer on our Questions page.</a></p>
+    <h3>Is it safe to put on their computer?</h3>
+    {/* source: docs/HELPER_GUIDE.md section 6 closing line; USER_GUIDE.md section 1 (no account, no cloud); LICENSE (AGPL) */}
+    <p>It runs on their computer only. No account, nothing sent to us. It is free, open-source software. It isn't a government service and isn't connected to Facebook/Meta or any data broker.</p>
+    <h3>Can I set it up for several family members?</h3>
+    {/* source: docs/HELPER_GUIDE.md section 5 ("when several are set up"); USER_GUIDE.md "For helpers" (profiles) */}
+    <p>Yes, from one computer. Each adult gives their own permission.</p>
+  </div>
+  <div class="mt-l flex flex-wrap gap-s">
+    <CtaDownload />
+    <a class={buttonVariants({ variant: "secondary", size: "lg" })} href={url("guides/")}>Use the free guides instead</a>
+  </div>
+</div>
+</Base>
