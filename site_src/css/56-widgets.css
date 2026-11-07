@@ -53,6 +53,14 @@
     background: var(--color-card); border: 1px solid var(--color-line); border-radius: var(--radius-lg);
     padding: var(--space-m); box-shadow: var(--shadow-2); display: grid; gap: var(--space-s);
   }
+  /* WR-33: a callout inside a card drops its outer margin (the grid gap spaces it) and most of its padding. */
+  .download-card > .callout, .card > .callout, .price-card > .callout { margin: 0; padding: var(--space-xs) var(--space-s); }
+  @media (max-width: 34em) {
+    .download-card { padding: var(--space-s); }
+    /* Icon floats beside the first line only; the text below gets the full card width. */
+    .download-card > .callout { display: block; padding-inline: var(--space-xs); }
+    .download-card > .callout > svg { float: left; float: inline-start; margin-inline-end: var(--space-2xs); }
+  }
   .facts { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-3xs) var(--space-s); font-size: var(--step--1); }
   .facts dt { font-weight: 700; color: var(--color-muted); }
   .facts dd { margin: 0; overflow-wrap: anywhere; }
