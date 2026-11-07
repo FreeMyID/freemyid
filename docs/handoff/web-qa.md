@@ -1,40 +1,15 @@
-# web-qa handoff: R7 verification of redesign v2 (2026-11-07)
+# web-qa handoff: R12 re-verify after round 2 (2026-11-07)
 
-Verdict: **PASS with P3s** for layout and accessibility; **FAIL-lite on claims**: 3 P2 copy fixes (WR-25, 26, 27) should land before the site is published. P1: 0, P2: 3, P3: 8.
+Verdict: **PASS with P3s**. P1: 0, P2: 0, P3: 1 new (WR-36). WR-25 to WR-35 verified fixed in the built output (a rebuild to scratchpad is byte-identical to site/).
 
-Method: built to scratchpad/qa/site (not site/), served on :8765, `tools/site_shots.py --crops --zoom-check`
-(10 pages x 360/768/1280/320 x light/dark = 80 combos), viewport-height crops at full resolution reviewed for
-home, safety, download and the Spokeo guide at 360 in both themes, keyboard tab-through, banned-word grep, claim
-audit against D8 and R5, gzip sizes. Screenshots: scratchpad/qa/shots (+ shots404, m/ montages).
+Method: built to scratchpad/qa2/site, `tools/site_shots.py --crops --zoom-check` (10 pages x 320/360/768/1280 x light/dark), full-resolution 360 crops of home, download, safety read in light and dark, keyboard tab-through at 1280 and 360, h-scroll at 320 and 640 on 7 pages, banned-word grep on visible text, gzip sizes. Shots: scratchpad/qa2/shots.
 
-Clean: no horizontal scroll at 320/360/640/768/1280 in either theme; one h1 per page; no skipped heading
-levels; no image without alt/width/height; no tap target under 24px (none under 44px either, outside the
-unstyled 404 test); dark mode contrast and polish good; focus ring visible on every one of 54 (1280) and 50 (360)
-tab stops, logical order (skip link, logo, nav, header CTA, hero, ..., footer), `scroll-padding-top` 120px so the
-sticky header does not cover focus; 404 renders fine under /freemyid/ (it uses absolute base-path URLs, so it only
-looks right under that prefix: `site_shots.py --prefix freemyid/`).
-Claims: all banned phrases absent (erase, guarantee, 100%, forever, audited, trusted by, ratings, counters);
-broker count is build-derived (29 guides); comparison paid column uses only the six R5 rows, no prices, no
-competitor names; made-up-data captions present on both screenshots.
+Verified: no h-scroll at 320/360/640/768/1280; one h1; no skipped levels; images have alt/width/height; no target under 24px (only the 404 test page at the root, unstyled by design, and logo 32px info). Focus ring on all 55 (1280) and 51 (360) tab stops, order logical. Comparison renders as stacked cards at 360 (every td has data-label); without :has() it falls back to the sideways-scrolling table (acceptable). "What it removes" is 2 columns; download "opens soon" callout is top of card, readable; safety copy matches WR-25/28/30; no releases links while release.version is null. srcset: dashboard 700/1200, report 600/900, aspect ratios match width/height attributes, no CLS risk. Banned phrases absent (only "permanent opt-out" in the OptOutPrescreen guide, a quote of the official form, fine).
 
-Sizes (gzip): home HTML 7.2 KB, safety 4.4, download 4.3, faq 4.9, guide ~3.8, CSS 10.2 KB (all under 50 KB);
-home total with images about 286 KB (budget 300).
+Sizes (gzip): home HTML 7.3 KB, safety 4.4, download 4.2, how-it-works 3.9, faq 4.9, families 5.2, guide 3.7, CSS 11.0 KB. Home first-view transfer about 104 KB with 700w images (budget 300).
 
-Tools: `tools/site_shots.py` (new, reusable) and three new `tools/site_check.py` rules (banned phrases on visible
-text, screenshot figure caption must contain "made-up data", no release-asset link or releases-page button while
-`release.yaml` version is null). All pass on current content; negative-tested on a tampered copy. `build_site.py
---check` OK, ruff clean.
+Tools: fixed `site_shots.py -h` crash (unescaped % in help text).
 
 | ID | Page | Sev | Problem |
 |---|---|---|---|
-| WR-25 | home, safety | P2 | "Nothing leaves your computer" vs text that the app contacts sites; table cell same |
-| WR-26 | home | P2 | "works on Windows 10 and 11 today" with no release |
-| WR-27 | download + 5 templates | P2 | "Installs in a few minutes" untimed; no source comments on download/how-it-works/faq/consent/guides |
-| WR-28 | safety, home | P3 | "don't have to trust us at all" absolute |
-| WR-29 | safety, download, home | P3 | fingerprint promise and links to empty releases page |
-| WR-30 | safety | P3 | app-password inside "never asks for" list |
-| WR-31 | home 360 | P3 | comparison table no scroll cue, tall header cell |
-| WR-32 | home 360 | P3 | oversized single-column "what it removes" cards |
-| WR-33 | download 360 | P3 | callout nested in card, cramped |
-| WR-34 | inner pages 360 | P3 | h1 flush to lead |
-| WR-35 | home | P3 | 286 KB total, oversized hero image, unreadable report at 360 |
+| WR-36 | faq, families, 404 templates | P3 | claims without source comments |

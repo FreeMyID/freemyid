@@ -69,7 +69,7 @@ def main() -> int:
     ap.add_argument("--prefix", default="", help="URL prefix for every page, e.g. freemyid/ when serving a "
                     "parent folder (the 404 page uses absolute /freemyid/ asset paths)")
     ap.add_argument("--crops", action="store_true", help="also save full-resolution viewport-height slices")
-    ap.add_argument("--zoom-check", action="store_true", help="also test 320px wide (400% zoom) for h-scroll")
+    ap.add_argument("--zoom-check", action="store_true", help="also test 320px wide (400%% zoom) for h-scroll")
     args = ap.parse_args()
     from playwright.sync_api import sync_playwright
 
