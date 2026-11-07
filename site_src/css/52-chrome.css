@@ -35,7 +35,7 @@
   .site-header__cta { flex: none; }
 
   /* No-JS menu (details/summary), shown below 62em. */
-  .menu { position: static; }
+  .menu { position: static; display: flex; align-items: center; margin: 0; }
   .menu > summary {
     display: inline-flex; align-items: center; gap: 0.45em; min-block-size: var(--tap);
     padding-inline: var(--space-s); border: 2px solid var(--color-line-strong); border-radius: var(--radius-md);
@@ -55,18 +55,31 @@
   .menu li + li { border-block-start: 1px solid var(--color-line); }
   .menu a:not(.btn) { display: flex; inline-size: 100%; font-size: 1rem; padding-inline: var(--space-2xs); }
   .menu .btn { margin-block: var(--space-xs) 0; inline-size: 100%; }
-  .menu > ul, .menu > :not(summary) > ul { padding: 0; }
+  .menu > :not(summary) > ul { padding: 0; }
 
   @media (max-width: 61.99em) {
     .nav--wide, .site-nav:not(.menu .site-nav) > :not(.menu, .site-header__cta) { display: none; }
-    .site-header__cta { display: none; }   /* the menu carries Download on small screens */
+  }
+  /* Phones: icon-only menu toggle (its label stays for screen readers) and a compact Download,
+     so brand + menu + Download fit in one row down to 320px. */
+  @media (max-width: 34em) {
+    .site-header > .wrap, .site-header__inner { gap: 0.4rem; padding-inline: max(0.8rem, 3vw); }
+    .brand { font-size: 0.9rem; gap: 0.4em; }
+    .menu > summary { inline-size: 2.5rem; min-block-size: 2.5rem; padding: 0; justify-content: center; }
+    .menu > summary span {
+      position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+    }
+    :is(.site-header__cta.btn, .site-header__cta .btn) { font-size: 0.8rem; min-block-size: 2.5rem; padding: 0.35em 0.7em; }
+    .site-header__cta svg { display: none; }
+    .site-header__cta { min-inline-size: 0; }
   }
   @media (min-width: 62em) {
     .menu { display: none; }
   }
-  @media (max-width: 22em) {
-    .brand { font-size: 1rem; gap: 0.4em; }
-    .menu > summary { padding-inline: var(--space-xs); }
+  @media (max-width: 21em) {   /* 336px and below: the logo alone names the home link */
+    .brand > span:not(.visually-hidden) {
+      position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+    }
   }
 
   /* ---------- Footer ---------- */
