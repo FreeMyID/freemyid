@@ -35,6 +35,7 @@
   :where(p, ul, ol, dl, details, figure, table, blockquote) + :where(p, ul, ol, dl, details, figure, table, blockquote) {
     margin-block-start: var(--space-s);
   }
+  h1 + :where(*) { margin-block-start: var(--space-s); }   /* WR-34: page title never sits flush on its lead */
   :where(h2, h3, h4) + :where(p, ul, ol, dl) { margin-block-start: var(--space-2xs); }
   :where(p, ul, ol, dl, figure, table) + :where(h2, h3, h4) { margin-block-start: var(--space-l); }
   :where(p, ul, ol, dl) + :where(.btn-row) { margin-block-start: var(--space-s); }
