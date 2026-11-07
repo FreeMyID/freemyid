@@ -1,0 +1,26 @@
+# Files Gemini CLI must never read (it sends what it reads to Google).
+# Private broker data and research
+brokers/registry.yaml
+brokers/registry.yaml.*
+docs/research/
+zzz_legacy/
+tools/private_host_hashes.txt
+# Secrets and personal files
+*.env
+.env*
+*Recovery-Codes*
+*recovery-codes*
+socialmedialogins*
+BingSiteAuth.xml
+*.db
+*.db-*
+*.key
+*.pem
+# Bulky or irrelevant
+.venv/
+node_modules/
+web/node_modules/
+web/dist/
+site/
+.claude/worktrees/
+brand/screenshots/
