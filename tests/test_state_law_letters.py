@@ -81,8 +81,11 @@ def test_verified_states_cite_the_matrix_citation(state, cite):
     # the background citation from state_laws.yaml is never used instead
     if LAWS[state].citation and LAWS[state].citation not in MATRIX.states[state].citation:
         assert LAWS[state].citation not in body
-    assert "45 days from receiving this request" in body
-    assert "45 more days" in body
+    if MATRIX.states[state].deadline_verified():
+        assert "45 days from receiving this request" in body
+        assert "45 more days" in body
+    else:   # deadline not read in statute yet (e.g. Oregon): never stated as law
+        assert "45 days from receiving this request" not in body
     assert "do not ask for more information" in body
     assert subj
 
