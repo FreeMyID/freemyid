@@ -146,8 +146,19 @@ def _main(verbose: Annotated[bool, typer.Option("--verbose", "-v")] = False) -> 
 def setup(prefill: Annotated[Path | None,
                              typer.Option(help="Family bundle (.freemyid-profile)")] = None,
           web: Annotated[bool, typer.Option(
-              help="Open the web wizard (else terminal prompts)")] = True):
+              help="Open the web wizard (else terminal prompts)")] = True,
+          from_file: Annotated[Path | None, typer.Option(
+              "--from", help="Set up from a YAML file, no wizard (docs/CLI.md)")] = None,
+          yes: Annotated[bool, typer.Option(
+              "--yes", help="With --from: confirm without asking")] = False,
+          check: Annotated[bool, typer.Option(
+              "--check", help="With --from: validate and show the plan; save nothing")] = False,
+          update: Annotated[bool, typer.Option(
+              "--update", help="With --from: replace the person with the same label")] = False):
     """Walk through setup for a person (opens the local web wizard by default)."""
+    if from_file is not None:
+        _setup_from(from_file, yes=yes, check=check, update=update)
+        return
     if web:
         from .wizard.server import serve
         serve(cfgmod.load().wizard_port, open_browser=True)
@@ -176,6 +187,48 @@ def doctor(offline: Annotated[bool, typer.Option(
                 con.print(c.fix, markup=False, highlight=False, soft_wrap=True)
     if any(c.status == "fail" for c in checks):
         raise typer.Exit(cj.EXIT_ERROR)
+
+
+def _setup_from(path: Path, *, yes: bool, check: bool, update: bool) -> None:
+    """Non-interactive setup from a versioned YAML file (setup_config.py)."""
+    from . import setup_config as sc
+    from .wizard.draft import SaveError, save_draft
+    try:
+        cfg = sc.load(path)
+        d = sc.to_draft(cfg, path.resolve().parent)
+    except sc.SetupFileError as e:
+        err.print(f"freemyid: {path.name} has {len(e.problems)} problem(s):", markup=False)
+        for line in e.problems:
+            err.print(f"  - {line}", markup=False, highlight=False, soft_wrap=True)
+        raise typer.Exit(cj.EXIT_USAGE) from None
+    for line in sc.plan_lines(cfg):
+        con.print(line, markup=False, highlight=False, soft_wrap=True)
+    if check:
+        con.print("Check only: the file is valid; nothing was saved.")
+        return
+    store = _open_store_or_fail()
+    prior = sc.find_existing(store, d.label or d.first)
+    if prior is not None and not update:
+        _fail(cj.EXIT_USAGE, f"someone called {prior.label!r} is already set up; use --update "
+              "to replace them, or change person.label")
+    if prior is not None:
+        d.id, d.editing = prior.id, True
+    if not yes:
+        try:
+            ok = typer.confirm("Save this person and give this permission?", default=False)
+        except typer.Abort:
+            ok = False
+        if not ok:
+            _fail(cj.EXIT_USAGE, "not confirmed; nothing saved (add --yes to confirm "
+                  "without a prompt)")
+    try:
+        prof = save_draft(store, d)
+    except SaveError as e:
+        _fail(cj.EXIT_ERROR, str(e))
+    con.print(f"[green]Saved {prof.label} ({prof.id[:8]}).[/] Next: `freemyid run --dry-run`.")
+    if cfg.schedule.install_job and cfg.schedule.weekly_recheck:
+        from . import scheduler
+        con.print(scheduler.install())
 
 
 @app.command("app")

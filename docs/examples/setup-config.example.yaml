@@ -1,0 +1,56 @@
+# Free My ID setup file (version 1). One file = one person. FAKE example data only.
+# Schema: schema/setup-config.schema.json   Reference: docs/CLI.md ("setup --from")
+#
+#   freemyid setup --from setup-config.yaml --check   # validate, show the plan, save nothing
+#   freemyid setup --from setup-config.yaml           # show the plan, then ask to confirm
+#   freemyid setup --from setup-config.yaml --yes     # confirm without a prompt (automation)
+#
+# Keep this file private (chmod 600): it holds personal details. Passwords never go in it.
+version: 1
+
+consent:
+  agreed: true                    # you read the permission text `setup --from` prints
+  signed_name: Jane Q Testperson  # typed signature of the person giving permission
+  basis: self                     # self | guardian_of_minor | authorized_agent
+  # authorization_file: signed-authorization.pdf   # required for authorized_agent
+
+person:
+  label: Jane                     # what to call them on screen
+  name:
+    first: Jane
+    middle: Q
+    last: Testperson
+  nicknames: [Janie]
+  previous_names: [Jane Q Example]
+  birth_year: 1980                # only the year is kept
+  addresses:                      # up to 4; mark the current one
+    - street: 742 Evergreen Terrace
+      city: Springfield
+      state: IL
+      zip: "62704"
+      current: true
+    - city: Shelbyville
+      state: IL
+  phones: ["217-555-0142"]
+  emails: [jane.testperson@example.com]   # only used to recognize listings
+  relatives: [John Testperson]
+
+permissions:                      # all off unless you say so
+  allow_id_upload: false
+  allow_account_creation: false
+  allow_phone_disclosure: false
+
+mailbox:                          # optional: the dedicated removal mailbox
+  provider: gmail                 # gmail | yahoo | icloud | proton_bridge | other
+  address: jane.removals@example.com
+  password_env: FREEMYID_MAILBOX_PASSWORD   # or: password_file: ~/.config/freemyid/mailbox-pw
+  # For provider: other, also give imap_host, smtp_host (and ports/TLS if not 993/465).
+  # For proton_bridge, also give tls_cert_sha256 (the fingerprint you approved once).
+
+email_mode: approve_each          # approve_each | auto
+
+schedule:
+  weekly_recheck: true
+  weekday: 6                      # 0=Mon .. 6=Sun
+  hour: 10
+  install_job: false              # true = also run `freemyid schedule install`

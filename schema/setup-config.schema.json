@@ -1,0 +1,538 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://freemyid.org/schema/setup-config.schema.json",
+  "$defs": {
+    "SetupAddress": {
+      "additionalProperties": false,
+      "properties": {
+        "street": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Street"
+        },
+        "city": {
+          "minLength": 1,
+          "title": "City",
+          "type": "string"
+        },
+        "state": {
+          "description": "2-letter US state, e.g. IL",
+          "pattern": "^[A-Za-z]{2}$",
+          "title": "State",
+          "type": "string"
+        },
+        "zip": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Zip"
+        },
+        "current": {
+          "default": false,
+          "title": "Current",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "city",
+        "state"
+      ],
+      "title": "SetupAddress",
+      "type": "object"
+    },
+    "SetupConsent": {
+      "additionalProperties": false,
+      "properties": {
+        "agreed": {
+          "description": "Must be true: you have read and agree to the consent text that `freemyid setup --from` prints",
+          "title": "Agreed",
+          "type": "boolean"
+        },
+        "signed_name": {
+          "description": "Full name of the person giving permission, typed as a signature",
+          "minLength": 1,
+          "title": "Signed Name",
+          "type": "string"
+        },
+        "basis": {
+          "default": "self",
+          "description": "self = I am this person; guardian_of_minor = parent or legal guardian of someone under 18; authorized_agent = signed written permission",
+          "enum": [
+            "self",
+            "guardian_of_minor",
+            "authorized_agent"
+          ],
+          "title": "Basis",
+          "type": "string"
+        },
+        "authorization_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Signed authorization form (PDF/image), required for authorized_agent. Relative paths are relative to this YAML file",
+          "title": "Authorization File"
+        }
+      },
+      "required": [
+        "agreed",
+        "signed_name"
+      ],
+      "title": "SetupConsent",
+      "type": "object"
+    },
+    "SetupMailbox": {
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "enum": [
+            "gmail",
+            "yahoo",
+            "icloud",
+            "proton_bridge",
+            "other"
+          ],
+          "title": "Provider",
+          "type": "string"
+        },
+        "address": {
+          "description": "The dedicated removal mailbox address",
+          "title": "Address",
+          "type": "string"
+        },
+        "username": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Login name if not the address",
+          "title": "Username"
+        },
+        "password_env": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Name of an environment variable holding the app password",
+          "title": "Password Env"
+        },
+        "password_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "File holding the app password (first line). Keep it chmod 600",
+          "title": "Password File"
+        },
+        "imap_host": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Imap Host"
+        },
+        "imap_port": {
+          "anyOf": [
+            {
+              "maximum": 65535,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Imap Port"
+        },
+        "imap_ssl": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Imap Ssl"
+        },
+        "imap_starttls": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Imap Starttls"
+        },
+        "smtp_host": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Smtp Host"
+        },
+        "smtp_port": {
+          "anyOf": [
+            {
+              "maximum": 65535,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Smtp Port"
+        },
+        "smtp_starttls": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Smtp Starttls"
+        },
+        "tls_cert_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9A-Fa-f:]{64,95}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Proton Mail Bridge only: the certificate fingerprint you approved",
+          "title": "Tls Cert Sha256"
+        }
+      },
+      "required": [
+        "provider",
+        "address"
+      ],
+      "title": "SetupMailbox",
+      "type": "object"
+    },
+    "SetupName": {
+      "additionalProperties": false,
+      "properties": {
+        "first": {
+          "minLength": 1,
+          "title": "First",
+          "type": "string"
+        },
+        "middle": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Middle"
+        },
+        "last": {
+          "minLength": 1,
+          "title": "Last",
+          "type": "string"
+        },
+        "suffix": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Suffix"
+        }
+      },
+      "required": [
+        "first",
+        "last"
+      ],
+      "title": "SetupName",
+      "type": "object"
+    },
+    "SetupPermissions": {
+      "additionalProperties": false,
+      "properties": {
+        "allow_id_upload": {
+          "default": false,
+          "title": "Allow Id Upload",
+          "type": "boolean"
+        },
+        "allow_account_creation": {
+          "default": false,
+          "title": "Allow Account Creation",
+          "type": "boolean"
+        },
+        "allow_phone_disclosure": {
+          "default": false,
+          "title": "Allow Phone Disclosure",
+          "type": "boolean"
+        }
+      },
+      "title": "SetupPermissions",
+      "type": "object"
+    },
+    "SetupPerson": {
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What to call them on screen, e.g. 'Mom'. Defaults to the first name",
+          "title": "Label"
+        },
+        "name": {
+          "$ref": "#/$defs/SetupName"
+        },
+        "nicknames": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Nicknames",
+          "type": "array"
+        },
+        "previous_names": {
+          "default": [],
+          "description": "Full previous/maiden names",
+          "items": {
+            "type": "string"
+          },
+          "title": "Previous Names",
+          "type": "array"
+        },
+        "birth_year": {
+          "anyOf": [
+            {
+              "minimum": 1900,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Only the year is kept",
+          "title": "Birth Year"
+        },
+        "age": {
+          "anyOf": [
+            {
+              "maximum": 130,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "If birth_year is unknown",
+          "title": "Age"
+        },
+        "addresses": {
+          "items": {
+            "$ref": "#/$defs/SetupAddress"
+          },
+          "maxItems": 4,
+          "minItems": 1,
+          "title": "Addresses",
+          "type": "array"
+        },
+        "phones": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Phones",
+          "type": "array"
+        },
+        "emails": {
+          "default": [],
+          "description": "Personal emails, used only to recognize listings, never sent anywhere",
+          "items": {
+            "type": "string"
+          },
+          "title": "Emails",
+          "type": "array"
+        },
+        "relatives": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Relatives",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "addresses"
+      ],
+      "title": "SetupPerson",
+      "type": "object"
+    },
+    "SetupSchedule": {
+      "additionalProperties": false,
+      "properties": {
+        "weekly_recheck": {
+          "default": true,
+          "title": "Weekly Recheck",
+          "type": "boolean"
+        },
+        "weekday": {
+          "default": 6,
+          "description": "0=Mon .. 6=Sun",
+          "maximum": 6,
+          "minimum": 0,
+          "title": "Weekday",
+          "type": "integer"
+        },
+        "hour": {
+          "default": 10,
+          "maximum": 23,
+          "minimum": 0,
+          "title": "Hour",
+          "type": "integer"
+        },
+        "install_job": {
+          "default": false,
+          "description": "Also install the background job (same as `freemyid schedule install`)",
+          "title": "Install Job",
+          "type": "boolean"
+        }
+      },
+      "title": "SetupSchedule",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Free My ID setup file, version 1. One file = one person.",
+  "properties": {
+    "version": {
+      "const": 1,
+      "description": "Setup file format version",
+      "title": "Version",
+      "type": "integer"
+    },
+    "consent": {
+      "$ref": "#/$defs/SetupConsent"
+    },
+    "person": {
+      "$ref": "#/$defs/SetupPerson"
+    },
+    "permissions": {
+      "$ref": "#/$defs/SetupPermissions",
+      "default": {
+        "allow_id_upload": false,
+        "allow_account_creation": false,
+        "allow_phone_disclosure": false
+      }
+    },
+    "mailbox": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SetupMailbox"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "email_mode": {
+      "default": "approve_each",
+      "enum": [
+        "approve_each",
+        "auto"
+      ],
+      "title": "Email Mode",
+      "type": "string"
+    },
+    "schedule": {
+      "$ref": "#/$defs/SetupSchedule",
+      "default": {
+        "weekly_recheck": true,
+        "weekday": 6,
+        "hour": 10,
+        "install_job": false
+      }
+    }
+  },
+  "required": [
+    "version",
+    "consent",
+    "person"
+  ],
+  "title": "SetupConfig",
+  "type": "object"
+}
