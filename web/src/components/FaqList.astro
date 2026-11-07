@@ -21,25 +21,6 @@ const { items, openFirst = 0 } = Astro.props;
 </div>
 
 <style>
-  .faq-item {
-    min-inline-size: 0;
-    overflow-wrap: anywhere;
-  }
-
-  .faq-item > summary {
-    min-block-size: max(44px, var(--fmi-tap));
-    min-inline-size: 44px;
-  }
-
-  .faq-question {
-    min-inline-size: 0;
-  }
-
-  /* Keep the ring inside the target so adjacent rows cannot cover it.
-     Heading ink contrasts with both the card and hover fill in each theme. */
-  .faq-item > summary:focus-visible {
-    outline: 3px solid var(--fmi-color-heading) !important;
-    outline-offset: -6px;
-    box-shadow: none !important;
-  }
+  .faq-item { overflow-wrap: anywhere; }
+  .faq-question { min-inline-size: 0; }
 </style>

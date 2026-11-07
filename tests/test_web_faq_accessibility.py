@@ -108,7 +108,7 @@ def luminance(color: str) -> float:
     ("link", "card", 4.5),
 ])
 def test_faq_token_contrast(theme: int, foreground: str, background: str, minimum: float) -> None:
-    """Heading ink also supplies the inset focus ring (AA non-text minimum is 3:1)."""
+    """Question, answer and link ink against card and hover fills."""
     css = (ROOT / "web/src/styles/tokens.css").read_text(encoding="utf-8")
     pairs = {name: (light, dark) for name, light, dark in re.findall(
         r"--fmi-color-([\w-]+): light-dark\((#[\da-f]{6}), (#[\da-f]{6})\)", css,
