@@ -414,3 +414,44 @@ Notes / open:
   resolved tmp path and umask=0o022 (lead saw a failure that only showed in the full suite).
 - CHANGE REQUEST (.gitignore, orchestrator): add `docs/marketing/seo/.bluesky-queue.md.lock`.
 - Open: qa re-review of SEC-57..59, then the lead runs install.sh and enables the timer.
+
+## 2026-11-07 Theo Park: secrets backend fixes SEC-70..76 (orchestrator-approved edits)
+
+Files: src/freemyid/secret_backends.py, src/freemyid/config.py, src/freemyid/crypto.py,
+tests/test_qa_secret_backends_review.py (the 5 strict xfail markers removed; each passes for real).
+- 3856b8d SEC-73: passphrase file opened with O_NONBLOCK | O_NOCTTY (FIFO no longer hangs).
+- 2fec409 SEC-74/75: secrets.enc read-modify-write under a flock/msvcrt lock (secrets.enc.lock,
+  removed by delete_data_key); temp files via mkstemp; directory fsync after rename; os.link
+  falls back to an O_EXCL create when the filesystem has no hard links.
+- 75b613b SEC-71 (config part) + SEC-76e: config.save is atomic (mkstemp in the same folder,
+  0600 before the rename, fsync, os.replace, dir fsync). config.load raises ConfigError
+  (a ValueError, so doctor's existing handler catches it) naming the file and bad field names,
+  never values.
+- b6e4b9a SEC-76 a-d: a refused FREEMYID_PASSPHRASE is popped from os.environ; scrypt ceiling is
+  now 2^18/r8/p1; the key cache is keyed by wrap path + inode/mtime/size; Windows note on the
+  passphrase-file check in the module doc.
+- 4550cc5 SEC-72: KeyringBackend.store_data_key refuses a different valid key (same key is a
+  no-op, a damaged entry is overwritten). delete_data_key(expected=key) leaves another
+  folder's key alone. crypto.delete_key -> secret_backends.wipe_data_keys: deletes the keychain
+  key only when the DB key_check (read straight from sqlite) or this folder's wrap proves it
+  is ours, or the entry is damaged; it also removes migrate.pending.
+- 74616a9 SEC-70/71: migrate writes migrate.pending {from,to,orig,target_existed,phase}.
+  phase "copy": select() returns the source. Then store the key, clear the cache and re-unwrap
+  it from disk with a fresh backend (the typed passphrase is kept in a per-migrate closure, so
+  there's no second prompt), copy the passwords, switch config, phase "cleanup": select()
+  returns the target. Then delete the source copies and the marker. Any BaseException in the
+  copy phase rolls back: the original config value (None stays None), the target copies
+  (the key only if the target had none before), and the marker. A kill leaves the marker, and
+  running the same `migrate --to X` resumes. A different target while one is pending is refused.
+- (this commit) SEC-72 namespacing decision documented in the secret_backends module doc:
+  deferred. The keychain entry stays global `freemyid`/`db-key-v1`, so no Windows user's entry
+  moves. Residual: two folders that really share one key can't be told apart by wipe.
+
+Checks: `.venv/bin/pytest -q` gives 836 passed, 2 skipped, 7 xfailed (all 7 are the SEC-77..81
+social-poster xfails in other files). ruff src tests and mypy src are clean.
+Ad-hoc SIGKILL-resume test (rollback disabled; kill at set_secret, config.save, the
+phase-cleanup marker write, and source cleanup; both directions; 8 cases pass):
+/tmp/claude-1000/-home-geekedsilicon-Documents-CODE-Data-Removal/758b0723-924a-4638-9035-1f367fc46365/scratchpad/test_sigkill_resume_draft.py
+Suggest qa adopt it.
+Open for qa: tests for wipe keeping another folder's valid keychain key, for the link fallback
+and lock contention (checked ad hoc, not in tests/), and for ConfigError messages.

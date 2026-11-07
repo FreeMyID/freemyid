@@ -21,6 +21,15 @@ Windows note (SEC-76): the owner-only check on ``FREEMYID_PASSPHRASE_FILE`` is P
 bits and uid, so on Windows the file gets no ACL or owner check. Windows users normally get
 the ``keyring`` backend (Credential Manager); if you point it at a passphrase file there,
 keep the file inside your own user profile folder.
+
+Keychain entry name (SEC-72 decision): the entry stays the global ``freemyid``/``db-key-v1``
+for every data folder. Per-folder names were considered and deferred: the default home on
+Windows must keep ``db-key-v1`` and must never be moved silently, and a per-home name for
+other folders needs a key_check probe to tell a new folder from an existing one that already
+uses the legacy entry. Instead the keyring backend refuses to overwrite a different key, and
+migrate/wipe delete the entry only when it is this folder's key (DB key_check or the same
+wrapped key). Residual: two folders that really share one keychain key can't be told apart,
+so wiping one removes the key the other uses.
 """
 from __future__ import annotations
 
