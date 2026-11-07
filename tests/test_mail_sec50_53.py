@@ -161,3 +161,35 @@ def test_sec50_tofu_on_real_loopback_returns_code(monkeypatch):
     _patch_tofu(monkeypatch, ("127.0.0.1", 1143), ("127.0.0.1", 1025))
     res = trust_on_first_use(_mb("localhost"))
     assert res.fingerprint == _pin()
+
+
+# ------------------------------------------------------------------------- SEC-51
+def test_sec51_policy_without_loopback_blocks_before_connecting(monkeypatch):
+    _Boom.calls = 0
+    monkeypatch.setattr(mail_tls.imaplib, "IMAP4", _Boom)
+    monkeypatch.setattr(mail_tls.smtplib, "SMTP", _Boom)
+    strict = NetPolicy(None)                       # loopback NOT allowed
+    with pytest.raises(TlsPinError, match="allowlist"):
+        trust_on_first_use(_mb(), netpolicy=strict)
+    with pytest.raises(TlsPinError, match="allowlist"):
+        mail_tls.fetch_loopback_fingerprint("127.0.0.1", 1143, "imap", starttls=True,
+                                            netpolicy=strict)
+    assert _Boom.calls == 0
+
+
+def test_sec51_policy_is_consulted_for_both_hosts(monkeypatch):
+    _patch_tofu(monkeypatch, ("127.0.0.1", 1143), ("127.0.0.1", 1025))
+    seen: list[str] = []
+
+    class Spy:
+        def is_allowed(self, h):
+            seen.append(h)
+            return True
+
+    trust_on_first_use(_mb(), netpolicy=Spy())     # type: ignore[arg-type]
+    assert seen.count("127.0.0.1") >= 2
+
+
+def test_sec51_default_policy_still_allows_loopback(monkeypatch):
+    _patch_tofu(monkeypatch, ("::1", 1143, 0, 0), ("::1", 1025, 0, 0))
+    assert trust_on_first_use(_mb("::1")).fingerprint == _pin()

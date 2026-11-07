@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
     from ..models import MailboxConfig
+    from ..netpolicy import NetPolicy
 
 LOOPBACK_HOSTS = frozenset({"127.0.0.1", "::1", "localhost"})
 # The connected peer must be one of these EXACT addresses (SEC-50). The name `localhost` is
@@ -106,12 +107,24 @@ def check_peer(sock: object, pin: str | None) -> None:
 
 
 # ------------------------------------------------------------------ trust on first use
+def _loopback_policy() -> NetPolicy:
+    """Fallback for callers that do not pass a policy yet: the global config allowlist
+    plus loopback. Combined with `is_loopback` it still only ever admits this computer."""
+    from ..netpolicy import NetPolicy
+    return NetPolicy(None, allow_loopback=True)
+
+
 def fetch_loopback_fingerprint(host: str, port: int, protocol: Literal["imap", "smtp"],
-                               *, starttls: bool, timeout_s: float = 10.0) -> str:
+                               *, starttls: bool, timeout_s: float = 10.0,
+                               netpolicy: NetPolicy | None = None) -> str:
     """Connect to a LOCAL mail app (e.g. Proton Bridge), read its certificate and return the
-    SHA-256 fingerprint for the user to confirm. Sends no username or password."""
+    SHA-256 fingerprint for the user to confirm. Sends no username or password.
+    The host must pass `netpolicy.is_allowed` before any socket opens (SEC-51)."""
     if not is_loopback(host):
         raise TlsPinError("only a mail app on this computer can be trusted this way")
+    pol = netpolicy if netpolicy is not None else _loopback_policy()
+    if not pol.is_allowed(host):
+        raise TlsPinError("mail host not on allowlist")
     ctx = _unverified_context()
     sock: object
     try:
@@ -155,15 +168,24 @@ class TrustResult:
     message: str                # plain-language prompt for the confirm screen
 
 
-def trust_on_first_use(mb: MailboxConfig, timeout_s: float = 10.0) -> TrustResult:
+def trust_on_first_use(mb: MailboxConfig, timeout_s: float = 10.0, *,
+                       netpolicy: NetPolicy | None = None) -> TrustResult:
     """Read the certificate of a local mail app from both the IMAP and SMTP ports.
     The caller shows `message` and saves `fingerprint` only after the user says yes.
-    Both ports must present the same certificate (Proton Bridge does)."""
+    Both ports must present the same certificate (Proton Bridge does).
+    Pass the caller's `netpolicy` (SEC-51); both hosts are checked before connecting."""
+    pol = netpolicy if netpolicy is not None else _loopback_policy()
+    for h in (mb.imap_host, mb.smtp_host):
+        if not is_loopback(h):
+            raise TlsPinError("only a mail app on this computer can be trusted this way")
+        if not pol.is_allowed(h):
+            raise TlsPinError("mail host not on allowlist")
     imap_fp = fetch_loopback_fingerprint(
         mb.imap_host, mb.imap_port, "imap",
-        starttls=mb.imap_starttls or not mb.imap_ssl, timeout_s=timeout_s)
+        starttls=mb.imap_starttls or not mb.imap_ssl, timeout_s=timeout_s, netpolicy=pol)
     smtp_fp = fetch_loopback_fingerprint(
-        mb.smtp_host, mb.smtp_port, "smtp", starttls=mb.smtp_starttls, timeout_s=timeout_s)
+        mb.smtp_host, mb.smtp_port, "smtp", starttls=mb.smtp_starttls, timeout_s=timeout_s,
+        netpolicy=pol)
     if not hmac.compare_digest(imap_fp, smtp_fp):
         raise TlsPinError("the mail app uses two different certificates; "
                           "this setup is not supported")
