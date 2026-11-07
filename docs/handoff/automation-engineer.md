@@ -455,3 +455,46 @@ phase-cleanup marker write, and source cleanup; both directions; 8 cases pass):
 Suggest qa adopt it.
 Open for qa: tests for wipe keeping another folder's valid keychain key, for the link fallback
 and lock contention (checked ad hoc, not in tests/), and for ConfigError messages.
+
+## 2026-11-07 Theo Park: social poster SEC-77..81 fixes + cross-platform test markers
+
+Commits (tools/social/**, tests/test_social_poster.py only; nothing in src/):
+- a3cfb9e SEC-80: unit `Environment=PYTHON_KEYRING_BACKEND=keyring.backends.SecretService.Keyring`;
+  `_default_keyring_get` forces the same value before importing keyring (manual runs).
+- aa4c481 SEC-77 + SEC-81a: append-only ledger `~/.local/state/freemyid-poster/posted.jsonl`
+  (`$STATE_DIRECTORY` under systemd, else `$XDG_STATE_HOME/freemyid-poster`, else
+  `~/.local/state/freemyid-poster`). Dir 0700, file 0600, O_NOFOLLOW, owner check, own flock.
+  Refused if inside the poster's own directory or any git work tree. Records
+  `{id, sha256(NFC stripped text), status, uri, at}`; `claimed` is fsynced before the queue
+  claim and before any network call, then `posted` (uri) / `unknown` / `released` (definite
+  NotCreated failure or a failed queue claim). An id or text hash whose latest record is
+  claimed/posted/unknown is refused with a plain message, exit 4. Damaged ledger: exit 4.
+  `--release ID` (human, after checking the account) frees claimed/unknown, never posted.
+  Any non-PosterError exception after the claim logs only the type name, records `unknown`,
+  exits 4. Unit: `StateDirectory=freemyid-poster`, `StateDirectoryMode=0700`.
+- 62b441b CI: fcntl is imported lazily, so the module imports on Windows. Tests that run the
+  poster for real are `posix_only`; install.sh/systemd tests are `linux_only`; parser, facet,
+  Unicode, HTTP-client and unit-text tests run everywhere (51 of them, checked with fcntl
+  blocked). Also fixed: `test_qa_sec57_no_repost_after_ambiguous_failure` called
+  `monkeypatch.undo()`, which dropped the per-test ledger env, so it now uses its own
+  MonkeyPatch. (During development one run wrote 4 fake-test records to the real
+  ~/.local/state/freemyid-poster before the autouse fixture existed. I removed that file and
+  directory and checked they're gone. The real ledger does not exist yet.)
+- 95a8568 SEC-81b: `install.sh --python` resolves symlinks. The interpreter, its directory
+  and its stdlib `os.py` + stdlib dir must be uid 0 and not g/o-writable. The venv is built
+  from the resolved path. Tests use a root-owned /usr/bin/python3 (skip if none).
+- 8c83bb2 SEC-78/79: tag characters only as the three RGI flags (England/Scotland/Wales).
+  Non-Cf default-ignorables (U+034F, VS1-16 except VS15/16 after an emoji or keycap base,
+  VS17+, Hangul fillers, Khmer inherent vowels, Mongolian FVS) refuse the item. A link gets a
+  facet only if it's all printable ASCII. Behaviour change: `https://freemyid.org/über` now
+  posts as plain text with no facet (QA's earlier "IDN paths allowed" test was updated; use
+  %-encoding). All 20 current queue items pass unchanged.
+- 1dc0f96 SEC-77: the first real run copies queue items already marked `posted` (Q-001) into
+  the ledger, so reverting their line can't repost them.
+- 5e55b4c README.
+
+xfails removed: SEC-77, SEC-78, SEC-79 x3, SEC-80, SEC-81. Gate: full `.venv/bin/pytest -q`
+908 passed, 2 skipped, 3 xfailed (none of them social). Social file: 153 passed. ruff
+src/tests/tools/social clean, `mypy --strict tools/social/poster.py` clean, shellcheck clean.
+`systemd-analyze --user verify` passes on units rendered by install.sh in a temp HOME (scratchpad).
+Not done: I didn't edit docs/SECURITY_REVIEW.md (qa owns it), and I didn't install anything.
