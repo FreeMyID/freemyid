@@ -29,11 +29,12 @@ const link = "flex min-h-tap items-center rounded-md px-xs font-semibold text-te
           <li><a class={link} href={url(href)} aria-current={nav === key ? "page" : undefined}>{label}</a></li>
         ))}
       </ul>
-      <details class="menu relative lg:hidden">
+      <details class="menu lg:hidden">
         <summary class="flex min-h-tap min-w-tap items-center justify-center gap-2xs rounded-md border-2 border-line-strong px-s font-bold text-heading max-[34em]:px-xs">
           <Icon name="menu" /><span class="menu-label"><span class="when-closed">Menu</span><span class="when-open">Close</span></span>
         </summary>
-        <ul class="absolute end-0 top-full z-50 mt-2xs grid min-w-[14rem] gap-3xs rounded-xl border border-line bg-card p-2xs shadow-3" role="list">
+        {/* WR-50: anchored to the sticky header (not the toggle) and capped to the viewport, so it can't run off a phone screen */}
+        <ul class="menu-panel absolute end-gutter top-full z-50 mt-2xs grid w-[min(20rem,calc(100vw-2*var(--fmi-gutter)))] gap-3xs rounded-xl border border-line bg-card p-2xs shadow-3" role="list">
           {items.map(([href, label, key]) => (
             <li><a class={link} href={url(href)} aria-current={nav === key ? "page" : undefined}>{label}</a></li>
           ))}
