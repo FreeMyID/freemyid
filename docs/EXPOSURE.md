@@ -39,6 +39,11 @@ The results are scored by the existing matcher:
 
 Signals are city/state, age within 2 years, relative, phone and email.
 
+When a checked site has possible matches and no confirmed match, the scan immediately
+adds an “Is this you?” review to-do to the dashboard, using the same review process as
+`scan`. An open review for that listing is reused on later scans. Confirmed matches and
+sites that need to be checked by hand create no new review to-do.
+
 `--offline` fetches nothing. It lists every site as "check by hand", with its link, and counts
 what earlier scans and runs already found.
 
