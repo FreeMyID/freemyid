@@ -1,0 +1,31 @@
+name: registry-health
+
+# Weekly offline check of the public sample registry (schema, https, email syntax, citations,
+# stale verified dates). No network checks: --online stays a local, hand-run option.
+on:
+  schedule:
+    - cron: "17 9 * * 1"   # Mondays 09:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: pip install --disable-pip-version-check .
+      - name: Registry health (offline)
+        run: python tools/registry_health.py --report registry-health.md
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: registry-health
+          path: registry-health.md
+          retention-days: 30
