@@ -106,10 +106,8 @@ def test_sec38_confirm_only_for_assisted_todos(wiz):
     assert c.post(f"/todo/{t.id}/fill", data={**f, "confirm": "yes"}).headers["location"] == "/"
 
 
-# --------------------------------------------------------------------------- SEC-46 (open)
+# --------------------------------------------------------------------------- SEC-46 (fixed)
 
-@pytest.mark.xfail(strict=True, reason="SEC-46: wipe leaves .fill-confirmed (not in "
-                   "paths.OWNED_ENTRIES), so the data folder survives a full wipe")
 def test_sec46_wipe_removes_the_fill_confirmation_marker(store, memkeyring, monkeypatch,
                                                         freemyid_env):
     from freemyid import cli, paths, scheduler

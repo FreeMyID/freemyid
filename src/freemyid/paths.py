@@ -30,7 +30,7 @@ def home() -> Path:
 MARKER = ".freemyid-home"
 # Every top-level entry Free My ID may create in home(); `freemyid wipe` deletes only these.
 OWNED_ENTRIES = ("freemyid.db", "freemyid.db-wal", "freemyid.db-shm", "evidence", "artifacts", "logs",
-                 "config.yaml", "registry.yaml", "app-instance.json", "freemyid-task.xml", MARKER)
+                 "config.yaml", "registry.yaml", "app-instance.json", "freemyid-task.xml", ".fill-confirmed", MARKER)
 
 
 def is_safe_wipe_target(p: Path) -> bool:
