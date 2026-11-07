@@ -18,7 +18,7 @@
   {% endfor %}
   </div>
   <div class="btn-row mt-l">
-    <a class="btn btn--lg" href="{{ url('download/') }}">{{ icon('download') }}Download, free</a>
+    {% include "partials/cta-download.html" %}
   </div>
 </div>
 {% endblock %}
