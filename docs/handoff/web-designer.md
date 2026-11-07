@@ -12,3 +12,12 @@
 - CSS 10.3 KB gzip. No horizontal scroll at 320/360 on any page.
 Unused decorative partials (mine): partials/star-rule.html, partials/hero-stars.svg: nothing includes them; delete when the lead agrees.
 Next round: drop 51-legacy rules as builders migrate the remaining v1 pages (grep first).
+
+## R2 QA fixes WR-31..34: DONE 2026-11-07 (commits ed89017, 293ef2b, 822299d, 3d810ef)
+- WR-31 compare: fixed layout (first col 22%, others equal), edge-shadow scroll cue (background-attachment local/scroll),
+  tighter phone sizing; stacked cards under 34em via `.compare:has(td[data-label])` (styleguide demos it).
+  Home needs `data-label` on its tds (CR to web-builder); contract row updated.
+- WR-32 cards--4: 2x2 compact under 34em. WR-33: callout inside a card has no margin and less padding; icon floats on phones.
+- WR-34: `h1 + :where(*)` gets space-s (base layer).
+- `.section`/`.section--alt` still used by download.html:42 and how-it-works.html:22: rules kept (40-layout, 90-print).
+- CSS 11.06 KB gzip (limit 12). Remaining legacy: 51-legacy rules, .section rules, unused star-rule/hero-stars partials.

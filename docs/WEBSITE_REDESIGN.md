@@ -61,7 +61,7 @@ Need a new component? Add it here in the same commit as its first use and tell t
 | Steps | `ol.steps` > `li.step` > `span.step__num` (aria-hidden) + `h3` + `p` | 3 steps side by side. `ol.steps.steps--list`: vertical numbered instructions, a step may hold lists, pictures, callouts, and `h3` is optional |
 | Card grid | `ul.cards` (`.cards--3`, `.cards--4`) > `li.card` > `.card__icon` + `h3` + `p` | auto-fit, container query |
 | Proof figure | `figure.proof` > `img`/mockup + `figcaption.caption` | "Sample ... made-up data" caption mandatory |
-| Compare table | `.table-scroll[tabindex=0][role=region][aria-labelledby=<h2 id>]` > `table.compare` with `th[scope]`; `td.yes` / `td.no` / `td.partial` | must reflow or scroll at 320px without page scroll |
+| Compare table | `.table-scroll[tabindex=0][role=region][aria-labelledby=<h2 id>]` > `table.compare` with `th[scope]`; `td.yes` / `td.no` / `td.partial`; optional `td[data-label="<column name>"]` on every td = stacked cards under 34em | must reflow or scroll at 320px without page scroll |
 | Callout | `aside.callout` + `.callout--info` / `.callout--note` | calm, never red alarm |
 | Does / doesn't | `.dodont` > `.dodont__col.dodont__col--do` / `--dont` > `h3` + `ul` | existing honesty box |
 | Price card | `.price-card` > `p.price-card__label`, `p.price-card__price`, `p.price-card__sub`, `ul.checklist`, CTA | one card, centered |
