@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import contextlib
 import datetime as dt
+import hashlib
 import ipaddress
 import socket
 import ssl
@@ -22,10 +23,12 @@ from pydantic import ValidationError
 from freemyid.engine.mail import MailError, SmtpImapMailer
 from freemyid.engine.mail_tls import (
     TlsPinError,
+    check_peer,
     client_context,
     fetch_loopback_fingerprint,
     fingerprint,
     format_fingerprint,
+    is_loopback,
     trust_on_first_use,
 )
 from freemyid.models import MailboxConfig
@@ -71,6 +74,7 @@ class FakeServer:
         self.lsock.settimeout(10)
         self.port = self.lsock.getsockname()[1]
         self._stop = False
+        self.done = threading.Event()   # set when a client connection has been closed
         self.t = threading.Thread(target=self._serve, daemon=True)
         self.t.start()
 
@@ -99,6 +103,7 @@ class FakeServer:
         finally:
             with contextlib.suppress(OSError):
                 c.close()
+            self.done.set()
 
     def _lines(self, f):
         while True:
@@ -366,3 +371,182 @@ def test_trust_on_first_use_reads_fingerprint_without_credentials(servers):
 def test_tofu_refuses_non_loopback():
     with pytest.raises(TlsPinError):
         fetch_loopback_fingerprint("mail.example.invalid", 993, "imap", starttls=False)
+
+
+# =============================================================================== qa-security
+# Negative tests added in the qa-security review of the pinning work (SEC-50..55).
+
+def _ca_and_leaf(tmp_path):
+    """Server context presenting leaf + CA chain; returns (ctx, leaf_fp, ca_fp, leaf_pem_sha)."""
+    now = datetime.now(UTC)
+    ca_key = ec.generate_private_key(ec.SECP256R1())
+    ca_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "Fake Bridge CA")])
+    ca = (x509.CertificateBuilder().subject_name(ca_name).issuer_name(ca_name)
+          .public_key(ca_key.public_key()).serial_number(x509.random_serial_number())
+          .not_valid_before(now - dt.timedelta(days=1))
+          .not_valid_after(now + dt.timedelta(days=30))
+          .add_extension(x509.BasicConstraints(ca=True, path_length=None), critical=True)
+          .sign(ca_key, hashes.SHA256()))
+    key = ec.generate_private_key(ec.SECP256R1())
+    leaf = (x509.CertificateBuilder()
+            .subject_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "127.0.0.1")]))
+            .issuer_name(ca_name).public_key(key.public_key())
+            .serial_number(x509.random_serial_number())
+            .not_valid_before(now - dt.timedelta(days=1))
+            .not_valid_after(now + dt.timedelta(days=30))
+            .sign(ca_key, hashes.SHA256()))
+    pem = leaf.public_bytes(serialization.Encoding.PEM)
+    cp, kp = tmp_path / "chain.pem", tmp_path / "leaf.key"
+    cp.write_bytes(pem + ca.public_bytes(serialization.Encoding.PEM))
+    kp.write_bytes(key.private_bytes(serialization.Encoding.PEM,
+                                     serialization.PrivateFormat.PKCS8,
+                                     serialization.NoEncryption()))
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    ctx.load_cert_chain(cp, kp)
+    return (ctx, fingerprint(leaf.public_bytes(serialization.Encoding.DER)),
+            fingerprint(ca.public_bytes(serialization.Encoding.DER)),
+            hashlib.sha256(pem).hexdigest())
+
+
+@pytest.mark.parametrize("starttls", [True, False])
+def test_qa_uppercase_colon_pin_is_accepted_end_to_end(servers, starttls):
+    """The 'AB:CD:..' form Bridge/cert viewers show must work for IMAP and SMTP."""
+    make, fp = servers
+    imap, smtp = make("imap", starttls), make("smtp", starttls)
+    shown = format_fingerprint(fp)
+    assert ":" in shown and shown == shown.upper()
+    assert _mailer().fetch_since(_profile(_mailbox(imap=imap, pin=shown)), SINCE) == []
+    _mailer().send(_profile(_mailbox(smtp=smtp, pin=shown)), "privacy@broker.example",
+                   "s", "b", "r1")
+    assert imap.logins == 1 and smtp.logins == 1
+
+
+def test_qa_unnormalised_pin_passed_directly_fails_closed():
+    """Callers that bypass the model (e.g. the wizard) must not get a weaker check."""
+    with pytest.raises(TlsPinError):
+        client_context("127.0.0.1", "AB:" * 31 + "AB")
+    with pytest.raises(TlsPinError):
+        client_context("127.0.0.1", "")
+
+
+@pytest.mark.parametrize("proto", ["imap", "smtp"])
+@pytest.mark.parametrize("starttls", [True, False])
+def test_qa_mismatch_closes_connection(servers, proto, starttls):
+    make, _fp = servers
+    srv = make(proto, starttls)
+    mb = _mailbox(imap=srv, pin=WRONG_PIN) if proto == "imap" else _mailbox(smtp=srv,
+                                                                             pin=WRONG_PIN)
+    with pytest.raises(MailError, match="certificate changed"):
+        if proto == "imap":
+            _mailer().fetch_since(_profile(mb), SINCE)
+        else:
+            _mailer().send(_profile(mb), "privacy@broker.example", "s", "b", "r1")
+    assert srv.done.wait(5), "client kept the connection open after a pin mismatch"
+    assert srv.logins == 0 and PASSWORD.encode() not in srv.received
+
+
+def test_qa_plain_imap_with_pin_never_sends_credentials(servers):
+    """imap_ssl=False and imap_starttls=False with a pin: refuse, nothing in cleartext."""
+    make, fp = servers
+    srv = make("imap", starttls=True)        # plaintext greeting; would accept LOGIN
+    mb = _mailbox(imap=srv, pin=fp).model_copy(update={"imap_ssl": False,
+                                                       "imap_starttls": False})
+    with pytest.raises(MailError, match="not encrypted"):
+        _mailer().fetch_since(_profile(mb), SINCE)
+    assert srv.logins == 0
+    assert PASSWORD.encode() not in srv.received
+    assert b"LOGIN" not in srv.received.upper()
+
+
+@pytest.mark.xfail(strict=True, reason="SEC-53 open: unpinned plain IMAP sends LOGIN in "
+                                       "cleartext (pre-existing, mail.py _imap)")
+def test_qa_sec53_plain_imap_without_pin_is_refused(servers):
+    make, _fp = servers
+    srv = make("imap", starttls=True)
+    mb = _mailbox(imap=srv).model_copy(update={"imap_ssl": False, "imap_starttls": False})
+    with contextlib.suppress(MailError):
+        _mailer().fetch_since(_profile(mb), SINCE)
+    assert PASSWORD.encode() not in srv.received
+
+
+def test_qa_check_peer_refuses_unencrypted_or_certless_socket():
+    plain = socket.socket()
+    try:
+        with pytest.raises(TlsPinError, match="not encrypted"):
+            check_peer(plain, "a" * 64)
+    finally:
+        plain.close()
+    with pytest.raises(TlsPinError):
+        check_peer(SimpleNamespace(getpeercert=lambda binary_form=False: None), "a" * 64)
+    with pytest.raises(TlsPinError):
+        check_peer(SimpleNamespace(getpeercert=lambda binary_form=False: b""), "a" * 64)
+
+
+def test_qa_pin_is_over_der_leaf_only(tmp_path):
+    """A pin of the CA cert, or of the leaf's PEM text, must not match."""
+    ctx, leaf_fp, ca_fp, pem_sha = _ca_and_leaf(tmp_path)
+    for bad in (ca_fp, pem_sha):
+        srv = FakeServer(ctx, "imap", starttls=False)
+        try:
+            with pytest.raises(MailError, match="certificate changed"):
+                _mailer().fetch_since(_profile(_mailbox(imap=srv, pin=bad)), SINCE)
+            assert srv.logins == 0
+        finally:
+            srv.close()
+    srv = FakeServer(ctx, "imap", starttls=False)
+    try:
+        assert _mailer().fetch_since(_profile(_mailbox(imap=srv, pin=leaf_fp)), SINCE) == []
+    finally:
+        srv.close()
+
+
+@pytest.mark.parametrize("host", [
+    "127.0.0.2", "127.1", "0.0.0.0", "::ffff:127.0.0.1", "[::ffff:127.0.0.1]",
+    "0:0:0:0:0:0:0:1", "localhost.example", "evil.localhost", "localhost.evil.example",
+    "127.0.0.1.nip.io", "mail.example.invalid", "", "10.0.0.1"])
+def test_qa_pin_refused_on_non_exact_loopback(host):
+    assert not is_loopback(host)
+    with pytest.raises(TlsPinError, match="only allowed"):
+        client_context(host, "a" * 64)
+    with pytest.raises(TlsPinError):
+        fetch_loopback_fingerprint(host, 993, "imap", starttls=False)
+
+
+@pytest.mark.parametrize("host", ["127.0.0.1", "::1", "[::1]", "localhost", "LOCALHOST",
+                                  "localhost.", " 127.0.0.1 "])
+def test_qa_exact_loopback_set(host):
+    assert is_loopback(host)
+    assert client_context(host, "a" * 64).verify_mode == ssl.CERT_NONE
+
+
+@pytest.mark.parametrize("host", ["imap.gmail.com", "127.0.0.1", "localhost", "::1",
+                                  "mail.example.invalid"])
+def test_qa_no_pin_never_returns_unverified_context(host):
+    ctx = client_context(host, None)
+    assert ctx.verify_mode == ssl.CERT_REQUIRED and ctx.check_hostname
+
+
+def test_qa_pinned_context_floor_is_tls12():
+    assert client_context("127.0.0.1", "a" * 64).minimum_version >= ssl.TLSVersion.TLSv1_2
+
+
+def test_qa_different_certs_on_imap_and_smtp_fail_safe(tmp_path, servers):
+    """One pin covers both ports. If Bridge ever serves two certs, TOFU refuses and the
+    pinned connection to the other port refuses before AUTH."""
+    make, imap_fp = servers
+    imap = make("imap", True)
+    other_dir = tmp_path / "other"
+    other_dir.mkdir()
+    other_ctx, other_fp = _self_signed(other_dir)
+    assert other_fp != imap_fp
+    smtp = FakeServer(other_ctx, "smtp", True)
+    try:
+        with pytest.raises(TlsPinError, match="two different certificates"):
+            trust_on_first_use(_mailbox(imap=imap, smtp=smtp), timeout_s=5)
+        with pytest.raises(MailError, match="certificate changed"):
+            _mailer().send(_profile(_mailbox(smtp=smtp, pin=imap_fp)),
+                           "privacy@broker.example", "s", "b", "r1")
+        assert smtp.logins == 0 and b"AUTH" not in smtp.received.upper()
+        assert imap.logins == 0
+    finally:
+        smtp.close()
