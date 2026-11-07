@@ -37,3 +37,6 @@ socialmedialogins*
 *Recovery-Codes*
 *recovery-codes*
 *recovery_codes*
+
+# private research (exposure scan patterns)
+docs/research/exposure_scan_patterns.yaml
