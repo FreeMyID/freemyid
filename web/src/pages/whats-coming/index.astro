@@ -1,0 +1,118 @@
+---
+// /whats-coming/: the public roadmap in plain words, for non-technical readers.
+// Source of truth: docs/ROADMAP.md (sections 3 and 6). HONESTY RULES (orchestrator, 2026-11-07):
+// no prices, no paid-tier names, no dates. Only v0.1.x is shipped; everything else is future tense.
+// Feedback goes by email (ROADMAP principle 6: no account, no github.com for regular users).
+// When a version ships: move its section to "Available now" and check every line against the release notes.
+import Base from "@/layouts/Base.astro";
+import PageHead from "@/components/PageHead.astro";
+import Section from "@/components/Section.astro";
+import Card from "@/components/ui/Card.astro";
+import Badge from "@/components/ui/Badge.astro";
+import Alert from "@/components/ui/Alert.astro";
+import CtaDownload from "@/components/CtaDownload.astro";
+import { pageProps, pages, site, url } from "@/lib/site";
+const p = pageProps("whats-coming");
+// /protect/ is being built in parallel: link it only once its pages.yaml entry exists.
+const hasProtect = "protect" in pages;
+const art = (name: string) => ({ light: url(`assets/art/${name}-light.svg`), dark: url(`assets/art/${name}-dark.svg`) });
+---
+<Base {...p}>
+<PageHead crumbs={p.crumbs} title="What's coming to Free My ID"
+  lead="What the app does today, and what we're building next, in plain words.">
+  {/* source: orchestrator brief 2026-11-07 (exact line); ROADMAP principle 3 (honest by default) */}
+  <p class="mt-s max-w-measure">We'll ship these when they're ready and tested. We don't promise dates, and plans can change.</p>
+  <picture slot="art">
+    {/* source: brand/v3/features (graphic-designer), alt from brand/README.md */}
+    <source srcset={art("find-me-first").dark} media="(prefers-color-scheme: dark)" />
+    <img src={art("find-me-first").light} width="320" height="250" class="h-auto w-full"
+      alt="A magnifying glass over a web page, finding a person's listing." />
+  </picture>
+</PageHead>
+
+<Section id="now" tone="alt" narrow title="Now: the Windows app" titleId="now-title">
+  {/* source: docs/ROADMAP.md 3.1, 3.3, 3.8 (shipped in v0.1.x: Windows installer, wizard, practice mode, three ways, re-checks); data/release.yaml */}
+  <p><Badge variant="ok">Available now, version 0.1</Badge></p>
+  <p class="mt-s max-w-measure">Free My ID for Windows 10 and 11 asks the people-search and data-broker sites that list your name, address and phone number to remove them, then keeps checking.</p>
+  <ul class="mt-s grid gap-2xs">
+    <li>A one-click installer and a short setup, with practice mode on until you say go.</li>
+    <li>Three ways of sending requests: by email, step by step with you, or, on some sites, by filling in the form for you.</li>
+    <li>Daily re-checks in the background, and a printable progress report.</li>
+  </ul>
+  <p class="mt-m"><CtaDownload /></p>
+</Section>
+
+<Section id="next" narrow title="Next: Linux, Mac and home servers" titleId="next-title">
+  {/* source: docs/ROADMAP.md 3.8 and 6 (v0.2 "Every platform": Linux/macOS headless + CLI, Docker image; not released) */}
+  <p><Badge variant="brand">Coming in version 0.2</Badge></p>
+  <p class="mt-s max-w-measure">The same app, for people who use Linux or a Mac, or who want it to run on a small home server. This version is mostly for technical users and works from the command line.</p>
+  <p class="mt-s"><a href={url("developers/")}>Read the plans for Linux, Mac and home servers</a></p>
+</Section>
+
+<Section id="then" tone="alt" narrow title="Then: see where you're listed, and get proof" titleId="then-title">
+  {/* source: docs/ROADMAP.md 6 (v0.3 "See it, fix it") */}
+  <p><Badge variant="brand">Planned for version 0.3</Badge></p>
+  <div class="mt-m grid gap-m">
+    <Card as="article">
+      {/* source: ROADMAP 3.1 ("find me first" scan before any removal) and 3.2 (exposure score with what drives it) */}
+      <h3>A "find me first" check</h3>
+      <p>Before anything is sent, see which sites list you, with a simple score that shows what makes you easy to find. Then decide what to remove.</p>
+    </Card>
+    <Card as="article">
+      {/* source: ROADMAP 3.3 (state-law request letters per state, statute cited); POSITIONING.md "Legal accuracy" qualifier */}
+      <h3>Letters that name your state's privacy law</h3>
+      <p>If your state has a privacy law that covers these sites, Free My ID will write the request with that law named in it. In other states, it sends a polite request, which many sites still honor.</p>
+    </Card>
+    <Card as="article">
+      {/* source: ROADMAP 2 (credit-freeze guides and opt-out checklists free for everyone) and 3.3/3.4 (credit freeze, suppression lists) */}
+      <h3>Credit-freeze and opt-out checklists</h3>
+      <p>Step-by-step lists for freezing your credit and for getting off junk-mail and pre-approved credit offer lists, inside the app.</p>
+      {hasProtect && <p><a href={url("protect/")}>Read the free protection guides you can use today</a></p>}
+    </Card>
+    <Card as="article">
+      {/* source: ROADMAP 3.5 (proof vault per site; one-page "what we did for you" report, printable); principle 5 (requested/confirmed/relisted) */}
+      <h3>A proof report</h3>
+      <p>One printable page that shows each site that was asked, the date, what it answered, and when it was checked again. Useful if you're helping a parent.</p>
+    </Card>
+  </div>
+  <picture class="mx-auto mt-l block w-full max-w-[20rem]">
+    {/* source: brand/v3/features (graphic-designer), alt from brand/README.md */}
+    <source srcset={art("proof-report").dark} media="(prefers-color-scheme: dark)" />
+    <img src={art("proof-report").light} width="320" height="250" class="h-auto w-full" loading="lazy"
+      alt="A progress report with checked rows and a star seal." />
+  </picture>
+</Section>
+
+<Section id="later" narrow title="Later: for the whole family" titleId="later-title">
+  {/* source: docs/ROADMAP.md 3.1 ("set it up for someone else", 0.4), 3.7 (multiple profiles, each separately consented, 0.4) and 6 (v0.4 "For the family") */}
+  <p><Badge variant="brand">Planned for version 0.4</Badge></p>
+  <ul class="mt-s grid gap-2xs">
+    <li><strong>Family profiles:</strong> several people in one app, each one giving their own consent.</li>
+    <li><strong>Helper mode:</strong> a son, daughter or grandchild can prepare the setup for a parent, and the parent just opens it to finish.</li>
+  </ul>
+  <picture class="mx-auto mt-l block w-full max-w-[20rem]">
+    {/* source: brand/v3/features (graphic-designer), alt from brand/README.md */}
+    <source srcset={art("family-helper").dark} media="(prefers-color-scheme: dark)" />
+    <img src={art("family-helper").light} width="320" height="250" class="h-auto w-full" loading="lazy"
+      alt="A grown child and a parent sharing one laptop with two name cards." />
+  </picture>
+</Section>
+
+<Section id="promises" tone="alt" narrow title="What won't change" titleId="promises-title">
+  <ul class="grid gap-2xs">
+    {/* source: ROADMAP principle 3 ("Free means free ... not a trial"); orchestrator brief allows "Free stays free" */}
+    <li><strong>Free stays free.</strong> The free app is not a trial.</li>
+    {/* source: ROADMAP principle 1 (local-first); POSITIONING.md trust panel wording */}
+    <li><strong>Your details stay with you.</strong> They are kept on your computer and go only to the sites you ask to remove you.</li>
+    {/* source: ROADMAP principle 6 (no account, ever, for regular users) */}
+    <li><strong>No account.</strong> You won't need to sign up anywhere to use it or to talk to us.</li>
+  </ul>
+</Section>
+
+<Section id="feedback" narrow title="Tell us what you need" titleId="feedback-title">
+  {/* source: site.yaml support_email; ROADMAP principle 6 (feedback by email) */}
+  <Alert variant="note" icon="mail">
+    <p>What would help you or your family most? Email us at <a href={site.support_mailto}>{site.support_email}</a>. No account needed: just send an email.</p>
+  </Alert>
+</Section>
+</Base>

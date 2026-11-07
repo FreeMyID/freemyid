@@ -87,3 +87,11 @@
   description: We couldn't find that page. Nothing is wrong with your computer.
   noindex: true
   absolute: true
+- id: whats-coming
+  out: whats-coming/
+  template: pages/whats-coming.html   # not used: v3_only (web/src/pages/whats-coming/index.astro)
+  v3_only: true
+  label: What's coming
+  title: "What's coming to Free My ID: our plain-words roadmap"
+  description: What Free My ID does today and what we're building next, from Linux and Mac to a find-me-first scan, proof reports and family profiles. No dates promised.
+  jsonld: [breadcrumbs]
