@@ -6,7 +6,7 @@ import os
 import sys
 from collections.abc import Callable, Sequence
 from pathlib import Path
-from typing import Annotated, TypeVar
+from typing import Annotated, NoReturn, TypeVar
 
 import typer
 from rich.console import Console
@@ -248,7 +248,7 @@ def dashboard():
     serve(cfgmod.load().wizard_port, open_browser=True)
 
 
-def _fail(code: int, reason: str) -> None:
+def _fail(code: int, reason: str) -> NoReturn:
     """Stop with `code` and a one-line reason (stderr; also a JSON document with --json)."""
     if _json_mode:
         cj.emit(cj.failure_doc(code, reason))
