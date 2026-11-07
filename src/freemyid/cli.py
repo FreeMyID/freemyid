@@ -157,6 +157,27 @@ def setup(prefill: Annotated[Path | None,
         con.print(f"[green]Saved profile {p.label} ({p.id[:8]})[/]")
 
 
+@app.command()
+def doctor(offline: Annotated[bool, typer.Option(
+               "--offline", help="Skip the mail server reachability check")] = False,
+           as_json: JsonOpt = False):
+    """Check this computer is ready: Python, data folder, secrets, browser, schedule, mail."""
+    from . import doctor as dmod
+    checks = dmod.run_checks(network=not offline)
+    if as_json:
+        cj.emit(dmod.doc(checks))
+    else:
+        style = {"ok": "green", "warn": "yellow", "fail": "red"}
+        for c in checks:
+            con.print(f"[{style[c.status]}]{c.status.upper():4}[/] {c.title}: ", end="")
+            con.print(c.detail, markup=False, highlight=False, soft_wrap=True)
+            if c.fix and c.status != "ok":
+                con.print("     fix: ", end="")
+                con.print(c.fix, markup=False, highlight=False, soft_wrap=True)
+    if any(c.status == "fail" for c in checks):
+        raise typer.Exit(cj.EXIT_ERROR)
+
+
 @app.command("app")
 def app_window(no_window: Annotated[bool, typer.Option(
         "--no-window", help="Use the web browser instead of an app window")] = False):
