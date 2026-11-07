@@ -112,6 +112,26 @@ Checked and OK (with tests):
 - **Consent and permissions.** `consent_ok` is checked before anything opens. Only `Method.WEB_FORM` brokers are allowed (account-required brokers are refused). `needs_id_upload` without `allow_id_upload` → Assisted. The wizard route (in progress) is POST-only behind cookie, CSRF and Origin, accepts only ASSISTED_OPT_OUT to-dos, and runs one fill at a time.
 - **PII-free logs and events.** `fill_for_me_filled` carries field keys and counts. `fill_for_me_fallback` carries a reason ≤ 40 chars (`error:<TypeName>`). `submitted` carries ids, method and signal. Logs carry exception type names only. `FillResult` has no values. Covered by `test_fill_for_me_success_records_like_web_form`, which asserts no name, city or mailbox in any event detail.
 
+## Test-suite hang, 2026-11-06, qa-security
+
+**SEC-39 | HIGH (functional; hangs the app) | automation-engineer | engine/fill_for_me.py `_drive._watch` (page.route handler) and the poll loop.**
+**FIXED 2026-11-06 (5112b56):** no evaluate for main-frame navigations in `_watch` (last poll's baseline), `route.fallback()` in `finally`, every evaluate/snapshot bounded at 5 s; 11 SEC39_HANG markers removed after they XPASSed.
+Once the person submits a form that navigates the main frame (an ordinary form POST), `_watch`
+awaits `_snapshot()` (page.evaluate) while that navigation request is paused in the route.
+Playwright 1.64.1 never resolves an evaluate on a page whose navigation is paused in a route
+handler (reproduced standalone), so `route.fallback()` is never reached, the person's click never
+returns, and the poll loop's own `_snapshot` blocks behind it: `timeout_s` is never checked and
+`fill_for_me` never returns. AJAX submits (no navigation) are fine. This is what hung
+`pytest -q`. Fix (src): in `_watch`, do not evaluate for main-frame navigation requests (keep the
+last poll's baseline, or bound it with `asyncio.wait_for(..., 2)`), and wrap every
+`_snapshot`/`page.evaluate` in the poll loop in `asyncio.wait_for` so the deadline always holds.
+Tests: affected flow tests are strict xfails (`SEC39_HANG`, raises=FillHang) in
+`test_fill_for_me.py`, `test_fill_for_me_fields.py`, `test_d9_security_fixes.py` and
+`test_security_d9.py`; remove the marker when the fix lands. The suite also has a per-test hang
+guard now (tests/conftest.py, `FREEMYID_TEST_TIMEOUT`, default 180 s, POSIX), and every browser
+flow runs through `flow_bounded`, which kills the Playwright driver on timeout so cleanup cannot
+hang either.
+
 ## Website review, 2026-11-06 (91539e5..HEAD: site/, site_src/, tools/build_site.py, tools/site_check.py, pages.yml, brand/)
 
 Verdict: PASS (no BLOCK items; 3 low and 2 info findings).

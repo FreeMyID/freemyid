@@ -13,7 +13,7 @@ import pytest
 from freemyid.engine import filler
 from freemyid.engine._dev import fixture_server
 from freemyid.engine.browser import BrowserManager
-from freemyid.engine.fill_for_me import _Snap, fill_for_me, new_signal
+from freemyid.engine.fill_for_me import _Snap, new_signal
 from freemyid.models import (
     Broker,
     Listing,
@@ -23,7 +23,12 @@ from freemyid.models import (
     Registry,
 )
 from freemyid.netpolicy import NetPolicy
-from tests.conftest import make_profile
+from tests.conftest import (
+    BROWSER_LAUNCH_TIMEOUT_MS,
+    fill_bounded,
+    make_profile,
+    no_browser,
+)
 
 F = ProfileField
 H = "https://devfill.example"
@@ -79,8 +84,9 @@ def _registry(*brokers: Broker) -> Registry:
 
 
 def _bm(fixture_base: str | None = None) -> BrowserManager:
-    b = Broker(id="dv", name="Dev", url=f"{H}/", category="people_search",
-               domains=["devfill.example"], method="web_form", opt_out_url=f"{H}/labels")
+    b = Broker.model_validate({"id": "dv", "name": "Dev", "url": f"{H}/",
+                               "category": "people_search", "domains": ["devfill.example"],
+                               "method": "web_form", "opt_out_url": f"{H}/labels"})
     return BrowserManager(NetPolicy(_registry(b)), headless=True, fixture_base=fixture_base)
 
 
@@ -179,7 +185,7 @@ async def test_headless_context_ignores_the_opt_in():
         try:
             await bm.start()
         except Exception as e:  # noqa: BLE001
-            pytest.skip(f"Playwright browser not available: {type(e).__name__}")
+            no_browser(type(e).__name__)
         ctx = await bm.new_context(["devfill.example"], allow_captcha_frames=True)
         assert ctx.freemyid_captcha_frames is False   # type: ignore[attr-defined]
         await ctx.close()
@@ -218,9 +224,9 @@ async def page():
     from playwright.async_api import async_playwright
     async with async_playwright() as p:
         try:
-            b = await p.chromium.launch(headless=True)
+            b = await p.chromium.launch(headless=True, timeout=BROWSER_LAUNCH_TIMEOUT_MS)
         except PWError as e:
-            pytest.skip(f"Playwright Chromium not available: {type(e).__name__}")
+            no_browser(type(e).__name__)
         ctx = await b.new_context()
         await ctx.route("**/*", lambda r: r.abort() if not r.request.url.startswith(
             ("about:", "data:")) else r.continue_())
@@ -357,10 +363,8 @@ async def test_ajax_success_on_same_page_counts(store):
         await pg.click("#send")
 
     with fixture_server():
-        res = await fill_for_me(store, p.id, b.id, registry=_registry(b), headed=False,
+        res = await fill_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
                                 timeout_s=15, on_ready=person, close_delay_s=0)
-    if res.reason == "browser_unavailable":
-        pytest.skip("needs the Playwright browser")
     assert res.status == "submitted" and res.reason == "success_text", res
     evs = store.list_evidence(p.id, b.id)
     assert sorted(e.caption for e in evs) == ["confirmation page", "form as sent"]
@@ -376,10 +380,8 @@ async def test_late_text_plus_unrelated_post_is_not_success(store):
         await pg.click("#draft")                     # a POST, but nothing new appears
 
     with fixture_server():
-        res = await fill_for_me(store, p.id, b.id, registry=_registry(b), headed=False,
+        res = await fill_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
                                 timeout_s=3, on_ready=person, close_delay_s=0)
-    if res.reason == "browser_unavailable":
-        pytest.skip("needs the Playwright browser")
     assert res.status == "fallback" and res.reason == "timeout" and res.submit_seen, res
     assert not store.list_requests(p.id)
 
@@ -397,10 +399,8 @@ async def test_covered_by_child_uses_listing_found_on_the_child(store):
         await pg.click("#send")
 
     with fixture_server():
-        res = await fill_for_me(store, p.id, child.id, registry=_registry(parent, child),
-                                headed=False, timeout_s=15, on_ready=person, close_delay_s=0)
-    if res.reason == "browser_unavailable":
-        pytest.skip("needs the Playwright browser")
+        res = await fill_bounded(store, p.id, child.id, registry=_registry(parent, child),
+                                headed=False, timeout_s=8, on_ready=person, close_delay_s=0)
     assert res.broker_id == "ff_parent" and res.ok, res
     assert got["url"] == li.url and "listing_url" in res.filled
     assert store.get_request(res.request_id).listing_ids == [li.id]

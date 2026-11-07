@@ -37,7 +37,7 @@ from freemyid.models import (
     Todo,
     TodoKind,
 )
-from tests.conftest import make_profile
+from tests.conftest import find_bounded, make_profile
 
 F = ProfileField
 H = "https://devfind.example"
@@ -158,7 +158,7 @@ async def test_right_result_chosen_via_search_form(store):
         await _click_me(page)
 
     with fixture_server():
-        res = await find_listing(store, p.id, b.id, registry=_registry(b), headed=False,
+        res = await find_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
                                  timeout_s=30, on_ready=person, close_delay_s=0)
     assert res.status == "found", res
     assert res.listing_url == RIGHT and res.searched_with == "form" and res.rejected == 0
@@ -195,7 +195,7 @@ async def test_search_url_pattern_opens_results_directly(store):
         await _click_me(page)
 
     with fixture_server():
-        res = await find_listing(store, p.id, b.id, registry=_registry(b), headed=False,
+        res = await find_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
                                  timeout_s=30, on_ready=person, close_delay_s=0)
     assert res.ok and res.searched_with == "search_url" and res.listing_url == RIGHT
 
@@ -216,7 +216,7 @@ async def test_pattern_mismatch_rejected_then_right_page_accepted(store):
         await _click_me(page)
 
     with fixture_server():
-        res = await find_listing(store, p.id, b.id, registry=_registry(b), headed=False,
+        res = await find_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
                                  timeout_s=30, on_ready=person, close_delay_s=0)
     assert res.ok and res.listing_url == RIGHT
     assert res.rejected == 1 and res.last_rejection == "pattern_mismatch"
@@ -234,7 +234,7 @@ async def test_search_page_itself_rejected(store):
         await page.close()
 
     with fixture_server():
-        res = await find_listing(store, p.id, b.id, registry=_registry(b), headed=False,
+        res = await find_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
                                  timeout_s=30, on_ready=person, close_delay_s=0)
     assert res.status == "fallback" and res.reason == "window_closed"
     assert res.last_rejection == "search_page" and not store.list_listings(p.id, b.id)
@@ -250,7 +250,7 @@ async def test_off_host_navigation_falls_back_blocked(store):
         await page.click("#ad", no_wait_after=True)   # sponsored link to another host
 
     with fixture_server():
-        res = await find_listing(store, p.id, b.id, registry=_registry(b), headed=False,
+        res = await find_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
                                  timeout_s=30, on_ready=person, close_delay_s=0)
     assert res.status == "fallback" and res.reason == "blocked" and res.todo_id
     assert not store.list_listings(p.id, b.id)
@@ -264,7 +264,7 @@ async def test_window_closed_falls_back_to_assisted_card(store):
         await page.close()
 
     with fixture_server():
-        res = await find_listing(store, p.id, b.id, registry=_registry(b), headed=False,
+        res = await find_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
                                  timeout_s=30, on_ready=person, close_delay_s=0)
     assert res.status == "fallback" and res.reason == "window_closed"
     todos = store.list_todos(p.id)
@@ -279,7 +279,7 @@ async def test_fallback_prefers_existing_review_card(store):
     review = Todo(profile_id=p.id, broker_id=b.id, kind=TodoKind.REVIEW_MATCH, title="Is this?")
     store.save_todo(review)
     with fixture_server():
-        res = await find_listing(store, p.id, b.id, registry=_registry(b), headed=False,
+        res = await find_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
                                  timeout_s=1, close_delay_s=0)
     assert res.reason == "timeout" and res.todo_id == review.id
     assert len(store.list_todos(p.id)) == 1
@@ -293,7 +293,7 @@ async def test_cant_find_button(store):
         await page.click(f"#{CANT_ID}")
 
     with fixture_server():
-        res = await find_listing(store, p.id, b.id, registry=_registry(b), headed=False,
+        res = await find_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
                                  timeout_s=30, on_ready=person, close_delay_s=0)
     assert res.status == "fallback" and res.reason == "user_cant_find" and res.todo_id
 
@@ -320,7 +320,7 @@ async def test_button_injection_is_text_only_in_page(store):
         await page.close()
 
     with fixture_server():
-        await find_listing(store, p.id, b.id, registry=_registry(b), headed=False,
+        await find_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
                            timeout_s=30, on_ready=person, close_delay_s=0)
     assert seen["text"] == "This is me" and seen["children"] == 0 and seen["tag"] == "BUTTON"
     assert set(seen["banner_html_tags"]) == {"DIV"}
@@ -346,7 +346,7 @@ async def test_page_script_cannot_call_binding_or_fake_click(store):
         await _click_me(page)                    # a real (trusted) click
 
     with fixture_server():
-        res = await find_listing(store, p.id, b.id, registry=_registry(b), headed=False,
+        res = await find_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
                                  timeout_s=30, on_ready=person, close_delay_s=0)
     assert seen["exposed"] == []
     assert seen["listings_before_real_click"] == 0
@@ -366,7 +366,7 @@ async def test_done_banner_shown(store):
         seen["done"] = True
 
     with fixture_server():
-        res = await find_listing(store, p.id, b.id, registry=_registry(b), headed=False,
+        res = await find_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
                                  timeout_s=30, on_ready=person, close_delay_s=1.5)
     assert res.ok and res.listing_url == WRONG and seen.get("done")
 
@@ -386,6 +386,7 @@ async def test_refusals(store):
     assert r.status == "refused" and r.reason == "consent" and not store.list_todos(p.id)
 
 
+@pytest.mark.browser
 def test_sync_wrapper_timeout(store):
     b = _broker()
     p = _profile(store)

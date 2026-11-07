@@ -17,6 +17,8 @@ pytest.importorskip("playwright.sync_api")
 from playwright.sync_api import Error as PWError
 from playwright.sync_api import sync_playwright
 
+from tests.conftest import BROWSER_LAUNCH_TIMEOUT_MS, no_browser
+
 pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
 
 STEPS = ["consent", "name", "address", "about", "mailbox", "finish"]
@@ -27,9 +29,9 @@ def browser():
     # The context manager stops the driver even when launch fails (see SEC-26).
     with sync_playwright() as p:
         try:
-            b = p.chromium.launch(headless=True)
+            b = p.chromium.launch(headless=True, timeout=BROWSER_LAUNCH_TIMEOUT_MS)
         except PWError as e:
-            pytest.skip(f"Playwright Chromium not available: {type(e).__name__}")
+            no_browser(type(e).__name__)   # fails instead when FREEMYID_REQUIRE_BROWSER=1
         yield b
         b.close()
 

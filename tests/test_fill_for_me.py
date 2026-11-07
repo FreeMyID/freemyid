@@ -31,7 +31,7 @@ from freemyid.models import (
     RequestStatus,
     TodoKind,
 )
-from tests.conftest import make_profile
+from tests.conftest import fill_bounded, make_profile
 
 F = ProfileField
 H = "https://devfill.example"
@@ -170,6 +170,7 @@ async def _page(registry: Registry, url: str):
     return bm, page
 
 
+@pytest.mark.browser
 async def test_fill_labels_page_leaves_protected_controls_alone(profile):
     b = _broker("fill_labels", "labels")
     p = profile.model_copy(update={"mailbox": _mailbox()})
@@ -200,6 +201,7 @@ async def test_fill_labels_page_leaves_protected_controls_alone(profile):
             await bm.close()
 
 
+@pytest.mark.browser
 async def test_fill_aria_placeholder_name_id(profile):
     b = _broker("fill_aria", "aria")
     p = profile.model_copy(update={"mailbox": _mailbox()})
@@ -234,8 +236,8 @@ async def test_fill_for_me_success_records_like_web_form(store):
         await page.click("#send")
 
     with fixture_server():
-        res = await fill_for_me(store, p.id, b.id, registry=_registry(b), headed=False,
-                                timeout_s=20, on_ready=person, close_delay_s=0)
+        res = await fill_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
+                                timeout_s=8, on_ready=person, close_delay_s=0)
     assert res.status == "submitted", res
     assert res.reason == "success_text" and res.submit_seen
     assert "not a robot" in seen["banner"] and MSG_PRACTICE in seen["banner"]
@@ -266,8 +268,8 @@ async def test_success_closes_open_assisted_todo(store):
         await page.click("#send")
 
     with fixture_server():
-        res = await fill_for_me(store, p.id, b.id, registry=_registry(b), headed=False,
-                                timeout_s=20, on_ready=person, close_delay_s=0)
+        res = await fill_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
+                                timeout_s=8, on_ready=person, close_delay_s=0)
     assert res.ok
     assert all(x.id != t.id for x in store.list_todos(p.id))
     assert store.get_status(p.id, b.id).state == ListingState.SUBMITTED
@@ -281,7 +283,7 @@ async def test_window_closed_falls_back_to_assisted_card(store):
         await page.close()
 
     with fixture_server():
-        res = await fill_for_me(store, p.id, b.id, registry=_registry(b), headed=False,
+        res = await fill_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
                                 timeout_s=20, on_ready=person, close_delay_s=0)
     assert res.status == "fallback" and res.reason == "window_closed"
     todos = store.list_todos(p.id)
@@ -294,9 +296,9 @@ async def test_timeout_falls_back_and_reuses_card(store):
     b = _broker("fill_slow", "labels", form=SUCCESS)
     p, _ = _setup(store, b)
     with fixture_server():
-        r1 = await fill_for_me(store, p.id, b.id, registry=_registry(b), headed=False,
+        r1 = await fill_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
                                timeout_s=1, close_delay_s=0)
-        r2 = await fill_for_me(store, p.id, b.id, registry=_registry(b), headed=False,
+        r2 = await fill_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
                                timeout_s=1, close_delay_s=0)
     assert r1.reason == "timeout" and r1.filled and not r1.submit_seen
     assert r1.todo_id == r2.todo_id and len(store.list_todos(p.id)) == 1
@@ -310,7 +312,7 @@ async def test_no_success_signal_is_unverified(store):
         await page.click("#send")
 
     with fixture_server():
-        res = await fill_for_me(store, p.id, b.id, registry=_registry(b), headed=False,
+        res = await fill_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
                                 timeout_s=3, on_ready=person, close_delay_s=0)
     assert res.status == "fallback" and res.reason == "unverified" and res.submit_seen
     assert res.todo_id and store.get_status(p.id, b.id).state == ListingState.UNKNOWN
@@ -321,7 +323,7 @@ async def test_success_text_already_on_page_needs_a_submit(store):
     b = _broker("fill_base", "fullname", form=form)
     p, _ = _setup(store, b)
     with fixture_server():
-        res = await fill_for_me(store, p.id, b.id, registry=_registry(b), headed=False,
+        res = await fill_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
                                 timeout_s=1, close_delay_s=0)
     assert res.reason == "timeout"                    # instructions text is not success
     assert set(res.filled) == {"full_name", "state", "email"}
@@ -331,8 +333,8 @@ async def test_success_text_already_on_page_needs_a_submit(store):
         await page.click("button")
 
     with fixture_server():
-        res = await fill_for_me(store, p.id, b.id, registry=_registry(b), headed=False,
-                                timeout_s=20, on_ready=person, close_delay_s=0)
+        res = await fill_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
+                                timeout_s=8, on_ready=person, close_delay_s=0)
     assert res.ok
 
 
@@ -340,7 +342,7 @@ async def test_nothing_to_fill_falls_back(store):
     b = _broker("fill_empty", "empty", form=SUCCESS)
     p, _ = _setup(store, b)
     with fixture_server():
-        res = await fill_for_me(store, p.id, b.id, registry=_registry(b), headed=False,
+        res = await fill_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
                                 timeout_s=5, close_delay_s=0)
     assert res.status == "fallback" and res.reason == "nothing_filled" and res.todo_id
 
@@ -355,7 +357,7 @@ async def test_data_minimization_in_flow(store):
         await page.close()
 
     with fixture_server():
-        res = await fill_for_me(store, p.id, b.id, registry=_registry(b), headed=False,
+        res = await fill_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
                                 timeout_s=20, on_ready=person, close_delay_s=0)
     assert got["state"] == "" and "state" in res.withheld
 
@@ -380,6 +382,7 @@ async def test_refusals(store):
     assert not store.list_todos(p.id)
 
 
+@pytest.mark.browser
 def test_sync_wrapper_and_covered_by_child(store):
     parent = _broker("fill_parent", "labels", form=SUCCESS)
     child = _broker("fill_child", "labels", covered_by="fill_parent")

@@ -42,7 +42,7 @@ from freemyid.models import (
     TodoKind,
 )
 from freemyid.wizard.server import _csrf_for, create_app
-from tests.conftest import make_profile
+from tests.conftest import make_profile, no_browser
 
 F = ProfileField
 TOKEN = "tok-sec-wave2"
@@ -334,7 +334,7 @@ class _Hits(BaseHTTPRequestHandler):
 def test_browser_does_not_follow_redirect_off_allowlist(monkeypatch):
     exe = _browser_exe()
     if not exe:
-        pytest.xfail("no local Chromium to test with")
+        no_browser("no local chrome-headless-shell to test with")
     pytest.importorskip("playwright")
     from freemyid.engine.browser import BlockedByPolicy, BrowserManager
     from freemyid.netpolicy import NetPolicy

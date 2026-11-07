@@ -22,7 +22,6 @@ from freemyid.engine.fill_for_me import (
     MSG_PRACTICE,
     _banner_js,
     _matched,
-    fill_for_me,
 )
 from freemyid.models import (
     Broker,
@@ -32,7 +31,12 @@ from freemyid.models import (
     ProfileField,
     Registry,
 )
-from tests.conftest import make_profile
+from tests.conftest import (
+    BROWSER_LAUNCH_TIMEOUT_MS,
+    fill_bounded,
+    make_profile,
+    no_browser,
+)
 
 pytest.importorskip("playwright.async_api")
 
@@ -48,9 +52,9 @@ async def page():
     from playwright.async_api import async_playwright
     async with async_playwright() as p:
         try:
-            b = await p.chromium.launch(headless=True)
+            b = await p.chromium.launch(headless=True, timeout=BROWSER_LAUNCH_TIMEOUT_MS)
         except PWError as e:
-            pytest.skip(f"Playwright Chromium not available: {type(e).__name__}")
+            no_browser(type(e).__name__)
         ctx = await b.new_context()
         # Nothing may leave the machine: inline pages only.
         await ctx.route("**/*", lambda r: r.abort() if not r.request.url.startswith(
@@ -193,9 +197,8 @@ async def test_sec32_preexisting_success_text_plus_reload_is_not_success(store, 
         await pg.click("#send")    # the server answers with the same form (not accepted)
 
     with _site(monkeypatch):
-        res = await fill_for_me(store, p.id, b.id, registry=reg, headed=False, timeout_s=4,
+        res = await fill_bounded(store, p.id, b.id, registry=reg, headed=False, timeout_s=4,
                                 on_ready=person, close_delay_s=0)
-    assert res.reason != "browser_unavailable", "needs the Playwright browser"
     assert res.status != "submitted", res
 
 

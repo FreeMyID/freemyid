@@ -27,7 +27,12 @@ jobs:
         run: pip install ".[dev]"
       - name: Ruff
         run: ruff check src tests
+      - name: Playwright Chromium (CI runner only)
+        run: python -m playwright install --with-deps chromium
       - name: Tests
+        timeout-minutes: 25
+        env:
+          FREEMYID_REQUIRE_BROWSER: "1"   # real-browser tests must run here, never skip
         run: pytest -q
 
   windows-installer:
@@ -42,7 +47,10 @@ jobs:
           cache: pip
       - name: Install (with packaging extras)
         run: pip install ".[package,dev]"
+      - name: Playwright Chromium (CI runner only)
+        run: python -m playwright install chromium
       - name: Tests
+        timeout-minutes: 30
         run: pytest -q
       - name: Version
         id: ver

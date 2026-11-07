@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from freemyid import registry
 from freemyid.models import Actor, Broker, Event, Registry
-from tests.conftest import FIXTURES, make_profile
+from tests.conftest import FIXTURES, full_registry_path, make_profile
 
 ROOT = Path(__file__).resolve().parent.parent
 PID = "0" * 32  # valid Id
@@ -80,9 +80,9 @@ def test_committed_schema_matches_models():
 
 
 def test_real_registry_validates():
-    p = ROOT / "brokers" / "registry.yaml"
-    if not p.exists():
-        pytest.skip("brokers/registry.yaml not written yet")
+    p = full_registry_path()
+    if p is None:
+        pytest.skip("full registry not present (public checkout)")
     reg = registry.load_registry(p)
     assert reg.brokers
     for b in reg.brokers:

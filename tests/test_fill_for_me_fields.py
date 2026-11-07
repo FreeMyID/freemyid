@@ -11,7 +11,7 @@ import pytest
 
 from freemyid.engine import filler
 from freemyid.engine._dev import fixture_server
-from freemyid.engine.fill_for_me import fill_for_me, success_signals, url_matches
+from freemyid.engine.fill_for_me import success_signals, url_matches
 from freemyid.models import (
     Broker,
     Listing,
@@ -21,7 +21,7 @@ from freemyid.models import (
     ProfileField,
     Registry,
 )
-from tests.conftest import make_profile
+from tests.conftest import fill_bounded, make_profile
 
 F = ProfileField
 H = "https://devfill.example"
@@ -91,8 +91,8 @@ async def test_success_text_from_registry(store):
     b = _broker("ff_st", "labels", success_text=["Your request has been received"])
     p, _ = _setup(store, b)
     with fixture_server():
-        res = await fill_for_me(store, p.id, b.id, registry=_registry(b), headed=False,
-                                timeout_s=20, on_ready=_submit, close_delay_s=0)
+        res = await fill_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
+                                timeout_s=8, on_ready=_submit, close_delay_s=0)
     assert res.ok and res.reason == "success_text"
     assert store.get_status(p.id, b.id).state == ListingState.SUBMITTED
 
@@ -101,8 +101,8 @@ async def test_success_url_pattern(store):
     b = _broker("ff_url", "labels", success_url_pattern=r"^/done$")
     p, _ = _setup(store, b)
     with fixture_server():
-        res = await fill_for_me(store, p.id, b.id, registry=_registry(b), headed=False,
-                                timeout_s=20, on_ready=_submit, close_delay_s=0)
+        res = await fill_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
+                                timeout_s=8, on_ready=_submit, close_delay_s=0)
     assert res.ok and res.reason == "success_url" and res.submit_seen
 
 
@@ -111,7 +111,7 @@ async def test_success_url_needs_navigation_first(store):
     b = _broker("ff_url_base", "labels", success_url_pattern=r"^/labels")
     p, _ = _setup(store, b)
     with fixture_server():
-        res = await fill_for_me(store, p.id, b.id, registry=_registry(b), headed=False,
+        res = await fill_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
                                 timeout_s=2, close_delay_s=0)
     assert res.status == "fallback" and res.reason == "timeout"
 
@@ -120,7 +120,7 @@ async def test_success_text_already_on_page_needs_submit(store):
     b = _broker("ff_st_base", "fullname", success_text=["your request has been received"])
     p, _ = _setup(store, b)
     with fixture_server():
-        res = await fill_for_me(store, p.id, b.id, registry=_registry(b), headed=False,
+        res = await fill_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
                                 timeout_s=2, close_delay_s=0)
     assert res.reason == "timeout"
 
@@ -130,11 +130,12 @@ async def test_url_pattern_counts_as_signal_not_unverified(store):
     b = _broker("ff_url_miss", "labels", success_url_pattern=r"^/elsewhere$")
     p, _ = _setup(store, b)
     with fixture_server():
-        res = await fill_for_me(store, p.id, b.id, registry=_registry(b), headed=False,
+        res = await fill_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
                                 timeout_s=3, on_ready=_submit, close_delay_s=0)
     assert res.reason == "timeout" and res.submit_seen
 
 
+@pytest.mark.browser
 async def test_safe_checkboxes_only_real_visible_main_frame_outside_captcha(store):
     from freemyid.engine.browser import BrowserManager
     from freemyid.engine.outbox import dev_fixture_base
@@ -175,8 +176,8 @@ async def test_fill_for_me_ticks_safe_checkboxes_and_nothing_else(store):
         await page.click("#send")
 
     with fixture_server():
-        res = await fill_for_me(store, p.id, b.id, registry=_registry(b), headed=False,
-                                timeout_s=20, on_ready=person, close_delay_s=0)
+        res = await fill_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
+                                timeout_s=8, on_ready=person, close_delay_s=0)
     assert res.ok
     # SEC-31: a marketing box ("Send me offers") is refused even when the registry picks it
     assert seen == {"agree": True, "robot": False, "news": False}
@@ -194,6 +195,6 @@ async def test_no_safe_checkboxes_ticks_nothing(store):
         await page.click("#send")
 
     with fixture_server():
-        res = await fill_for_me(store, p.id, b.id, registry=_registry(b), headed=False,
-                                timeout_s=20, on_ready=person, close_delay_s=0)
+        res = await fill_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
+                                timeout_s=8, on_ready=person, close_delay_s=0)
     assert res.ok and seen["agree"] is False
