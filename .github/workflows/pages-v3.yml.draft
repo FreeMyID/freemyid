@@ -18,6 +18,11 @@ on:
 permissions:
   contents: read
 
+# Astro build telemetry off (SEC-60): astro build/dev would otherwise POST to telemetry.astro.build,
+# CI included. web/package.json sets it too; the first build step fails if it is missing.
+env:
+  ASTRO_TELEMETRY_DISABLED: "1"
+
 concurrency:
   group: pages
   cancel-in-progress: false
@@ -41,6 +46,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Astro telemetry is off (SEC-60)
+        run: |
+          test "${ASTRO_TELEMETRY_DISABLED:-}" = "1" || { echo "::error::ASTRO_TELEMETRY_DISABLED must be 1"; exit 1; }
+          node -e 'const s=require("./package.json").scripts;const bad=Object.entries(s).filter(([,c])=>/(^|&& )astro /.test(c));if(bad.length){console.error("astro run without ASTRO_TELEMETRY_DISABLED=1:",bad.map(([k])=>k).join(", "));process.exit(1)}'
       - name: Install (exact versions from the lockfile)
         run: pnpm install --frozen-lockfile
       - name: Design tokens are up to date (contrast pairs checked)

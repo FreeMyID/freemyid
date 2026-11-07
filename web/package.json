@@ -11,10 +11,10 @@
   },
   "scripts": {
     "tokens": "node scripts/gen-tokens.mjs",
-    "dev": "node scripts/gen-tokens.mjs && astro dev",
-    "build": "node scripts/gen-tokens.mjs && astro build && node scripts/tighten-csp.mjs dist",
+    "dev": "node scripts/gen-tokens.mjs && ASTRO_TELEMETRY_DISABLED=1 astro dev",
+    "build": "node scripts/gen-tokens.mjs && ASTRO_TELEMETRY_DISABLED=1 astro build && node scripts/tighten-csp.mjs dist",
     "check": "node scripts/check-site.mjs dist",
-    "preview": "astro preview"
+    "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview"
   },
   "dependencies": {
     "@astrojs/react": "7.1.4",
