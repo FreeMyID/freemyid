@@ -70,7 +70,8 @@
   .trustbar__item a:hover { color: var(--color-link); text-decoration-color: currentColor; }
 
   /* ---------- Steps: three numbered steps side by side when there is room ---------- */
-  .steps:has(> .step) { grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: var(--space-l); }
+  .steps { display: grid; gap: var(--space-l); list-style: none; padding: 0; }
+  .steps:not(.steps--list) { grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); }
   .step { position: relative; margin: 0; }
   .step > * + * { margin-block-start: var(--space-2xs); }
   .step__num {
@@ -80,6 +81,21 @@
   }
   .step > h3 { font-size: var(--step-2); }
   .step > p { color: var(--color-muted); }
+
+  /* Steps as a vertical numbered list (instructions with any content: lists, pictures, callouts).
+     The number sits in a gutter on the left; everything else stays in one readable column. */
+  .steps--list { gap: var(--space-m); max-inline-size: calc(var(--measure) + 3.75rem); }
+  .steps--list > .step { padding-inline-start: 3.75rem; min-block-size: 2.75rem; }
+  .steps--list > .step > .step__num { position: absolute; inset-inline-start: 0; inset-block-start: -0.15rem; margin: 0; }
+  .steps--list > .step > .step__num + * { margin-block-start: 0; }
+  .steps--list > .step > h3 { font-size: var(--step-1); padding-block-start: 0.3rem; }
+  .steps--list > .step > p { color: var(--color-text); }
+  .steps--list > .step > ul { padding-inline-start: 1.2em; }
+  @media (max-width: 30em) {
+    .steps--list > .step { padding-inline-start: 3rem; }
+    .steps--list > .step > .step__num { inline-size: 2.25rem; block-size: 2.25rem; font-size: 1rem; inset-block-start: 0; }
+    .steps--list > .step > h3 { padding-block-start: 0.1rem; }
+  }
 
   /* ---------- Cards ---------- */
   .cards {

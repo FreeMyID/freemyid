@@ -13,8 +13,10 @@
       <a class="btn btn--lg" href="{{ site.download_url }}">{{ icon('download') }}Download FreeMyIDSetup.exe</a>
       {% else %}
       <!-- WR-9: no release yet, so no link (releases/latest would 404). Set release.version in data/release.yaml to switch this on. -->
-      <p class="btn btn--lg btn--pending">Download opens soon</p>
-      <p class="note">Not published yet. We'll show the download button here the day the first version is ready.</p>
+      <div class="callout callout--info">
+        {{ icon('calendar') }}
+        <div><p><strong>Download opens soon</strong></p><p>Not published yet. We'll show the download button here the day the first version is ready.</p></div>
+      </div>
       {% endif %}
       <dl class="facts">
         <dt>Works on</dt><dd>Windows 10 and 11</dd>
@@ -36,32 +38,34 @@
 
 <section class="section section--alt" id="smartscreen" aria-labelledby="ss-title">
   <div class="wrap">
-    <h2 id="ss-title" class="section-head">Windows may show a blue warning. Here's why, and what to do</h2>
+    <div class="section-head">
+      <h2 id="ss-title">Windows may show a blue warning. Here's why, and what to do</h2>
+    </div>
     <p class="prose">Windows shows "Windows protected your PC" for new programs that haven't paid for a publisher certificate yet. Free My ID is free and hasn't bought one yet. The warning doesn't mean anything is wrong.</p>
     <!-- WR-10 -->
     <p class="prose mt-s">Not sure about this step? Ask a family member to sit with you. <a href="{{ url('families/') }}">Here's a one-page guide for them.</a></p>
-    <ol class="steps steps--big mt-l" role="list">
-      <li><h3>Open the file you downloaded</h3><p>It's called <strong>FreeMyIDSetup.exe</strong>. You'll usually find it in your <strong>Downloads</strong> folder, or at the bottom or top-right of your web browser.</p></li>
-      <li>
+    <ol class="steps steps--list mt-l" role="list">
+      <li class="step"><span class="step__num" aria-hidden="true">1</span><h3>Open the file you downloaded</h3><p>It's called <strong>FreeMyIDSetup.exe</strong>. You'll usually find it in your <strong>Downloads</strong> folder, or at the bottom or top-right of your web browser.</p></li>
+      <li class="step"><span class="step__num" aria-hidden="true">2</span>
         <h3>Click the small words "More info"</h3>
         <p>If a blue box says <strong>"Windows protected your PC"</strong>, don't click "Don't run". Click <strong>More info</strong> instead.</p>
         {% set ss_step = 1 %}{% include "partials/smartscreen.html" %}
       </li>
-      <li>
+      <li class="step"><span class="step__num" aria-hidden="true">3</span>
         <h3>Check the name, then click "Run anyway"</h3>
         <p>Make sure it says the app is <strong>FreeMyIDSetup.exe</strong>. It will say "Unknown publisher"; that's expected. Then click <strong>Run anyway</strong>.</p>
         <!-- WR-19: safety line before Run anyway -->
         <p class="callout"><strong>Only do this if you downloaded the file from this page or from our GitHub releases page. If it came from anywhere else, delete it.</strong></p>
         {% set ss_step = 2 %}{% include "partials/smartscreen.html" %}
       </li>
-      <li><h3>Click Install</h3><p>Free My ID opens by itself and walks you through six simple screens.</p></li>
+      <li class="step"><span class="step__num" aria-hidden="true">4</span><h3>Click Install</h3><p>Free My ID opens by itself and walks you through six simple screens.</p></li>
     </ol>
   </div>
 </section>
 
 <div class="wrap section prose">
   <h2 id="genuine">How to know it's really us</h2>
-  <div class="callout callout--gold">
+  <div class="callout callout--note">
     {{ icon('shield') }}
     <div><p><strong>Stay safe:</strong> only download Free My ID from this page or from <a href="{{ site.releases_url }}">our GitHub releases page</a>. We will never email you an installer, and we will never call you.</p></div>
   </div>

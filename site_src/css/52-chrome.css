@@ -91,6 +91,7 @@
   .site-footer a { color: inherit; text-decoration-color: rgb(255 255 255 / 0.45); }
   .site-footer a:hover { text-decoration-color: currentColor; }
   .site-footer .brand { color: inherit; margin-inline-end: 0; }
+  .site-footer .wrap > p { margin-block: var(--space-2xs) var(--space-l); }
   .footer-cols {
     display: grid; gap: var(--space-l) var(--space-m);
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 10.5rem), 1fr));

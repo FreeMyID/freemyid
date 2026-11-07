@@ -58,10 +58,10 @@ Need a new component? Add it here in the same commit as its first use and tell t
 | Hero | `section.hero` > `.hero__text` (kicker, h1, `p.hero__lead`, `.hero__actions`, `p.hero__note`) + `figure.hero__media` (img/mockup + `figcaption.caption`) | two columns >= 900px, stacked below |
 | Buttons | `a.btn.btn--primary` / `.btn--secondary` / `.btn--ghost`; `.btn--large`; `.btn--small` | one primary per screen |
 | Trust bar | `ul.trustbar` > `li.trustbar__item` > `{{ icon() }}` + `span` | 4 items, links to /safety/ anchors |
-| Steps | `ol.steps` > `li.step` > `span.step__num` + `h3` + `p` | 3 steps |
+| Steps | `ol.steps` > `li.step` > `span.step__num` (aria-hidden) + `h3` + `p` | 3 steps side by side. `ol.steps.steps--list`: vertical numbered instructions, a step may hold lists, pictures, callouts, and `h3` is optional |
 | Card grid | `ul.cards` (`.cards--3`, `.cards--4`) > `li.card` > `.card__icon` + `h3` + `p` | auto-fit, container query |
 | Proof figure | `figure.proof` > `img`/mockup + `figcaption.caption` | "Sample ... made-up data" caption mandatory |
-| Compare table | `.table-scroll` > `table.compare` with `th[scope]`; `td.yes` / `td.no` / `td.partial` | must reflow or scroll at 320px without page scroll |
+| Compare table | `.table-scroll[tabindex=0][role=region][aria-labelledby=<h2 id>]` > `table.compare` with `th[scope]`; `td.yes` / `td.no` / `td.partial` | must reflow or scroll at 320px without page scroll |
 | Callout | `aside.callout` + `.callout--info` / `.callout--note` | calm, never red alarm |
 | Does / doesn't | `.dodont` > `.dodont__col.dodont__col--do` / `--dont` > `h3` + `ul` | existing honesty box |
 | Price card | `.price-card` > `p.price-card__label`, `p.price-card__price`, `p.price-card__sub`, `ul.checklist`, CTA | one card, centered |
