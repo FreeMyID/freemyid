@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import os
 import stat
-import sys
 from datetime import date
 
 import pytest
@@ -230,7 +229,7 @@ def test_todo_done_ambiguous_prefix(store, runner):
 # --------------------------------------------------------------------------- SEC-14
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="POSIX permissions")
+@pytest.mark.posix_only
 def test_cli_start_sets_umask_and_private_home(freemyid_env, runner):
     from freemyid import paths
     from freemyid.cli import app

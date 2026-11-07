@@ -5,7 +5,6 @@ from __future__ import annotations
 import base64
 import json
 import os
-import sys
 
 import keyring
 import pytest
@@ -17,7 +16,7 @@ from freemyid.models import MailboxConfig
 from freemyid.secrets import delete_mailbox_password, get_mailbox_password, set_mailbox_password
 from tests.conftest import make_profile
 
-posix_only = pytest.mark.skipif(sys.platform == "win32", reason="POSIX file modes")
+posix_only = pytest.mark.posix_only   # skip logic: tests/conftest.py
 
 PW = "correct horse battery staple"
 MB = MailboxConfig(address="removals.testperson@example.com", imap_host="imap.example.com",

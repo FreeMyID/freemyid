@@ -11,7 +11,6 @@ import glob
 import os
 import smtplib
 import subprocess
-import sys
 import threading
 import xml.etree.ElementTree as ET
 from datetime import UTC, date, datetime
@@ -250,7 +249,7 @@ def test_open_refuses_plain_http(client, store):
     assert opened == []
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="POSIX modes")
+@pytest.mark.posix_only
 def test_instance_file_is_private(freemyid_env):
     from freemyid.wizard import desktop
     desktop.write_instance(1234, "secret-token")

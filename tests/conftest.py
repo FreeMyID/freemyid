@@ -89,10 +89,45 @@ def chromium_probe() -> str | None:
     return _probe["r"]
 
 
+# ----------------------------------------------------------------------------- OS markers
+# Registered in pyproject.toml (windows_only, posix_only, macos_only, linux_only, browser).
+# Each OS marker skips the test everywhere else, so the CI matrix runs it only where it belongs.
+OS_MARKERS: dict[str, tuple[bool, str]] = {
+    "windows_only": (sys.platform == "win32", "Windows only"),
+    "posix_only": (sys.platform != "win32", "Linux/macOS only"),
+    "macos_only": (sys.platform == "darwin", "macOS only"),
+    "linux_only": (sys.platform.startswith("linux"), "Linux only"),
+}
+# Tests that touch the real OS scheduler (schtasks / systemd --user / launchd). They run only
+# on disposable CI runners (CI=true, set by GitHub Actions), never in a developer's session,
+# and must also carry the matching OS marker.
+REAL_SCHEDULER = "real_scheduler"
+
+
+def on_ci() -> bool:
+    return os.environ.get("CI", "").strip().lower() == "true"
+
+
 def pytest_configure(config):
     config.addinivalue_line(
-        "markers", f"browser: needs Playwright Chromium (skips if absent, fails if "
-                   f"{REQUIRE_BROWSER_ENV}=1)")
+        "markers", f"{REAL_SCHEDULER}: installs/removes a real scheduled job; runs only with "
+                   "CI=true and needs an OS marker (CR: register in pyproject.toml)")
+
+
+def pytest_collection_modifyitems(config, items):
+    for item in items:
+        os_marks = [m for m in OS_MARKERS if item.get_closest_marker(m) is not None]
+        for m in os_marks:
+            ok, why = OS_MARKERS[m]
+            if not ok:
+                item.add_marker(pytest.mark.skip(reason=f"{why} ({m})"))
+        if item.get_closest_marker(REAL_SCHEDULER) is not None:
+            if not os_marks:
+                item.add_marker(pytest.mark.skip(
+                    reason=f"{REAL_SCHEDULER} test without an OS marker never runs"))
+            elif not on_ci():
+                item.add_marker(pytest.mark.skip(
+                    reason="touches the real OS scheduler: runs only on CI (CI=true)"))
 
 
 def pytest_runtest_setup(item):
@@ -259,6 +294,19 @@ def _guarded_connect(self, address):
     if isinstance(host, str) and host not in ("127.0.0.1", "::1", "localhost"):
         raise RuntimeError(f"network blocked in tests: {host}")
     return _real_connect(self, address)
+
+
+@pytest.fixture(autouse=True)
+def _no_real_scheduler(request, monkeypatch):
+    """Nothing reaches schtasks/systemctl/launchctl/crontab unless the test is marked
+    real_scheduler (and so is on CI). Tests that fake `scheduler._run` replace this."""
+    if request.node.get_closest_marker(REAL_SCHEDULER) is not None:
+        return
+    from freemyid import scheduler
+
+    def refuse(args, input=None):
+        raise RuntimeError(f"real scheduler blocked in tests: {args[:1]}")
+    monkeypatch.setattr(scheduler, "_run", refuse)
 
 
 @pytest.fixture(autouse=True)

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-import sys
 from datetime import timedelta
 
 import pytest
@@ -59,7 +58,7 @@ def test_store_ok_and_permission_warning(store):
     assert c.status == "warn" and "without valid permission" in c.detail
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="POSIX permissions")
+@pytest.mark.posix_only
 def test_home_permissions(freemyid_env):
     from freemyid import paths
     h = paths.home()

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import sqlite3
-import sys
 
 import pytest
 from cryptography.exceptions import InvalidTag
@@ -83,7 +82,7 @@ def test_no_plaintext_pii_on_disk(freemyid_env, profile):
         assert needle not in raw, needle
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="POSIX mode bits; Windows uses per-user ACLs")
+@pytest.mark.posix_only
 def test_db_file_mode(store):
     assert paths.db_path().stat().st_mode & 0o077 == 0
 
