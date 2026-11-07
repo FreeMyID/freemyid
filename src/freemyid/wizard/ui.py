@@ -267,8 +267,12 @@ def _mailbox_body(d: Draft) -> str:
         lis = "".join(f"<li>{esc(x)}</li>" for x in steps)
         guides += (f'<div class="note guide"{_when("provider", k)}><b>{esc(title)}</b>'
                    f'<ol class="big-list">{lis}</ol></div>')
-    pw_hint = "A password is saved. Leave empty to keep it." if d.password or (
-        d.editing and d.mailbox) else "Paste the app password here."
+    if d.saved_password:
+        pw_hint = "A password is saved. Leave empty to keep it."
+    elif d.password:   # typed in this session, held in memory only until you finish
+        pw_hint = "Your password is ready but not saved yet. Leave empty to use it."
+    else:
+        pw_hint = "Paste the app password here."
     creds = (f'<div{_when("provider", "gmail,yahoo,icloud,proton_bridge,other")}>'
              + _inp("address", "Email address", mb.get("address", ""), typ="email")
              + _inp("password", "App password", "", typ="password", hint=pw_hint))

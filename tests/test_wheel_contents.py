@@ -21,7 +21,7 @@ def wheel(tmp_path_factory) -> Path:
         pytest.skip("`build` is not installed")
     out = tmp_path_factory.mktemp("dist")
     r = subprocess.run([sys.executable, "-m", "build", "--wheel", "--outdir", str(out), str(ROOT)],
-                       capture_output=True, text=True, timeout=300)
+                       capture_output=True, text=True, timeout=300, check=False)
     if r.returncode != 0:
         pytest.skip("wheel build unavailable offline: " + r.stderr[-200:])
     return next(out.glob("*.whl"))

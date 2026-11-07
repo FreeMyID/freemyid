@@ -648,8 +648,9 @@ def create_app(store, token: str, allowed_hosts: set[str],
                 **{k: v for k, v in mb.items() if k != "tls_cert_sha256"},
                 keyring_service="freemyid-mailbox"),
                 netpolicy=NetPolicy(None, allow_loopback=True))
-        except TlsPinError as e:
-            return {"ok": False, "status": "fail", "message": str(e)}
+        except TlsPinError:
+            return {"ok": False, "status": "fail",
+                    "message": dr.unreachable_message(mb.get("imap_host", ""))}
         except ValueError:
             return {"ok": False, "status": "fail",
                     "message": "Those mail settings are not complete yet."}

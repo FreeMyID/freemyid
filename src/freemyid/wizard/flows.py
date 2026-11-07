@@ -143,8 +143,8 @@ def _trust_local(d: dr.Draft, a: dict) -> None:
             provider="proton_bridge", address=a.get("address") or "x@example.org",
             username="x", keyring_service="freemyid-mailbox", **pre),
             netpolicy=NetPolicy(None, allow_loopback=True))
-    except (TlsPinError, ValueError) as e:
-        _say(f"Could not read the mail app's security code: {e}")
+    except (TlsPinError, ValueError):
+        _say(dr.unreachable_message(dr.PRESETS["proton_bridge"]["imap_host"]))
         return
     _say("\n" + res.message)
     if _yes("Do you trust this code", False):

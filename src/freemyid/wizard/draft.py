@@ -98,6 +98,7 @@ class Draft:
     id: str = field(default_factory=new_id)
     editing: bool = False
     imported: bool = False
+    saved_password: bool = False   # a mailbox password really exists in the secret store
     tls_pin: str = ""      # approved certificate fingerprint for a local mail app (Bridge)
     # consent
     basis: str = ConsentBasis.SELF.value
@@ -446,8 +447,11 @@ def check_mailbox(mb: dict[str, Any], password: str, timeout: float = 10.0
                 log.debug("logout failed")
     except TlsPinError:
         return False, _CHANGED_MSG, "cert_changed"
-    except (imaplib.IMAP4.error, OSError, ssl.SSLError) as e:
-        return False, f"Could not sign in to the incoming mail server ({type(e).__name__}).", "fail"
+    except imaplib.IMAP4.error:
+        return False, ("The mail server did not accept that address and password. Please "
+                       "check them (use an app password, not your normal one)."), "fail"
+    except (OSError, ssl.SSLError):
+        return False, unreachable_message(mb["imap_host"]), "fail"
     try:
         sh, sp = mb["smtp_host"], int(mb["smtp_port"])
         spin = pin if is_loopback(sh) else None
@@ -469,10 +473,21 @@ def check_mailbox(mb: dict[str, Any], password: str, timeout: float = 10.0
                 log.debug("quit failed")
     except TlsPinError:
         return False, _CHANGED_MSG, "cert_changed"
-    except (smtplib.SMTPException, OSError, ssl.SSLError) as e:
-        msg = f"Incoming mail works, but the outgoing server failed ({type(e).__name__})."
+    except (smtplib.SMTPException, OSError, ssl.SSLError):
+        msg = ("Incoming mail works, but sending did not. Please check the outgoing server "
+               "name and port, then press Test again.")
         return False, msg, "fail"
     return True, "Connection works. Free My ID can read and send from this mailbox.", "ok"
+
+
+def unreachable_message(host: str) -> str:
+    """Calm text for a mail app/server that did not answer. Never includes an exception name."""
+    if is_loopback(host):
+        return ("Free My ID could not find Proton Mail Bridge on this computer. Please open "
+                "Proton Mail Bridge, sign in, wait until it says it is running, then press "
+                "Test again.")
+    return ("Free My ID could not reach that mail server. Please check the server name and "
+            "your internet connection, then press Test again.")
 
 
 _CHANGED_MSG = ("The security code of your mail app is not the one you approved. Nothing was "
@@ -573,6 +588,17 @@ def _provider_of(p: Profile) -> str:
     return p.mailbox.provider or "other"
 
 
+def _has_saved_password(p: Profile) -> bool:
+    """True only if the password is really in the secret store (never in the DB)."""
+    if not p.mailbox:
+        return False
+    try:
+        from ..secrets import get_mailbox_password
+        return bool(get_mailbox_password(p.id, p.mailbox))
+    except Exception:  # noqa: BLE001 - a broken keychain must not break the settings page
+        return False
+
+
 def draft_from_profile(p: Profile, *, keep_consent: bool = True) -> Draft:
     d = Draft(provider=_provider_of(p), id=p.id, editing=True, label=p.label, first=p.name.first,
               middle=p.name.middle or "", last=p.name.last, suffix=p.name.suffix or "",
@@ -593,6 +619,7 @@ def draft_from_profile(p: Profile, *, keep_consent: bool = True) -> Draft:
         d.existing_consent = p.consent
     d.mailbox_answered = True
     if p.mailbox:
+        d.saved_password = _has_saved_password(p)
         d.mailbox = p.mailbox.model_dump(exclude={"keyring_service"})
         d.tls_pin = p.mailbox.tls_cert_sha256 or ""
     else:

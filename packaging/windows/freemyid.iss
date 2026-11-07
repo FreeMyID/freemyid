@@ -14,7 +14,6 @@ DefaultDirName={localappdata}\Programs\FreeMyID
 DefaultGroupName=Free My ID
 DisableProgramGroupPage=yes
 DisableDirPage=yes
-DisableReadyPage=yes
 SetupIconFile=freemyid.ico
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
@@ -58,8 +57,18 @@ Type: files; Name: "{app}\registry.yaml"
 Filename: "{app}\freemyid-cli.exe"; Parameters: "schedule remove"; Flags: runhidden; RunOnceId: "RemoveFreeMyIDTask"
 
 [Code]
-// "Ready to Install" stays on purpose: with every earlier page disabled, Inno Setup shows it anyway so a
-// double-click never installs without one deliberate click (VM checks 2026-11-07). Site copy says "Click Install".
+// "Ready to Install" stays on purpose (the disable-ready-page setting was removed: Inno showed the page anyway, VM
+// checks 2026-11-07). A double-click never installs without one deliberate click. Site copy says "Click Install".
+
+// A running Free My ID locks its own files, so a silent uninstall used to leave FreeMyID.exe and
+// _internal behind. Close it first (the window and any scheduled run; /T takes the child processes too).
+procedure CloseRunningApp;
+var
+  RC: Integer;
+begin
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /T /IM FreeMyID.exe', '', SW_HIDE, ewWaitUntilTerminated, RC);
+  Sleep(1500);   // let Windows release the file locks
+end;
 
 function DataDir: String;
 begin
@@ -80,6 +89,7 @@ begin
   // delete the encryption key and mailbox passwords from Windows Credential Manager.
   if CurUninstallStep = usUninstall then
   begin
+    CloseRunningApp;
     if IsFreeMyIDData then
       // SuppressibleMsgBox: a silent uninstall (/SUPPRESSMSGBOXES) answers IDNO = keep the data.
       // A plain MsgBox is never suppressed and would hang a silent uninstall forever.

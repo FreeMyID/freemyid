@@ -45,7 +45,8 @@ def test_consent_text_mailbox_optional():
 def test_icon_and_installer_settings():
     assert (ROOT / "packaging/windows/freemyid.ico").stat().st_size > 1000
     iss = (ROOT / "packaging/windows/freemyid.iss").read_text()
-    for k in ("DisableDirPage=yes", "DisableReadyPage=yes", "SetupIconFile=freemyid.ico"):
+    for k in ("DisableDirPage=yes", "SetupIconFile=freemyid.ico"):
+    assert "DisableReadyPage" not in iss  # Ready page stays on purpose (v0.1.3)
         assert k in iss
     assert "ArchitecturesAllowed=x64compatible" in iss
     assert "NextButton.OnClick" not in iss  # never auto-press Install for the person
