@@ -27,3 +27,8 @@ zzz_legacy/
 
 # editor workspaces
 *.code-workspace
+
+# credentials: never commit
+socialmedialogins*.txt
+*.env
+.env*
