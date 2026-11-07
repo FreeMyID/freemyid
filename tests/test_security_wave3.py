@@ -174,3 +174,31 @@ def test_sec48_approve_does_not_send_on_the_event_loop(wiz, monkeypatch):
     monkeypatch.setattr(outbox, "approve_and_send", fake_approve)
     assert c.post(f"/outbox/{req.id}/approve", data=f).status_code == 303
     assert seen == [False]
+
+
+# --------------------------------------------------------------------------- SEC-49 (open)
+
+@pytest.mark.xfail(strict=True, reason="SEC-49: /safety/ says the printable report holds "
+                   "'only site names, statuses and dates', but it is headed with the person's label")
+def test_sec49_safety_report_claim_mentions_the_persons_name():
+    from tests.conftest import ROOT
+    tpl = (ROOT / "site_src/templates/pages/safety.html").read_text(encoding="utf-8")
+    item = next(li for li in tpl.split("<li>") if "printable progress report" in li)
+    rest = re.sub(r"\{#.*?#\}", "", item, flags=re.DOTALL).replace("site names", "")
+    assert re.search(r"\b(name|label)\b", rest, re.IGNORECASE)
+
+
+def test_sec49_guard_report_has_label_but_no_address_or_mailbox(wiz):
+    from freemyid.models import Address, BrokerStatus, ListingState
+    from freemyid.wizard.report import build_report
+    _c, store, p, _ = wiz
+    p = p.model_copy(update={"label": "Jane", "addresses": [
+        Address(street="742 Evergreen Terrace", city="Springfield", state="IL", zip="62701",
+                current=True)]})
+    store.save_profile(p)
+    store.save_status(BrokerStatus(profile_id=p.id, broker_id="fakeone",
+                                   state=ListingState.SUBMITTED))
+    text = build_report(store, REG, p.id, "html").read_text(encoding="utf-8")
+    assert "Jane" in text and "Fakeone" in text
+    for leak in ("Evergreen", "62701", "removals@example.org", p.name.last):
+        assert leak not in text
