@@ -45,3 +45,21 @@ Wave D9 (2026-11-06):
   safe_checkboxes selector).
 - Full suite: 320 passed, 4 xfailed; ruff clean.
 Next: remove xfail markers as SEC-30..33 land; tools/registry_health.py still TODO.
+Post-v0.1.0 wave (2026-11-07):
+- SEC status table in SECURITY_REVIEW.md: SEC-01..45 = 41 Fixed, 4 Accepted (38, 41, 44, 45), 0 Open.
+  Rulings recorded (SEC-38 accepted + one-time confirm 8637941; SEC-41 accepted by peer ruling +
+  regenerated 450bb34; SEC-44/45 INFO). SEC-40/42/43 confirmed with tests.
+- tools/registry_health.py DONE (offline default; --online HEAD via NetPolicy, polite; --selectors;
+  --report md/json; exit 1 on ERROR). tests/test_registry_health.py (33, no network). Real
+  registries: 0 errors, 447 warnings (mostly no last_verified). CR: weekly CI workflow (below).
+- Adopted drafts: test_first_email_approval.py (7), test_reply_matcher.py (13),
+  test_escalation_timers.py (6); tracked engine/_test_drafts removed (a6c6869). An untracked
+  test_search_guard.py appeared there afterwards (automation-engineer WIP): adopt next time.
+- New: SEC-46 (fixed 85e1f74 by O), SEC-47 MED open (approve card hides held AUTO emails it also
+  sends), SEC-48 LOW open (approve sends on the event loop), SEC-49 LOW open (/safety/ report
+  copy omits the label). tests/test_security_wave3.py: 3 strict xfails (47, 48, 49) + guards.
+- Use FREEMYID_TEST_NO_FULL_REGISTRY=1 to run as a public checkout (never rename registry.yaml).
+- CR (orchestrator, .github/workflows): weekly job `python tools/registry_health.py --report
+  registry-health.md` (offline; add --online only if the runner's egress is acceptable), upload
+  the report as an artifact.
+Next: remove xfail markers as SEC-47/48/49 land; adopt test_search_guard.py.
