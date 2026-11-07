@@ -17,7 +17,7 @@ Secondary market: anyone who doesn't want their personal details sold online.
 
 ## The patriotic / traditional segment
 
-**Tone:** proud, plain-spoken, self-reliant. Think "Made in America, run on your own computer, answers to no one." It is patriotic, not partisan: no party, candidate, network or politician names or imagery. Partisan signals would cap the market at half the country and invite backlash, and patriotism and privacy are values every side shares.
+**Tone:** proud, plain-spoken, self-reliant. Think "run on your own computer, answers to no one." (Do not use "Made in America" or "American-made" claims without a lawyer's check.) It is patriotic, not partisan: no party, candidate, network or politician names or imagery. Partisan signals would cap the market at half the country and invite backlash, and patriotism and privacy are values every side shares.
 
 **Messages that are true, and that we can stand behind:**
 
@@ -26,8 +26,8 @@ Secondary market: anyone who doesn't want their personal details sold online.
 | "Your name, address and phone number are for sale. Anyone can buy them." | This is literally the broker business model. |
 | "Take yourself off the market." | That is exactly what the opt-outs do. |
 | "No cloud. No account. Nothing sent to us. Your information never leaves your computer." | True by architecture (local-first, `netpolicy`). This is the strongest pitch for people who distrust tech companies. |
-| "Government agencies have bought this kind of data from brokers instead of getting a warrant." | Documented: the declassified 2023 ODNI report on commercially available information. *Verify the citation before public use.* |
-| "Congress had to pass a law to stop brokers selling Americans' sensitive data to China, Russia, Iran and North Korea." | Protecting Americans' Data from Foreign Adversaries Act (2024), plus the DOJ bulk-data rule (2025). *Verify before public use.* |
+| "A report to the Director of National Intelligence, made public in 2023, says US intelligence agencies buy commercially available data about Americans, and warns it can enable blackmail, stalking and harassment." | Verified 2026-11-07: ODNI report dated 27 Jan 2022, released June 2023 (source and caveats in docs/MARKETING_COPY.md, Sources). Do not add "instead of a warrant". |
+| "A 2024 federal law bars data brokers from selling Americans' sensitive data to foreign adversaries, and a DOJ rule has restricted bulk transfers to countries of concern since April 2025." | Verified 2026-11-07: PADFA (Pub. L. 118-50, signed 24 Apr 2024); DOJ 28 CFR Part 202, effective 8 Apr 2025. Sources in docs/MARKETING_COPY.md. Never imply Free My ID stops overseas access; it removes listings from sites. |
 | "Built so your grandparents can use it." | This is the actual design goal. |
 
 **Lines we do NOT cross:**
@@ -36,7 +36,7 @@ Secondary market: anyone who doesn't want their personal details sold online.
 - We don't push conspiracy framing. If someone believes their phone is listening, the honest answer is "Free My ID can't fix that, but here's what it does fix."
 
 **Design ideas:**
-- An optional patriotic theme (flag accent, "American-owned" badge once the LLC exists) layered on the calm, high-contrast UI. It stays tasteful, so the standard theme still serves everyone.
+- An optional patriotic theme (flag accent; no "American-owned" or "Made in USA" badge unless a lawyer clears it) layered on the calm, high-contrast UI. It stays tasteful, so the standard theme still serves everyone.
 - A "Who can see this?" plain-English screen: what brokers have, who buys it, and what Free My ID does about it.
 - A trust panel on the welcome screen: "No account. No cloud. Never asks for your Social Security number or bank details. Uninstall anytime."
 - Before claiming "American-made", get a lawyer's check against the FTC "Made in USA" rules for software and services.

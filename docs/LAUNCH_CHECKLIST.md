@@ -22,8 +22,8 @@ Findings from a scan on 2026-11-06 are marked 🔎.
 - [ ] No ™/® used until something is filed. **B**
 - [x] **Registry data license chosen.** **U decides, O implements** ✅ 2026-11-06: sample-only public registry (`brokers/registry.sample.yaml`) under CC BY-NC 4.0; full registry private, all rights reserved (brokers/LICENSE-DATA.md).
 - [ ] LICENSE (AGPL-3.0-or-later) present, with SPDX/headers consistent. **O**
-- [ ] Marketing and site copy checked against the "never use" list in docs/MARKETING_COPY.md: no "terrorists/thieves/illegal", no insults attached to named brokers, no "guaranteed/erased". **B**
-- [ ] Every factual claim with a citation verified (ODNI 2023 report on agencies buying commercially available information, PADFA 2024, DOJ bulk-data rule) before it appears publicly. **B**
+- [x] Marketing and site copy checked against the "never use" list in docs/MARKETING_COPY.md: no "terrorists/thieves/illegal", no insults attached to named brokers, no "guaranteed/erased". **B** ✅ (2026-11-07) README, MARKETING_COPY, POSITIONING and docs/marketing/ audited against the never-use list; unsourced price/time claims and 'make them' wording removed.
+- [x] Every factual claim with a citation verified (ODNI 2023 report on agencies buying commercially available information, PADFA 2024, DOJ bulk-data rule) before it appears publicly. **B** ✅ (2026-11-07) ODNI (Jan 2022 report, released June 2023), PADFA (Pub. L. 118-50) and the DOJ rule (28 CFR 202, effective 8 Apr 2025) verified with live URLs, listed in MARKETING_COPY Sources. The CFPB Dec 2024 'scammers, stalkers' proposal was withdrawn 15 May 2025, so it is dropped.
 - [ ] No implied government affiliation ("Do Not List"-style wording avoided; the site footer says "not a government service"). ✅ done in site/ **B**
 
 ## 2. Personal and family information, including the git history
@@ -58,8 +58,8 @@ Public means **the whole history is public**, not just the latest files.
 
 ## 5. Repository hygiene
 
-- [ ] README rewritten for public visitors: what it is, the scope line, the download link, "for helpers/developers" section, license. **B**
-- [ ] `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` (Contributor Covenant), issue templates (bug, broker-is-wrong report). **B drafts**
+- [x] README rewritten for public visitors: what it is, the scope line, the download link, "for helpers/developers" section, license. **B** ✅ (2026-11-07) README now has status/v0.1.0 link, scope line, helper note, 'For developers and contributors' heading, license.
+- [x] `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` (Contributor Covenant), issue templates (bug, broker-is-wrong report). **B drafts** ✅ (2026-11-07) CONTRIBUTING (data-license line fixed), CODE_OF_CONDUCT and the issue templates reviewed for tone and accuracy.
 - [ ] Decide what internal files ship: CLAUDE.md, .claude/agents/, docs/handoff/, PROGRESS.md. Recommended: keep the agent setup (it's interesting and harmless once family references are scrubbed), but review each file first. **U decides**
 - [ ] Repo description, topics (`privacy`, `data-brokers`, `opt-out`, `ccpa`, `gdpr`), and the social-preview image. **B**
 - [ ] Branch protection on main (free for public repos). **O**
