@@ -262,6 +262,21 @@ class MailboxConfig(_Base):
     username: str
     keyring_service: str = "freemyid-mailbox"
     # keyring username is f"{profile_id}:{address}"
+    tls_cert_sha256: str | None = Field(
+        default=None,
+        description="Pinned SHA-256 (lowercase hex) of the server's DER leaf certificate. "
+                    "Only honoured for loopback hosts (e.g. Proton Bridge on 127.0.0.1); "
+                    "a pin on any other host is refused at connect time.")
+
+    @field_validator("tls_cert_sha256")
+    @classmethod
+    def _pin_hex(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        h = re.sub(r"[\s:]", "", v).lower()   # accept "AB:CD:.." as shown by cert viewers
+        if not re.fullmatch(r"[0-9a-f]{64}", h):
+            raise ValueError("tls_cert_sha256 must be 64 hex characters (SHA-256)")
+        return h
 
 
 class Permissions(_Base):
