@@ -23,3 +23,9 @@ Blocked on: the owner creating or choosing the Google/Microsoft account (agents 
 - Once the owner creates Free My ID accounts (GitHub org bot or account, AlternativeTo, HN, Reddit), work the listings.md queue (max 10 new contacts a day, log each one in outreach-log.md).
 - competitors.md (sourced facts only), then the /compare/ idea (keywords rows 15–16).
 - Next drafts: protect-elderly-parents-information, who-is-selling-my-phone-number.
+
+## Wave 2 (2026-11-07), posting methods
+- [x] posting-methods.md: owner step list (12 steps) + method per platform with sources. Keyring has _index only; no *_token entries, so no posts made (logged).
+- Decisions: Reddit (script app needs the password + API approval) and X (pay-per-use only) = manual; AlternativeTo/Product Hunt/Facebook = manual; Mastodon (write:statuses) and Bluesky (app password) ready once owner stores mastodon_token/mastodon_server/bluesky_token; GitHub PRs need github_token (Contents + Pull requests write).
+- For devops-engineer: Search Console TXT value arrives from the owner (step 6 in posting-methods.md); add at apex.
+- Next: when tokens appear, one first post each on Mastodon and Bluesky (draft in posting-methods.md), then GitHub PRs for listings rows 4, 5, 7.

@@ -7,6 +7,8 @@ Owner: seo-growth. Rules checked 2026-11-07 unless a row says `rules: verify`. S
 
 Log every submission in outreach-log.md. Always submit as "Free My ID" and disclose that we work on it wherever the site asks.
 
+Posting accounts and tokens: see posting-methods.md (updated 2026-11-07). Accounts now exist for AlternativeTo, GitHub, Reddit, X, Bluesky, Mastodon, Google (owner stored them); Hacker News and Microsoft do not. No API tokens exist yet, and no site below has an API we can safely use with a password, so: rows 1, 2, 16 are manual steps for the owner (paste-ready text below); rows 4, 5, 7, 8, 19, 20 become `queued: needs github_token` (fork and PR, one process with GH_TOKEN); row 3 stays queued (no Hacker News account).
+
 ## Facts every submission may use (sources)
 
 | Fact | Source |
