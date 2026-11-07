@@ -1,34 +1,55 @@
+{# Site footer: four columns (Product, Learn, Trust, Project) + legal row. Structure from the teardown
+   section 3 footer; links only to pages and anchors that exist (manifest-gated where a page may be missing). #}
 <footer class="site-footer">
   <div class="wrap">
-    <div class="footer-grid">
-      <div>
-        <a class="brand" href="{{ url('') }}">{% include "partials/brand-mark.svg" %}<span>Free My ID<span class="visually-hidden">, home page</span></span></a>
-        <p class="mt-s">Take your name off the websites that sell it.</p>
-        {# Trust panel, word for word from docs/BRAND.md #}
-        <p class="footer-trust">No account. No cloud. Never asks for your Social Security number, bank or card details. Free and open source. Uninstall anytime.</p>
-      </div>
-      <nav aria-label="Free My ID">
-        <h2>The app</h2>
+    <a class="brand" href="{{ url('') }}">{% include "partials/brand-mark.svg" %}<span>Free My ID<span class="visually-hidden">, home page</span></span></a>
+    <p>Take your name off the websites that sell it.</p>
+    <div class="footer-cols">
+      <nav aria-label="Product">
+        <h2>Product</h2>
         <ul role="list">
-          <li><a href="{{ url('how-it-works/') }}">How it works</a></li>
           <li><a href="{{ url('download/') }}">Download for Windows</a></li>
-          <li><a href="{{ url('safety/') }}">Is it safe?</a></li>
-          <li><a href="{{ url('faq/') }}">Questions</a></li>
+          {% if 'how-it-works' in pages %}<li><a href="{{ url('how-it-works/') }}">How it works</a></li>{% endif %}
+          <li><a href="{{ url('#what-it-removes') }}">What it removes</a></li>
+          {% if 'families' in pages %}<li><a href="{{ url('families/') }}">For families</a></li>{% endif %}
+          <li><a href="{{ url('#compare') }}">Compare with paid services</a></li>
         </ul>
       </nav>
-      <nav aria-label="Help">
-        <h2>Help</h2>
+      <nav aria-label="Learn">
+        <h2>Learn</h2>
         <ul role="list">
           {% if 'guides' in pages %}<li><a href="{{ url('guides/') }}">Free opt-out guides</a></li>{% endif %}
           {% if 'i-do-not-consent' in pages %}<li><a href="{{ url('i-do-not-consent/') }}">The "I do not consent" post</a></li>{% endif %}
-          {% if 'families' in pages %}<li><a href="{{ url('families/') }}">Helping a parent</a></li>{% endif %}
+          <li><a href="{{ url('faq/') }}">Questions (FAQ)</a></li>
+          <li><a href="{{ url('faq/#myths') }}">Myth vs. fact</a></li>
+        </ul>
+      </nav>
+      <nav aria-label="Trust">
+        <h2>Trust</h2>
+        <ul role="list">
+          <li><a href="{{ url('safety/') }}">Is it safe?</a></li>
+          <li><a href="{{ url('safety/#never-asks') }}">What it never asks for</a></li>
+          <li><a href="{{ url('safety/#open-source') }}">Open source</a></li>
+          <li><a href="{{ url('download/#checksum') }}">Verify your download</a></li>
+          <li><a href="{{ url('safety/#uninstall') }}">How to uninstall</a></li>
+        </ul>
+      </nav>
+      <nav aria-label="Project">
+        <h2>Project</h2>
+        <ul role="list">
           <li><a href="{{ site.repo_url }}">Source code on GitHub</a></li>
+          {# source: LICENSE (GNU AGPL v3); brokers/LICENSE-DATA.md (CC BY-NC 4.0, as on every guide page) #}
+          <li><a href="{{ site.repo_url }}/blob/main/LICENSE">License: GNU AGPL v3</a></li>
+          <li><a href="https://creativecommons.org/licenses/by-nc/4.0/">Site list data license: CC BY-NC 4.0</a></li>
         </ul>
       </nav>
     </div>
     <div class="footer-legal">
+      {# Trust panel, word for word from docs/BRAND.md #}
+      <p>No account. No cloud. Never asks for your Social Security number, bank or card details. Free and open source. Uninstall anytime.</p>
       <p>Free My ID is free, open-source software that runs on your own computer. It is not a government service and is not affiliated with Facebook/Meta or any data broker.</p>
-      <p>No cookies, no trackers, no analytics on this website. <a href="{{ url('safety/') }}#this-website">How this website treats you</a>.</p>
+      {# contract footer line; true of this site (no forms, no login, CSP in docs/WEBSITE.md) #}
+      <p>No account. No login. No tracking, no cookies. <a href="{{ url('safety/#this-website') }}">How this website treats you</a>.</p>
     </div>
   </div>
 </footer>
