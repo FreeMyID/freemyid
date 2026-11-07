@@ -2,14 +2,19 @@
 # Checked 2026-11-07 (second pass 2026-11-07: TransUnion, ChexSystems, OptOutPrescreen, SSA retried; DMAchoice fee read).
 # Written for older, non-technical readers: short steps, plain words.
 #
-# Each entry: id, title, why, url, cost, time_needed, need_on_hand, steps, how_to_undo,
+# Each entry: id, title, why, url, cost, time_needed, need_on_hand, steps, how_to_undo, tips,
 # source_urls, date_checked, verification, notes.
+# PUBLIC (shown on the web pages): title, why, url, cost, time_needed, need_on_hand, steps, how_to_undo, tips.
+# INTERNAL (never shown): notes, source_urls, date_checked, verification. `notes` is research notes only.
+# tips: optional list of short reader-facing tips (plain words, no research caveats).
 # verification: "official_page" = an official page was opened on date_checked and matches;
 #               "partial" = the official page was blocked or silent on some points; the rest comes
 #               from the sources listed (named in notes). Re-check before telling a user it is certain.
+# Rule for public text: only say in steps/why/tips what a page we read supports. Anything unconfirmed
+# stays out of public fields and is described in notes.
 # Nothing here asks a user to pay, except DMAchoice, which charges its own small fee (see entry).
 # Licence: CC BY-NC 4.0, same as brokers/LICENSE-DATA.md.
-version: "2026.11.07"
+version: "2026.11.07.2"
 updated: 2026-11-07
 
 checklists:
@@ -28,10 +33,12 @@ checklists:
       - "Turn the freeze on and write down your user name and password somewhere safe."
       - "No computer? Call (888) 298-0045 instead."
     how_to_undo: "When you need to apply for credit, sign in and choose 'Manage a Freeze' to lift it for a while or remove it. You can also lift it by phone. It is free."
+    tips:
+      - "A freeze at one bureau does not freeze the others. Freeze all of them. Freezing Equifax alone is not enough."
     source_urls: [https://www.equifax.com/personal/credit-report-services/credit-freeze/, https://consumer.ftc.gov/articles/what-know-about-credit-freezes-fraud-alerts]
     date_checked: 2026-11-07
     verification: official_page
-    notes: "A freeze at one bureau does not freeze the others. Do all of them. Freezing Equifax alone is not enough."
+    notes: ""
 
   - id: freeze_experian
     title: "Freeze your credit at Experian"
@@ -47,28 +54,32 @@ checklists:
       - "No computer? Call 1-888-397-3742."
       - "By mail: send your full name, Social Security number, addresses for the past 2 years, date of birth, a copy of a photo ID and a copy of a utility bill or bank statement to Experian Security Freeze, P.O. Box 9554, Allen, TX 75013. Mail can take up to 3 days to process."
     how_to_undo: "Sign in and remove the freeze with one click, or schedule a short 'thaw' with a start and end date. You can also remove it by phone or mail."
+    tips:
+      - "Experian's freeze is not shared with the other bureaus. You still need to freeze the others."
     source_urls: [https://www.experian.com/freeze/center.html]
     date_checked: 2026-11-07
     verification: official_page
-    notes: "Experian's freeze is not shared with the other bureaus."
+    notes: ""
 
   - id: freeze_transunion
     title: "Freeze your credit at TransUnion"
     why: "Same reason as the other two big bureaus."
     url: https://www.transunion.com/credit-freeze
-    cost: "Free (the FTC says freezes are free to place, lift and keep)."
-    time_needed: "About 10 minutes online."
+    cost: "Free. The FTC says there is no cost to place or lift a credit freeze."
+    time_needed: "A few minutes online."
     need_on_hand: ["Your Social Security number", "Date of birth", "Your current address", "An email address"]
     steps:
-      - "Open the TransUnion freeze web address above."
-      - "Make a free TransUnion account, or sign in."
-      - "Choose to add a freeze and confirm."
-      - "No computer? Call 1-800-916-8800."
-    how_to_undo: "Sign in and lift or remove the freeze. It is free."
+      - "Open the TransUnion freeze web address above. Check the address bar says transunion.com."
+      - "Follow TransUnion's instructions on that page to place a freeze. You may need to make a free account."
+      - "Keep any password or PIN TransUnion gives you somewhere safe."
+    how_to_undo: "Use the lift or remove option on TransUnion's freeze page or account. It is free."
+    tips:
+      - "A freeze at one bureau does not freeze the others. Freeze Equifax, Experian and TransUnion, all three."
+      - "Never pay anyone to freeze your credit. It is free."
     source_urls: [https://consumer.ftc.gov/articles/what-know-about-credit-freezes-fraud-alerts, https://www.experian.com/freeze/center.html]
     date_checked: 2026-11-07
     verification: partial
-    notes: "Retried 2026-11-07: transunion.com/credit-freeze, /credit-freeze/place-credit-freeze and /prescreen-opt-out all returned HTTP 403, so TransUnion's own pages were NOT read (no workaround tried). The free cost comes from the FTC page. The phone number 1-800-916-8800 is listed on Experian's freeze page, not on TransUnion's. The steps are generic. Before publishing exact wording, a person should read the page in a normal browser."
+    notes: "RESOLVED 2026-11-07 by trimming public text to what is supported. transunion.com/credit-freeze, /credit-freeze/place-credit-freeze and /prescreen-opt-out all return HTTP 403, so TransUnion's own page was never read. The FTC freeze page (read) confirms 'no cost to place or lift a credit freeze' and links transunion.com/credit-freeze/credit-freeze-faq (so the /credit-freeze path exists) but gives no adult freeze URL steps and no phone number. Removed from public text: the phone number 1-800-916-8800 (listed only on Experian's page, not TransUnion's or FTC's) and the specific account steps (generic guesses). Public steps are now generic. To upgrade to official_page and restore exact steps and phone, a person must read the page in a normal browser."
 
   - id: freeze_innovis
     title: "Freeze your credit at Innovis (the fourth bureau)"
@@ -84,10 +95,13 @@ checklists:
       - "Innovis checks it is you. When the freeze is on, you get a letter with a 10-digit PIN."
       - "Keep that PIN somewhere safe. You need it to lift the freeze."
     how_to_undo: "Ask for a 'lift PIN' or a replacement PIN online, by phone or by mail, then use it to lift or remove the freeze."
+    tips:
+      - "Keep the letter with your PIN in a safe place. Without it, lifting the freeze takes extra steps."
+      - "Questions? Innovis Consumer Assistance is 1-800-540-2505."
     source_urls: [https://www.innovis.com/personal/securityFreeze, https://consumer.ftc.gov/articles/what-know-about-credit-freezes-fraud-alerts]
     date_checked: 2026-11-07
     verification: official_page
-    notes: "The page names Consumer Assistance 1-800-540-2505 and PO Box 530088, Atlanta, GA 30353-0088. It does not say what ID is needed."
+    notes: "The page names Consumer Assistance 1-800-540-2505 and PO Box 530088, Atlanta, GA 30353-0088. It does not say what ID is needed. The 'extra steps without a PIN' wording in tips is an inference from the replacement-PIN option on the page."
 
   - id: freeze_chexsystems
     title: "Freeze your ChexSystems report (bank accounts)"
@@ -97,15 +111,15 @@ checklists:
     time_needed: "About 10 minutes."
     need_on_hand: ["Your Social Security number", "Date of birth", "Your current address"]
     steps:
-      - "Open the ChexSystems security freeze web address above."
-      - "Follow the form to place a freeze. You may be asked to make a free account first."
+      - "Open the ChexSystems security freeze web address above and follow the form to place a freeze."
       - "ChexSystems mails you a PIN. Keep it safe."
-      - "Phone option: the freeze line is 1-800-887-7652 according to ChexSystems' own freeze pages as shown in a search excerpt (we could not open them). The other number, 1-800-428-9623, is for requests that are not about a freeze."
     how_to_undo: "Use your PIN to lift or remove the freeze on the same site or by phone, before you open a new bank account."
+    tips:
+      - "Use the website if you can. ChexSystems has more than one phone number for different jobs, so check the number on chexsystems.com before you call."
     source_urls: [https://www.consumerfinance.gov/consumer-tools/credit-reports-and-scores/consumer-reporting-companies/companies-list/chex-systems/, https://www.chexsystems.com/security-freeze/information, https://experian.com/blogs/ask-experian/how-to-freeze-chexsystems-report, https://support.norton.com/sp/en/hk/lifelock-by-norton/current/solutions/v132649189]
     date_checked: 2026-11-07
     verification: partial
-    notes: "PHONE CONFLICT, resolved as far as we can: two numbers exist and they are for different things. The CFPB company listing (an official page we DID read, last modified 2025-01-30) gives 800-428-9623 as ChexSystems' general consumer number. ChexSystems' own freeze pages, as quoted in a search result (not opened by us), say 800-887-7652 is the security-freeze line (staffed 7am-11pm Central, Mon-Fri; automated line 24 hours) and say 800-428-9623 is for other requests. Retried 2026-11-07: chexsystems.com/security-freeze/place-freeze, /security-freeze/information and /contact-us all returned HTTP 403, so the freeze steps, cost and PIN rules are still from Experian and Norton help pages. Prefer telling users to use the website; show the phone numbers only with this caveat. The URL above is not confirmed to be the right freeze page; the search result lists https://www.chexsystems.com/security-freeze/place-freeze."
+    notes: "PHONE CONFLICT, resolved as far as we can: two numbers exist for different things. The CFPB company listing (official page we DID read, modified 2025-01-30) gives 800-428-9623 as ChexSystems' general consumer number. ChexSystems' own freeze pages, as quoted in a search result (not opened by us), say 800-887-7652 is the security-freeze line (7am-11pm Central Mon-Fri; automated line 24 hours) and 800-428-9623 is for other requests. No number is shown in public fields until someone reads the official freeze page. Retried 2026-11-07: chexsystems.com/security-freeze/place-freeze, /security-freeze/information and /contact-us all returned HTTP 403, so the freeze steps, cost and PIN rules are from Experian and Norton help pages. The search result lists https://www.chexsystems.com/security-freeze/place-freeze as the place-freeze page; the url above is not confirmed to be the right freeze page. The 'Free' cost and the PIN are unconfirmed on the official page."
 
   - id: freeze_nctue
     title: "Freeze your NCTUE report (phone, power and utility accounts)"
@@ -120,10 +134,12 @@ checklists:
       - "Phone option: call 1-866-349-5355."
       - "Mail option: Security Freeze, Exchange Service Center - NCTUE, P.O. Box 105561, Atlanta, GA 30348. Check with NCTUE what to include before you mail anything."
     how_to_undo: "Use the same portal or phone number to lift or remove the freeze. The page does not say if you can do this by mail."
+    tips:
+      - "NCTUE says there are some exceptions to what a freeze blocks."
     source_urls: [https://www.nctue.com/consumers]
     date_checked: 2026-11-07
     verification: official_page
-    notes: "The page says there are 'some exceptions' to what a freeze blocks."
+    notes: ""
 
   - id: freeze_lexisnexis
     title: "Freeze your LexisNexis Risk Solutions file"
@@ -139,10 +155,12 @@ checklists:
       - "Mail option: LexisNexis Risk Solutions Consumer Center, Attn: Security Freeze, P.O. Box 105108, Atlanta, GA 30348-5108."
       - "After they check it is you, a confirmation letter comes by mail. Keep it."
     how_to_undo: "Use the online lift or removal form, or call 1-800-456-1244."
+    tips:
+      - "The freeze applies only at LexisNexis. Companies you already do business with can still look at your file."
     source_urls: [https://consumer.risk.lexisnexis.com/freeze]
     date_checked: 2026-11-07
     verification: official_page
-    notes: "The freeze applies only at LexisNexis. Companies you already do business with can still look at your file. The page does not list what details the form needs."
+    notes: "The page does not list what details the form needs."
 
   # ---------------------------------------------------------------- junk offers and calls
   - id: optoutprescreen
@@ -158,16 +176,19 @@ checklists:
       - "For 'Permanent', you start online, then print the Permanent Opt-Out Election form, sign it and mail it to the address printed on it."
       - "Offers can keep coming for a few weeks."
     how_to_undo: "Use the same website or phone number to opt back in."
+    tips:
+      - "This stops pre-approved offers from the credit bureaus only. It does not stop all junk mail."
+      - "Only use optoutprescreen.com or the phone number above. Look-alike sites may charge you or steal your details."
     source_urls: [https://consumer.ftc.gov/articles/prescreened-credit-insurance-offers, https://www.transunion.com/prescreen-opt-out, https://www.experian.com/privacy/opting_out_preapproved_offers]
     date_checked: 2026-11-07
     verification: partial
-    notes: "The FTC page (official, read 2026-11-07) confirms the website optoutprescreen.com, the phone number 1-888-5-OPT-OUT (1-888-567-8688), the five-year option by web or phone, and the permanent option (start online or by phone, then sign and return the Permanent Opt-Out Election form). optoutprescreen.com itself and transunion.com/prescreen-opt-out still return HTTP 403 to our checker, so the site's own wording, what data it asks for and the form's mailing address were NOT read. It is run jointly by the credit bureaus (Experian, TransUnion, Equifax and Innovis), one request covers all of them (per the sources above, not re-read). It stops only bureau-list offers, not all junk mail."
+    notes: "The FTC page (official, read 2026-11-07) confirms the website optoutprescreen.com, the phone 1-888-5-OPT-OUT (1-888-567-8688), the five-year option by web or phone, and the permanent option (start online or by phone, then sign and return the Permanent Opt-Out Election form). optoutprescreen.com itself and transunion.com/prescreen-opt-out still return HTTP 403, so the site's own wording, what data it asks for (the SSN and date of birth line in need_on_hand) and the form's mailing address were NOT read. 'Run jointly by the bureaus, one request covers all' is from the sources above, not re-read. The look-alike-sites tip is general consumer-safety advice, not from a source we read; delete it if you want only sourced tips."
 
   - id: dmachoice
     title: "Cut down on junk mail with DMAchoice"
     why: "Many catalogs and charities mail you because of marketing lists. DMAchoice asks member companies to remove you."
     url: https://www.dmachoice.org/
-    cost: "A small fee set by the site: $8 online (credit card or PayPal) or $9 by mail (check or money order payable to ANA). Either one covers a 10-year registration. The user decides whether to pay."
+    cost: "A small fee set by the site: $8 online (credit card or PayPal) or $9 by mail (check or money order payable to ANA). Either one covers a 10-year registration. You decide whether to pay."
     time_needed: "About 15 minutes online."
     need_on_hand: ["Your name and mailing address", "A debit or credit card or PayPal (online) or a check or money order (by mail)", "An email address"]
     steps:
@@ -175,12 +196,15 @@ checklists:
       - "Fill in your name and address. Choose the kinds of mail you want to stop."
       - "Pay the $8 fee on the site's own payment page. Check the web address bar says dmachoice.org first."
       - "Mail option: print the mail-in form from the site and send it with a $9 check or money order payable to ANA, to the address printed on the form."
-      - "Give it a couple of months. It does not stop mail from companies that are not members."
+      - "Give it a couple of months."
     how_to_undo: "Log in at dmachoice.org to change your choices, or use the site's Contact Us page. The pages we read do not describe cancelling, so check the FAQ."
+    tips:
+      - "It does not stop mail from companies that are not members."
+      - "Free My ID never pays for you. Pay only on dmachoice.org itself."
     source_urls: [https://www.dmachoice.org/register.php, https://www.dmachoice.org/, https://dmachoice.org/static/consumer_choice_tools.php, https://www.consumer.ftc.gov/articles/how-stop-junk-mail]
     date_checked: 2026-11-07
     verification: official_page
-    notes: "Fee confirmed on the official registration page read 2026-11-07: $8 online, $9 by mail, 10-year term (earlier 'sources disagree' worry is closed). The old mail address (a P.O. box in Cos Cob, CT) came only from search summaries and was NOT confirmed on the page, so it was removed; send people to the address printed on the form. Free My ID never pays for the user."
+    notes: "Fee confirmed on the official registration page read 2026-11-07: $8 online, $9 by mail, 10-year term. The old mail address (a P.O. box in Cos Cob, CT) came only from search summaries and was NOT confirmed, so it was removed. 'Does not stop non-member mail' comes from search summaries and the FTC page, not re-read on dmachoice.org."
 
   - id: national_do_not_call
     title: "Join the National Do Not Call Registry"
@@ -196,10 +220,12 @@ checklists:
       - "No computer? Call 1-888-382-1222 from the phone you want to register (TTY 1-866-290-4236)."
       - "Your number shows on the list the next day. Calls can take up to 31 days to stop."
     how_to_undo: "Call 1-888-382-1222 from the phone you want removed. It comes off the list the next day. Registration never expires on its own."
+    tips:
+      - "If a number is disconnected and later given to someone else, you may need to register it again."
     source_urls: [https://consumer.ftc.gov/articles/national-do-not-call-registry-faqs]
     date_checked: 2026-11-07
     verification: official_page
-    notes: "Source is the FTC FAQ page. We did not open donotcall.gov itself. If a number is disconnected and later reassigned you may need to register it again."
+    notes: "Source is the FTC FAQ page. We did not open donotcall.gov itself."
 
   # ---------------------------------------------------------------- government accounts
   - id: irs_ip_pin
@@ -217,10 +243,14 @@ checklists:
       - "Or book a visit at a Taxpayer Assistance Center and bring a photo ID plus one more ID. The PIN comes within about 3 weeks."
       - "Get a new PIN each year, usually from mid-January to mid-November."
     how_to_undo: "The IRS page does not describe a general way to drop out. Call the IRS or ask at a Taxpayer Assistance Center before relying on dropping it. People who joined by the one-time option are taken off at the end of the calendar year."
+    tips:
+      - "The IRS never asks for your IP PIN by phone, email or text. Anyone who does is a scammer."
+      - "Lost your PIN? Do not file Form 15227 again. Use the IRS page for viewing or reissuing a lost IP PIN."
+      - "Children under 18 cannot use the app or online account."
     source_urls: [https://www.irs.gov/identity-theft-fraud-scams/get-an-identity-protection-pin]
     date_checked: 2026-11-07
     verification: official_page
-    notes: "SAFETY: the IRS never asks for your IP PIN by phone, email or text. Anyone who does is a scammer. Lost your PIN? Do not file Form 15227 again. Use the IRS page for viewing or reissuing a lost IP PIN. Dependents under 18 cannot use the app or online account."
+    notes: ""
 
   - id: ssa_my_social_security
     title: "Claim your my Social Security account (before a thief does)"
@@ -235,14 +265,16 @@ checklists:
       - "Return to my Social Security and sign in with it."
       - "Prefer that nobody, including you, can use your account online? Call SSA at 1-800-772-1213 (or visit a local office) and ask to block electronic access. You will be asked to prove who you are."
     how_to_undo: "To use the account again, call SSA at 1-800-772-1213 and ask them to lift the block."
+    tips:
+      - "Only use the ssa.gov address. SSA never asks you to pay to open an account."
     source_urls: [https://www.ssa.gov/faqs/en/questions/KA-01687.html, https://www.ssa.gov/pubs/EN-05-10220.pdf, https://www.ssa.gov/blog/en/posts/2021-05-20.html]
     date_checked: 2026-11-07
     verification: partial
-    notes: "Retried 2026-11-07: ssa.gov/myaccount, /faqs/en/questions/KA-01687.html and /pubs/EN-05-10220.pdf all returned HTTP 403, so no SSA page was read (no workaround tried). Facts come from SSA pages as returned by search (an SSA FAQ, an SSA leaflet and a 2021 SSA blog post). SSA stopped the old user name and password sign-in on 2025-06-07. The block procedure comes from the older leaflet and blog, so a person should confirm the phone number and wording on ssa.gov before publishing."
+    notes: "Retried 2026-11-07: ssa.gov/myaccount, /faqs/en/questions/KA-01687.html and /pubs/EN-05-10220.pdf all returned HTTP 403, so no SSA page was read (no workaround tried). Facts come from SSA pages as returned by search (an SSA FAQ, a leaflet and a 2021 blog post). SSA stopped the old user name and password sign-in on 2025-06-07. The block procedure and phone number come from the older leaflet and blog, so a person should confirm them on ssa.gov before publishing. The 'never asks you to pay' tip is general advice, not from a page we read; delete if you want only sourced tips."
 
   - id: usps_informed_delivery
     title: "Sign up for USPS Informed Delivery"
-    why: "You see a picture of each letter before it arrives, so a stolen or missing letter stands out. Signing up yourself also stops someone else from enrolling your address."
+    why: "You see a picture of each letter before it arrives, so a stolen or missing letter stands out."
     url: https://www.usps.com/manage/informed-delivery.htm
     cost: "Free."
     time_needed: "About 15 minutes."
@@ -254,10 +286,12 @@ checklists:
       - "Check your email each morning for the daily list of letters."
       - "If a letter in the picture never arrives, tell your post office."
     how_to_undo: "The USPS page does not explain cancelling. Look in your USPS.com account settings for Informed Delivery, or use USPS Online Support from the dashboard."
+    tips:
+      - "The pictures show only the address side of letter-sized mail, plus some catalogs and magazines."
     source_urls: [https://www.usps.com/manage/informed-delivery.htm]
     date_checked: 2026-11-07
     verification: official_page
-    notes: "The pictures show only the address side of letter-sized mail, plus some catalogs and magazines. The claim that signing up yourself stops someone else enrolling your address is common advice but is not stated on the USPS page, so do not repeat it as USPS's words."
+    notes: "Removed from the public 'why' (2026-11-07 pass): 'Signing up yourself also stops someone else from enrolling your address'. It is common advice but is not stated on the USPS page, so do not publish it as USPS's words."
 
   # ---------------------------------------------------------------- search engines
   - id: google_results_about_you
@@ -275,10 +309,13 @@ checklists:
       - "Turn on notifications so Google tells you when new matches appear."
       - "Check the status later on the same page: in progress, approved, denied or undone."
     how_to_undo: "In Settings choose 'Remove all personal info' to stop watching and delete what you entered."
+    tips:
+      - "Google hides the result from Search only. The page stays on the other website, so you still need to ask that site to remove it."
+      - "Google rarely removes results from government, school or news sites."
     source_urls: [https://support.google.com/websearch/answer/12719076, https://blog.google/products-and-platforms/products/search/a-new-search-tool-to-help-control-your-online-presence/]
     date_checked: 2026-11-07
     verification: partial
-    notes: "Details come from Google's own help and blog pages as returned by search; our checker got HTTP 404 on a different Google help URL, so exact screen names may differ. Google hides the result from Search only. The page stays on the other website, so you still need to ask that site to remove it. Google rarely removes results from government, school or news sites. Some features are for adults in certain countries."
+    notes: "Details come from Google's own help and blog pages as returned by search; our checker got HTTP 404 on a different Google help URL, so exact screen names may differ. Some features are for adults in certain countries."
 
   # ---------------------------------------------------------------- California
   - id: ca_drop
@@ -295,6 +332,10 @@ checklists:
       - "Send one deletion request. It goes to more than 600 registered data brokers."
       - "Come back in a few months and use 'Check DROP status' to see what happened."
     how_to_undo: "The DROP page does not say how to cancel a request or close a profile. Ask CalPrivacy through privacy.ca.gov."
+    tips:
+      - "You can also submit for another California resident, such as a parent or an elderly relative."
+      - "Deleting data may mean fewer personalised ads. Results like fewer spam calls 'will vary by consumer', says the page."
+      - "DROP covers registered brokers only. Sites that are not registered, and any outside California, still need their own opt-out."
     source_urls: [https://privacy.ca.gov/drop/, https://www.malwarebytes.com/blog/news/2026/08/californians-can-tell-data-brokers-to-drop-their-information]
     date_checked: 2026-11-07
     verification: official_page
@@ -302,6 +343,5 @@ checklists:
       Live for residents since 2026-01-01. Registered brokers had to start processing requests on
       2026-08-01 and must check DROP at least every 45 days from then on, then delete data each cycle.
       The page says that by November 2026 all brokers should have finished their first download and
-      upload. It can take up to 90 days to see a status update. We found no dated report on how many
-      brokers are actually complying.
-    notes: "You can also submit for another California resident, such as a parent or an elderly relative. Deleting data may mean fewer personalised ads. The page says results like fewer spam calls 'will vary by consumer'. DROP covers registered brokers only. Sites that are not registered, and any outside California, still need their own opt-out. If a broker cannot confirm who you are it must treat the request as an opt-out of sale or sharing (law-firm analysis in search results; not checked in the statute). The page does not say whether an email address is needed."
+      upload. It can take up to 90 days to see a status update.
+    notes: "We found no dated report on how many brokers actually comply. If a broker cannot confirm who you are it must treat the request as an opt-out of sale or sharing (law-firm analysis in search results; not checked in the statute), so not published. The page does not say whether an email address is needed."
