@@ -1,0 +1,73 @@
+---
+// /protect/ hub: free identity-safety steps, grouped. Built from brokers/checklists.yaml (via lib/protect.ts).
+// These are things people do themselves at official sites; Free My ID is not needed and is not involved.
+import Base from "@/layouts/Base.astro";
+import PageHead from "@/components/PageHead.astro";
+import Icon from "@/components/Icon.astro";
+import Alert from "@/components/ui/Alert.astro";
+import Badge from "@/components/ui/Badge.astro";
+import { pageProps, url } from "@/lib/site";
+import { PROTECT_GROUPS, longDate, protectMeta, protectPages } from "@/lib/protect";
+const p = pageProps("protect");
+const intros: Record<string, string> = {
+  // source: checklists.yaml freeze_equifax.why + freeze_experian.why ("Each bureau must be frozen on its own")
+  credit: "A freeze stops a thief from opening new credit in your name. It does not hurt your credit score. Each company must be frozen on its own, so do all of them.",
+  // source: checklists.yaml optoutprescreen.why, dmachoice.why, national_do_not_call.why
+  junk: "Pre-approved offers are made from lists the credit bureaus sell. These steps cut those offers, much of the catalog mail, and most sales calls.",
+  // source: checklists.yaml irs_ip_pin.why, ssa_my_social_security.why, usps_informed_delivery.why
+  government: "Claim your own accounts before someone else does, and add the extra locks the IRS, Social Security and the Postal Service offer.",
+  // source: checklists.yaml google_results_about_you.why + notes (Google hides the result from Search only)
+  search: "Google can hide search results that show your phone number, home address or email. The page itself stays on the other website.",
+  // source: checklists.yaml ca_drop.why
+  california: "One free request asks every data broker registered in California to delete your information.",
+};
+const paid = protectPages.filter((c) => !c.free);
+---
+<Base {...p}>
+<PageHead crumbs={p.crumbs} title="Protect yourself: free steps anyone can take"
+  lead="Freeze your credit, cut junk mail and lock down your government accounts, at the official websites. You don't need Free My ID for any of this." />
+{/* source: brokers/checklists.yaml (cost field: every entry free except dmachoice; steps happen on the official sites) */}
+<div class="wrap pb-2xl">
+  <Alert class="mt-0 max-w-[48rem]" icon="check-circle">
+    <p class="text-lead">
+      {paid.length === 0 ? "Every step here is free." : <>Every step here is free, except {paid.map((c, i) => <>{i > 0 && ", "}<a href={url(c.out)}>{c.title.replace(/^.* with /, "")}</a></>)}, which charges its own small fee.</>}
+      {" "}You do them yourself, on each company's or agency's own website. Free My ID is not involved.
+    </p>
+  </Alert>
+
+  <nav aria-label="On this page" class="mt-l max-w-[48rem] print:hidden">
+    <ul class="flex flex-wrap gap-xs" role="list">
+      {PROTECT_GROUPS.map((g) => <li><a class="inline-flex min-h-tap items-center rounded-pill border border-line bg-card px-s font-semibold" href={`#${g.key}`}>{g.title}</a></li>)}
+    </ul>
+  </nav>
+
+  {PROTECT_GROUPS.map((g) => (
+    <section class="mt-xl" aria-labelledby={g.key}>
+      <h2 id={g.key}>{g.title}</h2>
+      <p class="mt-xs max-w-measure text-lead text-muted">{intros[g.key]}</p>
+      <ul class="mt-m grid gap-s [grid-template-columns:repeat(auto-fill,minmax(min(100%,20rem),1fr))]" role="list">
+        {protectPages.filter((c) => c.group === g.key).map((c) => (
+          <li>
+            <a class="group flex h-full min-h-tap flex-col gap-2xs rounded-xl border border-line bg-card p-s no-underline shadow-1 hover:border-line-strong hover:bg-brand-soft" href={url(c.out)}>
+              <span class="flex items-start justify-between gap-xs text-lead font-bold text-link underline underline-offset-[0.18em]">{c.title}<Icon name="arrow-right" class="mt-[0.2em] text-brand" /></span>
+              <span class="text-muted">{c.why}</span>
+              <span class="mt-auto flex flex-wrap gap-2xs pt-2xs">
+                <Badge variant={c.free ? "ok" : "default"}><Icon name="tag" />{c.free ? "Free" : "Small fee"}</Badge>
+                <Badge><Icon name="clock" />{c.time_needed.split(".")[0]}</Badge>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+
+  <section class="mt-xl max-w-[48rem]" aria-labelledby="different-job">
+    <h2 id="different-job">Where Free My ID fits</h2>
+    {/* source: POSITIONING.md rule 6 (scope: people-search and data-broker sites only) */}
+    <p class="mt-xs">Free My ID does a different job: it asks people-search sites to remove your listing. The steps on this page are separate, and you can do every one of them without it. <a href={url("how-it-works/")}>How Free My ID works</a></p>
+  </section>
+
+  <p class="mt-l max-w-measure text-small text-muted">Steps last checked {longDate(protectMeta.updated)} (list version {protectMeta.version}), licensed <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>. Companies change their pages often; if something looks different, follow what the official page says.</p>
+</div>
+</Base>
