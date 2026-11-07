@@ -525,3 +525,29 @@ xfails removed: SEC-82, SEC-83, SEC-84 (the recheck file now has none).
 CHANGE REQUEST (paths.py): add "secrets.enc.lock" (and "migrate.pending") to `OWNED_ENTRIES`
 so wipe's folder sweep covers them, instead of relying on `wipe_data_keys`.
 Not done: docs/SECURITY_REVIEW.md (qa owns it); the Windows lock cap isn't tested on Windows.
+
+## 2026-11-07 v0.3 exposure scan ("find me first"), Theo Park
+
+- 58d33cf Groundwork. `engine/htmlsel.py` is a stdlib static HTML tree plus a CSS subset (tag,
+  .class, #id, [attr], [attr=v], descendant, child); unsupported selectors raise, and the
+  site goes to "check by hand". `web_form.search_url` now uses `Broker.slug_case` (title
+  keeps a 2-letter {state} upper case). `runner.merge_listings()` is now a module function,
+  shared by the runner scan and the exposure scan (no behavior change). Added
+  `exposure_models.py`.
+- a407f66 `engine/exposure.py`: `scan_exposure`, `score_entries`, `latest_exposure(store,
+  profile)` (dashboard hook), `exposure_history`. Plain GET for search_access=open (honest
+  UA, NetPolicy on every redirect hop, 2 MB cap). The browser (BrowserManager, no retries)
+  for js_required. bot_blocked/unknown are never fetched. Any failure or challenge makes
+  that site check_by_hand with its URL. 24 h cache, polite delay. In the dev registry,
+  devauto/devblocked are now `search_access: open` (devblocked serves a challenge).
+- 5318639 `freemyid exposure` CLI with `--profile/--json/--offline/--refresh/--headless`,
+  `cli_json.exposure_doc` (exposure/1), and tests/test_exposure.py (14 tests, fixture server
+  and fakes only).
+- 3bcecff docs/EXPOSURE.md (score formula), plus exposure/1 in docs/CLI.md.
+Storage: matched listings go to the listings table, the same as `scan`. Each scan writes one
+PII-free `exposure_scan` Event that references listing ids, so no URLs or HTML end up in
+events. Check URLs are rebuilt from the profile when the record is read.
+Not done: no REVIEW_MATCH to-dos for "possible" exposure hits (the next run creates them).
+Old-address variants aren't searched (current address only). The real registry has no
+`search_url_pattern` yet, so the exposure list is empty on the real registry until
+broker-researcher adds them.
