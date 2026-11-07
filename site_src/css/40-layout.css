@@ -9,7 +9,8 @@
   .prose { max-inline-size: var(--measure); }
 
   /* v2 section bands: calm white / off-white alternation, one deep navy band. */
-  .band { padding-block: var(--space-2xl); }
+  .band { padding-block: var(--space-xl); }
+  .band--tight { padding-block: var(--space-m); }
   .band--alt { background: var(--color-bg-alt); }
   .band--brand {
     background: var(--color-band-brand); color: var(--color-band-brand-ink);
@@ -20,7 +21,7 @@
 
   /* Section header: optional kicker, h2, lead. Centered above grids and tables. */
   .section-head {
-    max-inline-size: 44rem; margin-inline: auto; margin-block-end: var(--space-xl); text-align: center;
+    max-inline-size: 44rem; margin-inline: auto; margin-block-end: var(--space-l); text-align: center;
   }
   .section-head > * + * { margin-block-start: var(--space-xs); }
   .section-head .kicker { justify-content: center; }

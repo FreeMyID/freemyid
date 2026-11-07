@@ -35,7 +35,7 @@
 </section>
 
 {# 2. Trust bar: teardown 4.2 items, each linked to its /safety/ section #}
-<section class="band" aria-label="Our promises">
+<section class="band band--tight" aria-label="Our promises">
   <div class="wrap">
     <ul class="trustbar" role="list">
       {# source: D8 "Nothing is sent to us" (netpolicy.py); no account (PLAN_V1) #}
@@ -96,10 +96,10 @@
     {# source: U.S. CFPB press release, 3 Dec 2024 https://www.consumerfinance.gov/archive/newsroom/cfpb-proposes-rule-to-stop-data-brokers-from-selling-sensitive-personal-data-to-scammers-stalkers-and-spies/
        (address, phone, age, relatives as on the old home page). Teardown's "past addresses" and "email addresses" cards left out until sourced. #}
     <ul class="cards cards--4" role="list">
-      <li class="card"><span class="card__icon">{{ icon('computer') }}</span><h3>Home address</h3></li>
-      <li class="card"><span class="card__icon">{{ icon('chat') }}</span><h3>Phone numbers</h3></li>
+      <li class="card"><span class="card__icon">{{ icon('home') }}</span><h3>Home address</h3></li>
+      <li class="card"><span class="card__icon">{{ icon('phone') }}</span><h3>Phone numbers</h3></li>
       <li class="card"><span class="card__icon">{{ icon('family') }}</span><h3>Names of relatives</h3></li>
-      <li class="card"><span class="card__icon">{{ icon('clock') }}</span><h3>Age or birth year</h3></li>
+      <li class="card"><span class="card__icon">{{ icon('calendar') }}</span><h3>Age or birth year</h3></li>
     </ul>
     {# source: build data, the number of guides generated from brokers/registry.sample.yaml #}
     <p>We have step-by-step guides for {{ guides | length }} sites, and you can use every guide without the app. <a href="{{ url('guides/') }}">Browse the guides</a></p>

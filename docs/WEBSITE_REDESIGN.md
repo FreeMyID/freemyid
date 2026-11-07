@@ -53,7 +53,7 @@ Need a new component? Add it here in the same commit as its first use and tell t
 
 | Component | Markup (root class, children) | Notes |
 |---|---|---|
-| Section band | `section.band` + `.band--alt` / `.band--brand`; inner `.wrap` (`.wrap--narrow` for prose) | alternate bands down the page |
+| Section band | `section.band` + `.band--alt` / `.band--brand` / `.band--tight` (short strips such as the trust bar); inner `.wrap` (`.wrap--narrow` for prose) | alternate bands down the page |
 | Section header | `.section-head` > `p.kicker` + `h2` + `p.lead` | kicker optional |
 | Hero | `section.hero` > `.hero__text` (kicker, h1, `p.hero__lead`, `.hero__actions`, `p.hero__note`) + `figure.hero__media` (img/mockup + `figcaption.caption`) | two columns >= 900px, stacked below |
 | Buttons | `a.btn.btn--primary` / `.btn--secondary` / `.btn--ghost`; `.btn--large`; `.btn--small` | one primary per screen |

@@ -17,7 +17,7 @@
   /* ---------- Hero: text + product picture, two columns from 900px ---------- */
   .hero {
     display: grid; gap: var(--space-xl); align-items: center;
-    padding-block: var(--space-2xl) var(--space-2xl);
+    padding-block: var(--space-xl);
     padding-inline: max(var(--gutter), (100% - var(--wrap)) / 2 + var(--gutter));
     background: linear-gradient(var(--color-bg-alt), var(--color-bg));
     border-block-end: 1px solid var(--color-line);
@@ -25,7 +25,7 @@
   .hero > .wrap { grid-column: 1 / -1; padding-inline: 0; max-inline-size: none; }
   .hero > .wrap, .hero > .wrap.two-col { display: grid; gap: var(--space-xl); align-items: center; }
   @media (min-width: 56.25em) {
-    .hero, .hero > .wrap { grid-template-columns: 1.05fr 0.95fr; }
+    .hero, .hero > .wrap { grid-template-columns: 0.9fr 1.1fr; }
     .hero > .wrap { grid-template-columns: subgrid; }
   }
   .hero__text > * + * { margin-block-start: var(--space-s); }
@@ -48,23 +48,32 @@
 
   /* ---------- Trust bar: four short promises in one calm strip ---------- */
   .trustbar {
-    list-style: none; padding: var(--space-xs); display: grid; gap: var(--space-2xs);
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+    list-style: none; padding: var(--space-s); display: grid; gap: var(--space-xs) var(--space-s);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
     background: var(--color-card); border: 1px solid var(--color-line); border-radius: var(--radius-lg);
     box-shadow: var(--shadow-2);
   }
   .trustbar__item {
     display: flex; align-items: center; gap: var(--space-xs); margin: 0;
     min-block-size: var(--tap); padding: var(--space-2xs) var(--space-xs);
-    font-size: 0.9rem; font-weight: 600; line-height: 1.35; color: var(--color-text);
+    font-size: 1rem; font-weight: 700; line-height: 1.35; color: var(--color-heading);
   }
   .trustbar__item > a {   /* the whole item may be the link */
     display: flex; align-items: center; gap: var(--space-xs); min-block-size: var(--tap); inline-size: 100%;
     border-radius: var(--radius-md);
   }
   .trustbar__item svg {
-    inline-size: 2.4rem; block-size: 2.4rem; padding: 0.5rem; flex: none;
+    inline-size: 3rem; block-size: 3rem; padding: 0.65rem; flex: none;
     color: var(--color-brand); background: var(--color-brand-soft); border-radius: 50%;
+  }
+  @media (max-width: 30em) {   /* phones: one tidy list, more room for the words */
+    .trustbar { padding: var(--space-2xs); gap: 0; }
+    .trustbar__item { padding-inline: var(--space-2xs); }
+    .trustbar__item svg { inline-size: 2.5rem; block-size: 2.5rem; padding: 0.55rem; }
+  }
+  @media (min-width: 60em) {   /* four across: icon above a short centered line, so each promise reads as one block */
+    .trustbar__item, .trustbar__item > a { flex-direction: column; justify-content: flex-start; text-align: center; gap: var(--space-2xs); }
+    .trustbar__item > a { padding-block: var(--space-2xs); }
   }
   .trustbar__item a { color: inherit; text-decoration-color: var(--color-line-strong); text-underline-offset: 0.2em; }
   .trustbar__item a:hover { color: var(--color-link); text-decoration-color: currentColor; }
@@ -121,7 +130,13 @@
   .card__icon svg { inline-size: 100%; block-size: 100%; }
 
   /* ---------- Proof picture ---------- */
-  .proof { margin: 0 auto; max-inline-size: 52rem; }
+  .proof { margin: 0 auto; max-inline-size: 40rem; }
+  /* Show the top of the report (title + first rows) at a fixed height; width/height attributes stay for CLS. */
+  .proof > img {
+    max-block-size: 30rem; object-fit: cover; object-position: top;
+    -webkit-mask-image: linear-gradient(to bottom, #000 80%, transparent);
+    mask-image: linear-gradient(to bottom, #000 80%, transparent);
+  }
 
   /* ---------- Comparison table: scrolls inside its own box at 320px, never the page ---------- */
   .table-scroll {
@@ -169,11 +184,12 @@
   .dodont { display: grid; gap: var(--space-m); grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); }
   .dodont__col {
     background: var(--color-card); border: 1px solid var(--color-line); border-radius: var(--radius-lg);
-    border-block-start: 4px solid var(--color-ok); padding: var(--space-m); box-shadow: var(--shadow-1);
+    border-block-start: 4px solid var(--color-ok); padding: var(--space-s) var(--space-m); box-shadow: var(--shadow-1);
   }
   .dodont__col--dont { border-block-start-color: var(--color-line-strong); }
   .dodont__col > h3 { font-size: var(--step-1); margin-block-end: var(--space-xs); }
-  .dodont__col > ul:not(.checklist) { list-style: disc; padding-inline-start: 1.2em; }
+  .dodont__col > ul:not(.checklist) { list-style: disc; padding-inline-start: 1.2em; font-size: 0.95rem; line-height: 1.45; }
+  .dodont__col > ul > li + li { margin-block-start: var(--space-3xs); }
   .dodont__col > ul:not(.checklist) > li::marker { font-size: 1.2em; }
   .dodont__col--do > ul:not(.checklist) > li::marker { color: var(--color-ok); }
   .dodont__col--dont > ul:not(.checklist) > li::marker { color: var(--color-muted); }
