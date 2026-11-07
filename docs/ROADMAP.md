@@ -102,8 +102,8 @@ Each line: feature, tier, phase. Status: **shipped** items are in v0.1.x.
 
 ### 3.5 Proof and reporting
 - **Shipped:** evidence screenshots; status and report commands; basic report.
-- Proof vault: per broker, every email, screenshot and confirmation, dated and hashed - F (basic) / P (full) - 0.3
-- One-page PDF "what we did for you" report (plain English, printable for a parent) - F - 0.3
+- Proof vault: per broker, every email, screenshot and confirmation, dated and hashed - F (basic) / P (full) - 0.4
+- One-page PDF "what we did for you" report (plain English, printable for a parent) - F - 0.4 (a printable HTML summary ships in 0.3)
 - Court/attorney packet: chronological evidence bundle with hashes - P - 0.4
 - Monthly progress email or toast ("3 new removals confirmed, 1 relisted, handled") - F - 0.4
 
