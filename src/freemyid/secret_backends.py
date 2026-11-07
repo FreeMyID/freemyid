@@ -735,6 +735,14 @@ class MigrateResult:
     to_backend: str
     secrets_moved: int
     changed: bool
+    notice: str = ""   # plain text for the user (e.g. the keychain key was left, SEC-82)
+
+
+def _keychain_key_left_notice(target: str) -> str:
+    return ("The old copy of the encryption key stays in the system keychain, because "
+            "other Free My ID folders on this computer may use it. If this is the only Free "
+            "My ID folder on this computer, you can remove it with: freemyid secrets migrate "
+            f"--to {target} --remove-keychain-key")
 
 
 def _known_secret_ids(src: SecretBackend, key: bytes) -> list[tuple[str, str]]:
@@ -826,13 +834,26 @@ def _verify_on_disk(target: SecretBackend, key: bytes) -> None:
         raise crypto.KeyUnavailable("migration check failed: the new copy of the key differs")
 
 
-def _cleanup_source(source: SecretBackend, key: bytes, ids: list[tuple[str, str]]) -> None:
+def _cleanup_source(source: SecretBackend, key: bytes, ids: list[tuple[str, str]],
+                    target: str, remove_keychain_key: bool) -> str:
+    """Delete the source copies; returns a notice for the user ("" if none).
+
+    The keychain entry is global and every keyring folder on this computer shares it (a
+    second folder's first run reuses it), so moving one folder off the keychain must not
+    delete it, or the other folders' data can never be opened again (SEC-82). Only this
+    folder's mailbox passwords go; the key goes only with `remove_keychain_key`."""
     if isinstance(source, PassphraseBackend):
         source.delete_data_key()   # wrap and secrets.enc are this folder's files
-        return
+        return ""
     for svc, user in ids:
         source.delete_secret(svc, user)
-    source.delete_data_key(expected=key)   # never another folder's keychain key (SEC-72)
+    if not isinstance(source, KeyringBackend):
+        source.delete_data_key(expected=key)
+        return ""
+    if remove_keychain_key:
+        source.delete_data_key(expected=key)   # never another folder's key (SEC-72)
+        return "Removed the old copy of the encryption key from the system keychain."
+    return _keychain_key_left_notice(target)
 
 
 def _rollback(target: SecretBackend, key: bytes | None, ids: list[tuple[str, str]],
@@ -864,7 +885,7 @@ def _rollback(target: SecretBackend, key: bytes | None, ids: list[tuple[str, str
     clear_cache()
 
 
-def migrate(to: str) -> MigrateResult:
+def migrate(to: str, remove_keychain_key: bool = False) -> MigrateResult:
     """Re-wrap the data key (and copy mailbox passwords) into backend `to`. No data loss:
 
     1. write migrate.pending (phase "copy"): select() keeps using the source;
@@ -874,8 +895,18 @@ def migrate(to: str) -> MigrateResult:
 
     A failure (any BaseException) in 1-3 rolls back to the original config value. A kill
     leaves the marker, and running the same migrate again resumes (SEC-71). Encrypted
-    data in the store is untouched (same data key)."""
+    data in the store is untouched (same data key).
+
+    Moving off the keychain leaves the data key there (other folders may share it,
+    SEC-82) unless `remove_keychain_key`; that flag on an already-finished move only
+    removes the keychain copy.
+
+    Not covered: a mailbox password saved by another process (the wizard) to the source
+    during the "copy" phase, after the snapshot, is not copied and is deleted at cleanup
+    (SEC-85b). Don't run migrate while the wizard is open."""
     target = make(to)
+    if remove_keychain_key and isinstance(target, KeyringBackend):
+        raise ValueError("--remove-keychain-key only applies when moving off the keychain")
     from . import config
     cfg = config.load()
     pend = _read_pending()
@@ -896,7 +927,12 @@ def migrate(to: str) -> MigrateResult:
             if changed:
                 cfg.secrets_backend = target.name  # type: ignore[assignment]
                 config.save(cfg)
-            return MigrateResult(source.name, target.name, 0, changed)
+            notice = ""
+            if remove_keychain_key:   # a finished move off the keychain: drop the old copy
+                own = target.load_data_key(create=False)
+                KeyringBackend().delete_data_key(expected=own)
+                notice = "Removed the old copy of the encryption key from the system keychain."
+            return MigrateResult(source.name, target.name, 0, changed, notice)
         pend = {"from": source.name, "to": target.name, "orig": cfg.secrets_backend,
                 "target_existed": _has_data_key(target), "phase": "copy"}
         _write_pending(pend)
@@ -930,8 +966,8 @@ def migrate(to: str) -> MigrateResult:
         if cfg.secrets_backend != target.name:
             cfg.secrets_backend = target.name  # type: ignore[assignment]
             config.save(cfg)
-    _cleanup_source(source, key, ids)
+    notice = _cleanup_source(source, key, ids, target.name, remove_keychain_key)
     _pending_path().unlink(missing_ok=True)
     log.info("secrets migrated from %s to %s (%d saved passwords)",
              source.name, target.name, len(values))
-    return MigrateResult(source.name, target.name, len(values), True)
+    return MigrateResult(source.name, target.name, len(values), True, notice)

@@ -296,7 +296,9 @@ def test_migrate_roundtrip(env, tmp_path, monkeypatch, memkeyring):
     assert (r.from_backend, r.to_backend, r.secrets_moved, r.changed) == (
         "keyring", "passphrase", 1, True)
     assert config.load().secrets_backend == "passphrase"
-    assert not memkeyring.store                      # key and password left the keychain
+    # the password left the keychain; the key stays (other folders may share it, SEC-82)
+    assert list(memkeyring.store) == [(crypto.SERVICE, crypto.KEY_NAME)]
+    assert "--remove-keychain-key" in r.notice
     secret_backends.clear_cache()
     s = Store()                                      # same data key: store opens
     assert s.get_profile(p.id) is not None
@@ -312,6 +314,27 @@ def test_migrate_roundtrip(env, tmp_path, monkeypatch, memkeyring):
     assert s.get_profile(p.id) is not None
     s.close()
     assert get_mailbox_password(p.id, MB) == "app-password-not-real"
+
+
+@posix_only
+def test_migrate_remove_keychain_key_opt_in(env, tmp_path, monkeypatch, memkeyring):
+    """SEC-82: the keychain key goes only on request, during the move or after it."""
+    _seed_store_with_mailbox()
+    _pwfile(tmp_path, monkeypatch)
+    r = secret_backends.migrate("passphrase", remove_keychain_key=True)
+    assert not memkeyring.store and "Removed" in r.notice
+    with pytest.raises(ValueError):
+        secret_backends.migrate("keyring", remove_keychain_key=True)
+
+
+@posix_only
+def test_migrate_remove_keychain_key_after_finished_move(env, tmp_path, monkeypatch, memkeyring):
+    _seed_store_with_mailbox()
+    _pwfile(tmp_path, monkeypatch)
+    secret_backends.migrate("passphrase")
+    assert list(memkeyring.store) == [(crypto.SERVICE, crypto.KEY_NAME)]
+    r = secret_backends.migrate("passphrase", remove_keychain_key=True)
+    assert not memkeyring.store and "Removed" in r.notice and not r.changed
 
 
 @posix_only

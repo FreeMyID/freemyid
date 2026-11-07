@@ -472,7 +472,9 @@ def wipe(yes: Annotated[bool, typer.Option("--yes")] = False):
     if not paths.is_safe_wipe_target(target):
         con.print(f"[red]Refusing to wipe {target}:[/] it doesn't look like a Free My ID data folder.")
         raise typer.Exit(2)
-    if not yes and not typer.confirm("Delete ALL Free My ID data on this computer?"):
+    if not yes and not typer.confirm(
+            "Delete ALL Free My ID data on this computer? If you keep other Free My ID data "
+            "folders on this computer that use the system keychain, they will stop working too."):
         raise typer.Exit()
     try:
         from .scheduler import remove as sched_remove
@@ -671,20 +673,33 @@ def secrets_status(as_json: JsonOpt = False):
 
 
 @secrets_app.command("migrate")
-def secrets_migrate(to: Annotated[str, typer.Option(
-        "--to", help="passphrase | keyring | systemd-creds")]):
+def secrets_migrate(
+        to: Annotated[str, typer.Option("--to", help="passphrase | keyring | systemd-creds")],
+        remove_keychain_key: Annotated[bool, typer.Option(
+            "--remove-keychain-key",
+            help="Also delete the key from the system keychain. Only if this is the ONLY Free "
+                 "My ID folder on this computer: other folders that use the keychain share "
+                 "that key and would lose their data.")] = False):
     """Move the encryption key (and saved mailbox passwords) to another backend."""
     from . import crypto, secret_backends
     try:
-        r = secret_backends.migrate(to)
+        if remove_keychain_key:
+            err.print("Warning: removing the keychain key. Any other Free My ID folder on this "
+                      "computer that uses the system keychain will no longer open.",
+                      markup=False, highlight=False, soft_wrap=True)
+            r = secret_backends.migrate(to, remove_keychain_key=True)
+        else:
+            r = secret_backends.migrate(to)
     except (ValueError, crypto.KeyUnavailable) as e:
         err.print(f"freemyid: {e}", markup=False, highlight=False, soft_wrap=True)
         raise typer.Exit(cj.EXIT_USAGE) from None
     if r.changed:
         con.print(f"Now using {r.to_backend} (was {r.from_backend}); "
                   f"{r.secrets_moved} saved password(s) moved.")
-    else:
+    elif not r.notice:
         con.print("Nothing to change.")
+    if r.notice:
+        con.print(r.notice, markup=False, highlight=False, soft_wrap=True)
 
 
 # --------------------------------------------------------------------------- config

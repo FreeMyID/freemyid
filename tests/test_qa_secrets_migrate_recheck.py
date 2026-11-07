@@ -81,8 +81,8 @@ def test_qa_sec71_sigkill_at_each_step_resumes(env, memkeyring, monkeypatch, kil
     assert not sb._pending_path().exists()
     assert config.load().secrets_backend == direction
     assert get_mailbox_password(p.id, MB) == APP_PW
-    if direction == "passphrase":
-        assert KEY_ID not in memkeyring.store
+    if direction == "passphrase":   # passwords leave; the shared key stays (SEC-82)
+        assert set(memkeyring.store) == {KEY_ID}
     else:
         assert not sb.PassphraseBackend.wrap_path().exists()
         assert not sb.PassphraseBackend.secrets_path().exists()
@@ -180,8 +180,6 @@ def test_qa_sec72_wipe_keeps_key_when_marker_damaged(env, memkeyring):
     assert not sb._pending_path().exists()
 
 
-@pytest.mark.xfail(strict=True, raises=crypto.KeyUnavailable,
-                   reason="SEC-82: migrate off keyring deletes the key another folder shares")
 def test_qa_sec82_migrate_off_keyring_keeps_key_shared_by_another_folder(
         env, memkeyring, tmp_path, monkeypatch):
     """Two keyring folders always share the one global entry (the second folder's first run
