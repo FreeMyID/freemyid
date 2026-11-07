@@ -67,3 +67,22 @@ NEXT: real SmartScreen screenshots; fill data/release.yaml at first release; WR-
 build_site.py refuses unsafe FMID_SAMPLE_REGISTRY (`--selftest` shows it). site_check leak scan now also uses
 tools/private_host_hashes.txt (SHA-256 of private-only hostnames; regenerate with tools/gen_private_host_hashes.py
 while brokers/registry.yaml exists locally; hashes only). Remember to ship SHA256SUMS.txt with the first release (WR-19).
+
+## Orchestrator checkpoint (data-removal-00), 2026-11-07, handed to data-removal-e8 for the redesign
+
+**State:** the site is live at https://freemyid.github.io/freemyid/ (repo public, Pages deploy green on origin/main). `tools/build_site.py --check` passes (55 files, 29 broker guides); qa-security website review PASS (docs/SECURITY_REVIEW.md "Website").
+**Note:** the SHAs in docs/WEBSITE_REQUESTS.md status cells for WR-4..WR-23 are from before the history rewrite. Find the commits by subject (`git log --grep "WR-<n>"`).
+
+**WR queue:** WR-1 to WR-23 are done. WR-21's hash file (tools/private_host_hashes.txt) is untracked and gitignored (unsalted hashes are reversible), so the check runs only where the file exists locally. The WR-20 build guard is the real protection. Only **WR-24 is open**: re-render og-default.png and repo-preview.png with the official logo A dark mark (brand/logo/final/mark-dark.svg); both currently show a white tile with a red star.
+
+**Open brand and marketing work:**
+- The user still has to upload brand/social/repo-preview.png under GitHub Settings > Social preview.
+- README reorder (dev material lower, honest limits higher): docs/marketing/readme-proposal.md. The project lead wants it as a ready patch.
+- data/release.yaml: fill in the version, size and SHA256 at v0.1.0 to switch on the download button (the release job ships SHA256SUMS.txt).
+- After the full registry leaves the repo, rerun tools/gen_private_host_hashes.py locally whenever the private-only broker list changes.
+
+**Rules learned (in _shared-rules.md 11–13):**
+- Commit by explicit path only; never `git add -A` or stash in the shared tree.
+- To untrack a file: `git rm --cached`, check that `git diff --cached` shows only that file, then a plain commit.
+- Pin the registry for builds with FMID_SAMPLE_REGISTRY if a peer has uncommitted registry edits.
+- Never weaken the claims or privacy rules, whatever look the redesign takes (no trackers, third-party assets or fake social proof; POSITIONING copy rules apply). Competitor sites are for benchmarking only: don't copy their copy, art or claims, and in particular don't copy SaaS dark patterns such as countdowns or "X people protected" counters.
