@@ -75,3 +75,10 @@
 ## SEC-56 import clears pending_pin (done)
 - `POST /wizard/import` now sets `app.state.pending_pin = None` right after `load_bundle` replaces the draft. All other `app.state.draft` assignments (init, get_draft new, edit start, settings GET, finish, cancel) already cleared it.
 - Test: `tests/test_wizard_bridge_trust.py::test_import_drops_pending_pin_and_old_prompt_cannot_pin_imported_draft`.
+
+## VM check of CI run 42384413361 (main@6aa4661), 2026-11-07
+Installer artifact is FreeMyIDSetup-0.1.1 (pyproject still says 0.1.1, so this is not labelled 0.1.2). Clean snapshot, fake Pat Testperson, practice mode. Screenshots: brand/screenshots/vm-v0.1.2/.
+- PASS: SmartScreen More info -> Run anyway (launching from Explorer; a scheduled-task launch skips SmartScreen). Installer, all 6 wizard screens, dashboard, window fits 1024x768 (~905x680, above taskbar), toast shows the Free My ID icon.
+- PASS: Proton Bridge, no Bridge running: Test -> red box, no password sent (nothing listening), Next -> "Please press Test that it works and approve the security code first." Not saved; cmdkey list empty, "fakepassword" not in the data folder.
+- PASS: Other, SSL and STARTTLS both off: Test and Next both show "Your password would be sent unprotected ..." and refuse.
+- Findings: (1) LOW: Bridge unreachable message is "could not reach the mail app (ConnectionRefusedError); is it running?" - exception name leaks, not a calm Bridge-specific message. (2) LOW: the Ready to Install page still appears (ShouldSkipPage fix ineffective). (3) LOW: after the refused Bridge attempt, the "Other" form says "A password is saved. Leave empty to keep it." though nothing is stored (draft holds it in memory). (4) MEDIUM-ish: silent uninstall while the app is running leaves FreeMyID.exe + _internal behind (files locked); with the app closed it removes the install dir, shortcut and the "Free My ID Recheck" task cleanly. Silent uninstall keeps user data by design. GUI uninstall dialog not exercised.
