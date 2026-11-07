@@ -1,36 +1,40 @@
-# broker-researcher handoff (post-v0.1.0 wave, 2026-11-07)
+# broker-researcher handoff (v0.3 prep wave, 2026-11-07)
 
-## What changed
-No data files were changed. This run had only read, write and fetch tools, with no in-place edit and no shell. Rewriting the 675-line sample or the private full registry by hand risked corrupting them, so I left them alone. The findings below are ready to apply.
+## Tool limits this run (read first)
+No shell and no in-place edit. So: nothing is committed, `registry validate` and the YAML loaders were NOT run, and I could not append to `registry.yaml`, `registry.sample.yaml`, `state_laws.yaml` or `SOURCES.md`. New data went into new files instead. Please run the checks and commit (Priya Shah [freemyid], explicit paths).
 
-## Task 1: re-verify registry.sample.yaml (fetched 2026-11-07)
-- Reloaded and matched the stored entry, so nothing stale found: acxiom (opt-out, phone 1-877-774-2094, Conway AR address, 2-week processing), liveramp (portal; phone (844) 678-0045 code 4; consumercare@liveramp.com appears only for proof-of-residency documents, not as a deletion intake), experian (opting_out page: direct mail, telemarketing, email, targeted advertising, preapproved offers), cotality (policy text unchanged; portal URL still not shown), radaris (still the Atlas Data Privacy transfer notice, judgment 2026-08-27, contact support@atlas.net), ca_drop (privacy.ca.gov/drop: portal consumer.drop.privacy.ca.gov; brokers must check DROP every 45 days from 2026-08-01; status updates up to 90 days).
-- searchpeoplefree: page still loads. The fields and button match. The page also shows a success string, "You have successfully validated your email and started the record removal process." That is the post-email-link step, not final confirmation, so I did not add it to success_text.
-- peoplesearchnow: page still loads and the button matches. It also has Agent First Name, Agent Last Name and Agent Email fields, shown when "authorized agent" is chosen. Free My ID should always pick "The subject of the request". Suggest adding this to verification_notes.
-- Suggested edit: bump last_verified to 2026-11-07 on acxiom, liveramp, cotality, searchpeoplefree, peoplesearchnow, ca_drop.
-- Could not fetch (blocked, 403 or tool policy), so they stay unverified: spokeo, whitepages, beenverified, truepeoplesearch, fastpeoplesearch. The peopleconnect page returns only its title because it is a JS app.
-- Not re-fetched this run: equifax, transunion, optoutprescreen, mylife, nuwber, thatsthem, familytreenow, peoplefinders, google_results_about_you, oracle, explorium, peopledatalabs.
+## Files written
+- `brokers/checklists.yaml` (public). 16 entries: Equifax, Experian, TransUnion, Innovis, ChexSystems, NCTUE, LexisNexis freezes, OptOutPrescreen, DMAchoice, Do Not Call, IRS IP PIN, SSA, USPS Informed Delivery, Google Results about you, California DROP. Each has url, cost, time_needed, need_on_hand, steps, how_to_undo, source_urls, date_checked, verification (`official_page` or `partial`), notes. Not loaded by any code. Needs a quick YAML parse check.
+- `brokers/state_law_deletion_matrix.yaml` (public, companion to state_laws.yaml). In-force deletion rights by state, response windows, verification rules, appeal rules, the public-records caveat.
+- `docs/research/exposure_scan_patterns.yaml` (PRIVATE, not covered by .gitignore, add it before any commit). Search and listing patterns for 31 brokers.
 
-## Task 2: success signals
-- brokers/success_signals.yaml does not exist on disk. In this repo the signals are Broker fields (`success_text`, `listing_url_pattern`) inside the registry file, so there is nothing to add to a separate file. I did not read models.py or registry.py to confirm the loader.
-- The sample already carries success_text for spokeo, beenverified, truepeoplesearch, fastpeoplesearch, searchpeoplefree, peoplesearchnow, acxiom and liveramp, and listing_url_pattern for spokeo.
-- I did not read the full private registry, so no new signals were added. Most automatic-browser targets are behind bot protection and cannot be confirmed by fetch. New signals need a live run or fixture.
-- Open item for the orchestrator or automation engineer: should success_signals.yaml be created, and with what schema?
+## Checklist facts that are NOT confirmed (do not ship the wording as certain)
+- TransUnion (403), ChexSystems (403), OptOutPrescreen (403), SSA my account (403): official page not read. Facts come from search summaries of FTC, Experian, Norton, SSA leaflet/blog pages. ChexSystems phone numbers conflict (1-800-887-7652 vs 1-800-428-9623): publish none until read on the official page.
+- DMAchoice fee: $8 online, $9 by mail for 10 years per search results; older pages show lower. Confirm on site.
+- Do Not Call: FTC FAQ page read, donotcall.gov itself not opened.
+- IRS: the page has no general opt-out; how_to_undo says so.
+- California DROP, current status: live since 2026-01-01; brokers had to start processing 2026-08-01 and check at least every 45 days; page says all brokers should finish their first cycle by Nov 2026; status updates up to 90 days; free; over 600 brokers. Page does not say if an email is needed or how to cancel. No dated compliance report found. Note `registry.sample.yaml` ca_drop has `needs_email_verification: true` and `required_fields` including dob, street_address and email. The page does not confirm those; consider relaxing.
 
-## Task 3: state and federal law
-- NC, SC and AZ entries in brokers/state_laws.yaml are still correct as of 2026-11-07. No comprehensive law has been enacted in any of the three.
-  - NC: S 1022 (filed 2026-04-30) and S 757 are stuck in committee.
-  - SC: only the minors-only Age-Appropriate Code Design Act, signed Feb 2026.
-  - AZ: one tracker listed no comprehensive law as of May 2026. SB 1815 died. SB 1790 has no evidence of enactment.
-- Alabama: one secondary source says the Alabama Personal Data Protection Act was signed 2026-04-17, making it the 21st comprehensive state. Check the AL entry in state_laws.yaml, which I did not re-read this run.
-- Federal, new:
-  - DOJ Data Security Program (28 CFR Part 202, bulk sensitive data to countries of concern) took effect 2025-04-08, with enforcement stayed to 2025-07-08. It bars data brokerage of bulk US sensitive data to countries of concern. It is not a consumer deletion right.
-  - PADFAA (Protecting Americans' Data from Foreign Adversaries Act): the FTC sent warning letters to 13 data brokers on 2026-02-09. See https://ftc.gov/news-events/news/press-releases/2026/02/ftc-reminds-data-brokers-their-obligations-comply-padfaa. Penalties are up to $53,088 per violation. I found no penalty case yet.
-  - FTC and Kochava final order, 2026-05-04, under general FTC Act authority.
-- Sources are mostly law-firm alerts and trackers, not statute text. Nothing here gives an individual a deletion right, so templates are unchanged.
+## State laws (task 3)
+- Statute text actually read: Virginia 59.1-577 (45+45 days, may decline if cannot verify, appeal 60 days), Minnesota 325M.14 (45+45, verify by commercially reasonable efforts, opt-outs need no verification, appeal 45+60), Oregon 646A.574(1)(c) (delete right reaches data from other sources; the 45-day rule is in 646A.576, not read), California via the AG page.
+- Colorado, Connecticut and Texas statute pages failed to fetch (403, certificate error, empty). Everything else is `evidence: background`.
+- Section-level citations in the matrix for MT, DE, NH, NJ, TN, MD, IN, KY, RI, FL, UT, IA are from memory and may be wrong. They are NOT in the existing state_laws.yaml, which cites chapters only. Do not copy them into a letter until checked.
+- Realism: a deletion right helps only in states with a law in force, only when the site meets the size threshold, and usually not for public-record data (most laws exclude "publicly available information", background). Third-party data may lawfully be suppressed instead of erased (VA and MN confirmed). CA DROP is the one tool aimed at brokers. TX, OR, VT registries are lists only.
+- Newer laws: OK, LA (2027-01-01), AL (2027-05-01), VT (2028-01-01) stay `generic` until effective. Indiana, Kentucky and Rhode Island took effect 2026-01-01 and are already `state_privacy`.
 
-## Uncertain
-- Whether Whitepages uses `suppression_requests` or `suppression-requests`.
-- Whether BeenVerified's live path is `/app/optout/search` or `/svc/optout/search/comprehensive_optouts`.
-- Whether FastPeopleSearch uses `/removal` or `/optout`.
-- Cotality's portal URL.
+## Exposure scan (task 1)
+- Most people-search pages return 403 or are refused by the fetch and search tools. URL shapes are from indexed search-result URLs (fake query John Smith, Springfield IL). Confirmed from search: Spokeo, ThatsThem, Nuwber, MyLife, PeopleFinders, InstantCheckmate, TruthFinder, PeopleLooker, FamilyTreeNow, SearchPeopleFree, ClustrMaps, PeekYou, SmartBackgroundChecks, AdvancedBackgroundChecks, CocoFinder, VeriPages, USSearch, 411. From background only, unconfirmed: Whitepages, TruePeopleSearch, FastPeopleSearch, BeenVerified, Intelius, USPhonebook.
+- Whether JS is needed in a real browser was not observed, so it is `unknown`. Plain-fetch access is recorded as `bot_blocked`, `unknown` or `open`.
+- BIG FINDING: radaris.com now shows only an Atlas Data Privacy Corporation transfer notice (court order). No search, no listings. Do not scan it.
+- The file says "11 have no constructible name URL". The real count is 7 (radaris, addresses_com, neighborwho, locatefamily, peoplebyname, peoplewhiz, publicdatadigger). Fix on commit.
+- Short of 40: 31 done. Zabasearch and AnyWho are refused by the search tool; the quota ran out for peoplesearchnow and publicrecordsnow. I did not read the private registry, so the ids are my guesses from the sample and task list. Map them to real ids.
+- Nothing mirrored into `registry.sample.yaml`. Only Spokeo is in the sample and its `listing_url_pattern` is already there. Optional: add its `search_url_pattern` `https://www.spokeo.com/{first}-{last}/{state_name}/{city}`, but check that the engine keeps the capitalised slug.
+
+## CHANGE REQUESTS (orchestrator)
+1. models.py `Broker`: add `search_access` (enum open/js_required/bot_blocked/unknown), `search_access_note`, `search_url_evidence`, `search_url_checked: date`. Add `slug_case` or make the slugifier per-site.
+2. `.gitignore`: add `docs/research/exposure_scan_patterns.yaml`.
+3. Merge `state_law_deletion_matrix.yaml` into `state_laws.yaml` (or add a loader), and add a `Checklist` model plus loader for `checklists.yaml`.
+4. SOURCES.md was not updated. Sources are listed inside each new file with the access date 2026-11-07. Append a one-line pointer per file.
+
+## Still uncertain (carried over)
+Whitepages `suppression_requests` vs `suppression-requests`; BeenVerified live opt-out path; FastPeopleSearch `/removal` vs `/optout`; Cotality portal URL. The earlier re-verify findings (acxiom, liveramp, searchpeoplefree, peoplesearchnow `last_verified` bumps) are still unapplied.

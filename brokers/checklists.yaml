@@ -1,0 +1,306 @@
+# Free My ID identity-safety checklists (public, citable). Maintained by broker-researcher.
+# Checked 2026-11-07. Written for older, non-technical readers: short steps, plain words.
+#
+# Each entry: id, title, why, url, cost, time_needed, need_on_hand, steps, how_to_undo,
+# source_urls, date_checked, verification, notes.
+# verification: "official_page" = an official page was opened on date_checked and matches;
+#               "partial" = the official page was blocked or silent on some points; the rest comes
+#               from the sources listed (named in notes). Re-check before telling a user it is certain.
+# Nothing here asks a user to pay, except DMAchoice, which charges its own small fee (see entry).
+# Licence: CC BY-NC 4.0, same as brokers/LICENSE-DATA.md.
+version: "2026.11.07"
+updated: 2026-11-07
+
+checklists:
+  # ---------------------------------------------------------------- credit freezes
+  - id: freeze_equifax
+    title: "Freeze your credit at Equifax"
+    why: "A freeze stops a thief from opening new credit in your name. It does not hurt your credit score."
+    url: https://www.equifax.com/personal/credit-report-services/credit-freeze/
+    cost: "Free to place, lift and remove."
+    time_needed: "About 10 minutes online."
+    need_on_hand: ["Your Social Security number", "Date of birth", "Your current address", "A phone that can get a text message (for the code)", "An email address"]
+    steps:
+      - "Open the Equifax freeze web address above."
+      - "Choose 'Place a Security Freeze'. You make a free myEquifax account (you must be 18 or older)."
+      - "Prove it is you. Equifax sends a code by text, or asks questions about your credit history."
+      - "Turn the freeze on and write down your user name and password somewhere safe."
+      - "No computer? Call (888) 298-0045 instead."
+    how_to_undo: "When you need to apply for credit, sign in and choose 'Manage a Freeze' to lift it for a while or remove it. You can also lift it by phone. It is free."
+    source_urls: [https://www.equifax.com/personal/credit-report-services/credit-freeze/, https://consumer.ftc.gov/articles/what-know-about-credit-freezes-fraud-alerts]
+    date_checked: 2026-11-07
+    verification: official_page
+    notes: "A freeze at one bureau does not freeze the others. Do all of them. Freezing Equifax alone is not enough."
+
+  - id: freeze_experian
+    title: "Freeze your credit at Experian"
+    why: "Same reason as Equifax. Each bureau must be frozen on its own."
+    url: https://www.experian.com/freeze/center.html
+    cost: "Free."
+    time_needed: "About 10 minutes online. Takes effect right away online."
+    need_on_hand: ["Your Social Security number", "Date of birth", "Addresses for the last 2 years", "An email address"]
+    steps:
+      - "Open the Experian freeze web address above."
+      - "Make a free Experian account, or sign in if you have one."
+      - "Follow the prompts to turn the freeze on. Online it starts in real time and needs no PIN."
+      - "No computer? Call 1-888-397-3742."
+      - "By mail: send your full name, Social Security number, addresses for the past 2 years, date of birth, a copy of a photo ID and a copy of a utility bill or bank statement to Experian Security Freeze, P.O. Box 9554, Allen, TX 75013. Mail can take up to 3 days to process."
+    how_to_undo: "Sign in and remove the freeze with one click, or schedule a short 'thaw' with a start and end date. You can also remove it by phone or mail."
+    source_urls: [https://www.experian.com/freeze/center.html]
+    date_checked: 2026-11-07
+    verification: official_page
+    notes: "Experian's freeze is not shared with the other bureaus."
+
+  - id: freeze_transunion
+    title: "Freeze your credit at TransUnion"
+    why: "Same reason as the other two big bureaus."
+    url: https://www.transunion.com/credit-freeze
+    cost: "Free (the FTC says freezes are free to place, lift and keep)."
+    time_needed: "About 10 minutes online."
+    need_on_hand: ["Your Social Security number", "Date of birth", "Your current address", "An email address"]
+    steps:
+      - "Open the TransUnion freeze web address above."
+      - "Make a free TransUnion account, or sign in."
+      - "Choose to add a freeze and confirm."
+      - "No computer? Call 1-800-916-8800."
+    how_to_undo: "Sign in and lift or remove the freeze. It is free."
+    source_urls: [https://consumer.ftc.gov/articles/what-know-about-credit-freezes-fraud-alerts, https://www.experian.com/freeze/center.html]
+    date_checked: 2026-11-07
+    verification: partial
+    notes: "transunion.com returned HTTP 403 to our checker, so we could not read the steps on TransUnion's own pages. The free cost comes from the FTC page. The phone number 1-800-916-8800 is listed on Experian's freeze page, not on TransUnion's. The steps are generic. Re-check on a normal browser before publishing exact wording."
+
+  - id: freeze_innovis
+    title: "Freeze your credit at Innovis (the fourth bureau)"
+    why: "Few people have heard of Innovis, but some lenders use it. A freeze closes that gap."
+    url: https://www.innovis.com/personal/securityFreeze
+    cost: "Free under the FTC's rule that freezes are free. The Innovis page itself does not state a price."
+    time_needed: "About 10 minutes online. Then wait for a letter."
+    need_on_hand: ["Your Social Security number", "Date of birth", "Your current address", "A printer or pen if you use the mail form"]
+    steps:
+      - "Open the Innovis security freeze web address above."
+      - "Fill in the online 'Security Freeze Request' form, or download the mail-in PDF form."
+      - "Phone option: call 1-866-712-4546."
+      - "Innovis checks it is you. When the freeze is on, you get a letter with a 10-digit PIN."
+      - "Keep that PIN somewhere safe. You need it to lift the freeze."
+    how_to_undo: "Ask for a 'lift PIN' or a replacement PIN online, by phone or by mail, then use it to lift or remove the freeze."
+    source_urls: [https://www.innovis.com/personal/securityFreeze, https://consumer.ftc.gov/articles/what-know-about-credit-freezes-fraud-alerts]
+    date_checked: 2026-11-07
+    verification: official_page
+    notes: "The page names Consumer Assistance 1-800-540-2505 and PO Box 530088, Atlanta, GA 30353-0088. It does not say what ID is needed."
+
+  - id: freeze_chexsystems
+    title: "Freeze your ChexSystems report (bank accounts)"
+    why: "Banks use ChexSystems when you open a checking or savings account. A freeze stops a thief opening one in your name."
+    url: https://www.chexsystems.com/security-freeze
+    cost: "Free."
+    time_needed: "About 10 minutes."
+    need_on_hand: ["Your Social Security number", "Date of birth", "Your current address"]
+    steps:
+      - "Open the ChexSystems security freeze web address above."
+      - "Follow the form to place a freeze. You may be asked to make a free account first."
+      - "ChexSystems mails you a PIN. Keep it safe."
+      - "Phone option: some sources list 1-800-887-7652. Check the number on the ChexSystems page before you call."
+    how_to_undo: "Use your PIN to lift or remove the freeze on the same site or by phone, before you open a new bank account."
+    source_urls: [https://experian.com/blogs/ask-experian/how-to-freeze-chexsystems-report, https://support.norton.com/sp/en/hk/lifelock-by-norton/current/solutions/v132649189]
+    date_checked: 2026-11-07
+    verification: partial
+    notes: "chexsystems.com returned HTTP 403 to our checker, so the official page was NOT read. The cost, PIN and phone number come from web-search summaries of Experian and Norton help pages. One other source gives 1-800-428-9623, so the phone number is NOT confirmed. Do not publish a phone number until someone reads it on the official page. The exact URL above is the one we tried; it is not confirmed to be the right freeze page."
+
+  - id: freeze_nctue
+    title: "Freeze your NCTUE report (phone, power and utility accounts)"
+    why: "Phone, cable and utility companies check NCTUE before giving you service. A freeze blocks that for new accounts."
+    url: https://www.nctue.com/consumers
+    cost: "Free to place, lift and remove."
+    time_needed: "About 10 minutes online."
+    need_on_hand: ["Your Social Security number", "Date of birth", "Your current address"]
+    steps:
+      - "Open the NCTUE web address above and choose the consumer portal (nctueconsumerportal.com)."
+      - "Make an account and place the freeze."
+      - "Phone option: call 1-866-349-5355."
+      - "Mail option: Security Freeze, Exchange Service Center - NCTUE, P.O. Box 105561, Atlanta, GA 30348. Check with NCTUE what to include before you mail anything."
+    how_to_undo: "Use the same portal or phone number to lift or remove the freeze. The page does not say if you can do this by mail."
+    source_urls: [https://www.nctue.com/consumers]
+    date_checked: 2026-11-07
+    verification: official_page
+    notes: "The page says there are 'some exceptions' to what a freeze blocks."
+
+  - id: freeze_lexisnexis
+    title: "Freeze your LexisNexis Risk Solutions file"
+    why: "Insurance companies and others buy reports from LexisNexis. A freeze limits who can see yours."
+    url: https://consumer.risk.lexisnexis.com/freeze
+    cost: "Free to place, lift and remove."
+    time_needed: "About 15 minutes online. A confirmation letter arrives by mail."
+    need_on_hand: ["Your Social Security number", "Date of birth", "Your current address"]
+    steps:
+      - "Open the LexisNexis freeze web address above."
+      - "Choose 'Request a Security Freeze Online' and fill in the form."
+      - "Phone option: call 1-800-456-1244."
+      - "Mail option: LexisNexis Risk Solutions Consumer Center, Attn: Security Freeze, P.O. Box 105108, Atlanta, GA 30348-5108."
+      - "After they check it is you, a confirmation letter comes by mail. Keep it."
+    how_to_undo: "Use the online lift or removal form, or call 1-800-456-1244."
+    source_urls: [https://consumer.risk.lexisnexis.com/freeze]
+    date_checked: 2026-11-07
+    verification: official_page
+    notes: "The freeze applies only at LexisNexis. Companies you already do business with can still look at your file. The page does not list what details the form needs."
+
+  # ---------------------------------------------------------------- junk offers and calls
+  - id: optoutprescreen
+    title: "Stop pre-approved credit card and insurance offers in the mail"
+    why: "Those offers are made from lists the credit bureaus sell. They can be stolen from a mailbox and used to open an account in your name."
+    url: https://www.optoutprescreen.com
+    cost: "Free."
+    time_needed: "5 minutes online for 5 years. About 20 minutes plus a stamp for the permanent kind."
+    need_on_hand: ["Name", "Home address", "Social Security number and date of birth (the site asks)", "For permanent: a printer, a pen and a stamp"]
+    steps:
+      - "Open optoutprescreen.com, or call 1-888-567-8688 (1-888-5-OPT-OUT)."
+      - "Choose how long. 'Five years' finishes online or by phone in a few minutes."
+      - "For 'Permanent', you start online, then print the Permanent Opt-Out Election form, sign it and mail it to the address printed on it."
+      - "Offers can keep coming for a few weeks."
+    how_to_undo: "Use the same website or phone number to opt back in."
+    source_urls: [https://consumer.ftc.gov/articles/prescreened-credit-insurance-offers, https://www.transunion.com/prescreen-opt-out, https://www.experian.com/privacy/opting_out_preapproved_offers]
+    date_checked: 2026-11-07
+    verification: partial
+    notes: "optoutprescreen.com returned HTTP 403 to our checker. The 5-year versus permanent rule and the phone number come from the FTC page and the bureau pages as shown in search results. It is run jointly by Experian, TransUnion, Equifax and Innovis, and one request covers all four. It stops only bureau-list offers, not all junk mail."
+
+  - id: dmachoice
+    title: "Cut down on junk mail with DMAchoice"
+    why: "Many catalogs and charities mail you because of marketing lists. DMAchoice asks member companies to remove you."
+    url: https://www.dmachoice.org/
+    cost: "A small fee set by the site: $8 online or $9 by mail for 10 years, according to search results. Sources disagree and older pages show lower prices. Confirm the price on the site before paying."
+    time_needed: "About 15 minutes online."
+    need_on_hand: ["Your name and mailing address", "A debit or credit card (online) or a check (by mail)", "An email address"]
+    steps:
+      - "Open the DMAchoice web address above and choose 'New user? Register'."
+      - "Fill in your name and address. Choose the kinds of mail you want to stop."
+      - "Pay the fee on the site's own payment page. Check the web address bar says dmachoice.org first."
+      - "Mail option: use the printable form and send a check payable to ANA to DMAchoice Consumer Preferences, P.O. Box 900, Cos Cob, CT 06807."
+      - "Give it a couple of months. It does not stop mail from companies that are not members."
+    how_to_undo: "Log in at dmachoice.org to change your choices, or use the site's Contact Us page. The home page does not describe cancelling, so check the FAQ."
+    source_urls: [https://www.dmachoice.org/, https://dmachoice.org/static/consumer_choice_tools.php, https://www.consumer.ftc.gov/articles/how-stop-junk-mail]
+    date_checked: 2026-11-07
+    verification: partial
+    notes: "The home page confirms the service and the 'Register' and 'Renew' links but shows no fee. The fee, 10-year term and mail address come from search summaries of DMAchoice and ANA pages. Free My ID never pays for the user. The user decides whether to pay."
+
+  - id: national_do_not_call
+    title: "Join the National Do Not Call Registry"
+    why: "Stops most sales calls to your home and cell number. Scam callers ignore it, but legitimate sellers must obey."
+    url: https://www.donotcall.gov
+    cost: "Free. Never pay anyone to register you."
+    time_needed: "5 minutes."
+    need_on_hand: ["The phone number(s) you want to register", "An email address (to confirm)"]
+    steps:
+      - "Open donotcall.gov and choose 'Register a Phone Number'."
+      - "Enter the number and your email address. You can add up to 3 numbers."
+      - "Open the email from donotcall.gov and click the link within 72 hours."
+      - "No computer? Call 1-888-382-1222 from the phone you want to register (TTY 1-866-290-4236)."
+      - "Your number shows on the list the next day. Calls can take up to 31 days to stop."
+    how_to_undo: "Call 1-888-382-1222 from the phone you want removed. It comes off the list the next day. Registration never expires on its own."
+    source_urls: [https://consumer.ftc.gov/articles/national-do-not-call-registry-faqs]
+    date_checked: 2026-11-07
+    verification: official_page
+    notes: "Source is the FTC FAQ page. We did not open donotcall.gov itself. If a number is disconnected and later reassigned you may need to register it again."
+
+  # ---------------------------------------------------------------- government accounts
+  - id: irs_ip_pin
+    title: "Get an IRS Identity Protection PIN (IP PIN)"
+    why: "A 6-digit number that stops anyone else from filing a tax return with your Social Security number."
+    url: https://www.irs.gov/identity-theft-fraud-scams/get-an-identity-protection-pin
+    cost: "Free. The IRS page mentions no fee."
+    time_needed: "Online: about 20 minutes once you have an IRS online account. By mail or in person: 3 to 6 weeks."
+    need_on_hand: ["Social Security number or ITIN", "A photo ID", "A phone or computer that can set up an IRS online account", "For in-person: one photo ID and one more ID"]
+    steps:
+      - "Open the IRS IP PIN page. The fastest way is your IRS online account (you must register and prove who you are first)."
+      - "Find the 'IP PIN' section in your profile and ask for a PIN."
+      - "Write the PIN down. Use it when you file your tax return."
+      - "Cannot use the online account? If last year's income was under $84,000 ($168,000 if married filing jointly), you can use Form 15227. The IRS phones you to check it is you, and the PIN arrives by mail in about 4 to 6 weeks."
+      - "Or book a visit at a Taxpayer Assistance Center and bring a photo ID plus one more ID. The PIN comes within about 3 weeks."
+      - "Get a new PIN each year, usually from mid-January to mid-November."
+    how_to_undo: "The IRS page does not describe a general way to drop out. Call the IRS or ask at a Taxpayer Assistance Center before relying on dropping it. People who joined by the one-time option are taken off at the end of the calendar year."
+    source_urls: [https://www.irs.gov/identity-theft-fraud-scams/get-an-identity-protection-pin]
+    date_checked: 2026-11-07
+    verification: official_page
+    notes: "SAFETY: the IRS never asks for your IP PIN by phone, email or text. Anyone who does is a scammer. Lost your PIN? Do not file Form 15227 again. Use the IRS page for viewing or reissuing a lost IP PIN. Dependents under 18 cannot use the app or online account."
+
+  - id: ssa_my_social_security
+    title: "Claim your my Social Security account (before a thief does)"
+    why: "If you do not have an account, a thief can make one in your name and redirect your benefits. Making your own, or blocking online access, closes that door."
+    url: https://www.ssa.gov/myaccount/
+    cost: "Free."
+    time_needed: "20 to 30 minutes the first time."
+    need_on_hand: ["Social Security number", "A government photo ID", "An email address", "A phone number", "A phone or webcam for the ID photo step (ID.me needs a camera)"]
+    steps:
+      - "Open ssa.gov/myaccount. New accounts are made through Login.gov or ID.me. If unsure, pick Login.gov."
+      - "Make the Login.gov account (email, phone, photo of your ID) and follow the steps."
+      - "Return to my Social Security and sign in with it."
+      - "Prefer that nobody, including you, can use your account online? Call SSA at 1-800-772-1213 (or visit a local office) and ask to block electronic access. You will be asked to prove who you are."
+    how_to_undo: "To use the account again, call SSA at 1-800-772-1213 and ask them to lift the block."
+    source_urls: [https://www.ssa.gov/faqs/en/questions/KA-01687.html, https://www.ssa.gov/pubs/EN-05-10220.pdf, https://www.ssa.gov/blog/en/posts/2021-05-20.html]
+    date_checked: 2026-11-07
+    verification: partial
+    notes: "ssa.gov/myaccount returned HTTP 403 to our checker. Facts come from SSA pages as returned by search (an SSA FAQ, an SSA leaflet and a 2021 SSA blog post). SSA stopped the old user name and password sign-in on 2025-06-07. The block procedure comes from the older leaflet and blog, so re-check the phone number and wording on ssa.gov before publishing."
+
+  - id: usps_informed_delivery
+    title: "Sign up for USPS Informed Delivery"
+    why: "You see a picture of each letter before it arrives, so a stolen or missing letter stands out. Signing up yourself also stops someone else from enrolling your address."
+    url: https://www.usps.com/manage/informed-delivery.htm
+    cost: "Free."
+    time_needed: "About 15 minutes."
+    need_on_hand: ["Your home address", "An email address", "A phone that can get a code", "A photo ID if USPS asks you to prove who you are at a post office"]
+    steps:
+      - "Open the USPS Informed Delivery page above and sign in, or make a free USPS.com account."
+      - "Enter your address. USPS checks your mailbox is eligible (some apartment buildings are not)."
+      - "Prove it is you online. If that fails, you can visit a post office that offers identity checks."
+      - "Check your email each morning for the daily list of letters."
+      - "If a letter in the picture never arrives, tell your post office."
+    how_to_undo: "The USPS page does not explain cancelling. Look in your USPS.com account settings for Informed Delivery, or use USPS Online Support from the dashboard."
+    source_urls: [https://www.usps.com/manage/informed-delivery.htm]
+    date_checked: 2026-11-07
+    verification: official_page
+    notes: "The pictures show only the address side of letter-sized mail, plus some catalogs and magazines. The claim that signing up yourself stops someone else enrolling your address is common advice but is not stated on the USPS page, so do not repeat it as USPS's words."
+
+  # ---------------------------------------------------------------- search engines
+  - id: google_results_about_you
+    title: "Ask Google to hide your phone, address or email from search results"
+    why: "Google can show your personal contact details. This tool finds them and asks Google to stop showing those pages."
+    url: https://goo.gle/resultsaboutyou
+    cost: "Free."
+    time_needed: "10 minutes to set up, then a few minutes per result."
+    need_on_hand: ["A Google account", "The name, phone number, home address and email address you want Google to watch for"]
+    steps:
+      - "Open the web address above, or open the Google app and tap your picture, then 'Results about you'."
+      - "Sign in and type the details you want watched (name, address, phone, email)."
+      - "Google lists results that match. Open one and choose 'Request to remove'."
+      - "Type your contact info exactly as it shows on that page when asked."
+      - "Turn on notifications so Google tells you when new matches appear."
+      - "Check the status later on the same page: in progress, approved, denied or undone."
+    how_to_undo: "In Settings choose 'Remove all personal info' to stop watching and delete what you entered."
+    source_urls: [https://support.google.com/websearch/answer/12719076, https://blog.google/products-and-platforms/products/search/a-new-search-tool-to-help-control-your-online-presence/]
+    date_checked: 2026-11-07
+    verification: partial
+    notes: "Details come from Google's own help and blog pages as returned by search; our checker got HTTP 404 on a different Google help URL, so exact screen names may differ. Google hides the result from Search only. The page stays on the other website, so you still need to ask that site to remove it. Google rarely removes results from government, school or news sites. Some features are for adults in certain countries."
+
+  # ---------------------------------------------------------------- California
+  - id: ca_drop
+    title: "California DROP: one request to all registered data brokers (California residents only)"
+    why: "One free request asks every data broker registered in California to delete your information, and to keep checking."
+    url: https://privacy.ca.gov/drop/
+    cost: "Free. The page says 'we will never charge you to use DROP'."
+    time_needed: "About 20 minutes to ask. Then wait. Results can take up to 90 days to show."
+    need_on_hand: ["Proof you live in California (done through the California Identity Gateway, or your Login.gov sign-in if you have one)", "The details you choose to share (name, address and so on)"]
+    steps:
+      - "Check you live in California. Only California residents can use DROP."
+      - "Open the DROP web address above. Choose to verify you are a California resident through the California Identity Gateway. You do not need an account there, and DROP says it does not keep that information."
+      - "Make your profile. You choose how much to share."
+      - "Send one deletion request. It goes to more than 600 registered data brokers."
+      - "Come back in a few months and use 'Check DROP status' to see what happened."
+    how_to_undo: "The DROP page does not say how to cancel a request or close a profile. Ask CalPrivacy through privacy.ca.gov."
+    source_urls: [https://privacy.ca.gov/drop/, https://www.malwarebytes.com/blog/news/2026/08/californians-can-tell-data-brokers-to-drop-their-information]
+    date_checked: 2026-11-07
+    verification: official_page
+    status_as_of_2026_11_07: >-
+      Live for residents since 2026-01-01. Registered brokers had to start processing requests on
+      2026-08-01 and must check DROP at least every 45 days from then on, then delete data each cycle.
+      The page says that by November 2026 all brokers should have finished their first download and
+      upload. It can take up to 90 days to see a status update. We found no dated report on how many
+      brokers are actually complying.
+    notes: "You can also submit for another California resident, such as a parent or an elderly relative. Deleting data may mean fewer personalised ads. The page says results like fewer spam calls 'will vary by consumer'. DROP covers registered brokers only. Sites that are not registered, and any outside California, still need their own opt-out. If a broker cannot confirm who you are it must treat the request as an opt-out of sale or sharing (law-firm analysis in search results; not checked in the statute). The page does not say whether an email address is needed."

@@ -1,0 +1,86 @@
+# Which US state privacy laws give a deletion right that can reach data brokers, as of 2026-11-07.
+# Maintained by broker-researcher. COMPANION to brokers/state_laws.yaml (same state codes). Intended to be
+# merged into state_laws.yaml by the orchestrator (see handoff). Not loaded by any code yet.
+#
+# evidence levels used below:
+#   statute_text  = the statute or official AG page was fetched on 2026-11-07 and the point is in it
+#   background    = from the researcher's background knowledge or secondary trackers, NOT re-checked in the
+#                   statute text today. Verify before quoting in a letter.
+#
+# Plain answer for a data-broker letter:
+#  - A real, enforceable deletion right applies to people-search sites ONLY in states with a comprehensive law
+#    in force AND only if the site meets that law's size threshold AND the data is not "publicly available
+#    information" (most laws exclude public-record data, which is what many people-search sites hold).
+#  - So a state-law letter is a lawful request but a broker may lawfully refuse for those reasons. The one
+#    mechanism built for data brokers is California's Delete Act / DROP.
+#  - Registries in TX, OR, VT (and CA) only list brokers. They do not by themselves give a deletion right.
+version: "2026.11.07"
+updated: 2026-11-07
+
+common_rules:
+  verification:
+    evidence: statute_text
+    statement: >-
+      Virginia (Va. Code 59.1-577) and Minnesota (Minn. Stat. 325M.14, subd. 4(h)) both say a company that
+      cannot verify the requester using commercially reasonable efforts need not act on a deletion request,
+      and may ask for the extra information reasonably needed to verify. Minnesota adds that opt-out requests
+      generally need not be verified and may be refused only on a documented good-faith belief that the
+      request is fraudulent. California (oag.ca.gov/privacy/ccpa) lets an authorized agent be a person or a
+      business registered with the California Secretary of State.
+    practical: "Send only the fields the listing already shows, plus the removal mailbox, per Free My ID rule 6."
+  data_obtained_from_third_parties:
+    evidence: statute_text
+    statement: >-
+      Virginia 59.1-577 and Minnesota 325M.14 subd. 4(k) let a company treat a deletion request about data it
+      got from someone other than the consumer as satisfied if it keeps a minimal record to keep the data
+      deleted, or opts the consumer out of non-exempt processing. A broker that "suppresses" rather than
+      erases is therefore within the law. Oregon ORS 646A.574(1)(c) says the delete right covers data
+      "about the consumer" and reaches data the controller obtained from other sources.
+  appeals:
+    evidence: statute_text
+    statement: "Virginia: answer an appeal within 60 days. Minnesota: 45 days, extendable by 60 more. Both require pointing to the Attorney General if the appeal is denied."
+  free_requests:
+    evidence: statute_text
+    statement: "Virginia: free up to twice a year per consumer; a company may refuse or charge for manifestly unfounded, excessive or repetitive requests."
+  publicly_available_information:
+    evidence: background
+    statement: >-
+      Most of these statutes define "personal data" to exclude de-identified data and publicly available
+      information. That is why a broker holding only public-record data can refuse. Not re-checked in the
+      statute text today (the Virginia 59.1-577 page does not cover it; it is in 59.1-575/576).
+  thresholds:
+    evidence: background
+    statement: "Applicability thresholds (for example 100,000 consumers, or a lower figure with revenue from selling data) differ by state and were not re-checked. Florida's law reaches only very large companies (about USD 1 billion revenue)."
+
+# deletion_right_for_brokers: yes = statute gives a delete right and the state is in force today.
+# "broker_note" says whether the right is realistic against people-search sites.
+states:
+  - {state: CA, in_force: true, deletion_right: yes, citation: "Cal. Civ. Code 1798.105; Delete Act 1798.99.80 et seq.", response_days: 45, extension_days: 45, evidence: statute_text, broker_note: "Best case. CCPA applies to brokers over the thresholds. DROP (privacy.ca.gov/drop) lets brokers be asked in one request; registered brokers had to start processing 2026-08-01 and check DROP at least every 45 days. Use template ccpa for brokers; point Californians to DROP first.", source_urls: [https://oag.ca.gov/privacy/ccpa, https://privacy.ca.gov/drop/]}
+  - {state: VA, in_force: true, deletion_right: yes, citation: "Va. Code 59.1-577", response_days: 45, extension_days: 45, evidence: statute_text, broker_note: "Confirmed in statute text: 45 days + one 45-day extension; may decline if identity cannot be verified; appeal answered within 60 days. Public-record data is likely out of scope.", source_urls: [https://law.lis.virginia.gov/vacode/title59.1/chapter53/section59.1-577/]}
+  - {state: MN, in_force: true, deletion_right: yes, citation: "Minn. Stat. 325M.14 subd. 1(d)", response_days: 45, extension_days: 45, evidence: statute_text, broker_note: "Confirmed in statute text. Delete right covers data 'concerning the consumer'. Third-party-sourced data may be handled by a minimal suppression record.", source_urls: [https://www.revisor.mn.gov/statutes/cite/325M.14]}
+  - {state: OR, in_force: true, deletion_right: yes, citation: "ORS 646A.574(1)(c)", response_days: 45, extension_days: 45, evidence: statute_text, broker_note: "Delete right text confirmed (reaches data obtained from other sources). The 45-day window is in ORS 646A.576, not fetched, so it is background. Oregon also has a data-broker registry.", source_urls: [https://oregon.public.law/statutes/ors_646A.574]}
+  - {state: CO, in_force: true, deletion_right: yes, citation: "C.R.S. 6-1-1306", response_days: 45, extension_days: 45, evidence: background, broker_note: "law.justia.com returned 403, so statute text not re-checked. Delete right confirmed by trackers.", source_urls: [https://www.clym.io/blog/us-privacy-law-comparison-map]}
+  - {state: CT, in_force: true, deletion_right: yes, citation: "Conn. Gen. Stat. 42-518", response_days: 45, extension_days: 45, evidence: background, broker_note: "cga.ct.gov fetch failed (certificate error), so not re-checked. A 2026 act (PA 26-64) adds a broker registration framework from 2026-10-01, per a secondary source.", source_urls: [https://www.clym.io/blog/us-privacy-law-comparison-map]}
+  - {state: TX, in_force: true, deletion_right: yes, citation: "Tex. Bus. & Com. Code 541.051 (rights), 541.052 (response)", response_days: 45, extension_days: 45, evidence: background, broker_note: "Statute pages could not be fetched. Texas also has a data-broker registry (Secretary of State), which is a list only.", source_urls: [https://www.clym.io/blog/us-privacy-law-comparison-map]}
+  - {state: UT, in_force: true, deletion_right: limited, citation: "Utah Code 13-61-201", response_days: 45, extension_days: 45, evidence: background, broker_note: "Delete right is believed limited to data the consumer provided to the company, so weak against brokers. Not re-checked.", source_urls: [https://privacyterms.io/us-state-privacy-laws-2026]}
+  - {state: IA, in_force: true, deletion_right: limited, citation: "Iowa Code 715D.3", response_days: 90, extension_days: 45, evidence: background, broker_note: "Believed 90-day window and a delete right limited to data the consumer provided. Not re-checked.", source_urls: [https://privacyterms.io/us-state-privacy-laws-2026]}
+  - {state: MT, in_force: true, deletion_right: yes, citation: "Mont. Code Ann. 30-14-2806", response_days: 45, extension_days: 45, evidence: background, broker_note: "Not re-checked.", source_urls: [https://privacyterms.io/us-state-privacy-laws-2026]}
+  - {state: DE, in_force: true, deletion_right: yes, citation: "6 Del. C. 12D-104", response_days: 45, extension_days: 45, evidence: background, broker_note: "Not re-checked. Cited section numbers in this file are from memory; the existing state_laws.yaml uses only the chapter.", source_urls: [https://privacyterms.io/us-state-privacy-laws-2026]}
+  - {state: NE, in_force: true, deletion_right: yes, citation: "Neb. Rev. Stat. 87-1101 et seq.", response_days: 45, extension_days: 45, evidence: background, broker_note: "Not re-checked.", source_urls: [https://privacyterms.io/us-state-privacy-laws-2026]}
+  - {state: NH, in_force: true, deletion_right: yes, citation: "N.H. RSA 507-H:4", response_days: 45, extension_days: 45, evidence: background, broker_note: "Not re-checked.", source_urls: [https://privacyterms.io/us-state-privacy-laws-2026]}
+  - {state: NJ, in_force: true, deletion_right: yes, citation: "N.J.S.A. 56:8-166.10", response_days: 45, extension_days: 45, evidence: background, broker_note: "Not re-checked. A separate broker-registration law (A3538, signed 2026-06-30) is reported to start 2027-03-27, so it is not usable yet.", source_urls: [https://www.mondaq.com/unitedstates/privacy-protection/1816798/vermont-and-new-jersey-data-broker-laws-add-to-expanding-state-privacy-patchwork]}
+  - {state: TN, in_force: true, deletion_right: yes, citation: "Tenn. Code Ann. 47-18-3203", response_days: 45, extension_days: 45, evidence: background, broker_note: "Not re-checked.", source_urls: [https://privacyterms.io/us-state-privacy-laws-2026]}
+  - {state: MD, in_force: true, deletion_right: yes, citation: "Md. Code, Com. Law 14-4605", response_days: 45, extension_days: 45, evidence: background, broker_note: "Not re-checked.", source_urls: [https://privacyterms.io/us-state-privacy-laws-2026]}
+  - {state: IN, in_force: true, deletion_right: yes, citation: "Ind. Code 24-15-3", response_days: 45, extension_days: 45, evidence: background, broker_note: "In force since 2026-01-01. No cure period per the clym.io tracker. Not re-checked in statute.", source_urls: [https://www.clym.io/blog/us-privacy-law-comparison-map]}
+  - {state: KY, in_force: true, deletion_right: yes, citation: "KRS 367.3615", response_days: 45, extension_days: 45, evidence: background, broker_note: "In force since 2026-01-01. Not re-checked in statute.", source_urls: [https://www.clym.io/blog/us-privacy-law-comparison-map]}
+  - {state: RI, in_force: true, deletion_right: yes, citation: "R.I. Gen. Laws 6-48.1-4", response_days: 45, extension_days: 45, evidence: background, broker_note: "In force since 2026-01-01. Delete right confirmed by the clym.io table. Not re-checked in statute.", source_urls: [https://www.clym.io/blog/us-privacy-law-comparison-map]}
+  - {state: FL, in_force: true, deletion_right: not_practical, citation: "Fla. Stat. 501.705", response_days: 45, extension_days: 15, evidence: background, broker_note: "Applies only to companies with about USD 1 billion revenue, so people-search sites are outside it. Keep template generic.", source_urls: [https://privacyterms.io/us-state-privacy-laws-2026]}
+  - {state: OK, in_force: false, deletion_right: not_yet, effective_date: 2027-01-01, evidence: background, broker_note: "Enacted 2026, effective 2027-01-01. Do not cite until in force.", source_urls: [https://privacyterms.io/us-state-privacy-laws-2026]}
+  - {state: LA, in_force: false, deletion_right: not_yet, effective_date: 2027-01-01, evidence: background, broker_note: "Enacted 2026, effective 2027-01-01. Do not cite until in force.", source_urls: [https://privacyterms.io/us-state-privacy-laws-2026]}
+  - {state: AL, in_force: false, deletion_right: not_yet, effective_date: 2027-05-01, evidence: background, broker_note: "Enacted 2026, effective 2027-05-01 per a search summary. Do not cite until in force.", source_urls: [https://www.multistate.us/insider/2026/10/28/twenty-four-states-now-have-comprehensive-consumer-privacy-laws]}
+  - {state: VT, in_force: false, deletion_right: not_yet, effective_date: 2028-01-01, evidence: background, broker_note: "Comprehensive law enacted 2026 (effective 2028). Vermont's data-broker registry has existed since 2019 and is a list only.", source_urls: [https://www.multistate.us/insider/2026/10/28/twenty-four-states-now-have-comprehensive-consumer-privacy-laws]}
+
+no_deletion_right_states: >-
+  NC, SC, AZ and the other states in brokers/state_laws.yaml marked generic have no comprehensive consumer
+  privacy law in force as of 2026-11-07 (multistate.us count of 24 states, 2026-10-28, secondary). Use the
+  voluntary-request letter with no legal citation.
