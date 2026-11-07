@@ -61,7 +61,7 @@ Need a new component? Add it here in the same commit as its first use and tell t
 | Steps | `ol.steps` > `li.step` > `span.step__num` (aria-hidden) + `h3` + `p` | 3 steps side by side. `ol.steps.steps--list`: vertical numbered instructions, a step may hold lists, pictures, callouts, and `h3` is optional |
 | Card grid | `ul.cards` (`.cards--3`, `.cards--4`) > `li.card` > `.card__icon` + `h3` + `p` | auto-fit, container query |
 | Proof figure | `figure.proof` > `img`/mockup + `figcaption.caption` | "Sample ... made-up data" caption mandatory |
-| Compare table | `.table-scroll[tabindex=0][role=region][aria-labelledby=<h2 id>]` > `table.compare` with `th[scope]`; `td.yes` / `td.no` / `td.partial`; optional `td[data-label="<column name>"]` on every td = stacked cards under 34em | must reflow or scroll at 320px without page scroll |
+| Compare table | `.table-scroll[tabindex=0][role=region][aria-labelledby=<h2 id>]` > `table.compare` with `th[scope]`; `td.yes` / `td.no` / `td.partial`; optional `td[data-label="<column name>"]` on every td = stacked cards under 34em (web-designer ed89017; home uses it since 5d812cd, so on phones each row reads as a card) | must reflow or scroll at 320px without page scroll |
 | Callout | `aside.callout` + `.callout--info` / `.callout--note` | calm, never red alarm |
 | Does / doesn't | `.dodont` > `.dodont__col.dodont__col--do` / `--dont` > `h3` + `ul` | existing honesty box |
 | Price card | `.price-card` > `p.price-card__label`, `p.price-card__price`, `p.price-card__sub`, `ul.checklist`, CTA | one card, centered |
@@ -94,10 +94,10 @@ commit only your own source files by explicit path, and checkpoint in `docs/hand
 | R5 | Source the comparison "paid services (typical)" rows (D4) | broker-researcher | done b3a3fa5: use ONLY rows Price "Yearly or monthly fee", Where details go "Sent to the company", Account "Account required", Who sends "The company, on your behalf", Keeps checking "Yes, on a schedule", Hard cases "Often, on higher plans". DROP open-source and works-on rows from the paid column (open source may appear in the Free My ID column only). No price figures. |
 | R6 | Integrate: rebuild site/, docs/WEBSITE.md, fix seams between R1-R3, commit site/. Includes: site.yaml `privacy.html: safety` + redirect `privacy/index.html: safety`, then delete the temporary `privacy` entry in pages.yaml; replace the home "where paid services are better" line with the orchestrator wording below | web-developer | done f23f88d..9d67abe (site/ rebuild d2ea997) |
 | R7 | Verify: site_check extensions, screenshots 360/768/1280 light+dark, keyboard, zoom, claim audit | web-qa | done 785a7a4: PASS with P3s; P2 copy fixes WR-25..27 |
-| R9 | Round 2: WR-25..28, 30, 35 + .section→.band migration | web-builder | in-progress |
-| R10 | Round 2: WR-31..34 + comparison column balance + delete .section CSS | web-designer | in-progress |
-| R11 | WR-29 (empty releases-page links) + rebuild/commit site/ | web-developer | after R9-R10 |
-| R12 | Re-verify | web-qa | after R11 |
+| R9 | Round 2: WR-25..28, 30, 35 + .section→.band migration | web-builder | done 0cbb72e..6bbb580 |
+| R10 | Round 2: WR-31..34 + comparison column balance + delete .section CSS | web-designer | done ed89017..ce44224 (.section CSS deleted in R11) |
+| R11 | WR-29 (empty releases-page links) + rebuild/commit site/ | web-developer | done efc7997, d58dad5, site/ ab9b709 |
+| R12 | Re-verify | web-qa | next |
 | R8 | Security/privacy sign-off | qa-security | after R12 |
 
 ## Follow-ups seen during round 1 (not web)
@@ -112,3 +112,13 @@ commit only your own source files by explicit path, and checkpoint in `docs/hand
   "If you'd rather have a company handle it for you, a paid service may suit you better. We'll say so plainly."
 - **Dropped cards / lines stay dropped** ("past addresses", "email addresses", family-member limit, setup time,
   "printable sheet of what to say") until brand-marketing brings sourced copy. They're not blockers.
+
+## Orchestrator rulings (round 2)
+
+- **Report link text** "See the sample report full size" (WR-35) is accepted.
+- **FAQ "government" independence claim** is confirmed: it is the approved HELPER_GUIDE line, and the project has
+  no agency, Meta or broker ties.
+- **"Click Install"** (download step 4, families step 3) is now a LAUNCH_CHECKLIST VM item (154ec8a): verify it on a
+  clean Windows VM at first release.
+- **Fingerprint promise / releases links** (WR-29): while `release.version` is null, pages say "will come with a
+  fingerprint" and never link the empty GitHub releases page; JSON-LD `downloadUrl` appears only with a version.

@@ -102,7 +102,9 @@ from 900px); `.btn--primary/--secondary/--ghost` + `--large/--small`; `ul.trustb
 text from 60em, list below 30em); `ol.steps` > `li.step` > `span.step__num[aria-hidden]` (3 across) and
 `ol.steps.steps--list` (vertical instructions, any content per step); `ul.cards(--3/--4)`; `figure.proof`
 (max 40rem wide, image cropped to the top 30rem with a fade so it reads as a picture; width/height attributes
-kept for CLS); `.table-scroll[tabindex=0][role=region][aria-labelledby]` > `table.compare`;
+kept for CLS); `.table-scroll[tabindex=0][role=region][aria-labelledby]` > `table.compare` (put `data-label="<column name>"` on
+every `td` and under 34em each row becomes a stacked card with the label shown; without it the table scrolls
+with an edge shadow);
 `aside.callout--info/--note`; `.dodont`; `.price-card` + `ul.checklist`; `.faq` > `details.faq__item`;
 `section.cta-final`; header (`header.site-header`, `nav.site-nav`, no-JS `details.menu`, D5 CTA kept visible
 on phones) and footer (four columns + legal row).
@@ -120,7 +122,7 @@ Callout mapping from v1: gold -> `--note`, fact -> `--info`, myth -> `--note` (w
 | `/safety/` | built (v2, D2) | "Is it safe?": local + encrypted, never asks, open source, updates, verify, uninstall, limits, this website |
 | `/families/` | built | helper guide, setup steps, fridge-card PDF |
 | `/faq/` | built | myth vs. fact + all questions, FAQPage JSON-LD |
-| `/download/` | built | "opens soon" state until `data/release.yaml` has a version; SmartScreen steps with drawings |
+| `/download/` | built | "opens soon" state (and no releases links, WR-29) until `data/release.yaml` has a version; SmartScreen steps with drawings |
 | `/i-do-not-consent/` | built | explainer, plain Facebook share link |
 | `/styleguide/` | built, noindex | living style guide (every contract component) |
 | `/404.html` | built, noindex | absolute links (served at any depth) |
@@ -130,8 +132,16 @@ Callout mapping from v1: gold -> `--note`, fact -> `--info`, myth -> `--note` (w
 | Pricing | do not build | paid tier not announced |
 
 Images: `site_src/static/assets/screenshots/*.webp` (copied from `brand/screenshots/`, alt text from
-`brand/README.md`, captioned "Example with made-up data"). Home is the heaviest page: about 280 KB total
-(7 KB HTML + 10 KB CSS gzip + 263 KB of WebP; the report image is lazy-loaded).
+`brand/README.md`, captioned "Example with made-up data" inside the same `<figure>`, which site_check enforces).
+Home uses `srcset`/`sizes` (WR-35): hero `dashboard-700/-1200.webp` (eager, `fetchpriority="high"`), proof
+`report-600/-900.webp` (lazy) with a "See the sample report full size" link to the 900px file. Home weighs about
+100 KB on a phone and 165 KB on desktop (7 KB HTML + 11 KB CSS gzip + images). `dashboard.webp`, `report.webp`
+and `wizard-*.webp` are copied but not used by any page yet.
+
+Release-dependent wording (WR-29): while `data/release.yaml` `version` is null, every Download CTA goes through
+`cta-download.html` ("coming soon"), the fingerprint promise reads "will come with a fingerprint", no page links
+the GitHub releases page, and the SoftwareApplication JSON-LD has no `downloadUrl`. Setting `version` flips all of
+it. Use `{% if release.version %}` for any new release-dependent line (FAQ answers can use it too).
 
 ## Checks (`tools/site_check.py`)
 
@@ -140,3 +150,7 @@ exists, exactly one h1, no `style=""`, no inline handlers, no forms/iframes, no 
 no cross-origin or `data:` assets, every internal link and #anchor resolves, every `<img>` has alt/width/height.
 Site: sitemap lists exactly the indexable pages, robots.txt has a Sitemap line, CSS has no external `url()`
 or `@import`, no full-registry-only values, no mention of `registry.yaml`.
+Copy rules (web-qa 785a7a4; visible text only, the noindex styleguide is skipped): banned POSITIONING phrases
+(`BANNED_PHRASES`: guarantee, 100%, erase, forever, star ratings and counters, fear words, missing state-law qualifier); every screenshot sits in a
+`<figure>` whose caption says "made-up data"; while `release.version` is null no link may point at
+`/releases/latest`, `/releases/download` or an `.exe` (D5).

@@ -101,3 +101,13 @@ Screenshots + scripts: scratchpad lead/ (shots.py, sweep.py; before-*/after-* ho
 Next: R7 web-qa verify; R8 qa-security. Open: `.section`/`.section--alt` v1 layout helpers are still used
 by how-it-works/download/safety bodies (not in the R6 list; migrate to `.band` next round). Compare table
 Free My ID column is wide relative to the others at 1280 (cosmetic, designer).
+
+## R11 (2026-11-07, web lead alone): DONE
+
+efc7997 WR-29: while `release.version` is null, fingerprint lines say "will come with", no page links the empty
+GitHub releases page, FAQ answers get `release` in `render()` (FAQPage JSON-LD now uses the rendered answer), and
+SoftwareApplication `downloadUrl` is added only with a version. d58dad5 removed the v1 `.section` CSS (and print entry).
+ab9b709 rebuilt site/ (round 2 + R11). Board: R9, R10, R11 done, round 2 rulings recorded; WEBSITE.md has srcset,
+data-label, WR-29 and web-qa copy-rule notes. `--check` OK (64 files), ruff clean, site_shots 360/1280 light+dark clean.
+Leftovers: `dashboard.webp`, `report.webp`, `wizard-*.webp` are copied into site/ but unused (about 380 KB of repo,
+no page weight); drop them from site_src/static or use them. NEXT: R12 web-qa re-verify, then R8 qa-security.
