@@ -267,3 +267,12 @@ Drafts: src/freemyid/engine/_test_drafts/ (conftest re-exports tests/conftest; q
   a transient `systemd-run --user` dry-run with the same sandbox worked and reached the keyring.
 - tests/test_social_poster.py (44). Handle = `user` field of keyring entry `bluesky`.
 - Open: bluesky_token not yet in keyring (runs will skip until it is). Lead installs the timer.
+
+## Checkpoint 2026-11-07 (orchestrator, session end)
+- SEC-57/58/59 fix: NOT done. The agent stopped on a usage limit with nothing on disk; tree was clean at bbf96b1.
+- Next (in order, one commit each, no push until the lead says):
+  1. SEC-57: fcntl.flock lockfile in docs/marketing/seo/; atomic `status: posting <iso>` before createSession; revert to queued only on definite pre-createRecord failure; `posting` never auto-retried; strict at:// URI regex; escape URI with `_cell` in outreach-log.
+  2. SEC-58: skip items whose text has Unicode Cf chars (except ZWJ in emoji); keep /über paths working.
+  3. SEC-59 (lead's decision): tools/social/install.sh. Read-only copy at ~/.local/share/freemyid-poster/poster.py (0444, dir 0555) + own pinned venv (httpx, keyring); COPY unit/timer to ~/.config/systemd/user (0444); ExecStartPre `sha256sum -c` against a hash pinned in the installed unit; `--update` recomputes and prints the hash (lead-only step); never enables the timer; refuses root; test only on a temp HOME. README: install/update/pause/uninstall, drop ln -sf steps.
+- Don't edit tests/test_social_poster.py (qa-owned; strict xfails flip when fixed). Own tests go in tests/test_social_poster_state.py.
+- Timer install waits on qa PASS after these land.

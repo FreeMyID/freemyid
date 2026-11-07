@@ -94,3 +94,9 @@ R8 re-check site-v3 (971b1ec..cd35f9c): PASS, the BLOCK is lifted. SEC-60 (f683e
   'none', /download/ hashes match, 0 CSP violations. Still open: SEC-62, SEC-65 (LOW) and SEC-66, SEC-67 (INFO).
   Dev machines: run `pnpm exec astro telemetry disable` (a direct astro run still reports).
   WR rows were renumbered +11 by 971b1ec (WR-45..49 became WR-56..60).
+
+## Checkpoint 2026-11-07 (orchestrator, session end)
+- Bluesky poster reviewed: PASS (2a5bb23, bbf96b1). SEC-57 (MED), SEC-58 (LOW) open for automation-engineer; SEC-59 decided by lead (read-only install + sha256 pin via install.sh).
+- Next: once automation-engineer lands SEC-57/58 + install.sh, re-check SEC-57/58/59 only, remove the strict xfails in tests/test_social_poster.py, verify install.sh on a temp HOME (never the real one), report PASS/BLOCK to the lead. The lead installs the timer only after that PASS.
+- Spot-check docs/marketing/seo/bluesky-queue.md content now and then (it is the only content review point; owner chose fully autonomous).
+- SEC numbering: main uses 50–59 (all used up to 59); continue at SEC-70+. 60–69 belong to the site-v3 branch.
