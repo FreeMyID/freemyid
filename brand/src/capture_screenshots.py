@@ -58,7 +58,7 @@ with sync_playwright() as p:
     go()
     prof = store.list_profiles()[0]
     reg = load_registry()
-    ids = [x.id for x in reg.brokers if x.id != "ca_drop"][:14]
+    ids = [x.id for x in reg.brokers if x.id != "ca_drop" and not getattr(x, "covered_by", None)][:14]
     now = utcnow()
     plan = [L.CONFIRMED]*5 + [L.REMOVED]*2 + [L.SUBMITTED]*2 + [L.AWAITING_VERIFICATION] + [L.NEEDS_HUMAN]*2 + [L.NOT_FOUND]*2
     for i, (bid, st) in enumerate(zip(ids, plan)):

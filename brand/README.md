@@ -24,9 +24,9 @@ Real app, fake persona only (Jane Q Testperson, Springfield IL), 2x, cropped to 
 
 | File | Size (px) | WebP | Alt text |
 |---|---|---|---|
-| `screenshots/wizard-name.webp` | 2000x1850 | 89 KB | Free My ID setup, step 2 of 6: "What is the person's name?" with first, middle and last name boxes filled in with a made-up name, and large Back and Next buttons. |
-| `screenshots/wizard-address.webp` | 2000x1580 | 100 KB | Free My ID setup, step 3 of 6: "Where do they live?" asking only for a city and state, Springfield, IL. |
-| `screenshots/dashboard.webp` | 2000x2090 | 120 KB | The Free My ID home screen. A plain sentence says 7 sites have confirmed or no longer list you, 3 are waiting and 2 need you, followed by a card with copy-and-paste details and large buttons for the one step left. |
-| `screenshots/report.webp` | 1800x2250 | 141 KB | The printable progress report: a table of each people-search site, its status (site confirmed, asked, not listed now, needs you), when it was last checked and when the request was made. |
+| `screenshots/wizard-name.webp` | 2000x1650 | 48 KB | Free My ID setup, step 2 of 6: "What is the person's name?" with first, middle and last name boxes filled in with a made-up name, and large Back and Next buttons. |
+| `screenshots/wizard-address.webp` | 2000x1400 | 59 KB | Free My ID setup, step 3 of 6: "Where do they live?" asking only for a city and state, Springfield, IL. |
+| `screenshots/dashboard.webp` | 2000x2090 | 119 KB | The Free My ID home screen. A plain sentence says 7 sites have confirmed or no longer list you, 3 are waiting and 2 need you, followed by a card with copy-and-paste details and large buttons for the one step left. |
+| `screenshots/report.webp` | 1800x2440 | 143 KB | The printable progress report: a table of each people-search site, its status (site confirmed, asked, not listed now, needs you), when it was last checked and when the request was made. |
 
 Social images (`og-default.png`, `repo-preview.png`) now use the official logo A dark mark (`logo/final/mark-dark.svg`, WR-24).
