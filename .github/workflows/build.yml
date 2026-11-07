@@ -151,3 +151,38 @@ jobs:
           gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --title "Free My ID $VER" \
             --notes "Windows installer. The file is not code-signed yet, so Windows may show a blue 'Windows protected your PC' box: click More info, then Run anyway." \
             out/FreeMyIDSetup.exe "out/FreeMyIDSetup-$VER.exe" out/SHA256SUMS.txt
+
+  # After a release: put its version, size and sha256 on the website, rebuild site/, commit to main and
+  # redeploy Pages (a GITHUB_TOKEN push doesn't trigger other workflows, so pages.yml is dispatched).
+  site-release-info:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [release]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Update release info and rebuild site
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          VER="${TAG#v}"
+          python -m pip install --disable-pip-version-check "jinja2>=3.1" "PyYAML>=6"
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" -p FreeMyIDSetup.exe -p SHA256SUMS.txt -D rel
+          (cd rel && grep " FreeMyIDSetup.exe$" SHA256SUMS.txt | sha256sum -c -)
+          python tools/update_release_info.py "$VER" rel/FreeMyIDSetup.exe --date "$(date -u +%F)"
+          python tools/build_site.py
+          python tools/build_site.py --check
+          if git diff --quiet -- site_src/data/release.yaml site; then echo "site already current"; exit 0; fi
+          git -c user.name="Release Bot [freemyid]" -c user.email=242299803+GrayManSam@users.noreply.github.com \
+            commit -m "Site: v$VER release info (automatic)" -- site_src/data/release.yaml site
+          git push origin HEAD:main
+          gh workflow run pages.yml --repo "$GITHUB_REPOSITORY" --ref main

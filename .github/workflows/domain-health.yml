@@ -1,0 +1,46 @@
+name: domain-health
+
+# Weekly check of freemyid.org: site up over HTTPS, redirects, security headers, certificate lifetime,
+# security.txt not expiring, mail records present. Opens (or updates) one issue if anything fails.
+on:
+  schedule:
+    - cron: "41 8 * * 1"   # Mondays 08:41 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check freemyid.org
+        id: c
+        run: |
+          set -u; fail=""
+          note() { echo "- $1"; fail="$fail\n- $1"; }
+          for u in https://freemyid.org/ https://freemyid.org/download/; do
+            c=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "$u"); [ "$c" = 200 ] || note "$u returned $c"; done
+          r=$(curl -s -o /dev/null -w "%{http_code} %{redirect_url}" http://freemyid.org/); case "$r" in "301 https://freemyid.org/"*) ;; *) note "http redirect: $r";; esac
+          h=$(curl -sI https://freemyid.org/)
+          for k in strict-transport-security x-frame-options x-content-type-options referrer-policy; do
+            echo "$h" | grep -qi "^$k:" || note "missing header $k"; done
+          end=$(echo | openssl s_client -servername freemyid.org -connect freemyid.org:443 2>/dev/null | openssl x509 -noout -enddate | cut -d= -f2)
+          days=$(( ( $(date -d "$end" +%s) - $(date +%s) ) / 86400 )); [ "$days" -ge 14 ] || note "certificate expires in $days days"
+          exp=$(curl -s https://freemyid.org/.well-known/security.txt | sed -n 's/^Expires: //p')
+          [ -n "$exp" ] && [ $(( ( $(date -d "$exp" +%s) - $(date +%s) ) / 86400 )) -ge 30 ] || note "security.txt Expires is missing or within 30 days ($exp)"
+          dig +short MX freemyid.org | grep -q mx.cloudflare.net || note "MX no longer points at Cloudflare Email Routing"
+          dig +short TXT _dmarc.freemyid.org | grep -q "v=DMARC1" || note "DMARC record missing"
+          dig +short TXT resend._domainkey.freemyid.org | grep -q "p=" || note "Resend DKIM record missing"
+          if [ -n "$fail" ]; then printf "%b" "$fail" > problems.md; echo "failed=1" >> "$GITHUB_OUTPUT"; else echo "all checks passed"; fi
+      - name: Open or update issue
+        if: steps.c.outputs.failed == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          t="Domain health check failed"
+          n=$(gh issue list -R "$GITHUB_REPOSITORY" --state open --search "$t in:title" --json number -q '.[0].number')
+          body="$(printf 'The weekly freemyid.org check found:\n\n'; cat problems.md; printf '\n\nRun: %s/%s/actions/runs/%s' "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID")"
+          if [ -n "$n" ]; then gh issue comment "$n" -R "$GITHUB_REPOSITORY" -b "$body"; else gh issue create -R "$GITHUB_REPOSITORY" -t "$t" -b "$body"; fi
+          exit 1
