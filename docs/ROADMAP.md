@@ -18,7 +18,8 @@ A program that runs on your own computer and takes your name, address, phone and
 3. **Honest by default.** No fear pop-ups, fake counters, auto-renew traps or bundled junk. Free means free forever, not a trial.
 4. **The user is in charge.** Nothing goes out in their name without consent; practice mode is the default until they say "go".
 5. **Evidence over claims.** Every removal has proof attached, and we say "requested", "confirmed" or "relisted", never "erased".
-6. **Open engine, paid freshness.** The code is free and forkable. What we sell is the constantly updated broker knowledge and the convenience around it (the McAfee "virus definitions" model).
+6. **No account, ever, for regular users.** Downloading, installing, using, getting help and giving feedback never require signing up anywhere (not with us, not with GitHub, not with anyone). Regular users never land on github.com: downloads come from freemyid.org addresses, feedback goes through email or a form on our own site. GitHub links are for developers only (developer page, footer "source code"). Paid tiers use a licence key, not a login. (Owner rule, 2026-11-07.)
+7. **Open engine, paid freshness.** The code is free and forkable. What we sell is the constantly updated broker knowledge and the convenience around it (the McAfee "virus definitions" model).
 
 ### Who it is for
 | Persona | Needs | Edition |
