@@ -1,13 +1,21 @@
-// Free My ID website v3. Static output for GitHub Pages under /freemyid/.
+// Free My ID website v3. Static output for GitHub Pages (origin and base path from site_src/site.yaml).
 // Content comes from ../site_src (site.yaml, pages.yaml, data/*.yaml, static/) and
 // ../brokers/registry.sample.yaml at build time: one source of truth with the v2 site.
 import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
 import tailwindcss from "@tailwindcss/vite";
 import { fileURLToPath } from "node:url";
+import { readFileSync } from "node:fs";
 
-const BASE_URL = "https://freemyid.github.io"; // change with base when freemyid.org exists
-const BASE_PATH = "/freemyid/";
+// One source of truth with the v2 build: base_url (origin + path) and base_path in site_src/site.yaml.
+const SITE_YAML = readFileSync(new URL("../site_src/site.yaml", import.meta.url), "utf8");
+const yamlValue = (key) => {
+  const m = SITE_YAML.match(new RegExp(`^${key}:\\s*(\\S+)`, "m"));
+  if (!m) throw new Error(`site_src/site.yaml: ${key} missing`);
+  return m[1];
+};
+const BASE_URL = new URL(yamlValue("base_url")).origin;
+const BASE_PATH = yamlValue("base_path");
 
 export default defineConfig({
   site: BASE_URL,

@@ -13,6 +13,7 @@ private host-hash list and the full registry for the leak scan). Stdlib only.
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
@@ -27,7 +28,10 @@ def main() -> int:
     sys.path.insert(0, str(a.tools.resolve()))
     import site_check
 
-    errors = site_check.check_site(a.dist, "https://freemyid.github.io/freemyid/", "/freemyid/")
+    cfg = (ROOT / "site_src" / "site.yaml").read_text(encoding="utf-8")
+    base_url = re.search(r"^base_url:\s*(\S+)", cfg, re.MULTILINE).group(1)  # type: ignore[union-attr]
+    base_path = re.search(r"^base_path:\s*(\S+)", cfg, re.MULTILINE).group(1)  # type: ignore[union-attr]
+    errors = site_check.check_site(a.dist, base_url, base_path)
     kept = []
     for e in errors:
         page, _, msg = e.partition(": ")

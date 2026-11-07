@@ -58,7 +58,7 @@ export const releaseDate = release.date
   ? (release.date instanceof Date ? release.date.toISOString().slice(0, 10) : String(release.date))
   : "";
 
-/** Site-relative target ("" = home, "faq/#x", "og.png") -> path under the base ("/freemyid/faq/#x"). */
+/** Site-relative target ("" = home, "faq/#x", "og.png") -> path under the base from site_src/site.yaml ("/faq/#x" on freemyid.org). */
 export function url(target: string): string {
   return import.meta.env.BASE_URL.replace(/\/?$/, "/") + target.replace(/^\//, "");
 }

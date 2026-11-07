@@ -12,8 +12,16 @@ import { join, relative } from "node:path";
 import { gzipSync } from "node:zlib";
 
 const dist = process.argv[2] || "dist";
-const BASE_PATH = "/freemyid/";
-const ORIGIN = "https://freemyid.github.io";
+// Origin and base path come from site_src/site.yaml (same source as astro.config.mjs and the v2 build).
+const SITE_YAML = readFileSync(new URL("../../site_src/site.yaml", import.meta.url), "utf8");
+const yamlValue = (key) => {
+  const m = SITE_YAML.match(new RegExp(`^${key}:\\s*(\\S+)`, "m"));
+  if (!m) throw new Error(`site_src/site.yaml: ${key} missing`);
+  return m[1];
+};
+const BASE_PATH = yamlValue("base_path");
+const ORIGIN = new URL(yamlValue("base_url")).origin;
+const reEsc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const errors = [];
 const err = (f, m) => errors.push(`${f}: ${m}`);
 
@@ -61,7 +69,7 @@ for (const f of htmlFiles) {
   const desc = html.match(/<meta name="description" content="([^"]*)"/)?.[1];
   if (!desc) err(f, "missing meta description");
   else if (desc.replace(/&amp;/g, "&").replace(/&quot;/g, '"').length > 155) err(f, `description > 155 chars`);
-  if (!/<link rel="canonical" href="https:\/\/freemyid\.github\.io\/freemyid\/[^"]*"/.test(html)) err(f, "missing canonical");
+  if (!new RegExp(`<link rel="canonical" href="${reEsc(ORIGIN + BASE_PATH)}[^"]*"`).test(html)) err(f, "missing canonical");
   if (!/<meta name="referrer" content="no-referrer">/.test(html)) err(f, "missing referrer meta");
   const h1 = (html.match(/<h1[\s>]/g) || []).length;
   if (h1 !== 1) err(f, `${h1} <h1> elements`);
