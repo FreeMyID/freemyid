@@ -4,7 +4,7 @@ Account: Free My ID (handle in keyring entry `bluesky`; post with `bluesky_token
 Cadence: 1-2 posts a day for 14 days, in order. Format is read by tools/social/poster.py. Copy rules: docs/POSITIONING.md. Every link was checked against site/sitemap.xml on 2026-11-07 except the GitHub repo. Q-001 has NOT been posted: bluesky_token was absent from the keyring on 2026-11-07.
 
 ## Q-001
-status: queued
+status: posted 2026-11-07T15:29:51Z at://did:plc:y65jkegrv5essuc542rveywc/app.bsky.feed.post/3mzq7nabeti24
 note: Intro post. Disclosure: this is our own account.
 ```text
 We make Free My ID, a free, open-source Windows app that asks people-search and data-broker sites to delete your listing, and keeps checking because sites re-list people. It runs on your computer. No account. Early release: https://freemyid.org
