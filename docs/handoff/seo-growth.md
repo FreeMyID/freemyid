@@ -51,3 +51,11 @@ Next: once tokens exist, post Q-001, PR BADBOOL (row 4); skip pluja until ~2027-
   - Reddit/Discord: owner posts by hand from reddit-queue.md / discord-queue.md. Rules UNVERIFIED (Reddit is blocked for both fetchers and the browser tool; don't work around it). If the owner pastes rules, update the drafts.
   - Semrush: lead runs semrush-lookups.md in the browser; fold results into keywords.md.
   - broker-researcher must clear the needs-verify claims in the content/ drafts before publishing.
+
+## Wave 5 (2026-11-07), orchestrator follow-up
+- Contacts used today: 1 of 10 (BADBOOL PR #131). It was CLOSED by the maintainer 10 minutes after opening, no comment. Accepted; not resubmitting.
+- GitHub list PRs: 0 opened. Row 5 not until 2027-03-07; row 7 winget held (unsigned exe, silent install unchecked); row 8 Scoop needs an issue and approval first plus notability; row 19 Awesome-Windows repo is gone, the active list (0PandaDEV/awesome-windows) needs 50 stars (we have 1); row 20 archived. Revisit at 50 stars / signed exe. Details in listings.md.
+- mastodon-queue.md written (14 posts, M-001 = the intro already posted). Today's one post already used by the intro; the first queued post (M-002) goes out 2026-11-08, then one a day by hand via API until the poster supports Mastodon. M-013 links home until the "why free" article is approved.
+- Draft for owner review: content/why-free-my-id-is-free.md (from ROADMAP 1-2, no prices named; two review notes at the bottom).
+- Bluesky queue untouched (the scheduled poster owns it).
+- Escalation: none (no replies mentioning legal, press or money).
