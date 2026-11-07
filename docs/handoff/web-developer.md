@@ -111,3 +111,15 @@ ab9b709 rebuilt site/ (round 2 + R11). Board: R9, R10, R11 done, round 2 rulings
 data-label, WR-29 and web-qa copy-rule notes. `--check` OK (64 files), ruff clean, site_shots 360/1280 light+dark clean.
 Leftovers: `dashboard.webp`, `report.webp`, `wizard-*.webp` are copied into site/ but unused (about 380 KB of repo,
 no page weight); drop them from site_src/static or use them. NEXT: R12 web-qa re-verify, then R8 qa-security.
+
+## R13 post-v0.1.0 (2026-11-07, web lead alone): DONE
+
+605fe27 release.yaml v0.1.0 (64.0 MB, sha256 bb4a36153a1a99955bbe4d224d505f43ade678763f2c8b38ee43e203099b7bbe, hashed from the
+downloaded asset, matches SHA256SUMS.txt; releases/latest/download/FreeMyIDSetup.exe 302s to the v0.1.0 asset) | 9093bd4 WR-8
+"Read the source code" re-added to the home final CTA (lost in the redesign) | c3ecdb9 download button label wraps as one flex item |
+e6d4e2f + b174f6c WR-37 (ODNI replaces the withdrawn CFPB rule) and WR-38 (released-version copy) | 953d3f3 site/ rebuild (includes
+SEC-41 report-600/900.webp from 450bb34). Unused dashboard/report/wizard webps were already dropped in 2bf6680.
+Checks: build --check OK (60 files), site_check 44 pages OK, ruff clean, site_shots 360/1280 light+dark + 320 zoom: only the
+known unprefixed-404 artefacts (clean with --prefix freemyid/). Home 7.4 KB gzip, download 4.3 KB gzip.
+Open: broker-researcher SOURCES.md entry for the home "what they list" cards (relatives isn't a sample-registry field);
+LAUNCH_CHECKLIST line 48 can be ticked by the orchestrator; real SmartScreen screenshots still pending (VM).

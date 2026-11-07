@@ -99,6 +99,7 @@ commit only your own source files by explicit path, and checkpoint in `docs/hand
 | R11 | WR-29 (empty releases-page links) + rebuild/commit site/ | web-developer | done efc7997, d58dad5, site/ ab9b709 |
 | R12 | Re-verify | web-qa | next |
 | R8 | Security/privacy sign-off | qa-security | PASS 02e363c (+ tests 84d0caf); R12 web-qa PASS e8b2a9b |
+| R13 | Post-v0.1.0: release.yaml filled (605fe27), WR-8 source link (9093bd4), WR-37 ODNI (e6d4e2f, b174f6c), WR-38 released copy (b174f6c), 360px download button (c3ecdb9), site/ rebuild incl. SEC-41 report screenshots (953d3f3) | web-developer | done; web-qa re-verify optional |
 
 ## Follow-ups seen during round 1 (not web)
 

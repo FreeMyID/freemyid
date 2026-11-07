@@ -122,7 +122,7 @@ Callout mapping from v1: gold -> `--note`, fact -> `--info`, myth -> `--note` (w
 | `/safety/` | built (v2, D2) | "Is it safe?": local + encrypted, never asks, open source, updates, verify, uninstall, limits, this website |
 | `/families/` | built | helper guide, setup steps, fridge-card PDF |
 | `/faq/` | built | myth vs. fact + all questions, FAQPage JSON-LD |
-| `/download/` | built | "opens soon" state (and no releases links, WR-29) until `data/release.yaml` has a version; SmartScreen steps with drawings |
+| `/download/` | built | live button, version, size and SHA256 since v0.1.0 ("opens soon" state, no releases links, WR-29, only if `data/release.yaml` version is null); SmartScreen steps with drawings |
 | `/i-do-not-consent/` | built | explainer, plain Facebook share link |
 | `/styleguide/` | built, noindex | living style guide (every contract component) |
 | `/404.html` | built, noindex | absolute links (served at any depth) |
@@ -142,6 +142,9 @@ Release-dependent wording (WR-29): while `data/release.yaml` `version` is null, 
 `cta-download.html` ("coming soon"), the fingerprint promise reads "will come with a fingerprint", no page links
 the GitHub releases page, and the SoftwareApplication JSON-LD has no `downloadUrl`. Setting `version` flips all of
 it. Use `{% if release.version %}` for any new release-dependent line (FAQ answers can use it too).
+v0.1.0 (2026-11-07) is set: 64.0 MB is the Windows File Explorer count (67,113,842 bytes / 1,048,576); sha256 is
+hashed from the downloaded asset and must match the release's SHA256SUMS.txt. 0.x versions get the WR-38
+"early release" hero note (`release.version.startswith("0.")`).
 
 ## Checks (`tools/site_check.py`)
 
