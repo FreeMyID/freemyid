@@ -62,8 +62,15 @@ class HumanStep(Exception):
 # --------------------------------------------------------------------------- search
 
 
-def _slug(s: str) -> str:
-    return quote(re.sub(r"\s+", "-", s.strip().lower()), safe="-")
+def _slug(s: str, case: str = "lower") -> str:
+    """Whitespace -> '-', URL-encoded. `case` is Broker.slug_case: lower (default), title
+    ("John-Smith", "Springfield") or as_is."""
+    s = re.sub(r"\s+", "-", s.strip())
+    if case == "title":
+        s = "-".join(p[:1].upper() + p[1:].lower() for p in s.split("-"))
+    elif case != "as_is":
+        s = s.lower()
+    return quote(s, safe="-")
 
 
 def search_url(broker: Broker, profile: Profile) -> str | None:
@@ -82,7 +89,11 @@ def search_url(broker: Broker, profile: Profile) -> str | None:
     fields = {f for _, f, _, _ in string.Formatter().parse(broker.search_url_pattern) if f}
     if any(not vals.get(f) for f in fields):
         return None
-    url = broker.search_url_pattern.format(**{f: _slug(str(vals[f])) for f in fields})
+    case = broker.slug_case
+    # a 2-letter {state} stays upper case in title mode (".../Springfield/IL")
+    url = broker.search_url_pattern.format(**{
+        f: _slug(str(vals[f]), "as_is" if case == "title" and f == "state" else case)
+        for f in fields})
     return url if _host_ok(urlsplit(url).hostname or "", set(broker.domains)) else None
 
 

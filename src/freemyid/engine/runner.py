@@ -147,6 +147,35 @@ def run(store: Store, registry: Registry, profiles: list[Profile], *, scan_only:
     return asyncio.run(r.run(profiles))
 
 
+def merge_listings(store: Store, profile: Profile, broker: Broker, found: list[Listing],
+                   now: datetime) -> list[Listing]:
+    """Save a clean search's listings. Keeps ids/first_seen and the user's REVIEW_MATCH
+    answers across re-scans; listings no longer shown get `gone_since`. Returns the
+    non-NO_MATCH listings. Shared by the runner scan and the exposure scan."""
+    old = {li.url: li for li in store.list_listings(profile.id, broker.id)}
+    out: list[Listing] = []
+    seen = set()
+    for li in found:
+        prev = old.get(li.url)
+        if prev is not None:
+            upd: dict[str, Any] = {"id": prev.id, "first_seen": prev.first_seen,
+                                   "gone_since": None}
+            if "user_confirmed" in prev.match_reasons:
+                upd.update(match_level=MatchLevel.CONFIRMED,
+                           match_reasons=sorted({*li.match_reasons, "user_confirmed"}))
+            elif "user_rejected" in prev.match_reasons:
+                upd.update(match_level=MatchLevel.NO_MATCH, match_reasons=["user_rejected"])
+            li = li.model_copy(update=upd)
+        seen.add(li.url)
+        store.save_listing(li)
+        if li.match_level != MatchLevel.NO_MATCH:
+            out.append(li)
+    for url, prev in old.items():
+        if url not in seen and prev.gone_since is None:
+            store.save_listing(prev.model_copy(update={"gone_since": now}))
+    return out
+
+
 class Runner:
     def __init__(self, store: Store, registry: Registry, *, scan_only: bool, dry_run: bool,
                  interactive: bool, broker_ids: list[str] | None, only_due: bool,
@@ -415,29 +444,7 @@ class Runner:
 
     def _merge_listings(self, profile: Profile, broker: Broker,
                         found: list[Listing]) -> list[Listing]:
-        """Keep ids/first_seen and the user's REVIEW_MATCH answers across re-scans."""
-        old = {li.url: li for li in self.store.list_listings(profile.id, broker.id)}
-        out: list[Listing] = []
-        seen = set()
-        for li in found:
-            prev = old.get(li.url)
-            if prev is not None:
-                upd: dict[str, Any] = {"id": prev.id, "first_seen": prev.first_seen,
-                                       "gone_since": None}
-                if "user_confirmed" in prev.match_reasons:
-                    upd.update(match_level=MatchLevel.CONFIRMED,
-                               match_reasons=sorted({*li.match_reasons, "user_confirmed"}))
-                elif "user_rejected" in prev.match_reasons:
-                    upd.update(match_level=MatchLevel.NO_MATCH, match_reasons=["user_rejected"])
-                li = li.model_copy(update=upd)
-            seen.add(li.url)
-            self.store.save_listing(li)
-            if li.match_level != MatchLevel.NO_MATCH:
-                out.append(li)
-        for url, prev in old.items():
-            if url not in seen and prev.gone_since is None:
-                self.store.save_listing(prev.model_copy(update={"gone_since": self.now}))
-        return out
+        return merge_listings(self.store, profile, broker, found, self.now)
 
     def _apply_scan(self, profile: Profile, broker: Broker, st: Any, listings: list[Listing],
                     scanned: bool) -> Any:
