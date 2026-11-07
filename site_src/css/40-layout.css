@@ -25,6 +25,9 @@
   .section-head > * + * { margin-block-start: var(--space-xs); }
   .section-head .kicker { justify-content: center; }
   .section-head .lead { margin-inline: auto; }
+  .wrap--narrow .section-head, .prose .section-head { text-align: start; margin-inline: 0; margin-block-end: var(--space-m); }
+  .wrap--narrow .section-head .kicker { justify-content: flex-start; }
+  .wrap--narrow .section-head .lead { margin-inline: 0; }
 
   /* v1 layout helpers, still used by pages web-builder has not rebuilt yet. */
   .section { padding-block: var(--space-xl); }
