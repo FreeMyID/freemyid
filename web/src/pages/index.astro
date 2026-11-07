@@ -138,6 +138,13 @@ const cardIcon = "inline-flex size-12 items-center justify-center rounded-lg bg-
   </ul>
   {/* source: build data, the number of guides generated from brokers/registry.sample.yaml */}
   <p class="mt-l">We have {guides.length} step-by-step opt-out guides, and you can use every guide without the app. <a href={url("guides/")}>Browse the guides</a></p>
+  {/* source: brokers/checklists.yaml (credit freezes, prescreen opt-out, IRS IP PIN, SSA, USPS; free except DMAchoice); /protect/ pages */}
+  <Card class="reveal mt-l max-w-[48rem] items-start p-l shadow-2">
+    <span class={cardIcon}><Icon name="shield" /></span>
+    <h3>More free ways to protect yourself</h3>
+    <p>Freeze your credit, stop pre-approved offers in the mail, and lock down your IRS and Social Security accounts. Plain steps you can print, and you don't need Free My ID for any of them.</p>
+    <p><a href={url("protect/")}>See the free steps</a></p>
+  </Card>
   {/* names = the same build data (public sample registry); decorative repeat of the guides list */}
   <Marquee id="guide-marquee" label={`Sites and services with a free guide (${guides.length})`} items={guides.map((g) => g.name)} />
 </Section>
