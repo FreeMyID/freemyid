@@ -1,0 +1,54 @@
+# DRAFT, not merged. Facebook privacy settings checklist for brokers/checklists.yaml.
+# Author: Jordan Ellis (brand-marketing). For broker-researcher (Priya Shah) to review and merge.
+# Written 2026-11-07. Same shape as brokers/checklists.yaml entries.
+#
+# SCOPE NOTE (POSITIONING idea 6): Free My ID works on people-search and data-broker sites.
+# It does not change what Meta does with your account or data. This checklist only tightens
+# who else can see your things. It does not delete anything Meta already holds.
+#
+# VERIFICATION STATUS: pages were opened on 2026-11-07 with a text fetcher (no logged-in
+# account, so menu names come from Meta's help text, not from a live screen).
+#  - VERIFIED from the page text: steps 1 (Privacy Checkup), 3 (friends list), 4 (phone/email suggestions),
+#    5 (search engines), 6 (past posts), and the "posts on your profile" step in 2.
+#  - UNVERIFIED: the "default audience for future posts" step (Meta's page gives the idea but no
+#    steps in the text we could read) and the off-Facebook activity step (Meta's pages returned
+#    "This feature is not available in your region" to our fetcher, so no steps were readable).
+#    These two are marked "[UNVERIFIED]" and must be checked by a person logged in to Facebook before
+#    publishing. Do not publish them as written.
+# Menu names change often. Re-check before every release.
+
+checklists:
+  - id: facebook_privacy
+    title: "Tighten your Facebook privacy settings"
+    why: "Free My ID removes you from people-search sites. It does not change what Facebook itself keeps or does with your account. These steps limit who else can see your posts and details. They do not delete anything Facebook already has."
+    url: https://www.facebook.com/help/443357099140264
+    cost: "Free."
+    time_needed: "About 15 minutes on a computer."
+    need_on_hand: ["Your Facebook login", "A computer (the menu names below are for a computer; the phone app can look different)"]
+    steps:
+      - "Open Facebook on a computer and click your profile picture at the top right. Choose 'Settings & privacy', then 'Privacy Checkup'. This walks you through the main choices. If you do not see it, switch to your main profile and try again."
+      - "Who can see your posts. Click your profile picture, then 'Settings & privacy', then 'Settings'. In the left column click 'Profile and tagging'. Click 'Who can see what others post on your profile?' and choose 'Friends', then 'Done'. [UNVERIFIED: the separate setting for the audience of your own future posts. Meta's page did not show its steps. A person must check it while logged in. Until then, pick 'Friends' in the audience button each time you write a post.]"
+      - "Who can see your friends list. Click your profile picture, then 'Settings & privacy', then 'Settings'. Scroll to 'Audience and visibility' and click 'How people find and contact you'. Click 'Who can see your friends list?' and choose 'Friends'. Your friends control how their own friendships show, and people may still see friends you have in common."
+      - "Phone and email lookup. On the same 'How people find and contact you' page, click 'View' next to 'People with your email address', then next to 'People with your phone number'. Choose 'Friends' or 'No one' for who may be suggested your profile from those details. Meta says searching by your email or phone will not show your profile, but a search that includes your full name still may."
+      - "Search engines. On the same page, find 'Do you want search engines outside of Facebook to link to your profile?' and turn it off. This does not fully hide you. Search engines may still show things you made Public, and anything already in search results stays until you ask that search engine (Google, Bing, Yahoo) to remove it. Facebook cannot ask for you."
+      - "Old posts. Click your profile picture, then 'Settings & privacy', then 'Settings'. In the left column click 'Posts'. Next to 'Limit who can see past posts' click 'Limit Past Posts', then click 'Limit Past Posts' again to confirm. This changes old Public and friends-of-friends posts to 'Friends'. Posts shared with a custom audience are left alone."
+      - "Off-Facebook activity. [UNVERIFIED: Meta's pages for this ('Review', 'Manage future' and 'Disconnect past' activity off Meta technologies) would not open for our fetcher, saying the feature is not available in our region. A person must check the real menu names while logged in.] Meta describes it as a way to see which other websites and apps send Facebook information about you, and to disconnect that from your account. Disconnecting does not delete the information from the other sites."
+    how_to_undo: "Every setting above can be changed back the same way you set it, except 'Limit Past Posts'. That one cannot be undone in one click. To restore an old post's audience you must edit that post yourself."
+    tips:
+      - "Do the 'Privacy Checkup' first. It shows you the most common choices in one place."
+      - "Choose 'Friends' instead of 'Public' whenever you are unsure."
+      - "Other people's posts that mention you are controlled by them, not by you."
+      - "If you ever lived in the EU, other options may exist for you. We have not written those steps yet."
+    source_urls:
+      - https://www.facebook.com/help/443357099140264
+      - https://www.facebook.com/help/115450405225661
+      - https://www.facebook.com/help/131297846947406
+      - https://www.facebook.com/help/124518907626945
+      - https://www.facebook.com/help/236898969688346
+      - https://www.facebook.com/help/246629975377810
+      - https://www.facebook.com/help/120939471321735
+      - https://www.facebook.com/help/287199741901674
+      - https://www.facebook.com/help/1224342157705160
+    date_checked: 2026-11-07
+    verification: partial
+    notes: "Read via text fetch 2026-11-07, no logged-in session. Verified from help text: Privacy Checkup (443357099140264), friends list (115450405225661, which also lists a duplicate mobile-app path), phone/email suggestions (131297846947406), search engines (124518907626945), limit past posts (236898969688346), who can see others' posts on your profile (246629975377810). Not readable: off-Facebook activity pages (287199741901674, 1224342157705160, 2207256696182627 all said 'not available in your region'); default audience for future posts (120939471321735 only gives per-post selector and refers to a separate article). Need a person with a test account to confirm those two and to confirm all menu names live. No mobile steps found for any item. Do not claim anything about Meta deleting data."
