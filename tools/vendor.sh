@@ -23,8 +23,14 @@ allowed_paths() {   # lines under "## Allowed paths" in the work order, as path 
   awk '/^## Allowed paths/{f=1;next} /^## /{f=0} f' "$1" | sed -nE 's/^[-*] *`?([^` ]+)`?.*/\1/p'
 }
 
+NO_SHELL="IMPORTANT: shell/terminal commands are NOT available to you in this engagement; do not try any
+(no ls, cat, pytest, ruff, git). Use only your file read, search and edit tools. The owner reads your diff and
+runs the tests, then sends you the results at the next check-in. Write the tests anyway."
+
 run_vendor() {   # $1 worktree, $2 prompt
-  cd "$1" && agy -p "$2" --mode accept-edits --sandbox --print-timeout 3600s
+  cd "$1" && agy -p "$NO_SHELL
+
+$2" --mode accept-edits --sandbox --print-timeout 3600s
   git -C "$1" add -A
   git -C "$1" -c user.name="Vendor Antigravity [freemyid-vendor]" commit -q -m "vendor session $(date -u +%FT%TZ)" || true
 }
