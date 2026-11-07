@@ -6,7 +6,7 @@
   <!-- Sources: docs/marketing/families-page.md (WR-11), which traces every line to docs/HELPER_GUIDE.md, docs/USER_GUIDE.md and docs/assets/fridge-card.html -->
   <p class="lead mt-s">Free My ID was built so people who aren't comfortable with computers can use it. If you're setting it up for someone you love, this page is for you. Allow about half an hour the first time.</p>
   <div class="btn-row mt-m">
-    <a class="btn btn--lg" href="{{ url('download/') }}">{{ icon('download') }}Download Free My ID (free, for Windows)</a>
+    {% include "partials/cta-download.html" %}
     <a class="btn btn--lg btn--secondary" href="{{ asset('assets/free-my-id-fridge-card.pdf') }}">Print the fridge card (PDF)</a>
   </div>
 
@@ -99,7 +99,7 @@
   <p>Yes, from one computer. Each adult gives their own permission.</p>
 
   <div class="btn-row mt-l">
-    <a class="btn btn--lg" href="{{ url('download/') }}">{{ icon('download') }}Download Free My ID (free, for Windows)</a>
+    {% include "partials/cta-download.html" %}
     <a class="btn btn--lg btn--secondary" href="{{ url('guides/') }}">Use the free guides instead</a>
   </div>
 </div>
