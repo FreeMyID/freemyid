@@ -190,6 +190,17 @@ def _open_request(store, profile_id: str, broker_id: str, kind: RequestKind,
     return None
 
 
+HOLD_ACTION = "email_held_first_approval"   # SEC-27 Event marker (detail: request_id)
+RELEASE_ACTION = "held_emails_released"      # SEC-27 Event marker (detail: counts)
+
+
+def email_sent_before(store, profile_id: str) -> bool:
+    """True once a real (non-dry) EMAIL request for this profile has gone out. A web-form
+    submission does not count: the person must have seen one of Free My ID's emails."""
+    return any(r.status == RequestStatus.SENT and r.method == Method.EMAIL and not r.dry_run
+               for r in store.list_requests(profile_id))
+
+
 def needs_approval(profile: Profile, kind: RequestKind, store=None) -> bool:
     """Legal demands and every non-AUTO email wait for approval. SEC-27: in AUTO mode the
     FIRST email for a profile waits too, so the person sees one before any goes out."""
@@ -197,7 +208,33 @@ def needs_approval(profile: Profile, kind: RequestKind, store=None) -> bool:
         return True
     if store is None:
         return True       # can't prove an earlier send: be safe
-    return not any(r.status == RequestStatus.SENT for r in store.list_requests(profile.id))
+    return not email_sent_before(store, profile.id)
+
+
+def held_by_first_approval(profile: Profile, req: Request, store) -> bool:
+    """A queued email that is waiting only because the profile's first email has not been
+    approved yet (AUTO mode). Approving any email of the profile releases it."""
+    return (profile.email_mode == EmailMode.AUTO and not req.dry_run
+            and req.method == Method.EMAIL
+            and req.status == RequestStatus.QUEUED_FOR_APPROVAL
+            and req.kind != RequestKind.LEGAL_DEMAND
+            and not email_sent_before(store, profile.id))
+
+
+def _auto_releasable(profile: Profile, req: Request) -> bool:
+    return (profile.email_mode == EmailMode.AUTO and not req.dry_run
+            and req.method == Method.EMAIL
+            and req.status == RequestStatus.QUEUED_FOR_APPROVAL
+            and req.kind != RequestKind.LEGAL_DEMAND)
+
+
+def first_email_pending(store, profile: Profile) -> Request | None:
+    """The oldest email held for the profile's first approval (dashboard: "approve this one
+    and the rest go out by themselves"), or None."""
+    for r in store.list_requests(profile.id, status=RequestStatus.QUEUED_FOR_APPROVAL):
+        if held_by_first_approval(profile, r, store):
+            return r
+    return None
 
 
 def queue_email(store, profile: Profile, broker: Broker, listings: list[Listing], *,
@@ -214,6 +251,11 @@ def queue_email(store, profile: Profile, broker: Broker, listings: list[Listing]
     now = now or utcnow()
     existing = _open_request(store, profile.id, broker.id, kind, dry_run)
     if existing:
+        # SEC-27: an AUTO email that was held for the first approval goes out once the
+        # profile has an approved send (approve_and_send also releases them right away).
+        if (mailer is not None and _auto_releasable(profile, existing)
+                and not needs_approval(profile, kind, store)):
+            return send_request(store, existing, profile, mailer, now=now)
         return existing
     subject, body = compose(profile, broker, listings, state_law, kind, original=original)
     attempt = 1 + sum(1 for r in store.list_requests(profile.id, broker.id)
@@ -230,7 +272,12 @@ def queue_email(store, profile: Profile, broker: Broker, listings: list[Listing]
     store.log(Event(profile_id=profile.id, broker_id=broker.id, actor=Actor.ENGINE,
                     action="email_drafted" if dry_run else "email_queued",
                     detail={"request_id": req.id, "kind": kind.value, "dry_run": dry_run}))
-    if dry_run or mailer is None or needs_approval(profile, kind, store):
+    if dry_run or mailer is None:
+        return req
+    if needs_approval(profile, kind, store):
+        if _auto_releasable(profile, req):
+            store.log(Event(profile_id=profile.id, broker_id=broker.id, actor=Actor.ENGINE,
+                            action=HOLD_ACTION, detail={"request_id": req.id}))
         return req
     return send_request(store, req, profile, mailer, now=now)
 
@@ -325,3 +372,39 @@ def approve_and_send(store, request_id: str, *, mailer=None, registry: Registry 
                     action="email_approved", detail={"request_id": req.id}))
     sent = send_request(store, req, profile, mailer, now=now)
     apply_sent(store, sent, broker, now)
+    if profile.email_mode == EmailMode.AUTO:
+        release_held(store, profile, mailer=mailer, registry=registry, now=now)
+
+
+def release_held(store, profile: Profile, *, mailer, registry: Registry | None = None,
+                 now: datetime | None = None) -> dict[str, int]:
+    """SEC-27: after the profile's first approved send, send the AUTO emails that were held
+    for it. Legal demands, dry-run and non-AUTO requests are never touched. One failure
+    never stops the rest (the failed request is marked FAILED by send_request)."""
+    counts = {"sent": 0, "failed": 0}
+    if profile.email_mode != EmailMode.AUTO or not email_sent_before(store, profile.id):
+        return counts
+    from ..consent import consent_ok
+    if not consent_ok(profile, store)[0]:
+        return counts
+    now = now or utcnow()
+    for r in store.list_requests(profile.id, status=RequestStatus.QUEUED_FOR_APPROVAL):
+        if not _auto_releasable(profile, r):
+            continue
+        try:
+            sent = send_request(store, r, profile, mailer, now=now)
+        except OutboxError:
+            counts["failed"] += 1
+            continue
+        broker: Broker | None = None
+        if registry is not None:
+            try:
+                broker = registry.get(r.broker_id)
+            except KeyError:
+                broker = None
+        apply_sent(store, sent, broker, now)
+        counts["sent"] += 1
+    if counts["sent"] or counts["failed"]:
+        store.log(Event(profile_id=profile.id, actor=Actor.ENGINE, action=RELEASE_ACTION,
+                        detail=dict(counts)))
+    return counts

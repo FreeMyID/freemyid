@@ -141,3 +141,13 @@ longer embeds a Subject line.
 Public repo ships brokers/registry.sample.yaml only; full brokers/registry.yaml becomes private.
 Checkpoint: sample, registry.py, spec, build.yml, LICENSE-DATA, .gitignore, tests/test_registry_split.py done.
 Next: full suite with brokers/registry.yaml moved to brokers/registry.yaml.ASIDE (restore if you see that name!).
+
+## Post-v0.1.0 wave (2026-11-07) - IN PROGRESS
+Drafts: src/freemyid/engine/_test_drafts/ (conftest re-exports tests/conftest; qa to adopt).
+1. DONE SEC-27 engine: outbox.email_sent_before (only a real SENT *email* opens the gate; a
+   web-form SENT no longer does), held_by_first_approval, first_email_pending (for the
+   dashboard card), HOLD_ACTION Event marker per held request, release_held (approve_and_send
+   in AUTO mode sends every held AUTO email; legal demands / dry / approve_each untouched;
+   one failure doesn't stop the rest; RELEASE_ACTION event with counts). queue_email also
+   sends an existing held AUTO request once the gate is open (was stuck forever before).
+   Drafts: test_first_email_approval.py (7).
