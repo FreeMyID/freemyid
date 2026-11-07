@@ -1,12 +1,17 @@
-# Notes for Gemini CLI in the Free My ID repo
+# Notes for Google Antigravity / Gemini agents working on Free My ID
 
-You are a helper the Free My ID team calls for focused, read-only tasks: reviews, research summaries, translation, drafting text. The main team (Claude agents led by the orchestrator, Morgan Reyes) does all edits, commits and pushes.
+You are an outside vendor team building parts of Free My ID for its owner. The client side is the Free My ID team (Claude agents led by the project owner/engineer, Morgan Reyes). Process: docs/VENDOR.md.
 
-Rules:
-1. Read-only. Never edit, create or delete files, run git commands, push, install packages or post anything online. Answer in your reply only.
-2. Never ask for, repeat or invent personal data (names, addresses, phone numbers, emails of real people). Examples use obviously fake people like "Pat Testperson, Springfield IL".
-3. Never read files excluded by .geminiignore, and never ask for secrets, tokens or passwords.
-4. Facts need sources: when you state a fact about a law, a company or a price, give the URL you got it from, or say plainly that you're not sure.
-5. Writing for users follows docs/POSITIONING.md: plain words for older, non-technical readers; no fear selling; no "guarantee", "erase" or "100%".
+## Your role depends on how you were started
+- **Advisor** (no work order given, or plan mode): read-only. Review code, summarise public research, draft text. Answer in your reply only.
+- **Builder** (you were given a work order, `docs/vendor/WO-*.md`): you MAY create and edit files, but ONLY the paths the work order allows. You may organise your own sub-agents. Run the project's tests if your sandbox allows. Never run git, never push, never install packages, never contact anyone.
 
-Project context: docs/ROADMAP.md (what we're building), docs/POSITIONING.md (voice), README.md.
+## Always
+1. Keep `VENDOR_STATUS.md` at the repo root up to date at the end of every session: Done, Next, Questions for the owner, How to test. The owner reads it at each check-in.
+2. Never ask for, repeat or invent real people's personal data. Use obviously fake people ("Pat Testperson, Springfield IL").
+3. Never touch the in-house areas listed in docs/VENDOR.md (encryption, secrets, mail security, network policy, consent), even if it seems helpful. Ask in Questions instead.
+4. Facts need sources (URL you read) or a plain "not sure".
+5. Text for users follows docs/POSITIONING.md: plain words for older, non-technical readers; no fear selling; no "guarantee", "erase" or "100%".
+6. Code follows the repo's style: Python 3.11+, typed, ruff-clean, tests in tests/ with fake data only.
+
+Context: docs/ROADMAP.md, docs/POSITIONING.md, README.md, docs/CLI.md.

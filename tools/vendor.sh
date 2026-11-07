@@ -1,49 +1,79 @@
 #!/usr/bin/env bash
-# Google Antigravity CLI (`agy`) as an outside vendor. Owner-approved 2026-11-07.
-# Gemini CLI no longer works for individual accounts (Google moved it to Antigravity).
+# Google Antigravity (`agy`) as an outside vendor team. Process: docs/VENDOR.md.
 #
-#   tools/vendor.sh ask   "question"           read-only answer (plan mode), printed to stdout
-#   tools/vendor.sh build <task-name> "spec"   vendor writes code on branch vendor/<task-name>
+#   tools/vendor.sh ask "question"                 read-only advisor answer
+#   tools/vendor.sh start   WO-NNN                 vendor starts the work order (builder mode)
+#   tools/vendor.sh checkin WO-NNN "owner notes"   owner check-in; vendor continues
+#   tools/vendor.sh status  WO-NNN                 VENDOR_STATUS.md + diff + scope check
+#   tools/vendor.sh close   WO-NNN                 remove the worktree (branch kept)
 #
-# Safety:
-#   * The vendor ONLY ever sees a fresh git worktree of HEAD. Gitignored private files
-#     (brokers/registry.yaml, docs/research/, keys, recovery codes...) are never in it.
-#   * --sandbox restricts its terminal. It never pushes: there is no credential in the worktree
-#     remote config it can use, and our review merges, not the vendor.
-#   * Its output is UNTRUSTED vendor work: the owning agent + qa-security review the diff
-#     (tools/vendor.sh build prints `git diff main...vendor/<task>`) before anything merges.
+# The vendor only ever sees a fresh git worktree (gitignored private files never exist there),
+# runs with --sandbox, never gets git or push, and its work is reviewed like an outside PR.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SCRATCH="${VENDOR_DIR:-${TMPDIR:-/tmp}/freemyid-vendor}"
-command -v agy >/dev/null || { echo "agy not installed (curl -fsSL https://antigravity.google/cli/install.sh | bash)" >&2; exit 4; }
-mode="${1:-}"; shift || true
 mkdir -p "$SCRATCH"
-case "$mode" in
+need_agy() { command -v agy >/dev/null || { echo "agy not installed" >&2; exit 4; }; }
+wo_file() { local f="$ROOT/docs/vendor/$1.md"; [ -f "$f" ] || { echo "no work order $f" >&2; exit 2; }; echo "$f"; }
+wo_check() { [[ "$1" =~ ^WO-[0-9]{3}$ ]] || { echo "work order id must look like WO-001" >&2; exit 2; }; }
+wt_of() { echo "$SCRATCH/$(echo "$1" | tr 'A-Z' 'a-z')"; }
+branch_of() { echo "vendor/$(echo "$1" | tr 'A-Z' 'a-z')"; }
+
+allowed_paths() {   # lines under "## Allowed paths" in the work order, as path prefixes
+  awk '/^## Allowed paths/{f=1;next} /^## /{f=0} f' "$1" | sed -nE 's/^[-*] *`?([^` ]+)`?.*/\1/p'
+}
+
+run_vendor() {   # $1 worktree, $2 prompt
+  cd "$1" && agy -p "$2" --mode accept-edits --sandbox --print-timeout 3600s
+  git -C "$1" add -A
+  git -C "$1" -c user.name="Vendor Antigravity [freemyid-vendor]" commit -q -m "vendor session $(date -u +%FT%TZ)" || true
+}
+
+scope_report() {   # $1 WO id
+  local wo="$1" wt branch file bad=0
+  wt="$(wt_of "$wo")"; branch="$(branch_of "$wo")"; file="$(wo_file "$wo")"
+  mapfile -t allow < <(allowed_paths "$file")
+  echo "== $wo on $branch"; [ -f "$wt/VENDOR_STATUS.md" ] && cat "$wt/VENDOR_STATUS.md"
+  echo "== changed files"; git -C "$ROOT" diff --stat "main...$branch" | tail -20
+  while read -r f; do
+    [ "$f" = "VENDOR_STATUS.md" ] && continue
+    ok=0; for a in "${allow[@]}"; do [[ "$f" == "$a"* ]] && ok=1; done
+    [ $ok = 1 ] || { echo "OUT OF SCOPE: $f"; bad=1; }
+  done < <(git -C "$ROOT" diff --name-only "main...$branch")
+  [ $bad = 0 ] && echo "scope check: OK" || { echo "scope check: FAILED (reject or ask the vendor to revert these)"; return 1; }
+}
+
+cmd="${1:-}"; shift || true
+case "$cmd" in
   ask)
-    [ $# -ge 1 ] || { echo 'usage: tools/vendor.sh ask "question"' >&2; exit 2; }
-    wt="$(mktemp -d "$SCRATCH/ask.XXXXXX")"
+    need_agy; [ $# -ge 1 ] || { echo 'usage: tools/vendor.sh ask "question"' >&2; exit 2; }
+    wt="$(mktemp -d "$SCRATCH/ask.XXXXXX")"; rmdir "$wt"
     git -C "$ROOT" worktree add -q --detach "$wt" HEAD
     trap 'git -C "$ROOT" worktree remove --force "$wt" >/dev/null 2>&1 || true' EXIT
-    cd "$wt" && agy -p "$(cat "$ROOT/GEMINI.md")
+    cd "$wt" && agy -p "You are in ADVISOR mode (read-only). $1" --mode plan --sandbox --print-timeout 900s ;;
+  start)
+    need_agy; wo_check "${1:-}"; wo="$1"; file="$(wo_file "$wo")"; wt="$(wt_of "$wo")"
+    [ -e "$wt" ] && { echo "$wt exists: use checkin" >&2; exit 2; }
+    git -C "$ROOT" worktree add -q -b "$(branch_of "$wo")" "$wt" main
+    run_vendor "$wt" "You are in BUILDER mode for work order $wo. Read GEMINI.md and docs/VENDOR.md first.
+Change ONLY the allowed paths. End by updating VENDOR_STATUS.md (Done / Next / Questions for the owner / How to test).
 
-$1" --mode plan --sandbox --print-timeout 600s
-    ;;
-  build)
-    [ $# -ge 2 ] || { echo 'usage: tools/vendor.sh build <task-name> "spec"' >&2; exit 2; }
-    name="$1"; spec="$2"
-    [[ "$name" =~ ^[a-z0-9-]{3,40}$ ]] || { echo "task name: lowercase letters, digits, dashes" >&2; exit 2; }
-    branch="vendor/$name"; wt="$SCRATCH/$name"
-    git -C "$ROOT" worktree add -q -b "$branch" "$wt" HEAD
-    cd "$wt"
-    agy -p "You are an outside vendor writing code for Free My ID. Follow GEMINI.md, except that for
-this task you MAY edit and create files inside this folder. Do not run git, do not install
-packages, do not access the network except to read documentation. Finish with a short summary
-of every file you changed and how to test it.
+$(cat "$file")"
+    scope_report "$wo" || true ;;
+  checkin)
+    need_agy; wo_check "${1:-}"; wo="$1"; [ $# -ge 2 ] || { echo 'usage: checkin WO-NNN "notes"' >&2; exit 2; }
+    file="$(wo_file "$wo")"; wt="$(wt_of "$wo")"; [ -d "$wt" ] || { echo "not started" >&2; exit 2; }
+    run_vendor "$wt" "BUILDER mode, work order $wo, owner check-in. Re-read VENDOR_STATUS.md and the work order below,
+then act on the owner's notes. Change ONLY the allowed paths. Update VENDOR_STATUS.md at the end.
 
-TASK: $spec" --mode accept-edits --sandbox --print-timeout 1800s
-    git add -A && git -c user.name="Vendor (Antigravity) [freemyid-vendor]" commit -q -m "vendor: $name" || true
-    echo "--- vendor diff for review: git -C $ROOT diff main...$branch"
-    git -C "$ROOT" diff --stat "main...$branch"
-    ;;
-  *) echo 'usage: tools/vendor.sh ask "q" | build <task-name> "spec"' >&2; exit 2 ;;
+OWNER NOTES:
+$2
+
+WORK ORDER:
+$(cat "$file")"
+    scope_report "$wo" || true ;;
+  status) wo_check "${1:-}"; scope_report "$1" ;;
+  close)
+    wo_check "${1:-}"; git -C "$ROOT" worktree remove --force "$(wt_of "$1")" && echo "closed $1 (branch $(branch_of "$1") kept)" ;;
+  *) sed -n '2,9p' "$0" >&2; exit 2 ;;
 esac
