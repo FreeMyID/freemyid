@@ -203,3 +203,22 @@ Drafts: src/freemyid/engine/_test_drafts/ (conftest re-exports tests/conftest; q
   wait_for_confirmation if missing).
 - CR-R1 broker-researcher: registry steps could say "your email" instead of "removal email";
   the Assisted card now rewrites it when no mailbox exists, so this is cosmetic only.
+
+## 2026-11-07 TLS pinning for Proton Bridge (PROGRESS ticket)
+- models.MailboxConfig.tls_cert_sha256 (orchestrator-approved single field): lowercase hex
+  SHA-256 of the DER leaf cert; colons/spaces/uppercase normalised; else ValidationError.
+  Schemas unchanged (gen_schema covers Registry/StateLaws only).
+- engine/mail_tls.py: client_context(host, pin) (no pin -> ssl.create_default_context(),
+  unchanged; pin + non-loopback -> TlsPinError; loopback = exactly 127.0.0.1, ::1,
+  localhost), check_peer(sock, pin) (hmac.compare_digest on sha256 of the DER peer cert),
+  fetch_loopback_fingerprint / trust_on_first_use(mb) -> TrustResult(fingerprint, display,
+  plain-language message). TOFU never sends credentials.
+- engine/mail.py: SMTP (STARTTLS + SSL) and IMAP (STARTTLS + SSL) check the pin right after
+  the handshake, before login; mismatch -> MailError("... refused: ...").
+- tests/test_mail_tls_pin.py (17): fake self-signed IMAP/SMTP server on 127.0.0.1.
+- Open CR-W2 wizard-packager: on the proton_bridge mailbox screen, call
+  trust_on_first_use(mb), show .message with Yes/No, store .fingerprint in
+  mb.tls_cert_sha256 on Yes; on MailError containing "certificate changed" offer re-trust.
+  Also wizard/draft.py:395 "Test connection" uses ssl.create_default_context() directly and
+  will still fail for Bridge; it should use mail_tls.client_context + check_peer.
+- Open CR-C1 orchestrator (optional): `freemyid mailbox trust <profile>` CLI wrapper.
