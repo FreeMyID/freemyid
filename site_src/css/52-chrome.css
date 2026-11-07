@@ -3,7 +3,7 @@
      so at 400% zoom it never covers the page. Works with either markup:
        nav.site-nav (wide)  +  details.menu > nav.site-nav (narrow)       [siblings]
        nav.site-nav > ul    +  details.menu (inside the nav)              [nested]
-     and the v1 .nav / .nav--wide names. ---------- */
+     ---------- */
   .site-header { position: relative; z-index: 20; background: var(--color-bg); border-block-end: 1px solid var(--color-line); }
   @media (min-height: 36em) {
     .site-header { position: sticky; inset-block-start: 0; }
@@ -19,16 +19,16 @@
     letter-spacing: -0.015em; white-space: nowrap;
   }
   .brand svg { inline-size: 1.75em; block-size: 1.75em; flex: none; }
-  .site-nav, .nav { display: flex; align-items: center; }
-  .site-nav ul, .nav ul { display: flex; align-items: center; gap: var(--space-3xs) 0.15rem; list-style: none; padding: 0; }
-  .site-nav li, .nav li { margin: 0; }
-  :is(.site-nav, .nav) a:not(.btn) {
+  .site-nav { display: flex; align-items: center; }
+  .site-nav ul { display: flex; align-items: center; gap: var(--space-3xs) 0.15rem; list-style: none; padding: 0; }
+  .site-nav li { margin: 0; }
+  .site-nav a:not(.btn) {
     display: inline-flex; align-items: center; min-block-size: var(--tap);
     padding-inline: var(--space-xs); border-radius: var(--radius-md);
     color: var(--color-text); text-decoration: none; font-size: 0.9rem; font-weight: 600;
   }
-  :is(.site-nav, .nav) a:not(.btn):hover { color: var(--color-link); text-decoration: underline; text-underline-offset: 0.3em; }
-  :is(.site-nav, .nav) a[aria-current="page"]:not(.btn) {
+  .site-nav a:not(.btn):hover { color: var(--color-link); text-decoration: underline; text-underline-offset: 0.3em; }
+  .site-nav a[aria-current="page"]:not(.btn) {
     color: var(--color-heading); text-decoration: underline; text-decoration-thickness: 3px;
     text-decoration-color: var(--color-brand); text-underline-offset: 0.45em;
   }
@@ -58,7 +58,7 @@
   .menu > :not(summary) > ul { padding: 0; }
 
   @media (max-width: 61.99em) {
-    .nav--wide, .site-nav:not(.menu .site-nav) > :not(.menu, .site-header__cta) { display: none; }
+    .site-nav:not(.menu .site-nav) > :not(.menu, .site-header__cta) { display: none; }
   }
   /* Phones: icon-only menu toggle (its label stays for screen readers) and a compact Download,
      so brand + menu + Download fit in one row down to 320px. */

@@ -80,5 +80,5 @@
 @layer components {
   /* 320px / 400% zoom: let long words (file names, email addresses) break. */
   .btn, .steps > li, .download-card, .callout > div, .card, .trustbar__item { min-inline-size: 0; overflow-wrap: anywhere; }
-  .two-col > *, .grid-auto > *, .hero > * { min-inline-size: 0; }
+  .two-col > *, .hero > * { min-inline-size: 0; }
 }

@@ -3,14 +3,14 @@
   html { font-size: 12pt; }
   :root { color-scheme: light; }
   body { background: #fff !important; color: #000 !important; display: block; }
-  .flagbar, .site-header nav, .menu, .site-header__cta, .skip-link, .hero__stars, .btn-row .btn--secondary,
-  .hero__actions .btn--secondary, .no-print, .star-rule { display: none !important; }
+  .flagbar, .site-header nav, .menu, .site-header__cta, .skip-link, .btn-row .btn--secondary,
+  .hero__actions .btn--secondary, .no-print { display: none !important; }
   .site-header { position: static !important; }
   .site-header, .hero, .band, .section--alt, .band--brand, .cta-final {
     background: none !important; color: #000 !important; border: 0 !important; padding-block: 0.5rem !important;
   }
   .site-footer { background: none !important; color: #000 !important; border-block-start: 1px solid #000; padding-block: 0.5rem; }
-  .footer-grid nav, .footer-cols { display: none; }
+  .footer-cols { display: none; }
   a { color: #000 !important; }
   main a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 0.85em; overflow-wrap: anywhere; }
   .btn { background: none !important; color: #000 !important; border: 1px solid #000 !important; box-shadow: none !important; }

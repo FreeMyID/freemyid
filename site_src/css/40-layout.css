@@ -36,11 +36,6 @@
   .stack > * + * { margin-block-start: var(--space-s); }
   .stack-l > * + * { margin-block-start: var(--space-l); }
   .cluster { display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-s); align-items: center; }
-  .grid-auto {
-    display: grid;
-    gap: var(--space-m);
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
-  }
   .two-col { display: grid; gap: var(--space-xl); align-items: center; }
   @media (min-width: 60em) {
     .two-col { grid-template-columns: 1.1fr 0.9fr; }

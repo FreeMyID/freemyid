@@ -3,10 +3,6 @@
 @layer components {
   h2.section-head { max-inline-size: none; margin-inline: 0; margin-block-end: var(--space-s); text-align: start; }
   .btn--pending { background: var(--color-surface-strong); color: var(--color-heading); border-color: var(--color-heading); box-shadow: none; cursor: default; }
-  .btn-note { font-size: var(--step--1); color: var(--color-muted); }
-
-  /* Star rule and hero stars: D6 drops star decoration; hidden, markup still present on old pages. */
-  .star-rule, .hero__stars { display: none; }
 
   /* Card grid (v1 wrapper around a ul of .card) */
   .card-grid { container-type: inline-size; }
@@ -17,25 +13,7 @@
     inline-size: 3rem; block-size: 3rem; padding: 0.65rem; margin-block-end: var(--space-xs);
     color: var(--color-brand); background: var(--color-brand-soft); border-radius: var(--radius-md);
   }
-  .card__tag { display: inline-block; font-size: var(--step--1); font-weight: 700; color: var(--color-brand); margin-block-end: var(--space-3xs); }
-  .card--link { position: relative; }
-  .card--link a::after { content: ""; position: absolute; inset: 0; border-radius: var(--radius-lg); }
-  .card--link:has(a:hover) { border-color: var(--color-line-strong); box-shadow: var(--shadow-2); }
-  .card--link:has(a:focus-visible) { outline: 3px solid var(--color-focus); outline-offset: 2px; }
-  .card--link a:focus-visible { outline: none; box-shadow: none; }
 
-  /* Trust panel partial (partials/trust.html) */
-  .trust { container-type: inline-size; }
-  .trust ul { display: grid; gap: var(--space-xs); grid-template-columns: 1fr; }
-  @container (min-width: 34rem) { .trust ul { grid-template-columns: repeat(2, 1fr); } }
-  @container (min-width: 54rem) { .trust ul { grid-template-columns: repeat(3, 1fr); } }
-  .trust li {
-    display: flex; gap: var(--space-xs); align-items: flex-start; margin: 0;
-    background: var(--color-card); border: 1px solid var(--color-line); border-radius: var(--radius-md);
-    padding: var(--space-xs) var(--space-s); font-weight: 600;
-  }
-  .trust li svg { inline-size: 1.4em; block-size: 1.4em; flex: none; color: var(--color-ok); margin-block-start: 0.1em; }
-  .trust--compact li { background: transparent; border: 0; padding: 0; font-weight: 400; }
 
   /* Numbered steps without .step children (counter numbers) */
   .steps { counter-reset: step; display: grid; gap: var(--space-m); list-style: none; padding: 0; }
@@ -61,8 +39,4 @@
   .callout--fact > svg { color: var(--color-ok); }
   .callout h2 { font-size: var(--step-1); }
 
-  /* v1 header nav (.nav, .nav--wide) and footer grid */
-  .footer-grid { display: grid; gap: var(--space-l); grid-template-columns: 1fr; }
-  @media (min-width: 48em) { .footer-grid { grid-template-columns: 1.3fr 1fr 1fr; } }
-  .footer-trust { margin-block-start: var(--space-xs); }
 }
