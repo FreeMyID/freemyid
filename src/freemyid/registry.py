@@ -245,7 +245,7 @@ def install_registry_bytes(body: bytes) -> Registry:
     reg = validate_text(text)
     dest = paths.registry_cache_path()
     tmp = dest.with_suffix(".tmp")
-    tmp.write_text(text, encoding="utf-8")
+    tmp.write_bytes(body)   # exact bytes: text mode would turn \r\n into \r\r\n on Windows
     tmp.replace(dest)
     return reg
 
