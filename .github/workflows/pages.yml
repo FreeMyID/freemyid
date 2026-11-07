@@ -83,3 +83,20 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
+      # IndexNow: tell Bing/Yandex/Seznam/Naver the site changed. Sends only public URLs from the live
+      # sitemap. Key file is site_src/static/<key>.txt (served at the site root). Never fails the deploy.
+      - name: IndexNow ping
+        continue-on-error: true
+        env:
+          INDEXNOW_KEY: 2b3da124d08af987b483dfb5ca217d9f
+          SITE: https://freemyid.org
+        run: |
+          sleep 60
+          curl -fsS --max-time 20 "$SITE/$INDEXNOW_KEY.txt" | grep -qx "$INDEXNOW_KEY" || { echo "key file not live yet"; exit 0; }
+          urls=$(curl -fsS --max-time 20 "$SITE/sitemap.xml" | grep -o '<loc>[^<]*</loc>' | sed 's/<[^>]*>//g' | grep "^$SITE/" | head -1000)
+          [ -n "$urls" ] || { echo "no sitemap urls"; exit 0; }
+          body=$(printf '%s\n' "$urls" | jq -R . | jq -sc --arg k "$INDEXNOW_KEY" --arg h "${SITE#https://}" \
+            '{host:$h,key:$k,keyLocation:("https://"+$h+"/"+$k+".txt"),urlList:.}')
+          code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 -X POST https://api.indexnow.org/indexnow \
+            -H 'Content-Type: application/json; charset=utf-8' --data "$body")
+          echo "IndexNow: $(printf '%s\n' "$urls" | wc -l) urls, HTTP $code"
