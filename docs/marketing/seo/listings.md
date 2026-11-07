@@ -65,3 +65,11 @@ Never write: removes you from the internet, guaranteed, 100%, identity-theft pro
 | 20 | awesome-humane-tech (humanetech-community) | https://github.com/humanetech-community/awesome-humane-tech | GitHub PR; privacy section; rules: verify | Short | queued: needs Free My ID GitHub account |
 
 Not targeted on purpose: paid directories, "submit to 500 sites" tools (PAD blasters), link exchanges, and any site that wants a reciprocal link.
+
+
+## Wave 3 notes (2026-11-07)
+- Row 6 pluja/awesome-privacy: Contributing.md requires 6+ months of work, real user base; skip until about 2027-05.
+- Row 20 awesome-humane-tech: repo archived (GitHub API); skip.
+- Row 19 Awesome-Windows/Awesome: GitHub API returned 404; re-find the current repo before a PR.
+- Row 4 BADBOOL: README accepts PR or email; its stated bar is that users can verify a broker holds their data, so a tool line in 'Additional Options' is at the maintainer's discretion; PR once github_token exists.
+- All PRs blocked: no github_token in keyring.

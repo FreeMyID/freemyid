@@ -6,3 +6,4 @@ Every outward-facing action (submission, post, PR, issue, contact) goes here, wi
 |---|---|---|---|---|---|---|
 | 2026-11-07 | n/a | none | Wave 1: every target needs an account, a GitHub PR or email (see listings.md queue) | n/a | n/a | 0 |
 | 2026-11-07 | n/a | none | Wave 2: method research (posting-methods.md); no bluesky_token or mastodon_token in keyring, so no post | n/a | n/a | 0 |
+| 2026-11-07 | n/a | none | Wave 3: keyring service freemyid-social has entries github, bluesky, mastodon, google, reddit, x, alternativeto, producthunt, facebook, _index but NO github_token, bluesky_token or mastodon_token (checked with both system python and .venv). No PRs, no posts. The bare `github`/`bluesky` entries are account logins, not API tokens, so not used. | n/a | blocked: tokens not stored | 0 |

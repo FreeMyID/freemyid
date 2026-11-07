@@ -40,5 +40,5 @@ Keyring tip: for every "store" step, use the same service name, `freemyid-social
 - No hashtag spam, no follow/unfollow, no replies to strangers' posts, no automation beyond the single post.
 
 ## Draft first posts (for use once tokens exist)
-Mastodon/Bluesky (under 300 chars, one link):
+Account: Mastodon freemyid_usa@mastodon.social. Mastodon/Bluesky (under 300 chars, one link):
 `Free My ID is a free, open-source Windows app that asks people-search and data-broker sites to delete your listing, and keeps checking because sites re-list people. It runs on your computer. No account. Early release (v0.1.1): https://freemyid.org`

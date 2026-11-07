@@ -29,3 +29,8 @@ Blocked on: the owner creating or choosing the Google/Microsoft account (agents 
 - Decisions: Reddit (script app needs the password + API approval) and X (pay-per-use only) = manual; AlternativeTo/Product Hunt/Facebook = manual; Mastodon (write:statuses) and Bluesky (app password) ready once owner stores mastodon_token/mastodon_server/bluesky_token; GitHub PRs need github_token (Contents + Pull requests write).
 - For devops-engineer: Search Console TXT value arrives from the owner (step 6 in posting-methods.md); add at apex.
 - Next: when tokens appear, one first post each on Mastodon and Bluesky (draft in posting-methods.md), then GitHub PRs for listings rows 4, 5, 7.
+
+## Wave 3 (2026-11-07), Stage B GO
+BLOCKED on keys: keyring service `freemyid-social` has NO `github_token`, `bluesky_token` or `mastodon_token` (checked twice). Only account-login entries exist, which I did not use. So 0 PRs, 0 posts, 0 contacts. Owner: run `.venv/bin/python tools/store_social_keys.py` (maybe it stored under another user or keyring backend).
+Done: bluesky-queue.md (20 posts, poster.py format, Q-001 = intro, all queued); reddit-queue.md and discord-queue.md (rules UNVERIFIED, Reddit blocks our fetcher); backlinks-plan.md; 2 article drafts + WR-61..63; semrush-lookups.md (10). Mastodon handle: freemyid_usa@mastodon.social (posting-methods.md).
+Next: once tokens exist, post Q-001, PR BADBOOL (row 4); skip pluja until ~2027-05, Lissy93 until 2027-03-07.
