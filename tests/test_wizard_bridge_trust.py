@@ -1,23 +1,19 @@
 """Draft tests (CR-W2): the wizard's Test connection pins the local mail app's certificate
 instead of switching verification off, and the trust prompt flow. Fake data only.
 
-Reuses the fake self-signed Bridge from tests/test_mail_tls_pin.py. Adopting into tests/:
-change the import below to `from .test_mail_tls_pin import ...` (or drop the sys.path line).
+Reuses the fake self-signed Bridge from tests/test_mail_tls_pin.py.
 """
 from __future__ import annotations
-
-import sys
-from pathlib import Path
 
 import keyring
 import pytest
 from fastapi.testclient import TestClient
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
 from freemyid.storage import Store
 from freemyid.wizard import draft as dr
 from freemyid.wizard.server import _csrf_for, create_app
-from tests.test_mail_tls_pin import PASSWORD, WRONG_PIN, FakeServer, _self_signed
+
+from .test_mail_tls_pin import PASSWORD, WRONG_PIN, FakeServer, _self_signed
 
 TOKEN = "tok-test"
 
@@ -122,3 +118,68 @@ def test_trust_yes_without_pending_is_refused(web):
     c.get("/wizard/consent?new=1")
     r = c.post("/wizard/trust-certificate", data={"answer": "yes", **f}).json()
     assert not r["ok"]
+
+
+# --- SEC-53: the "other" provider must not allow plaintext IMAP -------------------------
+
+
+def _other(**kw):
+    f = {"provider": "other", "address": "removal@example.invalid", "password": PASSWORD,
+         "imap_host": "mail.example.invalid", "smtp_host": "mail.example.invalid",
+         "imap_port": "143", "smtp_port": "465"}
+    f.update(kw)
+    return f
+
+
+def test_both_off_is_refused_with_plain_message():
+    d = dr.Draft()
+    errs = dr._apply_mailbox(d, _other())
+    assert errs == [dr.UNENCRYPTED_MSG] and not d.mailbox
+    assert "unprotected" in errs[0] and "SSL or STARTTLS" in errs[0]
+    assert "Traceback" not in errs[0] and "ValueError" not in errs[0]
+
+
+@pytest.mark.parametrize("flag", ["imap_ssl", "imap_starttls"])
+def test_either_protection_is_accepted(flag):
+    d = dr.Draft()
+    assert dr._apply_mailbox(d, _other(**{flag: "1"})) == []
+    assert d.mailbox and d.mailbox[flag] is True
+
+
+def test_check_mailbox_refuses_both_off_without_connecting():
+    mb = {"provider": "other", "address": "a@example.invalid", "username": "a",
+          "imap_host": "mail.example.invalid", "imap_port": 143, "imap_ssl": False,
+          "imap_starttls": False, "smtp_host": "mail.example.invalid", "smtp_port": 465,
+          "smtp_starttls": False}
+    ok, msg, status = dr.check_mailbox(mb, PASSWORD)
+    assert (ok, status) == (False, "fail") and msg == dr.UNENCRYPTED_MSG
+
+
+def test_web_test_connection_both_off_is_a_kind_message(web):
+    c, f = web
+    c.get("/wizard/consent?new=1")
+    r = c.post("/wizard/test-connection", data={**_other(), **f},
+               headers={"X-CSRF": f["csrf"]})
+    assert r.status_code == 200
+    j = r.json()
+    assert not j["ok"] and j["status"] == "fail" and "unprotected" in j["message"]
+
+
+def test_build_profile_with_bad_mailbox_raises_save_error_not_validation_error():
+    d = dr.Draft()
+    d.mailbox = {"provider": "other", "address": "a@example.invalid", "username": "a",
+                 "imap_host": "mail.example.invalid", "imap_port": 143, "imap_ssl": False,
+                 "imap_starttls": False, "smtp_host": "mail.example.invalid",
+                 "smtp_port": 465, "smtp_starttls": False}
+    d.consent_at = "x"
+    with pytest.raises(dr.SaveError):
+        dr.build_profile(d)
+
+
+def test_require_trust_is_default_for_local_mail_app():
+    d = dr.Draft()
+    f = {"provider": "proton_bridge", "address": "removal@example.invalid",
+         "password": PASSWORD}
+    errs = dr._apply_mailbox(d, f)
+    assert errs and "security code" in errs[0]
+    assert dr._apply_mailbox(dr.Draft(), f, require_trust=False) == []

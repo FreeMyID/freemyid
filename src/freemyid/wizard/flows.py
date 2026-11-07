@@ -136,11 +136,13 @@ def _trust_local(d: dr.Draft, a: dict) -> None:
     """Ask the user to approve the local mail app's security code (no password is sent)."""
     from ..engine.mail_tls import TlsPinError, trust_on_first_use
     from ..models import MailboxConfig
+    from ..netpolicy import NetPolicy
     pre = dr.PRESETS["proton_bridge"]
     try:
         res = trust_on_first_use(MailboxConfig(
             provider="proton_bridge", address=a.get("address") or "x@example.org",
-            username="x", keyring_service="freemyid-mailbox", **pre))
+            username="x", keyring_service="freemyid-mailbox", **pre),
+            netpolicy=NetPolicy(None, allow_loopback=True))
     except (TlsPinError, ValueError) as e:
         _say(f"Could not read the mail app's security code: {e}")
         return
@@ -170,6 +172,8 @@ def _mailbox(d: dr.Draft) -> None:
             a.update(imap_host=_ask("Incoming mail server (IMAP)"), smtp_host=_ask("Outgoing mail server (SMTP)"),
                      imap_port=_ask("IMAP port", "993"), smtp_port=_ask("SMTP port", "465"),
                      imap_ssl="1" if _yes("IMAP uses SSL", True) else "",
+                     imap_starttls="1" if _yes("IMAP uses STARTTLS (needed if SSL is off, "
+                                               "or your password is sent unprotected)") else "",
                      smtp_starttls="1" if _yes("SMTP uses STARTTLS") else "")
         return a
     _loop(d, "mailbox", ask)
