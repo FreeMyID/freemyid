@@ -1511,3 +1511,18 @@ def test_sec87_default_ledger_path_falls_back_to_home(monkeypatch, tmp_path):
     expected = Path.home() / ".local" / "state" / "freemyid-poster" / "posted.jsonl"
     assert poster.default_ledger_path() == expected
     assert tmp_path / "home" in expected.parents  # the autouse fixture moved the home
+
+
+@pytest.mark.posix_only
+def test_qa_sec87_release_log_never_prints_a_bad_uri(files, ledger_dir, caplog):
+    """A posted record whose uri isn't a full AT URI is shown as 'no valid uri'."""
+    assert do_run(files, Recorder()) == poster.EXIT_OK
+    path = ledger_dir / "posted.jsonl"
+    recs = [json.loads(line) for line in path.read_text("utf-8").splitlines()]
+    for r in recs:
+        if r["id"] == "Q-002" and r["status"] == "posted":
+            r["uri"] = "at://did:plc:x/app.bsky.feed.post/y\x1b[2Jjunk"
+    path.write_text("".join(json.dumps(r) + "\n" for r in recs), encoding="utf-8")
+    with caplog.at_level(logging.INFO):
+        assert poster.main(["--release", "Q-002"]) == poster.EXIT_USAGE
+    assert "\x1b" not in caplog.text and "no valid uri" in caplog.text
