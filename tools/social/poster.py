@@ -289,12 +289,14 @@ RGI_TAG_FLAGS = frozenset(
 EMOJI_PUNCT = "\u203c\u2049\u3030\u303d"
 # Default_Ignorable_Code_Point characters that are NOT category Cf (those are refused
 # already): combining grapheme joiner, Hangul fillers, Khmer inherent vowels,
-# Mongolian variation selectors, variation selectors, halfwidth filler, reserved.
+# Mongolian variation selectors, the reserved U+2065 in the word-joiner block,
+# variation selectors, halfwidth filler, reserved.
 _IGNORABLE_RANGES = (
     (0x034F, 0x034F), (0x115F, 0x1160), (0x17B4, 0x17B5), (0x180B, 0x180F),
-    (0x3164, 0x3164), (0xFE00, 0xFE0F), (0xFFA0, 0xFFA0), (0xFFF0, 0xFFF8),
-    (0xE0000, 0xE0FFF),
+    (0x2060, 0x206F), (0x3164, 0x3164), (0xFE00, 0xFE0F), (0xFFA0, 0xFFA0),
+    (0xFFF0, 0xFFF8), (0xE0000, 0xE0FFF),
 )
+VARIATION_SELECTORS = "\ufe0e\ufe0f"
 
 
 def _is_ignorable(ch: str) -> bool:
@@ -326,13 +328,19 @@ def _allowed_format_char(text: str, i: int) -> bool:
 
 
 def _allowed_ignorable(text: str, i: int) -> bool:
-    """VS15/VS16 straight after a character that can be shown as emoji (SEC-79)."""
-    if text[i] not in "\ufe0e\ufe0f" or i == 0:
+    """One VS15/VS16 straight after a character that can be shown as emoji (SEC-79).
+
+    Never after another selector: a run of VS15/VS16 is invisible and can spell out
+    hidden bits (SEC-86). A keycap is only digit/#/* + VS16 + U+20E3.
+    """
+    if text[i] not in VARIATION_SELECTORS or i == 0:
         return False
     prev = text[i - 1]
-    return _is_emoji_side(prev) or prev in EMOJI_PUNCT or (
-        prev in "0123456789#*" and text[i + 1 : i + 2] == "\u20e3"  # keycap
-    )
+    if 0xFE00 <= ord(prev) <= 0xFE0F:
+        return False
+    if prev in "0123456789#*":
+        return text[i] == "\ufe0f" and text[i + 1 : i + 2] == "\u20e3"  # keycap
+    return _is_emoji_side(prev) or prev in EMOJI_PUNCT
 
 
 def hidden_char_error(text: str) -> str | None:
@@ -342,13 +350,19 @@ def hidden_char_error(text: str) -> str | None:
     soft hyphen, bidi embeddings/overrides/isolates) can make what a reader sees
     differ from what a link points to, so the whole item is refused. So can other
     default-ignorable characters (variation selectors, U+034F, Hangul fillers), except
-    VS15/VS16 right after an emoji. Tag characters pass only as the three RGI
-    subdivision flags (SEC-78, SEC-79).
+    one VS15/VS16 right after an emoji (SEC-86), and so can unassigned code points
+    (SEC-87). Tag characters pass only as the three RGI subdivision flags (SEC-78,
+    SEC-79).
     """
     for i, ch in enumerate(text):
-        if unicodedata.category(ch) == "Cf":
+        cat = unicodedata.category(ch)
+        if cat == "Cf":
             if not _allowed_format_char(text, i):
                 return f"an invisible/bidi character U+{ord(ch):04X} at position {i}"
+        elif cat == "Cn":
+            # Unassigned in this Python's Unicode data: no defined look, often reserved
+            # default-ignorable (U+2065, U+FFF0..), so fail closed (SEC-87).
+            return f"an unassigned character U+{ord(ch):04X} at position {i}"
         elif _is_ignorable(ch) and not _allowed_ignorable(text, i):
             return f"an invisible character U+{ord(ch):04X} at position {i}"
     return None
@@ -685,7 +699,9 @@ def default_ledger_path() -> Path:
     if state_dir.startswith("/"):
         return Path(state_dir) / LEDGER_NAME
     xdg = os.environ.get("XDG_STATE_HOME", "")
-    base = Path(xdg) if xdg.startswith("/") else Path.home() / ".local" / "state"
+    # os.path.isabs is exactly startswith("/") on Linux; it also lets tests on Windows
+    # point the ledger at a temp dir (Path.home() there reads USERPROFILE, not HOME).
+    base = Path(xdg) if os.path.isabs(xdg) else Path.home() / ".local" / "state"
     return base / LEDGER_DIRNAME / LEDGER_NAME
 
 
@@ -1046,7 +1062,7 @@ def _adopt_posted(backend: Backend, ledger: Ledger, items: Iterable[QueueItem]) 
         if parts[0] != "posted" or it.item_id in ledger.ids:
             continue
         at = parts[1] if len(parts) > 1 else ""
-        uri = parts[2] if len(parts) > 2 and AT_URI_RE.match(parts[2]) else ""
+        uri = parts[2] if len(parts) > 2 and AT_URI_RE.fullmatch(parts[2]) else ""
         try:
             ledger.append(it.item_id, text_hash(it.text), POSTED, at[:40], uri)
         except (OSError, LedgerError) as exc:
@@ -1147,9 +1163,11 @@ def release(item_id: str, ledger_path: Path | None = None) -> int:
             log.info("%s is not held in the ledger; nothing to release", item_id)
             return EXIT_OK
         if rec["status"] == POSTED:
+            uri = rec.get("uri")
+            shown = uri if isinstance(uri, str) and AT_URI_RE.fullmatch(uri) else "no valid uri"
             log.error("%s is recorded as posted (%s); refusing to release it. To post the "
                       "same idea again, add a new queue item with new text.", item_id,
-                      rec["uri"])
+                      shown)
             return EXIT_USAGE
         iso = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
         ledger.append(item_id, rec["sha256"], RELEASED, iso)

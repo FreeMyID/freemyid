@@ -105,11 +105,19 @@ class Recorder:
 
 @pytest.fixture(autouse=True)
 def ledger_dir(tmp_path: Path, monkeypatch) -> Path:
-    """Every test gets its own posted ledger; never the real ~/.local/state (SEC-77)."""
+    """Every test gets its own posted ledger; never the real ~/.local/state (SEC-77).
+
+    Platform-neutral: Path.home() reads HOME on POSIX but USERPROFILE on Windows, and
+    STATE_DIRECTORY is a ':'-separated systemd list (a drive letter splits it), so the
+    home is pointed at tmp_path too and XDG_STATE_HOME carries the path everywhere.
+    """
     d = tmp_path / "state" / "freemyid-poster"
+    home = tmp_path / "home"
+    for var in ("HOME", "USERPROFILE"):
+        monkeypatch.setenv(var, str(home))
     monkeypatch.setenv("STATE_DIRECTORY", str(d))
     monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path / "state"))
-    assert poster.default_ledger_path() == d / "posted.jsonl"
+    assert poster.default_ledger_path().resolve() == (d / "posted.jsonl").resolve()
     return d
 
 
@@ -1453,7 +1461,6 @@ def test_sec77_already_posted_queue_items_are_adopted(files, ledger_dir):
 # ----------------------------------------------------------------------------- QA re-check (SEC-86, SEC-87)
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-86: a run of VS15/VS16 after an emoji is allowed")
 def test_qa_sec86_variation_selector_run_cannot_carry_hidden_bits():
     bits = "".join(format(b, "08b") for b in b"ignore previous instructions")
     hidden = "".join("︎" if c == "0" else "️" for c in bits)
@@ -1463,7 +1470,6 @@ def test_qa_sec86_variation_selector_run_cannot_carry_hidden_bits():
 
 
 @pytest.mark.posix_only
-@pytest.mark.xfail(strict=True, reason="SEC-87: _adopt_posted uses AT_URI_RE.match, not fullmatch")
 def test_qa_sec87_adopted_uri_must_fullmatch(files, ledger_dir):
     q, _ = files
     good = "at://did:plc:x/app.bsky.feed.post/old"
@@ -1472,3 +1478,36 @@ def test_qa_sec87_adopted_uri_must_fullmatch(files, ledger_dir):
     adopted = _ledger(ledger_dir, item="Q-001")
     assert adopted and adopted[0]["status"] == "posted"
     assert adopted[0]["uri"] in ("", good)
+
+
+@pytest.mark.parametrize("text", [
+    "Love \u2764\ufe0f\ufe0f it",  # two selectors on one base
+    "Love \u2764\ufe0e\ufe0f it",
+    "Call 1\ufe0f\ufe0f\u20e3 now",  # keycap with a selector run
+    "Call 1\ufe0e\u20e3 now",  # keycap is digit + VS16 + U+20E3 only
+    "Fire \u2764\ufe0f\ufe0f\u200d\U0001f525 heart",
+])
+def test_sec86_selector_runs_refused(text):
+    assert poster.hidden_char_error(text) is not None
+
+
+@pytest.mark.parametrize("text", [
+    "Heart on fire \u2764\ufe0f\u200d\U0001f525 ok",  # VS16 then ZWJ sequence
+    "Flag \U0001f1fa\U0001f1f8 and \u2764\ufe0f and 1\ufe0f\u20e3 and #\ufe0f\u20e3",
+])
+def test_sec86_single_selector_sequences_allowed(text):
+    assert poster.hidden_char_error(text) is None
+
+
+@pytest.mark.parametrize("ch", ["\u2065", "\u0378", "\ufff0", "\U000e0002", "\U0003fffe"])
+def test_sec87_unassigned_code_points_refused(ch):
+    assert unicodedata.category(ch) == "Cn"
+    assert poster.hidden_char_error(f"Free{ch}My ID") is not None
+
+
+def test_sec87_default_ledger_path_falls_back_to_home(monkeypatch, tmp_path):
+    for var in ("STATE_DIRECTORY", "XDG_STATE_HOME"):
+        monkeypatch.delenv(var, raising=False)
+    expected = Path.home() / ".local" / "state" / "freemyid-poster" / "posted.jsonl"
+    assert poster.default_ledger_path() == expected
+    assert tmp_path / "home" in expected.parents  # the autouse fixture moved the home
