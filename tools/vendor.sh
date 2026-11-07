@@ -7,6 +7,8 @@
 #   tools/vendor.sh checkin WO-NNN "owner notes"   owner check-in; vendor continues
 #   tools/vendor.sh status  WO-NNN                 VENDOR_STATUS.md + diff + scope check
 #   tools/vendor.sh pr      WO-NNN                 push vendor/wo-NNN and open/update a draft PR (owner tooling)
+#   tools/vendor.sh webcheck WO-NNN                owner: build + site checks on a vendor branch
+#   tools/vendor.sh auto    [N]                    Codex team runs itself: lead writes up to N work orders, specialists build, PRs open
 #   tools/vendor.sh close   WO-NNN                 remove the worktree (branch kept)
 #   tools/vendor.sh lead    "message"              talk to the Codex team lead (plans, proposes work orders)
 #
@@ -35,6 +37,13 @@ wo_file() { local f="$ROOT/docs/vendor/$1.md"; [ -f "$f" ] || { echo "no work or
 wo_check() { [[ "$1" =~ ^WO-[0-9]{3}$ ]] || { echo "work order id must look like WO-001" >&2; exit 2; }; }
 wt_of() { echo "$SCRATCH/$(echo "$1" | tr 'A-Z' 'a-z')"; }
 branch_of() { echo "vendor/$(echo "$1" | tr 'A-Z' 'a-z')"; }
+
+# In-house only: no vendor change may touch these, whatever its work order says (docs/VENDOR.md).
+DENY_PREFIXES=(src/freemyid/crypto.py src/freemyid/secrets.py src/freemyid/secret_backends.py
+  src/freemyid/netpolicy.py src/freemyid/config.py src/freemyid/models.py src/freemyid/state.py
+  src/freemyid/consent.py src/freemyid/storage/ src/freemyid/engine/mail src/freemyid/wizard/server.py
+  .github/ packaging/ pyproject.toml tools/social/ tools/cloudflare tools/mail/ tools/vendor.sh
+  brokers/registry docs/research/ AGENTS.md GEMINI.md CLAUDE.md docs/VENDOR.md docs/vendor/codex-team/ .claude/)
 
 allowed_paths() {   # lines under "## Allowed paths" in the work order, as path prefixes
   awk '/^## Allowed paths/{f=1;next} /^## /{f=0} f' "$1" | sed -nE 's/^[-*] *`?([^` ]+)`?.*/\1/p'
@@ -75,6 +84,7 @@ scope_report() {   # $1 WO id
   while read -r f; do
     [ "$f" = "VENDOR_STATUS.md" ] && continue
     ok=0; for a in "${allow[@]}"; do [[ "$f" == "$a"* ]] && ok=1; done
+    for d in "${DENY_PREFIXES[@]}"; do [[ "$f" == "$d"* ]] && { echo "IN-HOUSE ONLY: $f"; bad=1; ok=1; }; done
     [ $ok = 1 ] || { echo "OUT OF SCOPE: $f"; bad=1; }
   done < <(git -C "$ROOT" diff --name-only "main...$branch")
   [ $bad = 0 ] && echo "scope check: OK" || { echo "scope check: FAILED (reject or ask the vendor to revert these)"; return 1; }
@@ -133,6 +143,46 @@ $1" >/dev/null
     else
       gh pr create --repo FreeMyID/freemyid --draft --base main --head "$br" --title "$title" --body "$body"
     fi ;;
+  webcheck)   # owner: build + check the vendor's website changes with the main repo's node_modules
+    wo_check "${1:-}"; wt="$(wt_of "$1")"; [ -d "$wt/web" ] || { echo "no worktree" >&2; exit 2; }
+    ln -sfn "$ROOT/web/node_modules" "$wt/web/node_modules"
+    trap 'command rm -f "$wt/web/node_modules"' EXIT
+    ( cd "$wt/web" && pnpm -s build >/dev/null && pnpm -s check && cd "$wt" && "$ROOT/.venv/bin/python" web/scripts/content_check.py web/dist ) ;;
+  auto)   # Codex team runs itself: the lead picks work from the roadmap, specialists build, PRs open
+    VENDOR=codex; need_agy; n="${1:-3}"
+    pw="$SCRATCH/plan.$(date +%s)"; git -C "$ROOT" worktree add -q --detach "$pw" main
+    trap 'git -C "$ROOT" worktree remove --force "$pw" >/dev/null 2>&1 || true' EXIT
+    existing="$(command ls "$ROOT/docs/vendor" | sed -nE 's/^(WO-[0-9]{3})\.md$/\1/p' | tr '\n' ' ')"
+    last="$(echo "$existing" | tr ' ' '\n' | sed -nE 's/WO-0*([0-9]+)/\1/p' | sort -n | tail -1)"
+    AGENT=lead
+    codex exec -s workspace-write -C "$pw" -o "$SCRATCH/lead-auto-reply.md" "$(role_prompt)
+
+AUTONOMOUS MODE (owner-approved): you decide what the Codex team builds next. Read docs/ROADMAP.md
+(release plan section 6: work on the CURRENT next release first), docs/VENDOR.md, docs/vendor/codex-team/lead-log.md
+and the existing work orders ($existing). Pick up to $n pieces of valuable, well-bounded work for different
+specialists (web-builder, web-designer, app-ui, app-features, test-quality). Write EACH as a new file
+docs/vendor/WO-NNN.md numbered from WO-$(printf %03d $((last+1))) upwards, in the template from docs/VENDOR.md, with
+Status: open, Vendor: codex, Agent: <role>, testable acceptance criteria, and Allowed paths that do not overlap
+each other or any open work order and never include an in-house-only path. Create ONLY those files; edit nothing
+else. Then reply with one line per work order: id, agent, title." >/dev/null
+    new=()
+    for f in "$pw"/docs/vendor/WO-*.md; do
+      id="$(basename "$f" .md)"; [ -f "$ROOT/docs/vendor/$id.md" ] && continue
+      ag="$(agent_of "$f")"
+      if [ "$(vendor_of "$f")" != codex ] || [ -z "$ag" ] || [ "$ag" = lead ] || [ ! -f "$TEAM_DIR/$ag.md" ]; then
+        echo "skipping $id: bad Vendor/Agent line" >&2; continue; fi
+      bad=0; while read -r a; do for d in "${DENY_PREFIXES[@]}"; do [[ "$a" == "$d"* ]] && bad=1; done; done < <(allowed_paths "$f")
+      [ $bad = 1 ] && { echo "skipping $id: allowed paths include an in-house area" >&2; continue; }
+      cp "$f" "$ROOT/docs/vendor/$id.md"; new+=("$id")
+    done
+    [ ${#new[@]} -gt 0 ] || { echo "lead proposed no new work orders"; cat "$SCRATCH/lead-auto-reply.md"; exit 0; }
+    git -C "$ROOT" add "${new[@]/#/docs/vendor/}".md
+    git -C "$ROOT" -c user.name="Elena Vasquez [freemyid-codex]" commit -q -m "Codex lead: work orders ${new[*]} (autonomous mode)" -- "${new[@]/#/docs/vendor/}".md
+    cat "$SCRATCH/lead-auto-reply.md"
+    for id in "${new[@]}"; do
+      echo "=== $id"; "$0" start "$id" || true
+      "$0" pr "$id" || echo "$id: PR not opened (see scope check)"
+    done ;;
   close)
     wo_check "${1:-}"; git -C "$ROOT" worktree remove --force "$(wt_of "$1")" && echo "closed $1 (branch $(branch_of "$1") kept)" ;;
   *) sed -n '2,9p' "$0" >&2; exit 2 ;;
