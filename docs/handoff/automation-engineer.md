@@ -276,3 +276,79 @@ Drafts: src/freemyid/engine/_test_drafts/ (conftest re-exports tests/conftest; q
   3. SEC-59 (lead's decision): tools/social/install.sh. Read-only copy at ~/.local/share/freemyid-poster/poster.py (0444, dir 0555) + own pinned venv (httpx, keyring); COPY unit/timer to ~/.config/systemd/user (0444); ExecStartPre `sha256sum -c` against a hash pinned in the installed unit; `--update` recomputes and prints the hash (lead-only step); never enables the timer; refuses root; test only on a temp HOME. README: install/update/pause/uninstall, drop ln -sf steps.
 - Don't edit tests/test_social_poster.py (qa-owned; strict xfails flip when fixed). Own tests go in tests/test_social_poster_state.py.
 - Timer install waits on qa PASS after these land.
+
+## v0.2 secrets backends (Theo Park, 2026-11-07)
+Files: `src/freemyid/secret_backends.py` (new), `crypto.py` (`_get_or_create_key` -> backend;
+old keyring code now `_keyring_get_or_create_key`, unchanged; `delete_key` clears every backend),
+`secrets.py` (mailbox passwords via `select()`), `config.py` (`secrets_backend`, default None =
+auto). Tests: `tests/test_secret_backends.py` (29). CLI wiring for `migrate` NOT done (cli.py
+is in another session's hands); see "CLI wiring" below.
+
+### Design
+- Store format unchanged (`V1` AES-GCM blobs, same 32-byte data key). Only the key's home moves.
+- keyring: same service/entry (`freemyid`/`db-key-v1`) as 0.1. Windows installs see no change.
+- passphrase: `FREEMYID_HOME/datakey.wrapped.json` = {v, kdf=scrypt, n=2^17, r=8, p=1, salt(16),
+  nonce, AES-GCM(KEK, data key, AAD "freemyid:datakey-wrap:v1")}. Mailbox passwords in
+  `FREEMYID_HOME/secrets.enc` (JSON map encrypted with the data key, AAD "freemyid:secrets:v1").
+  Both written 0600 via temp file + replace/link.
+- systemd-creds: same wrap file; passphrase from `$CREDENTIALS_DIRECTORY/freemyid-passphrase`.
+  So an admin can create the key interactively and run the timer with `LoadCredential=`.
+- Selection: config wins. Auto: wrap file exists -> passphrase (systemd-creds if the credential
+  is present); keychain usable -> keyring; no keychain and no DB yet -> passphrase with a plain
+  notice; no keychain but a DB exists -> fail closed (never mint a key that orphans data).
+- `migrate(to)` -> `MigrateResult(from_backend, to_backend, secrets_moved, changed)`: loads the
+  key from the current backend, writes and re-reads it in the target (compare_digest), switches
+  config, copies mailbox passwords (ids from the store's profiles + secrets.enc), verifies, and
+  only then deletes the old copy. On failure config is restored and the source is untouched.
+  passphrase <-> systemd-creds is a config-only change (shared wrap).
+
+### CLI wiring (for whoever owns cli.py)
+```python
+secrets_app = typer.Typer(help="Where Free My ID keeps its encryption key and passwords.")
+app.add_typer(secrets_app, name="secrets")
+
+@secrets_app.command("migrate")
+def secrets_migrate(to: Annotated[str, typer.Option("--to", help="passphrase|keyring|systemd-creds")]):
+    from . import crypto, secret_backends
+    try:
+        r = secret_backends.migrate(to)
+    except (ValueError, crypto.KeyUnavailable) as e:
+        con.print(f"[red]{e}[/]"); raise typer.Exit(2)
+    con.print(f"Now using {r.to_backend} (was {r.from_backend}); "
+              f"{r.secrets_moved} saved password(s) moved." if r.changed else "Nothing to change.")
+```
+Optional `freemyid secrets status` = `secret_backends.select().name`. `doctor` can call
+`KeyringBackend().usable()` for the keychain check.
+
+### Threat model (for qa-security)
+Assets: data key (decrypts every profile/evidence blob), mailbox app passwords, passphrase.
+In scope / mitigations:
+- Offline theft of FREEMYID_HOME (backup, stolen disk): wrap needs scrypt(passphrase) at
+  2^17/8/1 (~128 MiB, ~0.2 s per guess). Strength is bounded by the passphrase; min 8 chars
+  enforced at creation only. Weak passphrases are the main residual risk.
+- Passphrase leakage: never read from a plain env var (`FREEMYID_PASSPHRASE` is refused with a
+  message that does not echo it); passphrase file must be a regular file owned by the user with
+  no group/other bits (0600/0400), checked on the opened fd with O_NOFOLLOW (no symlink, no
+  TOCTOU swap); max 4 KiB; never logged; prompts via getpass with confirmation on creation.
+- systemd credential: world-readable refused; group-readable allowed (systemd may set it).
+- Wrong passphrase / tampered wrap: AES-GCM tag fails -> KeyUnavailable, file untouched, no new
+  key minted. Wrong passphrase and tampering are indistinguishable (tag check is constant time
+  in OpenSSL; secret comparisons use hmac.compare_digest).
+- KDF downgrade/DoS via edited wrap file: n must be a power of two in [2^14, 2^20], r in [8,16],
+  p in [1,4], salt >= 16 bytes, else "corrupt".
+- Silent plaintext fallback: impossible; there is no plaintext backend. Rejected keyring
+  backends (fail/null/PlaintextKeyring) still count as unusable. Explicit `keyring` never falls
+  back.
+- Data split between two keys: auto never creates a passphrase key when a DB already exists
+  without a wrap; Store's key_check still refuses a mismatched key.
+- Migration loss: target verified before source deletion; config rolled back on failure.
+Out of scope / residual:
+- Malware running as the user (can read the file, keylog the prompt, or read process memory;
+  the unwrapped key is cached in-process for the run, as Cipher already holds it).
+- Windows: POSIX mode checks are skipped for the passphrase file (NTFS ACLs not inspected);
+  Windows users stay on Credential Manager by default.
+- Root/admin on the box, swap/hibernation containing the key, cold-boot.
+- `FREEMYID_TEST_KEY` path is unchanged (pytest or FREEMYID_ALLOW_TEST_KEY=1 only).
+Suggested qa checks: race two first-run processes (os.link exclusivity), fuzz the wrap JSON,
+confirm no passphrase/key bytes in logs at DEBUG, and wipe on a headless box (delete_key now
+swallows any KeyringError).
