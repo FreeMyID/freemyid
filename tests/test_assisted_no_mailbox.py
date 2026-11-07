@@ -1,4 +1,4 @@
-"""Draft test (qa to adopt): VM walkthrough finding 7. Without a removal mailbox the
+"""Adopted from engine/_test_drafts: VM walkthrough finding 7. Without a removal mailbox the
 Assisted card must not ask for "your removal email"."""
 from __future__ import annotations
 
