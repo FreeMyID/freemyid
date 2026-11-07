@@ -11,7 +11,7 @@
     <div class="download-card">
       {% if release.version %}
       {# source: .github/workflows/build.yml release job publishes FreeMyIDSetup.exe + SHA256SUMS.txt #}
-      <a class="btn btn--lg" href="{{ site.download_url }}">{{ icon('download') }}Download FreeMyIDSetup.exe</a>
+      <a class="btn btn--lg" href="{{ site.download_url }}">{{ icon('download') }}<span>Download <span class="no-wrap">FreeMyIDSetup.exe</span></span></a>
       {% else %}
       {# WR-9: no release yet, so no link (releases/latest would 404). Set release.version in data/release.yaml to switch this on. #}
       <div class="callout callout--info">
