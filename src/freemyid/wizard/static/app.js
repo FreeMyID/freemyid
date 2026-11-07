@@ -96,3 +96,26 @@
     });
   });
 })();
+
+(function () {
+  // Light/dark toggle. Starts from the computer's setting; the choice is kept in a cookie.
+  var btn = document.getElementById("theme-toggle");
+  if (!btn) { return; }
+  var root = document.documentElement;
+  var dark = function () {
+    var t = root.getAttribute("data-theme");
+    return t ? t === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  var show = function () {
+    btn.setAttribute("aria-pressed", dark() ? "true" : "false");
+    document.getElementById("theme-label").textContent = dark() ? "Light" : "Dark";
+  };
+  btn.hidden = false;
+  show();
+  btn.addEventListener("click", function () {
+    var next = dark() ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    document.cookie = "fmi_theme=" + next + "; path=/; max-age=31536000; SameSite=Strict";
+    show();
+  });
+})();

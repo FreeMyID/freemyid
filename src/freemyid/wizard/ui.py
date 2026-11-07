@@ -39,18 +39,35 @@ def chip(state: ListingState) -> str:
     return f'<span class="chip {esc(state.value)}">{esc(CHIP_LABEL.get(state, state.value))}</span>'
 
 
-def layout(title: str, body: str, nav: bool = True, refresh: int = 0) -> str:
+NAV = (("/", "Today"), ("/protect", "Protect yourself"), ("/outbox", "Emails to approve"),
+       ("/wizard/consent?new=1", "Add a person"), ("/settings", "Settings"))
+
+
+def layout(title: str, body: str, nav: bool = True, refresh: int = 0, current: str = "") -> str:
+    """`current` is the nav path of this page (marks it for screen readers and sighted users)."""
     links = ""
     if nav:
-        links = ('<a href="/">Home</a><a href="/outbox">Emails to approve</a>'
-                 '<a href="/wizard/consent?new=1">Add a person</a>'
-                 '<a href="/settings">Settings</a>')
+        links = "".join(
+            f'<a href="{href}"{" aria-current=\"page\"" if href == current else ""}>{label}</a>'
+            for href, label in NAV)
+        links = f'<nav aria-label="Main">{links}</nav>'
+    toggle = ('<button type="button" class="theme secondary" id="theme-toggle" hidden '
+              'aria-pressed="false"><span class="ico" aria-hidden="true"></span> '
+              '<span id="theme-label">Dark</span></button>') if nav else ""
     return ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width,initial-scale=1">'
+            '<meta name="color-scheme" content="light dark">'
             + (f'<meta http-equiv="refresh" content="{int(refresh)}">' if refresh else "")
-            + f'<title>{esc(title)} - Free My ID</title><link rel="stylesheet" href="/static/style.css">'
-            f'</head><body><header><a class="brand" href="/">Free My ID</a>{links}</header>'
-            f'<main>{body}</main><script src="/static/app.js"></script></body></html>')
+            + f'<title>{esc(title)} - Free My ID</title>'
+            '<link rel="stylesheet" href="/static/tokens.css">'
+            '<link rel="stylesheet" href="/static/style.css">'
+            '<script src="/static/theme.js"></script>'
+            '</head><body><a class="skip" href="#main">Skip to the page</a>'
+            '<header class="top"><a class="brand" href="/">'
+            '<img src="/static/freemyid.png" alt="" width="30" height="30">Free My ID</a>'
+            f'{links}{toggle}</header>'
+            f'<main id="main" tabindex="-1">{body}</main><script src="/static/app.js"></script>'
+            '</body></html>')
 
 
 def error_page(heading: str, lines: list[str]) -> str:
