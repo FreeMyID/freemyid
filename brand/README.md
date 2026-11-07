@@ -17,3 +17,16 @@ Sources live in `brand/src/`; re-render with `.venv/bin/python brand/src/render_
 | `logo/final/wordmark-lockup.svg` | 118x24 viewBox, 0.7 KB | Mark plus "Free My ID" (Georgia/DejaVu Serif system font, adapts to dark mode). | Free My ID |
 
 Logo A final assets are rebuilt with `.venv/bin/python brand/src/render_logo.py`.
+
+## Product screenshots (R4 / D7)
+
+Real app, fake persona only (Jane Q Testperson, Springfield IL), 2x, cropped to app content. Throwaway home, in-memory keyring, network blocked, no scheduler. Regenerate: `capture_screenshots.py <scratch> <raw>` then `finish_screenshots.py <raw> brand/screenshots` (both in `src/`). Each has `.png` and `.webp` (WebP is the one to ship).
+
+| File | Size (px) | WebP | Alt text |
+|---|---|---|---|
+| `screenshots/wizard-name.webp` | 2000x1850 | 89 KB | Free My ID setup, step 2 of 6: "What is the person's name?" with first, middle and last name boxes filled in with a made-up name, and large Back and Next buttons. |
+| `screenshots/wizard-address.webp` | 2000x1580 | 100 KB | Free My ID setup, step 3 of 6: "Where do they live?" asking only for a city and state, Springfield, IL. |
+| `screenshots/dashboard.webp` | 2000x2090 | 120 KB | The Free My ID home screen. A plain sentence says 7 sites have confirmed or no longer list you, 3 are waiting and 2 need you, followed by a card with copy-and-paste details and large buttons for the one step left. |
+| `screenshots/report.webp` | 1800x2250 | 141 KB | The printable progress report: a table of each people-search site, its status (site confirmed, asked, not listed now, needs you), when it was last checked and when the request was made. |
+
+Social images (`og-default.png`, `repo-preview.png`) now use the official logo A dark mark (`logo/final/mark-dark.svg`, WR-24).
