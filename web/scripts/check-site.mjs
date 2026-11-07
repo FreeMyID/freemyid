@@ -106,7 +106,8 @@ for (const f of htmlFiles) {
   // links and anchors
   for (const m of html.matchAll(/<a\b[^>]*\shref="([^"]*)"/gi)) {
     const href = m[1].replace(/&amp;/g, "&");
-    if (href.startsWith(ORIGIN)) err(f, `absolute link to own site ${href} (use the base path)`);
+    // /get/* are Cloudflare redirects to release assets (tools/cloudflare_redirects.py), not pages: allowed as absolute links.
+    if (href.startsWith(ORIGIN) && !href.startsWith(ORIGIN + "/get/")) err(f, `absolute link to own site ${href} (use the base path)`);
     const r = resolveLocal(f, href);
     if (!r) continue;
     const [target, frag] = r;

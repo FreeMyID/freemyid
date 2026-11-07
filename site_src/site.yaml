@@ -10,8 +10,8 @@ issues_url: https://github.com/FreeMyID/freemyid/issues/new/choose   # /develope
 support_email: support@freemyid.org
 support_mailto: mailto:support@freemyid.org?subject=Free%20My%20ID%20question
 releases_url: https://github.com/FreeMyID/freemyid/releases   # /developers/ only
-# TODO(devops): switch to https://freemyid.org/get/windows once that redirect to the latest installer exists.
-download_url: https://github.com/FreeMyID/freemyid/releases/latest/download/FreeMyIDSetup.exe
+# Our own address (Cloudflare 302 to the latest release asset, tools/cloudflare_redirects.py). Regular users never see github.com.
+download_url: https://freemyid.org/get/windows
 # Old hand-written URLs that now redirect to clean folder URLs.
 redirects:
   download.html: download
