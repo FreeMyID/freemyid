@@ -170,10 +170,8 @@ def test_sec48_approve_does_not_send_on_the_event_loop(wiz, monkeypatch):
     assert seen == [False]
 
 
-# --------------------------------------------------------------------------- SEC-49 (open)
+# --------------------------------------------------------------------------- SEC-49 (fixed)
 
-@pytest.mark.xfail(strict=True, reason="SEC-49: /safety/ says the printable report holds "
-                   "'only site names, statuses and dates', but it is headed with the person's label")
 def test_sec49_safety_report_claim_mentions_the_persons_name():
     from tests.conftest import ROOT
     tpl = (ROOT / "site_src/templates/pages/safety.html").read_text(encoding="utf-8")
