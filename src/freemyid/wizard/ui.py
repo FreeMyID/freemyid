@@ -291,13 +291,14 @@ def step_page(step: str, d: Draft, csrf: str, errs: list[str], summary: str = ""
     i = vs.index(step) if step in vs else 0
     back = (f'<a class="btn secondary big" href="/wizard/{vs[i - 1]}">Back</a>' if i > 0 else "")
     last = step == "finish"
+    honesty = f'<p class="hint">{esc(HONESTY)}</p>' if i == 0 else ""   # once, on the first screen
     nxt = ("Save changes" if d.editing else "Finish") if last else "Next"
     return layout(STEP_TITLES[step],
                   f'{steps_bar(step, d)}<h1>{esc(STEP_TITLES[step])}</h1>{errors_html(errs)}'
                   f'<form method="post" action="/wizard/{step}"{multipart} class="card" '
                   f'autocomplete="off">{csrf_field(csrf)}{body}'
                   f'<div class="actions">{back}<button class="big" type="submit">{nxt}</button>'
-                  f'</div></form><p class="hint">{esc(HONESTY)}</p>', nav=False)
+                  f'</div></form>{honesty}', nav=False)
 
 
 def authorization_form(person: str, agent: str) -> str:

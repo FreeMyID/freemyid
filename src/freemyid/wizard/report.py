@@ -13,7 +13,9 @@ from .ui import CHIP_LABEL, HONESTY, esc
 
 _CSS = ("body{font:18px/1.5 system-ui,sans-serif;max-width:46rem;margin:2rem auto;padding:0 1rem}"
         "table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid #ccc;"
-        "padding:.4rem;text-align:left}.note{background:#f4f4f4;padding:.8rem;border-radius:6px}")
+        "padding:.4rem;text-align:left}td.d{white-space:nowrap}.cov{display:block;font-size:.8em;color:#666}"
+        "@page{size:A4;margin:1.5cm}@media print{body{font-size:14px;max-width:none;margin:0}}"
+        ".note{background:#f4f4f4;padding:.8rem;border-radius:6px}")
 
 
 _GOOD = {ListingState.CONFIRMED, ListingState.REMOVED}
@@ -28,6 +30,23 @@ def build_report(store, registry, profile_id: str, fmt: str = "html") -> Path:
     if fmt not in ("html", "pdf"):
         raise ValueError("fmt must be 'html' or 'pdf'")
     names = {b.id: b.name for b in registry.brokers} if registry else {}
+    members: dict[str, list[str]] = {}
+    for b in (registry.brokers if registry else []):
+        if getattr(b, "covered_by", None):
+            members.setdefault(b.covered_by, []).append(b.name)
+
+    def site_cell(bid: str) -> str:
+        full = names.get(bid, bid)
+        short = full.split(" (")[0]
+        cov = members.get(bid)
+        if cov:
+            extra = f'<span class="cov">covers: {esc(", ".join(sorted(cov)))}</span>'
+        elif short != full:
+            extra = f'<span class="cov">{esc(full[len(short) + 2:].rstrip(")"))}</span>'
+        else:
+            extra = ""
+        return esc(short) + extra
+
     sts = sorted(store.list_statuses(profile_id), key=lambda s: names.get(s.broker_id, s.broker_id))
     counts: dict[ListingState, int] = {}
     for s in sts:
@@ -36,9 +55,9 @@ def build_report(store, registry, profile_id: str, fmt: str = "html") -> Path:
     good = sum(n for k, n in counts.items() if k in _GOOD)
     wait = sum(n for k, n in counts.items() if k in _WAIT)
     rows = "".join(
-        f"<tr><td>{esc(names.get(s.broker_id, s.broker_id))}</td><td>{esc(CHIP_LABEL[s.state])}"
-        f"</td><td>{s.last_scan_at.date() if s.last_scan_at else '-'}</td>"
-        f"<td>{s.last_submitted_at.date() if s.last_submitted_at else '-'}</td></tr>"
+        f"<tr><td>{site_cell(s.broker_id)}</td><td>{esc(CHIP_LABEL[s.state])}"
+        f"</td><td class='d'>{s.last_scan_at.date() if s.last_scan_at else '-'}</td>"
+        f"<td class='d'>{s.last_submitted_at.date() if s.last_submitted_at else '-'}</td></tr>"
         for s in sts)
     todos = store.list_todos(profile_id)
     doc = (f'<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Free My ID report'
