@@ -1,4 +1,7 @@
 {# Drawing of the Windows SmartScreen box (not a screenshot). Real screenshots: LAUNCH_CHECKLIST section 3. #}
+{# source: dialog wording = Windows Defender SmartScreen "Windows protected your PC" box (text as Windows shows it);
+   "Unknown publisher" because the installer is not code-signed (.github/workflows/build.yml release notes);
+   file name FreeMyIDSetup.exe = build.yml release asset. #}
 <figure class="ss mt-s">
   <div class="ss__box" role="img" aria-label="{% if ss_step == 1 %}Drawing of the blue Windows protected your PC box. The small More info link under the message is highlighted.{% else %}Drawing of the same blue box after clicking More info. It shows App: FreeMyIDSetup.exe and Publisher: Unknown publisher. The Run anyway button is highlighted.{% endif %}">
     <p class="ss__title">Windows protected your PC</p>
