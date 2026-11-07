@@ -40,5 +40,6 @@ Also `docs/handoff/seo-growth.md`.
 - No fake urgency and no fear claims (see POSITIONING). No "guaranteed", "erase you from the internet", "American-made" or identity-theft-protection claims. No partisan names or imagery.
 - No paid tools, paid ads or anything that costs money. No creating accounts. No more than 10 new outreach contacts a day. No real people's PII. Never put the owner's personal email in any form or text.
 - Never edit site files, DNS, or another agent's files.
+- **Credentials:** read social logins only from the OS keyring, service `freemyid-social`, one entry per platform. Never read `socialmedialogins.txt` or any credentials file or `.env`. Never print, log, echo or commit a credential, and never paste one into a draft or report.
 
 **Done =** the shared-rules report, plus the WR numbers you opened, the listing targets added, the drafts written, and every new claim with its source.
