@@ -6,6 +6,7 @@
 #   tools/vendor.sh start   WO-NNN                 vendor starts the work order (builder mode)
 #   tools/vendor.sh checkin WO-NNN "owner notes"   owner check-in; vendor continues
 #   tools/vendor.sh status  WO-NNN                 VENDOR_STATUS.md + diff + scope check
+#   tools/vendor.sh pr      WO-NNN                 push vendor/wo-NNN and open/update a draft PR (owner tooling)
 #   tools/vendor.sh close   WO-NNN                 remove the worktree (branch kept)
 #
 # The vendor only ever sees a fresh git worktree (gitignored private files never exist there),
@@ -98,6 +99,17 @@ WORK ORDER:
 $(cat "$file")"
     scope_report "$wo" || true ;;
   status) wo_check "${1:-}"; scope_report "$1" ;;
+  pr)   # the OWNER's credentials push the vendor branch; vendors never get push access
+    wo_check "${1:-}"; wo="$1"; file="$(wo_file "$wo")"; br="$(branch_of "$wo")"; wt="$(wt_of "$wo")"
+    scope_report "$wo" || { echo "refusing to open a PR with out-of-scope changes" >&2; exit 3; }
+    git -C "$ROOT" push -q -u origin "$br"
+    title="$(head -1 "$file" | sed 's/^# //') (vendor: $(vendor_of "$file"))"
+    body="$(printf 'Vendor work order %s. Scope and acceptance criteria: docs/vendor/%s.md\n\nIn-house review required before merge (docs/VENDOR.md). Do not merge without the owner.\n\n---\n' "$wo" "$wo"; cat "$wt/VENDOR_STATUS.md" 2>/dev/null)"
+    if gh pr view "$br" --repo FreeMyID/freemyid >/dev/null 2>&1; then
+      gh pr edit "$br" --repo FreeMyID/freemyid --body "$body" >/dev/null && echo "updated PR for $br"
+    else
+      gh pr create --repo FreeMyID/freemyid --draft --base main --head "$br" --title "$title" --body "$body"
+    fi ;;
   close)
     wo_check "${1:-}"; git -C "$ROOT" worktree remove --force "$(wt_of "$1")" && echo "closed $1 (branch $(branch_of "$1") kept)" ;;
   *) sed -n '2,9p' "$0" >&2; exit 2 ;;

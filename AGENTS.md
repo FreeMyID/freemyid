@@ -8,7 +8,7 @@ You are an outside vendor team building parts of Free My ID, side by side with a
 
 ## Always
 1. Keep `VENDOR_STATUS.md` at the repo root current at the end of every session: Done, Next, Questions for the owner, How to test.
-2. Stay inside this folder. Never read, list or print files outside it (home directory, keyrings, ~/.config, environment dumps). Never run git, never push, never install packages, never use the network.
+2. Stay inside this folder. Never read, list or print files outside it (home directory, keyrings, ~/.config, environment dumps). Never run git, never push, never install packages, never use the network. The owner's tooling commits your session, pushes your branch `vendor/wo-NNN` and opens the pull request the in-house team reviews.
 3. Never touch the in-house-only areas listed in docs/VENDOR.md (encryption, secrets, mail security, network policy, consent, sending, CI/release). Ask in Questions instead.
 4. Never use, ask for or invent real people's personal data. Use obviously fake people ("Pat Testperson, Springfield IL").
 5. Text for users follows docs/POSITIONING.md: plain words for older, non-technical readers; no fear selling; no "guarantee", "erase" or "100%".
