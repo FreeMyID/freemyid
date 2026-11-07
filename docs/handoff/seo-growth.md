@@ -10,3 +10,11 @@ Caller instruction for this wave: no submissions, posts, accounts or contact (st
 - [x] listings.md: 20 targets, 0 submittable (all need account, GitHub PR or email); outreach-log.md started, 0 actions
 - [ ] WR rows
 - [ ] article draft
+- [x] WR rows: WR-39 (sitemap lastmod), WR-40 (related-guide links), WR-41 (guide dateModified JSON-LD; no HowTo, deprecated). Not requested, already present: robots.txt, sitemap, canonical, OG + twitter:card, SoftwareApplication/FAQPage/BreadcrumbList JSON-LD, titles/descriptions, page weight (WR-35).
+
+## For devops-engineer (measurement)
+Please add DNS TXT verification records for freemyid.org (Tier 1 per AUTONOMY: verification TXT, with a rollback note):
+1. **Google Search Console**: Domain property `freemyid.org`. Google gives a `google-site-verification=...` TXT value when the owner adds the property (needs the owner's Google login; Free My ID account preferred). Add it at the apex.
+2. **Bing Webmaster Tools**: either import from Search Console once verified (no DNS needed), or add the CNAME/TXT Bing gives.
+After verification, submit https://freemyid.org/sitemap.xml in both. No scripts or tags on the site, DNS only.
+Blocked on: the owner creating or choosing the Google/Microsoft account (agents don't create accounts).
