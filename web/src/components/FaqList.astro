@@ -12,10 +12,34 @@ const { items, openFirst = 0 } = Astro.props;
   {items.map((q, i) => (
     <details class="faq-item group" id={`q-${q.id}`} open={i < openFirst}>
       <summary class="flex min-h-tap items-center justify-between gap-s px-m py-s text-lead font-bold text-heading hover:bg-brand-soft">
-        <span>{q.q}</span>
+        <span class="faq-question">{q.q}</span>
         <Icon name="chevron-down" class="faq-chevron size-6 text-brand transition-transform duration-200 motion-reduce:transition-none" />
       </summary>
       <div class="prose-fmid px-m pb-m"><RichText nodes={rich(q.a)} /></div>
     </details>
   ))}
 </div>
+
+<style>
+  .faq-item {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .faq-item > summary {
+    min-block-size: max(44px, var(--fmi-tap));
+    min-inline-size: 44px;
+  }
+
+  .faq-question {
+    min-inline-size: 0;
+  }
+
+  /* Keep the ring inside the target so adjacent rows cannot cover it.
+     Heading ink contrasts with both the card and hover fill in each theme. */
+  .faq-item > summary:focus-visible {
+    outline: 3px solid var(--fmi-color-heading) !important;
+    outline-offset: -6px;
+    box-shadow: none !important;
+  }
+</style>
