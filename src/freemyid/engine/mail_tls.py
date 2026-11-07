@@ -27,6 +27,10 @@ if TYPE_CHECKING:
     from ..models import MailboxConfig
 
 LOOPBACK_HOSTS = frozenset({"127.0.0.1", "::1", "localhost"})
+# The connected peer must be one of these EXACT addresses (SEC-50). The name `localhost` is
+# accepted in settings, but the resolver decides where it goes, so it is never trusted on
+# its own: what counts is the address the socket actually reached.
+LOOPBACK_PEER_IPS = frozenset({"127.0.0.1", "::1"})
 
 
 class TlsPinError(RuntimeError):
@@ -74,15 +78,28 @@ def client_context(host: str, pin: str | None) -> ssl.SSLContext:
     return _unverified_context()
 
 
+def check_loopback_peer(sock: object) -> None:
+    """Raise TlsPinError unless the socket is connected to exactly 127.0.0.1 or ::1.
+    Fails closed: no `getpeername`, an error, or an unexpected shape all refuse."""
+    try:
+        peer = sock.getpeername()[0]  # type: ignore[attr-defined]
+    except (OSError, AttributeError, TypeError, IndexError, KeyError, ValueError):
+        peer = None
+    if not isinstance(peer, str) or peer not in LOOPBACK_PEER_IPS:
+        raise TlsPinError("the mail app is not on this computer; not trusting it")
+
+
 def check_peer(sock: object, pin: str | None) -> None:
-    """Raise TlsPinError unless the TLS peer certificate's SHA-256 equals `pin`.
-    No-op without a pin (the default context already verified the peer)."""
+    """Raise TlsPinError unless the TLS peer certificate's SHA-256 equals `pin` and the
+    peer is an exact loopback address (SEC-50). No-op without a pin (the default context
+    already verified the peer)."""
     if pin is None:
         return
     get = getattr(sock, "getpeercert", None)
     der = get(binary_form=True) if get else None
     if not der:
         raise TlsPinError("mail connection is not encrypted; refusing to sign in")
+    check_loopback_peer(sock)
     if not hmac.compare_digest(fingerprint(der).encode(), pin.lower().encode()):
         raise TlsPinError("the mail app's security certificate changed and does not match "
                           "the one you approved; not signing in")
@@ -105,18 +122,24 @@ def fetch_loopback_fingerprint(host: str, port: int, protocol: Literal["imap", "
             else:
                 conn = imaplib.IMAP4_SSL(host, port, ssl_context=ctx, timeout=timeout_s)
             sock = conn.sock
-            der = sock.getpeercert(binary_form=True)  # type: ignore[attr-defined]
-            with contextlib.suppress(Exception):
-                conn.logout()
+            try:
+                check_loopback_peer(sock)
+                der = sock.getpeercert(binary_form=True)  # type: ignore[attr-defined]
+            finally:
+                with contextlib.suppress(Exception):
+                    conn.logout()
         else:
             if starttls:
                 s = smtplib.SMTP(host, port, timeout=timeout_s)
                 s.starttls(context=ctx)
             else:
                 s = smtplib.SMTP_SSL(host, port, context=ctx, timeout=timeout_s)
-            der = s.sock.getpeercert(binary_form=True)  # type: ignore[union-attr]
-            with contextlib.suppress(Exception):
-                s.quit()
+            try:
+                check_loopback_peer(s.sock)
+                der = s.sock.getpeercert(binary_form=True)  # type: ignore[union-attr]
+            finally:
+                with contextlib.suppress(Exception):
+                    s.quit()
     except (OSError, imaplib.IMAP4.error, smtplib.SMTPException) as e:
         raise TlsPinError(f"could not reach the mail app ({type(e).__name__}); "
                           "is it running?") from None

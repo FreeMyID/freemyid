@@ -7,7 +7,15 @@ from types import SimpleNamespace
 import pytest
 
 from freemyid.engine import mail as mail_mod
+from freemyid.engine import mail_tls
 from freemyid.engine.mail import MailError, SmtpImapMailer
+from freemyid.engine.mail_tls import (
+    TlsPinError,
+    check_loopback_peer,
+    check_peer,
+    fingerprint,
+    trust_on_first_use,
+)
 from freemyid.models import MailboxConfig
 from freemyid.netpolicy import NetPolicy
 
@@ -61,3 +69,95 @@ def test_sec53_encrypted_imap_still_connects(monkeypatch):
     with pytest.raises(AssertionError, match="attempted"):
         _mailer()._imap(_mb())
     assert _Boom.calls == 1
+
+
+# ------------------------------------------------------------------------- SEC-50
+class _Sock:
+    def __init__(self, peer, der=b"fake-der"):
+        self._peer, self._der = peer, der
+
+    def getpeername(self):
+        if isinstance(self._peer, Exception):
+            raise self._peer
+        return self._peer
+
+    def getpeercert(self, binary_form=False):
+        return self._der
+
+
+def _pin() -> str:
+    return fingerprint(b"fake-der")
+
+
+@pytest.mark.parametrize("peer", [("127.0.0.1", 1143), ("::1", 1143, 0, 0)])
+def test_sec50_exact_loopback_peer_accepted(peer):
+    check_peer(_Sock(peer), _pin())
+    check_loopback_peer(_Sock(peer))
+
+
+@pytest.mark.parametrize("peer", [
+    ("10.0.0.5", 1143), ("192.168.1.20", 1143), ("127.0.0.2", 1143),
+    ("::ffff:127.0.0.1", 1143, 0, 0), ("localhost", 1143), ("", 0), (None, 0), (),
+    OSError("not connected")])
+def test_sec50_non_loopback_peer_refused_even_with_matching_pin(peer):
+    with pytest.raises(TlsPinError, match="not on this computer"):
+        check_peer(_Sock(peer), _pin())
+
+
+def test_sec50_socket_without_getpeername_fails_closed():
+    s = SimpleNamespace(getpeercert=lambda binary_form=False: b"fake-der")
+    with pytest.raises(TlsPinError):
+        check_peer(s, _pin())
+
+
+def test_sec50_no_pin_is_still_a_noop():
+    check_peer(_Sock(("203.0.113.9", 993)), None)   # CA-verified path, unchanged
+
+
+class _FakeImap:
+    """imaplib.IMAP4 stand-in that 'connects' to a chosen peer address."""
+    error = imaplib.IMAP4.error
+    abort = imaplib.IMAP4.abort
+    peer: tuple = ("127.0.0.1", 1143)
+    logged_out = 0
+
+    def __init__(self, host, port, timeout=None):
+        self.sock = _Sock(type(self).peer)
+
+    def starttls(self, ssl_context=None):
+        return "OK", [b""]
+
+    def logout(self):
+        type(self).logged_out += 1
+
+
+class _FakeSmtp:
+    peer: tuple = ("127.0.0.1", 1025)
+
+    def __init__(self, host, port, timeout=None):
+        self.sock = _Sock(type(self).peer)
+
+    def starttls(self, context=None):
+        return 220, b""
+
+    def quit(self):
+        pass
+
+
+def _patch_tofu(monkeypatch, imap_peer, smtp_peer):
+    _FakeImap.peer, _FakeSmtp.peer, _FakeImap.logged_out = imap_peer, smtp_peer, 0
+    monkeypatch.setattr(mail_tls.imaplib, "IMAP4", _FakeImap)
+    monkeypatch.setattr(mail_tls.smtplib, "SMTP", _FakeSmtp)
+
+
+def test_sec50_tofu_on_redirected_localhost_is_refused(monkeypatch):
+    _patch_tofu(monkeypatch, ("198.51.100.7", 1143), ("198.51.100.7", 1025))
+    with pytest.raises(TlsPinError, match="not on this computer"):
+        trust_on_first_use(_mb("localhost"))
+    assert _FakeImap.logged_out == 1      # connection still closed
+
+
+def test_sec50_tofu_on_real_loopback_returns_code(monkeypatch):
+    _patch_tofu(monkeypatch, ("127.0.0.1", 1143), ("127.0.0.1", 1025))
+    res = trust_on_first_use(_mb("localhost"))
+    assert res.fingerprint == _pin()
