@@ -177,8 +177,9 @@ else. Then reply with one line per work order: id, agent, title." >/dev/null
       cp "$f" "$ROOT/docs/vendor/$id.md"; new+=("$id")
     done
     [ ${#new[@]} -gt 0 ] || { echo "lead proposed no new work orders"; cat "$SCRATCH/lead-auto-reply.md"; exit 0; }
-    git -C "$ROOT" add "${new[@]/#/docs/vendor/}".md
-    git -C "$ROOT" -c user.name="Elena Vasquez [freemyid-codex]" commit -q -m "Codex lead: work orders ${new[*]} (autonomous mode)" -- "${new[@]/#/docs/vendor/}".md
+    paths=(); for id in "${new[@]}"; do paths+=("docs/vendor/$id.md"); done
+    git -C "$ROOT" add "${paths[@]}"
+    git -C "$ROOT" -c user.name="Elena Vasquez [freemyid-codex]" commit -q -m "Codex lead: work orders ${new[*]} (autonomous mode)" -- "${paths[@]}"
     cat "$SCRATCH/lead-auto-reply.md"
     for id in "${new[@]}"; do
       echo "=== $id"; "$0" start "$id" || true
