@@ -15,6 +15,25 @@ git commit -m "Site: roll back to v2 publisher" -- .github/workflows/pages.yml .
 git push origin main          # Pages redeploys site/ (or: gh workflow run pages.yml --ref main)
 ```
 
+## v0.2 developer page + owner rule (2026-11-07, Leo Hart; commits b65b927, c4912b9; not pushed)
+- `/developers/` (web/src/pages/developers/index.astro, pages.yaml id `developers`, `v3_only: true` so tools/build_site.py
+  skips it). Install (pipx, Docker compose, source), first run, systemd/launchd/cron + enable-linger, headless secrets,
+  JSON/exit codes (links docs/CLI.md on GitHub, which 404s until the orchestrator commits it), contribute, security.
+  EVERY v0.2 section carries the "Coming in v0.2" Badge and future-tense copy. When v0.2 ships: drop badges only for
+  what shipped, check the compose against packaging/docker/compose.example.yaml and the image name, and the secrets copy
+  against src/freemyid/secret_backends.py. WR-69 (Pro line) is on HOLD: no paid tier or price on the site.
+  Art: WR-64 SVGs copied to site_src/static/assets/art/, swapped with `<picture>` + prefers-color-scheme.
+  Linked from the footer (Project column, like other secondary pages), the sitemap, /download/ ("Using Linux or macOS?")
+  and /safety/#open-source. 6.4 KiB gzip HTML, no JS. tools/site_shots.py DEFAULT_PAGES includes it.
+- Owner rule (ROADMAP principle 6: no account, no github.com for regular users): home feedback link is
+  `site.support_mailto` (mailto:support@freemyid.org?subject=Free%20My%20ID%20question, no body) + "No account needed:
+  just send an email." GitHub releases links removed from download/families/safety; release notes live at
+  /download/#release-notes from release.yaml (renders an optional `notes:` list when someone adds one). Home "Read the source
+  code" now goes to /safety/#open-source, which points to /developers/. Footer: one quiet "Source code" link; AGPL is plain
+  text. GitHub issues/releases links only on /developers/. Remaining github.com hrefs on user pages: the Download button
+  (direct asset) until devops ships https://freemyid.org/get/windows (TODO in site.yaml; then change download_url only).
+- The v2 templates (site_src/templates, site/) still have the old issues/releases links; v2 is the rollback only.
+
 ## Build and check
 
 ```
