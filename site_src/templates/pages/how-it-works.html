@@ -19,7 +19,7 @@
   </ol>
 </div>
 
-<section class="section section--alt" aria-labelledby="three-ways">
+<section class="band band--alt" aria-labelledby="three-ways">
   <div class="wrap">
     {# source: PLAN_V1 D1 tier table (Email / Assisted / Automatic browser), chosen automatically; D9 visible Edge window; shared rule 5 (no CAPTCHA solving).
        Email fallback = src/freemyid/engine/outbox.py mailto + wizard/draft.py mailbox step text. #}
@@ -47,7 +47,8 @@
   </div>
 </section>
 
-<div class="wrap section prose">
+<section class="band" aria-labelledby="safety">
+  <div class="wrap wrap--narrow">
   <h2 id="safety">Built to be careful</h2>
   <div class="callout callout--note">
     {{ icon('info') }}
@@ -70,5 +71,6 @@
   <div class="btn-row mt-m">
     {% include "partials/cta-download.html" %}
   </div>
-</div>
+  </div>
+</section>
 {% endblock %}

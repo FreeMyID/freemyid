@@ -39,7 +39,7 @@
   </div>
 </div>
 
-<section class="section section--alt" id="smartscreen" aria-labelledby="ss-title">
+<section class="band band--alt" id="smartscreen" aria-labelledby="ss-title">
   <div class="wrap">
     <div class="section-head">
       <h2 id="ss-title">Windows may show a blue warning. Here's why, and what to do</h2>
@@ -69,7 +69,8 @@
   </div>
 </section>
 
-<div class="wrap section prose">
+<section class="band" aria-labelledby="genuine">
+  <div class="wrap wrap--narrow">
   <h2 id="genuine">How to know it's really us</h2>
   {# source: policy, not code: we never email installers or phone users (docs/marketing/families-page.md "never asks for" block); download sources = site.yaml download/releases URLs #}
   <div class="callout callout--note">
@@ -89,5 +90,6 @@
   <h2 class="mt-l" id="remove">Removing it</h2>
   {# source: freemyid.iss UninstallDisplayName (Settings > Apps entry), [UninstallRun] "schedule remove", SuppressibleMsgBox delete-data prompt #}
   <p class="mt-s">Open Windows <strong>Settings → Apps</strong>, find <strong>Free My ID</strong>, and click <strong>Uninstall</strong>. It asks whether to delete your saved records too.</p>
-</div>
+  </div>
+</section>
 {% endblock %}
