@@ -50,8 +50,11 @@ def test_icon_and_installer_settings():
     assert "icon=ICON" in (ROOT / "packaging/windows/freemyid.spec").read_text()
 
 
-def _fill_env(env, monkeypatch, result, gate=None):  # noqa: F811
+def _fill_env(env, monkeypatch, result, gate=None, ack=True):  # noqa: F811
     c, store, p, _, f = env
+    if ack:
+        from freemyid import paths
+        (paths.home() / ".fill-confirmed").write_text("1")
     t = _assisted(p)
     store.save_todo(t)
     calls = []
@@ -125,3 +128,26 @@ def test_fill_requires_csrf_and_assisted(env, monkeypatch):  # noqa: F811
     assert r.headers["location"] == "/" and not calls
 
 
+
+
+def test_fill_first_time_needs_confirm_page(env, monkeypatch):  # noqa: F811
+    from freemyid import paths
+    c, _s, t, f, calls = _fill_env(env, monkeypatch, SimpleNamespace(
+        status="submitted", reason="x", submit_seen=True, todo_id=None), ack=False)
+    r = c.post(f"/todo/{t.id}/fill", data=f)
+    assert r.status_code == 303 and r.headers["location"] == f"/todo/{t.id}/fill/confirm"
+    assert not calls
+    page = c.get(f"/todo/{t.id}/fill/confirm").text
+    assert "This sends a real request to the site." in page and 'name="confirm"' in page
+    assert "alert(" not in page
+    r = c.post(f"/todo/{t.id}/fill", data={**f, "confirm": "yes"})
+    assert r.headers["location"] == "/fill"
+    assert (paths.home() / ".fill-confirmed").exists()
+    # one-time: next press goes straight through
+    for _ in range(100):
+        if not c.app.state.fill["running"]:
+            break
+        import time
+        time.sleep(0.05)
+    r = c.post(f"/todo/{t.id}/fill", data=f)
+    assert r.headers["location"] == "/fill"

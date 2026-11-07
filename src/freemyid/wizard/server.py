@@ -287,11 +287,34 @@ def create_app(store, token: str, allowed_hosts: set[str],
         return redirect(_back(t), "done")
 
     # "Fill it in for me" (D9): interactive only, one at a time, in a background thread.
-    @app.post("/todo/{tid}/fill")
-    async def todo_fill(tid: str):
+    def _fill_ack_path():
+        from .. import paths
+        return paths.home() / ".fill-confirmed"
+
+    def _needs_fill_confirm() -> bool:
+        from .. import config as cfgmod
+        return not cfgmod.load().real_submissions_enabled and not _fill_ack_path().exists()
+
+    @app.get("/todo/{tid}/fill/confirm")
+    async def todo_fill_confirm(tid: str):
         t = _todo(tid)
         if not t or t.kind != TodoKind.ASSISTED_OPT_OUT or not t.broker_id:
             return redirect("/")
+        return html(dash.fill_confirm_page(t.id, csrf_token))
+
+    @app.post("/todo/{tid}/fill")
+    async def todo_fill(tid: str, request: Request):
+        t = _todo(tid)
+        if not t or t.kind != TodoKind.ASSISTED_OPT_OUT or not t.broker_id:
+            return redirect("/")
+        if _needs_fill_confirm():   # SEC-38: one-time plain-language confirmation
+            form = await request.form()
+            if form.get("confirm") != "yes":
+                return redirect(f"/todo/{t.id}/fill/confirm")
+            try:
+                _fill_ack_path().write_text("1", encoding="utf-8")
+            except OSError:
+                pass
         with fill_lock:
             if app.state.fill["running"]:
                 return redirect("/", "fill_busy")

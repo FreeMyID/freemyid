@@ -34,3 +34,6 @@
 - Items 1-8 from wizard-packager-positioning.md applied: status_sentence, consent text and authorization form (people-search wording, scope sentence, same legal meaning), STEP_TITLES, report.py (sentence-form counts, "Site", no removed count), "Not running yet" banners now `.note` (style.css already had it; no CSS change), server.py / flows.py / firstrun.py strings. Tests and FAMILY_QUICK_START.md updated to the new sentence. Item 10 (declaration step) deferred.
 - Still says "broker" in user-visible text: firstrun is fixed, but cli.py help text (not mine) and the consent hint "also called data brokers" on the welcome screen (intentional, explains the term).
 - site/ fact-check done: see orchestrator report (birthday, ID photo, "never leaves your computer", report contents, browser download exception fixed).
+
+## Wave 4 (post v0.1.0)
+- SEC-38 DONE: practice mode, first "Fill it in for me" press -> server-rendered GET /todo/{id}/fill/confirm ("This sends a real request to the site."), POST confirm=yes writes <home>/.fill-confirmed; one-time. Tests in tests/test_wizard_polish.py (file is qa-owned? existing; I added one test + ack in _fill_env).

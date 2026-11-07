@@ -206,6 +206,18 @@ def fill_page(state: str, tid: str, csrf: str, bname: str = "") -> str:
         '<a class="btn primary" href="/">Back to home</a></div></div>'))
 
 
+def fill_confirm_page(tid: str, csrf: str) -> str:
+    return layout("Before we fill it in", (
+        '<div class="card"><h1>This sends a real request to the site.</h1>'
+        '<p class="big">You are in practice mode, but this step is different. Free My ID will '
+        'open the site and fill in the form. When you press Submit on the site, your request '
+        'is real.</p><p>We only ask this once. Free My ID never presses Submit for you.</p>'
+        f'<form method="post" action="/todo/{esc(tid)}/fill" class="inline">{csrf_field(csrf)}'
+        '<input type="hidden" name="confirm" value="yes"><div class="actions">'
+        '<button type="submit" class="primary big">I understand, continue</button>'
+        '<a class="btn secondary" href="/">Not now</a></div></form></div>'))
+
+
 def _flash(msg: str) -> str:
     return f'<div class="note" role="status">{esc(msg)}</div>' if msg else ""
 
