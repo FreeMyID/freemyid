@@ -18,7 +18,8 @@
 #
 # Options:
 #   --update          replace an existing install (required if one exists)
-#   --python PATH     interpreter for the venv (default /usr/bin/python3, >= 3.12)
+#   --python PATH     interpreter for the venv (default /usr/bin/python3, >= 3.12);
+#                     must resolve to a root-owned file in a root-owned directory
 #   --wheelhouse DIR  install from local wheels only (pip --no-index --find-links)
 #
 # Test seam: FREEMYID_POSTER_TEST_SKIP_PIP=1 creates an empty venv without
@@ -62,8 +63,28 @@ for f in poster.py verify.sh requirements.lock freemyid-poster.service freemyid-
     [[ -f $src/$f ]] || die "missing $src/$f"
 done
 [[ -d $seo_dir ]] || die "missing $seo_dir (the unit's only writable path)"
-"$python" -c 'import sys; sys.exit(sys.version_info < (3, 12))' 2>/dev/null \
+# The venv's python symlink and the stdlib are outside the pinned manifest, so they
+# must be root-owned and not group/world-writable (SEC-81b). Resolve symlinks first and
+# build the venv from the real path, so no user-owned link sits in between.
+root_only() { # $1 = path; true if it and its directory are root-owned and not g/o-writable
+    local d
+    for d in "$1" "$(dirname -- "$1")"; do
+        [[ $(stat -L -c %u -- "$d") == 0 ]] || return 1
+        [[ -z $(find "$d" -maxdepth 0 -perm /022 -print) ]] || return 1
+    done
+}
+py_real=$(readlink -e -- "$python") || die "no such interpreter: $python"
+[[ -f $py_real && -x $py_real ]] || die "$python is not an executable file"
+root_only "$py_real" \
+    || die "$python ($py_real) is not root-owned or is writable by others; use the system interpreter (/usr/bin/python3)"
+python=$py_real
+"$python" -I -c 'import sys; sys.exit(sys.version_info < (3, 12))' 2>/dev/null \
     || die "$python is not Python 3.12 or newer (use --python)"
+stdlib=$("$python" -I -c 'import sysconfig; print(sysconfig.get_paths()["stdlib"])') \
+    || die "cannot ask $python for its stdlib path"
+if [[ ! -f $stdlib/os.py ]] || ! root_only "$stdlib/os.py"; then
+    die "the stdlib of $python ($stdlib) is not root-owned or is writable by others"
+fi
 [[ -z $wheelhouse || -d $wheelhouse ]] || die "no such wheelhouse: $wheelhouse"
 
 [[ ! -L $prefix ]] || die "$prefix is a symlink; remove it by hand"

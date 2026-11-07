@@ -967,6 +967,20 @@ def sandbox(tmp_path: Path, monkeypatch):
             p.chmod(p.stat().st_mode | stat.S_IWUSR)
 
 
+def _system_python() -> str:
+    """A root-owned Python >= 3.12 for install.sh (it refuses user-owned ones, SEC-81b)."""
+    import subprocess
+
+    for cand in ("/usr/bin/python3", "/usr/local/bin/python3"):
+        real = os.path.realpath(cand)
+        if os.path.isfile(real) and os.stat(real).st_uid == 0:
+            ok = subprocess.run([real, "-I", "-c", "import sys; sys.exit(sys.version_info < (3, 12))"],
+                                check=False, capture_output=True, timeout=30).returncode == 0
+            if ok:
+                return cand
+    pytest.skip("no root-owned Python >= 3.12 for install.sh")
+
+
 def run_install(sandbox, *args: str, uid0: bool = False):
     import subprocess
 
@@ -977,7 +991,7 @@ def run_install(sandbox, *args: str, uid0: bool = False):
         fake_id.chmod(0o755)
     return subprocess.run(
         ["/bin/bash", str(repo / "tools" / "social" / "install.sh"),
-         "--python", sys.executable, *args],
+         "--python", _system_python(), *args],
         check=False, env=_hermetic_env(home, bin_dir, home.parent / "tmp"),
         capture_output=True, text=True, timeout=120, cwd=home, umask=0o022,
     )
@@ -1350,3 +1364,34 @@ def test_sec77_unit_uses_state_directory():
     unit = (ROOT / "tools/social/freemyid-poster.service").read_text("utf-8")
     assert "StateDirectory=freemyid-poster" in unit
     assert "StateDirectoryMode=0700" in unit
+
+
+# ----------------------------------------------------------------------------- SEC-81b --python
+
+
+@pytest.mark.linux_only
+def test_sec81b_install_refuses_user_owned_python(sandbox, tmp_path):
+    import shutil
+
+    if os.getuid() == 0:
+        pytest.skip("running as root: every copy is root-owned")
+    user_py = tmp_path / "mypy-bin" / "python3"
+    user_py.parent.mkdir()
+    shutil.copy2(os.path.realpath(_system_python()), user_py)
+    res = run_install(sandbox, "--python", str(user_py))  # the later --python wins
+    assert res.returncode != 0
+    assert "not root-owned" in res.stderr
+    prefix, service, _ = _paths(sandbox[1])
+    assert not prefix.exists() and not service.exists()
+
+
+@pytest.mark.linux_only
+def test_sec81b_install_resolves_a_symlinked_python(sandbox, tmp_path):
+    link = tmp_path / "link-bin" / "python3"
+    link.parent.mkdir()
+    link.symlink_to(_system_python())
+    res = run_install(sandbox, "--python", str(link))
+    assert res.returncode == 0, res.stderr
+    prefix, _, _ = _paths(sandbox[1])
+    cfg = (prefix / "venv" / "pyvenv.cfg").read_text("utf-8")
+    assert str(link) not in cfg  # the venv never points through the user-owned link
