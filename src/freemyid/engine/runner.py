@@ -473,12 +473,7 @@ class Runner:
                    for t in self.store.list_todos(profile.id))
 
     def _review_todo(self, profile: Profile, broker: Broker, li: Listing, n: int) -> None:
-        todo = Todo(profile_id=profile.id, broker_id=broker.id, kind=TodoKind.REVIEW_MATCH,
-                    title=f"Is this {profile.label}? ({broker.name})",
-                    body=(f"Free My ID found {n} listing(s) on {broker.name} that might be "
-                          f"{profile.label}. Open the link and tell us if it is them."),
-                    links=[li.url], resume_token=f"review:{li.id}")
-        hmod.persist_todo(self.store, todo)
+        review_todo(self.store, profile, broker, li, n)
 
     # ------------------------------------------------------------------ submit
     async def _dispatch(self, profile: Profile, target: Broker, tier: Tier,
@@ -796,3 +791,14 @@ class Runner:
             self._notifier().notify("Free My ID needs 5 minutes of your help", body, None)
         except Exception as e:  # noqa: BLE001
             log.info("notification failed: %s", type(e).__name__)
+
+
+def review_todo(store: Store, profile: Profile, broker: Broker, li: Listing, n: int) -> None:
+    """The 'Is this you?' to-do for possible matches (deduplicated by handoff.persist_todo).
+    Shared by the runner and the exposure scan."""
+    todo = Todo(profile_id=profile.id, broker_id=broker.id, kind=TodoKind.REVIEW_MATCH,
+                title=f"Is this {profile.label}? ({broker.name})",
+                body=(f"Free My ID found {n} listing(s) on {broker.name} that might be "
+                      f"{profile.label}. Open the link and tell us if it is them."),
+                links=[li.url], resume_token=f"review:{li.id}")
+    hmod.persist_todo(store, todo)
