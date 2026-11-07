@@ -136,9 +136,9 @@ const cardIcon = "inline-flex size-12 items-center justify-center rounded-lg bg-
     ))}
   </ul>
   {/* source: build data, the number of guides generated from brokers/registry.sample.yaml */}
-  <p class="mt-l">We have step-by-step guides for {guides.length} sites, and you can use every guide without the app. <a href={url("guides/")}>Browse the guides</a></p>
+  <p class="mt-l">We have {guides.length} step-by-step opt-out guides, and you can use every guide without the app. <a href={url("guides/")}>Browse the guides</a></p>
   {/* names = the same build data (public sample registry); decorative repeat of the guides list */}
-  <Marquee id="guide-marquee" label={`Sites with a free guide (${guides.length})`} items={guides.map((g) => g.name)} />
+  <Marquee id="guide-marquee" label={`Sites and services with a free guide (${guides.length})`} items={guides.map((g) => g.name)} />
 </Section>
 
 {/* 6. The post */}
