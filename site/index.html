@@ -10,7 +10,7 @@
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#1b2f5b">
 <link rel="canonical" href="https://freemyid.github.io/freemyid/">
-<link rel="stylesheet" href="style.css?v=5faed4591e">
+<link rel="stylesheet" href="style.css?v=9cb550681c">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -36,226 +36,306 @@
   <div class="wrap site-header__inner">
     <a class="brand" href="./"><svg class="brand-mark" viewBox="0 0 24 24" width="32" height="32" aria-hidden="true" focusable="false"><rect width="24" height="24" rx="5" class="bm-bg"/><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7L12 17.3 5.8 21l1.6-7L2 9.3l7.1-.7z" transform="translate(4.8 4.8) scale(.6)" class="bm-star"/><rect y="20" width="24" height="2" class="bm-bar"/></svg>
 <span>Free My ID<span class="visually-hidden">, home page</span></span></a>
-    <nav class="nav nav--wide" aria-label="Main">
-      <ul role="list">
+    <nav class="site-nav" aria-label="Main">
+      <ul class="site-nav__list" role="list">
   <li><a href="how-it-works/">How it works</a></li>
-  <li><a href="guides/">Opt-out guides</a></li>
-  <li><a href="privacy/">Your privacy</a></li>
-  <li><a href="faq/">Questions</a></li>
-  <li><a class="btn btn--small" href="download/"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>Download</a></li>
+  <li><a href="guides/">Guides</a></li>
+  <li><a href="safety/">Is it safe?</a></li>
+  <li><a href="families/">For families</a></li>
+  <li><a href="faq/">FAQ</a></li>
 </ul>
 
+      <details class="menu">
+        <summary><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span class="when-closed">Menu</span><span class="when-open">Close</span></summary>
+        <ul class="menu__list" role="list">
+  <li><a href="how-it-works/">How it works</a></li>
+  <li><a href="guides/">Guides</a></li>
+  <li><a href="safety/">Is it safe?</a></li>
+  <li><a href="families/">For families</a></li>
+  <li><a href="faq/">FAQ</a></li>
+</ul>
+
+      </details>
     </nav>
-    <details class="menu">
-      <summary><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span class="when-closed">Menu</span><span class="when-open">Close</span></summary>
-      <nav class="nav" aria-label="Main">
-        <ul role="list">
-  <li><a href="how-it-works/">How it works</a></li>
-  <li><a href="guides/">Opt-out guides</a></li>
-  <li><a href="privacy/">Your privacy</a></li>
-  <li><a href="faq/">Questions</a></li>
-  <li><a class="btn btn--small" href="download/"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>Download</a></li>
-</ul>
-
-      </nav>
-    </details>
+    <div class="site-header__cta">
+<a class="btn btn--primary btn--small" href="download/"><span class="visually-hidden">Windows download: </span>Coming soon</a>
+    </div>
   </div>
 </header>
 <main id="main" tabindex="-1">
+
 <section class="hero" aria-labelledby="hero-title">
-<svg class="hero__stars" viewBox="0 0 200 200" width="200" height="200" aria-hidden="true" focusable="false"><g fill="currentColor"><path d="M100 10l26 53 58 8-42 41 10 58-52-27-52 27 10-58-42-41 58-8z"/></g></svg>
-  <div class="wrap two-col">
-    <div>
-      <p class="kicker"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path fill="currentColor" stroke="none" d="M12 2.8l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 16.8l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>That post didn't stop anyone. This does.</p>
+  <div class="wrap">
+    <div class="hero__text">
+      <p class="kicker">Free. Open source. For Windows.</p>
       <h1 id="hero-title">Take your name off the websites that sell it.</h1>
-      <!-- Source for "scammers and stalkers": U.S. CFPB press release, 3 Dec 2024, "CFPB Proposes Rule to Stop Data Brokers from Selling Sensitive Personal Data to Scammers, Stalkers, and Spies" https://www.consumerfinance.gov/archive/newsroom/cfpb-proposes-rule-to-stop-data-brokers-from-selling-sensitive-personal-data-to-scammers-stalkers-and-spies/ -->
-      <p class="lead">Websites are selling your home address, phone number, age and relatives' names to anyone who pays, scammers and stalkers included. Free My ID asks each one to remove you, the way that site takes removal requests, and keeps checking that it did.</p>
-      <div class="btn-row">
-        <a class="btn btn--lg" href="download/"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>Download Free My ID (free, for Windows)</a>
-        <a class="btn btn--lg btn--secondary" href="how-it-works/">See how it works</a>
+      <p class="hero__lead">Free My ID asks the people-search and data-broker sites that list your name, address and phone number to remove them, then keeps checking. It runs on your own computer. No account. No cloud.</p>
+      <div class="hero__actions">
+<a class="btn btn--primary btn--large" href="download/">Windows download: coming soon</a>
+        <a class="btn btn--ghost btn--large" href="how-it-works/">See how it works</a>
       </div>
-      <!-- Source: docs/PLAN_V1.md D5 (per-user install, PrivilegesRequired=lowest); install time VM-measured (commit 891452e) -->
-      <p class="note">For Windows 10 and 11. Installs in a few minutes, with no administrator password.</p>
-      <!-- Source: site_src/data/faq.yaml "Why does Windows warn me" (published copy) -->
-      <p class="note">Windows may show a blue "protected your PC" box the first time. <a href="download/#smartscreen">That's expected. Here's what to click.</a></p>
+      <p class="hero__note">Free for Windows 10 and 11. The first version is not published yet.</p>
+      <p class="hero__note">Windows may show a blue "protected your PC" box the first time. <a href="download/#smartscreen">That's expected. Here's what to click.</a></p>
     </div>
-<figure class="mock">
-  <div class="mock__window" role="img" aria-label="Drawing of the Free My ID home screen for an example person, Jane Q Testperson of Springfield, Illinois. It says Free My ID is working, most sites have confirmed, some are still waiting, and one site needs a few minutes of help, with a big Do it with me button.">
-    <div class="mock__bar"><svg class="brand-mark" viewBox="0 0 24 24" width="32" height="32" aria-hidden="true" focusable="false"><rect width="24" height="24" rx="5" class="bm-bg"/><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7L12 17.3 5.8 21l1.6-7L2 9.3l7.1-.7z" transform="translate(4.8 4.8) scale(.6)" class="bm-star"/><rect y="20" width="24" height="2" class="bm-bar"/></svg>
-<span>Free My ID</span><span class="mock__ctl">&#8211; &#9633; &#215;</span></div>
-    <div class="mock__body">
-      <p class="mock__who">Jane Q Testperson &middot; Springfield, IL</p>
-      <p class="mock__status"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16.2 9.5"/></svg><span>Free My ID is working. 23 sites have confirmed or no longer list you, 12 are still waiting, 1 needs you.</span></p>
-      <div class="mock__todo">
-        <p><strong>Whitepages needs 2 minutes of your help</strong></p>
-        <span class="mock__btn">Do it with me</span>
-      </div>
-      <ul class="mock__list">
-        <li><span>Spokeo</span><span class="chip chip--ok">Site confirmed</span></li>
-        <li><span>BeenVerified</span><span class="chip chip--warn">Waiting for the site to reply</span></li>
-        <li><span>TruePeopleSearch</span><span class="chip">Asked</span></li>
-      </ul>
+    <figure class="hero__media">
+      <img src="assets/screenshots/dashboard.webp" width="1000" height="1045" fetchpriority="high" alt="The Free My ID home screen. A plain sentence says 7 sites have confirmed or no longer list you, 3 are waiting and 2 need you, followed by a card with copy-and-paste details and large buttons for the one step left.">
+      <figcaption class="caption">Example with made-up data</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="band band--tight" aria-label="Our promises">
+  <div class="wrap">
+    <ul class="trustbar" role="list">
+      <li class="trustbar__item"><a href="safety/#local"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M9 20h6M12 16v4"/></svg><span>No account. Runs on your PC. Nothing sent to us.</span></a></li>
+      <li class="trustbar__item"><a href="safety/#never-asks"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l7 3v5.2c0 4.4-2.9 8.1-7 9.8-4.1-1.7-7-5.4-7-9.8V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg><span>Never asks for your Social Security number, bank or card details</span></a></li>
+      <li class="trustbar__item"><a href="safety/#open-source"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></svg><span>Free and open source</span></a></li>
+      <li class="trustbar__item"><a href="safety/#uninstall"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 7h16M9.5 7V4h5v3M6 7l1 13h10l1-13"/></svg><span>Uninstall any time</span></a></li>
+    </ul>
+  </div>
+</section>
+
+<section class="band band--alt" aria-labelledby="proof-title">
+  <div class="wrap">
+    <div class="section-head">
+      <h2 id="proof-title">See exactly what was asked, and what came back.</h2>
+      <p class="lead">Free My ID keeps a plain list: which site, when it asked, where things stand, and when it last checked. You can print it.</p>
     </div>
-  </div>
-  <figcaption>Example screen. The person and the numbers are made up.</figcaption>
-</figure>
+    <figure class="proof">
+      <img src="assets/screenshots/report.webp" width="900" height="1220" loading="lazy" alt="The printable progress report: a table of each people-search site, its status (site confirmed, asked, not listed now, needs you), when it was last checked and when the request was made.">
+      <figcaption class="caption">Sample report with made-up data</figcaption>
+    </figure>
+    <p>Some sites remove you in days. Some take weeks. Some ignore the request, and the report shows those too.</p>
   </div>
 </section>
 
-<section class="section" aria-labelledby="promises">
+<section class="band" aria-labelledby="steps-title">
   <div class="wrap">
-    <h2 id="promises" class="section-head">Our promises to you</h2>
-<div class="trust ">
-  <h2 class="visually-hidden">Our promises</h2>
-  <ul role="list">
-    <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="10" cy="8" r="3.8"/><path d="M3 20.5c0-3.7 3.1-6.3 7-6.3"/><path d="M15.5 15l5 5M20.5 15l-5 5"/></svg><span>No account</span></li>
-    <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M7.5 18h9.5a3.5 3.5 0 0 0 .6-6.95A6 6 0 0 0 6.3 9.4 4.3 4.3 0 0 0 7.5 18z"/><path d="M4 4l16 16"/></svg><span>No cloud</span></li>
-    <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l7 3v5.2c0 4.4-2.9 8.1-7 9.8-4.1-1.7-7-5.4-7-9.8V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg><span>Never asks for your Social Security number, bank or card details</span></li>
-    <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M9 20h6M12 16v4"/></svg><span>Your records stay on your computer</span></li>
-    <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></svg><span>Free and open source</span></li>
-    <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 7h16M9.5 7V4h5v3M6 7l1 13h10l1-13"/></svg><span>Uninstall anytime</span></li>
-  </ul>
-</div>
-    <!-- Source: docs/HELPER_GUIDE.md last line (approved copy), via WR-7 -->
-    <p class="note mt-s">Free My ID is not a government service, and it isn't connected to Facebook/Meta or to any people-search site.</p>
-  </div>
-</section>
-
-<section class="section section--alt" aria-labelledby="the-post">
-  <div class="wrap prose">
-    <p class="kicker"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 5h16v11H9.5L5 20v-4H4z"/></svg>You may have seen it on Facebook</p>
-    <h2 id="the-post">That post went to the wrong place</h2>
-    <p class="mt-s">Lots of people have posted "I do not give permission to use my pictures or information…" on Facebook. The instinct is right: your information should be yours. But a post on your own page doesn't reach the companies that sell your details, and they aren't required to read it.</p>
-    <p>Free My ID sends your "I do not consent" to the right place: the people-search sites (also called data brokers) that list and sell personal information. It uses each site's own opt-out process. Where a state privacy law applies (California and a growing list of other states), it sends a formal request the site is required to answer. Everywhere else it sends a clear, polite removal request: many sites honor these, but they aren't legally required to.</p>
-    <p><a href="i-do-not-consent/">Does the "I do not consent" post work? Read the full answer</a></p>
-  </div>
-</section>
-
-<section class="section" aria-labelledby="three-steps">
-  <div class="wrap">
-    <h2 id="three-steps" class="section-head">How it works, in three steps</h2>
-    <div class="card-grid card-grid--3">
-    <ol class="steps steps--big grid-auto" role="list">
-      <li><h3>Tell it who to protect</h3><p>Six simple screens: your name and the towns you've lived in. It never asks for your Social Security number or bank details.</p></li>
-      <li><h3>It sends the requests</h3><p>By email, by walking you through a site's form, or by filling the form in while you watch. Each site gets only what it already shows about you.</p></li>
-      <li><h3>It keeps checking</h3><p>Once a day, in the background. It shows you which sites confirmed and which are still waiting, and asks again if a site lists you again.</p></li>
+    <div class="section-head">
+      <h2 id="steps-title">How it works, in three steps</h2>
+    </div>
+    <ol class="steps" role="list">
+      <li class="step"><span class="step__num" aria-hidden="true">1</span><h3>Tell it who to protect.</h3><p>Six short screens: your name and the towns you have lived in. It never asks for your Social Security number or bank details.</p></li>
+      <li class="step"><span class="step__num" aria-hidden="true">2</span><h3>It sends the requests.</h3><p>By email, by walking you through a site's form, or by filling the form in while you watch. Each site gets only what it already shows about you.</p></li>
+      <li class="step"><span class="step__num" aria-hidden="true">3</span><h3>It keeps checking.</h3><p>Once a day, quietly in the background, while your computer is on and you are signed in. You see who confirmed, who is still waiting, and it asks again if a site lists you again.</p></li>
     </ol>
-    </div>
-    <p class="mt-m"><a href="how-it-works/">More about how Free My ID works</a></p>
+    <p><a href="how-it-works/">Read the details of the three ways</a></p>
   </div>
 </section>
 
-<div class="star-rule" aria-hidden="true"><svg viewBox="0 0 72 16" width="72" height="16"><g fill="currentColor"><path d="M8 1.5l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.3l-3.8 2 .7-4.3-3.1-3 4.3-.6z"/><path d="M36 1.5l1.9 3.9 4.3.6-3.1 3 .7 4.3-3.8-2-3.8 2 .7-4.3-3.1-3 4.3-.6z"/><path d="M64 1.5l1.9 3.9 4.3.6-3.1 3 .7 4.3-3.8-2-3.8 2 .7-4.3-3.1-3 4.3-.6z"/></g></svg></div>
-
-<section class="section" aria-labelledby="honest">
+<section class="band band--alt" id="what-it-removes" aria-labelledby="removes-title">
   <div class="wrap">
-    <h2 id="honest" class="section-head">What it does, honestly</h2>
-    <div class="card-grid">
-      <div class="grid-auto">
-        <div class="card">
-          <h3>Free My ID does</h3>
-          <ul class="checklist checklist--yes mt-s" role="list">
-            <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Ask people-search and data-broker sites to remove your listing, using each site's own process</span></li>
-            <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Send a formal legal request where your state's privacy law applies, and a polite request everywhere else</span></li>
-            <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Click the "confirm your request" links that sites send, and follow up when a site goes quiet</span></li>
-            <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Check again later, because some sites list people again</span></li>
-            <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Show you where each site stands: <em>asked</em>, <em>confirmed</em> or <em>still waiting</em></span></li>
-          </ul>
-        </div>
-        <div class="card">
-          <h3>Free My ID does not</h3>
-          <ul class="checklist checklist--no mt-s" role="list">
-            <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 12h12"/></svg><span>Remove you from every website on the internet. Nobody honest can promise that.</span></li>
-            <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 12h12"/></svg><span>Change what Facebook itself does with your account</span></li>
-            <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 12h12"/></svg><span>Stop hacking, phone tapping or government surveillance</span></li>
-            <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 12h12"/></svg><span>Remove news stories, social media posts or government records</span></li>
-            <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 12h12"/></svg><span>Ask for your Social Security number, bank or card details. Ever.</span></li>
-          </ul>
-        </div>
-      </div>
+    <div class="section-head">
+      <h2 id="removes-title">What people-search sites are selling about you.</h2>
+      <p class="lead">People-search sites, also called data brokers, collect public records and sell them to anyone. Here is what they commonly list:</p>
     </div>
-    <p class="mt-m">Some sites take weeks to respond, and some list people again later. That's why Free My ID keeps checking.</p>
+    <ul class="cards cards--4" role="list">
+      <li class="card"><span class="card__icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 11l8-7 8 7"/><path d="M6 9.5V20h12V9.5M10 20v-5h4v5"/></svg></span><h3>Home address</h3></li>
+      <li class="card"><span class="card__icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 4h3.5l1.8 4.5-2.3 1.4a11 11 0 0 0 6.1 6.1l1.4-2.3L20 15.5V19a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z"/></svg></span><h3>Phone numbers</h3></li>
+      <li class="card"><span class="card__icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="9" cy="8" r="3.4"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17.5 14c2.4 0 4 1.8 4 4.5"/></svg></span><h3>Names of relatives</h3></li>
+      <li class="card"><span class="card__icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span><h3>Age or birth year</h3></li>
+    </ul>
+    <p>We have step-by-step guides for 29 sites, and you can use every guide without the app. <a href="guides/">Browse the guides</a></p>
   </div>
 </section>
 
-<section class="section section--alt" id="helping" aria-labelledby="helping-title">
-  <div class="wrap two-col">
-    <div class="prose">
-      <p class="kicker"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="9" cy="8" r="3.4"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17.5 14c2.4 0 4 1.8 4 4.5"/></svg>For families and helpers</p>
-      <h2 id="helping-title">Helping a parent or grandparent?</h2>
-      <p class="mt-s">Free My ID was built so your parents and grandparents can use it: one installer, six simple screens, big buttons, plain words. After that it quietly re-checks once a day in the background, and only asks for help when a site truly needs a person.</p>
-      <!-- Sources: site/faq.html "Can I set it up for my parents?"; docs/USER_GUIDE.md section 3 (adult signs a permission form; "won't work on anyone without this step"); docs/USER_GUIDE.md section 4 (practice mode first) -->
-      <ul>
-        <li>Set it up on their computer in one visit, or protect several family members from one computer.</li>
-        <li>Each adult gives their own permission. Free My ID won't work on anyone without it.</li>
-        <li>Practice mode comes first, so nothing is sent until you say so.</li>
+<section class="band" aria-labelledby="post-title">
+  <div class="wrap wrap--narrow">
+    <div class="section-head">
+      <h2 id="post-title">You said "I do not consent." Here is how to make it count.</h2>
+    </div>
+    <p>If you shared that post on Facebook, you were right to object. The post just went to the wrong place, and in a form nobody is required to honor. The people who sell your address are the people-search sites, and each has its own removal process. Free My ID sends your request there, in the form each site actually processes, and in states with a broker privacy law, as a formal legal request.</p>
+    <p>It does not change what Facebook itself does with your account.</p>
+    <p><a href="i-do-not-consent/">Read: does the "I do not consent" post work?</a></p>
+  </div>
+</section>
+
+<section class="band band--alt" id="compare" aria-labelledby="compare-title">
+  <div class="wrap">
+    <div class="section-head">
+      <h2 id="compare-title">Free My ID, paid removal services, or doing it by hand</h2>
+    </div>
+    <div class="table-scroll" tabindex="0" role="region" aria-labelledby="compare-title">
+      <table class="compare">
+        <caption class="visually-hidden">Free My ID compared with paid removal services (typical) and doing it by hand</caption>
+        <thead>
+          <tr>
+            <th scope="col"><span class="visually-hidden">Question</span></th>
+            <th scope="col">Free My ID</th>
+            <th scope="col">Paid removal services (typical)</th>
+            <th scope="col">By hand</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">Price</th><td class="yes">Free</td><td>Yearly or monthly fee</td><td>Free, your time</td></tr>
+          <tr><th scope="row">Where your details go</th><td class="yes">Stay on your computer</td><td>Sent to the company</td><td>Stay on your computer</td></tr>
+          <tr><th scope="row">Account</th><td class="yes">None</td><td>Account required</td><td>None</td></tr>
+          <tr><th scope="row">Who sends the requests</th><td>Your own computer, as you</td><td>The company, on your behalf</td><td>You</td></tr>
+          <tr><th scope="row">Keeps checking</th><td class="yes">Yes, daily on your PC (your computer must be on and you must be signed in to Windows at the time)</td><td>Yes, on a schedule</td><td class="no">Only if you remember</td></tr>
+          <tr><th scope="row">Company staff handle hard cases</th><td class="partial">No. Some sites need you to do a step, and it shows you how</td><td>Often, on higher plans</td><td>You</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="caption">"Typical" describes the category, not any one company. Features and prices vary by service. Reviewed 2026-11-07.</p>
+    <p>Free My ID is open source, so you can read it, and works on Windows 10 and 11 today.</p>
+    <p>If you'd rather have a company handle it for you, a paid service may suit you better. We'll say so plainly.</p>
+  </div>
+</section>
+
+<section class="band" aria-labelledby="safety-title">
+  <div class="wrap">
+    <div class="section-head">
+      <h2 id="safety-title">Built so you do not have to trust us.</h2>
+    </div>
+    <ul class="cards cards--3" role="list">
+      <li class="card"><span class="card__icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg></span><h3>Nothing leaves your computer.</h3><p>Your details are stored encrypted on your computer. The app talks only to the sites you are asking to remove you, your own email account, and our public list of those sites.</p></li>
+      <li class="card"><span class="card__icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l7 3v5.2c0 4.4-2.9 8.1-7 9.8-4.1-1.7-7-5.4-7-9.8V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg></span><h3>It never asks for the wrong things.</h3><p>Never your Social Security number. Never bank or card details. Never a payment. Never a phone number or ID unless you choose to.</p></li>
+      <li class="card"><span class="card__icon"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></svg></span><h3>You can check the work.</h3><p>The code is public. Every download has a fingerprint you can compare. Uninstalling removes the program and its daily check.</p></li>
+    </ul>
+    <aside class="callout callout--info">
+      <svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.2"/></svg>
+      <p>Windows may warn "unknown publisher" the first time, because the installer is not yet signed. <a href="download/#smartscreen">See what the warning looks like and how to check the file</a>.</p>
+    </aside>
+    <div class="dodont">
+      <div class="dodont__col dodont__col--do">
+        <h3>Free My ID does</h3>
+        <ul role="list">
+          <li>Ask people-search and data-broker sites to remove your listing, using each site's own process</li>
+          <li>Send a formal legal request where your state's privacy law applies, and a polite request everywhere else</li>
+          <li>Click the "confirm your request" links that sites send, and follow up when a site goes quiet</li>
+          <li>Check again later, because some sites list people again</li>
+          <li>Show you where each site stands: <em>asked</em>, <em>confirmed</em> or <em>still waiting</em></li>
+        </ul>
+      </div>
+      <div class="dodont__col dodont__col--dont">
+        <h3>Free My ID does not</h3>
+        <ul role="list">
+          <li>Remove you from every website on the internet. Nobody honest can promise that.</li>
+          <li>Change what Facebook itself does with your account</li>
+          <li>Stop hacking, phone tapping or government surveillance</li>
+          <li>Remove news stories, social media posts or government records</li>
+          <li>Ask for your Social Security number, bank or card details. Ever.</li>
+        </ul>
+      </div>
+    </div>
+    <p><a href="safety/">Is Free My ID safe? Read the details</a></p>
+  </div>
+</section>
+
+<section class="band band--alt" aria-labelledby="price-title">
+  <div class="wrap">
+    <div class="section-head">
+      <h2 id="price-title">It's free</h2>
+    </div>
+    <div class="price-card">
+      <p class="price-card__label">Free My ID</p>
+      <p class="price-card__price">$0</p>
+      <p class="price-card__sub">Free. No trial. No card.</p>
+      <ul class="checklist" role="list">
+        <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Everything the app does, all three ways of sending requests</span></li>
+        <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Daily re-checks on your PC</span></li>
+        <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Printable progress report</span></li>
+        <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Every guide</span></li>
+        <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Uninstall any time</span></li>
       </ul>
-      <div class="btn-row mt-m">
-        <a class="btn" href="download/"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>Download, free</a>
-        <a class="btn btn--secondary" href="families/">Read the helper's guide</a>
-        <a class="btn btn--secondary" href="guides/">Use the free guides instead</a>
-      </div>
+<a class="btn btn--primary btn--large" href="download/">Windows download: coming soon</a>
     </div>
-    <div class="card">
-      <h3><svg class="icon card__icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l7 3v5.2c0 4.4-2.9 8.1-7 9.8-4.1-1.7-7-5.4-7-9.8V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg>A good rule to share</h3>
-      <p class="mt-s">Free My ID will <strong>never</strong> ask for a Social Security number, bank card or passwords. If something claiming to be Free My ID asks for those, it isn't us. Stop and call your helper.</p>
+    <h3>Why is it free?</h3>
+    <p>Free My ID is open-source software, so anyone can read it and anyone can use it. It exists to help ordinary people, starting with the author's own family.</p>
+  </div>
+</section>
+
+<section class="band" aria-labelledby="helpers-title">
+  <div class="wrap wrap--narrow">
+    <div class="section-head">
+      <h2 id="helpers-title">Helping a parent or grandparent?</h2>
+      <p class="lead">Set it up once on their computer, and it keeps working. They stay in control, and can stop or uninstall at any time.</p>
+    </div>
+    <ul>
+      <li>Set it up on their computer in one visit, or protect several family members from one computer.</li>
+      <li>Each adult gives their own permission. Free My ID won't work on anyone without it.</li>
+      <li>Practice mode comes first, so nothing is sent until you say so.</li>
+    </ul>
+    <p>Windows only for now. The person whose information is listed should agree to this.</p>
+    <div class="btn-row">
+<a class="btn btn--secondary" href="download/">Windows download: coming soon</a>
+      <a class="btn btn--ghost" href="families/">Read the helper's guide</a>
     </div>
   </div>
 </section>
 
-<section class="section" aria-labelledby="short-faq">
-  <div class="wrap prose">
-    <h2 id="short-faq" class="section-head">Common questions</h2>
+<section class="band band--alt" aria-labelledby="faq-title">
+  <div class="wrap wrap--narrow">
+    <div class="section-head">
+      <h2 id="faq-title">Common questions</h2>
+    </div>
     <div class="faq">
-      <details id="q-free"><summary>Is it really free?</summary><p>Yes. The app is free and open source. A paid option with extra help may come later, but the app itself stays free.</p></details>
-      <details id="q-whole-internet"><summary>Will this remove me from the whole internet?</summary><p>No, and be wary of anyone who promises that. Free My ID asks people-search and data-broker sites to remove your listing, shows you which ones confirmed, and keeps checking. It can't remove news stories, social media posts or government records.</p></details>
-      <details id="q-have-to"><summary>Do sites have to remove me?</summary><p>It depends on where you live. California and a growing number of states have privacy laws that require these sites to answer removal requests. In states without such a law, the request is a polite one. Many sites honor it anyway, but some don't. Free My ID tells you honestly which sites confirmed and which are still waiting.</p></details>
-      <details id="q-ssn"><summary>Will it ask for my Social Security number or bank details?</summary><p>No. Free My ID never asks for your Social Security number, bank account, or credit or debit card details. If anything claiming to be Free My ID asks you for these, it isn't us. <a href="privacy/">See everything we will never ask for</a>.</p></details>
-      <details id="q-parents"><summary>Can I set it up for my parents?</summary><p>Yes. It's made for that. You can set it up on their computer, or protect several family members from one computer.</p></details>
-      <details id="q-windows-warning"><summary>Why does Windows warn me when I install it?</summary><p>Windows shows a blue "Windows protected your PC" box for new programs that haven't bought a publisher certificate. Free My ID hasn't bought one yet. <a href="download/#smartscreen">See what to click, with pictures</a>.</p></details>
+      <details class="faq__item" id="q-free" open><summary>Is it really free?</summary><div class="faq__body"><p>Yes. There is no trial, no card and no account. The app is free and open source.</p></div></details>
+      <details class="faq__item" id="q-scam" open><summary>Is this a scam? How do I know?</summary><div class="faq__body"><p>We never ask for your Social Security number, bank or card details, and the app never asks for a payment. The code is public, and you can check the download's fingerprint. <a href="safety/#open-source">How to check that Free My ID is genuine</a>.</p></div></details>
+      <details class="faq__item" id="q-where-data"><summary>Where does my information go?</summary><div class="faq__body"><p>It stays on your computer. The app contacts only the sites you are asking to remove you, your own email and our public list of sites. <a href="safety/#local">What Free My ID stores, and where</a>.</p></div></details>
+      <details class="faq__item" id="q-whole-internet"><summary>Will this remove me from the whole internet?</summary><div class="faq__body"><p>No, and be wary of anyone who promises that. Free My ID asks people-search and data-broker sites to remove your listing, shows you which ones confirmed, and keeps checking. It can't remove news stories, social media posts or government records.</p></div></details>
+      <details class="faq__item" id="q-i-do-not-consent"><summary>I posted &#34;I do not consent.&#34; Did that work?</summary><div class="faq__body"><p>You were right to object. On its own, that post doesn't reach the sites that sell your details. Free My ID sends your wish to them directly. <a href="i-do-not-consent/">Read more about the "I do not consent" post</a>.</p></div></details>
+      <details class="faq__item" id="q-how-long"><summary>How long does it take?</summary><div class="faq__body"><p>Setup is six short screens. Some sites remove you within days; others take weeks. Free My ID keeps track so you don't have to.</p></div></details>
+      <details class="faq__item" id="q-windows-warning"><summary>Why does Windows warn me when I install it?</summary><div class="faq__body"><p>Windows shows a blue "Windows protected your PC" box for new programs that haven't bought a publisher certificate. Free My ID hasn't bought one yet. <a href="download/#smartscreen">See what to click, with pictures</a>.</p></div></details>
+      <details class="faq__item" id="q-mac"><summary>Is there a Mac or phone version?</summary><div class="faq__body"><p>Not yet. Free My ID runs on Windows 10 and Windows 11.</p></div></details>
     </div>
-    <p class="mt-m"><a class="link-solo" href="faq/">See all questions</a></p>
+    <p><a href="faq/">See all questions</a></p>
   </div>
 </section>
 
-<section class="section section--alt" aria-labelledby="cta">
-  <div class="wrap center">
-    <h2 id="cta">Your information. Off the market.</h2>
-    <p class="lead mt-s">Free, open source, and it runs on your own computer. <a href="https://github.com/FreeMyID/freemyid">Read the source code.</a></p>
-    <div class="btn-row btn-row--center mt-m">
-      <a class="btn btn--lg" href="download/"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>Download Free My ID (free, for Windows)</a>
-    </div>
+<section class="cta-final" aria-labelledby="cta-title">
+  <div class="wrap">
+    <h2 id="cta-title">Your information. Off the market.</h2>
+    <p>Free, open source, and it runs on your own computer, checking once a day.</p>
+<a class="btn btn--primary btn--large" href="download/">Windows download: coming soon</a>
+    <p class="cta-final__note">No account. No cloud. Never asks for your Social Security number. Uninstall any time.</p>
   </div>
 </section>
 </main>
 <footer class="site-footer">
   <div class="wrap">
-    <div class="footer-grid">
-      <div>
-        <a class="brand" href="./"><svg class="brand-mark" viewBox="0 0 24 24" width="32" height="32" aria-hidden="true" focusable="false"><rect width="24" height="24" rx="5" class="bm-bg"/><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7L12 17.3 5.8 21l1.6-7L2 9.3l7.1-.7z" transform="translate(4.8 4.8) scale(.6)" class="bm-star"/><rect y="20" width="24" height="2" class="bm-bar"/></svg>
+    <a class="brand" href="./"><svg class="brand-mark" viewBox="0 0 24 24" width="32" height="32" aria-hidden="true" focusable="false"><rect width="24" height="24" rx="5" class="bm-bg"/><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7L12 17.3 5.8 21l1.6-7L2 9.3l7.1-.7z" transform="translate(4.8 4.8) scale(.6)" class="bm-star"/><rect y="20" width="24" height="2" class="bm-bar"/></svg>
 <span>Free My ID<span class="visually-hidden">, home page</span></span></a>
-        <p class="mt-s">Take your name off the websites that sell it.</p>
-        <p class="footer-trust">No account. No cloud. Never asks for your Social Security number, bank or card details. Free and open source. Uninstall anytime.</p>
-      </div>
-      <nav aria-label="Free My ID">
-        <h2>The app</h2>
+    <p>Take your name off the websites that sell it.</p>
+    <div class="footer-cols">
+      <nav aria-label="Product">
+        <h2>Product</h2>
         <ul role="list">
-          <li><a href="how-it-works/">How it works</a></li>
           <li><a href="download/">Download for Windows</a></li>
-          <li><a href="privacy/">Your privacy</a></li>
-          <li><a href="faq/">Questions</a></li>
+<li><a href="how-it-works/">How it works</a></li>          <li><a href="#what-it-removes">What it removes</a></li>
+<li><a href="families/">For families</a></li>          <li><a href="#compare">Compare with paid services</a></li>
         </ul>
       </nav>
-      <nav aria-label="Help">
-        <h2>Help</h2>
+      <nav aria-label="Learn">
+        <h2>Learn</h2>
         <ul role="list">
-<li><a href="guides/">Free opt-out guides</a></li><li><a href="i-do-not-consent/">The "I do not consent" post</a></li><li><a href="families/">Helping a parent</a></li>          <li><a href="https://github.com/FreeMyID/freemyid">Source code on GitHub</a></li>
+<li><a href="guides/">Free opt-out guides</a></li><li><a href="i-do-not-consent/">The "I do not consent" post</a></li>          <li><a href="faq/">Questions (FAQ)</a></li>
+          <li><a href="faq/#myths">Myth vs. fact</a></li>
+        </ul>
+      </nav>
+      <nav aria-label="Trust">
+        <h2>Trust</h2>
+        <ul role="list">
+          <li><a href="safety/">Is it safe?</a></li>
+          <li><a href="safety/#never-asks">What it never asks for</a></li>
+          <li><a href="safety/#open-source">Open source</a></li>
+          <li><a href="download/#checksum">Verify your download</a></li>
+          <li><a href="safety/#uninstall">How to uninstall</a></li>
+        </ul>
+      </nav>
+      <nav aria-label="Project">
+        <h2>Project</h2>
+        <ul role="list">
+          <li><a href="https://github.com/FreeMyID/freemyid">Source code on GitHub</a></li>
+          <li><a href="https://github.com/FreeMyID/freemyid/blob/main/LICENSE">License: GNU AGPL v3</a></li>
+          <li><a href="https://creativecommons.org/licenses/by-nc/4.0/">Site list data license: CC BY-NC 4.0</a></li>
         </ul>
       </nav>
     </div>
     <div class="footer-legal">
+      <p>No account. No cloud. Never asks for your Social Security number, bank or card details. Free and open source. Uninstall anytime.</p>
       <p>Free My ID is free, open-source software that runs on your own computer. It is not a government service and is not affiliated with Facebook/Meta or any data broker.</p>
-      <p>No cookies, no trackers, no analytics on this website. <a href="privacy/#this-website">How this website treats you</a>.</p>
+      <p>No account. No login. No tracking, no cookies. <a href="safety/#this-website">How this website treats you</a>.</p>
     </div>
   </div>
 </footer>
