@@ -551,3 +551,36 @@ Not done: no REVIEW_MATCH to-dos for "possible" exposure hits (the next run crea
 Old-address variants aren't searched (current address only). The real registry has no
 `search_url_pattern` yet, so the exposure list is empty on the real registry until
 broker-researcher adds them.
+
+## 2026-11-07 v0.3: state-law deletion letters + checklist CLI (Theo Park)
+- 819e7a8 State-law letters. New `engine/law_matrix.py` loads
+  brokers/state_law_deletion_matrix.yaml. `outbox.effective_law` (and so compose,
+  queue_email, assisted, fill-for-me) cites a law ONLY when the matrix entry for the CURRENT
+  address's state has `evidence: statute_text`, `in_force`, `deletion_right: yes` and a
+  citation, and state_laws.yaml names the law with a delete right in effect. The citation
+  printed is the matrix's verified one ("Legal basis: ..."), never the background one from
+  state_laws.yaml. The deadline (and the one-time extension) is printed only if
+  `response_days_evidence` (default: the entry's evidence) is statute_text. A missing or
+  broken matrix fails closed: generic letter for everyone. `state_laws.last_verified` is no
+  longer the gate. New partial `templates/_law_rules.txt.j2` has the deadline and
+  verification rules in plain words. Per-state verification lines are in
+  `letters.VERIFICATION_RULES` (VA, MN, KY, from the matrix common_rules, statute_text) and
+  `AGENT_RULES` (CA, authorized agent only). Approval gate (SEC-27) and practice mode are
+  untouched: letters go through queue_email as before. Tests: tests/test_state_law_letters.py.
+  tests/test_outbox_letters.py now injects a matrix.
+- 18bf7df `freemyid checklist list|show ID|done ID|undo ID [-p PROFILE] [--json]` (schemas
+  checklists/1 and checklist/1). Storage helper: `src/freemyid/checklist_state.py`.
+
+### For wizard-packager (Nina): use checklist_state for the dashboard ticks
+`wizard/protect.py` should delegate to `freemyid.checklist_state`: `load_checklists()`,
+`progress(store, pid) -> {id: bool}`, `set_done(store, pid, id, done) -> bool`,
+`counts(store, pid) -> (done, total)`, plus `ticks()` (with timestamps) and the JSON docs.
+These are drop-in with the same names and return shapes. Why switch: protect.progress
+replays only the newest 5000 events of ALL kinds, so on a busy install (one daily run over
+~100 brokers logs hundreds of events) a tick silently disappears after a week or two.
+checklist_state writes tick events with the reserved `broker_id="_checklist"` and reads them
+with `store.events(pid, "_checklist")`, so they never age out. It still reads the untagged
+ticks protect.py has already written, and the newest tick wins. Until protect.py switches,
+CLI ticks show in the dashboard (it reads them from its recent window), but dashboard ticks
+age out as described. If the profile page lists events by broker, skip `_checklist` the
+same way `_consent` evidence is skipped.
