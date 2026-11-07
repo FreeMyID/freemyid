@@ -139,20 +139,51 @@
   }
 
   /* ---------- Comparison table: scrolls inside its own box at 320px, never the page ---------- */
+  /* WR-31 scroll cue, no JS: an edge shadow fixed to the box (scroll) that a card-coloured cover at the end
+     of the content (local) hides once you reach it, so it only shows while there is more to the right. */
   .table-scroll {
     overflow-x: auto; max-inline-size: 100%;
-    background: var(--color-card); border: 1px solid var(--color-line); border-radius: var(--radius-lg);
+    background:
+      linear-gradient(to right, transparent, var(--color-card) 60%) 100% 0 / 3rem 100% no-repeat local,
+      radial-gradient(farthest-side at 100% 50%, var(--color-line-strong), transparent) 100% 0 / 1.25rem 100% no-repeat scroll,
+      var(--color-card);
+    border: 1px solid var(--color-line); border-radius: var(--radius-lg);
     box-shadow: var(--shadow-1);
   }
   .table-scroll:focus-visible { outline-offset: 3px; }
-  .compare { inline-size: 100%; min-inline-size: 34rem; border-collapse: collapse; font-size: 0.92rem; line-height: 1.45; }
+  /* Fixed layout: the first header row sets the widths, so the Free My ID column can't grow past the others. */
+  .compare { inline-size: 100%; min-inline-size: 34rem; table-layout: fixed; border-collapse: collapse; font-size: 0.92rem; line-height: 1.45; }
+  .compare thead th:first-child { inline-size: 22%; }
+  @media (max-width: 34em) {
+    .compare { min-inline-size: 31rem; font-size: 0.85rem; }
+    .compare thead th:first-child { inline-size: 7.5rem; }
+    .compare th, .compare td { padding: 0.7em 0.75em; }
+    /* Stacked cards when every cell names its column (td[data-label]): no sideways scrolling on phones.
+       Browsers without :has() keep the scrolling table above. */
+    .compare:has(td[data-label]) { min-inline-size: 0; font-size: 0.95rem; }
+    .compare:has(td[data-label]) :is(tbody, tr, th, td) { display: block; }
+    .compare:has(td[data-label]) thead {
+      position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+    }
+    .compare:has(td[data-label]) tr { padding: var(--space-xs) var(--space-s); border-block-end: 1px solid var(--color-line); }
+    .compare:has(td[data-label]) tbody tr:last-child { border-block-end: 0; }
+    .compare:has(td[data-label]) th[scope="row"] {
+      position: static; padding: 0 0 var(--space-3xs); border: 0; box-shadow: none; background: none; font-size: var(--step-0);
+    }
+    .compare:has(td[data-label]) td { padding: 0.4em 0.6em; border: 0; border-radius: var(--radius-sm); }
+    .compare:has(td[data-label]) td + td { margin-block-start: var(--space-3xs); }
+    .compare:has(td[data-label]) td::before {
+      content: attr(data-label); display: block; color: var(--color-muted); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.01em;
+    }
+  }
   .compare caption { padding: var(--space-xs) var(--space-s); text-align: start; color: var(--color-muted); font-size: var(--step--1); caption-side: bottom; }
   .compare th, .compare td { padding: 0.8em 1em; text-align: start; vertical-align: top; border-block-end: 1px solid var(--color-line); }
   .compare tbody tr:last-child > * { border-block-end: 0; }
   .compare thead th { background: var(--color-surface); color: var(--color-heading); font-weight: 700; }
   .compare th[scope="row"] {
     color: var(--color-heading); font-weight: 600;
-    position: sticky; inset-inline-start: 0; background: var(--color-card);
+    position: sticky; inset-inline-start: 0; z-index: 1; background: var(--color-card);
+    box-shadow: inset -1px 0 var(--color-line);
   }
   .compare thead th:nth-child(2) { background: var(--color-brand); color: var(--color-brand-ink); }
   .compare td:nth-child(2) { background: var(--color-brand-soft); }

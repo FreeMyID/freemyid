@@ -134,15 +134,15 @@
 
 <section class="band" id="compare" aria-labelledby="sg-compare">
   <div class="wrap">
-    <div class="section-head"><h2 id="sg-compare">Comparison table</h2><p class="lead">Scrolls inside its own box on small screens; the row headers stay put.</p></div>
+    <div class="section-head"><h2 id="sg-compare">Comparison table</h2><p class="lead">On phones, rows stack into cards when every cell has a <code>data-label</code> naming its column; without it the table scrolls inside its own box, with an edge shadow while there is more to the right.</p></div>
     <div class="table-scroll" role="region" aria-labelledby="sg-compare" tabindex="0">
       <table class="compare">
         <thead><tr><th scope="col"><span class="visually-hidden">Feature</span></th><th scope="col">Free My ID</th><th scope="col">By hand</th></tr></thead>
         <tbody>
-          <tr><th scope="row">Price</th><td class="yes">{{ icon('check') }}Free</td><td class="yes">{{ icon('check') }}Free, your time</td></tr>
-          <tr><th scope="row">Account</th><td class="yes">{{ icon('check') }}None</td><td class="yes">{{ icon('check') }}None</td></tr>
-          <tr><th scope="row">Keeps checking</th><td class="partial">Daily, when the PC is on (sample)</td><td class="no">{{ icon('dash') }}Only if you remember</td></tr>
-          <tr><th scope="row">Phone or Mac</th><td class="no">{{ icon('x') }}Not yet</td><td class="yes">{{ icon('check') }}Yes</td></tr>
+          <tr><th scope="row">Price</th><td data-label="Free My ID" class="yes">{{ icon('check') }}Free</td><td data-label="By hand" class="yes">{{ icon('check') }}Free, your time</td></tr>
+          <tr><th scope="row">Account</th><td data-label="Free My ID" class="yes">{{ icon('check') }}None</td><td data-label="By hand" class="yes">{{ icon('check') }}None</td></tr>
+          <tr><th scope="row">Keeps checking</th><td data-label="Free My ID" class="partial">Daily, when the PC is on (sample)</td><td data-label="By hand" class="no">{{ icon('dash') }}Only if you remember</td></tr>
+          <tr><th scope="row">Phone or Mac</th><td data-label="Free My ID" class="no">{{ icon('x') }}Not yet</td><td data-label="By hand" class="yes">{{ icon('check') }}Yes</td></tr>
         </tbody>
       </table>
     </div>
