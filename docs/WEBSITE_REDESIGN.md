@@ -92,7 +92,7 @@ commit only your own source files by explicit path, and checkpoint in `docs/hand
 | R3 | Home rebuild (D10, D9, D4) | web-builder | done 7d7e75c (+ paid column per R5) |
 | R4 | Real screenshots (D7) + WR-24 | graphic-designer | done 128d9e7, 79ecbdd; WebP copied to site_src/static/assets/screenshots + og.png re-copied (6c38e59) |
 | R5 | Source the comparison "paid services (typical)" rows (D4) | broker-researcher | done b3a3fa5: use ONLY rows Price "Yearly or monthly fee", Where details go "Sent to the company", Account "Account required", Who sends "The company, on your behalf", Keeps checking "Yes, on a schedule", Hard cases "Often, on higher plans". DROP open-source and works-on rows from the paid column (open source may appear in the Free My ID column only). No price figures. |
-| R6 | Integrate: rebuild site/, docs/WEBSITE.md, fix seams between R1-R3, commit site/. Includes: site.yaml `privacy.html: safety` + redirect `privacy/index.html: safety`, then delete the temporary `privacy` entry in pages.yaml; replace the home "where paid services are better" line with the orchestrator wording below | web-developer | done f23f88d..(this commit); site/ rebuilt in the site commit |
+| R6 | Integrate: rebuild site/, docs/WEBSITE.md, fix seams between R1-R3, commit site/. Includes: site.yaml `privacy.html: safety` + redirect `privacy/index.html: safety`, then delete the temporary `privacy` entry in pages.yaml; replace the home "where paid services are better" line with the orchestrator wording below | web-developer | done f23f88d..9d67abe (site/ rebuild d2ea997) |
 | R7 | Verify: site_check extensions, screenshots 360/768/1280 light+dark, keyboard, zoom, claim audit | web-qa | after R6 |
 | R8 | Security/privacy sign-off | qa-security | after R7 |
 

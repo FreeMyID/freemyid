@@ -90,10 +90,10 @@ while brokers/registry.yaml exists locally; hashes only). Remember to ship SHA25
 ## R6 integration (2026-11-07, web lead dispatched alone): DONE
 
 Commits: f23f88d privacy.html + privacy/ -> safety/ in site.yaml (temporary pages.yaml entry gone) |
-dcf235f home paid-services line per ruling | v1 -> contract migration (steps--list, cards, section-head,
+dcf235f home paid-services line per ruling | 3af12fd v1 -> contract migration (steps--list, cards, section-head,
 callout--note/info), table-scroll region a11y, 51-legacy.css + star-rule.html + hero-stars.svg deleted |
 5b026bc home visual pass (proof capped 40rem x 30rem with fade, hero 0.9fr/1.1fr, bands xl, band--tight
-trust strip, compact does/doesn't, stronger trust bar, home/phone/calendar icons) | site/ rebuild | docs.
+trust strip, compact does/doesn't, stronger trust bar, home/phone/calendar icons) | d2ea997 site/ rebuild | 9d67abe docs.
 Checks: build --check OK (60 files), site_check 44 pages OK, ruff tools clean, no horizontal scroll on any
 page at 320 or 1280 (light+dark). Home 1280: 12,037 -> 10,591px. Home weight ~280 KB (263 KB WebP).
 New contract pieces (board updated): `.steps--list`, `.band--tight`, table-scroll attributes.
