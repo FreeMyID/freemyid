@@ -21,13 +21,22 @@ ExecStartPre=/usr/bin/sh -c 'cd @PREFIX@ && /usr/bin/sha256sum --check --strict 
 ExecStartPre=/usr/bin/sh @PREFIX@/verify.sh @PREFIX@
 ExecStart=@PREFIX@/venv/bin/python -I -B @PREFIX@/poster.py --queue @REPO@/docs/marketing/seo/bluesky-queue.md --outreach-log @REPO@/docs/marketing/seo/outreach-log.md
 TimeoutStartSec=120
+# keyring never reads ~/.config/python_keyring/keyringrc.cfg when this is set, so
+# that file cannot add code to the pinned copy (SEC-80). poster.py sets the same
+# value for manual runs.
+Environment=PYTHON_KEYRING_BACKEND=keyring.backends.SecretService.Keyring
+# Append-only "already posted" ledger outside the repo and the pinned copy (SEC-77):
+# ~/.local/state/freemyid-poster/posted.jsonl, passed in as $STATE_DIRECTORY.
+StateDirectory=freemyid-poster
+StateDirectoryMode=0700
 
 # Hardening that works for --user units (needs unprivileged user namespaces).
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=read-only
-# The only writes: the queue status line, its lock file and the outreach log.
+# The only writes: the queue status line, its lock file, the outreach log and the
+# ledger in StateDirectory (systemd makes that one writable).
 ReadWritePaths=@REPO@/docs/marketing/seo
 # AF_UNIX for the session D-Bus (keyring); AF_INET/6 for https://bsky.social.
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6

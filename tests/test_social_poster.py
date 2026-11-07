@@ -1129,10 +1129,27 @@ def test_qa_sec79_default_ignorable_in_link_is_refused(ch):
     assert poster.hidden_char_error(text) is not None or poster.link_facets(text) == []
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-80: unit does not pin PYTHON_KEYRING_BACKEND")
 def test_qa_sec80_unit_pins_keyring_backend():
     unit = (ROOT / "tools/social/freemyid-poster.service").read_text("utf-8")
     assert "Environment=PYTHON_KEYRING_BACKEND=keyring.backends.SecretService.Keyring" in unit
+    assert f"Environment=PYTHON_KEYRING_BACKEND={poster.KEYRING_BACKEND}" in unit
+
+
+def test_sec80_manual_run_pins_keyring_backend(monkeypatch):
+    import types
+
+    seen = {}
+    fake = types.ModuleType("keyring")
+
+    def get_password(service, name):
+        seen["backend"] = os.environ.get("PYTHON_KEYRING_BACKEND")
+        return "x"
+
+    fake.get_password = get_password  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "keyring", fake)
+    monkeypatch.setenv("PYTHON_KEYRING_BACKEND", "evil.module.Keyring")
+    assert poster._default_keyring_get("freemyid-social", "bluesky_token") == "x"
+    assert seen["backend"] == "keyring.backends.SecretService.Keyring"
 
 
 @pytest.mark.xfail(strict=True, reason="SEC-81: unexpected exception escapes with exit 1")

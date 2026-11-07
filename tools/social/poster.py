@@ -57,6 +57,9 @@ SEO_DIR = REPO / "docs" / "marketing" / "seo"
 KEYRING_SERVICE = "freemyid-social"
 HANDLE_ENV = "FREEMYID_BLUESKY_HANDLE"
 TIMEOUT_S = 20.0
+# Same value as the unit's Environment= line. With it set, keyring never reads its
+# config file (keyringrc.cfg), whose keyring-path could load outside code (SEC-80).
+KEYRING_BACKEND = "keyring.backends.SecretService.Keyring"
 
 EXIT_OK = 0
 EXIT_HTTP = 1
@@ -611,6 +614,7 @@ def append_outreach(path: Path, row: str) -> None:
 
 
 def _default_keyring_get(service: str, name: str) -> str | None:
+    os.environ["PYTHON_KEYRING_BACKEND"] = KEYRING_BACKEND  # manual runs too (SEC-80)
     try:
         import keyring
     except ImportError:
