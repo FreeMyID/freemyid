@@ -1,4 +1,4 @@
-"""Draft test (qa to adopt): a search that returns an error page, or a page with neither
+"""Adopted from engine/_test_drafts: a search that returns an error page, or a page with neither
 results nor the site's "no results" text, must never record NOT_FOUND. Dev fixtures only."""
 from __future__ import annotations
 
