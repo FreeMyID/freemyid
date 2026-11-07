@@ -1,137 +1,283 @@
 {% extends "base.html" %}
+{# Home, redesign v2. Order = D10 (teardown section 4). Copy = docs/marketing/redesign-teardown-messaging.md
+   section 4 minus anything D8 disallows (no time estimates, no unverified counts, no paid-tier hint).
+   Every Download button goes through partials/cta-download.html (D5). #}
 {% block main %}
+
+{# 1. Hero #}
 <section class="hero" aria-labelledby="hero-title">
-  {% include "partials/hero-stars.svg" %}
-  <div class="wrap two-col">
-    <div>
-      <p class="kicker">{{ icon('star') }}That post didn't stop anyone. This does.</p>
+  <div class="wrap">
+    <div class="hero__text">
+      {# source: teardown 4.1; LICENSE (AGPL); Windows-only v1 (docs/PLAN_V1.md) #}
+      <p class="kicker">Free. Open source. For Windows.</p>
       <h1 id="hero-title">Take your name off the websites that sell it.</h1>
-      <!-- Source for "scammers and stalkers": U.S. CFPB press release, 3 Dec 2024, "CFPB Proposes Rule to Stop Data Brokers from Selling Sensitive Personal Data to Scammers, Stalkers, and Spies" https://www.consumerfinance.gov/archive/newsroom/cfpb-proposes-rule-to-stop-data-brokers-from-selling-sensitive-personal-data-to-scammers-stalkers-and-spies/ -->
-      <p class="lead">Websites are selling your home address, phone number, age and relatives' names to anyone who pays, scammers and stalkers included. Free My ID asks each one to remove you, the way that site takes removal requests, and keeps checking that it did.</p>
-      <div class="btn-row">
-        <a class="btn btn--lg" href="{{ url('download/') }}">{{ icon('download') }}Download Free My ID (free, for Windows)</a>
-        <a class="btn btn--lg btn--secondary" href="{{ url('how-it-works/') }}">See how it works</a>
+      {# source: teardown 4.1; "runs on your own computer, no account, no cloud" = D8 / netpolicy.py #}
+      <p class="hero__lead">Free My ID asks the people-search and data-broker sites that list your name, address and phone number to remove them, then keeps checking. It runs on your own computer. No account. No cloud.</p>
+      <div class="hero__actions">
+        {% include "partials/cta-download.html" %}
+        <a class="btn btn--ghost btn--large" href="{{ url('how-it-works/') }}">See how it works</a>
       </div>
-      <!-- Source: docs/PLAN_V1.md D5 (per-user install, PrivilegesRequired=lowest); install time VM-measured (commit 891452e) -->
-      <p class="note">For Windows 10 and 11. Installs in a few minutes, with no administrator password.</p>
-      <!-- Source: site_src/data/faq.yaml "Why does Windows warn me" (published copy) -->
-      <p class="note">Windows may show a blue "protected your PC" box the first time. <a href="{{ url('download/') }}#smartscreen">That's expected. Here's what to click.</a></p>
+      {# source: release values from data/release.yaml (null today); PLAN_V1 D5 per-user install #}
+      {% if release.version %}
+      <p class="hero__note">Free for Windows 10 and 11. Version {{ release.version }}{% if release.size_mb %}, {{ release.size_mb }} MB{% endif %}.</p>
+      {% else %}
+      <p class="hero__note">Free for Windows 10 and 11. The first version is not published yet.</p>
+      {% endif %}
+      {# source: site_src/data/faq.yaml "Why does Windows warn me" (published copy) #}
+      <p class="hero__note">Windows may show a blue "protected your PC" box the first time. <a href="{{ url('download/#smartscreen') }}">That's expected. Here's what to click.</a></p>
     </div>
-    {% include "partials/mockup.html" %}
+    <figure class="hero__media">
+      {# D7: real screenshot, fake persona. Alt text: brand/README.md. 2x image, so half size here. #}
+      <img src="{{ url('assets/screenshots/dashboard.webp') }}" width="1000" height="1045" fetchpriority="high" alt="The Free My ID home screen. A plain sentence says 7 sites have confirmed or no longer list you, 3 are waiting and 2 need you, followed by a card with copy-and-paste details and large buttons for the one step left.">
+      <figcaption class="caption">Example with made-up data</figcaption>
+    </figure>
   </div>
 </section>
 
-<section class="section" aria-labelledby="promises">
+{# 2. Trust bar: teardown 4.2 items, each linked to its /safety/ section #}
+<section class="band" aria-label="Our promises">
   <div class="wrap">
-    <h2 id="promises" class="section-head">Our promises to you</h2>
-    {% set trust_class = "" %}
-    {% include "partials/trust.html" %}
-    <!-- Source: docs/HELPER_GUIDE.md last line (approved copy), via WR-7 -->
-    <p class="note mt-s">Free My ID is not a government service, and it isn't connected to Facebook/Meta or to any people-search site.</p>
+    <ul class="trustbar" role="list">
+      {# source: D8 "Nothing is sent to us" (netpolicy.py); no account (PLAN_V1) #}
+      <li class="trustbar__item"><a href="{{ url('safety/#local') }}">{{ icon('computer') }}<span>No account. Runs on your PC. Nothing sent to us.</span></a></li>
+      {# source: POSITIONING.md rule 4; safety page never-asks list #}
+      <li class="trustbar__item"><a href="{{ url('safety/#never-asks') }}">{{ icon('shield') }}<span>Never asks for your Social Security number, bank or card details</span></a></li>
+      {# source: LICENSE (GNU AGPL v3) #}
+      <li class="trustbar__item"><a href="{{ url('safety/#open-source') }}">{{ icon('code') }}<span>Free and open source</span></a></li>
+      {# source: packaging/windows/freemyid.iss (Windows Settings uninstall, removes the daily task) #}
+      <li class="trustbar__item"><a href="{{ url('safety/#uninstall') }}">{{ icon('trash') }}<span>Uninstall any time</span></a></li>
+    </ul>
   </div>
 </section>
 
-<section class="section section--alt" aria-labelledby="the-post">
-  <div class="wrap prose">
-    <p class="kicker">{{ icon('chat') }}You may have seen it on Facebook</p>
-    <h2 id="the-post">That post went to the wrong place</h2>
-    <p class="mt-s">Lots of people have posted "I do not give permission to use my pictures or information…" on Facebook. The instinct is right: your information should be yours. But a post on your own page doesn't reach the companies that sell your details, and they aren't required to read it.</p>
-    <p>Free My ID sends your "I do not consent" to the right place: the people-search sites (also called data brokers) that list and sell personal information. It uses each site's own opt-out process. Where a state privacy law applies (California and a growing list of other states), it sends a formal request the site is required to answer. Everywhere else it sends a clear, polite removal request: many sites honor these, but they aren't legally required to.</p>
-    <p><a href="{{ url('i-do-not-consent/') }}">Does the "I do not consent" post work? Read the full answer</a></p>
-  </div>
-</section>
-
-<section class="section" aria-labelledby="three-steps">
+{# 3. Proof picture #}
+<section class="band band--alt" aria-labelledby="proof-title">
   <div class="wrap">
-    <h2 id="three-steps" class="section-head">How it works, in three steps</h2>
-    <div class="card-grid card-grid--3">
-    <ol class="steps steps--big grid-auto" role="list">
-      <li><h3>Tell it who to protect</h3><p>Six simple screens: your name and the towns you've lived in. It never asks for your Social Security number or bank details.</p></li>
-      <li><h3>It sends the requests</h3><p>By email, by walking you through a site's form, or by filling the form in while you watch. Each site gets only what it already shows about you.</p></li>
-      <li><h3>It keeps checking</h3><p>Once a day, in the background. It shows you which sites confirmed and which are still waiting, and asks again if a site lists you again.</p></li>
+    <div class="section-head">
+      <h2 id="proof-title">See exactly what was asked, and what came back.</h2>
+      {# source: teardown 4.3, narrowed to what the shipped report shows: D8 "Printable progress report" with site names, states and dates only (src/freemyid/wizard/report.py) #}
+      <p class="lead">Free My ID keeps a plain list: which site, when it asked, where things stand, and when it last checked. You can print it.</p>
+    </div>
+    <figure class="proof">
+      <img src="{{ url('assets/screenshots/report.webp') }}" width="900" height="1125" loading="lazy" alt="The printable progress report: a table of each people-search site, its status (site confirmed, asked, not listed now, needs you), when it was last checked and when the request was made.">
+      <figcaption class="caption">Sample report with made-up data</figcaption>
+    </figure>
+    {# source: teardown 4.3 caveat; brokers/SOURCES.md "Website claims" (no guaranteed timeline) #}
+    <p>Some sites remove you in days. Some take weeks. Some ignore the request, and the report shows those too.</p>
+  </div>
+</section>
+
+{# 4. How it works #}
+<section class="band" aria-labelledby="steps-title">
+  <div class="wrap">
+    <div class="section-head">
+      {# D8: no time estimate in this heading ("about fifteen minutes" was never timed) #}
+      <h2 id="steps-title">How it works, in three steps</h2>
+    </div>
+    <ol class="steps" role="list">
+      {# source: D8 "Six short screens" (wizard/draft.py STEPS); POSITIONING.md rule 4 #}
+      <li class="step"><span class="step__num" aria-hidden="true">1</span><h3>Tell it who to protect.</h3><p>Six short screens: your name and the towns you have lived in. It never asks for your Social Security number or bank details.</p></li>
+      {# source: PLAN_V1 D1 three tiers; shared rule 6 (Listing.shown_fields) #}
+      <li class="step"><span class="step__num" aria-hidden="true">2</span><h3>It sends the requests.</h3><p>By email, by walking you through a site's form, or by filling the form in while you watch. Each site gets only what it already shows about you.</p></li>
+      {# source: D8 "Checks once a day" (PLAN_V1 D4, Task Scheduler) #}
+      <li class="step"><span class="step__num" aria-hidden="true">3</span><h3>It keeps checking.</h3><p>Once a day, quietly in the background, while your computer is on and you are signed in. You see who confirmed, who is still waiting, and it asks again if a site lists you again.</p></li>
     </ol>
-    </div>
-    <p class="mt-m"><a href="{{ url('how-it-works/') }}">More about how Free My ID works</a></p>
+    <p><a href="{{ url('how-it-works/') }}">Read the details of the three ways</a></p>
   </div>
 </section>
 
-{% include "partials/star-rule.html" %}
-
-<section class="section" aria-labelledby="honest">
+{# 5. What it removes #}
+<section class="band band--alt" id="what-it-removes" aria-labelledby="removes-title">
   <div class="wrap">
-    <h2 id="honest" class="section-head">What it does, honestly</h2>
-    <div class="card-grid">
-      <div class="grid-auto">
-        <div class="card">
-          <h3>Free My ID does</h3>
-          <ul class="checklist checklist--yes mt-s" role="list">
-            <li>{{ icon('check') }}<span>Ask people-search and data-broker sites to remove your listing, using each site's own process</span></li>
-            <li>{{ icon('check') }}<span>Send a formal legal request where your state's privacy law applies, and a polite request everywhere else</span></li>
-            <li>{{ icon('check') }}<span>Click the "confirm your request" links that sites send, and follow up when a site goes quiet</span></li>
-            <li>{{ icon('check') }}<span>Check again later, because some sites list people again</span></li>
-            <li>{{ icon('check') }}<span>Show you where each site stands: <em>asked</em>, <em>confirmed</em> or <em>still waiting</em></span></li>
-          </ul>
-        </div>
-        <div class="card">
-          <h3>Free My ID does not</h3>
-          <ul class="checklist checklist--no mt-s" role="list">
-            <li>{{ icon('dash') }}<span>Remove you from every website on the internet. Nobody honest can promise that.</span></li>
-            <li>{{ icon('dash') }}<span>Change what Facebook itself does with your account</span></li>
-            <li>{{ icon('dash') }}<span>Stop hacking, phone tapping or government surveillance</span></li>
-            <li>{{ icon('dash') }}<span>Remove news stories, social media posts or government records</span></li>
-            <li>{{ icon('dash') }}<span>Ask for your Social Security number, bank or card details. Ever.</span></li>
-          </ul>
-        </div>
-      </div>
+    <div class="section-head">
+      <h2 id="removes-title">What people-search sites are selling about you.</h2>
+      <p class="lead">People-search sites, also called data brokers, collect public records and sell them to anyone. Here is what they commonly list:</p>
     </div>
-    <p class="mt-m">Some sites take weeks to respond, and some list people again later. That's why Free My ID keeps checking.</p>
+    {# source: U.S. CFPB press release, 3 Dec 2024 https://www.consumerfinance.gov/archive/newsroom/cfpb-proposes-rule-to-stop-data-brokers-from-selling-sensitive-personal-data-to-scammers-stalkers-and-spies/
+       (address, phone, age, relatives as on the old home page). Teardown's "past addresses" and "email addresses" cards left out until sourced. #}
+    <ul class="cards cards--4" role="list">
+      <li class="card"><span class="card__icon">{{ icon('computer') }}</span><h3>Home address</h3></li>
+      <li class="card"><span class="card__icon">{{ icon('chat') }}</span><h3>Phone numbers</h3></li>
+      <li class="card"><span class="card__icon">{{ icon('family') }}</span><h3>Names of relatives</h3></li>
+      <li class="card"><span class="card__icon">{{ icon('clock') }}</span><h3>Age or birth year</h3></li>
+    </ul>
+    {# source: build data, the number of guides generated from brokers/registry.sample.yaml #}
+    <p>We have step-by-step guides for {{ guides | length }} sites, and you can use every guide without the app. <a href="{{ url('guides/') }}">Browse the guides</a></p>
   </div>
 </section>
 
-<section class="section section--alt" id="helping" aria-labelledby="helping-title">
-  <div class="wrap two-col">
-    <div class="prose">
-      <p class="kicker">{{ icon('family') }}For families and helpers</p>
-      <h2 id="helping-title">Helping a parent or grandparent?</h2>
-      <p class="mt-s">Free My ID was built so your parents and grandparents can use it: one installer, six simple screens, big buttons, plain words. After that it quietly re-checks once a day in the background, and only asks for help when a site truly needs a person.</p>
-      <!-- Sources: site/faq.html "Can I set it up for my parents?"; docs/USER_GUIDE.md section 3 (adult signs a permission form; "won't work on anyone without this step"); docs/USER_GUIDE.md section 4 (practice mode first) -->
-      <ul>
-        <li>Set it up on their computer in one visit, or protect several family members from one computer.</li>
-        <li>Each adult gives their own permission. Free My ID won't work on anyone without it.</li>
-        <li>Practice mode comes first, so nothing is sent until you say so.</li>
+{# 6. The post #}
+<section class="band" aria-labelledby="post-title">
+  <div class="wrap wrap--narrow">
+    <div class="section-head">
+      <h2 id="post-title">You said "I do not consent." Here is how to make it count.</h2>
+    </div>
+    {# source: teardown 4.6; POSITIONING.md core message and "Legal accuracy" (formal request only where a state law applies) #}
+    <p>If you shared that post on Facebook, you were right to object. The post just went to the wrong place, and in a form nobody is required to honor. The people who sell your address are the people-search sites, and each has its own removal process. Free My ID sends your request there, in the form each site actually processes, and in states with a broker privacy law, as a formal legal request.</p>
+    {# source: POSITIONING.md rule 6 (scope) #}
+    <p>It does not change what Facebook itself does with your account.</p>
+    <p><a href="{{ url('i-do-not-consent/') }}">Read: does the "I do not consent" post work?</a></p>
+  </div>
+</section>
+
+{# 7. Comparison (D4). No competitor names. #}
+<section class="band band--alt" id="compare" aria-labelledby="compare-title">
+  <div class="wrap">
+    <div class="section-head">
+      <h2 id="compare-title">Free My ID, paid removal services, or doing it by hand</h2>
+    </div>
+    {# source (Free My ID + By hand columns): PLAN_V1 D1/D4, D8 verified claims, netpolicy.py, shared rule 5 (some sites need a human step) #}
+    {# source: brokers/SOURCES.md "Website claims: comparison (R5)" (paid column: approved cell text only; rows without an approved cell are left out) #}
+    <div class="table-scroll">
+      <table class="compare">
+        <caption class="visually-hidden">Free My ID compared with paid removal services (typical) and doing it by hand</caption>
+        <thead>
+          <tr>
+            <th scope="col"><span class="visually-hidden">Question</span></th>
+            <th scope="col">Free My ID</th>
+            <th scope="col">Paid removal services (typical)</th>
+            <th scope="col">By hand</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">Price</th><td class="yes">Free</td><td>Yearly or monthly fee</td><td>Free, your time</td></tr>
+          <tr><th scope="row">Where your details go</th><td class="yes">Stay on your computer</td><td>Sent to the company</td><td>Stay on your computer</td></tr>
+          <tr><th scope="row">Account</th><td class="yes">None</td><td>Account required</td><td>None</td></tr>
+          <tr><th scope="row">Who sends the requests</th><td>Your own computer, as you</td><td>The company, on your behalf</td><td>You</td></tr>
+          <tr><th scope="row">Keeps checking</th><td class="yes">Yes, daily on your PC (your computer must be on and you must be signed in to Windows at the time)</td><td>Yes, on a schedule</td><td class="no">Only if you remember</td></tr>
+          <tr><th scope="row">Company staff handle hard cases</th><td class="partial">No. Some sites need you to do a step, and it shows you how</td><td>Often, on higher plans</td><td>You</td></tr>
+        </tbody>
+      </table>
+    </div>
+    {# source: teardown 4.7 footnote; review date = brokers/SOURCES.md R5 check date #}
+    <p class="caption">"Typical" describes the category, not any one company. Features and prices vary by service. Reviewed 2026-11-07.</p>
+    {# source: LICENSE (AGPL); PLAN_V1 (Windows only in v1). Free My ID side only, per R5 notes for rows 5 and 7. #}
+    <p>Free My ID is open source, so you can read it, and works on Windows 10 and 11 today.</p>
+    {# source: teardown 4.7 "where paid services are better" line, kept per D4 #}
+    <p>If you want it handled for you on any device, or you need a service that does it all in the cloud, a paid service may suit you better. We will say so.</p>
+  </div>
+</section>
+
+{# 8. Safety and privacy #}
+<section class="band" aria-labelledby="safety-title">
+  <div class="wrap">
+    <div class="section-head">
+      <h2 id="safety-title">Built so you do not have to trust us.</h2>
+    </div>
+    <ul class="cards cards--3" role="list">
+      {# source: teardown 4.8; D8 encrypted (crypto.py, storage/db.py) and "Nothing is sent to us" (netpolicy.py) #}
+      <li class="card"><span class="card__icon">{{ icon('lock') }}</span><h3>Nothing leaves your computer.</h3><p>Your details are stored encrypted on your computer. The app talks only to the sites you are asking to remove you, your own email account, and our public list of those sites.</p></li>
+      {# source: teardown 4.8; POSITIONING.md rule 4; shared rule 6 (never pay; phone/ID only with permission) #}
+      <li class="card"><span class="card__icon">{{ icon('shield') }}</span><h3>It never asks for the wrong things.</h3><p>Never your Social Security number. Never bank or card details. Never a payment. Never a phone number or ID unless you choose to.</p></li>
+      {# source: teardown 4.8; LICENSE; download page SHA256SUMS; freemyid.iss [UninstallRun] removes the daily task #}
+      <li class="card"><span class="card__icon">{{ icon('code') }}</span><h3>You can check the work.</h3><p>The code is public. Every download has a fingerprint you can compare. Uninstalling removes the program and its daily check.</p></li>
+    </ul>
+    <aside class="callout callout--info">
+      {{ icon('info') }}
+      {# source: teardown 4.8 callout; installer ships unsigned #}
+      <p>Windows may warn "unknown publisher" the first time, because the installer is not yet signed. <a href="{{ url('download/#smartscreen') }}">See what the warning looks like and how to check the file</a>.</p>
+    </aside>
+    {# Does / doesn't box: approved copy from the old home page "What it does, honestly" #}
+    <div class="dodont">
+      <div class="dodont__col dodont__col--do">
+        <h3>Free My ID does</h3>
+        <ul role="list">
+          <li>Ask people-search and data-broker sites to remove your listing, using each site's own process</li>
+          {# source: POSITIONING.md "Legal accuracy" #}
+          <li>Send a formal legal request where your state's privacy law applies, and a polite request everywhere else</li>
+          <li>Click the "confirm your request" links that sites send, and follow up when a site goes quiet</li>
+          <li>Check again later, because some sites list people again</li>
+          <li>Show you where each site stands: <em>asked</em>, <em>confirmed</em> or <em>still waiting</em></li>
+        </ul>
+      </div>
+      <div class="dodont__col dodont__col--dont">
+        <h3>Free My ID does not</h3>
+        <ul role="list">
+          <li>Remove you from every website on the internet. Nobody honest can promise that.</li>
+          <li>Change what Facebook itself does with your account</li>
+          <li>Stop hacking, phone tapping or government surveillance</li>
+          <li>Remove news stories, social media posts or government records</li>
+          <li>Ask for your Social Security number, bank or card details. Ever.</li>
+        </ul>
+      </div>
+    </div>
+    <p><a href="{{ url('safety/') }}">Is Free My ID safe? Read the details</a></p>
+  </div>
+</section>
+
+{# 9. $0 card (D9): one plan only, no second column #}
+<section class="band band--alt" aria-labelledby="price-title">
+  <div class="wrap">
+    <div class="section-head">
+      <h2 id="price-title">It's free</h2>
+    </div>
+    <div class="price-card">
+      <p class="price-card__label">Free My ID</p>
+      <p class="price-card__price">$0</p>
+      <p class="price-card__sub">Free. No trial. No card.</p>
+      {# source: D8 verified features: three ways (PLAN_V1 D1), daily checks (PLAN_V1 D4), printable report (wizard/report.py), guides (build data), uninstall (freemyid.iss).
+         Teardown's "no limit on family members" item left out until product confirms it. #}
+      <ul class="checklist" role="list">
+        <li>{{ icon('check') }}<span>Everything the app does, all three ways of sending requests</span></li>
+        <li>{{ icon('check') }}<span>Daily re-checks on your PC</span></li>
+        <li>{{ icon('check') }}<span>Printable progress report</span></li>
+        <li>{{ icon('check') }}<span>Every guide</span></li>
+        <li>{{ icon('check') }}<span>Uninstall any time</span></li>
       </ul>
-      <div class="btn-row mt-m">
-        <a class="btn" href="{{ url('download/') }}">{{ icon('download') }}Download, free</a>
-        <a class="btn btn--secondary" href="{{ url('families/') }}">Read the helper's guide</a>
-        <a class="btn btn--secondary" href="{{ url('guides/') }}">Use the free guides instead</a>
-      </div>
+      {% include "partials/cta-download.html" %}
     </div>
-    <div class="card">
-      <h3>{{ icon('shield', 'icon card__icon') }}A good rule to share</h3>
-      <p class="mt-s">Free My ID will <strong>never</strong> ask for a Social Security number, bank card or passwords. If something claiming to be Free My ID asks for those, it isn't us. Stop and call your helper.</p>
+    <h3>Why is it free?</h3>
+    {# source: teardown section 4.9 "Why is it free?" (the two approved sentences, D9) #}
+    <p>Free My ID is open-source software, so anyone can read it and anyone can use it. It exists to help ordinary people, starting with the author's own family.</p>
+  </div>
+</section>
+
+{# 10. Helpers #}
+<section class="band" aria-labelledby="helpers-title">
+  <div class="wrap wrap--narrow">
+    <div class="section-head">
+      <h2 id="helpers-title">Helping a parent or grandparent?</h2>
+      {# source: teardown 4.10 minus the unverified time and printable-sheet claims #}
+      <p class="lead">Set it up once on their computer, and it keeps working. They stay in control, and can stop or uninstall at any time.</p>
+    </div>
+    {# source: old home page helper list: docs/USER_GUIDE.md sections 3 and 4; faq "Can I set it up for my parents?" #}
+    <ul>
+      <li>Set it up on their computer in one visit, or protect several family members from one computer.</li>
+      <li>Each adult gives their own permission. Free My ID won't work on anyone without it.</li>
+      <li>Practice mode comes first, so nothing is sent until you say so.</li>
+    </ul>
+    <p>Windows only for now. The person whose information is listed should agree to this.</p>
+    <div class="hero__actions">
+      {% with cta_class = "btn--secondary" %}{% include "partials/cta-download.html" %}{% endwith %}
+      <a class="btn btn--ghost" href="{{ url('families/') }}">Read the helper's guide</a>
     </div>
   </div>
 </section>
 
-<section class="section" aria-labelledby="short-faq">
-  <div class="wrap prose">
-    <h2 id="short-faq" class="section-head">Common questions</h2>
+{# 11. FAQ: the eight home: true entries in data/faq.yaml (teardown section 11), first two open #}
+<section class="band band--alt" aria-labelledby="faq-title">
+  <div class="wrap wrap--narrow">
+    <div class="section-head">
+      <h2 id="faq-title">Common questions</h2>
+    </div>
     <div class="faq">
     {% for q in faq if q.get('home') %}
-      <details id="q-{{ q.id }}"><summary>{{ q.q }}</summary>{{ render(q.a) }}</details>
+      <details class="faq__item" id="q-{{ q.id }}"{% if loop.index <= 2 %} open{% endif %}><summary>{{ q.q }}</summary><div class="faq__body">{{ render(q.a) }}</div></details>
     {% endfor %}
     </div>
-    <p class="mt-m"><a class="link-solo" href="{{ url('faq/') }}">See all questions</a></p>
+    <p><a href="{{ url('faq/') }}">See all questions</a></p>
   </div>
 </section>
 
-<section class="section section--alt" aria-labelledby="cta">
-  <div class="wrap center">
-    <h2 id="cta">Your information. Off the market.</h2>
-    <p class="lead mt-s">Free, open source, and it runs on your own computer. <a href="{{ site.repo_url }}">Read the source code.</a></p>
-    <div class="btn-row btn-row--center mt-m">
-      <a class="btn btn--lg" href="{{ url('download/') }}">{{ icon('download') }}Download Free My ID (free, for Windows)</a>
-    </div>
+{# 12. Final CTA #}
+<section class="cta-final" aria-labelledby="cta-title">
+  <div class="wrap">
+    <h2 id="cta-title">Your information. Off the market.</h2>
+    {# source: old home final CTA (approved copy); teardown's "Fifteen minutes today" line dropped per D8; once a day = D8 #}
+    <p>Free, open source, and it runs on your own computer, checking once a day.</p>
+    {% include "partials/cta-download.html" %}
+    {# source: teardown 4.12; BRAND.md trust panel #}
+    <p class="cta-final__note">No account. No cloud. Never asks for your Social Security number. Uninstall any time.</p>
   </div>
 </section>
 {% endblock %}
