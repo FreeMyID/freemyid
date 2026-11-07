@@ -128,6 +128,13 @@
     border-radius: var(--radius-md);
   }
   .card__icon svg { inline-size: 100%; block-size: 100%; }
+  @media (max-width: 34em) {   /* WR-32: four short items read as a compact 2 x 2 on phones */
+    .cards--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-xs); }
+    .cards--4 > .card { padding: var(--space-s); }
+    .cards--4 > .card h3 { font-size: var(--step-0); line-height: 1.3; }
+    .cards--4 > .card p { font-size: var(--step--1); }
+    .cards--4 .card__icon { inline-size: 2.5rem; block-size: 2.5rem; padding: 0.55rem; margin-block-end: var(--space-2xs); }
+  }
 
   /* ---------- Proof picture ---------- */
   .proof { margin: 0 auto; max-inline-size: 40rem; }
