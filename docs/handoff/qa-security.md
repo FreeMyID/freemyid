@@ -70,8 +70,8 @@ R8 site-v3 (2026-11-07, branch site-v3, web/ at 4533a5c):
   onlyBuiltDependencies), SEC-63 LOW (unused TimelineBeam/motion chunk deployed), SEC-64 LOW (checkout
   persist-credentials), SEC-65 LOW (check-site on*= regex too narrow), SEC-66 INFO (meta CSP: no
   frame-ancestors; move it after charset; headers once on freemyid.org), SEC-67 INFO (no pnpm audit in
-  CI). SEC-50..59 are reserved for the Proton TLS work on main. WR-45..49 filed (WR-48 overlaps web-qa
-  WR-41).
+  CI). SEC-50..59 are reserved for the Proton TLS work on main. WR-56..49 filed (WR-59 overlaps web-qa
+  WR-52).
 - Verified: 43/43 pages have a meta CSP with no unsafe-*. 42 pages have script-src 'none'. /download/
   hashes match its 2 island scripts and 1 style. Playwright over all 43 pages with external requests
   aborted: 0 CSP violations, 0 errors, 0 external requests. CopyHash hydrates and copies after the

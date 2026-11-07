@@ -2,31 +2,31 @@
 
 ## R7 site-v3 (2026-11-07, Astro site in web/, branch site-v3)
 
-Verdict: **FAIL** (one P1 blocks switch-over). P1: 1 (WR-39), P2: 0, P3: 5 (WR-40 to WR-44). Everything else passes; fix WR-39 and the verdict becomes PASS with P3s.
+Verdict: **FAIL** (one P1 blocks switch-over). P1: 1 (WR-50), P2: 0, P3: 5 (WR-51 to WR-55). Everything else passes; fix WR-50 and the verdict becomes PASS with P3s.
 
-**WR-39 (P1):** the opened phone menu is clipped off the left edge at 390px and narrower, so on phones the only navigation is partly unreadable. `tools/site_shots.py` now detects it.
+**WR-50 (P1):** the opened phone menu is clipped off the left edge at 390px and narrower, so on phones the only navigation is partly unreadable. `tools/site_shots.py` now detects it.
 
 Method: `pnpm build` (43 pages), copied dist to scratchpad/srv/freemyid and served it with `python -m http.server`. `tools/site_shots.py --prefix freemyid/ --crops --zoom-check --reduced-motion` on home, safety, download, how-it-works, faq, families, guides, one guide, i-do-not-consent, 404 at 320/360/768/1280 x light/dark (80 combos), then looked at 360 crops of home, download, faq, safety (light and dark), 768 how-it-works, 1280 home, 404. Tab-through at 1280 and 360 on home and download with computed focus styles; header menu opened by keyboard and mouse at 320/360/390/414/540/768; text contrast computed for every visible text node on 8 pages x 2 themes x 360/1280 (zero below AA); banned-phrase and number grep on rendered text; source comments in templates; Copy button and console errors on /download/; external requests logged.
 
 Results:
 - Layout: no horizontal scroll at 320/360/768/1280, one h1 per page, no skipped heading levels, every img has alt/width/height, no interactive target under 24px (only the 30px Pause checkbox is under 44).
-- Keyboard: skip link is the first stop and is visible; 58 stops on home at 1280 (54 at 360), every stop has a 3px yellow outline plus dark inner ring (works on both themes); order is logical; focus leaves the page at the end, no traps; the scrollable comparison region is focusable by design. Menu: Escape does not close it (WR-40).
+- Keyboard: skip link is the first stop and is visible; 58 stops on home at 1280 (54 at 360), every stop has a 3px yellow outline plus dark inner ring (works on both themes); order is logical; focus leaves the page at the end, no traps; the scrollable comparison region is focusable by design. Menu: Escape does not close it (WR-51).
 - Contrast: all text meets AA in both themes (lowest body text about 7:1); the two-tone focus ring clears 3:1 on light and dark.
 - Product truth (WR-38): home hero, final CTA and download page show v0.1.0 and the real installer link; no "opens soon / not published / coming soon" text anywhere in dist. Download page: 64 MB, sha256, SmartScreen steps present.
-- Claims: no banned phrase ("guarantee", "100%", "erase", "forever", "fifteen minutes", "audited", "trusted by", stars or ratings); "never" appears only as "never asks for ..." (POSITIONING rule 4). Numbers: 29 guides (build-derived, WR-43 wording), six screens, once a day, 64 MB, 0.1.0 all match D8 or release.yaml. The WR-37 ODNI text and source comment are in. Every claim section has a source comment in the Astro templates (31 on home, 17 safety, 13 families, 11 download).
+- Claims: no banned phrase ("guarantee", "100%", "erase", "forever", "fifteen minutes", "audited", "trusted by", stars or ratings); "never" appears only as "never asks for ..." (POSITIONING rule 4). Numbers: 29 guides (build-derived, WR-54 wording), six screens, once a day, 64 MB, 0.1.0 all match D8 or release.yaml. The WR-37 ODNI text and source comment are in. Every claim section has a source comment in the Astro templates (31 on home, 17 safety, 13 families, 11 download).
 - Privacy: no third-party requests, CSP meta on every page, `content_check.py dist` OK (host-hash leak scan off in this worktree).
 - Copy button works, announces "Copied" in an aria-live region, no console errors other than the intentional 404 test URL.
 
-Sizes (gzip, measured): home HTML 12.8 KB + CSS 8.5 KB + JS 0 = 21.3 KB first view; with lazy images at desktop (dashboard-1200 59 KB, report-900 84 KB raw webp) about 165 KB worst case, about 105 KB at 360 (700w and 600w). Budget 300 KB: pass. CSS 8.5 KB on every page (budget 20): pass. HTML: safety 5.9, faq 6.0, families 6.6, how-it-works 6.1, download 8.2, guide 4.8, 404 2.8. JS: zero on every page except /download/, where after the checksum panel opens it is 80,454 bytes gzip = 78.6 KiB / 80.5 KB (budget 80 KB: at the limit, WR-41). An unused 32 KB gzip TimelineBeam chunk is emitted but never loaded (WR-41).
+Sizes (gzip, measured): home HTML 12.8 KB + CSS 8.5 KB + JS 0 = 21.3 KB first view; with lazy images at desktop (dashboard-1200 59 KB, report-900 84 KB raw webp) about 165 KB worst case, about 105 KB at 360 (700w and 600w). Budget 300 KB: pass. CSS 8.5 KB on every page (budget 20): pass. HTML: safety 5.9, faq 6.0, families 6.6, how-it-works 6.1, download 8.2, guide 4.8, 404 2.8. JS: zero on every page except /download/, where after the checksum panel opens it is 80,454 bytes gzip = 78.6 KiB / 80.5 KB (budget 80 KB: at the limit, WR-52). An unused 32 KB gzip TimelineBeam chunk is emitted but never loaded (WR-52).
 
 | ID | Page | Sev | Problem | Owner |
 |---|---|---|---|---|
-| WR-39 | all (phone menu) | P1 | opened menu panel clipped off the left edge at 390px and below (left edge -86px at 320, -46 at 360) | web-builder |
-| WR-40 | all (phone menu) | P3 | menu does not close on Escape, outside click or focus leaving | web-builder |
-| WR-41 | /download/, build | P3 | JS budget at the 80 KB limit (78.6 KiB / 80.5 KB); unused TimelineBeam chunk still emitted | web-builder |
-| WR-42 | home hero | P3 | button label wraps to "Download Free My / ID" at 360; ghost button inset misaligned at 1280 | web-designer |
-| WR-43 | home, faq | P3 | "29 sites" counts credit bureaus, DROP and Google; say "29 guides" | web-builder |
-| WR-44 | safety hero art (dark) | P3 | 5px text on the laptop card overlaps its edge | graphic-designer |
+| WR-50 | all (phone menu) | P1 | opened menu panel clipped off the left edge at 390px and below (left edge -86px at 320, -46 at 360) | web-builder |
+| WR-51 | all (phone menu) | P3 | menu does not close on Escape, outside click or focus leaving | web-builder |
+| WR-52 | /download/, build | P3 | JS budget at the 80 KB limit (78.6 KiB / 80.5 KB); unused TimelineBeam chunk still emitted | web-builder |
+| WR-53 | home hero | P3 | button label wraps to "Download Free My / ID" at 360; ghost button inset misaligned at 1280 | web-designer |
+| WR-54 | home, faq | P3 | "29 sites" counts credit bureaus, DROP and Google; say "29 guides" | web-builder |
+| WR-55 | safety hero art (dark) | P3 | 5px text on the laptop card overlaps its edge | graphic-designer |
 
 Tools: `tools/site_shots.py` gained `--reduced-motion` (scroll-driven reveals otherwise leave blank bands in full-page shots) and a header-menu clipping check that fails the run. Scratch scripts for keyboard, contrast and text dumps are in the session scratchpad (not committed). Shots: scratchpad/shots.
 
