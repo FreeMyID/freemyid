@@ -10,7 +10,7 @@ Legend. **Tier:** F = Free, P = Plus, Fam = Family, Pro = Pro/self-host, B = Bus
 
 A program that runs on your own computer and takes your name, address, phone and relatives off the websites that sell them, then keeps checking so the listings stay gone. It is free for individuals, open source (AGPL), and never sends your details to us.
 
-**The promise, in one breath:** your data never leaves your computer, nobody pays with their privacy, and we never scare you into buying.
+**The promise, in one breath:** your details are stored only on your computer and go nowhere except in a removal request you approve, sent straight to that one site; nobody pays with their privacy; and we never scare you into buying. (Wording corrected 2026-11-07: requests necessarily send the person's details to the broker they ask, so 'never leaves your computer' was too absolute.)
 
 ### Principles (they decide every tie)
 1. **Local-first.** Personal data lives only on the user's device, encrypted. Our servers hold no PII, ever. Anything we host (registry feed, licence check, crash reports) is PII-free by design and test.
@@ -74,12 +74,12 @@ Each line: feature, tier, phase. Status: **shipped** items are in v0.1.x.
 ### 3.2 Finding listings (discovery)
 - **Shipped:** listing finder for supported brokers; matcher with confirmed/possible/no-match levels; human review of "possible" matches.
 - Exposure scan across the full registry, cached and rate-limited, per-broker search adapters - F (core) / P (full) - 0.3
-- Exposure score (0-100) with what drives it, trend over time - F - 0.3
+- Exposure score (0-100) with what drives it, trend over time - F - 0.3. Always shown with its coverage: how many sites were checked, how many need checking by hand, how many are uncertain. A low score or zero means 'on the sites we could check', never 'you are safe'.
 - Relatives-and-associates view: which listings expose family members - P - 0.4
 - Old-address and maiden-name variants, nickname expansion - F - 0.3
 - Photo/face exposure check on people-search sites (local face matching, opt-in) - P - Later
 - Search-engine exposure: Google/Bing results about you, with removal request links (Google "Results about you") - F - 0.3
-- Dark-web / breach exposure via Have I Been Pwned k-anonymity API (email only, hashed) - F - 0.3
+- Breach check (Have I Been Pwned) - F - later. Note: HIBP's k-anonymity range API is for *passwords*; the breached-*account* lookup needs a paid API key and sends the email address to HIBP. Until the terms and disclosure are verified, the app links people to the HIBP site to check themselves.
 
 ### 3.3 Removing (the engine)
 - **Shipped:** 3 tiers (email, assisted "do it with me", automatic browser for verified forms); "fill it in for me"; first-email approval gate; reply matcher; escalation timers; ID-request goes to a human to-do.
@@ -149,7 +149,7 @@ Each line: feature, tier, phase. Status: **shipped** items are in v0.1.x.
 
 ### 3.10 Mail
 - **Shipped:** IMAP/SMTP with Gmail app password, Proton Bridge (pinned TLS), other IMAP; reply matching.
-- Outlook/Microsoft 365 via OAuth (device code flow) - F - 0.3
+- Outlook/Microsoft 365 via OAuth (device code flow) - F - 0.4
 - Gmail via OAuth (no app password) - F - 0.4 (needs Google verification)
 - Built-in alias addresses (requests sent from a relay address so the user's real email isn't exposed) - P - Later (needs PII-free relay design)
 
@@ -202,8 +202,9 @@ Each line: feature, tier, phase. Status: **shipped** items are in v0.1.x.
 ## 6. Release plan
 
 - **v0.2 "Every platform"** (now): Linux/macOS headless and CLI, secrets fallback, real schedulers, `--json`, YAML config, `doctor`, Docker image, PyPI, developer page, CI matrix. Also: Bluesky poster fixes (SEC-57/58/59) and v0.1.3 installer fixes (uninstall while running, calm Bridge copy, Ready page, password wording).
-- **v0.3 "See it, fix it"**: exposure scan + score, state-law letters, DROP, suppression lists, credit-freeze checklist, proof vault + PDF report, app redesign on the v3 look, Outlook OAuth, broker monitoring.
-- **v0.4 "For the family"**: multi-profile, helper bundle flow, relist detection, legal escalation pack, monthly summary, tray icon, Linux desktop packages.
+- **v0.3 "See it, fix it"** (re-scoped 2026-11-07 on the Codex lead's advice): one understandable journey from finding listings to acting on them: exposure scan + score with coverage, 'Is this you?' reviews, state-law letters, DROP, the identity-safety checklists, the app redesign, printable summary, accessibility. Each with its own acceptance gate. Moved to v0.4: proof vault + PDF, Outlook OAuth, broker monitoring.
+- **What counts as 'available'**: only what is in a published release (GitHub release + site_src/data/release.yaml). Merged-but-unreleased work is 'coming' on the website.
+- **v0.4 "For the family"**: proof vault + PDF report, Outlook OAuth, broker monitoring, multi-profile, helper bundle flow, relist detection, legal escalation pack, monthly summary, tray icon, Linux desktop packages.
 - **v0.5 "Together"**: helper relay, white-label build, plugin API, community broker reports, Spanish UI.
 - **v1.0 "Sustainable"**: Plus/Family/Pro tiers live, signed daily feed, payments, partner portal, independent audit, transparency page.
 
