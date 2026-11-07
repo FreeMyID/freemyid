@@ -34,7 +34,7 @@
     <h2 id="fmid">{{ icon('shield', 'icon card__icon') }}Don't just post it. Send it.</h2>
     <p class="mt-s">Free My ID sends your "I do not consent" to the companies that actually sell your name, address and phone number, through each site's own removal process (a formal legal request where a state privacy law applies), and keeps checking that they did. It's free, and it runs on your own computer.</p>
     <div class="btn-row mt-m">
-      <a class="btn" href="{{ url('download/') }}">{{ icon('download') }}Download Free My ID (free, for Windows)</a>
+      {% with cta_class = "btn--primary" %}{% include "partials/cta-download.html" %}{% endwith %}
       <a class="btn btn--secondary" href="{{ url('how-it-works/') }}">See how it works</a>
     </div>
   </section>
