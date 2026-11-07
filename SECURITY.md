@@ -7,7 +7,8 @@ Free My ID handles personal information (names, addresses, phone numbers and mai
 **Please don't open a public issue for security problems.**
 
 Report privately through GitHub: go to the repository's **Security** tab and choose **Report a vulnerability** (a GitHub private security advisory). Only the maintainers can see it.
-\nNo GitHub account? Email **security@freemyid.org** instead. Please don't include anyone's real personal details in the report.
+
+No GitHub account? Email **security@freemyid.org** instead. Please don't include anyone's real personal details in the report.
 
 Please include:
 - what's affected (version or commit, Windows/Linux, installer or source)
