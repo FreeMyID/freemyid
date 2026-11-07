@@ -23,18 +23,40 @@ it at 10:00 and 16:00 local time. Missed runs (machine off or asleep) catch up o
    handle comes from `--handle`, then `$FREEMYID_BLUESKY_HANDLE`, then the `user` field of the
    `bluesky` keyring entry (the `password` and `email` fields are never read). If either one is
    missing, it logs at info level and exits 0.
-4. Calls `createSession`, then `createRecord` (`app.bsky.feed.post`) with link facets that use
+4. Takes an exclusive lock (`docs/marketing/seo/.bluesky-queue.md.lock`). If another run holds
+   it, this run logs a skip and exits 0. Then it rewrites the block to
+   `status: posting <UTC ISO>` **before** anything is sent.
+5. Calls `createSession`, then `createRecord` (`app.bsky.feed.post`) with link facets that use
    UTF-8 byte offsets for every `https://` URL.
-5. On success it rewrites that block's line to `status: posted <UTC ISO> <at:// uri>` (temp file,
-   then `os.replace`) and appends a row to `docs/marketing/seo/outreach-log.md`.
+6. On success it rewrites the line to `status: posted <UTC ISO> <at:// uri>` (temp file, then
+   `os.replace`) and appends a row to `docs/marketing/seo/outreach-log.md`.
+
+Items are also skipped (with a warning, left `queued`) if they contain an invisible or bidi
+character (Unicode category Cf: zero-width space, word joiner, BOM, soft hyphen, RTL/LTR
+overrides). Emoji joiners inside emoji sequences are fine. These characters can make a link look
+like it goes somewhere it doesn't.
 
 Safety: requests go only to `https://bsky.social` (an allowlist checked before every request,
 full TLS verification, no redirects, 20 s timeouts, proxy env ignored). The app password and
 session tokens are scrubbed from every log line and error message.
 
-Exit codes: `0` posted or nothing to do · `1` network or HTTP error (the item stays queued) ·
-`2` posted, but the queue or log could not be updated (the URI is in the journal, so mark the item
-by hand) · `3` the queue file can't be read.
+### If an item is stuck in `posting`
+
+`posting` means "a post may or may not exist". This happens when the reply was lost (timeout),
+the server returned a 5xx, the run was killed, or the queue could not be updated. It is **never
+retried**, and nothing else is posted until you fix it, so a post can never go out twice.
+
+1. Open the Free My ID Bluesky profile and look for that post.
+2. If it's there, change the line to `status: posted <UTC ISO> <at:// uri>` (any text after
+   `posted` is fine). If not, change it back to `status: queued`.
+
+A definite failure before anything was created (allowlist refusal, connection refused, a 4xx
+answer such as a bad password, any session error) puts the item back to `queued` automatically.
+
+Exit codes: `0` posted, nothing to do, or another run holds the lock · `1` definite failure, item
+back to `queued` · `2` posted, but the queue or log could not be updated (the URI is in the
+journal, so mark the item by hand) · `3` the queue file can't be read or claimed · `4` outcome
+unknown or an item is stuck in `posting`: check the account.
 
 ## Try it without posting
 
@@ -43,29 +65,75 @@ by hand) · `3` the queue file can't be read.
 This prints the next post and its facets. It makes no network calls, doesn't read the keyring and
 writes no files.
 
+## How it is installed (SEC-59)
+
+The timer never runs code from the repo, because every agent session can write the repo. Instead
+`install.sh` builds a separate copy:
+
+- `~/.local/share/freemyid-poster/`: `poster.py` and `verify.sh` (0444), and a venv with only the
+  hash-pinned packages from `requirements.lock` (httpx, keyring and their dependencies). pip
+  is removed afterwards. Every file is read-only and every directory is 0555.
+- `FILES`, `LINKS` and `SHA256SUMS` list every file and symlink in that copy.
+- `~/.config/systemd/user/freemyid-poster.{service,timer}`: **copies** (0444) of the templates in
+  this folder. The installed unit pins the SHA-256 of `SHA256SUMS`. Before every start it
+  checks that pin, then every file in the list, then that nothing was added (for example a `.pth`
+  file in site-packages) and that nothing was made writable. Any mismatch means the run fails
+  and nothing is posted.
+
+This makes tampering obvious, but it isn't a hard security boundary: anything running as your user
+can still chmod the files. The real protection is that agent sandboxes can't write
+`~/.local/share` or `~/.config`, and that you review changes before you re-pin them.
+
+The script refuses to run as root. It never runs `systemctl` and never enables the timer. It
+doesn't change the repo either.
+
 ## Install (lead runs these; nothing is installed by default)
 
-    mkdir -p ~/.config/systemd/user
-    ln -sf ~/Documents/CODE/Data_Removal/tools/social/freemyid-poster.service ~/.config/systemd/user/
-    ln -sf ~/Documents/CODE/Data_Removal/tools/social/freemyid-poster.timer ~/.config/systemd/user/
+    cd ~/Documents/CODE/Data_Removal
+    tools/social/install.sh
     systemctl --user daemon-reload
     systemctl --user enable --now freemyid-poster.timer
     systemctl --user list-timers freemyid-poster.timer
 
-The unit assumes the repo is at `~/Documents/CODE/Data_Removal`. If it lives somewhere else, edit
-the `%h/...` paths in the `.service` file. To get one real post immediately, run
-`systemctl --user start freemyid-poster.service` and then read the log with
-`journalctl --user -u freemyid-poster.service -n 50`.
+`install.sh` prints the pinned hash. It downloads the pinned wheels from PyPI. To install
+offline, use `--wheelhouse DIR`. The venv uses `/usr/bin/python3`, or pass `--python PATH`
+(needs 3.12 or newer). The repo path is written into the unit, so if the repo moves, run
+`--update` again.
+
+To get one real post immediately, run `systemctl --user start freemyid-poster.service`, then
+read the log with `journalctl --user -u freemyid-poster.service -n 50`.
 
 The keyring must be unlocked when the timer fires (GNOME Keyring unlocks when you log in). If it's
 locked or missing, the run logs a skip and exits 0.
+
+## Update (after reviewing a change to tools/social/)
+
+    git log -p -- tools/social/          # review first
+    tools/social/install.sh --update     # rebuilds the copy and prints the new hash
+    systemctl --user daemon-reload
+
+`--update` deletes the old copy and builds a new one from scratch, so nothing from the old copy is
+carried over. If the build fails, the copy is removed and the poster won't run until a later
+update succeeds. If you upgrade `/usr/bin/python3`, run `--update` too.
+
+To change the dependencies, edit `requirements.in` and regenerate the lock (the command is at
+the top of `requirements.lock`). Review the diff before you update.
 
 ## Pause, resume, remove
 
     systemctl --user stop freemyid-poster.timer                  # pause until next login/boot
     systemctl --user disable --now freemyid-poster.timer         # pause until re-enabled
     systemctl --user enable --now freemyid-poster.timer          # resume
-    rm ~/.config/systemd/user/freemyid-poster.{service,timer} && systemctl --user daemon-reload
+
+Uninstall:
+
+    systemctl --user disable --now freemyid-poster.timer
+    rm -f ~/.config/systemd/user/freemyid-poster.{service,timer}
+    systemctl --user daemon-reload
+    chmod -R u+w ~/.local/share/freemyid-poster && rm -r ~/.local/share/freemyid-poster
+
+If an older install used `ln -sf` links, `install.sh` replaces those links with copies. It never
+touches the files the links pointed to.
 
 To hold back a single post, change its line from `status: queued` to something else, for example
 `status: hold`. To stop all posting at once without touching systemd, delete the `bluesky_token`
@@ -77,4 +145,4 @@ keyring entry.
 `load_credentials`, `post`. `MastodonBackend` is a stub (500 chars, `mastodon.social`, Bearer
 `mastodon_token`). To finish it, implement `load_credentials` and `post`
 (`POST https://mastodon.social/api/v1/statuses`), add it to `BACKENDS`, write tests, then add a
-second unit that runs `poster.py --backend mastodon`.
+second unit template that runs `poster.py --backend mastodon` and install it the same way.
