@@ -49,8 +49,11 @@
       {# source: teardown section 8 column 2; shared rule 6 (phone only with the Profile.permissions flag) #}
       <li>{{ icon('x') }}<span>Your phone number, unless you choose to share it with a site that needs it</span></li>
       <li>{{ icon('x') }}<span>A photo of your ID, unless you switch that on yourself in Settings for a site that insists on it</span></li>
-      <li>{{ icon('x') }}<span>Your Facebook or Google password, or the password to your everyday email. If you want it to send requests for you, you give it an app password for a separate removal mailbox, which is optional</span></li>
+      {# WR-30: only the everyday email password in the list; app password explained below #}
+      <li>{{ icon('x') }}<span>The password to your everyday email</span></li>
     </ul>
+    {# source: families.html Gmail step (separate free mailbox + app password); PLAN_V1 D2 (mailbox optional) #}
+    <p>If you want Free My ID to send requests for you, you give it an app password for a separate removal mailbox. That's optional.</p>
     <aside class="callout callout--note">
       {{ icon('shield') }}
       <p><strong>If anything claiming to be Free My ID asks you for these, it isn't us.</strong></p>
