@@ -24,6 +24,8 @@ from freemyid.models import (
     TodoKind,
 )
 
+from .conftest import make_profile
+
 STAMP = datetime(2026, 11, 7, 12, 34, 56, tzinfo=UTC)
 STAMP_TEXT = "2026-11-07T12:34:56+00:00"
 LABEL = 'Pat Testperson — 雪 "fake" \\ label\nSpringfield IL'
@@ -191,3 +193,31 @@ def test_emit_one_unwrapped_json_object(
     assert decoded["todos"][0]["label"] == LABEL
     assert decoded["todos"][0]["title"] == title
     assert doc == before
+
+
+def test_no_personal_details_or_secrets_in_any_document() -> None:
+    """docs/CLI.md: never names, addresses, phones, birth dates, mailbox details, letters
+    or copy-fields, even when the full (fake) profile and to-do carry them."""
+    from freemyid.models import MailboxConfig
+    # Fixed ids: random hex ids could contain "1980" or "62704" by chance.
+    full = make_profile(id=PROFILE_ID, label="Mom", mailbox=MailboxConfig(
+        address="removals.fake@example.net", imap_host="imap.example.net",
+        smtp_host="smtp.example.net", username="removals.fake@example.net"))
+    todo = Todo(id="33333333333333333333333333333333", profile_id=full.id,
+                broker_id="fake_broker", kind=TodoKind.OTHER,
+                title="Finish on Fake Broker", body="FAKE LETTER BODY",
+                copy_fields={"name": "Jane Q Testperson"}, created_at=STAMP)
+    status = BrokerStatus(profile_id=full.id, broker_id="fake_broker", updated_at=STAMP)
+    request = Request(id="22222222222222222222222222222222", profile_id=full.id,
+                      broker_id="fake_broker", kind=RequestKind.OPT_OUT, method=Method.EMAIL,
+                      created_at=STAMP)
+    raw = json.dumps([
+        cj.status_doc([(full, [status], 1)], {}, []),
+        cj.todos_doc([(full, todo)], []),
+        cj.outbox_doc([request]),
+        cj.reports_doc([(full, "html", "fake-reports/report.html")], []),
+    ], ensure_ascii=False)
+    assert "Mom" in raw
+    for leaked in ("Testperson", "Jane", "Evergreen", "62704", "555-0142", "1980",
+                   "example.com", "example.net", "FAKE LETTER BODY", "freemyid-mailbox"):
+        assert leaked not in raw
