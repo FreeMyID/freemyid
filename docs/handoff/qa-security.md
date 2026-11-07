@@ -63,3 +63,22 @@ Post-v0.1.0 wave (2026-11-07):
   registry-health.md` (offline; add --online only if the runner's egress is acceptable), upload
   the report as an artifact.
 Next: remove xfail markers as SEC-47/48/49 land; adopt test_search_guard.py.
+R8 site-v3 (2026-11-07, branch site-v3, web/ at 4533a5c):
+- Verdict: BLOCK (narrow), for the switch-over only, on SEC-60. Astro build telemetry is on (no
+  ASTRO_TELEMETRY_DISABLED; CI runs are still reported as `CI.<name>`). The built site passes.
+- SEC-60 MED (BLOCK), SEC-61 MED (actions not SHA-pinned), SEC-62 LOW (no strictDepBuilds or
+  onlyBuiltDependencies), SEC-63 LOW (unused TimelineBeam/motion chunk deployed), SEC-64 LOW (checkout
+  persist-credentials), SEC-65 LOW (check-site on*= regex too narrow), SEC-66 INFO (meta CSP: no
+  frame-ancestors; move it after charset; headers once on freemyid.org), SEC-67 INFO (no pnpm audit in
+  CI). SEC-50..59 are reserved for the Proton TLS work on main. WR-45..49 filed (WR-48 overlaps web-qa
+  WR-41).
+- Verified: 43/43 pages have a meta CSP with no unsafe-*. 42 pages have script-src 'none'. /download/
+  hashes match its 2 island scripts and 1 style. Playwright over all 43 pages with external requests
+  aborted: 0 CSP violations, 0 errors, 0 external requests. CopyHash hydrates and copies after the
+  panel opens. External origins in dist are navigational hrefs only.
+- Dependencies: 12 direct (exact pins). Lockfile: 322 entries / 295 names (165 optional platform
+  binaries), 219 installed on linux-x64, 322/322 with sha512 integrity, 0 install scripts.
+  pnpm audit skipped (not offline).
+- Build note: `astro build --outDir <scratchpad>` fails with EXDEV (cross-device rename). Build in
+  web/dist (gitignored), then copy it.
+Next: re-check SEC-60/61 when the workflow is renamed; clear SEC-62..65 as the WR rows land.
