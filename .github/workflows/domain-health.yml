@@ -22,6 +22,10 @@ jobs:
           note() { echo "- $1"; fail="$fail\n- $1"; }
           for u in https://freemyid.org/ https://freemyid.org/download/; do
             c=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "$u"); [ "$c" = 200 ] || note "$u returned $c"; done
+          g=$(curl -sIL -o /dev/null -w "%{http_code} %{content_type} %{url_effective}" --max-time 60 https://freemyid.org/get/windows)
+          case "$g" in "200 application/octet-stream "*|"200 application/x-msdownload "*|"200 application/vnd.microsoft.portable-executable "*) ;; *) note "/get/windows did not resolve to a 200 .exe download: ${g%% http*}";; esac
+          case "$g" in *FreeMyIDSetup.exe*) ;; *) note "/get/windows final URL is not FreeMyIDSetup.exe";; esac
+          for o in linux macos; do l=$(curl -s -o /dev/null -w "%{http_code} %{redirect_url}" https://freemyid.org/get/$o); [ "$l" = "302 https://freemyid.org/developers/" ] || note "/get/$o returned: $l"; done
           r=$(curl -s -o /dev/null -w "%{http_code} %{redirect_url}" http://freemyid.org/); case "$r" in "301 https://freemyid.org/"*) ;; *) note "http redirect: $r";; esac
           h=$(curl -sI https://freemyid.org/)
           for k in strict-transport-security x-frame-options x-content-type-options referrer-policy; do
