@@ -9,3 +9,10 @@ updates:
     directory: /
     schedule: {interval: weekly}
     open-pull-requests-limit: 5
+  - package-ecosystem: npm
+    directory: /web
+    schedule: {interval: weekly}
+    open-pull-requests-limit: 5
+    groups: {web: {patterns: ["*"], update-types: [minor, patch]}}
+  # TODO(devops): add the docker ecosystem (directory /packaging/docker) once the Dockerfile is committed;
+  # Dependabot errors on a missing directory.

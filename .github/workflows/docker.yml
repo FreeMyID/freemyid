@@ -1,0 +1,119 @@
+name: docker
+
+# Build packaging/docker/Dockerfile, smoke-run it, and on v* tags push to GHCR, sign (cosign keyless),
+# attach an SBOM (syft) and build provenance. Skips cleanly while the Dockerfile does not exist.
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+    paths: ["packaging/docker/**", "src/**", "pyproject.toml", ".github/workflows/docker.yml"]
+  pull_request:
+    paths: ["packaging/docker/**", ".github/workflows/docker.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE: ghcr.io/freemyid/freemyid
+
+jobs:
+  build-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Dockerfile present?
+        id: has
+        run: |
+          if [ -f packaging/docker/Dockerfile ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; echo "::notice::packaging/docker/Dockerfile not found yet; skipping"; fi
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+        if: steps.has.outputs.present == 'true'
+      - name: Build (local, not pushed)
+        if: steps.has.outputs.present == 'true'
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: packaging/docker/Dockerfile
+          load: true
+          tags: freemyid:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Smoke run
+        if: steps.has.outputs.present == 'true'
+        run: |
+          set -euo pipefail
+          docker run --rm freemyid:ci freemyid --help > /dev/null
+          docker run --rm freemyid:ci freemyid doctor --json > doctor.json || echo "doctor exit code $? (checks may warn in a bare container)"
+          python3 -c "import json; json.load(open('doctor.json')); print('doctor --json is valid JSON')"
+          # hardening expectations: non-root user
+          uid=$(docker run --rm freemyid:ci id -u); [ "$uid" != "0" ] || { echo "image runs as root"; exit 1; }
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-smoke]
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: read
+      packages: write      # push to GHCR
+      id-token: write      # cosign keyless + provenance
+      attestations: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Dockerfile present?
+        id: has
+        run: |
+          if [ -f packaging/docker/Dockerfile ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; echo "::notice::no Dockerfile; nothing to publish"; fi
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+        if: steps.has.outputs.present == 'true'
+      - uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
+        if: steps.has.outputs.present == 'true'
+      - name: Log in to GHCR
+        if: steps.has.outputs.present == 'true'
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - name: Build and push (latest + version)
+        id: push
+        if: steps.has.outputs.present == 'true'
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: packaging/docker/Dockerfile
+          push: true
+          provenance: mode=max
+          sbom: false
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ github.ref_name }}
+          cache-from: type=gha
+      - name: Sign the image (cosign keyless)
+        if: steps.has.outputs.present == 'true'
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: cosign sign --yes "${IMAGE}@${DIGEST}"
+      - name: SBOM (syft, SPDX)
+        if: steps.has.outputs.present == 'true'
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
+        with:
+          image: ${{ env.IMAGE }}@${{ steps.push.outputs.digest }}
+          format: spdx-json
+          output-file: sbom.spdx.json
+          upload-artifact: true
+          upload-release-assets: false
+      - name: Attach SBOM to the image as a signed attestation
+        if: steps.has.outputs.present == 'true'
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: cosign attest --yes --type spdxjson --predicate sbom.spdx.json "${IMAGE}@${DIGEST}"
