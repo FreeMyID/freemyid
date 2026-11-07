@@ -1,9 +1,19 @@
 # web v3 handoff (branch `site-v3`, never pushed, not merged)
 
-Status (2026-11-07): content parity with v2 done, checks pass. R7/R8 fixes landed (WR-50/51/52/54/56/57/59,
-SEC-60/61/63/64). Waiting on web-qa + qa-security re-check before any switch-over. P3 backlog left open: WR-53, 55, 58, 60,
-SEC-62, 65, 66, 67; Dependabot for github-actions (SEC-61 tail, devops).
-v2 (`site_src/`, `tools/build_site.py`, `site/`, `pages.yml`) untouched and still the live site.
+Status (2026-11-07): SWITCH-OVER PREPARED on site-v3 (merge of main + switch commit; orchestrator fast-forwards main
+and pushes). R7 PASS with P3s, R8 PASS (re-checks c55bf51, eb6e2d5). `.github/workflows/pages.yml` now builds web/ and
+deploys web/dist; the v2 publisher is kept inactive as `pages-v2.yml.draft`. Origin and base path come from
+site_src/site.yaml (freemyid.org at `/`) in astro.config.mjs, check-site.mjs and content_check.py.
+P3 backlog: WR-53, 55, 58, 60; SEC-62, 65, 66, 67; popover stays open on tab-out (WR-51 note); React-free CopyHash
+(/download/ JS 78.3 KiB of 80 KiB); Dependabot for github-actions + npm (devops, after merge).
+
+Rollback to v2 (site_src/, tools/build_site.py and site/ stay in the repo; build.yml still rebuilds site/ after releases):
+
+```
+git mv -f .github/workflows/pages-v2.yml.draft .github/workflows/pages.yml
+git commit -m "Site: roll back to v2 publisher" -- .github/workflows/pages.yml .github/workflows/pages-v2.yml.draft
+git push origin main          # Pages redeploys site/ (or: gh workflow run pages.yml --ref main)
+```
 
 ## Build and check
 
@@ -17,7 +27,7 @@ python scripts/content_check.py dist         # tools/site_check.py: copy rules +
 python scripts/content_check.py dist --tools <main checkout>/tools   # with the private host-hash list (leak scan ON)
 node scripts/gen-tokens.mjs --check          # tokens.css/theme.css up to date (CI)
 ```
-Preview: serve a folder that holds a `freemyid -> web/dist` symlink (`python -m http.server`), open `/freemyid/`.
+Preview: `python -m http.server` inside web/dist, open `/` (origin and base path come from site_src/site.yaml; freemyid.org at the root since the switch-over).
 Build is deterministic (two clean builds, identical sha256 for every file).
 
 ## Data: one source of truth
