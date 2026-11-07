@@ -1,0 +1,47 @@
+name: Something is not working
+description: Tell us what went wrong in plain words.
+title: "Problem: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Please do not share personal information.**
+        Never paste your name, address, phone number, email address, screenshots that show personal details, or profile/backup files. We never need them.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: "Tell us in your own words. Do not include your name, address, phone, email, personal screenshots, or profile/backup files. We never need them."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Free My ID version
+      description: "Open Free My ID and choose Help, then About. Or type the name of the installer file you downloaded."
+    validations:
+      required: true
+  - type: dropdown
+    id: windows
+    attributes:
+      label: Windows version
+      options:
+        - Windows 11
+        - Windows 10
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: What steps did you take?
+      description: "List what you clicked, one step per line. No personal details, please."
+    validations:
+      required: false

@@ -1,0 +1,42 @@
+name: Broker info is wrong or out of date
+description: A data broker's opt-out link or steps are wrong, changed, or the site closed.
+title: "Broker info: "
+labels: ["broker-data"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Please do not share personal information.**
+        Never paste your name, address, phone number, email address, screenshots that show personal details, or profile/backup files. We never need them.
+  - type: input
+    id: broker
+    attributes:
+      label: Broker id or site name
+      description: "For example: spokeo"
+    validations:
+      required: true
+  - type: dropdown
+    id: problem
+    attributes:
+      label: What is wrong?
+      options:
+        - Opt-out link is broken
+        - Opt-out steps have changed
+        - Site has closed
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Source link
+      description: "A web link to the broker's own page that shows the change."
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: "Tell us what you saw. Do not include your name, address, phone, email, or personal screenshots."
+    validations:
+      required: false
