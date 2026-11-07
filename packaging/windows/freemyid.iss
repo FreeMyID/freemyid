@@ -35,6 +35,11 @@ Source: "..\..\dist\FreeMyID\*"; DestDir: "{app}"; Flags: recursesubdirs ignorev
 ; person still reviews everything and gives their own permission.
 Source: "{#FamilyBundle}"; DestDir: "{app}"; Flags: ignoreversion
 #endif
+#ifdef FamilyRegistry
+; Private full broker list for a family build (iscc /DFamilyRegistry=path\registry.yaml).
+; Never used for public releases. The app validates it like an update before using it.
+Source: "{#FamilyRegistry}"; DestDir: "{app}"; DestName: "registry.yaml"; Flags: ignoreversion
+#endif
 
 [Icons]
 Name: "{autoprograms}\Free My ID"; Filename: "{app}\FreeMyID.exe"; IconFilename: "{app}\freemyid.ico"
@@ -42,6 +47,10 @@ Name: "{autodesktop}\Free My ID"; Filename: "{app}\FreeMyID.exe"; IconFilename: 
 
 [Run]
 Filename: "{app}\FreeMyID.exe"; Description: "Start Free My ID now"; Flags: nowait postinstall skipifsilent
+
+[UninstallDelete]
+; A family registry.yaml must not survive uninstall/reinstall.
+Type: files; Name: "{app}\registry.yaml"
 
 [UninstallRun]
 ; Remove the daily background task (per-user, no admin needed) before the files go away.

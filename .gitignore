@@ -21,3 +21,5 @@ docs/research/broker_candidates.md
 docs/research/success_signals.yaml
 # hashes of private broker hosts (reversible) stay local
 tools/private_host_hashes.txt
+# legacy prototype: local reference only, never tracked
+zzz_legacy/

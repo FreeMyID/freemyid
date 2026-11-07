@@ -376,6 +376,19 @@ def registry_validate(path: Annotated[Path | None, typer.Argument()] = None):
     con.print(f"OK: {len(reg.brokers)} brokers ({unver} unverified)")
 
 
+@registry_app.command("source")
+def registry_source_cmd(plain: Annotated[bool, typer.Option("--plain")] = False):
+    """Which broker list is in use: update, family, full or sample."""
+    from .registry import load_registry, load_warnings, registry_source
+    reg = load_registry()
+    if plain:
+        print(registry_source())
+        return
+    con.print(f"{registry_source()}: {len(reg.brokers)} brokers (version {reg.version})")
+    for w in load_warnings:
+        con.print(f"[yellow]warning:[/] {w}")
+
+
 @registry_app.command("show")
 def registry_show():
     t = Table()

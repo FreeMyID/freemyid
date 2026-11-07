@@ -63,7 +63,12 @@ jobs:
         run: pyinstaller packaging/windows/freemyid.spec --noconfirm --distpath dist --workpath build
       - name: Smoke test the built program
         shell: pwsh
-        run: ./dist/FreeMyID/freemyid-cli.exe registry validate
+        run: |
+          ./dist/FreeMyID/freemyid-cli.exe registry validate
+          # Public builds must carry only the sample registry (the full one is private).
+          $src = (./dist/FreeMyID/freemyid-cli.exe registry source --plain).Trim()
+          Write-Host "registry source: $src"
+          if ($src -ne "sample") { throw "public build must bundle only the sample registry, got '$src'" }
       - name: Inno Setup
         shell: pwsh
         run: |

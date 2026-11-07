@@ -20,18 +20,26 @@ datas = [
     (str(ROOT / "schema"), "freemyid/_data/schema"),                 # json schemas
 ]
 # Broker data. The public sample registry and state laws are always bundled. The full maintained
-# registry (brokers/registry.yaml) is NOT in the public repo; family/private builds drop it in
-# (CI fetches it from the private data repo when that secret is configured) and then it is
-# bundled too and takes precedence over the sample (see freemyid.registry).
+# registry (brokers/registry.yaml) is private: it is bundled ONLY when FMID_BUNDLE_FULL_REGISTRY=1
+# (family/private builds), never just because the file happens to be on disk, and never in a
+# GitHub Actions tag build (those become public Releases).
+import os
 BROKERS = ROOT / "brokers"
-for _name, _required in (("registry.sample.yaml", True), ("state_laws.yaml", True),
-                         ("LICENSE-DATA.md", True), ("registry.yaml", False)):
+for _name in ("registry.sample.yaml", "state_laws.yaml", "LICENSE-DATA.md"):
     _f = BROKERS / _name
-    if _f.exists():
-        datas.append((str(_f), "freemyid/_data/brokers"))
-    elif _required:
+    if not _f.exists():
         raise SystemExit(f"missing required data file: {_f}")
-print("bundling full broker registry:", (BROKERS / "registry.yaml").exists())
+    datas.append((str(_f), "freemyid/_data/brokers"))
+_full = BROKERS / "registry.yaml"
+if os.environ.get("FMID_BUNDLE_FULL_REGISTRY") == "1":
+    if os.environ.get("GITHUB_ACTIONS") == "true" and os.environ.get("GITHUB_REF", "").startswith("refs/tags/"):
+        raise SystemExit("refusing to bundle the private full registry into a public release build")
+    if not _full.exists():
+        raise SystemExit(f"FMID_BUNDLE_FULL_REGISTRY=1 but {_full} is missing")
+    datas.append((str(_full), "freemyid/_data/brokers"))
+    print("bundling FULL broker registry (private build)")
+else:
+    print("bundling SAMPLE broker registry only")
 datas += collect_data_files("desktop_notifier")
 datas += collect_data_files("jsonschema_specifications")
 

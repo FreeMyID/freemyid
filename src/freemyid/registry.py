@@ -8,11 +8,15 @@ Precedence: FREEMYID_HOME/registry.yaml (validated update or installed family re
 Updates: fetched ONLY from config.registry_url (the user's own GitHub repo), validated
 against the pydantic model + JSON Schema, optionally pinned by sha256, then atomically
 swapped in. A failed validation never replaces the working copy.
+If the preferred registry is unreadable or invalid, `load_registry()` falls back to the next
+source (so a bad update never leaves the app with no broker list) and records a warning in
+`load_warnings`. YAML aliases are refused (alias-expansion "billion laughs" protection).
 """
 from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import re
 from pathlib import Path
 
@@ -24,9 +28,24 @@ from . import config, paths
 from .models import Registry, StateLaw, StateLawRegistry
 from .netpolicy import NetPolicy
 
+log = logging.getLogger(__name__)
+
 
 class RegistryError(RuntimeError):
     pass
+
+
+class _NoAliasLoader(yaml.SafeLoader):
+    """SafeLoader that refuses aliases to lists/maps. Expanding those (the json round-trip
+    below) turns a tiny file into gigabytes ("billion laughs"). Aliases to plain scalars
+    (the registry reuses a source URL this way) cannot grow and stay allowed."""
+
+    def compose_node(self, parent, index):  # type: ignore[no-untyped-def]
+        if self.check_event(yaml.AliasEvent):
+            anchor = self.peek_event().anchor
+            if not isinstance(self.anchors.get(anchor), yaml.ScalarNode):
+                raise yaml.YAMLError("YAML aliases to lists or maps are not allowed in a registry")
+        return super().compose_node(parent, index)
 
 
 SOURCE_UPDATE, SOURCE_FAMILY, SOURCE_FULL, SOURCE_SAMPLE = "update", "family", "full", "sample"
@@ -48,24 +67,41 @@ def bundled_registry_path() -> Path:
     return full if full.exists() else bundled_sample_registry_path()
 
 
-def _active_registry() -> tuple[str, Path]:
+def _candidates() -> list[tuple[str, Path]]:
+    """Existing registries in precedence order; the sample is always last."""
+    out: list[tuple[str, Path]] = []
     cached = paths.registry_cache_path()
     if cached.exists():
-        return SOURCE_UPDATE, cached
+        out.append((SOURCE_UPDATE, cached))
     family = find_family_registry()
     if family is not None:
-        return SOURCE_FAMILY, family
+        out.append((SOURCE_FAMILY, family))
     full = bundled_full_registry_path()
     if full.exists():
-        return SOURCE_FULL, full
-    return SOURCE_SAMPLE, bundled_sample_registry_path()
+        out.append((SOURCE_FULL, full))
+    out.append((SOURCE_SAMPLE, bundled_sample_registry_path()))
+    return out
+
+
+def _active_registry() -> tuple[str, Path]:
+    return _candidates()[0]
+
+
+# (preferred candidate at load time, source actually loaded): a fallback is only reported
+# while the same preferred registry is still in place.
+_loaded: tuple[tuple[str, Path], str] | None = None
+load_warnings: list[str] = []
 
 
 def registry_source() -> str:
-    """Which registry `load_registry()` uses: "update" (FREEMYID_HOME/registry.yaml, from the
-    update feed or an installed family registry), "family" (registry.yaml next to the installed
-    exe), "full" (bundled full registry) or "sample" (public sample)."""
-    return _active_registry()[0]
+    """Which registry `load_registry()` used last (or would use): "update"
+    (FREEMYID_HOME/registry.yaml, from the update feed or an installed family registry),
+    "family" (registry.yaml next to the installed exe), "full" (bundled full registry) or
+    "sample" (public sample). After a fallback this names the source actually loaded."""
+    preferred = _active_registry()
+    if _loaded is not None and _loaded[0] == preferred:
+        return _loaded[1]
+    return preferred[0]
 
 
 def bundled_state_laws_path() -> Path:
@@ -82,7 +118,7 @@ def json_schema() -> dict:
 
 def validate_text(text: str) -> Registry:
     try:
-        raw = yaml.safe_load(text)
+        raw = yaml.load(text, Loader=_NoAliasLoader)
     except yaml.YAMLError as e:
         raise RegistryError(f"registry is not valid YAML: {e}") from e
     sp = schema_path()
@@ -94,12 +130,37 @@ def validate_text(text: str) -> Registry:
         raise RegistryError(f"registry failed validation: {e}") from e
 
 
+def _load_file(path: Path) -> Registry:
+    try:
+        if path.stat().st_size > MAX_REGISTRY_BYTES:
+            raise RegistryError(f"registry is larger than {MAX_REGISTRY_BYTES} bytes; refusing")
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as e:
+        raise RegistryError(f"registry could not be read: {e}") from e
+    return validate_text(text)
+
+
 def load_registry(path: Path | None = None) -> Registry:
-    if path is None:
-        path = _active_registry()[1]
-    if path.stat().st_size > MAX_REGISTRY_BYTES:
-        raise RegistryError(f"registry is larger than {MAX_REGISTRY_BYTES} bytes; refusing")
-    return validate_text(path.read_text(encoding="utf-8"))
+    """Load an explicit registry file, or the best available one with fallback."""
+    global _loaded
+    if path is not None:
+        return _load_file(path)
+    load_warnings.clear()
+    err: RegistryError | None = None
+    cands = _candidates()
+    for source, p in cands:
+        try:
+            reg = _load_file(p)
+        except RegistryError as e:
+            msg = f"{source} registry unusable, trying the next one: {e}"
+            log.warning(msg)
+            load_warnings.append(msg)
+            err = e
+            continue
+        _loaded = (cands[0], source)
+        return reg
+    assert err is not None
+    raise err
 
 
 def load_state_laws(path: Path | None = None) -> dict[str, StateLaw]:
