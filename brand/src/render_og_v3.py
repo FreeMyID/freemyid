@@ -6,7 +6,7 @@ r = pathlib.Path(__file__).resolve().parents[1]; v3 = r / "v3"
 mark = (r / "logo/final/mark.svg").read_text()
 PAGES = {
  "og-home": ("hero.svg", "Take your name off the websites that sell it.", "A free Windows app that asks people-search sites to remove your listing. Runs on your computer. Nothing is sent to us."),
- "og-download": ("sections/step-install.svg", "Download Free&nbsp;My&nbsp;ID for Windows", "Free. No account. Nothing leaves your computer. Uninstall anytime."),
+ "og-download": ("sections/step-install.svg", "Download Free&nbsp;My&nbsp;ID for Windows", "Free. No account. Nothing is sent to us. Uninstall anytime."),
 }
 def page(img, h, sub):
     svg = (v3 / img).read_text()
