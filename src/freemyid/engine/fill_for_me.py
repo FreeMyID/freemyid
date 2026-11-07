@@ -266,6 +266,20 @@ async def _snapshot(page: Page, texts: list[str], sels: list[str],
     return _Snap(counts, present, int(d.get("formLeft") or 0), page.url)
 
 
+# SEC-39: no single page call may outlive the fill_for_me deadline (an evaluate can hang
+# forever while a navigation is paused in a route handler).
+_CALL_TIMEOUT_S = 5.0
+
+
+async def _eval_t(page: Page, js: str, arg: Any = None) -> Any:
+    return await asyncio.wait_for(page.evaluate(js, arg), _CALL_TIMEOUT_S)
+
+
+async def _snap_t(page: Page, texts: list[str], sels: list[str],
+                  controls: list[tuple[str, str]]) -> _Snap:
+    return await asyncio.wait_for(_snapshot(page, texts, sels, controls), _CALL_TIMEOUT_S)
+
+
 def _merge_baseline(base: _Snap, now: _Snap) -> _Snap:
     """Before the first submit event, anything that shows up (late-rendered FAQ text, ...)
     becomes part of the baseline: it cannot be the result of submitting."""
@@ -503,29 +517,39 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
     async def _watch(route: Any) -> None:
         """Submit-like events after the fill (SEC-32): a main-frame navigation, or an
         XHR/fetch POST to an allowed host. The page is captured while the request waits,
-        i.e. exactly as the person sent it (SEC-37). Then the context route decides."""
-        req = route.request
+        i.e. exactly as the person sent it (SEC-37). Then the context route decides.
+
+        SEC-39: while a main-frame navigation is paused in this handler, Playwright never
+        answers a page.evaluate, so for navigations the baseline is the one from the last
+        poll (no snapshot here), and the request is always released (finally)."""
         try:
-            nav = req.is_navigation_request() and req.frame == page.main_frame
-            post = (req.resource_type in ("xhr", "fetch") and
-                    req.method not in ("GET", "HEAD", "OPTIONS") and
-                    bm.url_allowed(req.url, hosts))
-        except Exception:  # noqa: BLE001 - no frame (worker): not a submit
-            nav = post = False
-        if nav or post:
-            first = submit["n"] == 0
-            submit["n"] += 1
-            if first:   # the request waits here, so this is the page before submitting
-                try:
-                    submit["base"] = _merge_baseline(
-                        submit["base"], await _snapshot(page, texts, sels, controls))
-                except Exception as e:  # noqa: BLE001 - keep the last poll's baseline
-                    log.debug("submit-time baseline failed: %s", type(e).__name__)
+            req = route.request
             try:
-                submit["shot"] = await asyncio.wait_for(page.screenshot(full_page=True), 5)
-            except Exception as e:  # noqa: BLE001 - the fill-time shot is the fallback
-                log.debug("submit-time screenshot failed: %s", type(e).__name__)
-        await route.fallback()
+                nav = req.is_navigation_request() and req.frame == page.main_frame
+                post = (req.resource_type in ("xhr", "fetch") and
+                        req.method not in ("GET", "HEAD", "OPTIONS") and
+                        bm.url_allowed(req.url, hosts))
+            except Exception:  # noqa: BLE001 - no frame (worker): not a submit
+                nav = post = False
+            if nav or post:
+                first = submit["n"] == 0
+                submit["n"] += 1
+                if first and post and not nav:   # the page before submitting
+                    try:
+                        submit["base"] = _merge_baseline(
+                            submit["base"], await _snap_t(page, texts, sels, controls))
+                    except Exception as e:  # noqa: BLE001 - keep the last poll's baseline
+                        log.debug("submit-time baseline failed: %s", type(e).__name__)
+                try:
+                    submit["shot"] = await asyncio.wait_for(
+                        page.screenshot(full_page=True), _CALL_TIMEOUT_S)
+                except Exception as e:  # noqa: BLE001 - the fill-time shot is the fallback
+                    log.debug("submit-time screenshot failed: %s", type(e).__name__)
+        finally:
+            try:
+                await route.fallback()
+            except Exception as e:  # noqa: BLE001 - route already handled / page closed
+                log.debug("route fallback failed: %s", type(e).__name__)
 
     await page.route("**/*", _watch)
     task: asyncio.Task[Any] | None = (
@@ -542,7 +566,7 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
             submitted_before = submit["n"] > 0
             res.submit_seen = res.submit_seen or submitted_before
             try:
-                now = await _snapshot(page, texts, sels, controls)
+                now = await _snap_t(page, texts, sels, controls)
                 if not submitted_before:
                     if submit["n"] == 0:      # nothing was submitted while we looked
                         submit["base"] = _merge_baseline(submit["base"], now)
@@ -550,8 +574,8 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
                     how = new_signal(submit["base"], now, url_re)
                     if how:
                         break
-                if await page.evaluate(_NEEDS_BANNER_JS):
-                    await page.evaluate(banner)   # page reloaded (e.g. a validation error)
+                if await _eval_t(page, _NEEDS_BANNER_JS):
+                    await _eval_t(page, banner)   # page reloaded (e.g. a validation error)
             except Exception:  # noqa: BLE001 - mid-navigation; try again next tick
                 if closed["v"] or page.is_closed():
                     return fallback("window_closed")
@@ -562,7 +586,7 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
             return fallback("timeout")
         bm.check_escaped(page)
         try:
-            await page.evaluate(_REMOVE_BANNER_JS)       # SEC-37: no banner in the proof
+            await _eval_t(page, _REMOVE_BANNER_JS)       # SEC-37: no banner in the proof
         except Exception:  # noqa: BLE001, S110 - mid-navigation: shoot what is there
             pass
         done_png = await page.screenshot(full_page=True)
@@ -573,7 +597,7 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
                                                            shots, how)
         res.status, res.reason = "submitted", how
         try:
-            await page.evaluate(_banner_js([MSG_DONE], done=True))
+            await _eval_t(page, _banner_js([MSG_DONE], done=True))
             if close_delay_s > 0:
                 await asyncio.sleep(close_delay_s)
         except Exception:  # noqa: BLE001, S110 - person closed the window already
