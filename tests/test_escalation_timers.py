@@ -1,4 +1,4 @@
-"""Draft tests (qa to adopt): runner escalation-ladder timer edge cases.
+"""Adopted from engine/_test_drafts: runner escalation-ladder timer edge cases.
 
 Fake broker (*.example), FakeMailer only, nothing is sent anywhere.
 """
