@@ -15,6 +15,8 @@ const items = [
   ["families/", "For families", "families"],
   ["faq/", "FAQ", "faq"],
 ].filter(([, , key]) => key in pages);
+const toggle = "flex min-h-tap min-w-tap items-center justify-center gap-2xs rounded-md border-2 border-line-strong bg-transparent px-s font-bold text-heading max-[34em]:px-xs";
+const panel = "menu-panel w-[min(20rem,calc(100vw-2*var(--fmi-gutter)))] gap-3xs rounded-xl border border-line bg-card p-2xs text-text shadow-3";
 const link = "flex min-h-tap items-center rounded-md px-xs font-semibold text-text no-underline hover:bg-brand-soft hover:text-heading aria-[current=page]:text-heading aria-[current=page]:underline aria-[current=page]:decoration-accent aria-[current=page]:decoration-[0.12em] aria-[current=page]:underline-offset-[0.4em]";
 ---
 <div class="flagbar" aria-hidden="true"><span></span><span></span><span></span></div>
@@ -29,17 +31,30 @@ const link = "flex min-h-tap items-center rounded-md px-xs font-semibold text-te
           <li><a class={link} href={url(href)} aria-current={nav === key ? "page" : undefined}>{label}</a></li>
         ))}
       </ul>
-      <details class="menu lg:hidden">
-        <summary class="flex min-h-tap min-w-tap items-center justify-center gap-2xs rounded-md border-2 border-line-strong px-s font-bold text-heading max-[34em]:px-xs">
+      {/* WR-51: the phone menu is a native popover (no script, works under script-src 'none'): it closes on
+          Escape and on a tap or click outside it, and focus goes back to the button. Browsers without popover
+          support (e.g. iOS 16 and older) get the <details> menu below instead; global.css picks one. */}
+      <div class="menu lg:hidden">
+        <button type="button" class={`menu-btn ${toggle}`} popovertarget="site-menu">
           <Icon name="menu" /><span class="menu-label"><span class="when-closed">Menu</span><span class="when-open">Close</span></span>
-        </summary>
-        {/* WR-50: anchored to the sticky header (not the toggle) and capped to the viewport, so it can't run off a phone screen */}
-        <ul class="menu-panel absolute end-gutter top-full z-50 mt-2xs grid w-[min(20rem,calc(100vw-2*var(--fmi-gutter)))] gap-3xs rounded-xl border border-line bg-card p-2xs shadow-3" role="list">
+        </button>
+        <ul id="site-menu" popover class={`menu-popover ${panel}`} role="list">
           {items.map(([href, label, key]) => (
             <li><a class={link} href={url(href)} aria-current={nav === key ? "page" : undefined}>{label}</a></li>
           ))}
         </ul>
-      </details>
+        <details class="menu-fallback">
+          <summary class={toggle}>
+            <Icon name="menu" /><span class="menu-label"><span class="when-closed">Menu</span><span class="when-open">Close</span></span>
+          </summary>
+          {/* WR-50: anchored to the sticky header (not the toggle) and capped to the viewport, so it can't run off a phone screen */}
+          <ul class={`absolute end-gutter top-full z-50 mt-2xs grid ${panel}`} role="list">
+            {items.map(([href, label, key]) => (
+              <li><a class={link} href={url(href)} aria-current={nav === key ? "page" : undefined}>{label}</a></li>
+            ))}
+          </ul>
+        </details>
+      </div>
     </nav>
     <div class="header-cta shrink-0">
       <CtaDownload variant="header" />

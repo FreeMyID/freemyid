@@ -61,15 +61,23 @@ AUDIT_JS = """
 
 MENU_JS = """
 () => {
-  const d = document.querySelector('header details');
-  const sum = d && d.querySelector('summary');
-  if (!d || !sum || getComputedStyle(sum).display === 'none') return null;
-  sum.click();
+  // v3: popover button (popovertarget) where supported, else the <details> fallback; v2: <details>
+  const vis = (e) => e && getComputedStyle(e).display !== 'none' && e.getClientRects().length;
+  const btn = document.querySelector('header [popovertarget]');
+  let panel = null;
+  if (vis(btn)) { btn.click(); panel = document.getElementById(btn.getAttribute('popovertarget')); }
+  else {
+    const d = [...document.querySelectorAll('header details')].find((x) => vis(x.querySelector('summary')));
+    if (!d) return null;
+    d.querySelector('summary').click(); panel = d;
+  }
+  if (!panel) return 'menu panel not found';
   const bad = [];
-  for (const a of d.querySelectorAll('a')) {
+  for (const a of panel.querySelectorAll('a')) {
     const r = a.getBoundingClientRect();
     if (r.width && (r.left < 0 || r.right > innerWidth)) bad.push(`${a.textContent.trim().slice(0,20)} ${Math.round(r.left)}..${Math.round(r.right)}`);
   }
+  if (![...panel.querySelectorAll('a')].some((a) => a.getBoundingClientRect().width)) return 'menu did not open';
   return bad.length ? bad.join('; ') : null;
 }
 """

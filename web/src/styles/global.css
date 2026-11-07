@@ -90,12 +90,12 @@
   .flagbar span:nth-child(2) { background: var(--fmi-color-flag-white); }
   .flagbar span:nth-child(3) { background: var(--fmi-color-accent); }
 
-  /* No-JS mobile menu (details/summary). Wide screens show the inline list instead. */
-  .menu > summary { list-style: none; }
-  .menu > summary::-webkit-details-marker { display: none; }
+  /* No-JS mobile menu: popover button, or <details> where popover isn't supported (rules at the end). */
+  .menu-fallback > summary { list-style: none; }
+  .menu-fallback > summary::-webkit-details-marker { display: none; }
   .menu .when-open { display: none; }
-  .menu[open] .when-open { display: inline; }
-  .menu[open] .when-closed { display: none; }
+  .menu-fallback[open] .when-open { display: inline; }
+  .menu-fallback[open] .when-closed { display: none; }
 
   /* FAQ: native details styled like the shadcn/ui Accordion (works with JS off). */
   .faq-item > summary { list-style: none; }
@@ -235,11 +235,31 @@
 @media (max-width: 34em) {
   .header-row { gap: 0.4rem; padding-inline: max(0.8rem, 3vw); }
   .header-row .brand { font-size: 0.9rem; gap: 0.4em; }
-  .header-row .menu > summary { width: 2.5rem; min-width: 2.5rem; min-height: 2.5rem; padding: 0; justify-content: center; }
-  .menu-label, .header-row .menu > summary .menu-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .header-row .menu-btn, .header-row .menu-fallback > summary { width: 2.5rem; min-width: 2.5rem; min-height: 2.5rem; padding: 0; justify-content: center; }
+  .menu-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .header-cta a { font-size: 0.8rem; min-height: 2.5rem; padding: 0.35em 0.7em; }
   .header-cta a svg { display: none; }
 }
 @media (max-width: 21em) {
   .brand-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
+
+/* ---------------------------------------------------------------- phone menu (WR-50, WR-51)
+   Default: the <details> menu (any browser). Where popover is supported, the popover button replaces it:
+   native light dismiss closes it on Escape and on an outside tap/click, with no script (CSP script-src 'none').
+   The popover lives in the top layer, so it is placed against the viewport, under the header, never wider
+   than the screen. Unlayered so it beats the utilities and the UA popover style. */
+.menu-btn, .menu-popover { display: none; }
+@supports selector(:popover-open) {
+  .menu-fallback { display: none; }
+  .menu-btn { display: flex; cursor: pointer; }
+  .menu:has(.menu-popover:popover-open) .when-open { display: inline; }
+  .menu:has(.menu-popover:popover-open) .when-closed { display: none; }
+  .menu-popover {
+    position: fixed; inset: auto; margin: 0;
+    inset-block-start: calc(4px + 4rem + 1px + 0.5rem); /* flag bar + header row + border + gap */
+    inset-inline-end: var(--fmi-gutter);
+    max-block-size: calc(100dvh - 4px - 4rem - 1px - 1.5rem); overflow: auto;
+  }
+  .menu-popover:popover-open { display: grid; }
 }
