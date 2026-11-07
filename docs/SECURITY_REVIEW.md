@@ -175,3 +175,86 @@ Findings
 | SEC-45 | INFO | site_src/templates/pages/i-do-not-consent.html | The Facebook share link is a plain outbound anchor (no SDK, no request until clicked). OK. Keep it that way: no share widgets. | None. |
 
 New tests: tests/test_site_build.py (CSP and inline-code scan of every built page, JSON-LD data-only with no unreleased downloadUrl, CSS has no external or data URLs, string-template autoescape, `--out` inside repo refused, xfail SEC-40).
+
+## Post-v0.1.0 wave, 2026-11-07, qa-security (7173fbe..HEAD; SEC status, SEC-46..49)
+
+### Orchestrator rulings recorded
+- **SEC-38: Accepted as designed** (orchestrator). Defence in depth landed in 8637941: a one-time, server-rendered "This sends a real request to the site." page before the first "Fill it in for me" in practice mode (POST needs cookie + CSRF + Origin; only ASSISTED_OPT_OUT to-dos; tests: test_wizard_polish.py `test_fill_first_time_needs_confirm_page`, test_security_wave3.py `test_sec38_*`). Follow-up: SEC-46.
+- **SEC-41: Accepted (peer ruling: bare public broker names).** As defence in depth the screenshot was also regenerated from sample-only brokers (450bb34, brand/src/capture_report_sample.py: throwaway home, fake "Pat Testperson, Raleigh NC", sample registry loaded explicitly, all network aborted). Verified visually: every site in report.png is in registry.sample.yaml; CheckPeople, USPhonebook and Addresses.com are gone. site_check passes.
+- **SEC-44, SEC-45: INFO, no action.**
+- **SEC-40, SEC-42, SEC-43: confirmed fixed** (072a892, 7173fbe, d8b61a3; tests below). The SEC-43 copy is accurate about addresses and phones but omits the person's label: SEC-49.
+
+### Status of SEC-01..45
+Fixed = code landed and a test covers it (strict xfails removed). Accepted = ruled acceptable.
+
+| ID | Status | Commit | Test(s) |
+|---|---|---|---|
+| SEC-01 | Fixed | 6911bc6 | test_state.py, test_runner.py |
+| SEC-02 | Fixed | 6911bc6 | test_models.py, test_storage.py |
+| SEC-03 | Fixed | 6911bc6 | test_storage.py |
+| SEC-04 | Fixed | 2ee2748 | test_redaction.py |
+| SEC-05 | Fixed | 6911bc6 | test_netpolicy.py, test_registry_split.py |
+| SEC-06 | Fixed | 2ee2748 | test_consent.py |
+| SEC-07 | Fixed | 6911bc6 | test_models.py, test_security_wave2.py |
+| SEC-08 | Fixed | 6911bc6 | test_models.py, test_security_wave2.py |
+| SEC-09 | Fixed | 6911bc6 | test_netpolicy.py |
+| SEC-10 | Fixed | 2ee2748, 1c4d6c6 | test_crypto.py |
+| SEC-11 | Fixed | 6911bc6 | test_storage.py |
+| SEC-12 | Fixed | 2ee2748 | test_consent.py |
+| SEC-13 | Fixed | 2ee2748 | test_crypto.py, test_storage.py |
+| SEC-14 | Fixed | 2ee2748 | test_consent.py |
+| SEC-15 | Fixed | e27e2aa | test_models.py |
+| SEC-16 | Fixed | 55fdb1f | test_security_wave2.py, test_wave2_fixes.py |
+| SEC-17 | Fixed | 6ca699a | test_security_wave2.py, test_wizard_dashboard.py |
+| SEC-18 | Fixed | 55fdb1f | test_wave2_fixes.py |
+| SEC-19 | Fixed | 6ca699a | test_security_wave2.py |
+| SEC-20 | Fixed | ede1acf, 6ca699a | test_security_wave2.py (wipe) |
+| SEC-21 | Fixed | 55fdb1f | test_wave2_fixes.py |
+| SEC-22 | Fixed | ede1acf | test_security_wave2.py, test_runner.py |
+| SEC-23 | Fixed | 6ca699a | test_security_wave2.py |
+| SEC-24 | Fixed | 6ca699a | test_security_wave2.py |
+| SEC-25 | Fixed | 6ca699a | test_security_wave2.py, test_wizard_desktop.py |
+| SEC-26 | Fixed | 55fdb1f | test_security_wave2.py |
+| SEC-27 | Fixed | 6ca699a (wizard confirm), 55fdb1f + e06e388 (first email per AUTO profile waits) | test_security_wave2.py, test_wave2_fixes.py, test_first_email_approval.py (adopted). Follow-ups: SEC-47, SEC-48 |
+| SEC-28 | Fixed | 55fdb1f | test_wave2_fixes.py, test_security_wave2.py |
+| SEC-29 | Fixed | 55fdb1f | test_wave2_fixes.py |
+| SEC-30 | Fixed | 3ba260d | test_security_d9.py, test_d9_security_fixes.py |
+| SEC-31 | Fixed | 3ba260d, 1c1d4fd | test_security_d9.py, test_d9_security_fixes.py, test_fill_for_me_fields.py |
+| SEC-32 | Fixed | 3ba260d, 1c1d4fd | test_security_d9.py, test_d9_security_fixes.py |
+| SEC-33 | Fixed | 3ba260d | test_security_d9.py |
+| SEC-34 | Fixed | 3ba260d | test_d9_security_fixes.py |
+| SEC-35 | Fixed | 1c1d4fd | test_fill_for_me_fields.py |
+| SEC-36 | Fixed | 1c1d4fd | test_d9_security_fixes.py |
+| SEC-37 | Fixed (INFO) | 3ba260d | test_fill_for_me.py, test_security_d9.py |
+| SEC-38 | Accepted (design) + one-time confirm | 8637941 | test_wizard_polish.py, test_security_wave3.py |
+| SEC-39 | Fixed | 5112b56, db12a38 | conftest.py hang guard; flow tests in test_fill_for_me*.py |
+| SEC-40 | Fixed | 072a892 | test_site_build.py (`--out` inside repo, non-site dir, repo ancestor) |
+| SEC-41 | Accepted (peer ruling) + regenerated | 450bb34 | site_check.py (private-host scan), visual check |
+| SEC-42 | Fixed | 7173fbe | test_wizard_birth_year_only.py (posted dob ignored; CLI prompt year only) |
+| SEC-43 | Fixed (copy) | d8b61a3 | see SEC-49 for the remaining label wording |
+| SEC-44 | Accepted (INFO) | - | - |
+| SEC-45 | Accepted (INFO) | - | - |
+
+Counts SEC-01..45: **41 Fixed** (01-37, 39, 40, 42, 43), **4 Accepted** (38, 41, 44, 45), **0 Open**.
+
+### Wave commits reviewed
+- 8637941 (wizard-packager, SEC-38 confirm): OK; see SEC-46.
+- e06e388 (automation-engineer, SEC-27 engine): OK on the gate itself: held AUTO emails are released only inside `approve_and_send` (after the dry-run, status and consent checks and an explicit approval); legal demands, dry-run and non-AUTO requests are never released; a failed first send keeps the gate closed; web-form sends do not open it. See SEC-47/48 for the UI side.
+- 6dbb0fc (automation-engineer, reply matcher): OK. Sender domain still checked; a reply asking for ID contributes no links and opens an ID_UPLOAD to-do (never auto-handled); duplicates and replies older than the submission (minus 1 h) are skipped; events carry counts only. Mail without a Date header is treated as current (RFC 5322 requires Date; not worth a row).
+- 450bb34 (graphic-designer, SEC-41): OK (above).
+- 605fe27, 953d3f3, 9093bd4 (web-developer, release info): OK. release.yaml version 0.1.0, size and sha256 recorded with provenance; JSON-LD `downloadUrl`/`softwareVersion` now present as intended; all download links are https to github.com/FreeMyID/freemyid; `build_site.py --check` (60 files) and site_check (44 pages) pass.
+- Process note: d9d299e (a POSITIONING commit from another session) swept qa-security's staged `git mv` of test_first_email_approval.py in from the shared index. Harmless (pure rename), but it is the shared-index hazard from rule 12: commit with `-- <paths>` only.
+- Drafts adopted: tests/test_first_email_approval.py (7), tests/test_reply_matcher.py (13). `src/freemyid/engine/_test_drafts/` still holds `__init__.py`, `conftest.py` and an untracked, in-progress `test_escalation_timers.py` (automation-engineer); the folder must be gone before the next release build (it would ship in the package).
+
+### New findings
+| ID | Sev | Owner | Where | Finding | Fix |
+|---|---|---|---|---|---|
+| SEC-46 | LOW | orchestrator (paths.py) | wizard/server.py:290-293; paths.py:32 | The SEC-38 marker `.fill-confirmed` is written to FREEMYID_HOME but is not in `paths.OWNED_ENTRIES`. `freemyid wipe` (and the uninstaller's "delete my records") deletes the marker file `.freemyid-home`, then `rmdir` fails, so the folder survives with a stray file and no ownership marker. A later re-install also skips the one-time confirm. No PII in it. | Add `".fill-confirmed"` to `OWNED_ENTRIES` (or keep the flag in config.yaml). Test: test_security_wave3.py `test_sec46_*` (strict xfail). |
+| SEC-47 | MED | wizard-packager (+ automation-engineer for an API hint) | wizard/dashboard.py:284-299; engine/outbox.py:372-376 | **One click sends emails the person was not shown as part of it.** For an AUTO profile every email is held until the first approval. The Outbox shows each as its own card saying "Approving sends this email" and asking "Send this email now?", but approving any one calls `release_held`, which sends all of that person's held emails at once (reproduced through `/outbox/{id}/approve`: the fakeone card also sent faketwo). The person may have wanted to cancel some of those cards. This is not a BLOCK (the person chose automatic emails; nothing goes out without an approval), but the screen must say what the click does. | When `outbox.held_by_first_approval(...)` holds for the card, say so: "This is the first email for Jane. Approving it also sends the other N waiting emails for Jane (you chose automatic). Cancel any you don't want first." and use the same text in the button's confirm. Or offer two buttons ("Send just this one" / "Send this and the N others") and release only on the second. Test: `test_sec47_approve_card_discloses_every_email_it_sends` (strict xfail; it passes when the card names the others or says "N other"). |
+| SEC-48 | LOW (functional) | wizard-packager | wizard/server.py:428-442 | `outbox_approve` is `async def` and calls `approve_and_send` synchronously. Since e06e388 that is a burst of SMTP sends (up to every email-method broker: 367 in the full registry), so the whole single-process wizard freezes until the burst ends; an older user is likely to click again or close the window. A burst of hundreds of messages from a fresh mailbox can also trip the provider's spam limits. | Run the send off the loop (`await run_in_threadpool(approve_and_send, store, rid)`, or make the route a plain `def`), and redirect to a "sending N emails…" status. Consider pacing release_held (for example a few per minute, the rest on the next scheduled run). Test: `test_sec48_approve_does_not_send_on_the_event_loop` (strict xfail). |
+| SEC-49 | LOW (copy) | web-developer | site_src/templates/pages/safety.html:25 | The SEC-43 copy says the printable report "holds only site names, statuses and dates", but report.py puts the person's label at the top (the first name by default, and the user may type a full name; see the sample screenshot "Pat Testperson: what Free My ID has asked"). A reader who trusts the sentence might post the report publicly. | "...it holds only the name you gave this person, site names, statuses and dates, never your address or phone number." Test: `test_sec49_*` (strict xfail; a guard test checks the report has no address, zip, last name or mailbox). |
+
+**Verdict for v0.1.1: PASS (no BLOCK items).** No CAPTCHA/bot bypass, no consent-gate skip, no PII in logs/events/fixtures, no network path outside NetPolicy (registry_health's `--online` goes through NetPolicy too), no unapproved emails, data minimization unchanged. Recommended before tagging v0.1.1: SEC-47 (MED, a one-paragraph UI change) and SEC-46 (one tuple entry); SEC-48 and SEC-49 can follow. Also remove `src/freemyid/engine/_test_drafts/` before the build.
+
+### tools/registry_health.py (new)
+Offline by default: schema + pydantic validation (per broker as well), https-only URL values, opt_out_email syntax, duplicate domains (within one broker = ERROR; shared across brokers = WARN, e.g. the PeopleConnect suppression portal), missing citations and last_verified older than 180 days (WARN). `--online`: one HEAD per enabled broker (GET fallback, body unread), generic UA, at least 1 s between requests, redirects followed by hand with every hop checked against NetPolicy (off-list or http hops are never fetched), 403/429/503 reported as "check by hand" (never retried around). `--selectors` checks simple form selectors. Exit 1 on ERROR (or WARN with `--strict`), `--report` writes Markdown/JSON. Current state: sample + full registry, 0 errors, 447 warnings (438 stale: mostly no last_verified; 9 shared domains). Tests: tests/test_registry_health.py (33, no network).
