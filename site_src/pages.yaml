@@ -34,6 +34,15 @@
   title: "Help a parent get their details off people-search sites"
   description: A calm, step-by-step way to help a parent or grandparent ask people-search sites to take down their name, address and phone number.
   jsonld: [breadcrumbs]
+- id: phone-number
+  out: guides/get-your-phone-number-off-people-search-sites/
+  template: pages/phone-number.html   # not used: v3_only (web/src/pages/guides/get-your-phone-number-off-people-search-sites/index.astro)
+  v3_only: true
+  label: Your phone number
+  nav: guides
+  title: "Get your phone number off people-search sites"
+  description: Why your phone number can show up on people-search sites, and the free steps to ask each one to remove the listing that shows it.
+  jsonld: [breadcrumbs]
 - id: protect
   out: protect/
   template: pages/protect.html   # not used: v3_only (web/src/pages/protect/index.astro, from brokers/checklists.yaml)

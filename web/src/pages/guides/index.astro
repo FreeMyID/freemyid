@@ -24,8 +24,9 @@ const p = pageProps("guides");
       <li>You should never have to pay to be removed. If a people-search site asks for money or your Social Security number, stop.</li>
       <li>Sites often list people again later. Check back every few months.</li>
     </ul>
-    {/* WR-61 */}
+    {/* WR-61, WR-62, WR-63: topic guides */}
     <p class="mt-xs">Helping a parent or grandparent? Start with <a href={url("guides/help-a-parent-remove-their-information/")}>how to help a parent get their details off people-search sites</a>.</p>
+    <p class="mt-xs">Worried about your phone number? Read <a href={url("guides/get-your-phone-number-off-people-search-sites/")}>how to get your phone number off people-search sites</a>.</p>
   </Alert>
   {GROUPS.map(([key, label]) => {
     const items = guides.filter((g) => g.group === key);
