@@ -181,9 +181,9 @@
     <ul class="cards cards--3" role="list">
       {# source: teardown 4.8; D8 encrypted (crypto.py, storage/db.py) and "Nothing is sent to us" (netpolicy.py); headline per WR-25 (web-qa) #}
       {# source: docs/ROADMAP.md section 1; docs/POSITIONING.md privacy scope (WR-70) #}
-      <li class="card"><span class="card__icon">{{ icon('lock') }}</span><h3>Your details are stored on your computer. Nothing is sent to us.</h3><p>Your details are stored only on your computer. They go out only in a removal request you approve, sent straight to that one site. Your stored details are encrypted. The app talks only to the sites you are asking to remove you, your own email account, and our public list of those sites.</p></li>
+      <li class="card"><span class="card__icon">{{ icon('lock') }}</span><h3>Your details are stored on your computer. Nothing is sent to us.</h3><p>Your details are stored only on your computer. They go out only to the people-search sites themselves: your name and town to look you up, and removal requests you approve. Your stored details are encrypted. The app talks only to the sites you are asking to remove you, your own email account, and our public list of those sites.</p></li>
       {# source: teardown 4.8; POSITIONING.md rule 4; shared rule 6 (never pay; phone/ID only with permission) #}
-      <li class="card"><span class="card__icon">{{ icon('shield') }}</span><h3>It never asks for the wrong things.</h3><p>Never your Social Security number. Never bank or card details. Never a payment. Never a phone number or ID unless you choose to.</p></li>
+      <li class="card"><span class="card__icon">{{ icon('shield') }}</span><h3>It never asks for the wrong things.</h3><p>Never your Social Security number. Never bank or card details. Never a payment. It gives a site your phone number only if you switch that on.</p></li>
       {# source: teardown 4.8; LICENSE; download page SHA256SUMS; freemyid.iss [UninstallRun] removes the daily task #}
       <li class="card"><span class="card__icon">{{ icon('code') }}</span><h3>You can check the work.</h3><p>The code is public. {% if release.version %}Every download has{% else %}Each download will come with{% endif %} a fingerprint you can compare. Uninstalling removes the program and its daily check.</p></li>
     </ul>
@@ -259,7 +259,7 @@
     <ul>
       <li>Set it up on their computer in one visit, or protect several family members from one computer.</li>
       <li>Each adult gives their own permission. Free My ID won't work on anyone without it.</li>
-      <li>Practice mode comes first, so nothing is sent until you say so.</li>
+      <li>Practice mode comes first, so no removal requests go out until you say so.</li>
     </ul>
     <p>Windows only for now. The person whose information is listed should agree to this.</p>
     <div class="btn-row">

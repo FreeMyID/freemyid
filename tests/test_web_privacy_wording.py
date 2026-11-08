@@ -10,7 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "web" / "dist"
 PROMISE = (
     "Your details are stored only on your computer. "
-    "They go out only in a removal request you approve, sent straight to that one site."
+    "They go out only to the people-search sites themselves: your name and town to look you up, "
+    "and removal requests you approve."
 )
 ABSOLUTE = re.compile(
     r"your details stay on your (?:computer|pc)"

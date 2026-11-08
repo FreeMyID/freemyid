@@ -20,7 +20,7 @@
   # source: docs/ROADMAP.md section 1; docs/POSITIONING.md privacy scope (WR-70)
   q: 'Where does my information go?'
   a: |-
-    <p>Your details are stored only on your computer. They go out only in a removal request you approve, sent straight to that one site. Nothing is sent to us. The app contacts only the sites you are asking to remove you, your own email and our public list of sites. <a href="{{ url('safety/#local') }}">What Free My ID stores, and where</a>.</p>
+    <p>Your details are stored only on your computer. They go out only to the people-search sites themselves: your name and town to look you up, and removal requests you approve. Nothing is sent to us. The app contacts only the sites you are asking to remove you, your own email and our public list of sites. <a href="{{ url('safety/#local') }}">What Free My ID stores, and where</a>.</p>
 - id: whole-internet
   home: true
   # source: docs/USER_GUIDE.md section 1 (one site only; not news, social media or government records); POSITIONING.md (no whole-internet promise)

@@ -47,6 +47,7 @@ BANNED = (
     "never sent to anyone",
     "go out only in removal requests you approve",
     "go only to the sites you ask to remove you",
+    "go out only in a removal request you approve",
     "guaranteed",
     "100%",
     "erase you from the internet",
