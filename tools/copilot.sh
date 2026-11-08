@@ -50,9 +50,14 @@ git_guard() {   # git_guard WT -> prints a digest of the code-bearing parts of .
     find "$gd/hooks" "$gd/info" -mindepth 1 -printf '%m %p\n' 2>/dev/null | sort; } | sha256sum | cut -d' ' -f1
 }
 guarded_copilot() {   # guarded_copilot WT ARGS... : run a builder, then verify .git is unchanged
-  local wt="$1"; shift; local before after; before="$(git_guard "$wt")"
+  local wt="$1"; shift; local before after m0 m1; before="$(git_guard "$wt")"; m0="$(git -C "$ROOT" rev-parse main)"
   copilot -C "$wt" "$@" || true
-  after="$(git_guard "$wt")"
+  after="$(git_guard "$wt")"; m1="$(git -C "$ROOT" rev-parse main)"
+  # Refs: main may only move by a logged commit that descends from where it was (in-house agents commit meanwhile).
+  if [ "$m1" != "$(git -C "$ROOT" rev-parse 'main@{0}')" ] || ! git -C "$ROOT" merge-base --is-ancestor "$m0" "$m1"; then
+    echo "SEC-108 INCIDENT: refs/heads/main moved without a reflog entry or off its history during the builder run." >&2
+    exit 9
+  fi
   if [ "$before" != "$after" ]; then
     echo "SEC-108 INCIDENT: .git config/hooks/info changed during the builder run in $wt. Do NOT run git in the main" >&2
     echo "checkout until it is inspected (git config --list --local; ls .git/hooks .git/info). Nothing was committed." >&2
@@ -61,6 +66,27 @@ guarded_copilot() {   # guarded_copilot WT ARGS... : run a builder, then verify 
 }
 # Every git call on a builder worktree runs with hooks and fsmonitor forced off.
 SAFEGIT=(-c core.hooksPath=/dev/null -c core.fsmonitor=false)
+
+# SEC-108 fix (BL-IN-60): new builder folders are a plain `git archive` export of main with NO .git of their own, so a
+# builder cannot reach any git config, hook or ref. The base commit is stored outside the folder; changes are listed and
+# committed with a throwaway index against the main object store (trusted config only). Folders made before this change
+# still have a linked-worktree .git and use the legacy path until they are closed.
+BASES="$SCRATCH/.bases"
+br_of() { echo "copilot/$(echo "$1" | tr 'A-Z' 'a-z')"; }
+is_legacy() { [ -e "$1/.git" ]; }
+G() { git "${SAFEGIT[@]}" --git-dir="$ROOT/.git" "$@"; }
+base_of() {   # the commit the folder's next commit builds on: the WO branch tip if it exists, else the export base
+  local b; b="$(br_of "$1")"
+  if git -C "$ROOT" rev-parse -q --verify "refs/heads/$b" >/dev/null; then git -C "$ROOT" rev-parse "refs/heads/$b"
+  else cat "$BASES/$1"; fi
+}
+changes_of() {   # changes_of WO WT : changed paths vs base_of, one per line
+  local idx; idx="$(mktemp "$BASES/idx.XXXXXX")"
+  GIT_INDEX_FILE="$idx" G --work-tree="$2" read-tree "$(base_of "$1")"
+  GIT_INDEX_FILE="$idx" G --work-tree="$2" status --no-renames --porcelain -z -uall | tr '\0' '\n' | sed -E 's/^...//' \
+    | grep -vE '^(VENDOR_STATUS\.md|web/node_modules(/.*)?|\.venv(/.*)?)$' || true
+  rm -f "$idx"
+}
 
 need_cli() { command -v copilot >/dev/null || { echo "copilot CLI not installed" >&2; exit 4; }; }
 wo_check() { [[ "${1:-}" =~ ^WO-[0-9]{3}$ ]] || { echo "work order id must look like WO-001" >&2; exit 2; }; }
@@ -136,7 +162,8 @@ case "$cmd" in
     grep -qE '^Vendor: *copilot' "$f" || { echo "$wo is not a Copilot work order (Vendor: copilot)" >&2; exit 2; }
     role="$(agent_of "$f")"; [ -f "$ROOT/.github/agents/$role.agent.md" ] || { echo "no agent profile for '$role'" >&2; exit 2; }
     [ -e "$wt" ] && { echo "$wt exists: use checkin" >&2; exit 2; }
-    need_cli; git -C "$ROOT" worktree add -q -b "copilot/$(echo "$wo" | tr 'A-Z' 'a-z')" "$wt" main
+    need_cli; mkdir -p "$BASES" "$wt"; git -C "$ROOT" rev-parse main > "$BASES/$wo"
+    git -C "$ROOT" archive "$(cat "$BASES/$wo")" | tar -x -C "$wt"   # tracked files only; no .git, no private files
     # SEC-105: the builder gets its own throwaway copy of the venv (copy-on-write on btrfs), never the in-house one.
     cp -a --reflink=auto "$ROOT/.venv" "$wt/.venv"
     guarded_copilot "$wt" --agent "$role" "${SAFE[@]}" --allow-all-tools -p "You are $(name_of "$role") in BUILDER mode for work
@@ -148,7 +175,7 @@ folder (not only in your reply)
 (Done / Next / Questions for the owner / How to test).
 
 $(cat "$f")"
-    git "${SAFEGIT[@]}" -C "$wt" status --short ;;
+    changes_of "$wo" "$wt" ;;
   checkin)
     wo_check "${1:-}"; [ $# -ge 2 ] || { echo 'usage: checkin WO-NNN "notes"' >&2; exit 2; }
     wo="$1"; f="$(wo_file "$wo")"; wt="$(wt_of "$wo")"; role="$(agent_of "$f")"; need_cli
@@ -157,9 +184,25 @@ $2
 
 Continue within the allowed paths only (create no other files), rerun the tests with
 PYTHONPATH=src .venv/bin/python -m pytest -q <tests>, and update VENDOR_STATUS.md."
-    git "${SAFEGIT[@]}" -C "$wt" status --short ;;
+    if is_legacy "$wt"; then git "${SAFEGIT[@]}" -C "$wt" status --short; else changes_of "$wo" "$wt"; fi ;;
   commit)
     wo_check "${1:-}"; wo="$1"; f="$(wo_file "$wo")"; wt="$(wt_of "$wo")"; role="$(agent_of "$f")"
+    if ! is_legacy "$wt"; then
+      changed="$(changes_of "$wo" "$wt")"
+      [ -n "$changed" ] || { echo "nothing to commit in $wt" >&2; exit 2; }
+      check_paths "$f" <<<"$changed" || { echo "refusing to commit: out-of-scope changes" >&2; exit 3; }
+      mapfile -t paths <<<"$changed"
+      for p in "${paths[@]}"; do [ -L "$wt/$p" ] && { echo "refusing to commit: $p is a symlink" >&2; exit 3; }; done
+      n="$(name_of "$role")"; base="$(base_of "$wo")"; idx="$(mktemp "$BASES/idx.XXXXXX")"
+      GIT_INDEX_FILE="$idx" G --work-tree="$wt" read-tree "$base"
+      GIT_INDEX_FILE="$idx" G --work-tree="$wt" add -A -- "${paths[@]}"
+      tree="$(GIT_INDEX_FILE="$idx" G write-tree)"; rm -f "$idx"
+      c="$(GIT_AUTHOR_NAME="$n [freemyid-copilot]" GIT_AUTHOR_EMAIL="$EMAIL" GIT_COMMITTER_NAME="$n [freemyid-copilot]" \
+           GIT_COMMITTER_EMAIL="$EMAIL" G commit-tree "$tree" -p "$base" -m "$(head -1 "$f" | sed 's/^# //')")"
+      G update-ref "refs/heads/$(br_of "$wo")" "$c"
+      echo "committed $c on $(br_of "$wo") as $n [freemyid-copilot]"; exit 0
+    fi
+    # legacy linked worktree (made before the SEC-108 fix)
     changed="$(git "${SAFEGIT[@]}" -C "$wt" status --no-renames --porcelain -z -uall | tr '\0' '\n' | sed -E 's/^...//' | grep -vE '^(VENDOR_STATUS\.md|web/node_modules(/.*)?)$' || true)"
     [ -n "$changed" ] || { echo "nothing to commit in $wt" >&2; exit 2; }
     check_paths "$f" <<<"$changed" || { echo "refusing to commit: out-of-scope changes" >&2; exit 3; }
