@@ -13,7 +13,7 @@ brokers:
     domains: [privacy.ca.gov, consumer.drop.privacy.ca.gov]
     opt_out_url: https://consumer.drop.privacy.ca.gov
     method: account_required
-    required_fields: [full_name, street_address, city, state, zip, dob, email]
+    required_fields: [full_name, dob, zip]
     needs_email_verification: true
     needs_id_upload: false
     typical_processing_days: 90
@@ -26,7 +26,7 @@ brokers:
       - "Make a profile with only the details you choose to share."
       - "Send one deletion request. It reaches 600+ registered data brokers and is free."
       - "Come back in about 3 months to see the results."
-    source_urls: [https://privacy.ca.gov/drop/]
+    source_urls: [https://privacy.ca.gov/drop/, https://privacy.ca.gov/drop/how-drop-works/, https://privacy.ca.gov/2026/10/drop-faq-blog/]
     verification_status: verified
     verification_notes: "privacy.ca.gov/drop page fetched 2026-11-05 and matched. The consumer.drop.privacy.ca.gov host is named on that page but was not itself fetched. Identity check happens on the state site; Free My ID must hand off to the human (TodoKind.GOVERNMENT_PORTAL)."
     last_verified: 2026-11-07
@@ -500,7 +500,7 @@ brokers:
         note: "Button text seen on the live page 2026-11-06. Selectors for the fields were not visible in the fetched text, so none are recorded."
       - action: human
         note: "A person chooses 'The subject of the request', fills first name, last name and the removal email, solves the captcha and presses Begin Removal Process, then clicks the emailed link."
-    source_urls: [https://www.peoplesearchnow.com/opt-out, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    source_urls: [https://www.peoplesearchnow.com/opt-out, https://www.peoplesearchnow.com/do-not-sell, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
     verification_status: verified
     verification_notes: "Page fetched 2026-11-05 and again 2026-11-06 and matched; visible: radio 'The subject of the request' / 'An authorized agent of the subject of the request', Subject First Name*, Middle Name, Last Name*, Email*, button 'Begin Removal Process'; a captcha is mentioned. Confirmation link domain is presumed peoplesearchnow.com. Rendered text only, so no CSS selectors recorded. CA registry lists the site under Mississippi Tornado Alley LLC."
     last_verified: 2026-11-07
@@ -508,7 +508,7 @@ brokers:
     priority: 50
     search_url_pattern: https://www.peoplesearchnow.com/person/{first}-{last}
     search_access: open
-    search_access_note: Home page and /names loaded with a plain fetch on 2026-11-07 (no 403). The home page links person pages as /person/<first>-<last>, reverse phone as /phone-number and /phone, address search as /address, a name directory at /names and letter pages /a to /z. The form's action was not visible in the fet
+    search_access_note: Home page and /names loaded with a plain fetch on 2026-11-07 (no 403). The home page links person pages as /person/<first>-<last>, reverse phone as /phone-number and /phone, address search as /address, a name directory at /names and letter pages /a to /z.
     search_url_checked: '2026-11-07'
   - id: acxiom
     name: Acxiom
