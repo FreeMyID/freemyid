@@ -114,8 +114,21 @@ def pytest_configure(config):
                    "CI=true and needs an OS marker (CR: register in pyproject.toml)")
 
 
+# Tests in tests/test_web_*.py read the built website (web/dist). The Python CI job does not
+# build it, so they are auto-marked web_dist and skip when web/dist is missing; pages.yml runs
+# them right after its build with FREEMYID_REQUIRE_WEB_DIST=1, which turns the skip into a failure.
+WEB_DIST = ROOT / "web" / "dist"
+REQUIRE_WEB_DIST_ENV = "FREEMYID_REQUIRE_WEB_DIST"
+
+
+def web_dist_missing() -> bool:
+    return not (WEB_DIST / "index.html").is_file()
+
+
 def pytest_collection_modifyitems(config, items):
     for item in items:
+        if Path(str(item.fspath)).name.startswith("test_web_"):
+            item.add_marker(pytest.mark.web_dist)
         os_marks = [m for m in OS_MARKERS if item.get_closest_marker(m) is not None]
         for m in os_marks:
             ok, why = OS_MARKERS[m]
@@ -131,6 +144,11 @@ def pytest_collection_modifyitems(config, items):
 
 
 def pytest_runtest_setup(item):
+    if item.get_closest_marker("web_dist") is not None and web_dist_missing():
+        msg = f"built website not found ({WEB_DIST}/index.html): run pnpm build in web/"
+        if os.environ.get(REQUIRE_WEB_DIST_ENV, "").strip() not in ("", "0"):
+            pytest.fail(f"{msg} ({REQUIRE_WEB_DIST_ENV}=1 makes this a failure)", pytrace=False)
+        pytest.skip(msg)
     if item.get_closest_marker("browser") is not None:
         reason = chromium_probe()
         if reason is not None:
