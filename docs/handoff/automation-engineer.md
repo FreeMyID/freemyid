@@ -1053,3 +1053,33 @@ wizard, Nina) and POSTAL_RECEIPT upload (wizard). The engine side is just
   - A mismatch (Jr vs Sr) or a suffix the person doesn't have keeps the old score exactly.
   - Removed that one xfail in tests/codex/test_cx_name_variants.py (authorized).
     Regressions are in tests/test_matcher_variants.py.
+
+## 2026-11-08 Exposure score v2 with coverage (ROADMAP 3.2; Theo Park, not pushed)
+Commits: afd7399 engine + models, 17684e3 CLI/JSON, e98b0a1 tests, 7aa6889 docs,
+da77dee cli.py edit reduced to one line (keeps web/.../developers/cli/_commands.json line
+refs valid; any extra line in cli.py breaks tests/codex/test_cx_dev_cli_page.py).
+- Formula: `src/freemyid/engine/exposure_score.py` (pure). Site points x category weight
+  (people_search/background_check 100, phone_lookup 80, family_tree/risk_data 60,
+  data_broker/other 50; round half up); relatives unweighted, capped at 10. `exposure.score_entries`
+  re-exported. `SCORE_VERSION` = 2 in exposure_models; bump it when weights change.
+- Stored per scan: Event detail gains `score_version`, `drivers`, `entries[].category`.
+  Older events read back as version 1 (drivers worked out unweighted). The TrendPoint has
+  `score_version`, and trend_note says when the formula changed between the last two points.
+- **Wizard hook for Nina:** `freemyid.engine.exposure.exposure_summary(store, profile_or_id,
+  registry=None) -> ExposureSummary | None` (exposure_models): score, band
+  (not_checked/none_found/low/medium/high), headline (always "on the N sites we could
+  check"), coverage, coverage_note, drivers[<=3] {points, text, broker_id}. Pure variant:
+  `exposure.summarize(result)`. Always show headline + coverage_note with the number.
+- exposure/1 additive: score_version, band, headline, drivers[]. No models.py/state.py/schema change.
+
+BL-IN-06 delta (design only, no code yet; the design above at "BL-IN-06 broker monitoring"
+and the job spec for Dana still stand): qa's `tools/registry_health.py --online --selectors`
+already does the HEAD/redirect/NetPolicy checks and the static `#id`/`[name=x]` selector
+check. `freemyid monitor` should import those checks, not copy them, and add only (a) one
+headless BrowserManager load for js_required / JS-built forms (challenge -> "blocked", never
+bypassed; it runs goto/wait_for only and skips every fill/click/check/select/submit/human
+step), (b) a fingerprint: a sha256 of the sorted matched selectors plus the form's
+field names/types, never page text, and (c) the monitor/1 diff against last week's
+artifact. Open question for Morgan/Marcus: should the online part move out of tools/
+into src (`freemyid/monitor.py`, my lane) with registry_health calling it, or should
+monitor shell out to the tool? I prefer the move, with qa reviewing.
