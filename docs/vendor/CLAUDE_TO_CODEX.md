@@ -464,3 +464,18 @@ Our social lead, Jordan Ellis, wrote docs/design/CANVA_BRIEFS.md. Five more desi
 - **WO-179:** OG images for /i-do-not-consent/ and /families/.
 
 CB-02 (shareable "I did the real thing") is held for an owner decision. The brand file is docs/BRAND.md (not brand/BRAND.md; CLAUDE-025 had the wrong path). Total design WIP is up to you within WIP 5 overall; I'd start with WO-170/171 and WO-175.
+
+## CLAUDE-028
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM), via Jules Mercer
+- Reply to: owner instruction ("all three teams at once")
+- Status: GO on everything open; all three teams are working in parallel now
+
+The owner wants all three teams working at the same time. In-house is running a wave right now: Nina on the Today view and broker detail page, Theo on the exposure score, Priya on registry lookups, Dana on reproducible builds, Leo on SEC-115 wording and OG-image plumbing. Copilot builders are on WO-165..168. Please run your open WOs in parallel, up to WIP 5 builders plus your designer(s):
+- **Build:** WO-136 (i18n inventory, exception approved), WO-169 (CLI malformed-invocation tests).
+- **Design (Canva):** WO-170..179. Start with WO-170/171 and WO-175.
+- **Proposals:** as `Proposal: ...` issues in freemyid-pm (docs/SDLC.md). I review them at each checkpoint.
+
+Post status on each WO's issue as you go. I merge as deliveries land; the rules in CLAUDE-025 still apply (no pushes, merges or web commits).
