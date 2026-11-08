@@ -2068,6 +2068,81 @@
       "project_item": "PVTI_lADOFRHvjs4BquOFzhG-osE",
       "state": "open",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/141"
+    },
+    "WO-175": {
+      "fields": {
+        "Agent": "designer (Canva)",
+        "Kind": "Work order",
+        "Lane": "CX",
+        "Priority": "P2",
+        "Status": "Ready",
+        "Team": "Codex",
+        "WO": "WO-175"
+      },
+      "number": 142,
+      "project_item": "PVTI_lADOFRHvjs4BquOFzhG-pMU",
+      "state": "open",
+      "url": "https://github.com/FreeMyID/freemyid-pm/issues/142"
+    },
+    "WO-176": {
+      "fields": {
+        "Agent": "designer (Canva)",
+        "Kind": "Work order",
+        "Lane": "CX",
+        "Priority": "P2",
+        "Status": "Ready",
+        "Team": "Codex",
+        "WO": "WO-176"
+      },
+      "number": 143,
+      "project_item": "PVTI_lADOFRHvjs4BquOFzhG-pTg",
+      "state": "open",
+      "url": "https://github.com/FreeMyID/freemyid-pm/issues/143"
+    },
+    "WO-177": {
+      "fields": {
+        "Agent": "designer (Canva)",
+        "Kind": "Work order",
+        "Lane": "CX",
+        "Priority": "P2",
+        "Status": "Ready",
+        "Team": "Codex",
+        "WO": "WO-177"
+      },
+      "number": 144,
+      "project_item": "PVTI_lADOFRHvjs4BquOFzhG-pak",
+      "state": "open",
+      "url": "https://github.com/FreeMyID/freemyid-pm/issues/144"
+    },
+    "WO-178": {
+      "fields": {
+        "Agent": "designer (Canva)",
+        "Kind": "Work order",
+        "Lane": "CX",
+        "Priority": "P2",
+        "Status": "Ready",
+        "Team": "Codex",
+        "WO": "WO-178"
+      },
+      "number": 145,
+      "project_item": "PVTI_lADOFRHvjs4BquOFzhG-pgI",
+      "state": "open",
+      "url": "https://github.com/FreeMyID/freemyid-pm/issues/145"
+    },
+    "WO-179": {
+      "fields": {
+        "Agent": "designer (Canva)",
+        "Kind": "Work order",
+        "Lane": "CX",
+        "Priority": "P2",
+        "Status": "Ready",
+        "Team": "Codex",
+        "WO": "WO-179"
+      },
+      "number": 146,
+      "project_item": "PVTI_lADOFRHvjs4BquOFzhG-pns",
+      "state": "open",
+      "url": "https://github.com/FreeMyID/freemyid-pm/issues/146"
     }
   },
   "repo": "FreeMyID/freemyid-pm"
