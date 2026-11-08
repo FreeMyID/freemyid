@@ -49,7 +49,7 @@ First, middle and last name, maiden or earlier names, nicknames, and a short **o
 **City and state are enough** (2-letter state, like TX). Open **"Have they lived anywhere else in the last 10 years?"** to add old towns.
 
 **4 · A few details to recognise them**
-All optional: year of birth, phone number, the email they use, and relatives. These are used **only to tell them apart from people with the same name. They're never sent to anyone.**
+All optional: year of birth, phone number, the email they use, and relatives. These are used **mainly to tell them apart from people with the same name.** A phone number can also go into a removal request when a site needs it to find the listing (you can turn that off for each person). Nothing is sent except in a request you approve.
 
 **5 · A separate email address for replies**
 Choose the mail service (Gmail works best) and paste the app password, or pick **Skip, I'll do these by hand** (see section 1).
