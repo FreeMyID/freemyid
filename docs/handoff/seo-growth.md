@@ -68,3 +68,9 @@ Next: once tokens exist, post Q-001, PR BADBOOL (row 4); skip pluja until ~2027-
 - Bluesky R-BSKY-1 posted with image + alt: https://bsky.app/profile/freemyid.bsky.social/post/3mzrkmubuz42c
 - Mastodon R-MASTO-1 scheduled 2026-11-08 (daily cap used by intro); M-002 shifts to 11-09. Needs image upload (media API) via hand/script; poster.py has no image support.
 - X: owner posts R-X-1 by hand (release-posts-v0.2.0.md) with brand/social/release-0.2/release-0.2-x-bluesky-1200x675.png. Contacts today 1/10.
+
+## Wave 8 (2026-11-08), growth wave
+- Mastodon R-MASTO-1 posted text-only (token lacks write:media, upload 403): https://mastodon.social/@freemyid_usa/117579994415962637. M-002 next on 2026-11-09. For an image, owner re-issues the Mastodon token with write:media too.
+- Contacts today: 0/10. Listings: no allowed new actions (see outreach-log). Reddit: no reddit_* keys in keyring; owner posts by hand from reddit-queue.md.
+- Drafts protect-elderly-parents-information.md and who-is-selling-my-phone-number.md already exist (Wave 3); still need broker-researcher to clear needs-verify rows before WR publish.
+- BingSiteAuth.xml (repo root, untracked): Bing Webmaster verification file. It must be served at https://freemyid.org/BingSiteAuth.xml, i.e. placed in site/ next to the existing Google/IndexNow-style key txt (site root). web-developer/devops commit it (needs a build/site_src copy if the site is generated). Not committed by me.

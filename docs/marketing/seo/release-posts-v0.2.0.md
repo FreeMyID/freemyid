@@ -17,7 +17,7 @@ Free My ID v0.2.0 is out: a free, open-source Windows app that asks data-broker 
 
 ## Mastodon (500 char limit)
 ## R-MASTO-1
-status: scheduled 2026-11-08 (with square image)
+status: posted 2026-11-08 text-only (media 403): https://mastodon.social/@freemyid_usa/117579994415962637
 ```text
 Free My ID v0.2.0 is out. It's a free, open-source Windows app that asks people-search and data-broker sites to delete your listing, and re-checks because sites re-list people. Your details are stored only on your computer and go out only in removal requests you approve. No account needed. Some sites still need a manual step, and the app tells you which. Download: https://freemyid.org
 
