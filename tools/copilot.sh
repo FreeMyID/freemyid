@@ -90,7 +90,7 @@ lead() {
 answer Morgan Reyes in $VD/COPILOT_TO_CLAUDE.md and update proposals/log as your profile says. ${1:-}" \
     COPILOT_TO_CLAUDE.md COPILOT_PROPOSALS.md copilot-team/lead-log.md copilot-team/inbox.md
 }
-last_claude() { grep -oE '^## CLAUDE-P[0-9]{3}' "$ROOT/$VD/CLAUDE_TO_COPILOT.md" 2>/dev/null | tail -1; }
+last_claude() { grep -oE "^## CLAUDE-P[0-9]{3}" "$ROOT/$VD/CLAUDE_TO_COPILOT.md" 2>/dev/null | tail -1 || true; }
 
 cmd="${1:-}"; shift || true
 case "$cmd" in
