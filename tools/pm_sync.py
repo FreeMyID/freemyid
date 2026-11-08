@@ -294,21 +294,37 @@ def collect(root: Path = ROOT, git_log: str | None = None) -> list[dict]:
     bl = root / "docs" / "BACKLOG.md"
     if bl.exists():
         for it in parse_backlog(bl.read_text(encoding="utf-8")):
+            if it["key"].startswith(("CX-", "CP-")):  # these became WO-127..150: no duplicates
+                continue
             it.update(project_status="Backlog", closed=False, merge_sha="")
             items.append(it)
-    hp = root / "docs" / "handoff" / "qa-security.md"
-    if hp.exists():
-        rv = root / "docs" / "SECURITY_REVIEW.md"
-        for it in parse_sec(hp.read_text(encoding="utf-8"),
-                            rv.read_text(encoding="utf-8") if rv.exists() else ""):
-            closed = it["sec_status"] == "closed"
-            it.update(project_status="Done" if closed else "Ready", closed=closed, merge_sha="")
-            items.append(it)
-    pp = root / "PROGRESS.md"
-    if pp.exists():
-        for it in parse_owner_todo(pp.read_text(encoding="utf-8")):
-            it.update(project_status="Ready", closed=False, merge_sha="")
-            items.append(it)
+    # SEC findings and owner tasks come from the curated docs/pm/tracked.json: the narrative
+    # handoff is too loose to parse statuses from (wrong open/closed guesses), and owner-task keys
+    # must stay stable across checkpoints.
+    tp = root / "docs" / "pm" / "tracked.json"
+    if tp.exists():
+        tracked = json.loads(tp.read_text(encoding="utf-8"))
+        for s in tracked.get("security", []):
+            closed = s.get("status") == "closed"
+            items.append({
+                "key": s["id"], "title": f"{s['id']}: security finding", "team": "In-house",
+                "lane": "IN", "kind": "Security",
+                "priority": {"HIGH": "P0", "MED": "P1", "LOW": "P2"}.get(s.get("severity", ""), "P3"),
+                "agent": s.get("owner", ""), "wo": "", "release": "",
+                "sec_severity": s.get("severity", ""), "sec_owner": s.get("owner", ""),
+                "sec_status": s.get("status", "open"),
+                "project_status": "Done" if closed else (
+                    "In progress" if s.get("status") == "in progress" else "Ready"),
+                "closed": closed, "merge_sha": "",
+            })
+        for o in tracked.get("owner_tasks", []):
+            done = bool(o.get("done"))
+            items.append({
+                "key": o["key"], "title": f"Owner task: {o['title'][:110]}", "team": "In-house",
+                "lane": "IN", "kind": "Owner task", "priority": "P2", "agent": "Owner", "wo": "",
+                "release": "", "body_text": o["title"],
+                "project_status": "Done" if done else "Ready", "closed": done, "merge_sha": "",
+            })
     return items
 
 

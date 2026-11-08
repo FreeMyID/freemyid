@@ -1,0 +1,24 @@
+{
+  "_note": "Curated by Morgan / Marcus. SEC: open findings only, no details (they live in docs/handoff/qa-security.md). Owner tasks: stable keys; set done: true when finished.",
+  "security": [
+    {"id": "SEC-66", "severity": "see handoff", "owner": "Dana", "status": "open"},
+    {"id": "SEC-100", "severity": "INFO", "owner": "Marcus", "status": "open"},
+    {"id": "SEC-108", "severity": "LOW", "owner": "Owner", "status": "open"},
+    {"id": "SEC-112", "severity": "INFO", "owner": "Morgan", "status": "open"},
+    {"id": "SEC-113", "severity": "LOW", "owner": "Owner", "status": "open"},
+    {"id": "SEC-115", "severity": "LOW", "owner": "Theo", "status": "in progress"},
+    {"id": "SEC-117", "severity": "LOW", "owner": "Theo", "status": "open"}
+  ],
+  "owner_tasks": [
+    {"key": "OWN-gh-project-scope", "title": "Grant gh the project scope: gh auth refresh -h github.com -s project,read:project"},
+    {"key": "OWN-dockerhub-password", "title": "Change the Docker Hub password (it was pasted in chat)"},
+    {"key": "OWN-csp-go", "title": "Say go on the CSP header (Dana's rule in her handoff)"},
+    {"key": "OWN-ghcr-public", "title": "Make the GHCR package public"},
+    {"key": "OWN-copilot-prs", "title": "Approve or close Copilot cloud PRs #39-41"},
+    {"key": "OWN-social-preview", "title": "Upload brand/social/repo-preview.png as the repo social preview"},
+    {"key": "OWN-windows-vm", "title": "Windows VM checks: first-start splash, uninstall while running, Bridge-off wording"},
+    {"key": "OWN-browser-checks", "title": "Browser checks: TransUnion, ChexSystems, ssa.gov, VT/OR registries, new broker guides"},
+    {"key": "OWN-reddit-revoke", "title": "Revoke the two Reddit DevPlatform authorizations at reddit.com/prefs/apps"},
+    {"key": "OWN-old-watcher", "title": "Restart the old Copilot watcher (pid 337338) so SEC-108/113 close on the desk"}
+  ]
+}

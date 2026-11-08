@@ -108,3 +108,20 @@ def test_main_apply_refused(monkeypatch):
 def test_dry_run_json(capsys):
     assert pm.main(["--summary"]) == 0
     assert json.loads(capsys.readouterr().out)["mode"] == "dry-run"
+
+
+def test_tracked_json_sec_and_owner_items(tmp_path):
+    import json as _json
+    collect, issue_body = pm.collect, pm.issue_body
+    (tmp_path / "docs" / "pm").mkdir(parents=True)
+    (tmp_path / "docs" / "vendor").mkdir(parents=True)
+    (tmp_path / "docs" / "pm" / "tracked.json").write_text(_json.dumps({
+        "security": [{"id": "SEC-900", "severity": "LOW", "owner": "Theo", "status": "open",
+                      "detail": "secret repro steps"}],
+        "owner_tasks": [{"key": "OWN-x", "title": "Do a thing"},
+                        {"key": "OWN-y", "title": "Done thing", "done": True}]}))
+    items = {i["key"]: i for i in collect(tmp_path, git_log="")}
+    sec = items["SEC-900"]
+    body = issue_body(sec)
+    assert "Severity: LOW" in body and "secret" not in body and not sec["closed"]
+    assert items["OWN-x"]["closed"] is False and items["OWN-y"]["closed"] is True
