@@ -97,8 +97,7 @@ def test_build_uses_pages_yaml_og_and_publishes_every_image() -> None:
         assert (DIST / "assets" / png.name).read_bytes() == png.read_bytes(), png.name
 
 
-# WO-170..179 placement (Iris's art, 389138e). Held back for Iris: og-developers-cli (terminal output is not what
-# `freemyid status` prints) and og-developers-config ("settings" vs the page's setup-file reference).
+# WO-170..179 placement (Iris's art, 389138e); developer images redone to match the CLI and the setup-file page (7e80138).
 WIRED = {
     "i-do-not-consent/index.html": "og-i-do-not-consent",
     "families/index.html": "og-families",
@@ -108,8 +107,8 @@ WIRED = {
     "guides/whitepages/index.html": "og-guide-whitepages",
     "guides/beenverified/index.html": "og-guide-beenverified",
     "guides/intelius/index.html": "og-home",          # no og-guide-intelius.png yet: falls back
-    "developers/cli/index.html": "og-home",
-    "developers/config/index.html": "og-home",
+    "developers/cli/index.html": "og-developers-cli",
+    "developers/config/index.html": "og-developers-config",
 }
 
 

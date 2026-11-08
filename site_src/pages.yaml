@@ -122,6 +122,8 @@
   jsonld: [breadcrumbs]
 - id: developers-cli
   out: developers/cli/
+  og_image: og-developers-cli   # brand/social/og (WO-170/171 redo, 7e80138), alt from brand/README.md
+  og_alt: "Free My ID command line: a terminal window showing the status command and a table of sites with their state, dates and next check. Scriptable, local, no account."
   template: pages/developers.html   # not used: v3_only (web/src/pages/developers/cli/index.astro, WO-137)
   v3_only: true
   label: Command reference
@@ -130,6 +132,8 @@
   jsonld: [breadcrumbs]
 - id: developers-config
   out: developers/config/
+  og_image: og-developers-config   # brand/social/og (WO-170/171 redo, 7e80138), alt from brand/README.md
+  og_alt: "Setup file reference: the start of a plain-text setup file with version, consent and basis, for the freemyid setup command."
   template: pages/developers.html   # not used: v3_only (web/src/pages/developers/config/index.astro, WO-138)
   v3_only: true
   label: Setup file reference
