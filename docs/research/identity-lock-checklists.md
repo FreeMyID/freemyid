@@ -15,15 +15,18 @@ from search-result summaries of ssa.gov pages. Those are marked
 ## 1. IRS Identity Protection PIN (IP PIN)
 
 **In plain words:** A six-digit number that only you and the IRS know. Once you
-have one, a thief who has your Social Security number still cannot file a tax
-return in your name, because the return is rejected without the PIN. You get a
-new PIN every year. You can get one even if you don't have to file a return.
+have one, a federal return filed electronically without it is rejected, and a
+paper return without it is held and reviewed to verify identity before it is
+processed (IRS "Didn't receive or lost your IP PIN" page). So it makes a thief's
+return much harder to get through; it does not make one impossible. With
+continuous enrollment you get a new PIN every year. You can get one even if you don't have to file a return.
 Source: https://www.irs.gov/identity-theft-fraud-scams/get-an-identity-protection-pin
 
 **Official URLs**
 - Main page: https://www.irs.gov/identity-theft-fraud-scams/get-an-identity-protection-pin
 - FAQ: https://www.irs.gov/identity-theft-fraud-scams/frequently-asked-questions-about-the-identity-protection-personal-identification-number-ip-pin
-- Form 15227 (paper route) is linked from the main page. I did not fetch the form itself.
+- Form 15227 (paper route) is linked from the main page. Re-read 2026-11-08: https://www.irs.gov/pub/irs-pdf/f15227.pdf
+- Lost or not received: https://www.irs.gov/identity-theft-fraud-scams/didnt-receive-or-lost-your-identity-protection-pin-ip-pin
 
 **Eligibility**
 - Anyone with an SSN or ITIN who can verify their identity (main page).
@@ -32,17 +35,17 @@ Source: https://www.irs.gov/identity-theft-fraud-scams/get-an-identity-protectio
 - Automatic enrollment if the IRS has you as a tax identity-theft victim. A notice (CP01A) is mailed mid-December to early January (FAQ).
 
 **Steps (three routes, easiest first)**
-1. Online: register or sign in at IRS.gov (identity verification with Login.gov or ID.me, per FAQ), open your IRS online account or the IRS app, and go to the IP PIN section of your profile. The PIN shows on screen (main page).
-2. By mail, Form 15227: only if your adjusted gross income on your last return was under $84,000 (single) or $168,000 (married filing jointly), you cannot make an online account, you have a valid SSN or ITIN, and you can answer a phone call from the IRS (they call to verify you). The PIN comes by mail, usually in 4 to 6 weeks (main page).
+1. Online: register or sign in at IRS.gov (identity verification with Login.gov or ID.me, per FAQ), open your IRS online account or the IRS app, and go to the IP PIN section of your profile. The PIN shows on screen (main page). You choose **continuous enrollment** (you stay in the program this year and future years) or **one-time enrollment** (only the current calendar year; you are opted out automatically at the end of it, and must re-enroll online to be covered again) (FAQ Q3). For ongoing protection, choose **continuous**.
+2. By mail, Form 15227: only if your adjusted gross income on your last filed return was below $84,000 for individuals or $168,000 for married filing joint (IRS wording on Form 15227 and the main page), you cannot make an online account, you have a valid SSN or ITIN, and you can answer a phone call from the IRS (they call to verify you). The PIN comes by mail, usually in 4 to 6 weeks (main page).
 3. In person: make an appointment at an IRS Taxpayer Assistance Center. Bring one federal or state photo ID plus one other ID. For a dependent, bring two IDs for the dependent plus your own photo ID and one other ID. The PIN usually arrives by mail within 3 weeks (main page).
 
 **Cost:** The IRS pages I read do not state a price and describe no fee anywhere in the steps. The task brief expects it to be free. UNVERIFIED as an explicit statement; to confirm, find the sentence "free" on an IRS IP PIN page or in IRS Publication 5367.
 
 **Gotchas for older, non-technical users**
-- A new PIN is generated every calendar year. Online enrollees do not get a mailed notice, so they must look it up in the IRS online account or app each year, generally from mid-January to mid-November (main page). Anyone who cannot use the website needs the paper or in-person route and should expect a mailed letter instead.
-- The PIN must be typed on every return in the 1040 family (1040, 1040-NR, 1040-PR, 1040-SR, 1040-SS), including prior-year returns filed this year. A wrong or missing PIN gets an e-file rejected or a paper return delayed (main page).
+- A new PIN is generated every calendar year for people in the program (continuous enrollment; one-time enrollment ends on December 31). The IRS will not mail the PIN (CP01A) if you opted in online after 2019, if it has no valid address for you, or if you have not filed a return in the last three years; then look it up in the IRS app or online account, or call 800-908-4490 to have it mailed (lost-PIN page). Online enrollees do not get a mailed notice, so they must look it up in the IRS online account or app each year, generally from mid-January to mid-November (main page). Anyone who cannot use the website needs the paper or in-person route and should expect a mailed letter instead.
+- The PIN must be typed on every return in the 1040 family (1040, 1040-NR, 1040-PR, 1040-SR, 1040-SS) and on amended returns (Form 1040-X), including prior-year returns filed this year (FAQ Q22-Q23). A wrong or missing PIN gets an e-file rejected or a paper return delayed (main page).
 - Married couples: each spouse who has a PIN enters their own (FAQ). Dependents' PINs go on e-filed returns (FAQ).
-- Lost PIN: do not file Form 15227 again. Look it up in the app or online account. If that fails, call 800-908-4490 (Mon to Fri, 7 a.m. to 7 p.m. local time); the IRS mails it within 21 days (FAQ).
+- Lost PIN: do not file Form 15227 again. Look it up in the app or online account. If that fails, call 800-908-4490 (Mon to Fri, 7 a.m. to 7 p.m. local time); if the phone assistor can verify you, the IRS mails it within 21 days. It **cannot** be reissued by mail if you joined the program for the first time this calendar year, or during the end-of-year maintenance period (normally November to mid-January). If it can't be mailed and you can't get it online, mail a **paper return without the PIN**; the IRS reviews it to confirm you filed it, which may delay a refund (lost-PIN page). A minor's PIN can't be retrieved online; call to have it mailed.
 - Opting out: only allowed if you joined voluntarily and were never a tax identity-theft victim. Allow up to 72 hours after opting out before e-filing without a PIN (FAQ).
 - Scam warning: the IRS will never ask for your IP PIN by phone, email or text. "Phone calls, emails or texts asking for your IP PIN are scams" (main page).
 - Tax preparers need the PIN too. Tell the preparer; do not email the number.
@@ -72,11 +75,11 @@ Source: https://www.irs.gov/identity-theft-fraud-scams/get-an-identity-protectio
 - What it does: "No one, including you, will be able to see or change your personal information using our online or automated telephone services."
 - Who can use it: any person, for any reason. SSA's examples are domestic violence and identity theft victims.
 - Undoing it: call SSA and ask to unblock after proving who you are.
-- A related block, Direct Deposit Fraud Prevention, stops anyone (including you) from enrolling in direct deposit or changing address or direct deposit data. Removal needs contact with SSA.
+- A related block, Direct Deposit Fraud Prevention, stops direct deposit enrollment or changes (and address changes) made through my Social Security online and through a bank's automatic direct-deposit enrollment. It is not documented as blocking every channel (for example a change made in person or by phone after identity checks). UNVERIFIED: ssa.gov blocked my fetcher; source cited by the reviewer is https://www.ssa.gov/blog/en/posts/2024-08-21.html. Removal needs contact with SSA.
 
 **Eligibility**
 - Block: anyone (search summary). UNVERIFIED on the primary page.
-- my Social Security account: adults with an SSN and a U.S. mailing address; sign-in through Login.gov or ID.me. UNVERIFIED, I could not read the SSA page. To confirm: open https://www.ssa.gov/myaccount/ in a normal browser and read "Create an account".
+- my Social Security account: adults with an SSN; sign-in through Login.gov or ID.me. A U.S. mailing address is not always required: people with a foreign mailing address can reportedly create an account through ID.me (SSA publication EN-05-10540, https://www.ssa.gov/pubs/EN-05-10540.pdf). UNVERIFIED, I could not read the SSA page. To confirm: open https://www.ssa.gov/myaccount/ in a normal browser and read "Create an account".
 
 **Steps: my Social Security (UNVERIFIED details, general flow)**
 1. Go to ssa.gov/myaccount.
@@ -102,11 +105,19 @@ If online ID verification fails, SSA's account FAQ offers help by phone or at an
 
 ## 3. USPS Informed Delivery
 
-**In plain words:** A free USPS service that emails or shows you a picture of the
-front of each letter-sized piece of mail due that day, and tracks packages. For
-identity protection, its value is that you notice missing or unexpected mail
-(for example new credit card offers or bank mail) and that you register your own
-address before someone else registers it in your name.
+**In plain words:** A free USPS service that emails or shows you grayscale pictures of
+the address side of incoming letter-sized mail scheduled to arrive soon, and tracks
+packages. Limits (USPS page footnote 1): images are only provided for letter-sized
+mail processed through USPS's automated equipment, so some mail is never shown, and
+mail may not arrive the same day as the notification ("allow several days"). So it is
+not a complete list of a day's mail. For identity protection, its value is that you
+may notice missing or unexpected mail (for example new credit card offers or bank
+mail). Signing up does **not** reserve your address or lock others out: more than one
+account can reportedly be registered for the same address, so watch for USPS letters
+about Informed Delivery accounts you did not open and report them to USPS. UNVERIFIED
+(multiple accounts per address, the notice letters, and the removal process): the USPS
+FAQ at https://faq.usps.com/s/article/Informed-Delivery-The-Basics only renders with
+JavaScript, so I could not read it.
 Source: https://www.usps.com/manage/informed-delivery.htm
 
 **Official URLs**
@@ -130,7 +141,7 @@ Source: https://www.usps.com/manage/informed-delivery.htm
 - Fake emails are common. The Postal Inspection Service describes fake "Delivery Failure Notification" emails that ask you to click a button or open an attachment, which can install malware. USPS does not email about delivery attempts or ask for money or personal information. Do not click or scan QR codes; forward the email to spam@uspis.gov and delete it; if you already clicked, contact your bank. (https://www.uspis.gov/news/scam-article/fake-usps-emails)
 - USPS says it never sends unsolicited texts or emails about delivery problems (https://news.usps.com/2025/03/02/a-reminder-to-watch-out-for-imposters/, search summary). Practical rule for users: never click a link in a "USPS" message; type usps.com yourself.
 - The real Informed Delivery digest only shows the outside of mail, and I found no official USPS page that describes a phishing campaign specific to Informed Delivery itself. Do not tell users that a specific Informed Delivery email format is safe or unsafe.
-- Fraudsters have signed up for Informed Delivery in a victim's name to watch for incoming bank and credit cards (2018-2019 reporting; USPS said this happened in very few cases where the identity was already compromised). Secondary sources only: https://nextgov.com/cybersecurity/2018/11/postal-services-informed-delivery-feature-could-be-helping-fraudsters/152792 and https://www.fastcompany.com/90265536/report-id-thieves-are-exploiting-usps-mail-scanning-service-secret-service-warns . Reported advice: register your own address first. A report said a USPS fraud report line is 1-800-344-7779. UNVERIFIED. To confirm: read the USPS Informed Delivery security FAQ on faq.usps.com (my fetch returned only a title).
+- Fraudsters have signed up for Informed Delivery in a victim's name to watch for incoming bank and credit cards (2018-2019 reporting; USPS said this happened in very few cases where the identity was already compromised). Secondary sources only: https://nextgov.com/cybersecurity/2018/11/postal-services-informed-delivery-feature-could-be-helping-fraudsters/152792 and https://www.fastcompany.com/90265536/report-id-thieves-are-exploiting-usps-mail-scanning-service-secret-service-warns . Reported advice: register your own address first (helps you see the mail; does not stop another account, see above). A report said a USPS fraud report line is 1-800-344-7779. UNVERIFIED. To confirm: read the USPS Informed Delivery security FAQ on faq.usps.com (my fetch returned only a title).
 - Informed Delivery is not a lock on your mailbox and does not stop theft of mail. Collect mail promptly.
 - Not available for some multi-unit buildings; the user may be told the address is ineligible.
 - Informed Delivery requires an email address the user can read. For relatives without email, skip it.
