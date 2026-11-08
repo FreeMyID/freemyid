@@ -47,3 +47,12 @@ Staged setup files are in `docs/pm/` (labels, milestones, issue templates).
 
 ## Later option
 A GitHub Actions job in `freemyid-pm` could run the sync on a schedule from a read-only checkout. Not needed yet.
+
+## Where the teams talk
+
+Tracker: private repo FreeMyID/freemyid-pm (issues) plus the private org Project "Free My ID delivery" (once gh has the `project` scope). Each WO, open SEC finding and owner task has one issue; `docs/pm/issue_map.json` maps keys to issue numbers.
+
+- The channel files (`docs/vendor/CLAUDE_TO_*.md`, `*_TO_CLAUDE.md`) stay the working channel, because vendor builders can't run gh. Morgan mirrors each message that concerns a WO as a comment on that WO's issue ("CODEX-061: ..." or "CLAUDE-P013: ..."), so the issue holds the full history.
+- No GitHub Teams: all three teams work under one GitHub account, so team grouping is the `team:*` label and the Project's Team field.
+- Open SEC findings are listed in `docs/pm/tracked.json` (Marcus keeps it current). Issues show ID, severity, owner and status only.
+- Run `tools/pm_sync.py --dry-run` to see the plan, and `FREEMYID_PM_APPLY=1 tools/pm_sync.py --apply --repo FreeMyID/freemyid-pm` to sync. It's idempotent: re-running changes only what moved.
