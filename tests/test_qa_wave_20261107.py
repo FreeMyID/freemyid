@@ -125,8 +125,21 @@ def test_sec95_protect_card_names_the_person_when_several(store, monkeypatch):
 SCRIPT = ROOT / "tools" / "ci" / "check_commit_emails.sh"
 GOOD = "242299803+GrayManSam@users.noreply.github.com"
 BAD = "jane.testperson@example.com"
-needs_git = pytest.mark.skipif(not (shutil.which("git") and shutil.which("bash")),
-                               reason="git and bash needed")
+
+
+def _real_bash() -> str | None:
+    """Full path of a usable bash. On Windows, CreateProcess searches System32 before PATH, so a
+    bare "bash" can hit the WSL launcher (System32\\bash.exe, UTF-16 output, often no distro).
+    Resolve through PATH instead and refuse the WSL stubs."""
+    b = shutil.which("bash")
+    if b and os.name == "nt" and any(d in b.lower() for d in ("\\system32\\", "\\windowsapps\\")):
+        return None
+    return b
+
+
+BASH = _real_bash()
+needs_git = pytest.mark.skipif(not (shutil.which("git") and BASH),
+                               reason="git and a real bash (not the Windows WSL launcher) needed")
 
 
 def _git(repo: Path, *args: str, email: str = GOOD, cemail: str | None = None) -> str:
@@ -143,7 +156,7 @@ def _commit(repo: Path, msg: str, **kw) -> str:
 
 
 def _check(repo: Path, base: str, head: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(["bash", str(SCRIPT), base, head], check=False, cwd=repo, capture_output=True,
+    return subprocess.run([BASH or "bash", str(SCRIPT), base, head], check=False, cwd=repo, capture_output=True,
                           text=True, env={**os.environ, "GIT_CONFIG_GLOBAL": os.devnull})
 
 
