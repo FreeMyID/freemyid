@@ -22,3 +22,7 @@ One mark everywhere: the logo A star on navy `#1b2f5b` with a flag-red `#a3202e`
 | GitHub repo social preview | `../repo-preview.png` (1280x640, already current) | Repo Settings > Social preview |
 
 Alt text: avatar "Free My ID: a white star above a red bar on navy." Banners: "Free My ID. Take your name off the websites that sell it."
+
+## Rollout status (2026-11-07)
+Done: GitHub org FreeMyID, Bluesky (avatar + banner), X @FreeMyID (avatar + header), Discord user FreeMyID (avatar).
+To do: Mastodon (owner: the token is post-only), GitHub user FreeMyID-USA, PyPI via Gravatar, Reddit u/FreeMyID (owner only: reddit is blocked for agents), Facebook page (after the Meta ID check), Product Hunt (held).
