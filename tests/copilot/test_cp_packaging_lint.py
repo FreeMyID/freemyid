@@ -16,7 +16,14 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 DISTRO = ROOT / "distro"
-VERSION = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
+PYPROJECT_VERSION = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
+# Community recipes never track a pre-release (0.3.0rc1 and the like): while pyproject is a
+# pre-release they keep naming the latest stable release from site_src/data/release.yaml.
+# (In-house fix with the v0.3.0rc1 bump; Copilot informed via the tracker.)
+_STABLE = re.search(r'^version:\s*"([^"]+)"', (ROOT / "site_src" / "data" / "release.yaml")
+                    .read_text(encoding="utf-8"), re.MULTILINE)
+VERSION = (_STABLE.group(1) if re.search(r"(a|b|rc|dev)\d*$", PYPROJECT_VERSION) and _STABLE
+           else PYPROJECT_VERSION)
 
 RECIPES = [
     "aur/PKGBUILD",
