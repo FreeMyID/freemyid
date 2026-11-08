@@ -173,7 +173,7 @@ const json = `freemyid status --json`;
   <p class="flex flex-wrap items-center gap-xs"><Badge variant="brand">{soon}</Badge></p>
   {/* source: docs/CLI.md, command table, --json rules, status/1 and Exit codes. Release status: docs/ROADMAP.md 3.8. */}
   <p class="mt-s max-w-measure">In v0.2, <code>freemyid status --json</code> will read the saved status without changing it. JSON output will contain exactly one JSON object on stdout; human messages, such as warnings, will go to stderr. Each object will identify its versioned schema, such as <code>"schema": "status/1"</code>. Within a version, fields may be added, but will not be renamed or removed.</p>
-  <pre class={pre} tabindex="0" aria-label="JSON and exit code example"><code>{json}</code></pre>
+  <pre class={pre} tabindex="0" aria-label="JSON output example"><code>{json}</code></pre>
   <p class="mt-s max-w-measure"><a href={cliRef}>The full command and exit code reference (CLI.md on GitHub)</a></p>
 </Section>
 
