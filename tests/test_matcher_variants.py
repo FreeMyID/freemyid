@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from datetime import date
 
+import pytest
+
 from freemyid.engine import matcher, nicknames
 from freemyid.models import MatchLevel, PersonName
 from tests.conftest import make_profile
@@ -93,9 +95,52 @@ def test_age_gap_caps_at_possible_even_with_exact_name_and_phone():
 def test_nickname_group_name_needs_a_personal_signal():
     # city + relative only: the household shares both
     assert _house("Pat", "Patrick Testperson", None).level == MatchLevel.POSSIBLE
-    assert _house("Pat", "Patrick Testperson", 46).level == MatchLevel.CONFIRMED
+    assert _house("Margaret", "Peggy Testperson", 46).level == MatchLevel.CONFIRMED
     assert _house("Pat", "Patrick Testperson", None,
                   phones=["217-555-0142"]).level == MatchLevel.CONFIRMED
+
+
+# ------------------------------------------------------------ SEC-103 close-age spouse
+
+
+@pytest.mark.parametrize(("first", "shown"), [
+    ("Pat", "Patrick Testperson"),          # Pat is also Patricia
+    ("Pat", "Testperson, Patrick"),         # surname-first layout
+    ("Alexandra", "Alex Testperson"),       # Alex is also Alexander
+    ("Christina", "Chris Testperson"),      # Chris: three groups
+    ("Robert", "Bert Testperson"),          # Bert is also Albert
+    ("Jane", "Jan Testperson"),             # fuzzy, and Jan is Janet
+])
+def test_sec103_another_persons_name_needs_phone_or_email(first, shown):
+    # city + relative + an age within 2 years: a spouse can show all three
+    assert _house(first, shown, 47).level == MatchLevel.POSSIBLE
+    assert _house(first, shown, 47, phones=["217-555-0142"]).level == MatchLevel.CONFIRMED
+
+
+@pytest.mark.parametrize(("first", "shown"), [
+    ("Margaret", "Peggy Testperson"),       # one group, both sides
+    ("Robert", "Bob Testperson"),
+    ("Bob", "Robert Testperson"),
+    ("Pat", "Pat Testperson"),              # the person's own name
+    ("Jane", "Jane Q Testperson"),
+    ("Jane", "Jayne Testperson"),           # fuzzy, not a known given name: SEC-99 rules
+])
+def test_sec103_same_person_still_confirmed_on_age(first, shown):
+    assert _house(first, shown, 47).level == MatchLevel.CONFIRMED
+
+
+def test_sec103_own_nickname_is_trusted():
+    p = make_profile(name=PersonName(first="Pat", last="Testperson"), nicknames=["Patrick"],
+                     relatives=["Kim Testperson"], phones=[], emails=[])
+    c = matcher.Candidate(url="https://devauto.example/p/1", name="Patrick Testperson",
+                          age=47, locations=["Springfield, IL"], relatives=["Kim Testperson"])
+    assert matcher.score(p, c, TODAY).level == MatchLevel.CONFIRMED
+
+
+def test_groups_of():
+    assert nicknames.groups_of("pat") == {"patricia", "patrick"}
+    assert nicknames.groups_of("peggy") == {"margaret"}
+    assert nicknames.groups_of("zebulon") == frozenset()
 
 
 def test_exact_name_with_household_signals_still_confirms_when_age_unknown():

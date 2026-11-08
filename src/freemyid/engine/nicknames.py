@@ -109,3 +109,19 @@ def expand(first: str) -> set[str]:
     if not f:
         return set()
     return {f, *_index().get(f, ())}
+
+
+@cache
+def _groups() -> dict[str, frozenset[str]]:
+    """name -> the formal names of every group it is in."""
+    out: dict[str, set[str]] = {}
+    for g in GROUPS:
+        for n in g:
+            out.setdefault(n, set()).add(g[0])
+    return {k: frozenset(v) for k, v in out.items()}
+
+
+def groups_of(first: str) -> frozenset[str]:
+    """The groups (named by their formal name) that `first` is in; empty if none.
+    "pat" -> {"patricia", "patrick"}; "peggy" -> {"margaret"}."""
+    return _groups().get(first.strip(), frozenset())

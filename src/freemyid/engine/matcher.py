@@ -12,6 +12,11 @@ SEC-99 household guard (a spouse or parent shares the city and the relatives): C
 capped at POSSIBLE when the shown age is more than AGE_CONFLICT_YEARS off, or when the name
 matched only through a nickname group or fuzzily and no personal signal (age, phone, email)
 backs it up.
+
+SEC-103 (spouse close in age): when the shown first name is not one the person uses and is
+not tied to them through one unambiguous nickname group (Peggy for a Margaret is; Patrick for
+a Pat, Alex for an Alexandra or Chris for a Christina is not), only phone or email can confirm
+it. An age within 2 years is not enough, because spouses are often that close in age.
 """
 from __future__ import annotations
 
@@ -33,6 +38,8 @@ AGE_CONFLICT_YEARS = 5
 #: SEC-99: signals a household does not share. A name that is not an exact match (only via a
 #: nickname group, or only fuzzy) needs one of these to reach CONFIRMED.
 PERSONAL_SIGNALS = frozenset({"age", "phone", "email"})
+#: SEC-103: signals that tell two people of similar age in one household apart.
+CONTACT_SIGNALS = frozenset({"phone", "email"})
 USER_CONFIRMED = "user_confirmed"
 
 _US_STATES = {
@@ -148,6 +155,37 @@ def exact_name(p: Profile, shown: str | None) -> bool:
     return name_score(p, shown, groups=False) >= 100.0
 
 
+def _own_firsts(p: Profile) -> set[str]:
+    return {norm(f) for f in [*(n.first for n in p.all_names()), *p.nicknames] if norm(f)}
+
+
+def shown_first(p: Profile, shown: str | None) -> str | None:
+    """The shown given name: the first token that is not an initial and not one of the
+    person's last names ("Testperson, Patrick" -> "patrick")."""
+    lasts = {t for n in p.all_names() for t in norm(n.last).split()}
+    for t in norm(shown).split():
+        if len(t) > 1 and t not in lasts:
+            return t
+    return None
+
+
+def other_persons_name(p: Profile, shown: str | None) -> bool:
+    """SEC-103: the shown first name is a known given name the person does not use and is not
+    tied to them through exactly one nickname group. It may belong to someone else in the
+    house: Patrick for a Pat (Pat is also Patricia), Alex for an Alexandra (Alex is also
+    Alexander), Chris for a Christina, Bert for a Robert (Bert is also Albert)."""
+    s = shown_first(p, shown)
+    if s is None:
+        return False
+    own = _own_firsts(p)
+    if s in own:
+        return False
+    groups = nicknames.groups_of(s)
+    if not groups:
+        return False            # not a known given name: SEC-99 rules alone apply
+    return not any(len(g := nicknames.groups_of(f)) == 1 and groups == g for f in own)
+
+
 def score(profile: Profile, c: Candidate, today: date | None = None) -> MatchResult:
     ns = name_score(profile, c.name)
     if ns < NAME_THRESHOLD:
@@ -189,7 +227,10 @@ def score(profile: Profile, c: Candidate, today: date | None = None) -> MatchRes
             abs(est - c.age) > AGE_CONFLICT_YEARS
         loose_name = not exact_name(profile, c.name) and \
             not PERSONAL_SIGNALS.intersection(reasons)
-        if age_conflict or loose_name:
+        # SEC-103: a name that may be another household member's needs phone or email
+        other_name = not CONTACT_SIGNALS.intersection(reasons) and \
+            other_persons_name(profile, c.name)
+        if age_conflict or loose_name or other_name:
             level = MatchLevel.POSSIBLE
     sc = min(100.0, round(ns * 0.5 + 12.5 * n, 1))
     return MatchResult(level, sc, reasons)

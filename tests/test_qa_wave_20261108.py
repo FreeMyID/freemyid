@@ -62,7 +62,6 @@ def test_sec99_guard_real_person_via_nickname_and_age_confirmed():
     assert matcher.score(p, c, TODAY).level is MatchLevel.CONFIRMED
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-103: spouse close in age confirms via cross-gender nickname")
 @pytest.mark.parametrize(("first", "shown", "age"), [("Pat", "Patrick Testperson", 47),
                                                      ("Alexandra", "Alex Testperson", 45)])
 def test_sec103_close_age_spouse_via_cross_gender_nickname_is_not_confirmed(first, shown, age):
