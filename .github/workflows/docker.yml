@@ -104,10 +104,10 @@ jobs:
           {
             echo "list<<EOF"
             echo "${IMAGE}:${TAG}"
-            [ "$DH_ON" = "true" ] && echo "${DH_IMAGE}:${TAG}"
+            if [ "$DH_ON" = "true" ]; then echo "${DH_IMAGE}:${TAG}"; fi
             if [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
               echo "${IMAGE}:latest"
-              [ "$DH_ON" = "true" ] && echo "${DH_IMAGE}:latest"
+              if [ "$DH_ON" = "true" ]; then echo "${DH_IMAGE}:latest"; fi
             fi
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
@@ -129,7 +129,7 @@ jobs:
           DIGEST: ${{ steps.push.outputs.digest }}
         run: |
           cosign sign --yes "${IMAGE}@${DIGEST}"
-          [ "$DH_ON" = "true" ] && cosign sign --yes "${DH_IMAGE}@${DIGEST}" || true
+          if [ "$DH_ON" = "true" ]; then cosign sign --yes "${DH_IMAGE}@${DIGEST}"; fi
       - name: SBOM (syft, SPDX)
         if: steps.has.outputs.present == 'true'
         uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
