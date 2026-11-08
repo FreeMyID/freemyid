@@ -56,6 +56,9 @@ def layout(title: str, body: str, nav: bool = True, refresh: int = 0, current: s
     toggle = ('<button type="button" class="theme secondary" id="theme-toggle" hidden '
               'aria-pressed="false"><span class="ico" aria-hidden="true"></span> '
               '<span id="theme-label">Dark</span></button>') if nav else ""
+    if nav:
+        toggle += ('<button type="button" class="theme secondary" id="text-toggle" hidden '
+                   'aria-pressed="false"><span id="text-label">Larger text</span></button>')
     return ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width,initial-scale=1">'
             '<meta name="color-scheme" content="light dark">'

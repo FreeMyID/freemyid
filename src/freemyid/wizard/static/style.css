@@ -2,6 +2,7 @@
    No external assets, no motion. Mobile-first: it must work at 683px wide (1024x768 at 150%). */
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
+html[data-text="large"] { font-size: 125%; }
 body { font: 1.25rem/1.55 var(--fmi-font-sans); color: var(--fmi-color-text);
   background: var(--fmi-color-bg-alt); margin: 0; }
 a { color: var(--fmi-color-link); text-underline-offset: .15em; }
@@ -35,6 +36,7 @@ button.theme { order: 2; margin-left: auto; background: transparent; color: var(
   border: 2px solid currentColor; padding: .3rem .8rem; min-height: var(--fmi-tap);
   font-weight: 600; font-size: 1rem; }
 button.theme:hover { background: rgb(255 255 255 / .12); }
+#text-toggle { margin-left: 0; }
 main { max-width: var(--fmi-wrap); margin: 0 auto; padding: var(--fmi-space-m) var(--fmi-gutter)
   var(--fmi-space-2xl); }
 .wrap-narrow { max-width: 44rem; margin-inline: auto; }
@@ -58,7 +60,7 @@ main { max-width: var(--fmi-wrap); margin: 0 auto; padding: var(--fmi-space-m) v
 .hero-card.calm .txt { flex: 1 1 16rem; }
 .progress { font-size: var(--fmi-text-lead); font-weight: 700; margin: var(--fmi-space-s) 0;
   color: var(--fmi-color-heading); }
-.cols { display: grid; gap: var(--fmi-space-s); grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); }
+.cols { display: grid; gap: var(--fmi-space-s); grid-template-columns: repeat(auto-fit, minmax(min(17rem, 100%), 1fr)); }
 .cols > .card { margin: 0; }
 
 /* forms and buttons */

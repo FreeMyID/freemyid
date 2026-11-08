@@ -121,6 +121,25 @@
 })();
 
 (function () {
+  // Large-text toggle. Remembered in a cookie like the theme; browser zoom still works on top.
+  var btn = document.getElementById("text-toggle");
+  if (!btn) { return; }
+  var root = document.documentElement;
+  var on = function () { return root.getAttribute("data-text") === "large"; };
+  var show = function () {
+    btn.setAttribute("aria-pressed", on() ? "true" : "false");
+    document.getElementById("text-label").textContent = on() ? "Normal text" : "Larger text";
+  };
+  btn.hidden = false;
+  show();
+  btn.addEventListener("click", function () {
+    if (on()) { root.removeAttribute("data-text"); } else { root.setAttribute("data-text", "large"); }
+    document.cookie = "fmi_text=" + (on() ? "large" : "normal") + "; path=/; max-age=31536000; SameSite=Strict";
+    show();
+  });
+})();
+
+(function () {
   // "Print this page" buttons (inline handlers are blocked by the page policy).
   document.querySelectorAll("[data-print]").forEach(function (b) {
     b.addEventListener("click", function () { window.print(); });

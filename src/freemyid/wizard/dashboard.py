@@ -300,7 +300,7 @@ def profile_page(p: Profile, statuses: list[BrokerStatus], names: dict[str, str]
         body += todo_card(t, p.label, names.get(t.broker_id or "", ""), csrf, fill=fill)
     body += "</div>"
     # per-broker table
-    body += ('<div class="card"><h2>Sites</h2><table><tr><th>Site</th><th>State</th>'
+    body += ('<div class="card"><h2>Sites</h2><div class="tablewrap" tabindex="0" role="region" aria-label="Sites"><table><tr><th>Site</th><th>State</th>'
              '<th>Updated</th><th>Next check</th></tr>')
     for st in sorted(statuses, key=lambda s: (names.get(s.broker_id, s.broker_id)).lower()):
         extra = (f'<br><span class="hint">{esc(st.needs_human_reason)}</span>'
@@ -311,7 +311,7 @@ def profile_page(p: Profile, statuses: list[BrokerStatus], names: dict[str, str]
                  f'<td>{_dt(st.next_check_at)}</td></tr>')
     if not statuses:
         body += '<tr><td colspan="4">No sites checked yet.</td></tr>'
-    body += "</table></div>"
+    body += "</table></div></div>"
     # evidence
     body += '<div class="card"><h2>Receipts</h2><p class="hint">Pictures of what each site showed and replied. ' \
             'Kept on this computer only, encrypted.</p>'

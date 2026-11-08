@@ -4,4 +4,8 @@
 (function () {
   var m = document.cookie.match(/(?:^|; )fmi_theme=(light|dark)/);
   if (m) { document.documentElement.setAttribute("data-theme", m[1]); }
+  // Large-text mode: everything is sized in rem, so one root size scales the whole app.
+  if (/(?:^|; )fmi_text=large/.test(document.cookie)) {
+    document.documentElement.setAttribute("data-text", "large");
+  }
 })();
