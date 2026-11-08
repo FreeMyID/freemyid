@@ -136,3 +136,27 @@ Checks: pnpm build + check OK (61 HTML, 55 indexable), content_check OK (leak sc
 Shots: scratchpad hero/before, hero/after (360/600/768/1024/1280 light+dark).
 Open: SEC-66 header CSP/frame-ancestors (host move), SEC-67 + Dependabot (devops), WR-51 tab-out note, WR-61/62/63
 (broker-researcher), WR-69 HOLD, /protect/ "15 minutes" rule ruling + freeze_lexisnexis HOLD (orchestrator).
+
+## v0.3 wave availability pass (2026-11-08, web lead alone)
+
+Rule: "available" = in published v0.2.0 (ROADMAP 6, site_src/data/release.yaml). Checked feature list =
+docs/marketing/release-notes-v0.2.0.md; its source commits (9934dfd Today/Protect/summary, a407f66..519f384 exposure,
+18bf7df checklist CLI, bb2cf2a installer fixes) are all ancestors of tag v0.2.0. Merged after v0.2.0 (unreleased):
+Google/Bing guided step (bd6fb4d, 0f57972, 535fb7a), per-person Today card, SEC/a11y fixes.
+e64f7db /whats-coming/: "Available now, version {release.version}", "New in version 0.2, and still early" list
+(listing check + score with coverage and limits, "Is this you?", app checklists, printable summary); #next section is now
+"Also available: Linux, Mac and home servers" (command line only; Docker image + desktop apps not yet); v0.3 lead says 0.2
+has an early version; checklist card says app checklists shipped in 0.2, Google/Bing step "Coming next".
+tests/test_web_v03_roadmap.py (WO-003 file, not reserved this wave) assertion updated from the now-false
+"checklists are planned inside the app". 6a40368 FAQ Mac answer: no Mac app or phone version; Mac command line via
+/developers/. WR-68 status note updated. Section IDs, header/nav and families untouched.
+WR queue: nothing buildable. WR-61/62 still need broker-researcher clearance (needs-verify rows not cleared in
+SOURCES.md or its handoff), WR-63 waits on them, WR-69 HOLD (paid tier).
+Checks: pnpm build + check OK (62 HTML, 56 indexable), content_check OK (leak scan on), pytest tests/test_web_* 71 passed,
+/whats-coming/ 360+1280 light/dark no horizontal scroll.
+For the crew: web-qa: re-sweep /whats-coming/ and /faq/ screenshots after the next merge; web-builder: when the next
+release ships, move the "Coming next" Google/Bing line and the v0.3 section per the page's header comment.
+Open (orchestrator): ROADMAP 3.7 puts "multiple profiles" in 0.4, but v0.2.0 already has "Add a person" in the wizard
+(dashboard.py) and `profile add` in the CLI, and the FAQ says you can protect several family members from one computer.
+/whats-coming/ "Planned for 0.4: family profiles, each giving their own consent" reads as the consent-per-person part;
+please confirm or reword ROADMAP 3.7. Legacy site/ (not deployed; Pages builds web/) still has the old FAQ text.
