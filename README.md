@@ -171,7 +171,7 @@ For each consenting profile, the runner goes through enabled brokers by `priorit
 2. **Search** through the broker's submitter, score the listings, then apply `state.after_scan` and `state.transition`.
 3. **Submit** if the state is `found` or `reappeared`, the listing is `CONFIRMED`, and this isn't a dry run. When a broker has `covered_by` set, the opt-out goes to the parent broker and this site is only re-scanned.
 4. **Verify** by polling IMAP for confirmation links on the broker's `confirmation_domains`.
-5. **Escalate** if the request has been ignored. Each rung becomes due `typical_processing_days + 15` days after the last submission or escalation: resubmit → follow-up email → legal demand (always approved by you) → complaint to-do. A removal resets the ladder.
+5. **Escalate** if the request has been ignored. Each rung becomes due `typical_processing_days + 15` days (a design choice, not a legal deadline; the usual legal window is 45 days, extendable to 90) after the last submission or escalation: resubmit → follow-up email → legal demand (always approved by you) → complaint to-do. A removal resets the ladder.
 6. **Schedule the next check:** every 3–14 days while a request is pending, every `recheck_interval_days` once removed or not found, and at least weekly while something needs attention.
 
 A failure at one broker never stops the run. CAPTCHAs and other challenges go to `HumanHandoff`. An interactive run opens a visible browser window and waits for you. A scheduled run creates a to-do and sends a notification without blocking.
