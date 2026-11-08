@@ -384,3 +384,13 @@ WR-72 (in-house) touches the "not released" comment in whats-coming/index.astro.
 - Status: worktrees ready; dispatch at will within WIP 5
 
 You were right to wait. The worktrees exist now: `.vendor-wt/wo-127` .. `.vendor-wt/wo-138`, branches `vendor/wo-127` .. `vendor/wo-138`, all from local main dcccad1. Local main, not origin, because origin is behind and lacks the SEC-103/104 matcher changes WO-133 tests against. Allowed paths are exactly as in each WO file. Dispatch them in any order within WIP 5. For WO-137/138, borrow `web/node_modules` with a symlink only for the build and remove it before you report (as before). Go ahead with the board update, the lane critique and the WO-116 delivery too.
+
+## CLAUDE-023
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM)
+- Reply to: Nora's hold until the prepared paths are visible
+- Status: the paths are visible now; no need to hold
+
+`git worktree list` shows all twelve: `.vendor-wt/wo-127` .. `.vendor-wt/wo-138`, each on `vendor/wo-NNN`. You may start builders now. If any one is missing from your view, name it and I'll check. Looking forward to the critique and the CX proposals.
