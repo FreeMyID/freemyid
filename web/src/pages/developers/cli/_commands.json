@@ -161,8 +161,8 @@
     {
       "path": "scan",
       "summary": "Search brokers for listings. Never submits anything.",
-      "source": "src/freemyid/cli.py:327",
-      "summary_source": "src/freemyid/cli.py:333",
+      "source": "src/freemyid/cli.py:335",
+      "summary_source": "src/freemyid/cli.py:341",
       "arguments": [],
       "options": [
         {
@@ -172,7 +172,7 @@
           ],
           "help": "",
           "required": false,
-          "source": "src/freemyid/cli.py:328",
+          "source": "src/freemyid/cli.py:336",
           "value": true,
           "value_name": "PROFILE"
         },
@@ -183,7 +183,7 @@
           ],
           "help": "",
           "required": false,
-          "source": "src/freemyid/cli.py:329",
+          "source": "src/freemyid/cli.py:337",
           "value": true,
           "value_name": "BROKER"
         },
@@ -193,7 +193,7 @@
           ],
           "help": "No prompts or windows; fail closed (cron/Docker)",
           "required": false,
-          "source": "src/freemyid/cli.py:330",
+          "source": "src/freemyid/cli.py:338",
           "value": false,
           "value_name": "HEADLESS"
         },
@@ -203,7 +203,7 @@
           ],
           "help": "Machine-readable output (docs/CLI.md)",
           "required": false,
-          "source": "src/freemyid/cli.py:332",
+          "source": "src/freemyid/cli.py:340",
           "value": false,
           "value_name": "AS_JSON"
         }
@@ -212,8 +212,8 @@
     {
       "path": "run",
       "summary": "Scan, submit opt-outs, check verifications and escalate ignored requests.",
-      "source": "src/freemyid/cli.py:338",
-      "summary_source": "src/freemyid/cli.py:348",
+      "source": "src/freemyid/cli.py:346",
+      "summary_source": "src/freemyid/cli.py:356",
       "arguments": [],
       "options": [
         {
@@ -223,7 +223,7 @@
           ],
           "help": "",
           "required": false,
-          "source": "src/freemyid/cli.py:339",
+          "source": "src/freemyid/cli.py:347",
           "value": true,
           "value_name": "PROFILE"
         },
@@ -234,7 +234,7 @@
           ],
           "help": "",
           "required": false,
-          "source": "src/freemyid/cli.py:340",
+          "source": "src/freemyid/cli.py:348",
           "value": true,
           "value_name": "BROKER"
         },
@@ -244,7 +244,7 @@
           ],
           "help": "Search + report, submit nothing",
           "required": false,
-          "source": "src/freemyid/cli.py:341",
+          "source": "src/freemyid/cli.py:349",
           "value": false,
           "value_name": "DRY_RUN"
         },
@@ -254,7 +254,7 @@
           ],
           "help": "No prompts or windows; fail closed (cron/systemd/Docker)",
           "required": false,
-          "source": "src/freemyid/cli.py:343",
+          "source": "src/freemyid/cli.py:351",
           "value": false,
           "value_name": "HEADLESS"
         },
@@ -264,7 +264,7 @@
           ],
           "help": "Machine-readable output (docs/CLI.md)",
           "required": false,
-          "source": "src/freemyid/cli.py:346",
+          "source": "src/freemyid/cli.py:354",
           "value": false,
           "value_name": "AS_JSON"
         },
@@ -274,7 +274,7 @@
           ],
           "help": "",
           "required": false,
-          "source": "src/freemyid/cli.py:347",
+          "source": "src/freemyid/cli.py:355",
           "value": false,
           "value_name": "SCHEDULED"
         }
@@ -283,13 +283,13 @@
     {
       "path": "fill",
       "summary": "Open the broker's form in a visible window and fill it in; you tick the box and Submit.",
-      "source": "src/freemyid/cli.py:353",
-      "summary_source": "src/freemyid/cli.py:357",
+      "source": "src/freemyid/cli.py:361",
+      "summary_source": "src/freemyid/cli.py:365",
       "arguments": [
         {
           "name": "broker",
           "required": true,
-          "source": "src/freemyid/cli.py:354"
+          "source": "src/freemyid/cli.py:362"
         }
       ],
       "options": [
@@ -300,7 +300,7 @@
           ],
           "help": "",
           "required": false,
-          "source": "src/freemyid/cli.py:355",
+          "source": "src/freemyid/cli.py:363",
           "value": true,
           "value_name": "PROFILE"
         },
@@ -310,7 +310,7 @@
           ],
           "help": "",
           "required": false,
-          "source": "src/freemyid/cli.py:356",
+          "source": "src/freemyid/cli.py:364",
           "value": true,
           "value_name": "TIMEOUT"
         }
@@ -319,8 +319,8 @@
     {
       "path": "status",
       "summary": "Per-broker status for each person.",
-      "source": "src/freemyid/cli.py:371",
-      "summary_source": "src/freemyid/cli.py:374",
+      "source": "src/freemyid/cli.py:379",
+      "summary_source": "src/freemyid/cli.py:382",
       "arguments": [],
       "options": [
         {
@@ -330,7 +330,7 @@
           ],
           "help": "",
           "required": false,
-          "source": "src/freemyid/cli.py:372",
+          "source": "src/freemyid/cli.py:380",
           "value": true,
           "value_name": "PROFILE"
         },
@@ -340,7 +340,7 @@
           ],
           "help": "Machine-readable output (docs/CLI.md)",
           "required": false,
-          "source": "src/freemyid/cli.py:373",
+          "source": "src/freemyid/cli.py:381",
           "value": false,
           "value_name": "AS_JSON"
         }
@@ -349,8 +349,8 @@
     {
       "path": "exposure",
       "summary": "Find me first: which people-search sites show you, with a 0-100 exposure score.",
-      "source": "src/freemyid/cli.py:401",
-      "summary_source": "src/freemyid/cli.py:411",
+      "source": "src/freemyid/cli.py:409",
+      "summary_source": "src/freemyid/cli.py:423",
       "arguments": [],
       "options": [
         {
@@ -360,7 +360,7 @@
           ],
           "help": "",
           "required": false,
-          "source": "src/freemyid/cli.py:402",
+          "source": "src/freemyid/cli.py:410",
           "value": true,
           "value_name": "PROFILE"
         },
@@ -370,7 +370,7 @@
           ],
           "help": "Fetch nothing; use what earlier runs found",
           "required": false,
-          "source": "src/freemyid/cli.py:403",
+          "source": "src/freemyid/cli.py:411",
           "value": false,
           "value_name": "OFFLINE"
         },
@@ -380,7 +380,7 @@
           ],
           "help": "Check every site again, even if checked today",
           "required": false,
-          "source": "src/freemyid/cli.py:405",
+          "source": "src/freemyid/cli.py:413",
           "value": false,
           "value_name": "REFRESH"
         },
@@ -390,7 +390,7 @@
           ],
           "help": "Also search each site once at your previous address (off by default; at most one extra page per site)",
           "required": false,
-          "source": "src/freemyid/cli.py:401",
+          "source": "src/freemyid/cli.py:415",
           "value": false,
           "value_name": "OLD_ADDRESSES"
         },
@@ -400,7 +400,7 @@
           ],
           "help": "No prompts or windows; fail closed (cron/Docker)",
           "required": false,
-          "source": "src/freemyid/cli.py:407",
+          "source": "src/freemyid/cli.py:419",
           "value": false,
           "value_name": "HEADLESS"
         },
@@ -410,7 +410,7 @@
           ],
           "help": "Machine-readable output (docs/CLI.md)",
           "required": false,
-          "source": "src/freemyid/cli.py:410",
+          "source": "src/freemyid/cli.py:422",
           "value": false,
           "value_name": "AS_JSON"
         }
@@ -419,8 +419,8 @@
     {
       "path": "report",
       "summary": "Export a report (HTML or PDF).",
-      "source": "src/freemyid/cli.py:496",
-      "summary_source": "src/freemyid/cli.py:500",
+      "source": "src/freemyid/cli.py:512",
+      "summary_source": "src/freemyid/cli.py:516",
       "arguments": [],
       "options": [
         {
@@ -430,7 +430,7 @@
           ],
           "help": "",
           "required": false,
-          "source": "src/freemyid/cli.py:497",
+          "source": "src/freemyid/cli.py:513",
           "value": true,
           "value_name": "PROFILE"
         },
@@ -440,7 +440,7 @@
           ],
           "help": "html | pdf",
           "required": false,
-          "source": "src/freemyid/cli.py:498",
+          "source": "src/freemyid/cli.py:514",
           "value": true,
           "value_name": "FMT"
         },
@@ -450,7 +450,7 @@
           ],
           "help": "Machine-readable output (docs/CLI.md)",
           "required": false,
-          "source": "src/freemyid/cli.py:499",
+          "source": "src/freemyid/cli.py:515",
           "value": false,
           "value_name": "AS_JSON"
         }
@@ -459,8 +459,8 @@
     {
       "path": "wipe",
       "summary": "Delete everything Free My ID saved on this computer: people, evidence, mailbox passwords,",
-      "source": "src/freemyid/cli.py:565",
-      "summary_source": "src/freemyid/cli.py:567",
+      "source": "src/freemyid/cli.py:581",
+      "summary_source": "src/freemyid/cli.py:583",
       "arguments": [],
       "options": [
         {
@@ -469,7 +469,7 @@
           ],
           "help": "",
           "required": false,
-          "source": "src/freemyid/cli.py:566",
+          "source": "src/freemyid/cli.py:582",
           "value": false,
           "value_name": "YES"
         }
@@ -478,18 +478,18 @@
     {
       "path": "search-engines",
       "summary": "Google and Bing: guided steps to ask them to stop showing pages about you.",
-      "source": "src/freemyid/cli.py:887",
-      "summary_source": "src/freemyid/cli.py:894",
+      "source": "src/freemyid/cli.py:903",
+      "summary_source": "src/freemyid/cli.py:910",
       "arguments": [
         {
           "name": "action",
           "required": false,
-          "source": "src/freemyid/cli.py:889"
+          "source": "src/freemyid/cli.py:905"
         },
         {
           "name": "step_id",
           "required": false,
-          "source": "src/freemyid/cli.py:891"
+          "source": "src/freemyid/cli.py:907"
         }
       ],
       "options": [
@@ -500,7 +500,7 @@
           ],
           "help": "Whose list (needed only when more than one person is set up)",
           "required": false,
-          "source": "src/freemyid/cli.py:893",
+          "source": "src/freemyid/cli.py:909",
           "value": true,
           "value_name": "PROFILE"
         },
@@ -510,7 +510,7 @@
           ],
           "help": "Machine-readable output (docs/CLI.md)",
           "required": false,
-          "source": "src/freemyid/cli.py:893",
+          "source": "src/freemyid/cli.py:909",
           "value": false,
           "value_name": "AS_JSON"
         }
@@ -519,7 +519,7 @@
     {
       "path": "profile add",
       "summary": "",
-      "source": "src/freemyid/cli.py:520",
+      "source": "src/freemyid/cli.py:536",
       "summary_source": "",
       "arguments": [],
       "options": [
@@ -529,7 +529,7 @@
           ],
           "help": "",
           "required": false,
-          "source": "src/freemyid/cli.py:521",
+          "source": "src/freemyid/cli.py:537",
           "value": true,
           "value_name": "PREFILL"
         }
@@ -538,8 +538,8 @@
     {
       "path": "profile list",
       "summary": "Everyone set up on this computer.",
-      "source": "src/freemyid/cli.py:525",
-      "summary_source": "src/freemyid/cli.py:527",
+      "source": "src/freemyid/cli.py:541",
+      "summary_source": "src/freemyid/cli.py:543",
       "arguments": [],
       "options": [
         {
@@ -548,7 +548,7 @@
           ],
           "help": "Machine-readable output (docs/CLI.md)",
           "required": false,
-          "source": "src/freemyid/cli.py:526",
+          "source": "src/freemyid/cli.py:542",
           "value": false,
           "value_name": "AS_JSON"
         }
@@ -557,13 +557,13 @@
     {
       "path": "profile edit",
       "summary": "",
-      "source": "src/freemyid/cli.py:542",
+      "source": "src/freemyid/cli.py:558",
       "summary_source": "",
       "arguments": [
         {
           "name": "profile",
           "required": true,
-          "source": "src/freemyid/cli.py:543"
+          "source": "src/freemyid/cli.py:559"
         }
       ],
       "options": []
@@ -571,13 +571,13 @@
     {
       "path": "profile remove",
       "summary": "Delete a person and all their stored data from this computer.",
-      "source": "src/freemyid/cli.py:550",
-      "summary_source": "src/freemyid/cli.py:552",
+      "source": "src/freemyid/cli.py:566",
+      "summary_source": "src/freemyid/cli.py:568",
       "arguments": [
         {
           "name": "profile",
           "required": true,
-          "source": "src/freemyid/cli.py:551"
+          "source": "src/freemyid/cli.py:567"
         }
       ],
       "options": [
@@ -587,7 +587,7 @@
           ],
           "help": "",
           "required": false,
-          "source": "src/freemyid/cli.py:551",
+          "source": "src/freemyid/cli.py:567",
           "value": false,
           "value_name": "YES"
         }
@@ -596,18 +596,18 @@
     {
       "path": "profile export",
       "summary": "Create a passphrase-protected pre-filled profile for a family installer.",
-      "source": "src/freemyid/cli.py:615",
-      "summary_source": "src/freemyid/cli.py:617",
+      "source": "src/freemyid/cli.py:631",
+      "summary_source": "src/freemyid/cli.py:633",
       "arguments": [
         {
           "name": "profile",
           "required": true,
-          "source": "src/freemyid/cli.py:616"
+          "source": "src/freemyid/cli.py:632"
         },
         {
           "name": "dest",
           "required": true,
-          "source": "src/freemyid/cli.py:616"
+          "source": "src/freemyid/cli.py:632"
         }
       ],
       "options": []
@@ -615,7 +615,7 @@
     {
       "path": "schedule install",
       "summary": "",
-      "source": "src/freemyid/cli.py:629",
+      "source": "src/freemyid/cli.py:645",
       "summary_source": "",
       "arguments": [],
       "options": []
@@ -623,7 +623,7 @@
     {
       "path": "schedule remove",
       "summary": "",
-      "source": "src/freemyid/cli.py:635",
+      "source": "src/freemyid/cli.py:651",
       "summary_source": "",
       "arguments": [],
       "options": []
@@ -631,7 +631,7 @@
     {
       "path": "schedule status",
       "summary": "",
-      "source": "src/freemyid/cli.py:641",
+      "source": "src/freemyid/cli.py:657",
       "summary_source": "",
       "arguments": [],
       "options": [
@@ -641,7 +641,7 @@
           ],
           "help": "Machine-readable output (docs/CLI.md)",
           "required": false,
-          "source": "src/freemyid/cli.py:642",
+          "source": "src/freemyid/cli.py:658",
           "value": false,
           "value_name": "AS_JSON"
         }
@@ -650,7 +650,7 @@
     {
       "path": "registry update",
       "summary": "",
-      "source": "src/freemyid/cli.py:658",
+      "source": "src/freemyid/cli.py:674",
       "summary_source": "",
       "arguments": [],
       "options": []
@@ -658,13 +658,13 @@
     {
       "path": "registry validate",
       "summary": "",
-      "source": "src/freemyid/cli.py:665",
+      "source": "src/freemyid/cli.py:681",
       "summary_source": "",
       "arguments": [
         {
           "name": "path",
           "required": false,
-          "source": "src/freemyid/cli.py:666"
+          "source": "src/freemyid/cli.py:682"
         }
       ],
       "options": []
@@ -672,8 +672,8 @@
     {
       "path": "registry source",
       "summary": "Which broker list is in use: update, family, full or sample.",
-      "source": "src/freemyid/cli.py:673",
-      "summary_source": "src/freemyid/cli.py:676",
+      "source": "src/freemyid/cli.py:689",
+      "summary_source": "src/freemyid/cli.py:692",
       "arguments": [],
       "options": [
         {
@@ -682,29 +682,10 @@
           ],
           "help": "",
           "required": false,
-          "source": "src/freemyid/cli.py:674",
+          "source": "src/freemyid/cli.py:690",
           "value": false,
           "value_name": "PLAIN"
         },
-        {
-          "flags": [
-            "--json"
-          ],
-          "help": "Machine-readable output (docs/CLI.md)",
-          "required": false,
-          "source": "src/freemyid/cli.py:675",
-          "value": false,
-          "value_name": "AS_JSON"
-        }
-      ]
-    },
-    {
-      "path": "registry show",
-      "summary": "Every broker in the registry in use, highest priority first.",
-      "source": "src/freemyid/cli.py:690",
-      "summary_source": "src/freemyid/cli.py:692",
-      "arguments": [],
-      "options": [
         {
           "flags": [
             "--json"
@@ -718,10 +699,29 @@
       ]
     },
     {
+      "path": "registry show",
+      "summary": "Every broker in the registry in use, highest priority first.",
+      "source": "src/freemyid/cli.py:706",
+      "summary_source": "src/freemyid/cli.py:708",
+      "arguments": [],
+      "options": [
+        {
+          "flags": [
+            "--json"
+          ],
+          "help": "Machine-readable output (docs/CLI.md)",
+          "required": false,
+          "source": "src/freemyid/cli.py:707",
+          "value": false,
+          "value_name": "AS_JSON"
+        }
+      ]
+    },
+    {
       "path": "todo list",
       "summary": "Open to-dos (things that need a person).",
-      "source": "src/freemyid/cli.py:710",
-      "summary_source": "src/freemyid/cli.py:713",
+      "source": "src/freemyid/cli.py:726",
+      "summary_source": "src/freemyid/cli.py:729",
       "arguments": [],
       "options": [
         {
@@ -731,7 +731,7 @@
           ],
           "help": "",
           "required": false,
-          "source": "src/freemyid/cli.py:711",
+          "source": "src/freemyid/cli.py:727",
           "value": true,
           "value_name": "PROFILE"
         },
@@ -741,7 +741,7 @@
           ],
           "help": "Machine-readable output (docs/CLI.md)",
           "required": false,
-          "source": "src/freemyid/cli.py:712",
+          "source": "src/freemyid/cli.py:728",
           "value": false,
           "value_name": "AS_JSON"
         }
@@ -750,13 +750,13 @@
     {
       "path": "todo done",
       "summary": "",
-      "source": "src/freemyid/cli.py:725",
+      "source": "src/freemyid/cli.py:741",
       "summary_source": "",
       "arguments": [
         {
           "name": "todo_id",
           "required": true,
-          "source": "src/freemyid/cli.py:726"
+          "source": "src/freemyid/cli.py:742"
         }
       ],
       "options": []
@@ -764,8 +764,8 @@
     {
       "path": "outbox list",
       "summary": "Emails waiting for your approval.",
-      "source": "src/freemyid/cli.py:734",
-      "summary_source": "src/freemyid/cli.py:736",
+      "source": "src/freemyid/cli.py:750",
+      "summary_source": "src/freemyid/cli.py:752",
       "arguments": [],
       "options": [
         {
@@ -774,7 +774,7 @@
           ],
           "help": "Machine-readable output (docs/CLI.md)",
           "required": false,
-          "source": "src/freemyid/cli.py:735",
+          "source": "src/freemyid/cli.py:751",
           "value": false,
           "value_name": "AS_JSON"
         }
@@ -783,13 +783,13 @@
     {
       "path": "outbox approve",
       "summary": "",
-      "source": "src/freemyid/cli.py:747",
+      "source": "src/freemyid/cli.py:763",
       "summary_source": "",
       "arguments": [
         {
           "name": "request_id",
           "required": true,
-          "source": "src/freemyid/cli.py:748"
+          "source": "src/freemyid/cli.py:764"
         }
       ],
       "options": []
@@ -797,18 +797,18 @@
     {
       "path": "config set",
       "summary": "",
-      "source": "src/freemyid/cli.py:1005",
+      "source": "src/freemyid/cli.py:1021",
       "summary_source": "",
       "arguments": [
         {
           "name": "key",
           "required": true,
-          "source": "src/freemyid/cli.py:1006"
+          "source": "src/freemyid/cli.py:1022"
         },
         {
           "name": "value",
           "required": true,
-          "source": "src/freemyid/cli.py:1006"
+          "source": "src/freemyid/cli.py:1022"
         }
       ],
       "options": []
@@ -816,16 +816,16 @@
     {
       "path": "config enable-submissions",
       "summary": "One-time explicit opt-in to real (non-dry-run) opt-out submissions.",
-      "source": "src/freemyid/cli.py:1025",
-      "summary_source": "src/freemyid/cli.py:1027",
+      "source": "src/freemyid/cli.py:1041",
+      "summary_source": "src/freemyid/cli.py:1043",
       "arguments": [],
       "options": []
     },
     {
       "path": "secrets status",
       "summary": "Which backend holds the encryption key (keyring, passphrase or systemd-creds).",
-      "source": "src/freemyid/cli.py:956",
-      "summary_source": "src/freemyid/cli.py:958",
+      "source": "src/freemyid/cli.py:972",
+      "summary_source": "src/freemyid/cli.py:974",
       "arguments": [],
       "options": [
         {
@@ -834,7 +834,7 @@
           ],
           "help": "Machine-readable output (docs/CLI.md)",
           "required": false,
-          "source": "src/freemyid/cli.py:957",
+          "source": "src/freemyid/cli.py:973",
           "value": false,
           "value_name": "AS_JSON"
         }
@@ -843,8 +843,8 @@
     {
       "path": "secrets migrate",
       "summary": "Move the encryption key (and saved mailbox passwords) to another backend.",
-      "source": "src/freemyid/cli.py:972",
-      "summary_source": "src/freemyid/cli.py:980",
+      "source": "src/freemyid/cli.py:988",
+      "summary_source": "src/freemyid/cli.py:996",
       "arguments": [],
       "options": [
         {
@@ -853,7 +853,7 @@
           ],
           "help": "passphrase | keyring | systemd-creds",
           "required": true,
-          "source": "src/freemyid/cli.py:974",
+          "source": "src/freemyid/cli.py:990",
           "value": true,
           "value_name": "TO"
         },
@@ -863,7 +863,7 @@
           ],
           "help": "Also delete the key from the system keychain. Only if this is the ONLY Free My ID folder on this computer: other folders that use the keychain share that key and would lose their data.",
           "required": false,
-          "source": "src/freemyid/cli.py:975",
+          "source": "src/freemyid/cli.py:991",
           "value": false,
           "value_name": "REMOVE_KEYCHAIN_KEY"
         }
@@ -872,8 +872,8 @@
     {
       "path": "checklist list",
       "summary": "Every checklist, and which ones are done.",
-      "source": "src/freemyid/cli.py:799",
-      "summary_source": "src/freemyid/cli.py:801",
+      "source": "src/freemyid/cli.py:815",
+      "summary_source": "src/freemyid/cli.py:817",
       "arguments": [],
       "options": [
         {
@@ -883,7 +883,7 @@
           ],
           "help": "Whose list (needed only when more than one person is set up)",
           "required": false,
-          "source": "src/freemyid/cli.py:800",
+          "source": "src/freemyid/cli.py:816",
           "value": true,
           "value_name": "PROFILE"
         },
@@ -893,7 +893,7 @@
           ],
           "help": "Machine-readable output (docs/CLI.md)",
           "required": false,
-          "source": "src/freemyid/cli.py:800",
+          "source": "src/freemyid/cli.py:816",
           "value": false,
           "value_name": "AS_JSON"
         }
@@ -902,13 +902,13 @@
     {
       "path": "checklist show",
       "summary": "The steps for one checklist.",
-      "source": "src/freemyid/cli.py:824",
-      "summary_source": "src/freemyid/cli.py:827",
+      "source": "src/freemyid/cli.py:840",
+      "summary_source": "src/freemyid/cli.py:843",
       "arguments": [
         {
           "name": "checklist_id",
           "required": true,
-          "source": "src/freemyid/cli.py:825"
+          "source": "src/freemyid/cli.py:841"
         }
       ],
       "options": [
@@ -919,7 +919,7 @@
           ],
           "help": "Whose list (needed only when more than one person is set up)",
           "required": false,
-          "source": "src/freemyid/cli.py:826",
+          "source": "src/freemyid/cli.py:842",
           "value": true,
           "value_name": "PROFILE"
         },
@@ -929,7 +929,7 @@
           ],
           "help": "Machine-readable output (docs/CLI.md)",
           "required": false,
-          "source": "src/freemyid/cli.py:826",
+          "source": "src/freemyid/cli.py:842",
           "value": false,
           "value_name": "AS_JSON"
         }
@@ -938,13 +938,13 @@
     {
       "path": "checklist done",
       "summary": "Mark a checklist as done.",
-      "source": "src/freemyid/cli.py:863",
-      "summary_source": "src/freemyid/cli.py:866",
+      "source": "src/freemyid/cli.py:879",
+      "summary_source": "src/freemyid/cli.py:882",
       "arguments": [
         {
           "name": "checklist_id",
           "required": true,
-          "source": "src/freemyid/cli.py:864"
+          "source": "src/freemyid/cli.py:880"
         }
       ],
       "options": [
@@ -955,7 +955,7 @@
           ],
           "help": "Whose list (needed only when more than one person is set up)",
           "required": false,
-          "source": "src/freemyid/cli.py:865",
+          "source": "src/freemyid/cli.py:881",
           "value": true,
           "value_name": "PROFILE"
         },
@@ -965,7 +965,7 @@
           ],
           "help": "Machine-readable output (docs/CLI.md)",
           "required": false,
-          "source": "src/freemyid/cli.py:865",
+          "source": "src/freemyid/cli.py:881",
           "value": false,
           "value_name": "AS_JSON"
         }
@@ -974,13 +974,13 @@
     {
       "path": "checklist undo",
       "summary": "Mark a checklist as not done again.",
-      "source": "src/freemyid/cli.py:870",
-      "summary_source": "src/freemyid/cli.py:873",
+      "source": "src/freemyid/cli.py:886",
+      "summary_source": "src/freemyid/cli.py:889",
       "arguments": [
         {
           "name": "checklist_id",
           "required": true,
-          "source": "src/freemyid/cli.py:871"
+          "source": "src/freemyid/cli.py:887"
         }
       ],
       "options": [
@@ -991,7 +991,7 @@
           ],
           "help": "Whose list (needed only when more than one person is set up)",
           "required": false,
-          "source": "src/freemyid/cli.py:872",
+          "source": "src/freemyid/cli.py:888",
           "value": true,
           "value_name": "PROFILE"
         },
@@ -1001,7 +1001,7 @@
           ],
           "help": "Machine-readable output (docs/CLI.md)",
           "required": false,
-          "source": "src/freemyid/cli.py:872",
+          "source": "src/freemyid/cli.py:888",
           "value": false,
           "value_name": "AS_JSON"
         }
