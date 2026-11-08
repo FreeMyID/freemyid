@@ -39,3 +39,9 @@ Built by `brand/src/build_platform_art.py`. Platform app icons: `brand/icons/pla
 | v3/features/find-me-first-{light,dark} | 320x250 | "find me first" scan page | A magnifying glass over a web page, finding a person's listing. |
 | v3/features/proof-report-{light,dark} | 320x250 | proof report page | A progress report with checked rows and a star seal. |
 | v3/features/family-helper-{light,dark} | 320x250 | family helper mode page | A grown child and a parent sharing one laptop with two name cards. |
+
+## WO-170..179 art (Iris Novak, in-house; hand-authored HTML rendered by Playwright)
+Replaces the Codex/Canva plan: no `brand/codex/` or MANIFEST; files sit in `social/` and `web/` next to the existing art. Shared helpers `src/wo17_common.py`; each `src/build_wo17x_*.py` rebuilds its files (run from `brand/src` with the repo venv). Logo is always the unaltered `logo/final/wordmark-lockup.svg` (dark colours on navy). Headlines are the site's bold sans, not the SEO brief's Georgia (the site has had no serif headings since v2; the logo carries the serif).
+| File | Size | Use | Alt text |
+|---|---|---|---|
+| `social/og/og-developers-cli.png` | 1200x630, 14 KB | WO-170 OG image for /developers/cli/ (not wired). | Free My ID command line: a terminal window showing a status command. Scriptable, local, no account. |
