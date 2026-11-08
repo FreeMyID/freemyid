@@ -236,3 +236,53 @@ def test_old_addresses_follow_the_config_flag(store):
     ex.scan_exposure(store, p.id, registry=_reg(devblocked="bot_blocked"), fetch=calls,
                      use_browser=False, cfg=cfg)
     assert len(calls.urls) == 2
+
+
+# ------------------------------------------------------------------ CLI
+
+
+def test_cli_exposure_json_gains_coverage_and_drop(store, monkeypatch):
+    import json
+
+    from typer.testing import CliRunner
+
+    from freemyid import cli
+    p = _saved(store, addresses=[{"city": "Fresno", "state": "CA", "current": True}])
+    monkeypatch.setattr(cli, "_registry", fixture_registry)
+    runner = CliRunner()
+    r = runner.invoke(cli.app, ["exposure", "--json", "--offline", "--profile", p.id])
+    assert r.exit_code == 0, r.output
+    prof = json.loads(r.stdout)["profiles"][0]
+    assert prof["coverage"] == {"sites_total": 2, "sites_checked": 0, "found": 0,
+                                "not_found": 0, "check_by_hand": 2, "uncertain": 0}
+    assert "could not check any of the 2 sites" in prof["coverage_note"]
+    assert prof["drop_first"] is True and prof["first_checklist"] == DROP_CHECKLIST_ID
+    assert prof["counts"]["check_by_hand"] == 2          # old fields unchanged
+    assert all(e["old_address_checked"] is False for e in prof["entries"])
+    r = runner.invoke(cli.app, ["exposure", "--offline", "--profile", p.id])
+    text = " ".join(r.stdout.split())           # rich wraps long lines
+    assert r.exit_code == 0 and "does not mean you are safe" in text
+    assert f"freemyid checklist show {DROP_CHECKLIST_ID}" in text
+
+
+def test_cli_checklist_list_starts_with_drop_in_california(store):
+    import json
+
+    from typer.testing import CliRunner
+
+    from freemyid.cli import app
+    ca = _saved(store, label="CA", addresses=[{"city": "Fresno", "state": "CA",
+                                                "current": True}])
+    il = _saved(store, label="IL")
+    runner = CliRunner()
+    doc = json.loads(runner.invoke(app, ["checklist", "list", "--json", "-p", ca.id]).stdout)
+    assert doc["start_with"] == DROP_CHECKLIST_ID
+    assert doc["checklists"][0]["id"] == DROP_CHECKLIST_ID
+    out = runner.invoke(app, ["checklist", "list", "-p", ca.id]).stdout
+    assert out.startswith("You live in California")
+    rows = [ln for ln in out.splitlines() if ln.startswith(("[ ]", "[x]"))]
+    assert rows[0].startswith(f"[ ] {DROP_CHECKLIST_ID}")
+    doc = json.loads(runner.invoke(app, ["checklist", "list", "--json", "-p", il.id]).stdout)
+    assert doc["start_with"] is None
+    assert "You live in California" not in runner.invoke(
+        app, ["checklist", "list", "-p", il.id]).stdout
