@@ -268,3 +268,29 @@ c868a3c. Ratios recomputed from tokens.css, light / dark:
   focus outline on the built home page.
 Test: tests/test_web_contrast_inhouse.py (14 cases, browser ones offline-routed). Checks: build + check OK (65 HTML, 59
 indexable), content_check OK, gen-tokens --check OK, web tests 131 passed.
+
+## WO-162 never-asks consistency (2026-11-08, web lead alone): 3e3489b
+Master = /safety/#never-asks. "What it never asks for": SSN; bank/card; any payment; full birthday; everyday email password
+(+ app-password note). New h3 #never-does "What it never does": send year of birth or relatives' names to a site; give a
+site your phone number unless you switch that on; send a photo of ID unless switched on; create an account; solve robot
+checks. Code basis: submitters/base.py (_NEVER = DOB/ID; relatives are not a sendable field; phone gated), web_form.search_url
+(name/town, phone only with permission), tiers.py, no account-creation or upload code. Phone moved out of "never asks for"
+(setup asks for an optional phone).
+Exact short form: "never asks for your Social Security number or bank or card details, and never charges you" on home
+(trust bar, step 1, privacy card + "See the full list" link, final CTA), Footer, how-it-works step 1, families, faq.yaml
+(2 answers), FAMILY_QUICK_START.md:8, HELPER_GUIDE section 6 (now mirrors the master). FAMILY_QUICK_START.md:48 no longer
+"never sent to anyone". /families/ optional-details line now: "Year of birth and relatives' names are never sent to a site,
+and a phone number goes to a site only if you allow it" (also legacy template; WO-107 test updated). Fridge card md + html:
+"bank or card details, or your everyday email password". Guard: tests/test_web_never_asks.py.
+Checks: build + check OK (65/59), content_check OK, web tests 147 passed, tests/copilot wording guard 38 passed, legacy OK.
+
+For Morgan (Copilot lane / not mine):
+- docs/USER_GUIDE.md:29 -> "...Free My ID never asks for your Social Security number or bank or card details, and never
+  charges you. It is free and open source..." (exact short form).
+- :235 -> "Free My ID never asks for your Social Security number or bank or card details, and never charges you." + "Full list:
+  the website's Is it safe? page."
+- :107 "does not send them to any site as your details" is not true for the phone (sent when allow_phone_disclosure is on and a
+  site needs it) -> "Birth year and relatives are never sent to a site. A phone number goes to a site only if you switch that on."
+- :239 is correct per base.py (never DOB, relatives or personal email); keep.
+- site_src/static/assets/free-my-id-fridge-card.pdf still has "bank card or passwords": needs a re-render from the updated
+  docs/assets/fridge-card.html (graphic-designer/owner; I have no PDF tool).
