@@ -44,6 +44,15 @@ def allowed_fields(profile: Profile, broker: Broker, listings: list[Listing]) ->
     return out
 
 
+def shown_age(listings: list[Listing]) -> int | None:
+    """SEC-115: the age the site itself shows (confirmed listings first), never the
+    person's real age computed from their birth year. None if no listing shows one."""
+    for li in [*confirmed(listings), *listings]:
+        if li.age_shown is not None:
+            return li.age_shown
+    return None
+
+
 def _current(profile: Profile):
     return next((a for a in profile.addresses if a.current), profile.addresses[0])
 
@@ -67,7 +76,7 @@ def copy_fields(profile: Profile, broker: Broker, listings: list[Listing]) -> di
         out["Street address"] = cur.street
     if F.ZIP in allowed and cur.zip:
         out["ZIP code"] = cur.zip
-    if F.AGE in allowed and (age := profile.estimated_age()) is not None:
+    if F.AGE in allowed and (age := shown_age(listings)) is not None:
         out["Age"] = str(age)
     if F.PHONE in allowed and profile.phones:
         out["Phone"] = profile.phones[0]
@@ -98,8 +107,8 @@ def form_vars(profile: Profile, broker: Broker, listing: Listing | None) -> dict
         p["street"] = cur.street
     if F.ZIP in allowed and cur.zip:
         p["zip"] = cur.zip
-    if F.AGE in allowed:
-        p["age"] = profile.estimated_age()
+    if F.AGE in allowed and (age := shown_age(lis)) is not None:
+        p["age"] = age          # SEC-115: the listing's own age, never a computed one
     if F.PHONE in allowed and profile.phones:
         p["phone"] = profile.phones[0]
     return {

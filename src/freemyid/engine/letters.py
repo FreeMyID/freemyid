@@ -153,7 +153,9 @@ def letter_vars(profile: Profile, broker: Broker, listings: list[Listing],
     if ProfileField.STATE in shown:
         v["state"] = cur.state
     if ProfileField.AGE in shown:
-        v["age"] = profile.estimated_age(today)
+        # SEC-115: the age the listing shows, never the person's real (computed) age
+        from ..submitters.base import shown_age
+        v["age"] = shown_age(listings)
     if ProfileField.STREET_ADDRESS in shown and cur.street:
         v["street_address"] = cur.street
     if ProfileField.ZIP in shown and cur.zip:
