@@ -17,6 +17,7 @@ class Mem(KeyringBackend):
     def delete_password(s, a, b): s.d.pop((a, b), None)
 keyring.set_keyring(Mem())
 from datetime import timedelta
+from freemyid.models import Listing, MatchLevel, Method, Request, RequestKind, RequestStatus
 from freemyid.models import BrokerStatus, ListingState as L, Todo, TodoKind, utcnow
 from freemyid.registry import load_registry
 from freemyid.storage import Store
@@ -67,6 +68,19 @@ with sync_playwright() as p:
             last_submitted_at=None if st == L.NOT_FOUND else now - timedelta(days=i + 3),
             attempts=0 if st == L.NOT_FOUND else 1,
             next_check_at=now + timedelta(days=20), needs_human_reason="Needs you" if st == L.NEEDS_HUMAN else None))
+    # plausible history: every site that was found got a listing and one sent request (sent >= confirmed)
+    for i, (bid, st) in enumerate(zip(ids, plan)):
+        if st == L.NOT_FOUND:
+            continue
+        seen = now - timedelta(days=i + 6)
+        store.save_listing(Listing(profile_id=prof.id, broker_id=bid, url=f"https://example.com/{bid}/jane-testperson",
+            name_shown="Jane Testperson", age_shown=75, locations_shown=["Springfield, IL"],
+            match_score=92, match_level=MatchLevel.CONFIRMED, match_reasons=["city", "age"],
+            first_seen=seen, last_seen=now - timedelta(days=i),
+            gone_since=(now - timedelta(days=i)) if st == L.REMOVED else None))
+        store.save_request(Request(profile_id=prof.id, broker_id=bid, kind=RequestKind.OPT_OUT,
+            method=Method.EMAIL if i % 2 else Method.WEB_FORM, status=RequestStatus.SENT,
+            created_at=now - timedelta(days=i + 3), sent_at=now - timedelta(days=i + 3)))
     nh = [bid for bid, st in zip(ids, plan) if st == L.NEEDS_HUMAN]
     store.save_todo(Todo(profile_id=prof.id, broker_id=nh[0], kind=TodoKind.ASSISTED_OPT_OUT,
         title="Remove your listing", body="1. Open the page\n2. Find your listing\n3. Click Remove",
