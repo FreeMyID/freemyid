@@ -64,6 +64,14 @@ def consent_ok(p: Profile, store: Store | None = None, *,
         return False, "consent has no attesting name"
     if c.text_version not in ACCEPTED_TEXT_VERSIONS:
         return False, "consent was given to an older or unknown consent text; please re-confirm"
+    # BL-IN-08: a phone/email-only removal names the value it asks to delete, so it needs
+    # the matching explicit permission (never implied by the scope)
+    if p.removal_scope == "phone" and not p.permissions.allow_phone_disclosure:
+        return False, ("a phone-only removal needs permission to share the phone number "
+                       "with the sites")
+    if p.removal_scope == "email" and not p.permissions.allow_email_disclosure:
+        return False, ("an email-only removal needs permission to share the email address "
+                       "with the sites")
     if is_minor(p, today):
         if c.basis != ConsentBasis.GUARDIAN_OF_MINOR:
             return False, "minor profile requires parent/guardian consent"

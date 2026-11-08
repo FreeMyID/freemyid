@@ -53,6 +53,10 @@ _SHARED_SUFFIXES = frozenset({
 })
 _SEARCH_PLACEHOLDERS = frozenset(
     {"first", "last", "middle", "city", "state", "state_name", "zip", "phone"})
+#: BL-IN-08 reverse-lookup patterns: {phone_digits} 2175550142, {phone_dashed} 217-555-0142,
+#: {email} URL-encoded address.
+_PHONE_SEARCH_PLACEHOLDERS = frozenset({"phone_digits", "phone_dashed"})
+_EMAIL_SEARCH_PLACEHOLDERS = frozenset({"email"})
 _SUBMITTER_RE = re.compile(r"^freemyid\.submitters\.[a-z0-9_.]+:[A-Za-z_][A-Za-z0-9_]*$")
 # SEC-35: "(a+)+", "(a*)*", "(a{1,9})+", "(a|aa)+" style groups followed by a quantifier
 _NESTED_QUANT_RE = re.compile(r"\((?:[^()\\]|\\.)*(?:[+*}]|\|)(?:[^()\\]|\\.)*\)[+*{]")
@@ -169,6 +173,13 @@ class ConsentBasis(StrEnum):
 class EmailMode(StrEnum):
     APPROVE_EACH = "approve_each"   # default: every outgoing email queued for user approval
     AUTO = "auto"                   # opt-in; legal demands STILL require approval
+
+
+class RemovalScope(StrEnum):
+    """BL-IN-08: what the person wants removed."""
+    FULL = "full"       # name + address listings (the normal mode)
+    PHONE = "phone"     # just these phone numbers (reverse-lookup pages)
+    EMAIL = "email"     # just these email addresses (reverse-lookup pages)
 
 
 class Tier(StrEnum):
@@ -295,6 +306,9 @@ class Permissions(_Base):
     allow_id_upload: bool = False
     allow_account_creation: bool = False
     allow_phone_disclosure: bool = False
+    #: BL-IN-08: an email-only removal must name the address it asks to delete. Explicit,
+    #: never implied by removal_scope.
+    allow_email_disclosure: bool = False
 
 
 class MatchLevel(StrEnum):
@@ -314,14 +328,22 @@ class Profile(_Base):
     id: Id = Field(default_factory=new_id)
     label: str = Field(description="Display name, e.g. 'Mom'")
     consent: Consent
-    name: PersonName
+    removal_scope: RemovalScope = Field(
+        default=RemovalScope.FULL, description="BL-IN-08: 'full' needs a name and an "
+        "address; 'phone' / 'email' need only the phones / emails to remove")
+    name: PersonName = Field(
+        default_factory=lambda: PersonName(first="", last=""),
+        description="Required for removal_scope 'full'; empty for phone/email-only")
     nicknames: list[str] = []
     previous_names: list[PersonName] = []
-    addresses: list[Address] = Field(min_length=1)
+    addresses: list[Address] = Field(
+        default=[], description="At least one for removal_scope 'full'")
     dob: date | None = None
     age: int | None = Field(default=None, ge=0, le=130)
     phones: list[str] = []
-    emails: list[str] = []          # personal emails: for matching only, never sent anywhere
+    # personal emails: for matching only and never sent anywhere, except an email-only
+    # removal (removal_scope 'email' + permissions.allow_email_disclosure) names them
+    emails: list[str] = []
     relatives: list[str] = []
     is_minor: bool = False
     mailbox: MailboxConfig | None = None
@@ -331,8 +353,29 @@ class Profile(_Base):
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)
 
+    @model_validator(mode="after")
+    def _scope_requirements(self) -> Profile:
+        if self.removal_scope == RemovalScope.FULL:
+            if "name" not in self.model_fields_set:
+                raise ValueError("a full removal needs the person's name")
+            if not self.addresses:
+                raise ValueError("a full removal needs at least one address")
+        elif self.removal_scope == RemovalScope.PHONE and not self.phones:
+            raise ValueError("a phone-only removal needs at least one phone number")
+        elif self.removal_scope == RemovalScope.EMAIL and not self.emails:
+            raise ValueError("an email-only removal needs at least one email address")
+        return self
+
+    @property
+    def value_only(self) -> bool:
+        """BL-IN-08: phone-only or email-only removal (no name/address search)."""
+        return self.removal_scope != RemovalScope.FULL
+
     @property
     def state_of_residence(self) -> str:
+        """Two-letter state of the current address; "" when there is none (value-only)."""
+        if not self.addresses:
+            return ""
         cur = [a for a in self.addresses if a.current]
         return (cur or self.addresses)[0].state
 
@@ -392,6 +435,11 @@ class Broker(_Base):
         description="Python format string. Placeholders: {first} {last} {middle} {city} {state} "
         "{state_name} {zip} {phone}; values are slugified/URL-encoded by the engine",
     )
+    phone_search_url_pattern: str | None = Field(
+        default=None, description="BL-IN-08 reverse phone lookup. Placeholders: "
+        "{phone_digits} {phone_dashed}")
+    email_search_url_pattern: str | None = Field(
+        default=None, description="BL-IN-08 reverse email lookup. Placeholder: {email}")
     opt_out_url: HttpUrl | None = None
     search_page_url: HttpUrl | None = Field(
         default=None, description="Page with the people-search form, if not Broker.url "
@@ -512,13 +560,18 @@ class Broker(_Base):
         for u in filter(None, urls):
             if not _host_in(urlsplit(u).hostname, doms):
                 raise ValueError(f"{self.id}: URL host outside broker domains: {u}")
-        if self.search_url_pattern:
-            fields = {f for _, f, _, _ in string.Formatter().parse(self.search_url_pattern) if f}
-            if bad := fields - _SEARCH_PLACEHOLDERS:
+        for attr, allowed in (("search_url_pattern", _SEARCH_PLACEHOLDERS),
+                              ("phone_search_url_pattern", _PHONE_SEARCH_PLACEHOLDERS),
+                              ("email_search_url_pattern", _EMAIL_SEARCH_PLACEHOLDERS)):
+            pat = getattr(self, attr)
+            if not pat:
+                continue
+            fields = {f for _, f, _, _ in string.Formatter().parse(pat) if f}
+            if bad := fields - allowed:
                 raise ValueError(f"{self.id}: unknown search placeholders {sorted(bad)}")
-            probe = self.search_url_pattern.format(**{k: "x" for k in fields})
+            probe = pat.format(**{k: "x" for k in fields})
             if urlsplit(probe).scheme != "https" or not _host_in(urlsplit(probe).hostname, doms):
-                raise ValueError(f"{self.id}: search_url_pattern must be https on broker domains")
+                raise ValueError(f"{self.id}: {attr} must be https on broker domains")
         if self.opt_out_email:
             local, _, host = self.opt_out_email.rpartition("@")
             if not local or not _host_in(host, doms):

@@ -44,6 +44,32 @@
           "description": "Python format string. Placeholders: {first} {last} {middle} {city} {state} {state_name} {zip} {phone}; values are slugified/URL-encoded by the engine",
           "title": "Search Url Pattern"
         },
+        "phone_search_url_pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "BL-IN-08 reverse phone lookup. Placeholders: {phone_digits} {phone_dashed}",
+          "title": "Phone Search Url Pattern"
+        },
+        "email_search_url_pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "BL-IN-08 reverse email lookup. Placeholder: {email}",
+          "title": "Email Search Url Pattern"
+        },
         "opt_out_url": {
           "anyOf": [
             {
