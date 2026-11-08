@@ -12,6 +12,9 @@ KEYS = [
     ("github_token", "GitHub token (FreeMyID-USA, starts with ghp_)"),
     ("bluesky_token", "Bluesky app password (xxxx-xxxx-xxxx-xxxx)"),
     ("mastodon_token", "Mastodon access token"),
+    ("reddit_client_id", "Reddit app client ID (reddit.com/prefs/apps, under the app name; blank to skip)"),
+    ("reddit_client_secret", "Reddit app secret (blank to skip)"),
+    ("reddit_refresh_token", "Reddit OAuth refresh token for u/FreeMyID (blank to skip)"),
     ("discord_bot_token", "Discord bot token (Developer Portal > your app > Bot > Reset Token; leave blank to skip)"),
 ]
 
