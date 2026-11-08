@@ -140,3 +140,14 @@ Principle: tag push builds artifacts once; a `publish-packages.yml` on `release:
 - Also .deb/.rpm/AppImage (BL-IN-43 title): `nfpm` (single static binary, pin SHA) for deb/rpm from the wheel/venv bundle, `appimagetool` for AppImage; attach to the release with SHA256SUMS entries; sign with cosign keyless.
 - Order: PyPI live (owner setup) -> Homebrew/AUR/Nix (depend on sdist) ; independent: Scoop, winget, Flatpak, nfpm. All third-party actions SHA-pinned, `permissions: contents: read` default, secrets only on the jobs that need them.
 - Needs from owner: PyPI setup, GitHub accounts/tokens above, Flathub/AUR/winget accounts (real identities are owner's to create). Needs from Copilot: recipes under packaging/<ecosystem>/ using a `@VERSION@`/`@SHA256@` placeholder convention so CI can fill them.
+
+## 2026-11-08 Docker Hub publishing prepared (Dana Ortiz; nothing live)
+docker.yml `publish` job (v* tags only): when repo variable `DOCKERHUB_PUBLISH=true`, logs in to docker.io with secrets `DOCKERHUB_USERNAME` / `DOCKERHUB_TOKEN`, adds `docker.io/freemyid/freemyid:{vX.Y.Z, latest}` to the SAME single build (one digest for both registries), then cosign signs and attests (SPDX SBOM) the docker.io reference too. `:latest` only for plain `vX.Y.Z` tags (rc/pre-release never move it), on both registries. Without the variable everything is as before. Permissions unchanged (no extra scopes needed for Hub). Repo description source: `packaging/docker/DOCKERHUB_README.md`.
+Owner steps (never paste the token in chat):
+1. hub.docker.com > Account settings > Personal access tokens > Generate new token; description "github-actions freemyid"; Access permissions: Read & Write (not Read, Write, Delete); copy it once.
+2. In a terminal in the repo: `gh secret set DOCKERHUB_USERNAME` (type `freemyid`), `gh secret set DOCKERHUB_TOKEN` (paste the token at the prompt).
+3. `gh variable set DOCKERHUB_PUBLISH --body true`.
+4. Optional keyring copy: `tools/store_social_keys.py` (dockerhub_token prompt).
+5. Create the repo `freemyid/freemyid` on Docker Hub (public) and paste `DOCKERHUB_README.md` as its description/overview, or tell me and I set it later via the API.
+6. Next v* tag pushes to both; verify with `docker buildx imagetools inspect docker.io/freemyid/freemyid:vX.Y.Z` (digest equals the GHCR one) and `cosign verify` against the workflow identity.
+Rollback: `gh variable set DOCKERHUB_PUBLISH --body false`; revoke the token in Docker Hub. Hub free tier covers public repos; anonymous pulls are rate limited, GHCR remains the primary.
