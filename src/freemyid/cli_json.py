@@ -217,6 +217,7 @@ def exposure_doc(rows: list[tuple[Profile, ExposureResult]], *, offline: bool,
     """`freemyid exposure --json` (docs/CLI.md, docs/EXPOSURE.md). Listing and check URLs
     are shown because the human output shows them too (they are what the person opens).
     `trends`: profile id -> engine.exposure.Trend (null `trend` when absent)."""
+    from .engine import exposure_score as xs
     trends = trends or {}
     return {
         "schema": "exposure/1",
@@ -233,6 +234,11 @@ def exposure_doc(rows: list[tuple[Profile, ExposureResult]], *, offline: bool,
             "counts": {"confirmed_sites": r.confirmed_sites, "possible_sites": r.possible_sites,
                        "check_by_hand": len(r.by_status("check_by_hand")),
                        "not_found": len(r.by_status("not_found"))},
+            "score_version": r.score_version,
+            "band": xs.band(r.score, r.coverage),
+            "headline": xs.headline(r.score, r.coverage),
+            "drivers": [{"points": d.points, "text": d.text, "broker_id": d.broker_id}
+                        for d in r.drivers],
             "coverage": r.coverage.model_dump(),
             "coverage_note": r.coverage_note,
             "drop_first": r.drop_first,

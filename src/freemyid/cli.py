@@ -458,7 +458,13 @@ def exposure(profile: Annotated[str | None, typer.Option("--profile", "-p")] = N
     for p, r in rows:
         con.print(f"[bold]{escape(p.label)}[/]: exposure score [bold]{r.score}[/] / 100"
                   + (" (practice mode)" if r.practice_mode else ""))
+        summ = ex.summarize(r)
+        con.print(f"  {summ.headline}", markup=False)
         con.print(f"  {r.coverage_note}", markup=False)
+        if summ.drivers:
+            con.print("  What adds most to your score:")
+            for d in summ.drivers:
+                con.print(f"    +{d.points:<3} {d.text}", markup=False)
         if len(trends[p.id].points) >= 2:
             con.print(f"  {trends[p.id].note}", markup=False)
         if r.first_checklist:
