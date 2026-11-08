@@ -92,7 +92,7 @@ Bridge has to be running whenever Free My ID checks mail, including scheduled ba
 
 ## 3. Setting up
 
-On Windows you do not need a terminal. Double-click the **Free My ID** icon on your Desktop (or find it in the Start Menu). Free My ID opens in its own window. It runs only on your computer, and nothing you type is sent to a website.
+On Windows you do not need a terminal. Double-click the **Free My ID** icon on your Desktop (or find it in the Start Menu). Free My ID opens in its own window. It runs only on your computer, and during setup, your answers stay on this computer. Nothing real is sent until you choose to start requests.
 
 The setup has **six screens**. Each asks one thing. Press **Next** to go on, or **Back** if you change your mind.
 

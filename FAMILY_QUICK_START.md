@@ -17,11 +17,12 @@ account.
 
 ## 1. Install it (about 2 minutes)
 
-1. Find the file called **FreeMyIDSetup** that someone sent you. Double-click it.
+1. Download **FreeMyIDSetup** from freemyid.org. The name on the download page may have a number in it. That is fine. Double-click the file you downloaded.
 2. Windows may show a blue box: **"Windows protected your PC"**. This is normal for new
    programs. It does not mean anything is wrong.
    - Click the small words **More info**.
    - Then click the **Run anyway** button that appears.
+   - If you do not see this box, just carry on with the normal installer.
 
    ```
    +--------------------------------------+
@@ -32,8 +33,9 @@ account.
    |  then:   [ Run anyway ]  [ Don't run ]|
    +--------------------------------------+
    ```
-3. Click **Next**, **Next**, then **Install**. You do not need a password.
-4. Leave the box **"Start Free My ID now"** ticked and click **Finish**.
+3. Click **Next** when you see it, then click **Install**. You do not need a password.
+4. Leave the box **"Open Free My ID now"** ticked and click **Finish**.
+5. *(From version 0.3.)* The first time, Free My ID can take up to 15 seconds to open. Wait for the small **Free My ID is starting** window. Do not click it again.
 
 ## 2. Answer six easy questions (about 5 minutes)
 
@@ -74,5 +76,6 @@ At first Free My ID only **looks** and does not send anything. Open **Settings**
 ## Need help?
 
 - Open Free My ID again from the **Start Menu** or the **Free My ID** icon on your Desktop.
+- If nothing opens *(from version 0.3)*: wait 15 seconds. Then try the Start Menu shortcut once. If it still does not open, ask your helper. Please do not keep double-clicking.
 - To remove Free My ID: Windows **Settings > Apps > Free My ID > Uninstall**. It asks before it
-  deletes anything you saved.
+  deletes anything you saved. Choose **Yes** to remove saved people, reports and screenshots. Choose **No** to keep them for later.
