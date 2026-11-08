@@ -29,8 +29,8 @@ Requester: seo-growth lead (Sam Okafor). Reviewer: graphic-designer. Draft for M
   - Headline: `The Free My ID command line`
   - Sub-line: `Scriptable. Local. No account.`
   - Footer: `freemyid.org`
-- Visual: navy #1b2f5b panel at right showing a simple terminal window with two lines of sample text, `freemyid status` and `3 requests sent, 1 confirmed` (generic figures, no personal data). White left side with headline.
-- Alt text: `Free My ID command line: a terminal window showing a status command. Scriptable, local, no account.`
+- Visual: navy #1b2f5b panel at right showing a simple terminal window: the command `freemyid status` and the start of what it really prints, a table titled with the person label and the columns Broker, State, Updated, Next check, Escalation, with two or three made-up rows (sample-registry broker names, no personal data; source `src/freemyid/cli.py` status). No request-count summary: the command does not print one. White left side with headline.
+- Alt text: `Free My ID command line: a terminal window showing the status command and a table of sites with their state, dates and next check. Scriptable, local, no account.`
 - Reviewer: graphic-designer.
 - Acceptance: legible at 300x158; headline contrast at least 7:1; logo from brand/logo/final; terminal text is a command that exists in `web/src/pages/developers/cli/_commands.json` (check before use); no real data; under size target.
 
@@ -54,7 +54,7 @@ Requester: seo-growth lead (Sam Okafor). Reviewer: graphic-designer. Draft for M
 - On-image text, exact pattern (broker name only varies):
   - Small label: `FREE GUIDE`
   - Headline: `Remove yourself from <Broker name>`
-  - Sub-line: `Step by step. Free. No account needed.`
+  - Sub-line: `Step by step. Free.` (no account claim: some guides, such as the `account_required` ones, tell the reader to sign in or make an account)
   - Footer: `freemyid.org`
 - Visual: white background, a navy left rule, a simple three-step checklist glyph at right. Broker name is text only: no broker logos (trademarks, and they look like endorsements).
 - Alt text pattern: `Free guide: how to remove yourself from <Broker name>, step by step.`
