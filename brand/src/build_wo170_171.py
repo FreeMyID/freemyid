@@ -1,11 +1,14 @@
 """WO-170 / WO-171: OG images for /developers/cli/ and /developers/config/ (1200x630).
 Run: .venv/bin/python brand/src/build_wo170_171.py"""
+from __future__ import annotations
+
 from wo17_common import *
 
 OUT = BRAND / "social/og"
 
 
-def page(bg, headline, sub, panel_html, tab_html, px=650, hw=550, fs=28):
+def page(bg: str, headline: str, sub: str, panel_html: str, tab_html: str,
+         px: int = 650, hw: int = 550, fs: int = 28) -> str:
     return f"""<body style="width:1200px;height:630px;background:{bg}">
 <div class=flag></div>
 {logo(40, "left:60px;top:58px")}
@@ -32,7 +35,7 @@ cfg = (f'<div>{K}version:</span> 1</div><div>{K}consent:</span></div><div>&nbsp;
 SUB_CFG = 'Prepare one file for <span style="font-family:' + MONO + ';font-weight:700;color:' + HEAD + '">freemyid setup</span>'
 
 COLS = "190px 190px 160px 190px 1fr"
-def row(c, bold=False, color="#eef1f6"):
+def row(c: tuple[str, ...], bold: bool = False, color: str = "#eef1f6") -> str:
     return (f'<div style="display:grid;grid-template-columns:{COLS};height:34px;line-height:34px;color:{color};{"font-weight:700;" if bold else ""}">'
             + "".join(f"<span>{x}</span>" for x in c) + "</div>")
 rule = '<div style="height:2px;background:#4a5f8c;margin:2px 0"></div>'
@@ -46,7 +49,7 @@ cli_panel = (
     + '<div style="margin-top:8px;color:#f2c94c">1 item(s) need you: `freemyid todo list`</div>'
     + f'<div style="color:{M};line-height:1.3;margin-top:6px;font-size:21px">\'removed\' means removed from that broker, not from the whole internet.</div>')
 
-def cli_page():
+def cli_page() -> str:
     return f"""<body style="width:1200px;height:630px;background:#ffffff"><div class=flag></div>
 {logo(40, "left:60px;top:44px")}
 <p class=abs style="right:60px;top:50px;font-size:28px;font-weight:700;color:{NAVY}">freemyid.org</p>
