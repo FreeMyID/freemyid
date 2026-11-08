@@ -232,3 +232,14 @@ def test_untrusted_author_issue_is_not_adopted():
 
     m = pm.apply_plan(p, {"items": {}}, "o/r", "o", None, run=run, env={"FREEMYID_PM_APPLY": "1"})
     assert m["items"]["WO-3"]["number"] == 6  # a fresh issue, not #5
+
+
+def test_design_wo_closes_from_status_line_without_a_merge(tmp_path):
+    # docs/SDLC.md: a design-only WO has no "Merge WO-NNN" commit; "Status: done (<sha>)" closes it.
+    assert pm.wo_status_to_field("done (abc1234)", merged=False) == "Done"
+    (tmp_path / "docs" / "vendor").mkdir(parents=True)
+    (tmp_path / "docs" / "vendor" / "WO-170.md").write_text(
+        WO.replace("WO-103: Home hero fix (CP-01)", "WO-170: OG image").replace(
+            "Status: open", "Status: done (abc1234)"))
+    items = {i["key"]: i for i in pm.collect(tmp_path, git_log="")}
+    assert items["WO-170"]["closed"] is True
