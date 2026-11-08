@@ -14,10 +14,23 @@ only in its allowed paths, and nothing reaches `main` without in-house review.
 | Path guard | Sandbox + `tools/vendor.sh` scope check | Instructions + `tools/copilot.sh scope` before merge (soft guard; the review is the wall) |
 | Rules | AGENTS.md, codex-team/ | `.github/copilot-instructions.md`, `.github/agents/*.agent.md`, `.github/instructions/` |
 
-## Roles (custom agents in .github/agents/)
-`web-builder`, `web-designer`, `app-ui`, `app-features`, `test-quality`: the same specialist split as the Codex
-team, so a work order's `Agent:` line works for either vendor. No Copilot lead: the owner writes Copilot work
-orders, and Copilot does not plan its own work (no autonomous mode).
+## Team (docs/vendor/copilot-team/TEAM.md; custom agents in .github/agents/)
+Grace Holloway (project engineer, `lead`), Tomás Rivera (liaison, `liaison`), and five specialists matching the
+Codex split: Ben Adler (`web-builder`), Lucia Ferraro (`web-designer`), Arjun Rao (`app-ui`), Claire Dubois
+(`app-features`), Malik Johnson (`test-quality`). Commits: `Name [freemyid-copilot]`. Grace proposes work
+(COPILOT_PROPOSALS.md); Morgan accepts it and writes the work order.
+
+## Live channel (local Copilot CLI)
+`docs/vendor/CLAUDE_TO_COPILOT.md` (Morgan, `CLAUDE-P###`) and `docs/vendor/COPILOT_TO_CLAUDE.md` (Tomás receipts,
+Grace answers, `COPILOT-###`). `tools/copilot.sh sync` runs one round trip; `tools/copilot.sh watch` keeps it live
+by running a round trip whenever a new CLAUDE-P### appears. Grace and Tomás run in a clean desk worktree
+(`.vendor-wt/copilot-desk`, no gitignored private files) under the OS command sandbox, with no git, GitHub tools
+or network, and may write only their channel files, which the script copies back.
+
+## Two ways to build
+- **Local** (default): `tools/copilot.sh start WO-NNN` runs the specialist with Copilot CLI in `.vendor-wt/wo-NNN`
+  (sandboxed, no git/network); `checkin`, then `commit` (scope-checked, staff name), then a draft PR and the usual review.
+- **Cloud**: `tools/copilot.sh issue WO-NNN`, assign to the Copilot coding agent; it pushes a `copilot/*` branch.
 
 ## Lifecycle
 1. **Scope.** The owner writes `docs/vendor/WO-NNN.md` with `Vendor: copilot` and an `Agent:` line, reserves its
