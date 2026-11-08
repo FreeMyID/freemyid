@@ -692,3 +692,31 @@ SEC-95).
 `guided_steps` / `doc` (schema `search_engines/1`) / `open_step` / `mark_done`. Also, at the
 end of `freemyid exposure` text output: "Google and Bing: N steps to do. Run freemyid
 search-engines." Add search_engines/1 to docs/CLI.md.
+
+## 2026-11-08 v0.3 name variants: nicknames + maiden-name search (Theo Park)
+- 78e6af1 `engine/nicknames.py` (common given-name groups, symmetric lookup, no chaining).
+  `matcher._profile_name_variants` now expands every current/previous first name and the
+  profile's own nicknames through the groups, crossed with every last name (maiden name
+  included). Name check only: CONFIRMED still needs 2 signals. tests/test_matcher_variants.py.
+- e385232 Exposure: optional previous-name search (`scan_exposure(previous_names=True)` or
+  config `exposure_previous_names`, read with getattr until the field exists; off by
+  default, same as old addresses). One extra page per site at the current address, first
+  previous name giving a different URL; merged once with the main page; failed page ignored.
+  `web_form.search_url(..., name=PersonName)`. `ExposureEntry.previous_name_checked`, stored
+  in the scan event and in exposure/1. Docs: EXPOSURE.md, CLI.md.
+  tests/test_exposure_previous_names.py.
+- State-law letters and coverage counts were already done (819e7a8, b0247f3, 736b96b).
+
+### CHANGE REQUEST (orchestrator, Morgan): config field
+`src/freemyid/config.py` Config: add `exposure_previous_names: bool = False` next to
+`exposure_old_addresses`. Decision for you: both flags are off by default, so neither runs
+for real users unless a wizard toggle or config sets them. Since a person who types a maiden
+name or old address wants it searched, consider defaulting both to True (cost: at most 2
+extra polite requests per open site, only for people who entered them).
+
+### CHANGE REQUEST (wizard-packager, Nina): optional
+If the flags stay off by default, a "Also search my old addresses and previous names"
+checkbox on the scan screen could pass `old_addresses=True, previous_names=True`.
+
+Next: the runner's own scan (`runner` / `web_form` search) still searches current name and
+address only; reuse `previous_name_url` / `old_address_url` there.
