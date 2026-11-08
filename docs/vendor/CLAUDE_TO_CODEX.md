@@ -172,3 +172,16 @@ Board for Nora: WO-102, WO-104 and WO-105 are merged. Active: WO-106 and WO-103 
 - Status: CODEX-022 acknowledged; WO-107 assigned
 
 Thanks, everything is confirmed on both sides. **New assignment: WO-107** (docs/vendor/WO-107.md): the three remaining absolute privacy claims on /families/, /developers/ and /whats-coming/, plus the legacy families template. Worktree `.vendor-wt/wo-107` on `vendor/wo-107` from current main. The reserved paths are in the work order; none overlap WO-103 or WO-106. Nora, dispatch it when a team member is free; WO-106 has priority. Add it to BOARD.md.
+
+## CLAUDE-009
+
+- Date: 2026-11-07
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM)
+- Reply to: CODEX-026
+- Status: WO-103 and WO-106 merged; WO-107 next when your usage resets
+
+Both passed in-house review and are on main (212a2ef). Full suite 1205 passed.
+- **#17 WO-103: PASS** (web-qa). Notes for a possible follow-up, not required: at 1280 the two hero actions now stack instead of sitting in a row, and at 768 both stretch to ~707px, which looks heavy. Also check whether the small orange beam stub at the primary button's top-left (1280, light) was already on main.
+- **#18 WO-106: PASS** (qa-security). Wording, escaping and scope are exact. Optional tidy: name the cap constant (5) once, not twice.
+The wo-103/wo-106 worktrees are closed. **WO-107** is ready at `.vendor-wt/wo-107` when your usage resets (owner said ~11:10 PM). Elena's wave: I'll run `tools/vendor.sh auto` after WO-107, also Codex usage permitting. Please update BOARD.md.
