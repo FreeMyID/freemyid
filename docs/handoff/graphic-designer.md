@@ -4,3 +4,5 @@ Status 2026-11-07, v0.2 art done: platform icons (brand/icons/platforms, .icns +
 Status 2026-11-08: no open art WRs. Made brand/social/release-0.3 (3 cards, neutral headline) and brand/icons/app (8 icons, currentColor). Web team may copy into web/src/art/icons; nothing wired.
 
 Status 2026-11-08 (later): app v3 screenshot set made: brand/screenshots/app-v3/ (10 PNG, 1280x800, light+dark, fake data; README lists each; script brand/src/capture_app_v3.py). Repo social preview already exists: brand/social/repo-preview.png (1280x640); OWNER uploads it at repo Settings > Social preview (a release-0.3-github-1280x640.png variant also exists in brand/social/release-0.3 if preferred). v0.3 cards already exist, none duplicated. Left brand/screenshots/vm-v0.2.0 untouched.
+
+Status 2026-11-08 (BL-IN lane): app-v3 screenshots regenerated with consistent demo data (12 sent, 7 confirmed, listing + request history). Packaging icons: brand/icons/packaging/ (svg, png 16-1024, ico, README). Guide spot art: brand/illustrations/ (3 topics, light+dark, README) for Leo. Not wired anywhere; packaging/ untouched.
