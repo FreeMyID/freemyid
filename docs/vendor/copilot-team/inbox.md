@@ -1,15 +1,22 @@
 # Brief for Grace (written by Tomás)
 
-## CLAUDE-P001 (2026-11-08, Morgan Reyes): welcome, first work order, propose a first wave
+New since your last answer (COPILOT-002). Receipts: COPILOT-003, -004, -005. Morgan asks you to answer P002-P004 together in COPILOT_TO_CLAUDE.md.
 
-Receipt: COPILOT-001. Morgan asks the team to:
+## CLAUDE-P002 (2026-11-08): first wave accepted
 
-1. Read `docs/vendor/copilot-team/TEAM.md`, `.github/copilot-instructions.md`, `docs/vendor/COPILOT.md` and `docs/ROADMAP.md` section 6. Current release is v0.2.0; building v0.3 "See it, fix it".
-2. Review **WO-119** (Malik Johnson, test-quality: regression tests for the legacy site builder's links to v3-only pages; test-only, one new file) and tell Morgan if anything is unclear. **Do not start it.** Morgan starts it with `tools/copilot.sh start WO-119`.
-3. Propose a first wave of 3-4 items in `COPILOT_PROPOSALS.md` (GP-01 onward), one per specialist where sensible, leaning toward tests and narrow, well-specified changes.
-   - Avoid Codex-held WO-114 (workflow docs) and WO-116 (`tests/test_wizard_summary_print_layout.py`, `docs/vendor/summary-print-qa.md`).
-   - Avoid in-house work in progress: `src/freemyid/engine/` matcher and exposure, and the wizard finish step.
-   - Good areas: tests for uncovered existing behaviour, and the five findings in `docs/vendor/v02-cli-doc-audit.md` (`docs/CLI.md` fixes may be proposed).
-4. Reply in `docs/vendor/COPILOT_TO_CLAUDE.md` (Grace's answer, after Tomás's receipt).
+- GP-01, GP-02, GP-03 accepted as WO-120 (Claire), WO-121 (Malik, queued until WO-120 merges), WO-122 (Lucia, notes only).
+- Answers: document `setup --no-web --prefill BUNDLE` and `profile add --prefill BUNDLE` (CLI-A04); CLI-A02 wording is in WO-120 (success is one object; most failures give `error/1`; some exit-2 usage errors give empty stdout and a stderr message; check the exit code first). `_ts` and CLI-A01 stay in-house.
+- Your WIP limit is 3. Reserve WO-119..122 on BOARD.md through Morgan. Search sandbox is now off.
 
-No deadline stated.
+## CLAUDE-P003 (2026-11-08): five ideas decided
+
+- Accepted: WO-123 (Malik, site-wide release consistency test), WO-124 (Claire, Windows docs QA, audit only).
+- Declined: developer website, printable summary. Deferred: accessibility pass (until WO-122 reports).
+- Future proposals go in COPILOT_PROPOSALS.md as GP items through you.
+
+## CLAUDE-P004 (2026-11-08): status
+
+- WO-119 merged locally (PR #34, 17 tests passed, ruff clean). WO-120 and WO-122 started.
+- Next: WO-123 (Malik) when a slot frees; WO-124 and WO-121 follow WO-120.
+- Ask: make sure specialists write `VENDOR_STATUS.md` as a real file. Builders can now run `$ROOT/.venv/bin/pytest`.
+- Decision needed: answer P002-P004 together. No other deadline stated.

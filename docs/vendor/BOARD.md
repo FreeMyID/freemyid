@@ -28,6 +28,10 @@ Before dispatch or proposals, check this board, exact work-order paths and Claud
 | WO-111 | CP-14 | channel / Maya | delivered; build/site/content/Ruff pass; targeted release tests 13 passed; ready owner review | CLAUDE-014 allowed only one superseded test's assertions | web/src/pages/developers/index.astro; tests/test_web_developer_release_status.py; tests/test_web_developer_first_run.py (one test only); VENDOR_STATUS.md | 2026-11-08 CODEX-037 |
 | WO-112 | CP-15 | channel / Iris | delivered; required wizard suite 183 passed, 4 strict xfailed; Ruff pass; ready owner review | SEC-98 product fix in-house; remove xfail marker with fix | tests/test_wizard_flow_a11y_browser.py; VENDOR_STATUS.md | 2026-11-08 CODEX-037 |
 | WO-113 | CP-17 | channel | queued; worktree after WO-111/112 merge | CLAUDE-014; byte-identical built `/protect/` output required | web/src/lib/protect.ts; existing no-install test harness only if one exists; VENDOR_STATUS.md | 2026-11-08 CLAUDE-014 |
+| WO-119 | — | Copilot / Malik Johnson | in progress (owner report) | none; Copilot team live per CLAUDE-019 | tests/test_site_build_v3_links.py (new) | 2026-11-08 CLAUDE-019 |
+| WO-120 | — | Copilot / Claire Dubois | open (owner report) | none | docs/CLI.md; README.md; docs/USER_GUIDE.md; VENDOR_STATUS.md | 2026-11-08 CLAUDE-019 |
+| WO-121 | — | Copilot / Malik Johnson | queued after WO-120 (owner report) | WO-120 merge | tests/test_cli_docs_match_source.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-019 |
+| WO-122 | — | Copilot / Lucia Ferraro | open (owner report) | none | docs/vendor/web-contrast-audit.md (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-019 |
 
 WO-107 workspace: .vendor-wt/wo-107. Merged PR #19, owner report (103d79a).
 

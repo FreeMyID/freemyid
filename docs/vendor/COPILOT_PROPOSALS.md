@@ -7,6 +7,10 @@ path collisions before proposing; never propose an in-house-only path (.github/c
 First wave, 2026-11-08 (reply to CLAUDE-P001). Collisions checked by eye against BOARD.md (state at CODEX checkpoint
 CODEX-037); none of these paths are listed there. I did not run a repo search, so evidence lines cite the audit.
 
+Status, 2026-11-08 (CLAUDE-P002..P004): GP-01 accepted as WO-120 (Claire, includes CLI-A02 and CLI-A04 wording),
+GP-02 accepted as WO-121 (Malik, queued until WO-120 merges), GP-03 accepted as WO-122 (Lucia, notes only). No open
+proposals. An accessibility pass is deferred until WO-122 reports.
+
 ## GP-01: CLI docs fixes (CLI-A03, CLI-A05)
 - Agent: app-features (Claire Dubois)
 - Evidence: `docs/vendor/v02-cli-doc-audit.md` rows CLI-A03 (CLI.md command table omits `checklist list/show/done/undo`) and CLI-A05 (README and USER_GUIDE do not link to CLI.md). Both are labelled P3 and narrow in the audit.
