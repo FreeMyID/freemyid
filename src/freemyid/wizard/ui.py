@@ -125,8 +125,8 @@ def error_fields(step: str, errs: list[str]) -> dict[str, list[int]]:
                 if needle in msg:
                     names = fields
                     break
-        for n in names:
-            out.setdefault(n, []).append(i)
+        for fname in names:
+            out.setdefault(fname, []).append(i)
     return out
 
 
