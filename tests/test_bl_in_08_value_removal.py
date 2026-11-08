@@ -214,3 +214,14 @@ def test_dry_run_skips_brokers_a_value_removal_does_not_use(store):
         if not tiers.value_applicable(b, p, reg):
             assert b.id not in touched, b.id
     assert all(t.kind.value != "automatic" for t in store.list_todos(p.id))
+
+
+def test_lookup_hit_review_todo_asks_about_the_number(store):
+    from freemyid.engine.runner import review_todo
+    from freemyid.models import TodoKind
+    p = phone_person()
+    store.save_profile(p)
+    review_todo(store, p, broker(), _listing(p), 1)
+    t = next(t for t in store.list_todos(p.id) if t.kind == TodoKind.REVIEW_MATCH)
+    assert t.title == "Is this T's phone number? (Dev Phone)"
+    assert PHONE not in t.title and PHONE not in t.body

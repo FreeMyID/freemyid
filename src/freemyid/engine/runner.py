@@ -895,9 +895,16 @@ class Runner:
 def review_todo(store: Store, profile: Profile, broker: Broker, li: Listing, n: int) -> None:
     """The 'Is this you?' to-do for possible matches (deduplicated by handoff.persist_todo).
     Shared by the runner and the exposure scan."""
+    what = {"phone_lookup": "phone number", "email_lookup": "email address"}
+    kind = next((what[r] for r in li.match_reasons if r in what), None)
+    if kind:    # BL-IN-08 reverse-lookup hit: always the person's call (rule 7)
+        title = f"Is this {profile.label}'s {kind}? ({broker.name})"
+        body = (f"{broker.name} has {n} page(s) for a {kind} {profile.label} asked to "
+                f"remove. Open the link and tell us if it is about them.")
+    else:
+        title = f"Is this {profile.label}? ({broker.name})"
+        body = (f"Free My ID found {n} listing(s) on {broker.name} that might be "
+                f"{profile.label}. Open the link and tell us if it is them.")
     todo = Todo(profile_id=profile.id, broker_id=broker.id, kind=TodoKind.REVIEW_MATCH,
-                title=f"Is this {profile.label}? ({broker.name})",
-                body=(f"Free My ID found {n} listing(s) on {broker.name} that might be "
-                      f"{profile.label}. Open the link and tell us if it is them."),
-                links=[li.url], resume_token=f"review:{li.id}")
+                title=title, body=body, links=[li.url], resume_token=f"review:{li.id}")
     hmod.persist_todo(store, todo)
