@@ -49,6 +49,11 @@ REVIEWED: list[tuple[str, str, str]] = [
         "DOB, relatives and personal emails are used only for matching and are never sent",
         "Code-backed claim (Listing.shown_fields), reviewed by the owner; not an absolute privacy promise.",
     ),
+    (
+        "docs/USER_GUIDE.md",
+        "Birth year and relatives are never sent to a site",
+        "Code-backed (submitters/base.py has no birth date or relatives field); matches /safety/ never-does list.",
+    ),
 ]
 
 
