@@ -53,13 +53,13 @@
       "id": "SEC-119",
       "severity": "MED",
       "owner": "Morgan",
-      "status": "in review"
+      "status": "closed"
     },
     {
       "id": "SEC-120",
       "severity": "LOW",
       "owner": "Morgan",
-      "status": "in review"
+      "status": "closed"
     },
     {
       "id": "SEC-121",
