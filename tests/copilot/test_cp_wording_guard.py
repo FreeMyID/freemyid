@@ -1,6 +1,6 @@
 """Wording and released-versus-coming guard for user-facing docs (GP-09 / WO-154).
 
-Scans README.md, docs/USER_GUIDE.md, docs/user/*.md and distro/**/README.md for:
+Scans README.md, docs/USER_GUIDE.md, docs/HELPER_GUIDE.md, docs/user/**/*.md and distro/**/README.md for:
 - words docs/POSITIONING.md bans ("guarantee", "erase", "100%", "never sent");
 - a package channel (Homebrew, AUR, Nix, Flatpak, winget, Scoop) described as "available" while
   site_src/data/release.yaml does not list it.
@@ -53,8 +53,8 @@ REVIEWED: list[tuple[str, str, str]] = [
 
 
 def _doc_files() -> list[Path]:
-    files = [ROOT / "README.md", ROOT / "docs/USER_GUIDE.md"]
-    files += sorted((ROOT / "docs/user").glob("*.md"))
+    files = [ROOT / "README.md", ROOT / "docs/USER_GUIDE.md", ROOT / "docs/HELPER_GUIDE.md"]
+    files += sorted((ROOT / "docs/user").glob("**/*.md"))
     files += sorted((ROOT / "distro").glob("**/README.md"))
     return [f for f in files if f.is_file()]
 
@@ -161,7 +161,12 @@ def test_channel_negations_and_marker_are_allowed() -> None:
 
 def test_scanned_files_exist() -> None:
     names = {_rel(f) for f in _doc_files()}
-    assert {"README.md", "docs/USER_GUIDE.md", "docs/user/INSTALL.md"} <= names
+    assert {
+        "README.md",
+        "docs/USER_GUIDE.md",
+        "docs/HELPER_GUIDE.md",
+        "docs/user/INSTALL.md",
+    } <= names
     assert any(n.startswith("distro/") for n in names)
 
 
