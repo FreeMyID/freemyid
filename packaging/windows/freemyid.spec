@@ -50,7 +50,7 @@ hiddenimports = (
     + collect_submodules("keyring.backends")
     + collect_submodules("webview")
     + collect_submodules("desktop_notifier")
-    + ["multipart", "python_multipart", "win32timezone"]
+    + ["multipart", "python_multipart", "win32timezone", "splash_win"]
 )
 excludes = ["tkinter", "matplotlib", "numpy", "pytest", "mypy", "weasyprint", "IPython"]
 
@@ -58,7 +58,7 @@ excludes = ["tkinter", "matplotlib", "numpy", "pytest", "mypy", "weasyprint", "I
 def analysis(script):
     return Analysis(
         [str(ROOT / "packaging" / "windows" / script)],
-        pathex=[str(ROOT / "src")],
+        pathex=[str(ROOT / "src"), str(ROOT / "packaging" / "windows")],
         datas=datas, hiddenimports=hiddenimports, excludes=excludes,
         noarchive=False,
     )

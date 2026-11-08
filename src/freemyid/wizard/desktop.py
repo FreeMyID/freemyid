@@ -146,9 +146,14 @@ def _show_window(url: str, on_ready: Callable[[Any], None]) -> bool:
         return False
 
 
-def main(window: bool = True) -> int:
-    """Run the app. Returns a process exit code."""
+def main(window: bool = True, on_started: Callable[[], None] | None = None) -> int:
+    """Run the app. Returns a process exit code.
+
+    `on_started` is called once the window (or browser) is up, or the app exits; the Windows
+    launcher uses it to close its "starting" splash.
+    """
     from .server import start_background
+    done = on_started or (lambda: None)
 
     paths.home()
     if (info := read_instance()) is not None:
@@ -163,6 +168,8 @@ def main(window: bool = True) -> int:
         shown = False
         if window and os.environ.get("FREEMYID_NO_WINDOW") != "1":
             def on_ready(win: Any) -> None:
+                done()
+
                 def focus() -> None:
                     for fn in ("restore", "show"):
                         with contextlib.suppress(Exception):
@@ -177,8 +184,10 @@ def main(window: bool = True) -> int:
             running.app.state.on_focus = lambda: webbrowser.open(running.url)
             running.app.state.on_quit = stop.set
             webbrowser.open(running.url)
+            done()
             _wait_forever(stop)
     finally:
+        done()
         clear_instance(running.port)
         running.stop()
     return 0

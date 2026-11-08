@@ -23,8 +23,10 @@ def main() -> int:
         from freemyid.cli import app
         app()
         return 0
+    import splash_win
+    splash_win.show()
     from freemyid.wizard.desktop import main as desktop_main
-    return desktop_main()
+    return desktop_main(on_started=splash_win.close)
 
 
 if __name__ == "__main__":
