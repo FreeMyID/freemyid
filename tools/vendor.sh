@@ -18,7 +18,9 @@
 # session live in the Antigravity app.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SCRATCH="${VENDOR_DIR:-${TMPDIR:-/tmp}/freemyid-vendor}"
+# Worktrees live INSIDE the repo (gitignored .vendor-wt/) because AGENTS.md tells Codex to stay inside
+# the repo folder; a /tmp worktree was outside that boundary for the interactive channel session.
+SCRATCH="${VENDOR_DIR:-$ROOT/.vendor-wt}"
 mkdir -p "$SCRATCH"
 need_agy() { command -v "${VENDOR:-agy}" >/dev/null || { echo "${VENDOR:-agy} not installed" >&2; exit 4; }; }
 vendor_of() { sed -nE "s/^Vendor: *(agy|codex).*/\1/p" "$1" | head -1; }

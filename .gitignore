@@ -48,4 +48,5 @@ docs/marketing/seo/.bluesky-queue.md.lock
 /FreeMyIDSetup*.exe
 
 # vendor session artefacts
+.vendor-wt/
 .vendor-last-message.txt
