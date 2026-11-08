@@ -205,9 +205,9 @@ def _checklist_item(c, done: bool, pid: str, csrf: str) -> str:
         f'<div class="cl-body"><p>{esc(c.why)}</p>'
         f'<p class="meta"><span>Cost: {esc(c.cost)}</span><span>Time: {esc(c.time_needed)}</span></p>'
         f'{partial}{extra}'
-        + (f"<h3>Have these ready</h3><ul>{need}</ul>" if need else "")
-        + f"<h3>Steps</h3><ol>{steps}</ol>"
-        + (f"<h3>Good to know</h3><ul>{tips}</ul>" if tips else "")
+        + (f"<h2 class=\"sub\">Have these ready</h2><ul>{need}</ul>" if need else "")
+        + f"<h2 class=\"sub\">Steps</h2><ol>{steps}</ol>"
+        + (f"<h2 class=\"sub\">Good to know</h2><ul>{tips}</ul>" if tips else "")
         + f'<p><b>To undo it:</b> {esc(c.how_to_undo)}</p>'
         f'<p class="hint">Checked on {_dt(datetime.combine(c.date_checked, datetime.min.time()))}.</p>'
         f'<div class="actions"><form method="post" action="/protect/{esc(pid)}/{cid}/open" '

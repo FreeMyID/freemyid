@@ -107,21 +107,21 @@ def test_checklist_with_tips_shows_good_to_know():
     html = views.protect_page(cf, [p], p, {}, "csrf-token")
 
     # Item with tips shows heading and every tip
-    assert "<h3>Good to know</h3>" in html
+    assert "<h2 class=\"sub\">Good to know</h2>" in html
     for tip in c_tips.tips:
         assert f"<li>{tip}</li>" in html
 
     # Heading placement: after steps and before undo
-    steps_idx = html.index("<h3>Steps</h3>")
-    tips_idx = html.index("<h3>Good to know</h3>")
+    steps_idx = html.index("<h2 class=\"sub\">Steps</h2>")
+    tips_idx = html.index("<h2 class=\"sub\">Good to know</h2>")
     undo_idx = html.index("<b>To undo it:</b>")
     assert steps_idx < tips_idx < undo_idx
 
     # Item without tips has no "Good to know" heading
-    assert html.count("<h3>Good to know</h3>") == 1  # only on c_tips, never on c_notips
+    assert html.count("<h2 class=\"sub\">Good to know</h2>") == 1  # only on c_tips, never on c_notips
     body_no_tips = views._checklist_item(c_notips, False, p.id, "csrf-token")
     assert "Good to know" not in body_no_tips
-    assert "<h3>Good to know</h3>" not in body_no_tips
+    assert "<h2 class=\"sub\">Good to know</h2>" not in body_no_tips
 
 
 def test_notes_text_never_appears_in_rendered_page():

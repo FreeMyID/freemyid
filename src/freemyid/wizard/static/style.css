@@ -9,6 +9,7 @@ h1, h2, h3 { color: var(--fmi-color-heading); line-height: 1.2; }
 h1 { font-size: var(--fmi-text-h1); margin: .5em 0 .4em; }
 h2 { font-size: var(--fmi-text-h2); margin: .3em 0 .5em; }
 h3 { font-size: var(--fmi-text-h3); margin: .8em 0 .3em; }
+h2.sub { font-size: var(--fmi-text-h3); margin: .8em 0 .3em; }
 p { margin: .6em 0; }
 :focus-visible { outline: 3px solid var(--fmi-color-focus); outline-offset: 2px;
   box-shadow: 0 0 0 5px var(--fmi-color-focus-inner); }
