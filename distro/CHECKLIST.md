@@ -9,6 +9,19 @@ Run the release-tooling items only after confirming the published asset names
 and checksums. Commands in the source files were **unverified** when this
 checklist was written; this work order did not run them.
 
+## Publish gate (SEC-112)
+
+Release tooling **must** run `python tools/ci/check_distro_hashes.py` and see
+exit 0 before any upstream submission (AUR push, Flathub, Homebrew, Scoop,
+winget, Nix). It lists every `SKIP`, all-zero or `REPLACE_WITH_*` hash in
+`distro/` and exits 1. Normal CI does not run it, because placeholders are
+expected until release day. Tests: `tests/test_distro_hash_gate.py`.
+
+Nix: `distro/nix/flake.nix` follows `nixos-unstable` and there is no
+`flake.lock`. Generating one needs `nix flake lock` with Nix installed and
+network access, which was not possible when this gate was added. Release day:
+run it on a machine with Nix and commit `distro/nix/flake.lock`. Not done.
+
 ## AUR
 
 | File:line | Release-day item and replacement | Responsibility | State |
