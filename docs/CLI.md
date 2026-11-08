@@ -29,7 +29,7 @@ Codes are stable: a number never changes meaning.
 
 | Command | What it does | `--json` |
 |---|---|---|
-| `setup` | Opens the web wizard. `--web/--no-web`, `--from FILE [--yes] [--check] [--update]`. `--prefill BUNDLE` only takes effect with `--no-web` (terminal prompts): `freemyid setup --no-web --prefill BUNDLE`. Plain `setup --prefill BUNDLE` opens the web wizard and ignores the bundle | |
+| `setup` | Opens the web wizard. `--web/--no-web`, `--from FILE [--yes] [--check] [--update]`. `--prefill BUNDLE` implies terminal prompts (`freemyid setup --prefill BUNDLE`). `--web --prefill` exits 2 and points to the wizard's Import screen (`/wizard/import`) | |
 | `app` | Opens the app window (`--no-window` uses the browser) | |
 | `dashboard` | Opens the local dashboard | |
 | `doctor` | Readiness checks (`--offline` skips the mail server check) | `doctor/1` |
@@ -41,7 +41,7 @@ Codes are stable: a number never changes meaning.
 | `status` | Per-broker state for each person. `-p` | `status/1` |
 | `report` | Writes an HTML or PDF report. `-p`, `--format html\|pdf` | `reports/1` |
 | `profile list` | Everyone set up | `profiles/1` |
-| `profile add [--prefill BUNDLE]` | Add a person. Without `--prefill`: the web wizard. With `--prefill BUNDLE`: imports the bundle with terminal prompts (same as `setup --no-web --prefill BUNDLE`) | |
+| `profile add [--prefill BUNDLE]` | Add a person. Without `--prefill`: the web wizard. With `--prefill BUNDLE`: imports the bundle with terminal prompts (same as `setup --prefill BUNDLE`) | |
 | `profile edit / remove / export` | Manage people | |
 | `checklist list` | Identity-safety checklists and which are done. `-p/--profile` (needed only when more than one person is set up) | [`checklists/1`](#checklists1) |
 | `checklist show ID` | Steps for one checklist. `-p/--profile`. ID may be a prefix | [`checklist/1`](#checklist1) |

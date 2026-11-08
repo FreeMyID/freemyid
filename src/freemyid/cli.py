@@ -147,8 +147,8 @@ def _main(verbose: Annotated[bool, typer.Option("--verbose", "-v")] = False) -> 
 @app.command()
 def setup(prefill: Annotated[Path | None,
                              typer.Option(help="Family bundle (.freemyid-profile)")] = None,
-          web: Annotated[bool, typer.Option(
-              help="Open the web wizard (else terminal prompts)")] = True,
+          web: Annotated[bool | None, typer.Option(
+              help="Open the web wizard (else terminal prompts; --prefill implies terminal)")] = None,
           from_file: Annotated[Path | None, typer.Option(
               "--from", help="Set up from a YAML file, no wizard (docs/CLI.md)")] = None,
           yes: Annotated[bool, typer.Option(
@@ -161,6 +161,12 @@ def setup(prefill: Annotated[Path | None,
     if from_file is not None:
         _setup_from(from_file, yes=yes, check=check, update=update)
         return
+    if web and prefill is not None:
+        con.print("A family setup file can't be opened with --web. Open the wizard and use "
+                  "its Import screen (/wizard/import), or drop --web to answer in the terminal.")
+        raise typer.Exit(2)
+    if web is None:
+        web = prefill is None
     if web:
         from .wizard.server import serve
         serve(cfgmod.load().wizard_port, open_browser=True)
