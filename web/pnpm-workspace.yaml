@@ -1,0 +1,7 @@
+# pnpm settings for the website build (WR-58, SEC-62). Not a multi-package workspace.
+# No dependency may run install/build scripts: none needs one today, and a new one makes
+# `pnpm install` fail (strictDepBuilds) so it gets a human review instead of a silent warning.
+onlyBuiltDependencies: []
+strictDepBuilds: true
+# Don't resolve package versions published less than a day ago (minutes).
+minimumReleaseAge: 1440
