@@ -495,12 +495,12 @@
     },
     "BL-IN-73": {
       "fields": {
-        "Agent": "Priya",
+        "Agent": "Morgan (ea team)",
         "Kind": "Feature",
         "Lane": "IN",
         "Priority": "P2",
         "Release": "v0.4",
-        "Status": "Backlog",
+        "Status": "In review",
         "Team": "In-house"
       },
       "number": 107,
@@ -510,12 +510,12 @@
     },
     "BL-IN-74": {
       "fields": {
-        "Agent": "Priya",
+        "Agent": "Morgan (ea team)",
         "Kind": "Feature",
         "Lane": "IN",
         "Priority": "P2",
         "Release": "v0.4",
-        "Status": "Backlog",
+        "Status": "In review",
         "Team": "In-house"
       },
       "number": 108,
@@ -538,10 +538,11 @@
     },
     "BL-IN-81": {
       "fields": {
+        "Agent": "Morgan (ea team)",
         "Kind": "Feature",
         "Lane": "IN",
         "Priority": "P2",
-        "Status": "Backlog",
+        "Status": "In review",
         "Team": "In-house"
       },
       "number": 110,
@@ -847,13 +848,55 @@
         "Kind": "Security",
         "Lane": "IN",
         "Priority": "P2",
-        "Status": "In review",
+        "Status": "Done",
         "Team": "In-house"
       },
       "number": 136,
       "project_item": "PVTI_lADOFRHvjs4BquOFzhG-joI",
-      "state": "open",
+      "state": "closed",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/136"
+    },
+    "SEC-119": {
+      "fields": {
+        "Agent": "Morgan",
+        "Kind": "Security",
+        "Lane": "IN",
+        "Priority": "P1",
+        "Status": "Done",
+        "Team": "In-house"
+      },
+      "number": 157,
+      "project_item": "PVTI_lADOFRHvjs4BquOFzhHBkrw",
+      "state": "closed",
+      "url": "https://github.com/FreeMyID/freemyid-pm/issues/157"
+    },
+    "SEC-120": {
+      "fields": {
+        "Agent": "Morgan",
+        "Kind": "Security",
+        "Lane": "IN",
+        "Priority": "P2",
+        "Status": "Done",
+        "Team": "In-house"
+      },
+      "number": 158,
+      "project_item": "PVTI_lADOFRHvjs4BquOFzhHBkzw",
+      "state": "closed",
+      "url": "https://github.com/FreeMyID/freemyid-pm/issues/158"
+    },
+    "SEC-121": {
+      "fields": {
+        "Agent": "Dana",
+        "Kind": "Security",
+        "Lane": "IN",
+        "Priority": "P3",
+        "Status": "Ready",
+        "Team": "In-house"
+      },
+      "number": 161,
+      "project_item": "PVTI_lADOFRHvjs4BquOFzhHBk60",
+      "state": "open",
+      "url": "https://github.com/FreeMyID/freemyid-pm/issues/161"
     },
     "SEC-66": {
       "fields": {

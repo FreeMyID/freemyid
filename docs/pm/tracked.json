@@ -178,6 +178,18 @@
     "BL-IN-27": {
       "status": "Blocked",
       "agent": "Owner (Windows VM)"
+    },
+    "BL-IN-73": {
+      "status": "In review",
+      "agent": "Morgan (ea team)"
+    },
+    "BL-IN-74": {
+      "status": "In review",
+      "agent": "Morgan (ea team)"
+    },
+    "BL-IN-81": {
+      "status": "In review",
+      "agent": "Morgan (ea team)"
     }
   }
 }
