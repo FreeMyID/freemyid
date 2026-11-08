@@ -104,7 +104,7 @@ The setup has **six screens**. Each asks one thing. Press **Next** to go on, or 
    Type your full name to sign, and tick the box. Free My ID won't work on anyone without this step.
 2. **Name.** Full name, plus any nicknames or maiden or earlier names. Example: *Jane Q Testperson*, nickname *Janie*, earlier name *Jane Q Example*.
 3. **Address.** The city and state where you live now (for example *Springfield, IL*). Add past cities if you like. They help Free My ID recognize *your* listing among people with the same name.
-4. **A few details.** Birth year, a phone number and an email. These are **only used on this computer to tell you apart from other people with your name.** Birth year and relatives are never sent to a site. A phone number goes to a site only if you switch that on.
+4. **A few details.** Birth year, a phone number and an email. These are **only used on this computer to tell you apart from other people with your name.** Birth year and relatives are never sent to a site. If a site's form asks for an age, it gets only the age that site's own listing already shows, never one worked out from your birth year. A phone number goes to a site only if you switch that on.
 5. **Email for removals.** The separate mailbox from [section 2](#2-before-you-start-a-separate-email-address-for-removals). Pick your email company and follow the short steps on screen, **or** choose **Skip, I'll do these by hand**. Skipping is fine. Permissions for ID, accounts and phone numbers stay **off** unless you turn them on later in Settings.
 6. **Run automatically?** Leave the box ticked so Free My ID keeps checking by itself. Click **Finish**.
 
@@ -234,7 +234,7 @@ What you can do:
 - **Everything stays on your computer.** Free My ID has no account, no cloud and no tracking.
 - **Your information is encrypted.** The database and screenshots are encrypted, and the key is kept in your computer's secure password store.
 - **Free My ID talks only to the removal sites themselves and your removal mailbox.** It's blocked from contacting anything else.
-- **Sites get as little as possible:** only what they already show about you, plus your removal email address. Never your birth date, relatives, or personal email.
+- **Sites get as little as possible:** only what they already show about you, plus your removal email address. Never your birth date, relatives, or personal email. If a site asks for an age, it gets only the age its own listing already shows, never one worked out from your birth year.
 - **To delete everything about a person:** `freemyid profile remove <name>`. This removes their profile, screenshots, records and saved mailbox password.
 
 ## 11. Questions
