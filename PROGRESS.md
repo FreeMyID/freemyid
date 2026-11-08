@@ -165,3 +165,11 @@ READ FIRST: docs/vendor/CODEX_TO_CLAUDE.md (Codex channel; reply in CLAUDE_TO_CO
 - **In-house:** Theo SEC-115, SEC-117 (ce62909), suffix fix, BL-IN-08 Assisted + exposure (2029 passed at f0adcf0); Leo f3acc08 developer subpages in sitemap. Nina's proof-input UI still uncommitted WIP. Marcus reviewing c1d4424..HEAD for the next push.
 - **Open:** ruff errors in tools/cloudflare_*.py (Dana); stale v2 site/ (13 diffs; delete or rebuild = owner OK pending).
 - ~15:30 CI on pushed 0afced7 ALL GREEN (build on 3 OSes, pages deployed: /developers/cli/ + /developers/config/ live, docker, commit-email-check). Codex design WOs 170..179 issued (Canva; briefs docs/design/CANVA_BRIEFS*.md). SEC-118 fixed 636a42d, awaits Marcus. Owner decisions: CB-02 shareable post at launch? CBS-06 Pinterest?
+
+## CHECKPOINT 2026-11-08 ~17:30 (orchestrator, push day)
+- **PUSHED beaf662** (0afced7..beaf662, ~85 commits): Marcus PASS (SEC-118/119/120 closed; SEC-119 fixed by making claude.yml issues-only), full suite 2331 passed on that SHA (ea session), CI all green incl. windows-installer, reproducible-build + SBOM jobs. Site deployed.
+- **PUSHED f14203a = v0.3.0rc1** (version bump + Jordan's HELD release notes + packaging-lint fix: recipes keep the stable version during a pre-release). Full suite 2331 passed on that SHA. Owner tags v0.3.0rc1 on f14203a once its CI is green (ea session gives the go).
+- **Next cycle merged locally:** Iris WO-170/171 redo, ea-team research BL-IN-73/74 (Priya) + BL-IN-81 drafts (Sam), Copilot #60 (WO-185) + #61 (WO-186), citation check fix 753d1d8 (7 false-positive xfails removed).
+- **Running:** Leo places the developer OG images (unblocks Codex CP-32); Theo BL-IN-06 monitor (src/freemyid/monitor.py); Dana SEC-121 pins + claude.yml least privilege + dependabot.
+- **Copilot paused** until the credit reset (~11-30); watcher stopped by the owner. Never write a CLAUDE-P heading while the watcher runs.
+- **Owner decisions open:** child-freeze checklist placement (I suggest the credit-freeze page); retire the stale v2 site/ check (I suggest retire); CB-02 shareable post at launch; CBS-06 Pinterest.
