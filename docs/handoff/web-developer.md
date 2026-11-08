@@ -123,3 +123,16 @@ Checks: build --check OK (60 files), site_check 44 pages OK, ruff clean, site_sh
 known unprefixed-404 artefacts (clean with --prefix freemyid/). Home 7.4 KB gzip, download 4.3 KB gzip.
 Open: broker-researcher SOURCES.md entry for the home "what they list" cards (relatives isn't a sample-registry field);
 LAUNCH_CHECKLIST line 48 can be ticked by the orchestrator; real SmartScreen screenshots still pending (VM).
+
+## v3 P3 round (2026-11-07, web lead alone; site is web/ Astro now, not site_src/templates)
+
+9f70271 home hero: actions side by side at 768-899px (one-column hero); stacked below 768 and at 900+ (two-column
+hero, ~400-570px column can't fit both at lead size); WR-53 brand rule kept; WO-103 test gained a 768 row case |
+acd514a WR-60/SEC-65 check-site handler + javascript: URL guard | 12d93b1 WR-58/SEC-62 web/pnpm-workspace.yaml |
+320b9ba SEC-66 page part: CSP meta right after <meta charset>, enforced by check-site | 0f29745 React-free CopyHash,
+React deps and integration removed (lockfile: removals only) | 5e7fed1 WR-53/55/58/60/70 closed (55 and 70 were done by
+vendor WO-102/WO-101, 53 by WO-103, rows hadn't been updated).
+Checks: pnpm build + check OK (61 HTML, 55 indexable), content_check OK (leak scan on), pytest tests/test_web_*.py 46 passed.
+Shots: scratchpad hero/before, hero/after (360/600/768/1024/1280 light+dark).
+Open: SEC-66 header CSP/frame-ancestors (host move), SEC-67 + Dependabot (devops), WR-51 tab-out note, WR-61/62/63
+(broker-researcher), WR-69 HOLD, /protect/ "15 minutes" rule ruling + freeze_lexisnexis HOLD (orchestrator).

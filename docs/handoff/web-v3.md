@@ -4,8 +4,10 @@ Status (2026-11-07): SWITCH-OVER PREPARED on site-v3 (merge of main + switch com
 and pushes). R7 PASS with P3s, R8 PASS (re-checks c55bf51, eb6e2d5). `.github/workflows/pages.yml` now builds web/ and
 deploys web/dist; the v2 publisher is kept inactive as `pages-v2.yml.draft`. Origin and base path come from
 site_src/site.yaml (freemyid.org at `/`) in astro.config.mjs, check-site.mjs and content_check.py.
-P3 backlog: WR-53, 55, 58, 60; SEC-62, 65, 66, 67; popover stays open on tab-out (WR-51 note); React-free CopyHash
-(/download/ JS 78.3 KiB of 80 KiB); Dependabot for github-actions + npm (devops, after merge).
+P3 backlog (2026-11-07 round, Leo Hart): WR-53, 55, 58, 60, 70 and SEC-62, 65 DONE; SEC-66 page-side part done (CSP meta
+right after charset, check-site enforces); React removed (CopyHash is a plain module, /download/ JS 0.4 KiB).
+Still open: SEC-66 header CSP + frame-ancestors (needs a host with headers), SEC-67 pnpm audit + Dependabot (devops),
+popover stays open on tab-out (WR-51 note, native popover limit), WR-61/62/63 (broker-researcher), WR-69 HOLD.
 
 Rollback to v2 (site_src/, tools/build_site.py and site/ stay in the repo; build.yml still rebuilds site/ after releases):
 
@@ -73,12 +75,14 @@ fed from the theme. style="" attributes in the SVGs are turned into presentation
 | Marquee | Magic UI (CSS-only port, Pause checkbox, hover/focus pause) | components/magicui/Marquee.astro | home "What it removes" (guide site names, plain text) |
 | Blur Fade | Magic UI idea, done as scroll-driven CSS (`.reveal`) | global.css | cards and section heads |
 | Timeline | Aceternity UI (static list + beam) | components/aceternity/Timeline*.astro | CSS scroll-driven beam on how it works, download, families, I-do-not-consent, guides. The motion island was deleted with the `motion` dependency (WR-52/SEC-63) |
-| CopyHash | own island with shadcn Button | components/CopyHash.tsx | download checksum panel (loads only when the panel opens) |
-Islands: only `client:visible`, and only CopyHash ships (lazy, inside the closed checksum panel). Every other page has zero JS. All motion is off under prefers-reduced-motion and in print.
+| CopyHash | own, plain module script (no React), shadcn button classes | components/CopyHash.astro | download checksum panel (button hidden without JS) |
+No islands and no React (removed 2026-11-07). /download/ loads one 380-byte (gzip) same-origin module for the Copy button. Every other page has zero JS. All motion is off under prefers-reduced-motion and in print.
 
 ## Dependencies (exact, pnpm 10.32.1, node 24)
-astro 7.4.7, @astrojs/react 7.1.4, react 19.3.1, react-dom 19.3.1, tailwindcss 4.3.5, @tailwindcss/vite 4.3.5,
-clsx 2.1.1, tailwind-merge 3.7.0, class-variance-authority 0.7.1, @radix-ui/react-slot 1.5.0, yaml 2.9.1.
+astro 7.4.7, tailwindcss 4.3.5, @tailwindcss/vite 4.3.5, clsx 2.1.1, tailwind-merge 3.7.0, class-variance-authority 0.7.1,
+yaml 2.9.1. web/pnpm-workspace.yaml: no dependency build scripts (strictDepBuilds), minimumReleaseAge 1440 minutes;
+to re-lock within a day of a locked version's publish date: `pnpm install --config.minimum-release-age=0`, then check
+the lockfile diff.
 
 ## Security / privacy
 - Astro telemetry is off: `ASTRO_TELEMETRY_DISABLED=1` prefixes every astro script in package.json and is set in the
@@ -96,8 +100,8 @@ clsx 2.1.1, tailwind-merge 3.7.0, class-variance-authority 0.7.1, @radix-ui/reac
 
 ## Budgets (gzip, measured by pnpm check)
 Home: HTML 12.8 KiB + CSS 8.6 KiB + JS 0 = 21.4 KiB first view (screenshots are lazy). CSS 8.5 KB on every page.
-/download/: JS 80,053 bytes gzip -9 = 78.2 KiB (React + CopyHash), loaded only after the checksum panel is opened
-(0 before). Under the 80 KiB budget, 53 bytes over 80 kB decimal; a plain-script CopyHash would drop ~70 KiB (WR-52 idea). /how-it-works/: 14.6 KB, no JS.
+/download/: first view 15.4 KiB including a 380-byte gzip CopyHash module (was 78.2 KiB of React after opening the
+checksum panel, before 0f29745). /how-it-works/: 14.6 KB, no JS.
 All other pages 11-15 KB, no JS.
 
 ## Header on phones
