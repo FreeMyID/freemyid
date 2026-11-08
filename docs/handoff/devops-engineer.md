@@ -151,3 +151,10 @@ Owner steps (never paste the token in chat):
 5. Create the repo `freemyid/freemyid` on Docker Hub (public) and paste `DOCKERHUB_README.md` as its description/overview, or tell me and I set it later via the API.
 6. Next v* tag pushes to both; verify with `docker buildx imagetools inspect docker.io/freemyid/freemyid:vX.Y.Z` (digest equals the GHCR one) and `cosign verify` against the workflow identity.
 Rollback: `gh variable set DOCKERHUB_PUBLISH --body false`; revoke the token in Docker Hub. Hub free tier covers public repos; anonymous pulls are rate limited, GHCR remains the primary.
+
+## 2026-11-08 CI on 6a2cc6e + SEC-111 hash check (Dana Ortiz)
+Run build 42488907811: pages, docker, commit-email-check green. Tests red:
+- All 3 OSes: tests/test_cli_old_addresses.py::test_old_addresses_is_in_the_help. Cause: typer forces ANSI output when GITHUB_ACTIONS is set, splitting `--old-addresses` with escape codes. Reproduced locally with GITHUB_ACTIONS=true; `_TYPER_FORCE_DISABLE_TERMINAL=1` fixes it. Set in the build.yml test step env (commit after 5190992).
+- Windows: my f324bfd (PATH prepend) did NOT fix the 3 commit-email guard tests. Reason: CreateProcess searches System32 before PATH, so `subprocess.run(["bash", ...])` still hits the WSL launcher. CR for qa-security (tests/test_qa_wave_20261107.py:146): run `[shutil.which("bash"), ...]` (which does honor PATH). f324bfd is harmless; keep or drop.
+- Ubuntu only: tests/test_wizard_large_text.py::test_large_text_no_sideways_scroll[320] (profile site/examplebroker page scrolls sideways at 320px, 334px wide). Real layout overflow or flake; owner web/wizard (Leo/Nina) to look. Passed on macOS and Windows.
+SEC-111 follow-up: pypi.yml build job records `sha256sum` of every dist file as job output `dist_sha256`; publish runs `sha256sum -c` plus a file-count check before the PyPI upload (job outputs do not go through the artifact store). Logic tested locally (tamper detected).
