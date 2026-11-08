@@ -69,7 +69,8 @@ select, textarea, input[type=file] { width: 100%; font: inherit; padding: .6rem 
   border-radius: var(--fmi-radius-md); background: var(--fmi-color-bg);
   color: var(--fmi-color-text); }
 .row { display: flex; gap: 12px; flex-wrap: wrap; } .row > * { flex: 1 1 140px; }
-.check { display: flex; gap: 12px; align-items: flex-start; font-weight: 400; }
+.check { display: flex; gap: 12px; align-items: flex-start; font-weight: 400;
+  min-height: var(--fmi-tap); }
 .check input { width: 1.6rem; height: 1.6rem; flex: none; margin-top: .2rem;
   accent-color: var(--fmi-color-brand); }
 button, .btn { font: inherit; font-weight: 700; padding: .6rem 1.4rem; min-height: var(--fmi-tap);
