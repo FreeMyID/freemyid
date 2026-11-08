@@ -802,3 +802,61 @@ tests/test_exposure_trend.py (7). Docs: EXPOSURE.md.
 ### CHANGE REQUEST (wizard-packager, Nina)
 - Exposure card: show `Trend.note` under the score, plus a small sparkline of `points[].score`
   when there are 2 or more points.
+
+## 2026-11-08 BL-IN-08 phone-only / email-only removal: design note, STOPPED (contracts)
+Goal (ROADMAP 0.4): "I just want my phone number (or email address) gone." The person gives
+one phone or email, not a full identity. We find the reverse-lookup pages and ask for the
+records tied to that value to be deleted.
+Why it stops: four contract points, all Morgan's.
+1. models.Profile: `name` and `addresses` (min_length=1) are required. Proposal: add
+   `removal_scope: Literal["full", "phone", "email"] = "full"`. When scope != full, allow an
+   empty `addresses` and a placeholder-free name (validator: scope "phone" needs >= 1 phone,
+   scope "email" needs >= 1 email). Regenerate schemas.
+2. models.Broker: proposal `phone_search_url_pattern: str | None` and
+   `email_search_url_pattern: str | None`, with the same https-on-broker-domain validator as
+   `search_url_pattern` (fields {phone_digits}, {phone_dashed} / {email_urlenc}). Researcher
+   (Priya) fills in which brokers support them. registry.yaml has only 2 mentions today.
+3. Rule 7 / state: a reverse-lookup hit has no name check. Decision needed. My
+   recommendation: in phone/email scope, an exact phone (or email) match on the listing is the
+   identity signal, but it never auto-submits. It is POSSIBLE -> REVIEW_MATCH ("Is this your
+   number?"). Auto-submit happens only for email-tier letters that name nothing but the value
+   itself.
+4. Permissions: the letter has to disclose the phone or email it asks to delete. Proposal:
+   scope "phone" requires `permissions.allow_phone_disclosure` (the wizard sets it with a
+   plain explanation). Email has no flag today. Either add `allow_email_disclosure` or decide
+   that scope "email" implies it.
+What I would build once those land (no further contract need): `templates/value_removal.txt.j2`
+(it names only the value plus listing URLs; no name, no address), and
+`letters.value_letter_vars`. Also a `matcher.score_value(profile, candidate)` exact-value
+check, `tiers` routing (email tier when there's an opt_out_email, otherwise Assisted with a
+Copy button for the value only), and the exposure scan reading the reverse-lookup pattern.
+Rough size: about 300 lines plus tests, in 3 commits.
+
+## 2026-11-08 BL-IN-06 broker monitoring: design note only
+Goal: a weekly, headless check that each broker's opt-out route still works, so a moved
+page or a changed form is flagged before a person hits it.
+- What: per broker, read only the public opt-out URL (and the search URL's host page if
+  `search_access` allows it). Never submit anything and never fill in a form. No personal
+  data goes in any request; a fake-free fetch is fine because no person is involved.
+- Checks (all deterministic): HTTP status and the final host after redirects (must stay
+  on `broker.domains`, through NetPolicy). A challenge or CAPTCHA marker (reuse
+  browser/exposure detectors): record "blocked", never bypass. For brokers with `form`
+  steps: whether each step's selector is present (htmlsel on the fetched HTML; JS-only
+  pages count as "unknown", not broken). Plus a content fingerprint: a hash of the
+  normalized visible text of the form region, so changes can be spotted without storing
+  page text.
+- Output: a `broker_health` record per broker (ok / moved / form_changed / blocked /
+  unreachable, plus first_seen_bad) stored as PII-free Events (action "broker_health").
+  `freemyid monitor [--json]` (schema monitor/1) and a maintainer report. Two bad weeks in a
+  row drops an Automatic-tier broker to Assisted (tiers already falls back on errors) and
+  opens a CR for Priya.
+- Where it runs: it does NOT belong on users' machines by default (network use with no user
+  benefit, and it multiplies load on brokers). Proposal: a scheduled GitHub Actions job
+  (Dana's lane) runs `freemyid monitor --json` against the public registry and opens an
+  issue on changes. Users get the fixes through the registry update. If it does run locally,
+  it's opt-in and limited to brokers the person has open requests with.
+- Contract needs (later): none for the Events route. A `BrokerHealth` model plus schema
+  if Morgan wants it typed; a registry field `last_monitored`/`health` written by CI, not
+  by users.
+- Rate: one GET per URL per week, same pacing and UA as the exposure scan, robots.txt
+  respected for non-opt-out pages.
