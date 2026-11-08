@@ -118,7 +118,7 @@ Each line: feature, tier, phase. Status: **shipped** items are in v0.1.x.
 - Tray/menu-bar icon with status and "check now" - F - 0.4
 
 ### 3.7 Family and helpers
-- Multiple profiles in one install, each separately consented - Fam - 0.4
+- Multiple profiles in one install, each separately consented - F - shipped in 0.2 ("Add a person" in the app, `freemyid profile add`; consent is stored per profile). Corrected 2026-11-08: it was listed as Fam - 0.4.
 - Helper mode: a relative's app sends PII-free progress and approval requests to the helper's app via end-to-end encrypted relay; helper approves; the relative's data never leaves their machine - Fam - 0.5
 - Shared family to-do list ("Mom has 2 things that need her signature") - Fam - 0.5
 - Elder-safety tie-in: scam-call and mail-fraud tips, notify helper if a new listing appears - Fam - 0.5
@@ -204,7 +204,7 @@ Each line: feature, tier, phase. Status: **shipped** items are in v0.1.x.
 - **v0.2 "Every platform"** (now): Linux/macOS headless and CLI, secrets fallback, real schedulers, `--json`, YAML config, `doctor`, Docker image, PyPI, developer page, CI matrix. Also: Bluesky poster fixes (SEC-57/58/59) and v0.1.3 installer fixes (uninstall while running, calm Bridge copy, Ready page, password wording).
 - **v0.3 "See it, fix it"** (re-scoped 2026-11-07 on the Codex lead's advice): one understandable journey from finding listings to acting on them: exposure scan + score with coverage, 'Is this you?' reviews, state-law letters, DROP, the identity-safety checklists, the app redesign, printable summary, accessibility. Each with its own acceptance gate. Moved to v0.4: proof vault + PDF, Outlook OAuth, broker monitoring.
 - **What counts as 'available'**: only what is in a published release (GitHub release + site_src/data/release.yaml). Merged-but-unreleased work is 'coming' on the website.
-- **v0.4 "For the family"**: proof vault + PDF report, Outlook OAuth, broker monitoring, multi-profile, helper bundle flow, relist detection, legal escalation pack, monthly summary, tray icon, Linux desktop packages.
+- **v0.4 "For the family"**: proof vault + PDF report, Outlook OAuth, broker monitoring, helper bundle flow, relist detection, legal escalation pack, monthly summary, tray icon, Linux desktop packages.
 - **v0.5 "Together"**: helper relay, white-label build, plugin API, community broker reports, Spanish UI.
 - **v1.0 "Sustainable"**: Plus/Family/Pro tiers live, signed daily feed, payments, partner portal, independent audit, transparency page.
 
