@@ -38,7 +38,7 @@ from ..models import (
     TodoKind,
     utcnow,
 )
-from ..netpolicy import _host_ok
+from ..netpolicy import _host_ok, host_of
 from . import assisted, base
 
 if TYPE_CHECKING:
@@ -74,6 +74,21 @@ def _slug(s: str, case: str = "lower") -> str:
     return quote(s, safe="-")
 
 
+def on_broker_url(broker: Broker, url: str) -> bool:
+    """A URL taken from a broker page (or built for it) really points at the broker
+    (SEC-89): `host_of` must accept it (no backslash host confusion such as
+    `https://evil.example\\@broker/`, no whitespace or control characters), it has no
+    user:password part, and the host is one of `broker.domains`."""
+    host = host_of(url)
+    if not host:
+        return False
+    try:
+        u = urlsplit(url)
+    except ValueError:
+        return False
+    return not u.username and not u.password and _host_ok(host, set(broker.domains))
+
+
 def current_address(profile: Profile) -> Address:
     """The address searches use: the one marked current, else the first."""
     return next((a for a in profile.addresses if a.current), profile.addresses[0])
@@ -101,7 +116,7 @@ def search_url(broker: Broker, profile: Profile, address: Address | None = None)
     url = broker.search_url_pattern.format(**{
         f: _slug(str(vals[f]), "as_is" if case == "title" and f == "state" else case)
         for f in fields})
-    return url if _host_ok(urlsplit(url).hostname or "", set(broker.domains)) else None
+    return url if on_broker_url(broker, url) else None
 
 
 async def _text(el: Any, sel: str | None) -> str | None:
@@ -133,7 +148,7 @@ async def parse_results(page: Page, broker: Broker) -> list[matcher.Candidate]:
             a = await el.query_selector(spec.link_selector)
             href = await a.get_attribute("href") if a else None
         url = urljoin(page.url, href) if href else page.url
-        if not _host_ok(urlsplit(url).hostname or "", set(broker.domains)):
+        if not on_broker_url(broker, url):      # SEC-89
             continue
         name = await _text(el, spec.name_selector)
         locs = _split(await _text(el, spec.location_selector))

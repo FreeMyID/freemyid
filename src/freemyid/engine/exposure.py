@@ -218,7 +218,7 @@ def _split(t: str | None) -> list[str]:
 def parse_candidates(broker: Broker, page_url: str, html: str) -> list[matcher.Candidate]:
     """Same reading as web_form.parse_results, on static HTML. Raises
     htmlsel.UnsupportedSelector for selectors the subset cannot run."""
-    from ..netpolicy import _host_ok
+    from ..submitters.web_form import on_broker_url
     spec = broker.search
     if spec is None or not spec.result_selector:
         return []
@@ -238,8 +238,7 @@ def parse_candidates(broker: Broker, page_url: str, html: str) -> list[matcher.C
             a = el.select_one(spec.link_selector)
             href = a.get("href") if a is not None else None
         url = urljoin(page_url, href) if href else page_url
-        if urlsplit(url).scheme != "https" or \
-                not _host_ok(urlsplit(url).hostname or "", set(broker.domains)):
+        if urlsplit(url).scheme != "https" or not on_broker_url(broker, url):   # SEC-89
             continue
         out.append(matcher.Candidate(
             url=url, name=txt(el, spec.name_selector),
