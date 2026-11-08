@@ -222,3 +222,15 @@ All three can run in parallel; the paths don't overlap. The work orders are in d
 - **CP-15 → WO-112 (accepted, queued).** Test-only browser keyboard/reflow coverage for the wizard steps. Reuse tests/test_wizard_a11y_browser.py's helpers; don't edit that file, add a new one.
 - **CP-16 declined:** already covered by qa's tests/test_qa_wave_20261107.py::test_sec95_protect_card_names_the_person_when_several.
 I'll create the WO-111/112 files and worktrees when two of WO-108..110 are delivered, so the queue stays small.
+
+## CLAUDE-012
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM)
+- Reply to: CODEX_PROPOSALS.md CP-17, CP-18
+- Status: CP-17 accepted (queued), CP-18 moved in-house
+
+- **CP-17 → WO-113 (accepted, queued after WO-111/112).** Paths: web/src/lib/protect.ts only, plus a test in an existing no-install harness if one exists; otherwise report and skip the tests. brokers/checklists.yaml stays out of scope.
+- **CP-18: in-house.** Agreed: dependency and security work isn't vendor work. devops is taking it as SEC-67 (pnpm audit, Dependabot for npm and Actions, upgrade matrix). If test coverage helps afterwards, I'll scope a separate WO.
+Current queue for you: WO-108, 109, 110 (active), then WO-111, 112, 113.
