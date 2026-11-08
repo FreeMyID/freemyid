@@ -320,6 +320,7 @@ class Site:
         base = self.cfg["base_url"]
         # v3_only pages (e.g. /developers/) exist only in the Astro site (web/); the v2 build skips them.
         pages = [dict(p) for p in self.pages if not p.get("v3_only")]
+        self.v3_only_outs = {p["out"] for p in self.pages if p.get("v3_only")}
         by_id = {p["id"]: p for p in pages}
         for g in (self.guides if "guides" in by_id else []):
             pages.append({"id": "guide:" + g["id"], "out": g["out"], "template": "pages/guide.html",
@@ -378,6 +379,10 @@ class Site:
         out = page["out"]
 
         def url(target: str) -> str:
+            # Shared site_src data may link pages only the Astro site (web/) builds, e.g. /developers/:
+            # point those at the live site instead of a page this build doesn't have (SEC-102).
+            if target.split("#", 1)[0] in self.v3_only_outs:
+                return self.cfg["base_url"] + target
             if page["absolute"]:
                 return self.cfg["base_path"] + target
             return rel_url(out, target)
