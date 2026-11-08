@@ -110,3 +110,20 @@ def test_scan_only_not_found_then_i_sent_it_records_the_submission(store):
     assert st.state == S.SUBMITTED and st.last_submitted_at is not None
     assert store.get_request(todo.request_id).status == RequestStatus.SENT
     assert not _opt_outs(store, p, RequestStatus.QUEUED_FOR_APPROVAL)
+
+
+def test_real_run_retires_letter_and_listing_gone_cancels_the_draft(store):
+    """Mailbox added, then a real run: _manual_to_email retires the letter (SEC-117) but the
+    scan no longer finds the listing, so nothing is queued. The retired letter's DRAFT must
+    not linger as an open "send it yourself" request with no to-do behind it."""
+    p, todo = _letter_made(store)
+    p = p.model_copy(update={"mailbox": MB})
+    store.save_profile(p)
+    st = _run(store, p, T0 + timedelta(days=8), found=False)
+    assert st.state == S.NOT_FOUND
+    assert not _manual(store, p)
+    assert not _opt_outs(store, p, RequestStatus.QUEUED_FOR_APPROVAL)
+    assert not _opt_outs(store, p, RequestStatus.DRAFT), "no orphan send-it-yourself DRAFT"
+    assert store.get_request(todo.request_id).status == RequestStatus.CANCELLED
+    ev = [e for e in store.events(p.id, B.id) if e.action == "manual_letter_retired"]
+    assert ev and ev[0].detail == {"request_id": todo.request_id, "why": "nothing_to_send"}
