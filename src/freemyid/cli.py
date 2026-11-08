@@ -320,6 +320,14 @@ def _do_run(profile, broker, scan_only, dry_run, scheduled, headless: bool = Fal
     else:
         for line in rep.summary_lines():
             con.print(line)
+    if scheduled and not dry_run:
+        # BL-IN-25: the app is often closed, so the monthly PII-free summary also fires after a
+        # scheduled run. Never let a notification problem change the run's result.
+        try:
+            from . import notify
+            notify.maybe_monthly_progress(store)
+        except Exception:  # noqa: BLE001  (a toast must never fail the run)
+            log.debug("monthly summary toast skipped", exc_info=True)
     if code:
         raise typer.Exit(code)
 

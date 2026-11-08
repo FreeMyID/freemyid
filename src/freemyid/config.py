@@ -28,6 +28,7 @@ class Config(BaseModel):
     user_agent_suffix: str = "FreeMyID/0.1 (personal privacy opt-out tool)"
     wizard_port: int = 8765
     real_submissions_enabled: bool = False   # flipped only after explicit user approval
+    tray_enabled: bool = False   # BL-IN-23: tray/menu-bar icon; needs the optional "tray" extra
     # Exposure scan: also search ONE previous address per broker (docs/EXPOSURE.md). Off.
     exposure_old_addresses: bool = False
     # Exposure scan: also search ONE previous name (e.g. maiden name) per broker. Off: searching
