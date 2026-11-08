@@ -4,7 +4,9 @@ To {{ broker_name or "the privacy team" }} (legal / privacy officer),
 
 This is a formal demand. On {{ original_request_date or "an earlier date" }} I requested deletion of my personal
 information{% if statute_name %} under the {{ statute_name }}{% if citation %} ({{ citation }}){% endif %}{% endif %}.
-{% if response_deadline %}Your response was due by {{ response_deadline }}. {% endif %}I have also sent a follow-up.
+{% if response_deadline %}Your response was due by {{ response_deadline }}.
+{% elif reply_requested_by %}I asked for a reply, and {{ reply_requested_days }} days (to {{ reply_requested_by }}) is a reasonable time to respond.
+{% endif %}I have also sent a follow-up.
 The information remains published or unconfirmed.
 
 {% include "_identity.txt.j2" %}

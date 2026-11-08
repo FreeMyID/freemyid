@@ -98,8 +98,6 @@ def _letter(state: str, kind: RequestKind) -> str:
     return outbox.compose(p, B, [], LAWS.get(state), kind, original=orig)[1]
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-90: follow-up / formal demand state a due date "
-                   "from broker.typical_processing_days when the law's window is unverified")
 @pytest.mark.parametrize("state", ["OR", "NC"])
 @pytest.mark.parametrize("kind", [RequestKind.FOLLOW_UP, RequestKind.LEGAL_DEMAND])
 def test_sec90_no_deadline_claim_without_a_verified_window(state, kind):

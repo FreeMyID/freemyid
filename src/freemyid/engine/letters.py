@@ -43,6 +43,7 @@ def render(template: str, **vars: Any) -> str:
         "listing_urls": [], "city": None, "state": None, "age": None, "phone": None,
         "statute_name": None, "citation": None, "response_days": None,
         "original_request_date": None, "response_deadline": None, "reference": None,
+        "reply_requested_days": None, "reply_requested_by": None,
         "broker_postal": None, "complaint_urls": [], "today": date.today().isoformat(),
         "is_agent": False, "agent_name": None, "street_address": None, "zip": None,
         "extension_days": None, "verification_rules": [], "state_name": None,
@@ -147,10 +148,17 @@ def letter_vars(profile: Profile, broker: Broker, listings: list[Listing],
                                                 *state_law.other_complaint_urls] if u]
     if original_request_date:
         v["original_request_date"] = original_request_date.date().isoformat()
-        days = (state_law.response_days if state_law and state_law.response_days
-                else broker.typical_processing_days)
-        v["response_deadline"] = (original_request_date.date() +
-                                  timedelta(days=days)).isoformat()
+        start = original_request_date.date()
+        # SEC-90: a legal due date only from a VERIFIED window (effective_law has already
+        # dropped response_days unless the matrix evidence is statute_text). Otherwise the
+        # letter only says when we hoped for a reply, never that one was owed.
+        if state_law and state_law.response_days:
+            v["response_deadline"] = (start + timedelta(days=state_law.response_days)
+                                      ).isoformat()
+        elif broker.typical_processing_days:
+            v["reply_requested_days"] = broker.typical_processing_days
+            v["reply_requested_by"] = (start + timedelta(
+                days=broker.typical_processing_days)).isoformat()
     if reference:
         v["reference"] = reference
     if broker.postal:
