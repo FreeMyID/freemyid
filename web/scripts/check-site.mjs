@@ -89,7 +89,12 @@ for (const f of htmlFiles) {
       if (!csp.includes(sha(body))) err(f, "inline <style> not covered by a CSP hash");
   }
   if (/\sstyle="/.test(html)) err(f, 'style="" attribute (blocked by the CSP)');
-  if (/\son[a-z]+="/i.test(html)) err(f, "inline event handler attribute");
+  // WR-60/SEC-65: look only inside start tags (comments and script/style bodies removed), any quoting or spacing.
+  const tagsOnly = html.replace(/<!--[\s\S]*?-->/g, "").replace(/<(script|style)\b([^>]*)>[\s\S]*?<\/\1>/gi, "<$1$2>");
+  for (const [tag] of tagsOnly.matchAll(/<[a-z][^>]*>/gi)) {
+    if (/\son[a-z]+\s*=/i.test(tag)) err(f, `inline event handler attribute: ${tag.slice(0, 80)}`);
+    if (/\s(?:href|src|action|formaction|xlink:href)\s*=\s*["']?\s*javascript:/i.test(tag)) err(f, `javascript: URL: ${tag.slice(0, 80)}`);
+  }
   // third-party assets: src / link href / srcset must be local
   for (const m of html.matchAll(/<(?:img|script|source|iframe|video|audio|embed)\b[^>]*\ssrc="([^"]+)"/gi))
     if (/^(https?:)?\/\//.test(m[1])) err(f, `third-party asset ${m[1]}`);
