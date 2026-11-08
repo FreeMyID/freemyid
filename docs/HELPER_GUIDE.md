@@ -26,7 +26,7 @@
 3. Windows may show a blue box: **"Windows protected your PC."** This happens because Free My ID is free and hasn't bought a publisher certificate yet. Click the small words **More info**, check that the app is **FreeMyIDSetup**, then click **Run anyway**. If you do not see this box, carry on with the normal installer.
    [screenshot: SmartScreen "Windows protected your PC" with "More info" highlighted]
    [screenshot: SmartScreen after "More info", with "Run anyway" highlighted]
-4. Click **Next** when shown, then click **Install**. No administrator password is needed. Leave **Open Free My ID now** ticked and click **Finish**. Free My ID opens by itself.
+4. Click **Next** when shown, then click **Install**. No administrator password is needed. Leave the start box ticked (**Start Free My ID now** in version 0.2.0, **Open Free My ID now** from version 0.3) and click **Finish**. Free My ID opens by itself.
    *From version 0.3:* the first opening can take up to 15 seconds. Wait for the **Free My ID is starting** window and do not click again. If nothing opens after 15 seconds, try the Start Menu shortcut once, then ask for help rather than clicking again.
    [screenshot: installer finished, with "Start Free My ID now" ticked]
 

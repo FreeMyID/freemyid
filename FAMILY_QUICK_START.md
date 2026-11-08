@@ -17,7 +17,7 @@ account.
 
 ## 1. Install it (about 2 minutes)
 
-1. Download **FreeMyIDSetup** from freemyid.org. The name on the download page may have a number in it. That is fine. Double-click the file you downloaded.
+1. Go to freemyid.org and click the **Download Free My ID** button. This downloads **FreeMyIDSetup**. Its name may have a number in it. That is fine. Double-click the file you downloaded.
 2. Windows may show a blue box: **"Windows protected your PC"**. This is normal for new
    programs. It does not mean anything is wrong.
    - Click the small words **More info**.
@@ -34,7 +34,7 @@ account.
    +--------------------------------------+
    ```
 3. Click **Next** when you see it, then click **Install**. You do not need a password.
-4. Leave the box **"Open Free My ID now"** ticked and click **Finish**.
+4. Leave the box ticked and click **Finish**. In version 0.2.0 the box says **"Start Free My ID now"**; from version 0.3 it says **"Open Free My ID now"**.
 5. *(From version 0.3.)* The first time, Free My ID can take up to 15 seconds to open. Wait for the small **Free My ID is starting** window. Do not click it again.
 
 ## 2. Answer six easy questions (about 5 minutes)
