@@ -89,8 +89,11 @@ def test_counts_score_date_and_limits(
     expected = ("No listings found on the sites checked." if found == 0 else
                 f"Listings found on {found} site{'' if found == 1 else 's'}.")
     assert expected in html
-    assert (f"{manual} site needs a manual check." if manual == 1 else
-            f"{manual} sites need a manual check.") in html
+    if manual == 0:
+        assert "manual check" not in html
+    else:
+        assert (f"{manual} site needs a manual check." if manual == 1 else
+                f"{manual} sites need a manual check.") in html
     assert "only the sites checked, not every website" in html
     assert "<b>37</b> out of 100" in html
     assert "this check, not your overall safety" in html
@@ -104,8 +107,10 @@ def test_all_explanations_are_escaped(monkeypatch: pytest.MonkeyPatch) -> None:
     install_engine(monkeypatch, lambda store, profile: result)
     html = exposure_card(STORE, PROFILE)
     assert html.count("<li>") == 6
-    for i in range(6):
+    for i in range(5):
         assert f"Line {i}: &lt;script&gt;&quot;&amp;&lt;/script&gt;" in html
+    assert "Line 5:" not in html
+    assert "<li>…and 1 more reason</li>" in html
     assert "<script>" not in html
     assert result.score == 37 and len(result.explanation) == 6
 
