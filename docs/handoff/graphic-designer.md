@@ -12,4 +12,4 @@ Status 2026-11-08 (WO-170..179, in-house, replaces Codex/Canva): order 170,171,1
 ## 2026-11-08 fridge card re-render (WO-184 wording)
 - docs/assets/fridge-card.html item 3 now reads "...bank or card details, money or a payment of any kind, or your everyday email password." (matches docs/FRIDGE_CARD.md). Re-rendered site_src/static/assets/free-my-id-fridge-card.pdf with brand/src/render_fridge_card.py (36 KB, 1 page, Letter).
 - Layout, font sizes (22px body, 23px bold) and QR unchanged; QR region pixel-identical to the previous render.
-- Known pre-existing defect, not touched (asked to keep layout): the QR caption "Scan with your phone for help" overlaps the end of item 2's heading line. Needs a small layout fix (narrower item 2 or move caption) if Morgan wants it.
+- Fixed the QR caption overlap: items 1 and 2 now have a 150px right margin (class "side") so they wrap clear of the QR column. Text sizes and QR unchanged; still one Letter page.
