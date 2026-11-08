@@ -8,7 +8,7 @@ This guide is for the person using Free My ID. You don't need to be technical. I
 
 ## Contents
 
-1. [What Free My ID does (and doesn't)](#1-what-freemyid-does-and-doesnt)
+1. [What Free My ID does (and doesn't)](#1-what-free-my-id-does-and-doesnt)
 2. [Before you start: a separate email address for removals](#2-before-you-start-a-separate-email-address-for-removals)
 3. [Setting up](#3-setting-up)
 4. [Your first run](#4-your-first-run)
