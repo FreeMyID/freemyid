@@ -1,0 +1,87 @@
+[
+  {
+    "name": "team:in-house",
+    "color": "1d76db",
+    "description": "Owned by the in-house team"
+  },
+  {
+    "name": "team:codex",
+    "color": "5319e7",
+    "description": "Owned by the codex team"
+  },
+  {
+    "name": "team:copilot",
+    "color": "0e8a16",
+    "description": "Owned by the copilot team"
+  },
+  {
+    "name": "kind:work-order",
+    "color": "fbca04",
+    "description": "Kind: work order"
+  },
+  {
+    "name": "kind:security",
+    "color": "fbca04",
+    "description": "Kind: security"
+  },
+  {
+    "name": "kind:bug",
+    "color": "fbca04",
+    "description": "Kind: bug"
+  },
+  {
+    "name": "kind:feature",
+    "color": "fbca04",
+    "description": "Kind: feature"
+  },
+  {
+    "name": "kind:docs",
+    "color": "fbca04",
+    "description": "Kind: docs"
+  },
+  {
+    "name": "kind:ops",
+    "color": "fbca04",
+    "description": "Kind: ops"
+  },
+  {
+    "name": "kind:owner-task",
+    "color": "fbca04",
+    "description": "Kind: owner task"
+  },
+  {
+    "name": "lane:in",
+    "color": "c5def5",
+    "description": "In-house lane"
+  },
+  {
+    "name": "lane:cx",
+    "color": "c5def5",
+    "description": "Codex lane"
+  },
+  {
+    "name": "lane:cp",
+    "color": "c5def5",
+    "description": "Copilot lane"
+  },
+  {
+    "name": "priority:p0",
+    "color": "b60205",
+    "description": "Priority P0"
+  },
+  {
+    "name": "priority:p1",
+    "color": "d93f0b",
+    "description": "Priority P1"
+  },
+  {
+    "name": "priority:p2",
+    "color": "fbca04",
+    "description": "Priority P2"
+  },
+  {
+    "name": "priority:p3",
+    "color": "c2e0c6",
+    "description": "Priority P3"
+  }
+]

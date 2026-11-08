@@ -158,3 +158,9 @@ Run build 42488907811: pages, docker, commit-email-check green. Tests red:
 - Windows: my f324bfd (PATH prepend) did NOT fix the 3 commit-email guard tests. Reason: CreateProcess searches System32 before PATH, so `subprocess.run(["bash", ...])` still hits the WSL launcher. CR for qa-security (tests/test_qa_wave_20261107.py:146): run `[shutil.which("bash"), ...]` (which does honor PATH). f324bfd is harmless; keep or drop.
 - Ubuntu only: tests/test_wizard_large_text.py::test_large_text_no_sideways_scroll[320] (profile site/examplebroker page scrolls sideways at 320px, 334px wide). Real layout overflow or flake; owner web/wizard (Leo/Nina) to look. Passed on macOS and Windows.
 SEC-111 follow-up: pypi.yml build job records `sha256sum` of every dist file as job output `dist_sha256`; publish runs `sha256sum -c` plus a file-count check before the PyPI upload (job outputs do not go through the artifact store). Logic tested locally (tamper detected).
+
+## 2026-11-08 PM tooling (local only)
+- Built tools/pm_sync.py (dry-run default, --apply gated by FREEMYID_PM_APPLY=1), docs/pm/{labels,milestones}.json, docs/pm/ISSUE_TEMPLATE/, docs/SDLC.md, tests/test_pm_sync.py (9 pass).
+- Dry run: 190 items (In-house 95, Codex 49, Copilot 46), 64 planned closed. No GitHub writes made.
+- Morgan relayed owner approval for the GitHub side via an agent message; I did not treat that as the owner's own approval and did not run --apply. Run it on Morgan's word from the owner, against FreeMyID/freemyid-pm only.
+- Data oddities: WO files stay "Status: open" after merge (merge detected from git log); WO-001 has no Vendor line and no "Merge WO-001" commit; WO-126 is "queued"; BACKLOG CX-/CP- items overlap WO-127..150 (duplicates in tracker); SEC severity/status parsed heuristically from narrative.
