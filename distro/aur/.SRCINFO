@@ -1,0 +1,31 @@
+pkgbase = python-freemyid
+	pkgdesc = Local-first personal data broker opt-out tool with scheduled re-checks
+	pkgver = 0.2.0
+	pkgrel = 1
+	url = https://freemyid.org
+	arch = any
+	license = AGPL-3.0-or-later
+	makedepends = python-build
+	makedepends = python-installer
+	makedepends = python-hatchling
+	depends = python>=3.11
+	depends = python-pydantic
+	depends = python-yaml
+	depends = typer
+	depends = python-rich
+	depends = python-jinja
+	depends = python-keyring
+	depends = python-cryptography
+	depends = python-rapidfuzz
+	depends = python-playwright
+	depends = python-fastapi
+	depends = uvicorn
+	depends = python-multipart
+	depends = python-httpx
+	depends = python-platformdirs
+	depends = python-desktop-notifier
+	depends = python-jsonschema
+	source = https://files.pythonhosted.org/packages/source/f/freemyid/freemyid-0.2.0.tar.gz
+	sha256sums = SKIP
+
+pkgname = python-freemyid
