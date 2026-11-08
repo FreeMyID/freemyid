@@ -39,14 +39,6 @@ def test_example_config_is_a_yaml_mapping() -> None:
     assert isinstance(_load(CONFIG), dict)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "packaging/docker/example-config.yaml:2 uses a top-level `profile:` key (full_name, "
-        "removal_email); schema/setup-config.schema.json requires version, consent, person "
-        "and sets additionalProperties false"
-    ),
-)
 def test_example_config_validates_against_setup_schema() -> None:
     schema = json.loads(SCHEMA.read_text(encoding="utf-8"))
     jsonschema.validate(_load(CONFIG), schema)
