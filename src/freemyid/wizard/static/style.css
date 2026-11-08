@@ -177,7 +177,14 @@ progress { width: 100%; height: 1rem; accent-color: var(--fmi-color-ok); }
 /* summary report page */
 .summary { background: var(--fmi-color-card); border: 1px solid var(--fmi-color-line);
   border-radius: var(--fmi-radius-lg); padding: var(--fmi-space-l); }
+.summary h1, .summary p, .summary td, .summary th { overflow-wrap: anywhere; }
 .summary table td:last-child { white-space: nowrap; }
+@media (max-width: 40rem) {
+  .summary { padding: var(--fmi-space-m); }
+  .summary table { font-size: .9rem; }
+  .summary td, .summary th { padding-inline: .25rem; }
+  .summary table td:last-child { white-space: normal; }
+}
 
 @media (max-width: 40rem) {
   body { font-size: 1.125rem; }

@@ -122,3 +122,8 @@ Installer artifact is FreeMyIDSetup-0.1.1 (pyproject still says 0.1.1, so this i
 - Installer: [Messages] FinishedLabel warns first start takes up to 15 s (unverified on Windows; CI build only). A real splash would need launcher work.
 - Finish step: dated "what happens next" timeline (ui._screen_body "finish").
 - Tests: tests/test_wizard_v013.py (+2). Next: a11y zoom/AA audit on dashboard pages; native splash.
+
+## 2026-11-08 SUM-320 (Nina Alvarez) DONE
+- Summary page overflowed at 320px (long Site names + nowrap Date column + padding). Fix in style.css only: `.summary` text wraps (`overflow-wrap: anywhere`), and at <=40rem the Date cell may wrap, table font .9rem, tighter padding. 640px and print rules unchanged.
+- Test: tests/test_wizard_summary_320.py (320/640px, light/dark, 1 and 36 sites; fails 4/8 on the old CSS). Codex WO-116 browser test (48 cases) also passes against this CSS when copied into tests/.
+- v0.1.3 backlog: nothing remaining (see audit above); only the Windows VM checks stay open.
