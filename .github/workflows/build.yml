@@ -100,7 +100,6 @@ jobs:
       - name: Pinned build toolchain (hash-checked)
         run: |
           python -m pip install --disable-pip-version-check --require-hashes -r tools/ci/build-requirements.txt
-          python -m pip install --disable-pip-version-check twine
       - name: Build sdist and wheel
         run: |
           set -euo pipefail

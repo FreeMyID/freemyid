@@ -7,7 +7,8 @@ Status as of 2026-11-08 (roadmap 0.3, BL-IN-42). Owner: devops-engineer.
 What makes two builds of one commit byte-identical:
 
 - The build backend and its whole toolchain are pinned with hashes in `tools/ci/build-requirements.txt`
-  (hatchling, build, packaging, pathspec, pluggy, pyproject-hooks, trove-classifiers). CI installs it with
+  (hatchling, build, packaging, pathspec, pluggy, pyproject-hooks, trove-classifiers) plus twine and its dependencies
+  (resolved for Linux x86_64 and CPython 3.12, which is all CI uses). CI installs it with
   `pip install --require-hashes`. `pyproject.toml` still lists `hatchling>=1.24` for people building by hand; the CI
   build ignores that range because it runs `python -m build --no-isolation` against the pinned install.
 - `SOURCE_DATE_EPOCH` is the commit time of the built commit (`git log -1 --format=%ct`). Hatchling uses it for every
@@ -33,6 +34,12 @@ Each GitHub release carries `freemyid.cdx.json`, a CycloneDX 1.x JSON SBOM of th
 It is listed in `SHA256SUMS.txt` next to the installer. The SBOM job runs separately from the build, verifies the dist
 hashes first, and the release job verifies the SBOM hash recorded by that job before uploading (SEC-111 pattern). The
 PyPI workflow keeps its own SPDX SBOM as a workflow artifact. The Docker image has its own SPDX SBOM attestation.
+
+Residual risk (SEC-121): the syft version is pinned (`v1.18.1`), but `anchore/sbom-action` downloads the syft binary
+at run time and we have no independent hash pin for it. The action's own download step may compare against the
+checksums file published on the same GitHub release; that catches corruption, not a compromised release. The SBOM job
+has read-only permissions and cannot change the wheel, which limits the damage to a wrong or missing SBOM. Fix later by
+pinning the syft release archive by sha256 in a step of our own.
 
 What the SBOM does not cover: the Windows installer. It describes the Python wheel and its dependencies, not the
 PyInstaller bundle, the Python runtime inside it, or Inno Setup. Treat it as a close approximation for the exe's
