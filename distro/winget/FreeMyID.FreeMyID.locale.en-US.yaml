@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.10.0.schema.json
+PackageIdentifier: FreeMyID.FreeMyID
+PackageVersion: 0.2.0
+PackageLocale: en-US
+Publisher: Free My ID
+PublisherUrl: https://freemyid.org
+PackageName: Free My ID
+PackageUrl: https://freemyid.org
+License: AGPL-3.0-or-later
+LicenseUrl: https://github.com/FreeMyID/freemyid/blob/main/LICENSE
+ShortDescription: Free desktop app that asks data brokers to remove your listings.
+Tags:
+  - privacy
+  - data-broker
+  - opt-out
+ManifestType: defaultLocale
+ManifestVersion: 1.10.0

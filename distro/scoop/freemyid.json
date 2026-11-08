@@ -1,0 +1,35 @@
+{
+    "version": "0.2.0",
+    "description": "Free desktop app that asks data brokers to remove your listings.",
+    "homepage": "https://freemyid.org",
+    "license": "AGPL-3.0-or-later",
+    "architecture": {
+        "64bit": {
+            "url": "https://github.com/FreeMyID/freemyid/releases/download/v0.2.0/FreeMyIDSetup-0.2.0.exe#/dl.exe",
+            "hash": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+    },
+    "installer": {
+        "script": [
+            "Start-Process -FilePath \"$dir\\dl.exe\" -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART' -Wait",
+            "Remove-Item \"$dir\\dl.exe\""
+        ]
+    },
+    "uninstaller": {
+        "script": [
+            "$u = Get-ChildItem \"$env:LOCALAPPDATA\\Programs\\FreeMyID\\unins*.exe\" | Select-Object -First 1",
+            "if ($u) { Start-Process -FilePath $u.FullName -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART' -Wait }"
+        ]
+    },
+    "checkver": {
+        "github": "https://github.com/FreeMyID/freemyid"
+    },
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://github.com/FreeMyID/freemyid/releases/download/v$version/FreeMyIDSetup-$version.exe#/dl.exe"
+            }
+        }
+    },
+    "notes": "The hash above is a PLACEHOLDER (all zeros) for release tooling to replace."
+}

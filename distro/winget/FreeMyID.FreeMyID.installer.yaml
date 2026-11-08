@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.10.0.schema.json
+# Version matches pyproject.toml ([project] version). Release tooling updates
+# PackageVersion, InstallerUrl and InstallerSha256 (from the release's SHA256SUMS.txt).
+PackageIdentifier: FreeMyID.FreeMyID
+PackageVersion: 0.2.0
+InstallerType: inno
+Scope: user
+InstallModes:
+  - interactive
+  - silent
+  - silentWithProgress
+InstallerSwitches:
+  Silent: /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
+  SilentWithProgress: /SILENT /SUPPRESSMSGBOXES /NORESTART
+UpgradeBehavior: install
+Installers:
+  - Architecture: x64
+    InstallerUrl: https://github.com/FreeMyID/freemyid/releases/download/v0.2.0/FreeMyIDSetup-0.2.0.exe
+    InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000 # PLACEHOLDER: release tooling fills this in
+ManifestType: installer
+ManifestVersion: 1.10.0
