@@ -68,6 +68,6 @@ screen and not part of this project. Proton's help pages are the place to check.
 | You see | What to do | Source |
 | --- | --- | --- |
 | "Free My ID could not find Proton Mail Bridge on this computer. Please open Proton Mail Bridge, sign in, wait until it says it is running, then press Test again." | Do what it says. | `draft.py:490-492` |
-| "The security code of your mail app has changed since you last approved it. This is normal if you just reinstalled or updated Proton Mail Bridge. If you did not, say No." Question: "Do you trust the new code?" | If you just updated or reinstalled Bridge, check the code and press Yes. Otherwise press No. | `server.py:717-725` |
+| "The security code of your mail app has changed since you last approved it. This is normal if you just reinstalled or updated Proton Mail Bridge. If you did not, say No." Question: "Do you trust the new code?" | If you just updated or reinstalled Bridge, check the code and press Yes. Otherwise press No. This can happen after Proton Mail Bridge is reinstalled or updated. | `server.py:745-753` |
 | "The security code of your mail app is not the one you approved. Nothing was sent." | Same as above. Run the test again and answer the question. | `draft.py:497-498` |
 | "The mail server did not accept that address and password." | Copy the Bridge username and password again. | `draft.py:455-456` |
