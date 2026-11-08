@@ -116,3 +116,9 @@ Installer artifact is FreeMyIDSetup-0.1.1 (pyproject still says 0.1.1, so this i
 - `ui.errors_html` gives each alert an id (`err-N`); `ui.mark_invalid` adds `aria-invalid="true"` and `aria-describedby` (existing ids kept) to the rejected input, matched from the server message via `ui.error_fields`. Used by `step_page` (consent, name, address, about, mailbox) and the Settings mailbox page. Alerts stay visible; no copy or layout change; no JS. Radios and the Outlook/choose-one errors are not field-linked (group-level).
 - New fields must be added to `_FIELD_HINTS` in `ui.py` if their error wording is new. Tests: `tests/test_wizard_field_errors_sec98.py`.
 - WO-112 browser test: drop the `@pytest.mark.xfail(strict=True, ...)` line above `test_wizard_validation_error_is_associated_with_its_field` once merged (strict xfail would otherwise fail on XPASS).
+
+## 2026-11-08 v0.3 wave (Nina)
+- CR-W1 done: dashboard.outbox_releases builds the SEC-47 note; server inline block removed (no `_disclose_releases` existed by then).
+- Installer: [Messages] FinishedLabel warns first start takes up to 15 s (unverified on Windows; CI build only). A real splash would need launcher work.
+- Finish step: dated "what happens next" timeline (ui._screen_body "finish").
+- Tests: tests/test_wizard_v013.py (+2). Next: a11y zoom/AA audit on dashboard pages; native splash.
