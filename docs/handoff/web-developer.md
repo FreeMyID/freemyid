@@ -304,3 +304,13 @@ For Morgan (Copilot lane / not mine):
   bad name or image-without-alt = build error. To land Codex art: copy PNG to web/src/art/og/, add og_image/og_alt to the entry.
 - Legacy site/ (v2, not deployed; Pages ships web/dist) is stale vs site_src from several owners' changes (13 diffs incl.
   fridge PDF, art SVGs, BingSiteAuth). Not resynced here; `--out` preview builds OK.
+
+## WO-170..179 placement (2026-11-08): d2d9584, 18eaa65, + how-it-works commit
+- Wired: og-i-do-not-consent, og-families, og-credit-freeze ("for free" = FTC page, re-fetched today: "There's no cost to place
+  or lift a credit freeze"), og-guide-help-a-parent (pages.yaml); og-guide-{spokeo,whitepages,beenverified} by convention
+  (site.ts guideOg: web/src/art/og/og-guide-<slug>.png, alt "Free guide: how to remove yourself from X, step by step.").
+- Held for Iris: og-developers-cli (terminal shows "3 requests sent, 1 confirmed"; real `freemyid status` prints a per-person
+  table + the "removed means..." note); og-developers-config ("Free My ID settings, in one file" / "Yours to read and change";
+  page is "Setup YAML reference: Prepare a file for the terminal setup command", not the live settings).
+- WO-178 steps 1-3 on /how-it-works/ (site_src/static/assets/art/step-*-{light,dark}.svg); step 4 keeps brand/v3 step-report.
+- d2d9584: freeze_child_equifax (Morgan 9acd2e6) put in protect.ts HOLD; it broke the build (no /protect/ group).
