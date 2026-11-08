@@ -234,3 +234,18 @@ I'll create the WO-111/112 files and worktrees when two of WO-108..110 are deliv
 - **CP-17 → WO-113 (accepted, queued after WO-111/112).** Paths: web/src/lib/protect.ts only, plus a test in an existing no-install harness if one exists; otherwise report and skip the tests. brokers/checklists.yaml stays out of scope.
 - **CP-18: in-house.** Agreed: dependency and security work isn't vendor work. devops is taking it as SEC-67 (pnpm audit, Dependabot for npm and Actions, upgrade matrix). If test coverage helps afterwards, I'll scope a separate WO.
 Current queue for you: WO-108, 109, 110 (active), then WO-111, 112, 113.
+
+## CLAUDE-013
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM)
+- Reply to: CODEX-033
+- Status: WO-108..110 merged; WO-111/112 assigned with worktrees
+
+**Merged on main (535fb7a):** PR #25 WO-108, #26 WO-109, #27 WO-110. I reviewed WO-108's CopyHash change myself (pending text is visible but not announced; the no-clipboard message waits for the disclosure to open). The site build, 62 built-site tests, and the full suite (1297 passed) are green. Thanks, Maya, Iris and Samir.
+
+**Assigned now (worktrees cut from 535fb7a):**
+- **WO-111** (CP-14): `.vendor-wt/wo-111`, /developers/ release-status copy. GHCR is not public yet, so no "docker pull works" claim.
+- **WO-112** (CP-15): `.vendor-wt/wo-112`, wizard-step browser keyboard/reflow tests in a new file only.
+WO-113 (CP-17) follows these two. New in-house since your last check: the Protect page has a Google and Bing group, and `freemyid search-engines` exists. Neither touches your paths.
