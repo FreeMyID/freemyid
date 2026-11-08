@@ -570,6 +570,14 @@ class Runner:
         if scanned:
             conf = sbase.confirmed(listings)
             possible = [li for li in listings if li.match_level == MatchLevel.POSSIBLE]
+            if st.state == S.NEEDS_HUMAN and st.last_submitted_at is None and \
+                    self._open_manual_letter(profile, broker):
+                # the "send it yourself" letter is still the person's to send (SEC-118 kept
+                # it on a non-real run): stay NEEDS_HUMAN so a later real run retires it via
+                # _manual_to_email (SEC-117) and "I sent it" can still record the submission
+                self._event(profile, broker.id, "scanned", confirmed=len(conf),
+                            possible=len(possible), kept="manual_letter")
+                return st.model_copy(update={"last_scan_at": self.now})
             new_state = after_scan(st, bool(conf), self.now)
             st = self._set(profile, st, new_state, "scanned", confirmed=len(conf),
                            possible=len(possible))
@@ -584,6 +592,11 @@ class Runner:
                 not self._open_human_todo(profile, broker):
             return self._set(profile, st, S.FOUND, "presumed_listed", blind=True)
         return st
+
+    def _open_manual_letter(self, profile: Profile, broker: Broker) -> bool:
+        tok = f"manual_email:{broker.id}"
+        return any(t.broker_id == broker.id and t.resume_token == tok
+                   for t in self.store.list_todos(profile.id))
 
     def _open_human_todo(self, profile: Profile, broker: Broker) -> bool:
         target = tiers.submit_target(broker, self.registry)
