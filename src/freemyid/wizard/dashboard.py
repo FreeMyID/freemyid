@@ -140,12 +140,32 @@ def todo_card(t: Todo, who: str, bname: str, csrf: str, show_who: bool = False,
     # everything else: one primary button
     url = open_url_of(t)
     opener = _post_btn(f"/todo/{tid}/open", csrf, "Open the page", "secondary") if url else ""
-    if t.resume_token:
-        primary = _post_btn(f"/todo/{tid}/resolve", csrf, "I finished it", "primary")
+    target, label = ((f"/todo/{tid}/resolve", "I finished it") if t.resume_token
+                     else (done, "Done"))
+    proof = ""
+    if t.kind == TodoKind.PHONE_CALL:
+        proof = (f'<label for="note-{tid}">A short note about the call (optional)</label>'
+                 f'<textarea id="note-{tid}" name="note" rows="3" maxlength="1000"></textarea>'
+                 '<p class="hint">Only kept on this computer, as your own record. Please do not '
+                 'write passwords or ID numbers.</p>')
+    elif t.kind == TodoKind.POSTAL_LETTER:
+        proof = (f'<label for="receipt-{tid}">A photo or scan of the mailing receipt '
+                 f'(optional)</label><input type="file" id="receipt-{tid}" name="receipt" '
+                 'accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png">'
+                 '<p class="hint">PDF, JPG or PNG, up to 10 MB. Kept encrypted on this '
+                 'computer as your own record.</p>')
+    if proof:
+        primary = (f'<form method="post" action="{esc(target)}" enctype="multipart/form-data">'
+                   f'{csrf_field(csrf)}{proof}<div class="actions">'
+                   f'<button type="submit" class="primary">{esc(label)}</button></div></form>')
+        if opener:   # its own form, so it sits outside the upload form (no nested forms)
+            primary = f'<div class="actions">{opener}</div>{primary}'
+        actions = ""
     else:
-        primary = _post_btn(done, csrf, "Done", "primary")
+        primary = _post_btn(target, csrf, label, "primary")
+        actions = f'<div class="actions">{opener}{primary}</div>'
     return (f'<div class="card todo" data-kind="{esc(t.kind.value)}">{head}<p>{esc(t.title)}</p>'
-            f'<p class="hint">{esc(t.body)}</p><div class="actions">{opener}{primary}</div></div>')
+            f'<p class="hint">{esc(t.body)}</p>{primary if proof else actions}</div>')
 
 
 def progress_line(statuses: list[BrokerStatus], sent: int, need_you: int) -> str:

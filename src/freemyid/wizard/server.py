@@ -37,7 +37,7 @@ from ..models import (
 )
 from . import dashboard as dash
 from . import draft as dr
-from . import protect, ui, views
+from . import proof_input, protect, ui, views
 
 log = logging.getLogger(__name__)
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -61,6 +61,7 @@ MSGS = {
     "fill_busy": "Another form is already being filled in. Please finish that one first.",
     "fill_none": ("The form was not sent, so nothing changed. Your to-do is still on the "
                   "list. You can try again or use \"Open the site myself\"."),
+    "bad_receipt": proof_input.BAD_RECEIPT + " Nothing was changed.",
     "no_practice": "Please let a practice check finish first, then look at the results.",
 }
 
@@ -338,11 +339,36 @@ def create_app(store, token: str, allowed_hosts: set[str],
     def _back(t) -> str:
         return "/"
 
+    async def _optional_proof(request: Request, t) -> bool:
+        """Save the optional call note / receipt sent with "I did it". False = bad receipt."""
+        try:
+            form = await request.form()
+        except Exception:  # noqa: BLE001  not a form post: nothing to save
+            return True
+        if proof_input.wants_note(t):
+            try:
+                proof_input.save_call_note(store, t, str(form.get("note", "")))
+            except Exception as e:  # noqa: BLE001  a proof copy never blocks "I did it"
+                log.warning("call note not saved (%s)", type(e).__name__)
+        up = form.get("receipt")
+        if proof_input.wants_receipt(t) and hasattr(up, "read"):
+            data = await up.read()  # type: ignore[union-attr]
+            if data:
+                if proof_input.check_receipt(data):
+                    return False
+                try:
+                    proof_input.save_receipt(store, t, data)
+                except Exception as e:  # noqa: BLE001
+                    log.warning("receipt not saved (%s)", type(e).__name__)
+        return True
+
     @app.post("/todo/{tid}/done")
-    async def todo_done(tid: str):
+    async def todo_done(tid: str, request: Request):
         t = _todo(tid)
         if not t:
             return redirect("/")
+        if not await _optional_proof(request, t):
+            return redirect("/", "bad_receipt")
         if t.kind in (TodoKind.ASSISTED_OPT_OUT, TodoKind.SEND_EMAIL_MANUALLY) and t.broker_id:
             try:   # the person did the opt-out themselves: broker moves to "submitted"
                 from ..engine.handoff import mark_manual_submitted
@@ -458,10 +484,12 @@ def create_app(store, token: str, allowed_hosts: set[str],
         return redirect("/", "opened" if ok else "openfail")
 
     @app.post("/todo/{tid}/resolve")
-    async def todo_resolve(tid: str):
+    async def todo_resolve(tid: str, request: Request):
         t = _todo(tid)
         if not t:
             return redirect("/")
+        if not await _optional_proof(request, t):
+            return redirect("/", "bad_receipt")
         try:   # let the engine resume the paused flow if it exposes a hook
             from ..engine import handoff
             hook = getattr(handoff, "mark_resolved", None)
