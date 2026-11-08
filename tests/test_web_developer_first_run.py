@@ -71,7 +71,11 @@ def test_json_is_read_only_and_explains_streams(sections: dict[str, str]) -> Non
     assert "exit code reference" in copy
 
 
-def test_examples_remain_coming(sections: dict[str, str]) -> None:
-    for name in ("first-run", "json"):
-        assert "Coming in v0.2" in text(sections[name])
-    assert "Version 0.2 isn't out yet" in text(sections["status"])
+def test_examples_match_shipped_v020(sections: dict[str, str]) -> None:
+    for name in ("first-run", "json", "status"):
+        copy = text(sections[name])
+        assert "Coming in v0.2" not in copy
+        assert "Version 0.2 isn't out yet" not in copy
+    assert "Version 0.2.0 is out" in text(sections["status"])
+    assert "You can open the web wizard" in text(sections["first-run"])
+    assert "reads the saved status without changing it" in text(sections["json"])

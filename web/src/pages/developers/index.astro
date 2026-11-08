@@ -1,8 +1,8 @@
 ---
 // /developers/ (v0.2 "Every platform", docs/ROADMAP.md 3.8): Linux, macOS, Docker and headless use for tech users.
 // The Windows app stays the main path for everyone else (callout at the top).
-// HONESTY RULE: v0.2 is NOT released. Everything that isn't shipped carries the "Coming in v0.2" badge and
-// future-tense copy. When v0.2 ships, drop the badges section by section, and only for what actually shipped.
+// Release status: v0.2.0 is published; docs/marketing/release-notes-v0.2.0.md is the checked
+// feature list. WO-111 confirms the GHCR image is not public: Docker stays planned.
 // Copy: headline WR-67, homelab pitch WR-68 (brand). WR-69 (Pro edition line) is on HOLD: no paid tier or prices here.
 // Owner rule (ROADMAP principle 6): this is the only page that links GitHub issues/releases.
 import Base from "@/layouts/Base.astro";
@@ -14,7 +14,7 @@ import Badge from "@/components/ui/Badge.astro";
 import CtaDownload from "@/components/CtaDownload.astro";
 import { pageProps, site, url } from "@/lib/site";
 const p = pageProps("developers");
-const soon = "Coming in v0.2";
+const soon = "Planned";
 const cliRef = `${site.repo_url}/blob/main/docs/CLI.md`;
 const pre = "mt-s max-w-full overflow-x-auto rounded-md border border-line bg-surface p-s text-small leading-snug text-text";
 
@@ -45,7 +45,8 @@ secrets:
 
 volumes:
   freemyid-data:`;
-// compose matches packaging/docker/compose.example.yaml (in progress for v0.2), with the GHCR image instead of a local build
+// Planned example: matches packaging/docker/compose.example.yaml with the GHCR image.
+// WO-111: the public image is not available yet; commands below are not ready to use.
 const composeRun = `docker compose run --rm freemyid doctor
 docker compose run --rm freemyid run --headless`;
 const source = `git clone ${site.repo_url}.git
@@ -96,7 +97,7 @@ const json = `freemyid status --json`;
 </PageHead>
 
 <div class="wrap pb-l">
-  {/* Windows stays the main path (docs/PLAN_V1.md); v0.1.2 is the shipped Windows release (data/release.yaml) */}
+  {/* source: docs/marketing/release-notes-v0.2.0.md, Windows section; data/release.yaml (published v0.2.0) */}
   <Alert variant="note" icon="computer" class="mt-0 max-w-[44rem]">
     <p><strong>Not a developer? You don't need anything on this page.</strong> On Windows 10 or 11, the app does everything with a few clicks, no terminal needed.</p>
   </Alert>
@@ -104,39 +105,39 @@ const json = `freemyid status --json`;
 </div>
 
 <Section id="status" tone="alt" narrow title="What's ready today, and what's coming" titleId="status-title">
-  {/* source: docs/ROADMAP.md 3.8 (shipped: Windows x64 + CLI; Linux/macOS, Docker, PyPI = 0.2) and 6 (v0.2 "Every platform", not released) */}
+  {/* source: docs/marketing/release-notes-v0.2.0.md, technical users and honest limits; docs/vendor/WO-111.md (GHCR not public) */}
   <ul class="mt-xs grid gap-xs">
     <li class="flex flex-wrap items-center gap-xs"><Badge variant="ok">Available now</Badge><span>The Windows app, with the same engine and command line (<code>freemyid</code>) inside.</span></li>
-    <li class="flex flex-wrap items-center gap-xs"><Badge variant="brand">{soon}</Badge><span>Linux and macOS, pipx, the Docker image, headless runs, JSON output.</span></li>
+    <li class="flex flex-wrap items-center gap-xs"><Badge variant="ok">Available now</Badge><span>Linux and macOS command line, installation from PyPI with pipx, headless runs, JSON output and background scheduling.</span></li>
+    <li class="flex flex-wrap items-center gap-xs"><Badge variant="brand">{soon}</Badge><span>A public Docker image, and desktop apps and packages for Linux and macOS.</span></li>
   </ul>
-  <p class="mt-s max-w-measure">Version 0.2 isn't out yet. Commands marked "{soon}" show how it's planned to work, and details may still change before release.</p>
-  {/* source: WR-68 (brand homelab pitch; platform list checked against ROADMAP 3.8: Linux/macOS are v0.2, so badged); storage and approved-request scope = docs/ROADMAP.md section 1, docs/vendor/WO-107.md */}
+  <p class="mt-s max-w-measure">Version 0.2.0 is out. Linux and macOS are command line only. Items marked "{soon}" are not available yet.</p>
+  {/* source: WR-68 (brand homelab pitch; platform release checked against docs/marketing/release-notes-v0.2.0.md, technical users); storage and approved-request scope = docs/ROADMAP.md section 1, docs/vendor/WO-107.md */}
   <p class="mt-s max-w-measure">Run it headless on a home server. Same engine as the Windows app, driven from the command line and a schedule, with no account and no cloud. Your profile and records are stored on the box you control and go out only in removal requests you approve.</p>
 </Section>
 
 <Section id="install" narrow title="Install" titleId="install-title">
-  <h3 id="pipx" class="mt-m flex flex-wrap items-center gap-xs">With pipx <Badge variant="brand">{soon}</Badge></h3>
-  {/* source: ROADMAP 3.8 (pipx install freemyid; PyPI in the v0.2 release plan) */}
-  <p class="mt-xs max-w-measure">For Linux and macOS. pipx keeps Free My ID in its own environment.</p>
+  <h3 id="pipx" class="mt-m flex flex-wrap items-center gap-xs">With pipx</h3>
+  {/* source: docs/marketing/release-notes-v0.2.0.md, technical users (published PyPI package); docs/vendor/WO-111.md */}
+  <p class="mt-xs max-w-measure">For the command line on Linux and macOS. pipx keeps Free My ID in its own environment.</p>
   <pre class={pre} tabindex="0" aria-label="pipx commands"><code>{pipx}</code></pre>
 
   <h3 id="docker" class="mt-l flex flex-wrap items-center gap-xs">With Docker <Badge variant="brand">{soon}</Badge></h3>
-  {/* source: ROADMAP 3.8 (GHCR image: non-root, read-only rootfs, Playwright Chromium bundled, volume for data) */}
-  <p class="mt-xs max-w-measure">The image will run as a normal user with a read-only file system, with the browser it needs built in. Your data lives in one volume.</p>
+  {/* source: docs/vendor/WO-111.md (public GHCR image unavailable); docs/marketing/release-notes-v0.2.0.md (image design) */}
+  <p class="mt-xs max-w-measure">The public Docker image is not available yet. The examples below are planned; do not run them yet. The image is designed to run as a normal user with a read-only file system, with the browser it needs built in. Your data lives in one volume.</p>
   <pre class={pre} tabindex="0" aria-label="Example compose.yaml"><code>{compose}</code></pre>
-  <p class="mt-s max-w-measure">Then run it once, or from a timer on the host:</p>
+  <p class="mt-s max-w-measure">Once the public image is available, these commands will run it once, or from a timer on the host:</p>
   <pre class={pre} tabindex="0" aria-label="Docker run commands"><code>{composeRun}</code></pre>
 
-  <h3 id="source" class="mt-l flex flex-wrap items-center gap-xs">From source <Badge variant="brand">{soon}</Badge></h3>
-  {/* source: repo is public (site.yaml repo_url), pyproject.toml (pip-installable package). Linux/macOS support itself is v0.2 (ROADMAP 3.8), hence the badge. */}
-  <p class="mt-xs max-w-measure">The code is public today, but Linux and macOS support isn't finished until v0.2.</p>
+  <h3 id="source" class="mt-l flex flex-wrap items-center gap-xs">From source</h3>
+  {/* source: site.yaml repo_url (public code); docs/marketing/release-notes-v0.2.0.md, technical users (Linux/macOS command line) */}
+  <p class="mt-xs max-w-measure">The code is public. Version 0.2.0 supports the command line on Linux and macOS.</p>
   <pre class={pre} tabindex="0" aria-label="Install from source"><code>{source}</code></pre>
 </Section>
 
 <Section id="first-run" tone="alt" narrow title="First run" titleId="first-run-title">
-  <p class="flex flex-wrap items-center gap-xs"><Badge variant="brand">{soon}</Badge></p>
-  {/* source: docs/CLI.md, doctor and setup --from; schema/setup-config.schema.json (version 1); docs/examples/setup-config.example.yaml. Release status: docs/ROADMAP.md 3.8. */}
-  <p class="mt-s max-w-measure"><code>freemyid doctor</code> checks that everything Free My ID needs is in place and tells you what to fix. For v0.2, you will be able to open the web wizard with <code>freemyid setup</code>, or prepare a YAML file and validate it before importing it.</p>
+  {/* source: docs/CLI.md, doctor and setup --from; schema/setup-config.schema.json (version 1); docs/examples/setup-config.example.yaml. Release status: docs/marketing/release-notes-v0.2.0.md, technical users. */}
+  <p class="mt-s max-w-measure"><code>freemyid doctor</code> checks that everything Free My ID needs is in place and tells you what to fix. You can open the web wizard with <code>freemyid setup</code>, or prepare a YAML file and validate it before importing it.</p>
   <pre class={pre} tabindex="0" aria-label="First run commands"><code>{firstRun}</code></pre>
   <p class="mt-s max-w-measure">Start with the <a href={`${site.repo_url}/blob/main/schema/setup-config.schema.json`}>version 1 setup schema</a> and the <a href={`${site.repo_url}/blob/main/docs/examples/setup-config.example.yaml`}>fake example YAML</a> in the repository. Save your edited file as <code>config.yaml</code>. Keep the file private: it holds the details you want removed.</p>
   {/* source: docs/CLI.md, setup --from (--check saves nothing; interactive import asks for confirmation). */}
@@ -144,9 +145,8 @@ const json = `freemyid status --json`;
 </Section>
 
 <Section id="scheduling" narrow title="Headless scheduling" titleId="scheduling-title">
-  <p class="flex flex-wrap items-center gap-xs"><Badge variant="brand">{soon}</Badge></p>
-  {/* source: ROADMAP 3.8 (systemd user timer, launchd agent, rendered by scheduler/render.py; install/remove/status made real in 0.2) */}
-  <p class="mt-s max-w-measure">Free My ID checks once a day. One command writes the job for your system: a systemd user timer on Linux, a launchd agent on macOS.</p>
+  {/* source: docs/marketing/release-notes-v0.2.0.md, technical users (shipped schedulers) and honest limits (macOS CI-only testing) */}
+  <p class="mt-s max-w-measure">Free My ID checks once a day. One command writes the job for your system: a systemd user timer on Linux, a launchd agent on macOS. The macOS scheduler has been tested in automated checks, but not yet on real Mac hardware.</p>
   <pre class={pre} tabindex="0" aria-label="Scheduling commands"><code>{sched}</code></pre>
   {/* source: src/freemyid/scheduler/render.py systemd_timer (UNIT freemyid-recheck, Persistent, RandomizedDelaySec), launchd LABEL org.freemyid.recheck */}
   <p class="mt-s max-w-measure">The timer it writes looks like this. A run missed while the machine was off happens at the next start. On macOS the agent is called <code>org.freemyid.recheck</code>.</p>
@@ -159,8 +159,7 @@ const json = `freemyid status --json`;
 </Section>
 
 <Section id="secrets" tone="alt" narrow title="Secrets on a headless box" titleId="secrets-title">
-  <p class="flex flex-wrap items-center gap-xs"><Badge variant="brand">{soon}</Badge></p>
-  {/* source: src/freemyid/secret_backends.py (in progress: passphrase file must be owner-only; $CREDENTIALS_DIRECTORY/freemyid-passphrase); ROADMAP 3.8 (passphrase-derived key (scrypt), FREEMYID_PASSPHRASE_FILE, or systemd-creds, same encrypted store); src/freemyid/crypto.py (AES-256-GCM) */}
+  {/* source: docs/marketing/release-notes-v0.2.0.md, technical users (shipped secrets backends); src/freemyid/secret_backends.py (passphrase file must be owner-only; $CREDENTIALS_DIRECTORY/freemyid-passphrase); ROADMAP 3.8 (passphrase-derived key (scrypt), FREEMYID_PASSPHRASE_FILE, or systemd-creds, same encrypted store); src/freemyid/crypto.py (AES-256-GCM) */}
   <p class="mt-s max-w-measure">On Windows the key sits in Windows' own password store. A server often has no desktop key store, so v0.2 adds two other ways to unlock the same encrypted store:</p>
   <ul class="mt-s grid max-w-measure list-disc gap-2xs ps-l">
     <li><strong>A passphrase file</strong> that only your user can read (Free My ID refuses a file others can read). The key is derived from it (scrypt).</li>
@@ -170,9 +169,8 @@ const json = `freemyid status --json`;
 </Section>
 
 <Section id="json" narrow title="JSON output and exit codes" titleId="json-title">
-  <p class="flex flex-wrap items-center gap-xs"><Badge variant="brand">{soon}</Badge></p>
-  {/* source: docs/CLI.md, command table, --json rules, status/1 and Exit codes. Release status: docs/ROADMAP.md 3.8. */}
-  <p class="mt-s max-w-measure">In v0.2, <code>freemyid status --json</code> will read the saved status without changing it. JSON output will contain exactly one JSON object on stdout; human messages, such as warnings, will go to stderr. Each object will identify its versioned schema, such as <code>"schema": "status/1"</code>. Within a version, fields may be added, but will not be renamed or removed.</p>
+  {/* source: docs/CLI.md, command table, --json rules, status/1 and Exit codes. Release status: docs/marketing/release-notes-v0.2.0.md, technical users. */}
+  <p class="mt-s max-w-measure">In v0.2.0, <code>freemyid status --json</code> reads the saved status without changing it. JSON output contains exactly one JSON object on stdout; human messages, such as warnings, go to stderr. Each object identifies its versioned schema, such as <code>"schema": "status/1"</code>. Within a version, fields may be added, but will not be renamed or removed.</p>
   <pre class={pre} tabindex="0" aria-label="JSON output example"><code>{json}</code></pre>
   <p class="mt-s max-w-measure"><a href={cliRef}>The full command and exit code reference (CLI.md on GitHub)</a></p>
 </Section>
