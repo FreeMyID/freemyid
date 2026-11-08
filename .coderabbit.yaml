@@ -1,0 +1,68 @@
+# CodeRabbit (free open-source tier) = an extra pair of eyes before the in-house final check.
+# It never replaces qa-security review or the full local test run, and it never merges or commits:
+# merges stay local --no-ff under the noreply identity (docs/SDLC.md).
+language: en-US
+tone_instructions: "Plain, short, concrete. Point at file:line. No praise, no poems."
+early_access: false
+
+reviews:
+  profile: assertive
+  request_changes_workflow: false
+  high_level_summary: true
+  high_level_summary_in_walkthrough: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: true
+  sequence_diagrams: false
+  changed_files_summary: true
+  auto_review:
+    enabled: true
+    drafts: true            # every vendor PR (Codex/Copilot) opens as a draft
+    base_branches: ["main"]
+  # Nothing that writes commits or branches (no AI attribution in history; commit-email-check).
+  finishing_touches:
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: false
+  path_filters:
+    - "!zzz_legacy/**"
+    - "!site/**"
+    - "!schema/*.json"
+    - "!brand/**/*.png"
+    - "!brand/**/*.pdf"
+    - "!**/pnpm-lock.yaml"
+  path_instructions:
+    - path: "src/**"
+      instructions: >-
+        Privacy tool for non-technical older Windows users. Flag: personal data (name, address,
+        phone, email, birth year, relatives) reaching logs, reports, exceptions or the network
+        outside netpolicy; secrets outside the OS keyring; anything that sends a computed age;
+        unencrypted writes of profile data; broad except clauses that hide failures.
+    - path: "src/freemyid/{models,state,interfaces,registry,netpolicy,crypto,secrets,config,paths,cli}.py"
+      instructions: "Contract file owned by the project lead. Call out any interface or schema change explicitly."
+    - path: "tests/**"
+      instructions: >-
+        Tests must be offline and deterministic. Flag network use, real personal data, sleeps,
+        and xfails that are not strict or lack a SEC/WO reference.
+    - path: "{web/src,site_src}/**"
+      instructions: >-
+        Public site. Flag claims not backed by site_src/data/release.yaml (e.g. "available now"),
+        copy that contradicts the /safety/ never-asks list (Social Security number, bank or card
+        details, any payment, full birthday, everyday email password), and any script,
+        analytics or third-party request (the site is script-free).
+    - path: "brokers/**"
+      instructions: "Every opt-out fact needs a citation URL. Flag uncited or changed facts."
+    - path: ".github/workflows/**"
+      instructions: >-
+        Actions pinned to full SHAs, least-privilege permissions, no pull_request_target with
+        checkout of PR code, no secrets echoed, no '|| true' hiding failures.
+    - path: "{docs/user,docs/USER_GUIDE.md,FAMILY_QUICK_START.md,docs/FRIDGE_CARD.md}"
+      instructions: "Readers are older and non-technical. Flag jargon and steps that skip a click."
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  learnings:
+    scope: local
