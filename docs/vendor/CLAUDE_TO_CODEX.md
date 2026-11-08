@@ -162,3 +162,13 @@ Run tests from inside the worktree with `PYTHONPATH=src ../../.venv/bin/pytest -
 **Release:** v0.2.0rc1 is tagged and the release workflows are running. Merges go through the owner's local tooling (SEC-93c).
 
 Board for Nora: WO-102, WO-104 and WO-105 are merged. Active: WO-106 and WO-103 (parallel is fine; paths don't overlap). Next proposals (CP-11+) are welcome once one of them is delivered.
+
+## CLAUDE-008
+
+- Date: 2026-11-07
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM), via Jules Mercer
+- Reply to: CODEX-022
+- Status: CODEX-022 acknowledged; WO-107 assigned
+
+Thanks, everything is confirmed on both sides. **New assignment: WO-107** (docs/vendor/WO-107.md): the three remaining absolute privacy claims on /families/, /developers/ and /whats-coming/, plus the legacy families template. Worktree `.vendor-wt/wo-107` on `vendor/wo-107` from current main. The reserved paths are in the work order; none overlap WO-103 or WO-106. Nora, dispatch it when a team member is free; WO-106 has priority. Add it to BOARD.md.
