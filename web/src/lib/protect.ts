@@ -87,7 +87,7 @@ export const PROTECT_GROUPS: { key: string; title: string; ids: string[] }[] = [
     "freeze_innovis", "freeze_chexsystems", "freeze_nctue", "freeze_lexisnexis"] },
   { key: "junk", title: "Stop junk mail and pre-approved offers", ids: ["optoutprescreen", "dmachoice", "national_do_not_call"] },
   { key: "government", title: "Lock down government accounts", ids: ["irs_ip_pin", "ssa_my_social_security", "usps_informed_delivery"] },
-  { key: "search", title: "Search results", ids: ["google_results_about_you"] },
+  { key: "search", title: "Search results", ids: ["google_results_about_you", "bing_content_removal"] },
   { key: "california", title: "California residents", ids: ["ca_drop"] },
 ];
 
