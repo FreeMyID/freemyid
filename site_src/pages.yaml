@@ -97,7 +97,7 @@
   v3_only: true
   label: For developers
   title: "Free My ID for developers: Linux, macOS and headless"
-  description: Free My ID on Linux, macOS, Docker and headless servers - pipx, scheduling, secrets, JSON output - coming in v0.2. Windows users, get the app.
+  description: "Free My ID on Linux and macOS from the command line: pipx install, doctor, scheduling, secrets, JSON output. Docker image coming. Windows: get the app."   # WR-72 (release-notes-v0.2.0, WO-111: Docker not public)
   jsonld: [breadcrumbs]
 - id: styleguide
   out: styleguide/
