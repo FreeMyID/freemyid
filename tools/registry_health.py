@@ -34,9 +34,11 @@ from dataclasses import asdict, dataclass
 from datetime import date
 from pathlib import Path
 from typing import Any
-from urllib.parse import urljoin, urlsplit
 
 import yaml
+
+from freemyid import monitor
+from freemyid.monitor import Requester
 
 ROOT = Path(__file__).resolve().parent.parent
 SAMPLE = ROOT / "brokers" / "registry.sample.yaml"
@@ -45,16 +47,14 @@ FULL = ROOT / "brokers" / "registry.yaml"
 ERROR, WARN = "ERROR", "WARN"
 MAX_AGE_DAYS = 180
 USER_AGENT = "Mozilla/5.0 (compatible; registry-health)"
-MAX_REDIRECTS = 5
-MAX_BODY = 2_000_000
-BLOCKED = {403, 429, 503}
+MAX_REDIRECTS = monitor.MAX_REDIRECTS
+BLOCKED = monitor.BLOCKED
 
 _LABEL = r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?"
 EMAIL_RE = re.compile(
     r"^(?!\.)(?!.*\.\.)[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]{1,64}(?<!\.)"
     rf"@{_LABEL}(?:\.{_LABEL})*\.[A-Za-z]{{2,63}}$")
-_SIMPLE_SEL = re.compile(
-    r"""^(?:#(?P<id>[A-Za-z][\w-]*)|(?:[a-z]+)?\[name=["']?(?P<name>[\w\[\]-]+)["']?\])$""")
+
 
 
 @dataclass
@@ -151,60 +151,22 @@ def check_offline(path: Path, *, today: date | None = None,
 
 # --- online ------------------------------------------------------------------------------
 
-Requester = Callable[[str, str], tuple[int, str | None, bytes]]
-"""(method, url) -> (status, Location header or None, body[:MAX_BODY]; empty for HEAD)."""
-
+# The fetch, redirect, allowlist and selector checks live in freemyid.monitor (BL-IN-06),
+# shared with `freemyid monitor`; this tool keeps its own User-Agent and HEAD-first flow.
 
 def _httpx_requester(timeout: float) -> tuple[Requester, Callable[[], None]]:
-    import httpx
-    client = httpx.Client(timeout=timeout, follow_redirects=False,
-                          headers={"User-Agent": USER_AGENT, "Accept": "text/html,*/*"})
-
-    def req(method: str, url: str) -> tuple[int, str | None, bytes]:
-        if method == "HEAD":
-            r = client.head(url)
-            return r.status_code, r.headers.get("location"), b""
-        with client.stream("GET", url) as r:
-            body = bytearray()
-            if method == "GET_BODY":
-                for chunk in r.iter_bytes():
-                    body.extend(chunk)
-                    if len(body) >= MAX_BODY:
-                        break
-            return r.status_code, r.headers.get("location"), bytes(body[:MAX_BODY])
-    return req, client.close
+    return monitor.httpx_requester(timeout=timeout, user_agent=USER_AGENT)
 
 
 def _fetch(url: str, method: str, policy: Any, req: Requester,
            pause: Callable[[], None]) -> tuple[int | None, str, bytes]:
-    """Follow redirects by hand; every hop must be https and allowed. Returns
-    (status or None, problem text, body)."""
-    for _ in range(MAX_REDIRECTS + 1):
-        if urlsplit(url).scheme != "https":
-            return None, f"not https: {url[:120]}", b""
-        if not policy.is_allowed(url):
-            return None, f"host not on the NetPolicy allowlist: {urlsplit(url).hostname}", b""
-        pause()
-        try:
-            status, loc, body = req(method, url)
-            if method == "HEAD" and status in (405, 501):
-                pause()
-                status, loc, body = req("GET", url)
-        except Exception as e:  # noqa: BLE001 - network failure is a finding, not a crash
-            return None, f"request failed: {type(e).__name__}", b""
-        if status in (301, 302, 303, 307, 308) and loc:
-            url = urljoin(url, loc)
-            continue
-        return status, "", body
-    return None, f"more than {MAX_REDIRECTS} redirects", b""
+    """(status or None, problem text, body), via freemyid.monitor.fetch."""
+    r = monitor.fetch(url, method, policy, req, pause)
+    return r.status, r.problem, r.body
 
 
 def _selector_present(sel: str, html: str) -> bool | None:
-    m = _SIMPLE_SEL.match(sel.strip())
-    if not m:
-        return None
-    attr, val = ("id", m["id"]) if m["id"] else ("name", m["name"])
-    return re.search(rf"""\b{attr}\s*=\s*["']?{re.escape(val)}["'\s>/]""", html) is not None
+    return monitor.selector_present(sel, html)
 
 
 def check_online(path: Path, *, delay: float = 3.0, selectors: bool = False,
@@ -246,12 +208,7 @@ def check_online(path: Path, *, delay: float = 3.0, selectors: bool = False,
                 out.append(Finding(ERROR, name, b.id, "online", f"HTTP {status} for {target}"))
             if not selectors:
                 continue
-            page, sels = target, []
-            for st in b.form:
-                if st.action == "goto" and st.url:
-                    page = st.url
-                elif st.selector:
-                    sels.append(st.selector)
+            page, sels = monitor.form_plan(b)
             if not sels:
                 continue
             status, problem, body = _fetch(page, "GET_BODY", policy, requester, pause)
