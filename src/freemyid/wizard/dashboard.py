@@ -225,10 +225,30 @@ def home_page(*, statuses: list[BrokerStatus], todos: list[tuple[Todo, str, str]
                  'today</h1><p class="lead">Free My ID keeps checking in the background and '
                  'will tell you if that changes.</p></div></section>')
     body += (f'<p class="progress" role="status">{esc(progress_line(statuses, sent, need))}</p>')
-    if rest:
-        body += f'<h2>Also waiting ({len(rest)})</h2>'
-        for t, who, bname in rest:
+    body += '<p class="actions">'
+    if len(todos) > (0 if outbox_count else 1):
+        body += (f'<a class="btn secondary" href="/more#waiting-h">See the full list '
+                 f'({len(todos)} waiting)</a> ')
+    body += '<a class="btn secondary" href="/more">More: safety steps and details</a></p>'
+    body += ('<p class="hint">A site that says it deleted you has done that for that one site '
+             'only. Details can reappear, which is why Free My ID keeps checking.</p>')
+    return layout("Today", body, refresh=6 if running else 0, current="/")
+
+
+def more_page(*, todos: list[tuple[Todo, str, str]], people: list[dict], csrf: str,
+              flash: str = "", fill: bool = False, filling: bool = False,
+              exposure: str = "", protect: list[tuple[str, str, int, int]] | None = None,
+              engines: dict[str, int] | None = None) -> str:
+    """Everything that is not "the next thing": the full to-do list, safety steps, the
+    listing check and the per-person pages. One click from Today."""
+    body = _flash(flash) + '<p><a href="/">Back to Today</a></p><h1>Everything</h1>'
+    multi = len({w for _, w, _ in todos}) > 1
+    body += f'<h2 id="waiting-h">Waiting for you ({len(todos)})</h2>'
+    if todos:
+        for t, who, bname in todos:
             body += todo_card(t, who, bname, csrf, multi, fill and not filling)
+    else:
+        body += '<div class="card"><p>Nothing is waiting for you.</p></div>'
     body += '<div class="cols">'
     rows = [(pid, label, done, total) for pid, label, done, total in (protect or []) if total]
     if rows:
@@ -243,17 +263,15 @@ def home_page(*, statuses: list[BrokerStatus], todos: list[tuple[Todo, str, str]
                          f'step{"" if n == 1 else "s"} to do</a> for {esc(label)}</p>')
         body += '</section>'
     body += exposure
-    body += '</div><h2>More</h2><div class="card">'
+    body += '</div><h2>People</h2><div class="card">'
     for r in people:
         p = r["profile"]
         body += (f'<p><a class="btn secondary" href="/profile/{esc(p.id)}">All the details for '
                  f'{esc(p.label)}</a> <a class="btn secondary" '
                  f'href="/profile/{esc(p.id)}/summary">What we did for {esc(p.label)}</a></p>')
     body += ('<p><a class="btn secondary" href="/wizard/consent?new=1">Add a person</a></p>'
-             '<p class="hint">A site that says it deleted you has done that for that one site only. '
-             'Details can reappear, which is why Free My ID keeps checking. Free My ID does '
-             'not change anything on Facebook or Google.</p></div>')
-    return layout("Today", body, refresh=6 if running else 0, current="/")
+             '<p class="hint">Free My ID does not change anything on Facebook or Google.</p></div>')
+    return layout("Everything", body, current="/")
 
 
 FILL_WAIT = ("A window opened. Free My ID filled in the form. Tick the \"I'm not a robot\" box "

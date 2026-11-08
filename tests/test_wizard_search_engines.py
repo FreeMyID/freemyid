@@ -110,8 +110,8 @@ def test_off_host_url_never_opened(env, monkeypatch):
 
 def test_today_line_per_person(env):
     c, _store, p, _, csrf = env
-    assert "Google and Bing: 2 steps to do" in c.get("/").text
+    assert "Google and Bing: 2 steps to do" in c.get("/more").text
     c.post(f"/protect/{p.id}/search/google_results_about_you/done", data=csrf)
-    assert "Google and Bing: 1 step to do" in c.get("/").text
+    assert "Google and Bing: 1 step to do" in c.get("/more").text
     c.post(f"/protect/{p.id}/search/bing_content_removal/done", data=csrf)
-    assert "Google and Bing:" not in c.get("/").text
+    assert "Google and Bing:" not in c.get("/more").text

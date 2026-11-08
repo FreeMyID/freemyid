@@ -70,9 +70,11 @@ def test_today_one_big_card_then_progress_line(env):
     t = c.get("/").text
     assert t.count('class="card hero-card"') == 1 and "Next for you" in t
     assert "1 request sent, 1 confirmed, 2 need you" in t     # practice request not counted
-    assert t.index("hero-card") < t.index("1 request sent") < t.index("Also waiting (1)")
+    assert t.index("hero-card") < t.index("1 request sent") < t.index("See the full list (2 waiting)")
     assert t.count("<h1") == 1                                # one h1 per page
-    assert "Coming soon" in t or "Where you are listed" in t
+    assert "Second one" not in t and "Where you are listed" not in t
+    m = c.get("/more").text
+    assert "Second one" in m and ("Coming soon" in m or "Where you are listed" in m)
 
 
 def test_today_calm_when_nothing_to_do(env):

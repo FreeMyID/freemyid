@@ -234,7 +234,20 @@ def create_app(store, token: str, allowed_hosts: set[str],
             practice=not cfgmod.load().real_submissions_enabled,
             running=bool(app.state.running), fill=True,
             filling=bool(app.state.fill["running"]),
-            sent=sum(1 for r in store.list_requests(status=RequestStatus.SENT) if not r.dry_run),
+            sent=sum(1 for r in store.list_requests(status=RequestStatus.SENT) if not r.dry_run)))
+
+    @app.get("/more")
+    async def more(request: Request):
+        profiles = store.list_profiles()
+        if not profiles:
+            return redirect("/wizard/consent?new=1")
+        nm = names()
+        who = {p.id: p.label for p in profiles}
+        return html(dash.more_page(
+            todos=[(t, who.get(t.profile_id, ""), nm.get(t.broker_id or "", ""))
+                   for t in store.list_todos()],
+            people=[{"profile": p} for p in profiles], csrf=csrf_token, flash=flash(request),
+            fill=True, filling=bool(app.state.fill["running"]),
             exposure="".join(views.exposure_card(store, pr) for pr in profiles),
             protect=[(pr.id, pr.label, *protect.counts(store, pr.id)) for pr in profiles],
             engines={pr.id: se.pending(se.guided_steps(store, pr.id)) for pr in profiles}))

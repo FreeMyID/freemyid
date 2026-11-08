@@ -63,7 +63,7 @@ def test_proof_fields_fit_and_are_big_enough_with_large_text(browser, seeded, wi
     ctx, pg, origin = _open(browser, r, viewport={"width": width, "height": 900})
     try:
         pg.click("#text-toggle")
-        pg.goto(origin + "/")
+        pg.goto(origin + "/more")
         assert pg.evaluate("document.documentElement.scrollWidth") <= width
         assert pg.locator("textarea[name=note]").count() + pg.locator("input[name=receipt]").count() >= 1
         for sel in ("textarea[name=note]", "input[name=receipt]", "form button.primary"):
@@ -74,5 +74,26 @@ def test_proof_fields_fit_and_are_big_enough_with_large_text(browser, seeded, wi
         labels = pg.evaluate("""() => [...document.querySelectorAll('textarea[name=note], input[name=receipt]')]
             .map(e => !!document.querySelector('label[for="' + e.id + '"]'))""")
         assert all(labels)
+    finally:
+        ctx.close()
+
+
+@pytest.mark.parametrize("path", ["/", "/more", "/profile/{pid}/site/examplebroker"])
+def test_today_more_and_broker_fit_320_with_large_text_and_keyboard(browser, seeded, path):  # noqa: F811
+    from freemyid.models import Todo, TodoKind
+    from freemyid.storage import Store
+    r, p = seeded
+    Store().save_todo(Todo(profile_id=p.id, broker_id="examplebroker", kind=TodoKind.ASSISTED_OPT_OUT,
+                           title="Remove your listing", body="1. Find it\n2. Click Remove"))
+    ctx, pg, origin = _open(browser, r, viewport={"width": 320, "height": 800})
+    try:
+        pg.click("#text-toggle")
+        pg.goto(origin + path.format(pid=p.id))
+        assert pg.evaluate("document.documentElement.scrollWidth") <= 320
+        pg.keyboard.press("Tab")
+        assert pg.evaluate("document.activeElement !== document.body")
+        for el in pg.locator("a.btn, button").all():
+            if el.is_visible():
+                assert el.bounding_box()["height"] >= 40
     finally:
         ctx.close()

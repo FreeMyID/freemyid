@@ -87,7 +87,7 @@ def test_sec93a_one_card_per_person_without_cross_profile_leakage(store, monkeyp
                      open_url=lambda u: True)
     c = TestClient(app, follow_redirects=False)
     c.cookies.set("freemyid_session", "tok-qa")
-    page = c.get("/").text
+    page = c.get("/more").text
     cards = [CARD + part.split("</section>")[0] for part in page.split(CARD)[1:]]
     assert len(cards) == 2
     by_label = {("Alpha" if "Alpha" in x else "Beta"): x for x in cards}
@@ -114,7 +114,7 @@ def test_sec95_protect_card_names_the_person_when_several(store, monkeypatch):
                      open_url=lambda u: True)
     c = TestClient(app, follow_redirects=False)
     c.cookies.set("freemyid_session", "tok-qa")
-    page = c.get("/").text
+    page = c.get("/more").text
     protect = page.split("Protect yourself</h2>", 1)[1].split("</section>", 1)[0]
     first = store.list_profiles()[0].label
     assert first in protect

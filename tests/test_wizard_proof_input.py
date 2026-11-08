@@ -29,7 +29,7 @@ def test_cards_show_optional_fields_with_labels(env):  # noqa: F811
     c, store, p, _, _ = env
     store.save_todo(_call(p))
     store.save_todo(_post(p))
-    html = c.get("/").text
+    html = c.get("/more").text
     assert 'name="note"' in html and 'for="note-' in html
     assert 'name="receipt"' in html and 'multipart/form-data' in html
     assert "optional" in html
