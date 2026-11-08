@@ -8,7 +8,8 @@ const { value } = Astro.props;
 ---
 <span class="inline-flex flex-wrap items-center gap-2" data-copy-hash={value}>
   <button type="button" class={buttonVariants({ variant: "secondary", size: "sm" })} hidden>Copy the code</button>
-  <span role="status" aria-live="polite" class="text-small text-text"></span>
+  <span data-copy-pending aria-hidden="true" class="text-small text-text" hidden>Copying…</span>
+  <span role="status" aria-live="polite" aria-atomic="true" class="text-small text-text"></span>
 </span>
 
 <script>
@@ -16,21 +17,40 @@ const { value } = Astro.props;
   for (const root of document.querySelectorAll<HTMLElement>("[data-copy-hash]")) {
     const button = root.querySelector("button");
     const status = root.querySelector<HTMLElement>("[role=status]");
-    if (!button || !status) continue;
+    const pending = root.querySelector<HTMLElement>("[data-copy-pending]");
+    if (!button || !status || !pending) continue;
     if (typeof navigator.clipboard?.writeText !== "function") {
-      status.textContent = FAILED;
+      // A closed disclosure is absent from the accessibility tree. Wait until it opens,
+      // then give the already-rendered empty status a frame before adding its message.
+      const showUnavailable = () => requestAnimationFrame(() => requestAnimationFrame(() => {
+        status.textContent = FAILED;
+      }));
+      const disclosure = root.closest("details");
+      if (disclosure && !disclosure.open) {
+        const onToggle = () => {
+          if (!disclosure.open) return;
+          disclosure.removeEventListener("toggle", onToggle);
+          showUnavailable();
+        };
+        disclosure.addEventListener("toggle", onToggle);
+      } else {
+        showUnavailable();
+      }
       continue;
     }
     button.hidden = false;
     button.addEventListener("click", async () => {
       button.disabled = true;
-      status.textContent = "Copying…";
+      // Pending stays visible without announcing it on every activation.
+      status.textContent = "";
+      pending.hidden = false;
       try {
         await navigator.clipboard.writeText(root.dataset.copyHash ?? "");
         status.textContent = "Copied";
       } catch {
         status.textContent = FAILED;
       } finally {
+        pending.hidden = true;
         button.disabled = false;
       }
     });
