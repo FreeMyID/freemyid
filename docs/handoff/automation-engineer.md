@@ -974,3 +974,42 @@ Still open for BL-IN-08:
 4. Wizard (Nina): the scope choice "Remove just a phone number / email address", the
    permission checkbox wording, and a setup that doesn't ask for a name or address.
 5. CLI setup (Morgan): `freemyid setup --from config.yaml` accepting removal_scope.
+
+## 2026-11-08 SEC-114 check, EvidenceKind, proof-vault fixes (Theo Park, not pushed)
+- SEC-114 import paths, checked:
+  - `setup --from` uses its own `SetupPerson`/`SetupPermissions` models (extra=forbid,
+    with no removal_scope or allow_email_disclosure), so such a file is rejected.
+  - The profile bundle import (wizard/flows.load_bundle) validates the file's dict, then
+    rebuilds through the Draft, which has no scope field, so the scope and the email flag
+    are dropped.
+  - The wizard save (draft.py) never sets them.
+  - Pinned by tests/test_sec114_no_scope_import.py (29ee4a9, 47b0f1c).
+  - Marcus's other suggestion (have the runner skip value_only profiles) is NOT done,
+    because the engine now handles them (2ff0dab). Open BL-IN-08 items: the Assisted card
+    and the exposure lookup, waiting on Marcus's review.
+- 3ea201b EvidenceKind += USER_ATTESTATION, PHONE_CALL_NOTE, POSTAL_RECEIPT. No committed
+  schema contains EvidenceKind, so gen_schema ran with no diff.
+- 68ffdd5 replies:
+  - `ReplyScan.replies` holds the matched raw messages, newest first, capped at
+    MAX_MESSAGE_BYTES and hidden from repr.
+  - `runner.save_replies` saves each one as encrypted EMAIL_RECEIVED evidence, deduped by
+    plaintext sha256, tied to `runner.answered_request`: the latest real SENT request at or
+    before the reply date (plus DATE_SLACK).
+  - The event `replies_saved` carries only a count.
+  - The confirmation-page screenshot in `_click` now carries request_id.
+- 792fdc0 send it yourself:
+  - `outbox.record_manual_letter` turns a SEND_EMAIL_MANUALLY to-do into a stored request
+    with LETTER evidence. Callers: the Assisted submitter, the web_form fallback, the email
+    submitter and runner._letter.
+  - Decision taken: status DRAFT (non-dry-run), not QUEUED_FOR_APPROVAL. QUEUED requests
+    are listed on the wizard and CLI approval screens, and approving one with no mailbox
+    fails with "no removal mailbox". An open request of the same kind is reused across runs.
+  - "I sent it" (`mark_resolved`) marks the request SENT, follow-up and legal demand
+    letters included; dry-run requests never.
+  - Every "I did it" saves USER_ATTESTATION evidence (what, when, request_id), and a
+    failure there never blocks resolving.
+  - Tests: tests/test_proof_vault.py (9).
+- Gate: full suite 1906 passed, 2 skipped on 792fdc0. Ruff and mypy are clean on src.
+Not done (no ask yet): PHONE_CALL_NOTE (the call todo would need a note field in the
+wizard, Nina) and POSTAL_RECEIPT upload (wizard). The engine side is just
+`store.save_evidence` with the new kinds once the UI sends them.
