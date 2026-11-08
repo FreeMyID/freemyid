@@ -16,7 +16,14 @@ const crumbs: Crumb[] = [["Home", ""], [pages.guides.label, pages.guides.out], [
 ---
 <Base {...p} crumbs={crumbs}>
 <PageHead crumbs={crumbs} title="Help a parent get their details off people-search sites"
-  lead="If your mom, dad or grandparent's name, address and phone number show up on people-search sites, you can help them ask for it to be taken down. It's free, and you don't need to be technical." />
+  lead="If your mom, dad or grandparent's name, address and phone number show up on people-search sites, you can help them ask for it to be taken down. It's free, and you don't need to be technical.">
+  <picture slot="art">
+    {/* source: brand/illustrations/help-a-parent-*.svg (graphic-designer), alt from brand/illustrations/README.md */}
+    <source srcset={url("assets/art/help-a-parent-dark.svg")} media="(prefers-color-scheme: dark)" />
+    <img src={url("assets/art/help-a-parent-light.svg")} width="320" height="250" class="h-auto w-full"
+      alt="A grown child and a parent checking a laptop together." />
+  </picture>
+</PageHead>
 {/* source: free opt-outs = our guides (brokers/registry.sample.yaml, never pay = shared rule 6) */}
 <div class="wrap-narrow pb-2xl">
   <h2 id="permission">Do I need their permission?</h2>

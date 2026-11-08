@@ -16,7 +16,14 @@ const crumbs: Crumb[] = [["Home", ""], [pages.guides.label, pages.guides.out], [
 ---
 <Base {...p} crumbs={crumbs}>
 <PageHead crumbs={crumbs} title="Get your phone number off people-search sites"
-  lead="Typing a phone number into a people-search site can bring up a name and address. Here are the free steps to ask each site to take that listing down." />
+  lead="Typing a phone number into a people-search site can bring up a name and address. Here are the free steps to ask each site to take that listing down.">
+  <picture slot="art">
+    {/* source: brand/illustrations/phone-number-*.svg (graphic-designer), alt from brand/illustrations/README.md */}
+    <source srcset={url("assets/art/phone-number-dark.svg")} media="(prefers-color-scheme: dark)" />
+    <img src={url("assets/art/phone-number-light.svg")} width="320" height="250" class="h-auto w-full"
+      alt="A phone with its number hidden and a green check." />
+  </picture>
+</PageHead>
 {/* source: research doc WR-62 S1 ("often" -> "can", no primary source for frequency); what the sites sell = faq.yaml who-buys (ODNI report) */}
 <div class="wrap-narrow pb-2xl">
   <h2 id="why">Why is my number there?</h2>
