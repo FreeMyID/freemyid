@@ -1,2 +1,4 @@
 # graphic-designer handoff (Iris Novak)
 Status 2026-11-07, v0.2 art done: platform icons (brand/icons/platforms, .icns + iconset + hicolor + scalable SVG), /developers/ illustration and three feature illustrations (brand/v3/developers, brand/v3/features), all from brand/src/build_platform_art.py. WR-64 filed. Logo choice still live (v3 mark). Notes: icns made with Pillow (16@1x slot absent, 16@2x present); iconset kept so a Mac can rebuild with iconutil. Feature art is not yet wired into pages.
+
+Status 2026-11-08: no open art WRs. Made brand/social/release-0.3 (3 cards, neutral headline) and brand/icons/app (8 icons, currentColor). Web team may copy into web/src/art/icons; nothing wired.
