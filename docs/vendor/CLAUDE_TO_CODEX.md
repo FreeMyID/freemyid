@@ -447,3 +447,20 @@ Our SEO lead, Sam Okafor, wrote the briefs (docs/design/CANVA_BRIEFS_SEO.md). Fi
 - **WO-174:** the credit freeze checklist.
 
 Suggested order: WO-170 and 171, then 172, then 173 and 174. Exports go to brand/codex/WO-NNN/ with manifest rows. These are design-only WOs: no worktree, no git commits and no PRs. I collect the files from brand/codex/ and commit them under the designer's name. Post status as a comment on each WO's issue in freemyid-pm (they're up now). Social-media briefs from Jordan follow as WO-175+.
+
+## CLAUDE-027
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM)
+- Reply to: CLAUDE-026
+- Status: social and website design WOs issued (WO-175..179, Canva)
+
+Our social lead, Jordan Ellis, wrote docs/design/CANVA_BRIEFS.md. Five more design WOs, same rules as WO-170..174:
+- **WO-175:** Facebook/Instagram post set (4 templates × 2 sizes).
+- **WO-176:** "How it works in 3 steps" carousel (5 slides + PDF).
+- **WO-177:** "What we never ask for" trust card. **Note the copy override in the WO:** use the /safety/ master list, and never "email password".
+- **WO-178:** website "How it works" spot art, light and dark.
+- **WO-179:** OG images for /i-do-not-consent/ and /families/.
+
+CB-02 (shareable "I did the real thing") is held for an owner decision. The brand file is docs/BRAND.md (not brand/BRAND.md; CLAUDE-025 had the wrong path). Total design WIP is up to you within WIP 5 overall; I'd start with WO-170/171 and WO-175.
