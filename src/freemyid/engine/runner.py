@@ -176,6 +176,24 @@ def merge_listings(store: Store, profile: Profile, broker: Broker, found: list[L
     return out
 
 
+def keep_unchecked(store: Store, profile: Profile, broker: Broker,
+                   found: list[Listing]) -> list[Listing]:
+    """`found` plus the stored, still-shown listings it lacks. Use when an extra search page
+    (old address / previous name) could not be read: a listing seen only on that page is
+    unknown now, not gone, so merge_listings must not stamp it `gone_since`."""
+    have = {li.url for li in found}
+    return [*found, *(li for li in store.list_listings(profile.id, broker.id)
+                      if li.gone_since is None and li.url not in have)]
+
+
+def search_variants(cfg: cfgmod.Config) -> dict[str, bool]:
+    """Which extra search pages a broker search reads (config flags, off by default). The
+    runner scan and the exposure scan use the same flags, so a listing found on an extra
+    page is not marked gone by the other scan."""
+    return {"old_addresses": bool(getattr(cfg, "exposure_old_addresses", False)),
+            "previous_names": bool(getattr(cfg, "exposure_previous_names", False))}
+
+
 class Runner:
     def __init__(self, store: Store, registry: Registry, *, scan_only: bool, dry_run: bool,
                  interactive: bool, broker_ids: list[str] | None, only_due: bool,
@@ -408,7 +426,8 @@ class Runner:
                           netpolicy=NetPolicy(self.registry), handoff=self._handoff(profile),
                           notifier=NullNotifier(), mailer=self.mailer_for(profile),
                           dry_run=self.dry_run, interactive=self.interactive,
-                          state_law=self._law(profile), now=self.now, scratch=dict(scratch))
+                          state_law=self._law(profile), now=self.now,
+                          scratch={"search_variants": search_variants(self.cfg), **scratch})
 
     def _set(self, profile: Profile, st: Any, dst: S, action: str, **detail: Any) -> Any:
         if st.state == dst:

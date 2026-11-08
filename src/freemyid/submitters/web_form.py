@@ -162,12 +162,9 @@ async def parse_results(page: Page, broker: Broker) -> list[matcher.Candidate]:
     return out
 
 
-async def search_listings(ctx: RunContext) -> list[Listing]:
-    """Search one broker with the browser; stores a page screenshot in ctx.scratch."""
-    bm: BrowserManager = ctx.scratch["browser"]
-    url = search_url(ctx.broker, ctx.profile)
-    if url is None:
-        raise UnexpectedPage("search_url_unavailable")
+async def _search_page(bm: BrowserManager, ctx: RunContext, url: str
+                       ) -> tuple[list[Listing], bytes | None]:
+    """Read one search page: (scored listings, screenshot when any were found)."""
     bctx = await bm.new_context(ctx.broker.domains)
     try:
         page = await bctx.new_page()
@@ -178,18 +175,62 @@ async def search_listings(ctx: RunContext) -> list[Listing]:
         spec = ctx.broker.search
         html = await page.content()
         if spec and spec.no_results_text and spec.no_results_text.lower() in html.lower():
-            return []
+            return [], None
         cands = await parse_results(page, ctx.broker)
         if not cands and spec and spec.no_results_text:
             # neither results nor the site's "no results" text: the page changed
             raise UnexpectedPage("search_page_unrecognized")
         listings = matcher.score_all(ctx.profile, ctx.broker.id, cands,
                                      (ctx.now or utcnow()).date())
-        if listings:
-            ctx.scratch["search_screenshot"] = await page.screenshot(full_page=True)
-        return listings
+        shot = await page.screenshot(full_page=True) if listings else None
+        return listings, shot
     finally:
         await bctx.close()
+
+
+def extra_search_urls(ctx: RunContext) -> list[str]:
+    """Old-address / previous-name search URLs, per ctx.scratch["search_variants"] (the
+    runner fills it from the same config flags the exposure scan uses)."""
+    from ..engine.exposure import old_address_url, previous_name_url
+    want = ctx.scratch.get("search_variants") or {}
+    urls = []
+    if want.get("old_addresses"):
+        urls.append(old_address_url(ctx.broker, ctx.profile))
+    if want.get("previous_names"):
+        urls.append(previous_name_url(ctx.broker, ctx.profile))
+    return [u for u in urls if u]
+
+
+async def search_listings(ctx: RunContext) -> list[Listing]:
+    """Search one broker with the browser; stores a page screenshot in ctx.scratch. Extra
+    pages (old address / previous name) are merged in; if one cannot be read, the listings
+    stored from earlier searches are kept as they are (unknown, never marked gone)."""
+    bm: BrowserManager = ctx.scratch["browser"]
+    url = search_url(ctx.broker, ctx.profile)
+    if url is None:
+        raise UnexpectedPage("search_url_unavailable")
+    listings, shot = await _search_page(bm, ctx, url)
+    seen = {li.url for li in listings}
+    unread = False
+    for extra in extra_search_urls(ctx):
+        try:
+            more, more_shot = await _search_page(bm, ctx, extra)
+        except Exception as e:  # noqa: BLE001 - the main answer still counts
+            # incl. a challenge: never bypassed, and never read as "nothing there"
+            log.info("search: %s extra page skipped (%s)", ctx.broker.id, type(e).__name__)
+            unread = True
+            continue
+        shot = shot or more_shot
+        for li in more:
+            if li.url not in seen:
+                seen.add(li.url)
+                listings.append(li)
+    if unread:
+        from ..engine.runner import keep_unchecked
+        listings = keep_unchecked(ctx.store, ctx.profile, ctx.broker, listings)
+    if shot is not None:
+        ctx.scratch["search_screenshot"] = shot
+    return listings
 
 
 # --------------------------------------------------------------------------- form

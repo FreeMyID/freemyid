@@ -484,11 +484,12 @@ def _check_one(store: Store, profile: Profile, broker: Broker, url: str, fetch: 
     previous-name page `name_url`), then save the listings with ONE merge so an extra page
     never marks the main page's listings gone. A failed extra page is ignored: the main
     answer stands. `before_old` runs before each extra page (the polite gap)."""
-    from .runner import merge_listings, review_todo
+    from .runner import keep_unchecked, merge_listings, review_todo
     entry = ExposureEntry(broker_id=broker.id, broker_name=broker.name, status="check_by_hand",
                           check_url=url, checked_at=now)
     found = _read(profile, broker, url, fetch, now)
     seen = {li.url for li in found}
+    unread = False
     for what, extra in (("old-address", old_url), ("previous-name", name_url)):
         if not extra:
             continue
@@ -496,6 +497,7 @@ def _check_one(store: Store, profile: Profile, broker: Broker, url: str, fetch: 
             before_old()
         more = _read_extra(profile, broker, extra, fetch, now, what)
         if more is None:
+            unread = True
             continue
         if what == "old-address":
             entry.old_address_checked = True
@@ -505,6 +507,8 @@ def _check_one(store: Store, profile: Profile, broker: Broker, url: str, fetch: 
             if li.url not in seen:
                 seen.add(li.url)
                 found.append(li)
+    if unread:          # a listing seen only on the unread page is unknown, not gone
+        found = keep_unchecked(store, profile, broker, found)
     saved = merge_listings(store, profile, broker, found, now)
     possible = [li for li in saved if li.match_level == MatchLevel.POSSIBLE]
     if possible and not any(li.match_level == MatchLevel.CONFIRMED for li in saved):

@@ -142,3 +142,91 @@ def test_scan_event_stays_pii_free(store):
                      previous_names=True)
     blob = repr([ev.detail for ev in store.events(p.id, limit=100)]).lower()
     assert "oldname" not in blob and "testperson" not in blob
+
+
+# ------------------------------------------------- unread extra page: unknown, not gone
+
+
+def test_failed_extra_page_never_marks_earlier_listings_gone(store):
+    p = _saved(store, previous_names=[OLDNAME])
+    ex.scan_exposure(store, p.id, registry=_reg(), fetch=Calls(_pages), use_browser=False,
+                     previous_names=True)
+
+    def flaky(broker, url):
+        if "oldname" in url:
+            return ex.Fetched(url, 503, "busy")
+        return _pages(broker, url)
+
+    res = ex.scan_exposure(store, p.id, registry=_reg(), fetch=Calls(flaky),
+                           use_browser=False, previous_names=True, refresh=True)
+    assert sorted(li.url.rsplit("/", 1)[1] for li in res.entries[0].listings) == \
+        ["maiden", "now"]
+    assert all(li.gone_since is None for li in store.list_listings(p.id, "devauto"))
+
+
+def test_search_variants_follow_config():
+    from freemyid.engine.runner import search_variants
+    assert search_variants(cfgmod.Config()) == {"old_addresses": False,
+                                                "previous_names": False}
+    assert search_variants(_Cfg(exposure_old_addresses=True)) == {"old_addresses": True,
+                                                                  "previous_names": True}
+
+
+def _ctx(store, p, variants):
+    from types import SimpleNamespace
+    return SimpleNamespace(broker=_auto(_reg()), profile=p, store=store, now=None,
+                           scratch={"browser": object(), "search_variants": variants})
+
+
+def _fake_pages(monkeypatch, fail_maiden=False):
+    from freemyid.engine import matcher
+    from freemyid.submitters import web_form
+    seen = []
+
+    async def page(bm, ctx, url):
+        seen.append(url)
+        if "oldname" in url:
+            if fail_maiden:
+                raise web_form.UnexpectedPage("search_http_503")
+            c = matcher.Candidate(url="https://devauto.example/p/maiden", name="Jane Oldname",
+                                  age=46, locations=["Springfield, IL"])
+        else:
+            c = matcher.Candidate(url="https://devauto.example/p/now",
+                                  name="Jane Q Testperson", age=46,
+                                  locations=["Springfield, IL"])
+        return matcher.score_all(ctx.profile, ctx.broker.id, [c]), b"png"
+
+    monkeypatch.setattr(web_form, "_search_page", page)
+    return seen
+
+
+def test_runner_search_reads_the_same_extra_pages(store, monkeypatch):
+    import asyncio
+
+    from freemyid.submitters import web_form
+    p = _saved(store, previous_names=[OLDNAME])
+    seen = _fake_pages(monkeypatch)
+    off = asyncio.run(web_form.search_listings(_ctx(store, p, {})))
+    assert seen == [MAIN] and [li.url for li in off] == ["https://devauto.example/p/now"]
+    seen.clear()
+    ctx = _ctx(store, p, {"previous_names": True})
+    on = asyncio.run(web_form.search_listings(ctx))
+    assert seen == [MAIN, MAIDEN] and len(on) == 2
+    assert ctx.scratch["search_screenshot"] == b"png"
+
+
+def test_runner_search_keeps_stored_listing_when_extra_page_fails(store, monkeypatch):
+    import asyncio
+
+    from freemyid.engine.runner import merge_listings
+    from freemyid.models import utcnow
+    from freemyid.submitters import web_form
+    p = _saved(store, previous_names=[OLDNAME])
+    _fake_pages(monkeypatch)
+    ctx = _ctx(store, p, {"previous_names": True})
+    merge_listings(store, p, ctx.broker, asyncio.run(web_form.search_listings(ctx)), utcnow())
+    _fake_pages(monkeypatch, fail_maiden=True)
+    again = asyncio.run(web_form.search_listings(_ctx(store, p, {"previous_names": True})))
+    merge_listings(store, p, ctx.broker, again, utcnow())
+    assert len(again) == 2
+    assert all(li.gone_since is None for li in store.list_listings(p.id, "devauto"))
