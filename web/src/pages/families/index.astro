@@ -85,7 +85,7 @@ const h2 = "mt-xl";
 
   <div class="prose-fmid">
     <h2 class={h2}>What they'll see afterward</h2>
-    {/* source: docs/HELPER_GUIDE.md section 4 (status words, "Needs you" cards, never does the robot step, approval before sending, notices without personal details, receipts) */}
+    {/* source: docs/HELPER_GUIDE.md section 4 (status words, "Needs you" cards, never does the robot step, approval before sending, notices without personal details, receipts). Approval = models.py EmailMode.APPROVE_EACH default (AUTO is opt-in). Notice text = engine/runner.py notify() title/body (no name or label) */}
     <ul>
       <li><strong>A status page in plain words:</strong> listed, asked, waiting for the site, site confirmed, or not listed now.</li>
       <li><strong>"Needs you" cards.</strong> A few sites need a real person. A card appears with one big button.
@@ -93,8 +93,8 @@ const h2 = "mt-xl";
           <li>"Fill it in for me" opens the site's removal page and fills in the boxes. If the site asks "I'm not a robot," the person ticks the box and presses Submit themselves. Free My ID never does that step.</li>
           <li>"Do it with me" opens the site in their own browser with numbered steps and a Copy button for each box.</li>
         </ul></li>
-      <li><strong>Emails waiting for approval,</strong> if a reply mailbox is set up. Nothing is sent until they press OK.</li>
-      <li><strong>Small desktop notices</strong> like "Mom: 2 sites need you." They never include personal details.</li>
+      <li><strong>Emails waiting for approval,</strong> if a reply mailbox is set up. Unless they switch on automatic sending, no email goes out until they press OK.</li>
+      <li><strong>Small desktop notices</strong> like "Free My ID needs 5 minutes of your help." They don't show names, addresses or other personal details.</li>
       <li><strong>Receipts:</strong> a printable list of every site, when it was asked, what it replied, and when it was checked again.</li>
     </ul>
 

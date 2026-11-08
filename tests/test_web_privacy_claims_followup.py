@@ -23,13 +23,16 @@ FAMILIES_DETAILS = (
         ("families/index.html", FAMILIES_DETAILS),
         (
             "developers/index.html",
-            ("Your profile and records are stored on the box you control "
-             "and go out only in removal requests you approve."),
+            ("Your profile and records are stored on the box you control. "
+             "Nothing is sent to us: your details go only to the people-search sites "
+             "(a name-and-town lookup, then the removal requests you approve) "
+             "and through your own mail server."),
         ),
         (
             "whats-coming/index.html",
             ("Your details are stored with you. They are kept on your computer "
-             "and go only to the sites you ask to remove you."),
+             "and go only to the people-search sites it checks and asks to remove you. "
+             "Nothing is sent to us."),
         ),
     ],
 )
