@@ -63,3 +63,8 @@ Next: once tokens exist, post Q-001, PR BADBOOL (row 4); skip pluja until ~2027-
 ## Round 6 (2026-11-07), orchestrator
 - Posted: nothing. Mastodon M-002 not due until 2026-11-08 (one a day; intro used today). Listings: no new allowed actions. Contacts used today: 1/10 (BADBOOL, closed).
 - Drafted, held: release-posts-v0.2.0.md (Bluesky, Mastodon, X) for the final v0.2.0 only. No Discord invite published. Escalations: none.
+
+## Round 7 (2026-11-07), v0.2.0 release posts
+- Bluesky R-BSKY-1 posted with image + alt: https://bsky.app/profile/freemyid.bsky.social/post/3mzrkmubuz42c
+- Mastodon R-MASTO-1 scheduled 2026-11-08 (daily cap used by intro); M-002 shifts to 11-09. Needs image upload (media API) via hand/script; poster.py has no image support.
+- X: owner posts R-X-1 by hand (release-posts-v0.2.0.md) with brand/social/release-0.2/release-0.2-x-bluesky-1200x675.png. Contacts today 1/10.
