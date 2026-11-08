@@ -1,7 +1,9 @@
 ---
 // /whats-coming/: the public roadmap in plain words, for non-technical readers.
 // Source of truth: docs/ROADMAP.md (sections 3 and 6). HONESTY RULES (orchestrator, 2026-11-07):
-// no prices, no paid-tier names, no dates. Only v0.1.x is shipped; everything else is future tense.
+// no prices, no paid-tier names, no dates. "Available" = in a published release only (ROADMAP 6, data/release.yaml);
+// v0.2.0 is the current release (checked list: docs/marketing/release-notes-v0.2.0.md, commits verified as ancestors of
+// tag v0.2.0). Merged-but-unreleased work (e.g. the Google/Bing guided step, bd6fb4d) is "coming".
 // Feedback goes by email (ROADMAP principle 6: no account, no github.com for regular users).
 // When a version ships: move its section to "Available now" and check every line against the release notes.
 import Base from "@/layouts/Base.astro";
@@ -11,10 +13,11 @@ import Card from "@/components/ui/Card.astro";
 import Badge from "@/components/ui/Badge.astro";
 import Alert from "@/components/ui/Alert.astro";
 import CtaDownload from "@/components/CtaDownload.astro";
-import { pageProps, pages, site, url } from "@/lib/site";
+import { pageProps, pages, release, site, url } from "@/lib/site";
 const p = pageProps("whats-coming");
 // /protect/ is being built in parallel: link it only once its pages.yaml entry exists.
 const hasProtect = "protect" in pages;
+const v = release.version;
 const art = (name: string) => ({ light: url(`assets/art/${name}-light.svg`), dark: url(`assets/art/${name}-dark.svg`) });
 ---
 <Base {...p}>
@@ -31,22 +34,35 @@ const art = (name: string) => ({ light: url(`assets/art/${name}-light.svg`), dar
 </PageHead>
 
 <Section id="now" tone="alt" narrow title="Now: the Windows app" titleId="now-title">
-  {/* source: docs/ROADMAP.md 3.1, 3.3, 3.8 (shipped in v0.1.x: Windows installer, wizard, practice mode, three ways, re-checks); data/release.yaml */}
-  <p><Badge variant="ok">Available now, version 0.1</Badge></p>
+  {/* source: docs/ROADMAP.md 3.1, 3.3, 3.8 (shipped since v0.1: Windows installer, wizard, practice mode, three ways, re-checks); data/release.yaml */}
+  <p><Badge variant="ok">{v ? `Available now, version ${v}` : "Coming soon"}</Badge></p>
   <p class="mt-s max-w-measure">Free My ID for Windows 10 and 11 asks the people-search and data-broker sites that list your name, address and phone number to remove them, then keeps checking.</p>
   <ul class="mt-s grid gap-2xs">
     <li>A one-click installer and a short setup, with practice mode on until you say go.</li>
     <li>Three ways of sending requests: by email, step by step with you, or, on some sites, by filling in the form for you.</li>
     <li>Daily re-checks in the background, and a printable progress report.</li>
   </ul>
+  {/* source: docs/marketing/release-notes-v0.2.0.md "New, early" and "Honest limits" (exposure check reads a limited set of
+      sites, score says how many were checked, shows listings but does not remove them; "Is this you?"; Protect checklists;
+      printable summary); commits 9934dfd, a407f66, 519f384 are in tag v0.2.0 */}
+  {v && <>
+  <h3 class="mt-m">New in version 0.2, and still early</h3>
+  <ul class="mt-xs grid gap-2xs">
+    <li>A check of where you are listed, on the sites it can read, before anything is sent. It gives a score with plain reasons and says how many sites it could check. It shows listings; it doesn't remove them, and a low score doesn't mean you're safe everywhere.</li>
+    <li>An "Is this you?" question when a site shows only a possible match.</li>
+    <li>Free protect-yourself checklists, such as freezing your credit, that you can tick off in the app.</li>
+    <li>A printable summary of what was found and done.</li>
+  </ul>
+  </>}
   <p class="mt-m"><CtaDownload /></p>
 </Section>
 
-<Section id="next" narrow title="Next: Linux, Mac and home servers" titleId="next-title">
-  {/* source: docs/ROADMAP.md 3.8 and 6 (v0.2 "Every platform": Linux/macOS headless + CLI, Docker image; not released) */}
-  <p><Badge variant="brand">Coming in version 0.2</Badge></p>
-  <p class="mt-s max-w-measure">The same app, for people who use Linux or a Mac, or who want it to run on a small home server. This version is mostly for technical users and works from the command line.</p>
-  <p class="mt-s"><a href={url("developers/")}>Read the plans for Linux, Mac and home servers</a></p>
+<Section id="next" narrow title="Also available: Linux, Mac and home servers" titleId="next-title">
+  {/* source: docs/marketing/release-notes-v0.2.0.md "For technical users" and "Honest limits" (command line only; no desktop
+      apps or packages for macOS/Linux); docs/vendor/WO-111.md (public Docker image not available yet) */}
+  <p><Badge variant="ok">Available now, command line only</Badge></p>
+  <p class="mt-s max-w-measure">The same engine, for people who use Linux or a Mac, or who want it to run on a small home server. It's mostly for technical users and works from the command line. A desktop app for Mac and Linux, and a public Docker image, are not available yet.</p>
+  <p class="mt-s"><a href={url("developers/")}>How to run it on Linux, a Mac or a home server</a></p>
 </Section>
 
 <Section id="then" tone="alt" narrow title="Then: find listings, review them and check results" titleId="then-title">
@@ -54,7 +70,8 @@ const art = (name: string) => ({ light: url(`assets/art/${name}-light.svg`), dar
   <p><Badge variant="brand">Planned for version 0.3</Badge></p>
   {/* source: docs/ROADMAP.md 6 (v0.3 journey); 3.2 marks basic matching/review as shipped.
       This section describes the planned joined-up journey, not a new release of every underlying feature. */}
-  <p class="mt-s max-w-measure">We're planning one clear path from finding a listing to checking what happened after a removal request.</p>
+  {/* source: docs/marketing/release-notes-v0.2.0.md ("This part is new and early ... the rest of the journey is coming in 0.3") */}
+  <p class="mt-s max-w-measure">Version 0.2 has an early first version of some of these steps. For version 0.3, we're planning one clear path from finding a listing to checking what happened after a removal request.</p>
   <div class="mt-m grid gap-m">
     <Card as="article">
       {/* source: docs/ROADMAP.md 3.1, 3.2 and 6 (scan, score with coverage). */}
@@ -78,10 +95,11 @@ const art = (name: string) => ({ light: url(`assets/art/${name}-light.svg`), dar
       <p>A planned printable summary will show requests and confirmed results separately, so you can see what is still waiting. It will help you follow what happened after each request, rather than treating a request as proof of removal.</p>
     </Card>
     <Card as="article">
-      {/* source: docs/ROADMAP.md 3.3, 3.4 and 6 (planned app checklists);
-          docs/handoff/web-v3.md, /protect/ guides (available website pages). */}
-      <h3>Protection guides and planned app checklists</h3>
-      <p>Credit-freeze and opt-out checklists are planned inside the app. The website already has step-by-step protection guides you can use without the app.</p>
+      {/* source: docs/marketing/release-notes-v0.2.0.md (Protect checklists in the app since v0.2.0, commit 9934dfd);
+          commit bd6fb4d (guided Google/Bing step, merged after v0.2.0, not released) + brokers/checklists.yaml
+          google_results_about_you, bing_content_removal; docs/handoff/web-v3.md, /protect/ guides (available website pages). */}
+      <h3>Protection guides and app checklists</h3>
+      <p>Credit-freeze and opt-out checklists are in the app since version 0.2. Coming next: guided steps for Google's tool that hides search results showing your phone number, address or email, and Bing's form for dropping old copies of removed pages. The website already has step-by-step protection guides you can use without the app.</p>
       {hasProtect && <p><a href={url("protect/")}>Read the free website protection guides available now</a></p>}
     </Card>
   </div>

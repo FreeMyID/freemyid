@@ -77,7 +77,9 @@ def test_v03_is_planned_with_ordered_journey(roadmap: RoadmapParser) -> None:
 
 def test_available_website_guides_link_to_built_page(roadmap: RoadmapParser) -> None:
     text = " ".join(" ".join(roadmap.text).split())
-    assert "checklists are planned inside the app" in text
+    # v0.2.0 shipped the app checklists (release notes); the unreleased Google/Bing step stays "coming".
+    assert "checklists are in the app since version 0.2" in text
+    assert "Coming next: guided steps for Google" in text
     assert "website already has step-by-step protection guides" in text
     links = [(href, label) for href, label in roadmap.links if "protection guides" in label]
     assert len(links) == 1
