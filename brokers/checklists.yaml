@@ -1,5 +1,5 @@
 # Free My ID identity-safety checklists (public, citable). Maintained by broker-researcher.
-# Checked 2026-11-07 (second pass 2026-11-07: TransUnion, ChexSystems, OptOutPrescreen, SSA retried; DMAchoice fee read).
+# Checked 2026-11-07; re-read 2026-11-08: Experian, Innovis, NCTUE, DMAchoice, FTC Do Not Call FAQ (all still match); Bing entry rewritten.
 # Written for older, non-technical readers: short steps, plain words.
 #
 # Each entry: id, title, why, url, cost, time_needed, need_on_hand, steps, how_to_undo, tips,
@@ -14,8 +14,8 @@
 # stays out of public fields and is described in notes.
 # Nothing here asks a user to pay, except DMAchoice, which charges its own small fee (see entry).
 # Licence: CC BY-NC 4.0, same as brokers/LICENSE-DATA.md.
-version: "2026.11.07.2"
-updated: 2026-11-07
+version: "2026.11.08.1"
+updated: 2026-11-08
 
 checklists:
   # ---------------------------------------------------------------- credit freezes
@@ -57,9 +57,9 @@ checklists:
     tips:
       - "Experian's freeze is not shared with the other bureaus. You still need to freeze the others."
     source_urls: [https://www.experian.com/freeze/center.html]
-    date_checked: 2026-11-07
+    date_checked: 2026-11-08
     verification: official_page
-    notes: ""
+    notes: "Re-read 2026-11-08: online 3 steps, phone 1-888-397-3742, mail address, free, no PIN needed; all match."
 
   - id: freeze_transunion
     title: "Freeze your credit at TransUnion"
@@ -79,7 +79,7 @@ checklists:
     source_urls: [https://consumer.ftc.gov/articles/what-know-about-credit-freezes-fraud-alerts, https://www.experian.com/freeze/center.html]
     date_checked: 2026-11-07
     verification: partial
-    notes: "RESOLVED 2026-11-07 by trimming public text to what is supported. transunion.com/credit-freeze, /credit-freeze/place-credit-freeze and /prescreen-opt-out all return HTTP 403, so TransUnion's own page was never read. The FTC freeze page (read) confirms 'no cost to place or lift a credit freeze' and links transunion.com/credit-freeze/credit-freeze-faq (so the /credit-freeze path exists) but gives no adult freeze URL steps and no phone number. Removed from public text: the phone number 1-800-916-8800 (listed only on Experian's page, not TransUnion's or FTC's) and the specific account steps (generic guesses). Public steps are now generic. To upgrade to official_page and restore exact steps and phone, a person must read the page in a normal browser."
+    notes: "RESOLVED 2026-11-07 by trimming public text to what is supported. transunion.com/credit-freeze, /credit-freeze/place-credit-freeze and /prescreen-opt-out all return HTTP 403, so TransUnion's own page was never read. The FTC freeze page (read) confirms 'no cost to place or lift a credit freeze' and links transunion.com/credit-freeze/credit-freeze-faq (so the /credit-freeze path exists) but gives no adult freeze URL steps and no phone number. Removed from public text: the phone number 1-800-916-8800 (listed only on Experian's page, not TransUnion's or FTC's) and the specific account steps (generic guesses). Public steps are now generic. To upgrade to official_page and restore exact steps and phone, a person must read the page in a normal browser. Not retried 2026-11-08 (still bot-gated 2026-11-07)."
 
   - id: freeze_innovis
     title: "Freeze your credit at Innovis (the fourth bureau)"
@@ -99,9 +99,9 @@ checklists:
       - "Keep the letter with your PIN in a safe place. Without it, lifting the freeze takes extra steps."
       - "Questions? Innovis Consumer Assistance is 1-800-540-2505."
     source_urls: [https://www.innovis.com/personal/securityFreeze, https://consumer.ftc.gov/articles/what-know-about-credit-freezes-fraud-alerts]
-    date_checked: 2026-11-07
+    date_checked: 2026-11-08
     verification: official_page
-    notes: "The page names Consumer Assistance 1-800-540-2505 and PO Box 530088, Atlanta, GA 30353-0088. It does not say what ID is needed. The 'extra steps without a PIN' wording in tips is an inference from the replacement-PIN option on the page."
+    notes: "Re-read 2026-11-08: online form, phone 1-866-712-4546, mail PDF form, confirmation letter with 10-digit PIN, replacement or lift PIN by any channel, Consumer Assistance 1-800-540-2505 and PO Box 530088 Atlanta GA 30353-0088. All match. The page still states no fee and does not say what ID is needed. The 'extra steps without a PIN' wording in tips is an inference from the replacement-PIN option on the page."
 
   - id: freeze_chexsystems
     title: "Freeze your ChexSystems report (bank accounts)"
@@ -119,7 +119,7 @@ checklists:
     source_urls: [https://www.consumerfinance.gov/consumer-tools/credit-reports-and-scores/consumer-reporting-companies/companies-list/chex-systems/, https://www.chexsystems.com/security-freeze/information, https://experian.com/blogs/ask-experian/how-to-freeze-chexsystems-report, https://support.norton.com/sp/en/hk/lifelock-by-norton/current/solutions/v132649189]
     date_checked: 2026-11-07
     verification: partial
-    notes: "PHONE CONFLICT, resolved as far as we can: two numbers exist for different things. The CFPB company listing (official page we DID read, modified 2025-01-30) gives 800-428-9623 as ChexSystems' general consumer number. ChexSystems' own freeze pages, as quoted in a search result (not opened by us), say 800-887-7652 is the security-freeze line (7am-11pm Central Mon-Fri; automated line 24 hours) and 800-428-9623 is for other requests. No number is shown in public fields until someone reads the official freeze page. Retried 2026-11-07: chexsystems.com/security-freeze/place-freeze, /security-freeze/information and /contact-us all returned HTTP 403, so the freeze steps, cost and PIN rules are from Experian and Norton help pages. The search result lists https://www.chexsystems.com/security-freeze/place-freeze as the place-freeze page; the url above is not confirmed to be the right freeze page. The 'Free' cost and the PIN are unconfirmed on the official page."
+    notes: "PHONE CONFLICT, resolved as far as we can: two numbers exist for different things. The CFPB company listing (official page we DID read, modified 2025-01-30) gives 800-428-9623 as ChexSystems' general consumer number. ChexSystems' own freeze pages, as quoted in a search result (not opened by us), say 800-887-7652 is the security-freeze line (7am-11pm Central Mon-Fri; automated line 24 hours) and 800-428-9623 is for other requests. No number is shown in public fields until someone reads the official freeze page. Retried 2026-11-07: chexsystems.com/security-freeze/place-freeze, /security-freeze/information and /contact-us all returned HTTP 403, so the freeze steps, cost and PIN rules are from Experian and Norton help pages. The search result lists https://www.chexsystems.com/security-freeze/place-freeze as the place-freeze page; the url above is not confirmed to be the right freeze page. The 'Free' cost and the PIN are unconfirmed on the official page. Not retried 2026-11-08."
 
   - id: freeze_nctue
     title: "Freeze your NCTUE report (phone, power and utility accounts)"
@@ -137,9 +137,9 @@ checklists:
     tips:
       - "NCTUE says there are some exceptions to what a freeze blocks."
     source_urls: [https://www.nctue.com/consumers]
-    date_checked: 2026-11-07
+    date_checked: 2026-11-08
     verification: official_page
-    notes: ""
+    notes: "Re-read 2026-11-08: free to place, lift and remove; portal nctueconsumerportal.com; phone 1-866-349-5355; mail address unchanged. All match."
 
   - id: freeze_lexisnexis
     title: "Freeze your LexisNexis Risk Solutions file"
@@ -202,9 +202,9 @@ checklists:
       - "It does not stop mail from companies that are not members."
       - "Free My ID never pays for you. Pay only on dmachoice.org itself."
     source_urls: [https://www.dmachoice.org/register.php, https://www.dmachoice.org/, https://dmachoice.org/static/consumer_choice_tools.php, https://www.consumer.ftc.gov/articles/how-stop-junk-mail]
-    date_checked: 2026-11-07
+    date_checked: 2026-11-08
     verification: official_page
-    notes: "Fee confirmed on the official registration page read 2026-11-07: $8 online, $9 by mail, 10-year term. The old mail address (a P.O. box in Cos Cob, CT) came only from search summaries and was NOT confirmed, so it was removed. 'Does not stop non-member mail' comes from search summaries and the FTC page, not re-read on dmachoice.org."
+    notes: "Fee re-confirmed on the official registration page 2026-11-08: $8 online (card or PayPal), $9 by mail (check or money order payable to the ANA), 10-year term. The old mail address (a P.O. box in Cos Cob, CT) came only from search summaries and was NOT confirmed, so it was removed. 'Does not stop non-member mail' comes from search summaries and the FTC page, not re-read on dmachoice.org."
 
   - id: national_do_not_call
     title: "Join the National Do Not Call Registry"
@@ -223,9 +223,9 @@ checklists:
     tips:
       - "If a number is disconnected and later given to someone else, you may need to register it again."
     source_urls: [https://consumer.ftc.gov/articles/national-do-not-call-registry-faqs]
-    date_checked: 2026-11-07
+    date_checked: 2026-11-08
     verification: official_page
-    notes: "Source is the FTC FAQ page. We did not open donotcall.gov itself."
+    notes: "Source is the FTC FAQ page (the registry's owner), re-read 2026-11-08: donotcall.gov or 1-888-382-1222 (TTY 1-866-290-4236), up to 3 numbers online, confirmation link within three days (we say 72 hours), listed next day, up to 31 days for calls to stop, removal by phone, no expiry. donotcall.gov itself returns only navigation text to our fetcher, so its own wording was not read."
 
   # ---------------------------------------------------------------- government accounts
   - id: irs_ip_pin
@@ -319,24 +319,26 @@ checklists:
 
   - id: bing_content_removal
     title: "Ask Bing to drop old copies of pages that were removed"
-    why: "After a people-search site removes your page, Bing can keep showing the old page or its preview for a while. This form asks Bing to check the page again."
-    url: https://www.bing.com/webmaster/tools/contentremovalform
+    why: "After a people-search site removes your page, Bing can keep showing the old page or its preview for a while. Bing has a tool where the owner of a page, or anyone reporting it, can ask Bing to update or drop it."
+    url: https://www.bing.com/webmasters/tools/contentremoval
     cost: "Free."
-    time_needed: "A few minutes per page."
-    need_on_hand: ["The web address of the page that was removed (copy it from the Bing result)"]
+    time_needed: "A few minutes per page. Bing can take days or weeks to act."
+    need_on_hand: ["The web address of the page that was removed (copy it from the Bing result)", "A Microsoft, Google or Facebook account to sign in with"]
     steps:
       - "First make sure the people-search site has removed your page. Open the page: it should be gone or no longer show you."
-      - "Open the Bing web address above."
-      - "Paste the web address of the removed page and send the form."
+      - "Open the Bing web address above. Bing asks you to sign in with a Microsoft, Google or Facebook account."
+      - "Follow the form. Paste the web address of the page, then choose whether you are asking Bing to remove the page or to update its old saved copy (the 'cache')."
+      - "Not working or no sign-in wanted? Use Microsoft's 'Report a Concern to Bing' page: https://www.microsoft.com/en-us/concern/bing"
       - "Come back here and tick 'I did this'."
-    how_to_undo: "Nothing to undo. Bing only refreshes its copy of the page."
+    how_to_undo: "Nothing to undo. Bing only refreshes or drops its own copy. The page is not changed anywhere else."
     tips:
-      - "This works only after the site has removed or changed the page. Ask the site first."
-      - "For other personal-information problems, Microsoft has a 'Report a Concern to Bing' page: https://www.microsoft.com/en-us/concern/bing"
-    source_urls: [https://www.bing.com/webmaster/tools/contentremovalform, https://www.microsoft.com/en-us/concern/bing]
-    date_checked: 2026-11-07
+      - "Bing does not control what other websites publish. Microsoft says your best option is to contact the website itself, and that reporting a concern will not necessarily remove a result."
+      - "Bing will not remove a page that is still live just because you ask. Ask the people-search site to remove it first."
+      - "Live in Europe or the UK? Microsoft also has a separate form to block results shown for searches on your name."
+    source_urls: [https://support.microsoft.com/en-us/topic/1831f0fe-3c4d-46ae-8e57-16c487715729, https://www.bing.com/webmasters/tools/contentremoval, https://www.microsoft.com/en-us/concern/bing]
+    date_checked: 2026-11-08
     verification: partial
-    notes: "Drafted by automation-engineer without opening the pages. Confirm the form URL, whether sign-in is needed, and the exact field names before marking official_page. The Google entry's URL (goo.gle short link) is also on the allowed host list; myactivity.google.com/results-about-you is accepted too."
+    notes: "Re-researched 2026-11-08. READ (official): Microsoft Support 'How to report a concern or contact Bing' (support.microsoft.com/en-us/topic/1831f0fe-...): a Bing reporting form for URLs in results; 'Reporting a concern will not necessarily result in removal'; removal limited to a narrow set of circumstances (not listed); Bing does not control what websites publish; best option is to contact the webmaster; even if Bing removes a URL the content stays at its address. The page names no content-removal tool and does not mention personal information or outdated content. OPENED: https://www.bing.com/webmasters/tools/contentremoval shows a Bing sign-in (Microsoft, Google or Facebook), so the tool needs an account; the form behind it was not seen. NOT OPENED (JS or empty to our fetcher): microsoft.com/en-us/concern/bing and bing.com/webmasters/help/bing-content-removal-tool-cb6c294d (title only). The OLD url in this entry, bing.com/webmaster/tools/contentremovalform (singular 'webmaster'), returned only the page title 'Bing Webmaster Tools'; it is replaced by the plural url that shows a sign-in. COMMUNITY (Microsoft Q&A, not official, not shown publicly as fact): tool has 'Remove page' and 'outdated cache' options; cache removal needs the URL to be reachable and a word that is in Bing's saved copy but no longer on the live page; takes up to about 4 weeks; Bing Webmaster support form was reported broken in Nov-Dec 2025. EU/UK name-search block form (community-cited): bing.com/webmaster/tools/eu-privacy-request, and support.microsoft.com/topic/submitting-privacy-related-requests-to-block-results-in-the-eu-f3e157e4-77c7-4fef-90d6-8f012ebdbc91; neither opened. Stays partial because the form's own fields and options were not seen. The 'will not remove a still-live page' tip is from community answers, so soften or drop it if the site wants official-only tips. Allowed hosts: bing.com and microsoft.com."
 
   # ---------------------------------------------------------------- California
   - id: ca_drop

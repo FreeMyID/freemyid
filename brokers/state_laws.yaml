@@ -1,18 +1,22 @@
-# State privacy-law registry for Free My ID. Maintained by broker-researcher. Researched 2026-11-06.
+# State privacy-law registry for Free My ID. Maintained by broker-researcher. Researched 2026-11-06; citations re-checked 2026-11-07 and 2026-11-08.
 #
 # Template rule: `ccpa` = CA only; `state_privacy` = comprehensive law IN FORCE today;
 # `generic` = no applicable law today (voluntary request, NO legal citation in the letter).
 # States whose law is enacted but not yet effective stay `generic` until effective_date passes.
 #
-# Evidence levels (see each entry's notes):
-#  - effective dates / law names / "enacted" status: seen in fetched pages or search results (source_urls).
-#  - statutory citations and 45-day response windows for comprehensive-law states: NOT re-fetched from
-#    statute text in this pass (secondary trackers did not list them). They come from the researcher's
-#    background knowledge; last_verified is left null for those entries. Verify before quoting in a letter.
-#  - ag_complaint_url: only set where the page was fetched OK or is flagged UNVERIFIED in notes.
-# YAML anchors (&pt, &new, &ms) are defined at first use and reused below.
-version: "2026.11.1"
-updated: 2026-11-06
+# `citation` format: "<code> (deletion: <section of the delete right>; response: <section of the deadline>)".
+# Evidence levels (stated in each entry's notes):
+#  - STATUTE TEXT: the deletion-right subsection and the response window were read on an official legislature, code or AG
+#    page (or the enacted bill on the legislature's own site) on the entry's last_verified date. Later amendments to the
+#    code were not diffed unless noted.
+#  - BACKGROUND / UNVERIFIED: not read in statute text. Do NOT quote the section number in a letter without a human check.
+#  - ag_complaint_url: only set where the page was fetched OK, or flagged in notes as seen-but-not-opened.
+# Plain truth for letters: a deletion right reaches a people-search site only if the site meets the law's size threshold and the
+# data is not 'publicly available information'. Most laws exclude public-record data. Write letters as requests, not demands.
+# Companion file with per-state broker notes: brokers/state_law_deletion_matrix.yaml.
+# YAML anchors (&new, &ms) are defined at first use and reused below.
+version: "2026.11.2"
+updated: 2026-11-08
 
 states:
   # ------------------------------------------------------------------ the family's states (checked first)
@@ -26,7 +30,8 @@ states:
       delete data held by brokers. Official ncleg.gov page for S 1022 (Consumer Privacy Act, filed
       2026-04-30): last action 2026-05-05 re-referred to Appropriations/Base Budget; no votes. Earlier S 757
       (introduced 2025-03-25) was referred to Rules and no later action found. H 462 (NC Personal Data
-      Privacy Act) reported in committee, not enacted. Use the generic voluntary-request letter; do not
+      Privacy Act) reported in committee, not enacted. The multistate.us list of states with comprehensive
+      laws (2026-10-28) does not include NC. Use the generic voluntary-request letter; do not
       cite any NC statute. Re-check after the next session convenes.
     source_urls:
       - https://www.ncleg.gov/BillLookUp/2025/S1022
@@ -82,7 +87,7 @@ states:
   # ------------------------------------------------------------------ comprehensive laws in force
   - state: CA
     statute_name: "California Consumer Privacy Act as amended by the CPRA; Delete Act (SB 362)"
-    citation: "Cal. Civ. Code 1798.100 et seq. (deletion: 1798.105); Delete Act: Cal. Civ. Code 1798.99.80 et seq."
+    citation: "Cal. Civ. Code 1798.100 et seq. (deletion: 1798.105; response: 45 days per oag.ca.gov/privacy/ccpa); Delete Act: Cal. Civ. Code 1798.99.80 et seq."
     effective_date: 2020-01-01
     rights: [know, delete, correct, opt_out_sale, opt_out_sharing, limit_sensitive, non_discrimination]
     response_days: 45
@@ -96,19 +101,18 @@ states:
     notes: >-
       Verified on oag.ca.gov/privacy/ccpa: delete right; 45 calendar days to respond, +45 with notice;
       authorized agent may be a person or a business registered with the CA Secretary of State; complaints
-      to the AG and (since 2023-07-01) the CPPA. DROP start date 2026-08-01 is from a secondary source
-      (privacylawmap.com); cppa.ca.gov/delete returned 404, so the exact DROP portal URL is left to the
-      registry entry ca_drop. government_portal_url is the CPPA home page only. Delete Act citation is
-      from background knowledge.
+      to the AG and (since 2023-07-01) the CPPA. DROP: privacy.ca.gov/drop (official, read 2026-11-07), live for
+      residents since 2026-01-01, brokers process from 2026-08-01. The Delete Act section 1798.99.80 is from
+      background knowledge, not re-read. See registry entry ca_drop.
     source_urls:
       - https://oag.ca.gov/privacy/ccpa
+      - https://privacy.ca.gov/drop/
       - https://privacylawmap.com/blog/data-broker-registration-requirements-2026
-      - https://www.mondaq.com/unitedstates/privacy-protection/1732128/is-your-business-a-data-broker-californias-drop-goes-live-and-calprivacy-continues-to-enforce-delete-act
-    last_verified: 2026-11-06
+    last_verified: 2026-11-07
 
   - state: VA
     statute_name: "Virginia Consumer Data Protection Act"
-    citation: "Va. Code 59.1-575 et seq. (deletion: 59.1-577)"
+    citation: "Va. Code 59.1-575 et seq. (deletion and response: 59.1-577)"
     effective_date: 2023-01-01
     rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
     response_days: 45
@@ -116,16 +120,18 @@ states:
     ag_complaint_url: https://www.oag.state.va.us/consumer-protection/index.php/file-a-complaint
     template: state_privacy
     notes: >-
-      Citation and 45+45 windows from background knowledge, not re-fetched. VA AG complaint page fetched OK
-      (general consumer complaint form; page does not mention privacy). Agent rules not confirmed.
-      30-day cure period (privacyterms.io).
-    source_urls: &pt
+      STATUTE TEXT read 2026-11-07 (law.lis.virginia.gov, 59.1-577): 45 days plus one 45-day extension; a
+      controller may decline if it cannot verify the requester; appeal answered within 60 days. The AG
+      complaint page loads (general consumer complaint form, no privacy wording). 30-day cure period is from
+      privacyterms.io (secondary). Agent rules not confirmed.
+    source_urls:
+      - https://law.lis.virginia.gov/vacode/title59.1/chapter53/section59.1-577/
       - https://privacyterms.io/us-state-privacy-laws-2026
-      - https://www.clym.io/blog/us-privacy-law-comparison-map
+    last_verified: 2026-11-07
 
   - state: CO
     statute_name: "Colorado Privacy Act"
-    citation: "C.R.S. 6-1-1301 et seq. (deletion: 6-1-1306)"
+    citation: "C.R.S. 6-1-1301 et seq. (deletion: 6-1-1306(1)(d); response: 6-1-1306(2)(a))"
     effective_date: 2023-07-01
     rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
     response_days: 45
@@ -133,244 +139,324 @@ states:
     ag_complaint_url: https://coag.gov/file-a-complaint/
     template: state_privacy
     notes: >-
-      Citation and windows from background knowledge, not re-fetched. The complaint URL fetch returned an
-      empty page, so it is UNVERIFIED. Cure period expired Jan 2025. Agent rules not confirmed.
-    source_urls: *pt
+      Delete right and 45+45 windows read 2026-11-07 in the enacted bill SB21-190 on content.leg.colorado.gov
+      (later CRS amendments not checked). Applies at 100,000 consumers, or 25,000 plus revenue or a discount
+      from selling data (6-1-1304). The complaint URL fetch returned an empty page, so it is UNVERIFIED. Cure
+      period expired Jan 2025. Agent rules not confirmed.
+    source_urls:
+      - https://content.leg.colorado.gov/sites/default/files/2021a_190_signed.pdf
+      - https://privacyterms.io/us-state-privacy-laws-2026
+    last_verified: 2026-11-07
 
   - state: CT
     statute_name: "Connecticut Data Privacy Act"
-    citation: "Conn. Gen. Stat. 42-515 et seq. (deletion: 42-518)"
+    citation: "Conn. Gen. Stat. 42-515 et seq. (deletion and response: 42-518, section number UNVERIFIED)"
     effective_date: 2023-07-01
     rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
     response_days: 45
     extension_days: 45
     data_broker_law: "Public Act 26-64 (SB 4): data-broker registration with the Dept. of Consumer Protection, framework effective 2026-10-01; sales restriction on unregistered brokers from 2027-01-01 (per privacylawmap.com; not verified against the Act)."
+    ag_complaint_url: https://portal.ct.gov/ag/common/complaint-form-landing-page
     template: state_privacy
     notes: >-
-      Citation and windows from background knowledge, not re-fetched. 2026 amendments to the CTDPA reported
-      (multistate.us) but not detailed. The AG privacy-complaint URL could not be fetched; left empty.
-      Cure period expired Dec 2024.
+      The CT Attorney General's CTDPA page (portal.ct.gov, read 2026-11-08) confirms the act name, the delete
+      right, 'no later than 45 days' and a possible 45-day extension, but cites no section for them. The
+      section number 42-518 is background knowledge: cga.ct.gov fails with a certificate error and
+      law.justia.com returned 403, so do not quote 42-518 in a letter without a human check. The complaint URL
+      is the 'File a Complaint' link on that AG page; the form page itself was not opened. CT amendments
+      (effective 2026-07-01, and SB 4 changes 2026-10-01 per law-firm summaries, secondary) widen scope and
+      lower thresholds; details not verified. Cure period expired Dec 2024.
     source_urls:
-      - https://privacyterms.io/us-state-privacy-laws-2026
+      - https://portal.ct.gov/ag/sections/privacy/the-connecticut-data-privacy-act
       - https://privacylawmap.com/blog/data-broker-registration-requirements-2026
-      - https://www.multistate.us/insider/2026/10/28/twenty-four-states-now-have-comprehensive-consumer-privacy-laws
+      - https://www.mondaq.com/unitedstates/privacy-protection/1797932/connecticut-broadens-data-privacy-act-requirements-effective-july-1-2026
+    last_verified: 2026-11-08
 
   - state: UT
     statute_name: "Utah Consumer Privacy Act"
-    citation: "Utah Code 13-61-101 et seq."
+    citation: "Utah Code 13-61-101 et seq. (deletion: 13-61-201(2); response: 13-61-203(2))"
     effective_date: 2023-12-31
     rights: [access, delete, portability, opt_out_sale, opt_out_targeting]
     response_days: 45
     extension_days: 45
     template: state_privacy
     notes: >-
-      Citation and windows from background knowledge, not re-fetched. Utah's right to delete applies to
-      data the consumer provided to the controller, which matters for broker records; a letter should not
-      overstate it. Complaint URL not verified; left empty.
-    source_urls: *pt
+      Read 2026-11-07 in enrolled S.B. 227 (2022) on le.utah.gov, current code page not readable, so later
+      amendments (for example HB 418, effective 2026-07-01 per a law-firm summary) were not checked. The
+      delete right is limited to 'personal data that the consumer provided to the controller', which is weak
+      against brokers; a letter must not overstate it. Complaint URL not verified; left empty.
+    source_urls:
+      - https://le.utah.gov/~2022/bills/sbillenr/SB0227.htm
+    last_verified: 2026-11-07
 
   - state: TX
     statute_name: "Texas Data Privacy and Security Act"
-    citation: "Tex. Bus. & Com. Code ch. 541 (data brokers: ch. 509)"
+    citation: "Tex. Bus. & Com. Code ch. 541 (deletion: 541.051(b)(3); response: 541.052(b)); data brokers: ch. 509"
     effective_date: 2024-07-01
     rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
     response_days: 45
     extension_days: 45
-    data_broker_law: "Texas data-broker registry: brokers register annually with the Texas Secretary of State (per privacylawmap.com; the sos.texas.gov page was not found, so section and URL not verified)."
+    data_broker_law: "Texas data-broker registry: brokers register annually with the Texas Secretary of State (per privacylawmap.com; the sos.texas.gov page was not found, so section and URL not verified). A list only, no deletion right."
     ag_complaint_url: https://www.texasattorneygeneral.gov/consumer-protection/file-consumer-complaint
     template: state_privacy
     notes: >-
-      Citation and windows from background knowledge, not re-fetched. Complaint URL returned HTTP 402 to the
-      fetcher (likely bot-gated), so UNVERIFIED. 30-day cure period (privacyterms.io).
+      Read 2026-11-07 in the enrolled bill HB 4 (88R) on capitol.texas.gov: delete 'personal data provided by or
+      obtained about the consumer'; respond no later than the 45th day, extendable once by 45. The statutes.capitol
+      page showed only an index, so the section numbers are from the bill's codification, not the live code. Complaint URL returned
+      HTTP 402 to the fetcher, so UNVERIFIED. 30-day cure period (privacyterms.io).
     source_urls:
-      - https://privacyterms.io/us-state-privacy-laws-2026
+      - https://capitol.texas.gov/tlodocs/88R/billtext/html/HB00004F.htm
       - https://privacylawmap.com/blog/data-broker-registration-requirements-2026
-      - https://www.clym.io/blog/us-privacy-law-comparison-map
+    last_verified: 2026-11-07
 
   - state: OR
     statute_name: "Oregon Consumer Privacy Act"
-    citation: "ORS 646A.570 to 646A.589"
+    citation: "ORS 646A.570 to 646A.589 (deletion: 646A.574(1)(c); response: 646A.576(5)(a))"
     effective_date: 2024-07-01
     rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling, list_of_third_parties]
     response_days: 45
     extension_days: 45
-    data_broker_law: "Oregon data-broker registration with the Dept. of Consumer and Business Services (per privacylawmap.com; no statute section or details verified)."
+    data_broker_law: "Oregon data-broker registration with the Dept. of Consumer and Business Services (per privacylawmap.com; no statute section or details verified). A list only."
     ag_complaint_url: https://justice.oregon.gov/consumercomplaints/
     template: state_privacy
     notes: >-
-      Citation and windows from background knowledge, not re-fetched. Complaint page fetched OK (Oregon DOJ
-      Consumer Protection complaint form).
+      STATUTE TEXT read: 646A.574(1)(c) delete right covers data obtained from other sources (2026-11-07);
+      646A.576 on oregon.public.law (2026-11-08): 45 days, extendable by 45 more with notice inside the first
+      45 days. Complaint page fetched OK earlier (Oregon DOJ Consumer Protection complaint form).
     source_urls:
-      - https://privacyterms.io/us-state-privacy-laws-2026
-      - https://privacylawmap.com/blog/data-broker-registration-requirements-2026
-      - https://www.clym.io/blog/us-privacy-law-comparison-map
+      - https://oregon.public.law/statutes/ors_646A.574
+      - https://oregon.public.law/statutes/ors_646A.576
+    last_verified: 2026-11-08
 
   - state: FL
     statute_name: "Florida Digital Bill of Rights"
-    citation: "Fla. Stat. 501.701 et seq."
+    citation: "Fla. Stat. 501.701 et seq. (deletion: 501.705(2)(c); response window not found in text)"
     effective_date: 2024-07-01
     rights: [access, correct, delete, opt_out_sale]
     response_days: 45
     extension_days: 15
     template: generic
     notes: >-
-      Applies only to very large companies (about USD 1 billion revenue threshold per privacyterms.io),
-      so it almost never reaches people-search sites; letter template stays generic. Citation and windows
-      from background knowledge, not re-fetched.
-    source_urls: *pt
+      Delete right read 2026-11-07 on leg.state.fl.us ('personal data provided by or obtained about the
+      consumer'). 501.705 states NO deadline in the text read, so 45 + 15 days is background, UNVERIFIED.
+      Applies only to very large companies (about USD 1 billion revenue per privacyterms.io; 501.702/501.703
+      not read), so it almost never reaches people-search sites; letter template stays generic.
+    source_urls:
+      - https://www.leg.state.fl.us/statutes/index.cfm?App_mode=Display_Statute&URL=0500-0599/0501/Sections/0501.705.html
+      - https://privacyterms.io/us-state-privacy-laws-2026
+    last_verified: 2026-11-07
 
   - state: MT
     statute_name: "Montana Consumer Data Privacy Act"
-    citation: "Mont. Code Ann. 30-14-2801 et seq."
+    citation: "Mont. Code Ann. 30-14-2801 et seq. (deletion: 30-14-2808(1)(c); response: 30-14-2808(4)(a))"
     effective_date: 2024-10-01
     rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
     response_days: 45
     extension_days: 45
     template: state_privacy
-    notes: "Citation and windows from background knowledge, not re-fetched. Complaint URL not verified; left empty."
-    source_urls: *pt
+    notes: >-
+      Read 2026-11-07 on mca.legmt.gov: 'delete personal data about the consumer'; 45 days, extendable by 45.
+      An earlier cite to 30-14-2806 was wrong and is corrected. Applicability thresholds (30-14-2803) not read.
+      Complaint URL not verified; left empty.
+    source_urls:
+      - https://mca.legmt.gov/bills/mca/title_0300/chapter_0140/part_0280/sections_index.html
+    last_verified: 2026-11-07
 
   - state: DE
     statute_name: "Delaware Personal Data Privacy Act"
-    citation: "6 Del. C. ch. 12D"
+    citation: "6 Del. C. ch. 12D (deletion: 12D-104(a)(3); response: 12D-104(c)(1))"
     effective_date: 2025-01-01
     rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling, list_of_third_parties]
     response_days: 45
     extension_days: 45
     template: state_privacy
     notes: >-
-      Citation and windows from background knowledge, not re-fetched. A 2026 amendment is reported
-      (multistate.us), not detailed. A Delaware data-broker registry was NOT confirmed. Complaint URL not verified.
+      Read 2026-11-07 on delcode.delaware.gov: 'Delete personal data provided by, or obtained about, the
+      consumer'; 45 days plus 45 more if reasonably necessary. Publicly available information is excluded
+      (12D-102). A 2026 amendment is reported (multistate.us), not detailed. No Delaware data-broker registry
+      confirmed. Complaint URL not verified.
     source_urls:
-      - https://privacyterms.io/us-state-privacy-laws-2026
+      - https://delcode.delaware.gov/title6/c012d/index.html
       - https://www.multistate.us/insider/2026/10/28/twenty-four-states-now-have-comprehensive-consumer-privacy-laws
+    last_verified: 2026-11-07
 
   - state: IA
     statute_name: "Iowa Consumer Data Protection Act"
-    citation: "Iowa Code ch. 715D"
+    citation: "Iowa Code ch. 715D (deletion: 715D.3(1)(b); response: 715D.3(2)(a))"
     effective_date: 2025-01-01
     rights: [access, delete, portability, opt_out_sale]
     response_days: 90
     extension_days: 45
     template: state_privacy
     notes: >-
-      Iowa's response window is believed to be 90 days (+45), longer than most states, and the deletion
-      right limited to data the consumer provided (background knowledge, not re-fetched). Complaint URL
-      not verified.
-    source_urls: *pt
+      Read 2026-11-07 in Iowa Code 2026 section 715D.3 (legis.iowa.gov): 'To delete personal data provided by
+      the consumer' (limited to what the consumer gave the company, weak against brokers); respond within 90
+      days, extendable once by 45. Appeal answered within 60 days. Complaint URL not verified.
+    source_urls:
+      - https://www.legis.iowa.gov/docs/code/715D.3.pdf
+    last_verified: 2026-11-07
 
   - state: NE
     statute_name: "Nebraska Data Privacy Act"
-    citation: "Neb. Rev. Stat. 87-1101 et seq."
-    effective_date: 2025-01-01
-    rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
-    response_days: 45
-    extension_days: 45
-    template: state_privacy
-    notes: "Citation and windows from background knowledge, not re-fetched. Complaint URL not verified."
-    source_urls: *pt
-
-  - state: NH
-    statute_name: "New Hampshire Privacy Act"
-    citation: "N.H. RSA ch. 507-H"
+    citation: "Neb. Rev. Stat. 87-1101 to 87-1130 (deletion: 87-1107(2)(c); response window section not located)"
     effective_date: 2025-01-01
     rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
     response_days: 45
     extension_days: 45
     template: state_privacy
     notes: >-
-      Citation and windows from background knowledge, not re-fetched. 2026 amendments reported
-      (multistate.us), not detailed; HB 1694 (2026) appeared in a data-broker search, content not checked.
+      Read 2026-11-08 on nebraskalegislature.gov: 87-1101 names the 'Data Privacy Act' (87-1101 to 87-1130,
+      LB1074, 2024); 87-1107 'Consumer rights; request to exercise' (2)(c) says a controller must
+      'Delete personal data provided by or obtained about the consumer'. The 45+45 day response window was NOT
+      found in 87-1107 and is background, UNVERIFIED (probably a later section of the Act). Complaint URL not
+      verified.
     source_urls:
-      - https://privacyterms.io/us-state-privacy-laws-2026
-      - https://www.multistate.us/insider/2026/10/28/twenty-four-states-now-have-comprehensive-consumer-privacy-laws
+      - https://nebraskalegislature.gov/laws/statutes.php?statute=87-1101
+      - https://nebraskalegislature.gov/laws/statutes.php?statute=87-1107
+    last_verified: 2026-11-08
+
+  - state: NH
+    statute_name: "New Hampshire Privacy Act"
+    citation: "N.H. RSA ch. 507-H (deletion: 507-H:4, I(c); response: 507-H:4, III(a))"
+    effective_date: 2025-01-01
+    rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
+    response_days: 45
+    extension_days: 45
+    template: state_privacy
+    notes: >-
+      Read 2026-11-07 on gc.nh.gov: 'Delete personal data provided by, or obtained about, the consumer'; 45
+      days, extendable by 45. 2026 amendments reported (multistate.us), not detailed; HB 1694 (2026) appeared
+      in a data-broker search, content not checked. Complaint URL not verified.
+    source_urls:
+      - https://gc.nh.gov/rsa/html/LII/507-H/507-H-4.htm
+      - https://gc.nh.gov/rsa/html/NHTOC/NHTOC-LII-507-H.htm
       - https://bills.nhliberty.org/bills/2026/HB1694
+    last_verified: 2026-11-07
 
   - state: NJ
     statute_name: "New Jersey Data Privacy Act"
-    citation: "N.J.S.A. 56:8-166.4 et seq."
+    citation: "N.J.S.A. 56:8-166.4 et seq. (deletion: 56:8-166.10 a.(3); response: 56:8-166.7)"
     effective_date: 2025-01-15
     rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
     response_days: 45
     extension_days: 45
     data_broker_law: "A3538 signed 2026-06-30; registration and enforcement operative 2027-03-27 (per search summary of a Greenberg/Mondaq article; not verified against the Act). Not yet usable."
     template: state_privacy
-    notes: "Citation and windows from background knowledge, not re-fetched. Complaint URL not verified."
+    notes: >-
+      Read 2026-11-07 on pub.njleg.gov (P.L.2023 c.266): right to delete personal data concerning the
+      consumer; 45 days plus 45 more if reasonably necessary. 2026 c.25 amended section 9 (controller duties,
+      not rights). Complaint URL not verified.
     source_urls:
-      - https://privacyterms.io/us-state-privacy-laws-2026
+      - https://pub.njleg.gov/Bills/2022/PL23/266_.HTM
       - https://www.mondaq.com/unitedstates/privacy-protection/1816798/vermont-and-new-jersey-data-broker-laws-add-to-expanding-state-privacy-patchwork
+    last_verified: 2026-11-07
 
   - state: TN
     statute_name: "Tennessee Information Protection Act"
-    citation: "Tenn. Code Ann. 47-18-3201 et seq."
+    citation: "Tenn. Code Ann. 47-18-3201 et seq. (deletion: 47-18-3203(a)(2)(C); response: 47-18-3203(b)(1))"
     effective_date: 2025-07-01
     rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
     response_days: 45
     extension_days: 45
     template: state_privacy
-    notes: "Citation and windows from background knowledge, not re-fetched. Complaint URL not verified."
-    source_urls: *pt
+    notes: >-
+      Read 2026-11-07 in the bill text HB1181/SB73 on capitol.tn.gov (not a code page), so the enrolled version
+      could differ slightly. Applies at 100,000 consumers, or 25,000 plus over 50 percent of revenue from
+      selling data. Publicly available information is excluded (47-18-3201(16)(C)). Complaint URL not verified.
+    source_urls:
+      - https://www.capitol.tn.gov/Bills/113/Bill/HB1181.pdf
+      - https://www.tn.gov/attorneygeneral/news/2025/4/30/pr25-25.html
+    last_verified: 2026-11-07
 
   - state: MN
     statute_name: "Minnesota Consumer Data Privacy Act"
-    citation: "Minn. Stat. ch. 325M"
+    citation: "Minn. Stat. ch. 325M (deletion: 325M.14, subd. 1(d); response: 325M.14, subd. 4(e))"
     effective_date: 2025-07-31
     rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling, list_of_third_parties]
     response_days: 45
     extension_days: 45
     template: state_privacy
-    notes: "Citation and windows from background knowledge, not re-fetched. Complaint URL not verified."
-    source_urls: *pt
+    notes: >-
+      STATUTE TEXT read 2026-11-08 on revisor.mn.gov/statutes/cite/325M.14: 'A consumer has the right to delete
+      personal data concerning the consumer'; respond within 45 days of receipt, extendable once by 45 with
+      notice inside the first 45 days. Minnesota also lets a controller satisfy a request about data from a
+      third party by a minimal suppression record (subd. 4(k)). Complaint URL not verified.
+    source_urls:
+      - https://www.revisor.mn.gov/statutes/cite/325M.14
+    last_verified: 2026-11-08
 
   - state: MD
     statute_name: "Maryland Online Data Privacy Act"
-    citation: "Md. Code, Com. Law 14-4601 et seq."
+    citation: "Md. Code, Com. Law 14-4701 et seq. (deletion: 14-4705(b)(4); response: 14-4705(e)(2))"
     effective_date: 2025-10-01
     rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
     response_days: 45
     extension_days: 45
     template: state_privacy
     notes: >-
-      Citation and windows from background knowledge, not re-fetched. 2026 amendments reported
-      (multistate.us), and Maryland HB 1220 (2026) appeared in a data-broker search; content not checked.
+      Read 2026-11-07 on mgaleg.maryland.gov (2026RS): 'delete personal data provided by, or obtained about,
+      the consumer unless retention is required by law'; 45 days, extendable by 45. 'Personal data' excludes
+      publicly available information (14-4701(w)(2)). An earlier cite to 14-4605 was wrong and is corrected.
+      Maryland HB 1220 (2026) appeared in a data-broker search; content not checked.
     source_urls:
-      - https://privacyterms.io/us-state-privacy-laws-2026
-      - https://www.multistate.us/insider/2026/10/28/twenty-four-states-now-have-comprehensive-consumer-privacy-laws
+      - https://mgaleg.maryland.gov/2026RS/Statute_Web/gcl/14-4705.pdf
+      - https://mgaleg.maryland.gov/2026RS/Statute_Web/gcl/14-4701.pdf
+    last_verified: 2026-11-07
 
   - state: IN
     statute_name: "Indiana Consumer Data Protection Act"
-    citation: "Ind. Code 24-15"
+    citation: "Ind. Code 24-15 (deletion: 24-15-3-1(b); response: 24-15-3-1(c)(1)); section letters from a secondary code mirror"
     effective_date: 2026-01-01
     rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
     response_days: 45
     extension_days: 45
     template: state_privacy
-    notes: "Citation and windows from background knowledge, not re-fetched. Complaint URL not verified."
-    source_urls: *pt
+    notes: >-
+      Read 2026-11-08 on codes.findlaw.com (a secondary mirror of IC 24-15-3-1, NOT iga.in.gov, which only
+      returns a heading to our fetcher): (b) lists the right 'To delete personal data provided by or obtained
+      about the consumer'; (c)(1) requires a response within 45 days, extendable once by 45 with notice.
+      Treat the section letters as UNVERIFIED against the official code until a human opens iga.in.gov.
+      Complaint URL not verified.
+    source_urls:
+      - https://codes.findlaw.com/in/title-24-trade-regulation/in-code-sect-24-15-3-1/
+      - https://iga.in.gov/ic/2024/Title_24/Article_15.pdf
+    last_verified: 2026-11-08
 
   - state: KY
     statute_name: "Kentucky Consumer Data Protection Act"
-    citation: "KRS 367.3611 et seq."
+    citation: "KRS 367.3611 et seq. (deletion: 367.3615(2)(c); response: 367.3615(3)(a))"
     effective_date: 2026-01-01
     rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
     response_days: 45
     extension_days: 45
     template: state_privacy
-    notes: "Citation and windows from background knowledge, not re-fetched. 2026 amendment reported (multistate.us), not detailed."
+    notes: >-
+      Read 2026-11-07 on apps.legislature.ky.gov: 'Delete personal data provided by or obtained about the
+      consumer'; 45 days plus one 45-day extension; data from a non-consumer source may be handled by a minimal
+      deletion record or an opt-out (3)(e); appeal answered within 60 days. 2026 amendment reported
+      (multistate.us), not detailed. Complaint URL not verified.
     source_urls:
-      - https://privacyterms.io/us-state-privacy-laws-2026
+      - https://apps.legislature.ky.gov/LAW/STATUTES/statute.aspx?id=55838
       - https://www.multistate.us/insider/2026/10/28/twenty-four-states-now-have-comprehensive-consumer-privacy-laws
+    last_verified: 2026-11-07
 
   - state: RI
     statute_name: "Rhode Island Data Transparency and Privacy Protection Act"
-    citation: "R.I. Gen. Laws 6-48.1-1 et seq."
+    citation: "R.I. Gen. Laws 6-48.1-1 et seq. (deletion: 6-48.1-5(e)(2); response: 6-48.1-6(b)(1))"
     effective_date: 2026-01-01
     rights: [access, correct, delete, portability, opt_out_sale, opt_out_targeting, opt_out_profiling]
     response_days: 45
     extension_days: 45
     template: state_privacy
-    notes: "Delete right confirmed in clym.io comparison table. Citation and windows from background knowledge, not re-fetched."
-    source_urls: *pt
+    notes: >-
+      Read 2026-11-07 on webserver.rilegislature.gov: 6-48.1-5 'Customer rights' lets a customer ask a
+      controller to delete personal data 'provided by, or obtained about, the customer'; 6-48.1-6(b)(1) gives
+      45 days plus 45 more; appeal answered within 60 days. An earlier cite to 6-48.1-4 was wrong and is
+      corrected. Complaint URL not verified.
+    source_urls:
+      - https://webserver.rilegislature.gov/Statutes/TITLE6/6-48.1/6-48.1-5.htm
+      - https://webserver.rilegislature.gov/Statutes/TITLE6/6-48.1/6-48.1-6.htm
+    last_verified: 2026-11-07
 
   # ------------------------------------------------------------------ enacted in 2026, NOT yet in force (generic until effective)
   - state: OK
@@ -380,11 +466,12 @@ states:
     rights: []
     template: generic
     notes: >-
-      Signed 2026-03-20 per a secondary guide; effective 2027-01-01 per a search summary (sources partly
-      conflict on Oklahoma's date). NOT in force on 2026-11-06, so do not cite. Switch template to
-      state_privacy and fill rights/windows once effective and the statute text is checked.
+      Signed 2026-03-20 per a secondary guide; effective 2027-01-01 per Ice Miller via a 2026-11-08 search
+      summary (earlier sources partly conflict on the date). NOT in force on 2026-11-08, so do not cite. Switch
+      template to state_privacy and fill rights/windows once effective and the statute text is checked.
     source_urls: &new
       - https://www.multistate.us/insider/2026/10/28/twenty-four-states-now-have-comprehensive-consumer-privacy-laws
+    last_verified: 2026-11-08
 
   - state: LA
     statute_name: "Louisiana Data Privacy Act (SB 386)"
@@ -401,7 +488,7 @@ states:
     effective_date: 2027-05-01
     rights: []
     template: generic
-    notes: "Signed 2026-04-17 per a secondary guide; effective 2027-05-01. NOT in force today; do not cite."
+    notes: "Signed 2026-04-17 per a secondary guide; effective 2027-05-01 (confirmed by a second secondary summary 2026-11-08). NOT in force today; do not cite."
     source_urls: *new
 
   - state: VT
@@ -409,7 +496,7 @@ states:
     citation: "2026 Vt. S.71 (Act 145)"
     effective_date: 2028-01-01
     rights: []
-    data_broker_law: "Vermont data-broker registry: annual registration with the Secretary of State, enforced by the AG (in effect since 2019). A 2026 law (signed 2026-06-16) reportedly raises the fee from USD 100 to USD 900 on 2027-01-01 (secondary source). Registry statute citation not verified."
+    data_broker_law: "Vermont data-broker registry: annual registration with the Secretary of State, enforced by the AG (in effect since 2019). A 2026 law (signed 2026-06-16) reportedly raises the fee from USD 100 to USD 900 on 2027-01-01 (secondary source). Registry statute citation not verified. A list only, no deletion right."
     template: generic
     notes: >-
       Comprehensive law signed 2026-06-16, effective 2028-01-01 per a secondary guide: NOT in force today.
@@ -422,8 +509,9 @@ states:
 
   # ------------------------------------------------------------------ no comprehensive law found (generic letter)
   # Not individually researched beyond "not among the 24 states with comprehensive laws" (multistate.us, 2026-10-28).
+  # Arkansas HB 1717 (July 2026) is a children/teen online-privacy law, not a comprehensive law (Ice Miller summary, 2026-11-08).
   - {state: AK, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). Not individually researched.", source_urls: &ms [https://www.multistate.us/insider/2026/10/28/twenty-four-states-now-have-comprehensive-consumer-privacy-laws]}
-  - {state: AR, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). Not individually researched.", source_urls: *ms}
+  - {state: AR, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). A 2026 children/teen online privacy law (HB 1717) is not a general deletion right. Not individually researched.", source_urls: *ms}
   - {state: DC, template: generic, notes: "No comprehensive consumer privacy law found (not among the 24 per multistate.us, 2026-10-28). Not individually researched.", source_urls: *ms}
   - {state: GA, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). Not individually researched.", source_urls: *ms}
   - {state: HI, template: generic, notes: "No comprehensive consumer privacy law (not among the 24 enacted per multistate.us, 2026-10-28). Not individually researched.", source_urls: *ms}
