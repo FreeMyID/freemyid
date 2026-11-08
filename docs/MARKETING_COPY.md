@@ -155,3 +155,15 @@ Slogans in that voice:
 | A 2024 federal law (PADFA) makes it unlawful for a data broker to sell or give access to Americans' sensitive data to foreign-adversary countries or entities they control | Pub. L. 118-50, Div. I, sec. 2 (signed 24 Apr 2024); FTC text: https://www.ftc.gov/legal-library/browse/statutes/protecting-americans-data-foreign-adversaries-act-2024-padfa ; FTC sent warning letters to 13 brokers on 9 Feb 2026 (see https://www.jdsupra.com/legalnews/ftc-warns-data-brokers-of-possible-3356177/) | Do not name countries unless quoting the statute. Do not say Congress "had to" act. |
 | A Justice Department rule has restricted sales of bulk sensitive personal data to "countries of concern" since 8 Apr 2025 | DOJ National Security Division, Data Security Program: https://www.justice.gov/nsd/data-security (28 CFR Part 202; 90 FR 1636) | Describe as "a DOJ rule", not a ban on all broker sales. |
 | DROPPED: CFPB "scammers, stalkers and spies" | CFPB press release 3 Dec 2024 was a proposed rule; withdrawn 15 May 2025 (90 FR 20568, docket CFPB-2024-0044) | Not used anywhere. |
+
+## Developer page intros (drafted 2026-11-08, Jordan; for the Codex pages WO-137 and WO-138)
+
+Pick-up copy only; the web team pastes it. Facts checked against docs/CLI.md (v0.2 command line) and `freemyid --help` on main. Plain words, no promise a site removes anyone.
+
+**/developers/cli/ intro (about 55 words)**
+"The `freemyid` command does everything the app does, from a terminal: set up a person, scan, run, check status, print a report, and install the background re-check. Run `freemyid doctor` first to see if the computer is ready. Add `--dry-run` to practice without sending anything. Every command below lists its options and exit codes."
+
+**/developers/config/ intro (about 60 words)**
+"Set up a person without the wizard by describing them in one YAML file and running `freemyid setup --from setup.yaml`. The file goes through the same checks as the wizard, and agreeing is explicit: you type the person's name as consent. Passwords never go in the file; point to an environment variable or a file instead. Use `--check` to validate the file and save nothing."
+
+Notes: both intros follow docs/CLI.md ("setup --from" section: same checks as the wizard, `consent.signed_name`, `password_env`/`password_file`, `--check` saves nothing). The schema file is schema/setup-config.schema.json. Do not add examples with real names; the fake example is docs/examples/setup-config.example.yaml.
