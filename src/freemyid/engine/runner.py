@@ -24,7 +24,7 @@ import asyncio
 import logging
 from collections import Counter
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 from .. import config as cfgmod
@@ -74,6 +74,11 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 
+#: BL-IN-10: the statutory response window (days from the first request) and the one
+#: extension a broker may claim, used when no verified state-law figure is available.
+LEGAL_WINDOW_DAYS = 45
+LEGAL_EXTENSION_DAYS = 45
+EXTENSION_EVENT = "broker_extension"
 _SUBMITTED_STATES = (S.SUBMITTED, S.AWAITING_VERIFICATION, S.CONFIRMED)
 ID_REQUEST_REASON = "id_requested"
 CPPA_COMPLAINT_URL = "https://cppa.ca.gov/webapplications/complaint"
@@ -639,6 +644,8 @@ class Runner:
         if scan.duplicates or scan.stale:
             self._event(profile, broker.id, "mail_replies_skipped",
                         duplicates=scan.duplicates, stale=scan.stale)
+        if scan.extension_claimed and not self._extension_claimed(profile, broker):
+            self._event(profile, broker.id, EXTENSION_EVENT)
         if scan.id_requested:
             return self._id_requested(profile, broker, st)
         links = scan.links
@@ -731,11 +738,21 @@ class Runner:
             self._event(profile, broker.id, "escalation_waiting", rung=dec.action.value,
                         why=waiting)
             return st
+        law = self._law(profile)
+        window_end = self.legal_window_end(profile, broker, st, law)
+        early = window_end is not None and self.now < window_end
+        if window_end is not None and early and \
+                dec.action in (Escalation.LEGAL_DEMAND, Escalation.COMPLAINT):
+            # BL-IN-10: no legal demand (or complaint) before the statutory window has passed
+            self._event(profile, broker.id, "escalation_waiting", rung=dec.action.value,
+                        why="legal_window", until=window_end.date().isoformat())
+            return st
+        if early and dec.action == Escalation.FOLLOW_UP:
+            law = None        # a polite reminder: no statute, no legal deadline
         if self.dry_run:
             self._event(profile, broker.id, "escalation_due", rung=dec.action.value,
-                        level=dec.new_level)
+                        level=dec.new_level, reminder=early)
             return st
-        law = self._law(profile)
         listings = [li for li in self.store.list_listings(profile.id, broker.id)
                     if li.gone_since is None and li.match_level == MatchLevel.CONFIRMED]
         original = self._last_sent(profile, broker)
@@ -765,9 +782,35 @@ class Runner:
                         level=st.escalation_level, result=done)
             return st.model_copy(update={"last_escalated_at": self.now})
         self._event(profile, broker.id, "escalated", rung=dec.action.value,
-                    level=dec.new_level, result=done)
+                    level=dec.new_level, result=done, reminder=early)
         return st.model_copy(update={"escalation_level": dec.new_level,
                                      "last_escalated_at": self.now})
+
+    def _extension_claimed(self, profile: Profile, broker: Broker) -> bool:
+        return any(e.action == EXTENSION_EVENT
+                   for e in self.store.events(profile.id, broker.id, limit=2000))
+
+    def legal_window_end(self, profile: Profile, broker: Broker, st: Any,
+                         law: StateLaw | None) -> datetime | None:
+        """BL-IN-10: when the statutory response window for the FIRST request ends:
+        45 days (or the verified `response_days`), plus the extension (verified
+        `extension_days`, else 45) once the broker has said it is taking more time. Before
+        this, a follow-up is a polite reminder and no legal demand goes out. None = nothing
+        was ever sent."""
+        sent = [r.sent_at for r in self.store.list_requests(profile.id, broker.id,
+                                                            status=RequestStatus.SENT)
+                if r.sent_at is not None and not r.dry_run and
+                r.kind in (RequestKind.OPT_OUT, RequestKind.RESUBMIT)]
+        first = min(sent, default=None) or st.last_submitted_at
+        if first is None:
+            return None
+        from .outbox import effective_law
+        eff = effective_law(profile, law, self.now.date())
+        days = (eff.response_days if eff and eff.response_days else LEGAL_WINDOW_DAYS)
+        if self._extension_claimed(profile, broker):
+            days += (eff.extension_days if eff and eff.extension_days
+                     else LEGAL_EXTENSION_DAYS)
+        return first + timedelta(days=days)
 
     def _ladder_view(self, profile: Profile, broker: Broker, st: Any) -> Any:
         """Status as the ladder should see it: a letter approved (and sent) long after it

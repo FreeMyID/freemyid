@@ -55,6 +55,13 @@ _ID_REQUEST = re.compile(
     r"\bssn\b|last (4|four) digits|notari[sz]ed|utility bill|"
     r"proof of (identity|address|residency)|identity document|id document",
     re.IGNORECASE)
+# BL-IN-10: a broker reply saying it needs more time (a statutory extension). The runner then
+# waits the longer legal window before any letter that cites the law.
+_EXTENSION = re.compile(
+    r"\bextend(ing|ed)?\b[^.]{0,60}\b(time|period|deadline|response|days)\b|"
+    r"\bextension\b|additional (45|forty[- ]five|90|ninety) days|"
+    r"(need|require)s? (additional|more) time",
+    re.IGNORECASE)
 DATE_SLACK = timedelta(hours=1)     # broker clock skew vs. our last_submitted_at
 MAX_MESSAGES = 50            # per poll; we only need recent broker mail
 MAX_MESSAGE_BYTES = 2_000_000
@@ -151,6 +158,7 @@ class ReplyScan:
     """What the broker's replies say, PII-free (links are confirmation URLs only)."""
     links: list[str] = field(default_factory=list)   # newest message first, ranked inside
     id_requested: bool = False      # some reply asks for an ID document -> human to-do
+    extension_claimed: bool = False  # some reply says the broker is taking more time
     messages: int = 0               # distinct broker messages considered
     duplicates: int = 0             # same Message-ID (or same bytes) seen again
     stale: int = 0                  # older than the submission this reply would answer
@@ -196,6 +204,11 @@ def asks_for_id(raw: bytes) -> bool:
     return bool(_ID_REQUEST.search(_plain_text(raw)))
 
 
+def claims_extension(raw: bytes) -> bool:
+    """The reply says the broker is extending its response time (BL-IN-10)."""
+    return bool(_EXTENSION.search(_plain_text(raw)))
+
+
 def scan_replies(raws: list[bytes], broker: Broker, since: datetime | None = None, *,
                  check_sender: bool = True) -> ReplyScan:
     """Pure reply matcher.
@@ -205,6 +218,7 @@ def scan_replies(raws: list[bytes], broker: Broker, since: datetime | None = Non
     * mail dated before `since` (minus DATE_SLACK) answers an earlier request: ignored, so
       an old confirmation link is never clicked for a new submission;
     * a message that asks for ID sets id_requested and contributes no links;
+    * a message saying the broker needs more time sets extension_claimed;
     * links come newest message first (a broker that answers twice: its latest link wins).
     """
     allowed = confirmation_hosts(broker)
@@ -230,6 +244,8 @@ def scan_replies(raws: list[bytes], broker: Broker, since: datetime | None = Non
     floor = datetime.min.replace(tzinfo=UTC)
     msgs.sort(key=lambda m: (m[0] or floor, m[1]), reverse=True)
     for _d, _i, raw in msgs:
+        if claims_extension(raw):
+            out.extension_claimed = True
         if asks_for_id(raw):
             out.id_requested = True
             continue
