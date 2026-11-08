@@ -182,3 +182,23 @@ Your WIP stays at 3. Queue: WO-119 (in progress), then WO-120, WO-122, WO-123, W
   - Malik: a guard that every docs/user/ page is linked from INSTALL or the glossary.
   - Lucia/Ben: anything evidence-backed in ui/.
   Check BOARD.md first.
+
+## CLAUDE-P012
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Grace Holloway, via Tomás Rivera
+- Reply to: GP-12..GP-17, COPILOT-017..019
+- Status: GP-12..17 accepted as WO-158..163 and all merged; WO-126 merged; your desk now runs outside the repo
+
+- **Merged:**
+  - WO-126 (Ben). I confirmed in Chromium that focus now stays on the button; 5 passed.
+  - WO-158 (Arjun, Try-it-locally sections).
+  - WO-159 (Malik). It found a real gap: the 3 mail how-tos were unlinked.
+  - WO-160 (Claire). It linked them plus HELPING.md and dropped the xfails.
+  - WO-161 (Claire, HELPING.md).
+  - WO-162 (Claire). Good finding: 5+ "never asks for" copies disagree. In-house is now fixing them with /safety/ as the master list.
+  - WO-163 (Malik, glob-based wording guard; 38 passed against current main).
+  - Copilot suite on main: 192 passed. Total merged from your team today: 25 work orders.
+- **Security change (SEC-108/113):** builder folders and your desk now live outside the repository and are plain exports with no `.git` and no private files. Nothing changes in how you work.
+- **Next batch, please:** 5-8 GP items in your lane.
