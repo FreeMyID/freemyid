@@ -54,9 +54,10 @@ brokers:
       - "Go to the opt-out page. Paste the web address and type your removal email."
       - "Press the button to send."
       - "Open the email Spokeo sends you and click its link."
-    source_urls: [&badbool https://github.com/yaelwrites/Big-Ass-Data-Broker-Opt-Out-List, https://www.spokeo.com/privacy-policy, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
-    verification_status: unverified
-    verification_notes: "Opt-out page /optout returned HTTP 403 (bot protection), so unverified. Email source: Spokeo's own privacy policy (fetched 2026-11-06) lists CustomerCare@spokeo.com for general privacy questions and says EEA users may email it to request erasure; deletion for others is via its web form or phone (877) 864-0183. privacy@spokeo.com is named there only for the Data Protection Officer and appeals; the CA registry primary contact is legal@spokeo.com. The registry also lists freepeopledirectory.com, peoplewin.com and thatsthem.com as Spokeo sites. BADBOOL warns paid accounts may keep removed data."
+    source_urls: [https://www.spokeo.com/optout, &badbool https://github.com/yaelwrites/Big-Ass-Data-Broker-Opt-Out-List, https://www.spokeo.com/privacy-policy, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    verification_status: verified
+    verification_notes: "Opened in a real browser 2026-11-07: /optout asks for the listing URL (each listing is opted out separately) and an email; you click a confirmation link; processed in 24-48 hours. Help: privacy@spokeo.com. Earlier: Opt-out page /optout returned HTTP 403 (bot protection), so unverified. Email source: Spokeo's own privacy policy (fetched 2026-11-06) lists CustomerCare@spokeo.com for general privacy questions and says EEA users may email it to request erasure; deletion for others is via its web form or phone (877) 864-0183. privacy@spokeo.com is named there only for the Data Protection Officer and appeals; the CA registry primary contact is legal@spokeo.com. The registry also lists freepeopledirectory.com, peoplewin.com and thatsthem.com as Spokeo sites. BADBOOL warns paid accounts may keep removed data."
+    last_verified: 2026-11-07
     priority: 90
     search_url_pattern: https://www.spokeo.com/{first}-{last}/{state_name}/{city}
     search_access: bot_blocked
@@ -85,7 +86,7 @@ brokers:
     url: https://www.whitepages.com/
     category: people_search
     domains: [www.whitepages.com, whitepages.com, support.whitepages.com]
-    opt_out_url: https://www.whitepages.com/suppression_requests
+    opt_out_url: https://www.whitepages.com/suppression-requests
     method: web_form
     alt_methods: [email]
     opt_out_email: legal@whitepages.com
@@ -99,9 +100,10 @@ brokers:
       - "Paste it on the removal page and press the button."
       - "Whitepages phones you with a 4-digit code. This needs your OK to share a phone number."
       - "Type the code. If you cannot, this one will need you to finish it yourself."
-    source_urls: [*badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
-    verification_status: unverified
-    verification_notes: "Fetch blocked by tool policy. BADBOOL gives suppression_requests (underscore); the legacy seed used suppression-requests (hyphen); confirm which is live. Phone verification means NEEDS_HUMAN unless allow_phone_disclosure is set. Email: legal@whitepages.com is the 'primary contact email' in the CA CPPA registry 2025 CSV (fetched 2026-11-06) and a search-result summary of Whitepages pages names it for written CCPA deletion requests; not confirmed on a Whitepages page. A separate search result mentioned privacyrequest@whitepages.com; not recorded (single weak source)."
+    source_urls: [https://www.whitepages.com/suppression-requests, *badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    verification_status: verified
+    verification_notes: "Opened in a real browser 2026-11-07: /suppression_requests redirects to /suppression-requests. 'Opt-out of Whitepages', step 1 of 5 asks for the URL of your listing, then Next. Earlier: Fetch blocked by tool policy. BADBOOL gives suppression_requests (underscore); the legacy seed used suppression-requests (hyphen); confirm which is live. Phone verification means NEEDS_HUMAN unless allow_phone_disclosure is set. Email: legal@whitepages.com is the 'primary contact email' in the CA CPPA registry 2025 CSV (fetched 2026-11-06) and a search-result summary of Whitepages pages names it for written CCPA deletion requests; not confirmed on a Whitepages page. A separate search result mentioned privacyrequest@whitepages.com; not recorded (single weak source)."
+    last_verified: 2026-11-07
     priority: 90
     search_url_pattern: https://www.whitepages.com/name/{first}-{last}/{city}-{state}
     search_access: bot_blocked
@@ -130,7 +132,7 @@ brokers:
     url: https://www.beenverified.com/
     category: people_search
     domains: [www.beenverified.com, beenverified.com]
-    opt_out_url: https://www.beenverified.com/app/optout/search
+    opt_out_url: https://www.beenverified.com/svc/optout/search/optouts
     method: web_form
     required_fields: [full_name, state, email]
     needs_email_verification: true
@@ -143,9 +145,10 @@ brokers:
       - "Type your removal email address."
       - "Open the email BeenVerified sends and click its link."
       - "You need to repeat this for each email address you use."
-    source_urls: [*badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
-    verification_status: unverified
-    verification_notes: "Fetch blocked by tool policy. URL from seed and BADBOOL. A separate property-record opt-out exists at /app/optout/address-search. The CA registry (fetched 2026-11-06) lists the CCPA request page as https://www.beenverified.com/svc/optout/search/comprehensive_optouts, a different path from /app/optout/search; neither was loadable, so confirm which is live. No email channel recorded: the registry primary contact is privacy@moneybot5000.com, which is not a BeenVerified domain (the schema only allows addresses on a broker's domains); see report."
+    source_urls: [https://www.beenverified.com/svc/optout/search/optouts, *badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    verification_status: verified
+    verification_notes: "Opened in a real browser 2026-11-07: /app/optout/search redirects to /svc/optout/search/optouts. Search your record by name and state, select it, confirm via a verification email; free, no account; about 24 hours. Only one record can be removed online; more via privacy@beenverified.com. Earlier: Fetch blocked by tool policy. URL from seed and BADBOOL. A separate property-record opt-out exists at /app/optout/address-search. The CA registry (fetched 2026-11-06) lists the CCPA request page as https://www.beenverified.com/svc/optout/search/comprehensive_optouts, a different path from /app/optout/search; neither was loadable, so confirm which is live. No email channel recorded: the registry primary contact is privacy@moneybot5000.com, which is not a BeenVerified domain (the schema only allows addresses on a broker's domains); see report."
+    last_verified: 2026-11-07
     priority: 90
     search_url_pattern: https://www.beenverified.com/people/{first}-{last}/
     search_access: bot_blocked
@@ -189,9 +192,10 @@ brokers:
       - "Select your record, then confirm."
       - "Open the email they send and click its link."
       - "This covers Intelius, Instant Checkmate, TruthFinder, US Search and ZabaSearch. It does not cover Classmates."
-    source_urls: [*badbool]
-    verification_status: unverified
-    verification_notes: "Page loaded 2026-11-05 but only the title 'PeopleConnect - Suppression Center' was returned (JS app), so the flow could not be confirmed. Coverage of the brands is stated by BADBOOL and several third-party guides, not by a primary page. DeleteMe help-center articles say PeopleConnect rejects requests submitted by third-party agents. No email recorded for this entry; see intelius, truthfinder, instantcheckmate."
+    source_urls: [https://suppression.peopleconnect.us/login, *badbool]
+    verification_status: verified
+    verification_notes: "Opened in a real browser 2026-11-07: Suppression Center. Step 1 is your email address; a verification email link continues the process; free. Earlier: Page loaded 2026-11-05 but only the title 'PeopleConnect - Suppression Center' was returned (JS app), so the flow could not be confirmed. Coverage of the brands is stated by BADBOOL and several third-party guides, not by a primary page. DeleteMe help-center articles say PeopleConnect rejects requests submitted by third-party agents. No email recorded for this entry; see intelius, truthfinder, instantcheckmate."
+    last_verified: 2026-11-07
     priority: 90
   - id: intelius
     name: Intelius
@@ -209,9 +213,10 @@ brokers:
     steps:
       - "Nothing extra to do. The PeopleConnect Suppression Center request covers Intelius."
       - "Do the PeopleConnect Suppression Center request first, then check Intelius again in a week."
-    source_urls: [*badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
-    verification_status: unverified
-    verification_notes: "Fetch blocked by tool policy. Email support@mailer.intelius.com is the 'primary contact email' for Intelius, LLC in the CA CPPA registry 2025 CSV (fetched 2026-11-06; also BADBOOL). The registry lists US Search as an Intelius DBA. Phone is from BADBOOL only; a third-party profile could not confirm it. Registry contact, not a stated request intake."
+    source_urls: [https://suppression.peopleconnect.us/login, *badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    verification_status: verified
+    verification_notes: "Opened in a real browser 2026-11-07: PeopleConnect Suppression Center (covers Intelius and other PeopleConnect sites). Step 1 is your email address; a verification email link continues the process; free. Earlier: Fetch blocked by tool policy. Email support@mailer.intelius.com is the 'primary contact email' for Intelius, LLC in the CA CPPA registry 2025 CSV (fetched 2026-11-06; also BADBOOL). The registry lists US Search as an Intelius DBA. Phone is from BADBOOL only; a third-party profile could not confirm it. Registry contact, not a stated request intake."
+    last_verified: 2026-11-07
     priority: 80
     search_url_pattern: https://www.intelius.com/people-search/{first}-{last}/
     search_access: bot_blocked
@@ -257,9 +262,9 @@ brokers:
       - "Copy the web address of that listing."
       - "Paste it on the opt-out page and type your removal email."
       - "Open the email they send and click its link within 24 hours."
-    source_urls: [*badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    source_urls: [https://www.peoplefinders.com/opt-out, *badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
     verification_status: unverified
-    verification_notes: "HTTP 403 on fetch (opt-out and /about/privacy). URL from the legacy seed only. BADBOOL notes an opt-out at SmartBackgroundChecks likely also removes PeopleFinders. Email customercare@peoplefinders.com is the 'primary contact email' for Peoplefinders LLC in the CA CPPA registry 2025 CSV (2026-11-06), a customer-service mailbox. The registry says CCPA requests go through links in section V of peoplefinders.com/about/privacy. A search result (third party) mentions a 24-hour email verification link; sender domain assumed peoplefinders.com. privacy@peoplefinders.com appears only in a third-party guide; not recorded."
+    verification_notes: "Opened in a real browser 2026-11-07: /opt-out shows 'Right to Opt-out' with a Next button; later steps not seen, so still unverified. Earlier: HTTP 403 on fetch (opt-out and /about/privacy). URL from the legacy seed only. BADBOOL notes an opt-out at SmartBackgroundChecks likely also removes PeopleFinders. Email customercare@peoplefinders.com is the 'primary contact email' for Peoplefinders LLC in the CA CPPA registry 2025 CSV (2026-11-06), a customer-service mailbox. The registry says CCPA requests go through links in section V of peoplefinders.com/about/privacy. A search result (third party) mentions a 24-hour email verification link; sender domain assumed peoplefinders.com. privacy@peoplefinders.com appears only in a third-party guide; not recorded."
     priority: 70
     search_url_pattern: https://www.peoplefinders.com/name/{first}-{last}/{state}/{city}
     search_access_note: 'Seen: /name/john-smith, /name/julie-williams/mn, /name/karen-smith/il/naperville. A person-report listing URL was not seen (reports are paywalled); address pages are /address/<slug>/<id>.'
@@ -285,9 +290,10 @@ brokers:
       - "Copy the web address of that listing."
       - "Paste it on the removal page. A picture puzzle (captcha) appears; you must solve it."
       - "Open the email they send and click its link within 24 hours."
-    source_urls: [*badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
-    verification_status: unverified
-    verification_notes: "Fetch blocked by tool policy. BADBOOL says captchas are required. Imitation sites exist (e.g. truepeoplesearch.net) and are not this operator. Email support@truepeoplesearch.com is the 'primary contact email' for Free Data Services, LLC (TruePeopleSearch) in the CA CPPA registry 2025 CSV (2026-11-06); a search result (third-party guide) says verification emails come from the same address."
+    source_urls: [https://www.truepeoplesearch.com/removal, *badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    verification_status: verified
+    verification_notes: "Opened in a real browser 2026-11-07: /removal. Subject or agent choice, name and email plus a captcha; an emailed link (valid 24 hours) opens the opt-out form, which should match the record; confirmation page and email; allow 3 days. Earlier: Fetch blocked by tool policy. BADBOOL says captchas are required. Imitation sites exist (e.g. truepeoplesearch.net) and are not this operator. Email support@truepeoplesearch.com is the 'primary contact email' for Free Data Services, LLC (TruePeopleSearch) in the CA CPPA registry 2025 CSV (2026-11-06); a search result (third-party guide) says verification emails come from the same address."
+    last_verified: 2026-11-07
     priority: 85
     search_url_pattern: https://www.truepeoplesearch.com/results?name={first}%20{last}&citystatezip={city}%2C%20{state}
     search_access: bot_blocked
@@ -299,7 +305,7 @@ brokers:
     url: https://www.fastpeoplesearch.com/
     category: people_search
     domains: [www.fastpeoplesearch.com, fastpeoplesearch.com]
-    opt_out_url: https://www.fastpeoplesearch.com/removal
+    opt_out_url: https://www.fastpeoplesearch.com/optout
     method: web_form
     required_fields: [listing_url]
     has_captcha: true
@@ -313,9 +319,10 @@ brokers:
       - "Paste it on the removal page and type your removal email. Solve the picture puzzle (captcha)."
       - "Open the email they send and click its link within 24 hours."
       - "Each listing needs its own request."
-    source_urls: [*badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
-    verification_status: unverified
-    verification_notes: "Fetch blocked by tool policy. Seed says /removal; BADBOOL says /optout. Confirm which is live. No email channel recorded: the CA registry lists the operator (Mississippi Tornado Alley LLC) contact as privacy@mtalley.zendesk.com, a host outside this broker's domains. A third-party guide says confirmation emails come from support@fastpeoplesearch.com (confirmation domain recorded from that)."
+    source_urls: [https://www.fastpeoplesearch.com/optout, *badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    verification_status: verified
+    verification_notes: "Opened in a real browser 2026-11-07: /removal redirects to /optout. Subject or agent choice, first and last name, email and a captcha; an emailed link (valid 24 hours) opens the opt-out form; confirmation email; allow 3 days. Earlier: Fetch blocked by tool policy. Seed says /removal; BADBOOL says /optout. Confirm which is live. No email channel recorded: the CA registry lists the operator (Mississippi Tornado Alley LLC) contact as privacy@mtalley.zendesk.com, a host outside this broker's domains. A third-party guide says confirmation emails come from support@fastpeoplesearch.com (confirmation domain recorded from that)."
+    last_verified: 2026-11-07
     priority: 85
     search_url_pattern: https://www.fastpeoplesearch.com/name/{first}-{last}_{city}-{state}
     search_access: bot_blocked
@@ -352,9 +359,10 @@ brokers:
       - "MyLife may ask for a phone number. Only give it if you are comfortable doing so."
       - "MyLife may try to start an account or ask for ID. Stop if so. You do not need to do either."
       - "If the page does not work, email privacy@mylife.com asking for your listing to be deleted."
-    source_urls: [*badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
-    verification_status: unverified
-    verification_notes: "Seed URL (/ccpa/index.pubview) returned HTTP 403; /privacy-policy also 403. URL, email privacy@mylife.com and phone are from BADBOOL only. The CA registry (2026-11-06) lists Insightbridge LLC (alt. name MyLife) with primary contact membersupport@mylife.com and request page https://www.mylife.com/privacy-policy; that address is not recorded because only one email field exists. BADBOOL reports MyLife may push an account and a phone call or driver's licence; treat as human-assisted."
+    source_urls: [https://www.mylife.com/privacyrequest, *badbool, https://cppa.ca.gov/data_broker_registry/registry2025.csv]
+    verification_status: verified
+    verification_notes: "Opened in a real browser 2026-11-07: /privacyrequest is the 'Deletion and opt out of sale of personal information' form (state, name, email and more). Support: membersupport@mylife.com. Earlier: Seed URL (/ccpa/index.pubview) returned HTTP 403; /privacy-policy also 403. URL, email privacy@mylife.com and phone are from BADBOOL only. The CA registry (2026-11-06) lists Insightbridge LLC (alt. name MyLife) with primary contact membersupport@mylife.com and request page https://www.mylife.com/privacy-policy; that address is not recorded because only one email field exists. BADBOOL reports MyLife may push an account and a phone call or driver's licence; treat as human-assisted."
+    last_verified: 2026-11-07
     priority: 70
     search_url_pattern: https://www.mylife.com/{first}-{last}/
     listing_url_pattern: ^/[a-z-]+/e[0-9]+$
