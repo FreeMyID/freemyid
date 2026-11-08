@@ -42,10 +42,23 @@ from ..exposure_models import (
     ExposureEntry,
     ExposureListing,
     ExposureResult,
+    ExposureSummary,
+    ScoreDriver,
     ScoreLine,
 )
-from ..models import Actor, Broker, Event, Listing, MatchLevel, ProfileField, utcnow
+from ..models import Actor, Broker, BrokerCategory, Event, Listing, MatchLevel, ProfileField, utcnow
+from . import exposure_score as xs
 from . import htmlsel, matcher
+from .exposure_score import (  # noqa: F401  re-exported: the formula lives in exposure_score
+    MAX_EXTRA_PER_SITE,
+    MAX_RELATIVE_POINTS,
+    W_CONFIRMED_SITE,
+    W_CONTACT,
+    W_EXTRA_LISTING,
+    W_POSSIBLE_SITE,
+    W_RELATIVE,
+    score_entries,
+)
 
 if TYPE_CHECKING:
     from ..models import Profile, Registry
@@ -70,13 +83,6 @@ _HEADERS = {"User-Agent": USER_AGENT, "Accept": "text/html,application/xhtml+xml
 _MAX_RESULTS = 25
 
 # score weights (docs/EXPOSURE.md; change both together)
-W_CONFIRMED_SITE = 15
-W_EXTRA_LISTING = 5
-MAX_EXTRA_PER_SITE = 2
-W_CONTACT = 5
-W_POSSIBLE_SITE = 5
-W_RELATIVE = 2
-MAX_RELATIVE_POINTS = 10
 
 
 class ExposureRefused(Exception):
@@ -363,56 +369,6 @@ def _contact(li: Listing) -> bool:
     return bool({ProfileField.PHONE, ProfileField.STREET_ADDRESS} & set(li.shown_fields))
 
 
-def _plural(n: int, one: str, many: str) -> str:
-    return f"{n} {one if n == 1 else many}"
-
-
-def score_entries(entries: list[ExposureEntry]) -> tuple[int, list[ScoreLine]]:
-    """Exposure score 0-100 plus the lines that explain it (docs/EXPOSURE.md)."""
-    confirmed = [e for e in entries if e.match_level == MatchLevel.CONFIRMED]
-    possible = [e for e in entries if e.match_level == MatchLevel.POSSIBLE]
-    lines: list[ScoreLine] = []
-    if confirmed:
-        lines.append(ScoreLine(points=W_CONFIRMED_SITE * len(confirmed), text=(
-            f"{_plural(len(confirmed), 'site shows', 'sites show')} a listing that is you "
-            f"({W_CONFIRMED_SITE} points each)")))
-        extra = sum(min(MAX_EXTRA_PER_SITE, sum(
-            1 for li in e.listings if li.match_level == MatchLevel.CONFIRMED) - 1)
-            for e in confirmed)
-        if extra > 0:
-            lines.append(ScoreLine(points=W_EXTRA_LISTING * extra, text=(
-                f"{_plural(extra, 'extra listing', 'extra listings')} of you on the same "
-                f"sites ({W_EXTRA_LISTING} points each, up to {MAX_EXTRA_PER_SITE} per site)")))
-        contact = sum(1 for e in confirmed if any(
-            li.contact_shown for li in e.listings if li.match_level == MatchLevel.CONFIRMED))
-        if contact:
-            lines.append(ScoreLine(points=W_CONTACT * contact, text=(
-                f"{_plural(contact, 'of them shows', 'of them show')} your phone number or "
-                f"street address ({W_CONTACT} points each)")))
-        rel = sum(li.relatives_shown for e in confirmed for li in e.listings
-                  if li.match_level == MatchLevel.CONFIRMED)
-        if rel:
-            lines.append(ScoreLine(points=min(MAX_RELATIVE_POINTS, W_RELATIVE * rel), text=(
-                f"{_plural(rel, 'relative or associate is', 'relatives or associates are')} "
-                f"named next to you ({W_RELATIVE} points each, up to {MAX_RELATIVE_POINTS})")))
-    if possible:
-        lines.append(ScoreLine(points=W_POSSIBLE_SITE * len(possible), text=(
-            f"{_plural(len(possible), 'site may show', 'sites may show')} you; please look "
-            f"and tell us ({W_POSSIBLE_SITE} points each)")))
-    raw = sum(ln.points for ln in lines)
-    if raw > 100:
-        lines.append(ScoreLine(points=100 - raw, text="The score stops at 100"))
-    hand = sum(1 for e in entries if e.status == "check_by_hand" and e.match_level is None)
-    if hand:
-        lines.append(ScoreLine(points=0, text=(
-            f"{_plural(hand, 'site', 'sites')} could not be checked automatically; open "
-            f"{'it' if hand == 1 else 'them'} yourself (not counted)")))
-    if not lines:
-        lines.append(ScoreLine(points=0, text="No listings of you were found on the sites "
-                                              "we checked"))
-    return max(0, min(100, raw)), lines
-
-
 # --------------------------------------------------------------------------- scan
 
 
@@ -651,16 +607,19 @@ def scan_exposure(store: Store, profile_id: str, *, registry: Registry | None = 
         for broker in scan_brokers(registry, profile):
             if broker_ids and broker.id not in broker_ids:
                 continue
-            entries.append(_scan_broker(store, profile, broker, now, offline,
-                                        prev.get(broker.id), fetch, browser_fetch, cfg, fast,
-                                        sleep, pace, old_addresses, previous_names))
+            entry = _scan_broker(store, profile, broker, now, offline, prev.get(broker.id),
+                                 fetch, browser_fetch, cfg, fast, sleep, pace, old_addresses,
+                                 previous_names)
+            entry.category = broker.category
+            entries.append(entry)
     finally:
         if own_browser is not None:
             own_browser.close()
     score, lines = score_entries(entries)
     res = ExposureResult(profile_id=profile.id, created_at=now, offline=offline,
                          practice_mode=not cfg.real_submissions_enabled, score=score,
-                         explanation=lines, entries=entries, drop_first=drop_first(profile))
+                         explanation=lines, entries=entries, drop_first=drop_first(profile),
+                         drivers=xs.drivers(entries))
     _save(store, res)
     return res
 
@@ -750,11 +709,13 @@ def _save(store: Store, res: ExposureResult) -> None:
             for li in store.list_listings(res.profile_id, e.broker_id):
                 ids_by_url[li.url] = li.id
     detail = {
-        "version": res.version, "score": res.score, "offline": res.offline,
-        "practice_mode": res.practice_mode,
+        "version": res.version, "score": res.score, "score_version": res.score_version,
+        "offline": res.offline, "practice_mode": res.practice_mode,
         "explanation": [[ln.points, ln.text] for ln in res.explanation],
+        "drivers": [[d.points, d.text, d.broker_id] for d in res.drivers],
         "entries": [{
             "broker_id": e.broker_id, "status": e.status, "reason": e.reason,
+            "category": e.category.value if e.category else None,
             "match_level": e.match_level.value if e.match_level else None,
             "signals": e.signals, "from_store": e.from_store,
             "old_address_checked": e.old_address_checked,
@@ -796,6 +757,7 @@ def _from_event(store: Store, profile: Profile, ev: Event,
         entries.append(ExposureEntry(
             broker_id=raw["broker_id"], broker_name=b.name if b else raw["broker_id"],
             status=raw["status"], reason=raw.get("reason"),
+            category=BrokerCategory(raw["category"]) if raw.get("category") else None,
             match_level=MatchLevel(raw["match_level"]) if raw.get("match_level") else None,
             signals=raw.get("signals", []), listings=lis,
             check_url=_hand_check_url(b, profile) if b else None,
@@ -803,8 +765,15 @@ def _from_event(store: Store, profile: Profile, ev: Event,
             old_address_checked=bool(raw.get("old_address_checked")),
             previous_name_checked=bool(raw.get("previous_name_checked")),
             checked_at=datetime.fromisoformat(raw["checked_at"])))
+    version = int(d.get("score_version", 1))
+    if "drivers" in d:
+        drv = [ScoreDriver(points=int(p), text=str(t), broker_id=b)
+               for p, t, b in d["drivers"]]
+    else:   # older scan: work the drivers out the way its score was worked out
+        drv = xs.drivers(entries, weighted=version >= 2)
     return ExposureResult(
         profile_id=profile.id, created_at=ev.ts, offline=bool(d.get("offline")),
+        score_version=version, drivers=drv,
         practice_mode=bool(d.get("practice_mode", True)), score=int(d.get("score", 0)),
         drop_first=drop_first(profile),     # from the profile now, not stored
         explanation=[ScoreLine(points=int(p), text=str(t)) for p, t in d.get("explanation",
@@ -852,6 +821,7 @@ class TrendPoint:
     sites_total: int
     sites_checked: int
     found: int
+    score_version: int = 1            # how the score was worked out (exposure_score)
 
 
 @dataclass(frozen=True)
@@ -869,7 +839,8 @@ def _point(ev: Event) -> TrendPoint:
         sites_checked=sum(1 for e in entries if e.get("status") in ("found", "not_found")
                           and not e.get("from_store")),
         found=sum(1 for e in entries if e.get("status") == "found" and
-                  e.get("match_level") == MatchLevel.CONFIRMED.value))
+                  e.get("match_level") == MatchLevel.CONFIRMED.value),
+        score_version=int(ev.detail.get("score_version", 1)))
 
 
 def trend_note(points: list[TrendPoint]) -> str:
@@ -888,6 +859,9 @@ def trend_note(points: list[TrendPoint]) -> str:
         out = f"Your score is the same as on {when}."
     if last.sites_checked < prev.sites_checked:
         out += " Fewer sites could be checked this time, so the change may not be real."
+    if last.score_version != prev.score_version:
+        out += (" The way the score is worked out changed between these scans, so part of "
+                "the change comes from that.")
     return out
 
 
@@ -904,3 +878,25 @@ def exposure_trend(store: Store, profile_id: str, limit: int = 52) -> Trend:
     change = points[-1].score - points[-2].score if len(points) >= 2 else None
     since = points[-2].day if len(points) >= 2 else None
     return Trend(points=points, change=change, since=since, note=trend_note(points))
+
+
+# ------------------------------------------------------------- summary (ROADMAP 3.2)
+
+
+def summarize(res: ExposureResult) -> ExposureSummary:
+    """The score with its coverage, band, headline and top 3 drivers. Pure."""
+    cov = res.coverage
+    return ExposureSummary(
+        profile_id=res.profile_id, created_at=res.created_at, practice_mode=res.practice_mode,
+        score=res.score, score_version=res.score_version, band=xs.band(res.score, cov),
+        headline=xs.headline(res.score, cov), coverage=cov, coverage_note=res.coverage_note,
+        drivers=list(res.drivers))
+
+
+def exposure_summary(store: Store, profile: Profile | str,
+                     registry: Registry | None = None) -> ExposureSummary | None:
+    """Wizard / dashboard hook: the newest stored scan as an ExposureSummary, or None if
+    this person has never been scanned. Reads only; no network. Show `headline` and
+    `coverage_note` next to `score` every time; never show the number alone."""
+    res = latest_exposure(store, profile, registry)
+    return summarize(res) if res is not None else None

@@ -13,7 +13,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .models import MatchLevel, utcnow
+from .models import BrokerCategory, MatchLevel, utcnow
 
 #: found          the site shows a confirmed or possible listing
 #: not_found      the site was read and shows nothing that matches
@@ -55,6 +55,7 @@ class ExposureEntry(_M):
     broker_id: str
     broker_name: str
     status: EntryStatus
+    category: BrokerCategory | None = None   # registry category; weights the score
     reason: str | None = None        # HAND_REASONS key when check_by_hand
     match_level: MatchLevel | None = None   # best listing on this site
     signals: list[str] = []          # union over listings
@@ -126,6 +127,20 @@ class ScoreLine(_M):
     text: str                        # plain English, PII-free
 
 
+class ScoreDriver(_M):
+    """One of the (at most 3) things adding the most to the score, in plain words."""
+    points: int
+    text: str                        # PII-free: a site name and what it shows, no values
+    broker_id: str | None = None     # None for the relatives line
+
+
+#: Score bands. "not_checked": no site could be read, so the number says nothing.
+ScoreBand = Literal["not_checked", "none_found", "low", "medium", "high"]
+
+#: 1: v0.2 formula (no site weighting). 2: weighted by site category (engine.exposure_score).
+SCORE_VERSION = 2
+
+
 class ExposureResult(_M):
     version: Literal[1] = 1
     profile_id: str
@@ -136,6 +151,8 @@ class ExposureResult(_M):
     explanation: list[ScoreLine] = []
     entries: list[ExposureEntry] = []
     drop_first: bool = False         # California: do the ca_drop checklist first
+    drivers: list[ScoreDriver] = []  # top 3 things driving the score (biggest first)
+    score_version: int = SCORE_VERSION
 
     @property
     def coverage(self) -> Coverage:
@@ -159,3 +176,18 @@ class ExposureResult(_M):
     @property
     def possible_sites(self) -> int:
         return sum(1 for e in self.entries if e.match_level == MatchLevel.POSSIBLE)
+
+
+class ExposureSummary(_M):
+    """What the wizard / dashboard shows: the score ALWAYS with its coverage and plain
+    words. Built by `engine.exposure.exposure_summary` from the newest stored scan."""
+    profile_id: str
+    created_at: datetime
+    practice_mode: bool = True
+    score: int = Field(ge=0, le=100)
+    score_version: int = SCORE_VERSION
+    band: ScoreBand
+    headline: str                    # always says "on the sites we could check"
+    coverage: Coverage
+    coverage_note: str
+    drivers: list[ScoreDriver] = []
