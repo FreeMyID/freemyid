@@ -81,7 +81,7 @@ Proton encrypts your mail, so other programs can only reach it through the free 
 2. Install **Proton Mail Bridge** from Proton's website and sign in.
 3. In Bridge, open the mailbox settings and copy the **Bridge password** it shows you. This is different from your Proton password.
 4. In the Free My ID setup wizard, choose **Proton Bridge**. The settings are filled in for you (server `127.0.0.1`, ports 1143 and 1025). Paste the Bridge password.
-5. Free My ID shows you Bridge's **security code** (a long row of letters and numbers). Bridge makes its own security certificate, so Free My ID asks you once whether to trust it. If you just installed and started Bridge yourself, click **Yes**. <!-- TODO verify: wizard confirm screen (helper freemyid.engine.mail_tls.trust_on_first_use exists; wizard hook pending) -->
+5. Free My ID shows you the mail app's **security code** (a long row of letters and numbers) and asks you once whether to trust it. If you just installed and started Bridge yourself, click **Yes**. <!-- TODO verify: wizard confirm screen (helper freemyid.engine.mail_tls.trust_on_first_use exists; wizard hook pending) -->
 6. Click **Test connection**.
 
 Free My ID remembers that security code. If it ever changes, Free My ID won't sign in and tells you instead. That usually just means Bridge was reinstalled or reset: run the setup's mailbox step again to trust the new code. If you didn't change anything, don't trust it, and ask someone you trust to check your computer.
@@ -133,7 +133,7 @@ Helpers and developers can do the same things in a terminal. Normal users can sk
 
 ## 5. What each status means
 
-The dashboard shows a colored label for each site. <!-- TODO verify: exact chip labels and colors -->
+The dashboard shows a colored label for each site.
 
 | You'll see | It means | What you do |
 |---|---|---|
@@ -173,9 +173,7 @@ Some sites ask for a photo ID, an account, or a phone number. If you left that p
 
 - **Skip that site.** Often the best choice. Many people decide a site isn't worth an ID.
 - **Do it yourself** using the site's steps shown in the to-do. Cover your ID number and photo if the site allows it.
-- **Turn the permission on** for that person, if you're comfortable with it.
-
-<!-- TODO verify: how to change a permission flag (wizard edit vs. `freemyid profile edit`) -->
+- **Turn the permission on** for that person, if you're comfortable with it: open **Settings**, select the person, tick the permission, and click **Save**.
 
 ### Letters to mail
 
@@ -197,7 +195,7 @@ The site showed something Free My ID didn't recognize, for example a redesigned 
 
 Many sites take removal requests by email. In **Approve each email** mode (the default), Free My ID writes each email but **doesn't send it until you approve it**.
 
-- On the Home page, open **Emails to approve**, read the email, and click **Approve and send**. <!-- TODO verify: dashboard outbox UI -->
+- On the Home page, open **Emails**, read the email, and click **Approve and send**. <!-- TODO verify: dashboard outbox UI -->
 
 Each email comes from your removal mailbox and includes only the details that site already shows about you. A copy of every sent email is kept in your encrypted records.
 
