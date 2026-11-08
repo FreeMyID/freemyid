@@ -1013,3 +1013,43 @@ Still open for BL-IN-08:
 Not done (no ask yet): PHONE_CALL_NOTE (the call todo would need a note field in the
 wizard, Nina) and POSTAL_RECEIPT upload (wizard). The engine side is just
 `store.save_evidence` with the new kinds once the UI sends them.
+
+## 2026-11-08 SEC-115, BL-IN-08 card + exposure, SEC-117, suffix fix (Theo Park, not pushed)
+- 5f01a9c SEC-115: `base.shown_age(listings)` is the listing's own `age_shown` (confirmed
+  listings first) or None. It's used by copy_fields ("Age"), form_vars (`profile.age`; absent
+  when no age is shown, so a form step asking for it drops to Assisted) and letter_vars
+  ("Approximate age shown", which the phone script uses too). `estimated_age()` is now
+  only used by the matcher. Tests: tests/test_sec115_shown_age.py (4).
+  web-developer still owns the site/USER_GUIDE wording part of SEC-115.
+- 7e57910 BL-IN-08 Assisted card (after Marcus's OK on 2ff0dab/afe8a3c):
+  - `base.value_copy_fields` gives only the value(s), with permission, max 3, plus listing
+    links and the removal mailbox.
+  - `todo_for` for value-only gives the value letter to send if the site has an email route,
+    otherwise the card, with the lead step "search for the phone number ..., not for a name".
+  - The postal letter and phone script (built from name/address) are never used.
+- 6e15e35 BL-IN-08 exposure:
+  - `scan_brokers(registry, profile)`: a value-only person scans only sites with that
+    scope's reverse lookup.
+  - `_main_urls` uses `value_search_urls`. The first value is the main page; the others are
+    extra pages, and an unreadable one keeps the stored hits.
+  - `_read` scores with `score_lookup`, so hits are POSSIBLE and counted as "uncertain",
+    never "is you".
+  - Tests: tests/test_bl_in_08_exposure.py (4). BL-IN-08 engine side is now complete;
+    what's left is registry patterns (Priya), wizard (Nina) and setup --from (Morgan), and
+    SEC-114 still holds: no import path sets removal_scope.
+- ce62909 SEC-117: `Runner._manual_to_email`. When the tier is EMAIL, the site is
+  NEEDS_HUMAN with nothing submitted, and the only open human to-do is the plain
+  `manual_email:<site>` letter, it completes that to-do and sets the site back to FOUND, so
+  the run queues the real email.
+  - `outbox._open_request` never reuses a non-dry-run DRAFT. The new `_open_manual` is the
+    manual path's own reuse.
+  - `queue_email` cancels the leftover manual DRAFT (`manual_letter_replaced` event).
+  - A letter the person already marked sent stays SENT and nothing new is queued.
+  - Removed qa's strict xfail and the now-unused `import pytest` in tests/test_qa_sec117.py.
+    Regressions are in tests/test_proof_vault.py.
+- 9554104 suffix (Codex WO-133): `matcher.SUFFIXES` = jr, sr, ii, iii, iv.
+  - When every suffix the listing shows is one of the person's own, the name is scored
+    without it. "Pat Testperson III" goes from 87.5 to 100.
+  - A mismatch (Jr vs Sr) or a suffix the person doesn't have keeps the old score exactly.
+  - Removed that one xfail in tests/codex/test_cx_name_variants.py (authorized).
+    Regressions are in tests/test_matcher_variants.py.
