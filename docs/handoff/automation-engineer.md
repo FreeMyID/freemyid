@@ -1,5 +1,43 @@
 # automation-engineer handoff
 
+## CURRENT STATE (2026-11-07 checkpoint, Theo Park) - read this first
+
+Done and committed (not pushed):
+- 736b96b v0.3 exposure: `ExposureResult.coverage` (sites_total/sites_checked/found/not_found/
+  check_by_hand/uncertain; found+uncertain+not_found+check_by_hand == total) and
+  `coverage_note` (properties, derived from entries, so old stored scans get them too);
+  `config.exposure_old_addresses` (off) -> at most one previous-address search per broker
+  whose search_url_pattern uses city/state/state_name (`exposure.old_address_url`, one merge
+  via `_read` + `_check_one(old_url=...)`, same pacing gap, skipped if main read failed,
+  failure ignored, `ExposureEntry.old_address_checked`); `checklist_state.drop_first(profile)`,
+  `first_checklist`, `ordered`, `list_doc(..., first)` -> "start_with";
+  `ExposureResult.drop_first` / `first_checklist` ("ca_drop"); `web_form.current_address`,
+  `search_url(..., address=None)`. Tests: tests/test_exposure_coverage.py.
+- 0a2d8c8 CLI (orchestrator-owned files, minimal edits, flag to Morgan): cli_json exposure/1
+  adds coverage, coverage_note, drop_first, first_checklist, entries[].old_address_checked;
+  `freemyid exposure` prints the note + DROP line; `checklist list` starts with ca_drop for CA.
+- 519f384 docs/EXPOSURE.md (Coverage, Old addresses, California sections), docs/CLI.md.
+- a7b8aa5 SEC-89: `web_form.on_broker_url` (host_of + no userinfo + _host_ok) used by
+  exposure.parse_candidates, web_form.parse_results and search_url. Tests:
+  tests/test_sec89_listing_urls.py.
+
+Uncommitted (left in the working tree on purpose): tests/test_qa_v03_review.py is qa's untracked
+file; I removed ONLY the strict-xfail marker on `test_sec89_parse_candidates_refuses_confusable_urls`
+(now passes). `test_sec89_scan_never_stores_an_off_domain_listing` stays xfail: it asserts
+`urls` is non-empty, but the recommended fix drops the hostile result so nothing is stored.
+qa should drop the `urls and` part, then remove that marker.
+
+Next, in order:
+1. SEC-90 (letters.py, templates follow_up/legal_demand): response_deadline only from a
+   verified state_law.response_days; otherwise a `reply_requested_by`-style request wording.
+   Remove the SEC-90 xfail markers in tests/test_qa_v03_review.py when they pass.
+2. SEC-91 (exposure.http_fetcher): `cl.cookies.clear()` before each redirect hop; remove marker.
+3. (SEC-92 htmlsel deep nesting is in the qa file too; not assigned yet.)
+4. v0.3 remainder: optional `--old-addresses` CLI flag (needs orchestrator OK, cli.py);
+   wizard exposure card can show `coverage_note` / DROP_NOTE once vendor PR #10 lands (not ours).
+Gate at checkpoint: ruff clean, mypy clean (61 files), full pytest green except
+tests/test_social_poster.py (3 failures, pre-existing, unrelated to these files).
+
 Scope = PLAN_V1 D1-D4 (end-to-end loop). Per-broker parsers DROPPED. Next wave (not started,
 wait for orchestrator): D9 visible-Edge "Fill it in for me" + D10 listing finder.
 
