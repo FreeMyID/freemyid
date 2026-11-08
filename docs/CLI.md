@@ -208,6 +208,9 @@ When a headless run fails closed before starting, `--json` prints
    "coverage": {"sites_total": 2, "sites_checked": 1, "found": 1, "not_found": 0,
      "check_by_hand": 1, "uncertain": 0},
    "coverage_note": "This score is based on the 1 site we could check, out of 2. …",
+   "score_version": 2, "band": "low",
+   "headline": "Your exposure is low on the 1 site we could check. 1 site was not checked, …",
+   "drivers": [{"points": 15, "text": "Spokeo shows a listing of you", "broker_id": "spokeo"}],
    "drop_first": false, "first_checklist": null,
    "trend": {"change": -12, "since": "2026-10-01",
      "note": "Your score went down 12 points since 2026-10-01.",
@@ -242,6 +245,14 @@ one entry per day (the day's last scan), oldest first, and offline scans are ski
 fewer than 2 points. `note` is one plain line, and it warns when fewer sites could be
 checked than last time. The text output prints `note` under the coverage note once
 there are 2 or more points.
+
+`score_version`, `band`, `headline` and `drivers` (additive, v0.3; schema still
+`exposure/1`): `band` is `not_checked`, `none_found`, `low` (1-24), `medium` (25-59) or `high`
+(60-100). `headline` is one line that always says "on the N sites we could check" (or that
+nothing could be checked) and never says "safe". `drivers` are the top 3 things adding to
+the score, biggest first; `broker_id` is null for the relatives line. Show the score with
+`headline` and `coverage_note` every time. Text output prints the headline under the score,
+then "What adds most to your score:" with the drivers. Weights: docs/EXPOSURE.md.
 
 ### `checklists/1`
 

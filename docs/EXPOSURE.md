@@ -14,6 +14,11 @@ Offline scans are skipped because they only re-read stored results. It also has 
 `since` (the latest score against the previous day's) and `note`, one plain line such as
 "Your score went down 12 points since 2026-10-01." The note adds a warning when fewer sites
 could be checked than last time, and it never says "safe".
+Wizard / dashboard hook for the score: `exposure.exposure_summary(store, profile) ->
+ExposureSummary | None` (newest stored scan; no network). It carries `score`, `band`,
+`headline`, `coverage`, `coverage_note` and the top-3 `drivers`. Always show `headline` and
+`coverage_note` with the number. Each point has `score_version`, and the note says when the
+formula changed between the last two scans.
 
 ## What it checks
 
@@ -139,16 +144,22 @@ worked out from the profile when the result is read, so it follows a move.
 
 ## Exposure score (0-100)
 
+Code: `src/freemyid/engine/exposure_score.py` (pure, deterministic). Score version 2.
+
 | What | Points |
 |---|---|
-| Each site that shows a **confirmed** listing of you | 15 |
-| Each extra confirmed listing on the same site (up to 2 per site) | 5 |
-| Each of those sites that shows your phone number or street address | 5 |
-| Each relative or associate named on your confirmed listings | 2 (10 at most) |
-| Each site with only a **possible** listing (needs your review) | 5 |
+| Each site that shows a **confirmed** listing of you | 15 x site weight |
+| Each extra confirmed listing on the same site (up to 2 per site) | 5 x site weight |
+| Each of those sites that shows your phone number or street address | 5 x site weight |
+| Each relative or associate named on your confirmed listings | 2 (10 at most, not weighted) |
+| Each site with only a **possible** listing (needs your review) | 5 x site weight |
 | Sites that had to be checked by hand | 0 (listed, not counted) |
 
-The total stops at 100. Every part of the score comes with a line of explanation, for example:
+Site weight by registry `category`: people_search and background_check 100%, phone_lookup
+80%, family_tree and risk_data 60%, data_broker and other 50%. Each part is rounded half up
+(e.g. a confirmed data_broker listing is 8). Scans stored before v0.3 have no category and
+count at 100% (`score_version` 1, the old formula). The total stops at 100, and the
+explanation lines always add up to the score. Example:
 
 ```
 +15  1 site shows a listing that is you (15 points each)
@@ -156,10 +167,25 @@ The total stops at 100. Every part of the score comes with a line of explanation
       1 site could not be checked automatically; open it yourself (not counted)
 ```
 
-Why this formula: it's simple to explain to the person and it can't be gamed by a single
-site. A confirmed listing is what matters most. Contact details and family members make a
-listing more harmful. "Possible" listings count a little, until the person looks at them.
-If the weights change, change `score_entries` and this table together.
+**Drivers**: the top 3 things adding the most to the score, biggest first, in plain words
+("Spokeo shows 2 listings of you with your phone number or street address", "3 relatives or
+associates are named next to you on those listings"). Each one is a site's whole share, or
+the relatives total. Ties go confirmed first, then possible, then relatives, then by site
+name, so the order is the same every run. Only site names and counts, never what a page
+showed.
+
+**Band and headline**: `not_checked` (nothing could be read, so the number means nothing),
+`none_found` (0), `low` (1-24), `medium` (25-59), `high` (60-100). The headline is always
+scoped: "We found no listings of you on the 12 sites we could check. 28 sites were not
+checked, so there may be more." No text says the person is "safe", "protected" or "clean"
+(tests/test_exposure_score.py checks this across a grid of scores and coverages).
+
+Why this formula: it's simple to explain and a single site can't game it. A confirmed
+listing on a public people-search site matters most. Contact details and family members make
+a listing more harmful. Marketing and risk databases are real exposure, but a stranger can't
+open them as easily, so they count for less. "Possible" listings count a little until the
+person looks at them. If the weights change, bump `SCORE_VERSION`
+(exposure_models.py) and change `exposure_score.py` and this section together.
 
 ## Check-by-hand reasons (`reason`)
 
