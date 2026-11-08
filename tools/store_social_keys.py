@@ -15,6 +15,7 @@ KEYS = [
     ("reddit_client_id", "Reddit app client ID (reddit.com/prefs/apps, under the app name; blank to skip)"),
     ("reddit_client_secret", "Reddit app secret (blank to skip)"),
     ("reddit_refresh_token", "Reddit OAuth refresh token for u/FreeMyID (blank to skip)"),
+    ("dockerhub_token", "Docker Hub access token for user freemyid (hub.docker.com > Account settings > Personal access tokens, Read & Write; NOT the password; blank to skip)"),
     ("discord_bot_token", "Discord bot token (Developer Portal > your app > Bot > Reset Token; leave blank to skip)"),
 ]
 
