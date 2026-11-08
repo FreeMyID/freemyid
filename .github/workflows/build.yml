@@ -70,6 +70,12 @@ jobs:
                       raise SystemExit
           raise SystemExit("chrome-headless-shell not found after playwright install")
           PY
+      - name: Use Git for Windows bash (Windows only)
+        # `bash` on windows-latest resolves to the WSL launcher (System32\bash.exe, no distro
+        # installed), which prints UTF-16 errors. Tests that run shell scripts need Git's bash.
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: '"C:\Program Files\Git\bin" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH'
       - name: Tests
         timeout-minutes: 25
         env:
