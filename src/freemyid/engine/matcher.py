@@ -143,11 +143,22 @@ def _profile_name_variants(p: Profile, groups: bool = True) -> list[str]:
     return sorted({o for o in out if o})
 
 
+#: generational suffixes (normalized). Codex WO-133: one that matches on both sides must
+#: not lower the score; a mismatched one (Jr vs Sr) must not raise it.
+SUFFIXES = frozenset({"jr", "sr", "ii", "iii", "iv"})
+
+
 def name_score(p: Profile, shown: str | None, groups: bool = True) -> float:
     s = norm(shown)
     if not s:
         return 0.0
     toks = s.split()
+    shown_suf = {t for t in toks if t in SUFFIXES}
+    own_suf = {norm(n.suffix).replace(" ", "") for n in p.all_names() if n.suffix}
+    if shown_suf and shown_suf <= own_suf:
+        # the listing shows the person's own suffix: score the name without it
+        toks = [t for t in toks if t not in SUFFIXES] or toks
+        s = " ".join(toks)
     # drop single-letter middle initials so "Jane Q Testperson" ~ "Jane Testperson"
     s2 = " ".join(t for t in toks if len(t) > 1) or s
     best = 0.0

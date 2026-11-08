@@ -151,3 +151,31 @@ def test_own_nickname_counts_as_exact():
     p = make_profile(name=PersonName(first="Patricia", last="Testperson"), nicknames=["Trish"])
     assert matcher.exact_name(p, "Trish Testperson")
     assert not matcher.exact_name(p, "Patty Testperson")
+
+
+# ------------------------------------------------------------------ generational suffixes
+
+
+def _suffixed(suffix):
+    return make_profile(name=PersonName(first="Pat", last="Testperson", suffix=suffix))
+
+
+@pytest.mark.parametrize(("suffix", "shown"), [
+    ("III", "Pat Testperson III"), ("Jr.", "Pat Testperson Jr."), ("II", "Testperson, Pat II"),
+    ("IV", "Pat Q Testperson IV"), ("Sr", "Pat Testperson Sr."),
+])
+def test_matching_suffix_never_lowers_the_score(suffix, shown):
+    assert matcher.name_score(_suffixed(suffix), shown) == 100.0
+
+
+def test_mismatched_suffix_never_raises_the_score():
+    plain = make_profile(name=PersonName(first="Pat", last="Testperson"))
+    for mine, shown in (("Jr.", "Pat Testperson Sr."), ("Sr.", "Pat Testperson Jr"),
+                        ("II", "Pat Testperson III")):
+        assert matcher.name_score(_suffixed(mine), shown) == matcher.name_score(plain, shown)
+        assert matcher.name_score(_suffixed(mine), shown) < 100.0
+
+
+def test_suffix_the_person_does_not_have_is_unchanged():
+    plain = make_profile(name=PersonName(first="Pat", last="Testperson"))
+    assert matcher.name_score(plain, "Pat Testperson Jr") < 100.0

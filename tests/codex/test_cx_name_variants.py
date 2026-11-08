@@ -68,14 +68,7 @@ def test_common_nickname_match_works_in_both_directions(
         (PersonName(first="Pat", middle="Quinn", last="Testperson"), "Pat Q. Testperson"),
         (PersonName(first="Pat", middle="Quinn", last="Testperson"), "Pat Testperson"),
         (PersonName(first="Pat", last="Testperson", suffix="Jr."), "Pat Testperson Jr."),
-        pytest.param(
-            PersonName(first="Pat", last="Testperson", suffix="III"),
-            "Pat Testperson III",
-            marks=pytest.mark.xfail(
-                strict=True,
-                reason="matcher.py:133 omits suffix from generated name variants",
-            ),
-        ),
+        (PersonName(first="Pat", last="Testperson", suffix="III"), "Pat Testperson III"),
         (PersonName(first="Pat", last="Testperson", suffix="Sr."), "Pat Testperson"),
     ],
 )
