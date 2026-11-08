@@ -164,7 +164,8 @@ def home_page(*, statuses: list[BrokerStatus], todos: list[tuple[Todo, str, str]
               people: list[dict], outbox_count: int, csrf: str, flash: str = "",
               practice: bool = False, running: bool = False, fill: bool = False,
               filling: bool = False, sent: int = 0, exposure: str = "",
-              protect: list[tuple[str, str, int, int]] | None = None) -> str:
+              protect: list[tuple[str, str, int, int]] | None = None,
+              engines: dict[str, int] | None = None) -> str:
     """The Today view: one big card with the next thing to do, then one progress line.
     todos = (todo, person label, broker name). `exposure` is ready-made HTML (views.exposure_card)."""
     need = len(todos) + (1 if outbox_count else 0)
@@ -216,6 +217,10 @@ def home_page(*, statuses: list[BrokerStatus], todos: list[tuple[Todo, str, str]
         for pid, label, done, total in rows:
             body += (f'<p><a class="btn secondary" href="/protect?p={esc(pid)}">Steps for '
                      f'{esc(label)}</a> {done} of {total} done</p>')
+            n = (engines or {}).get(pid, 0)
+            if n > 0:
+                body += (f'<p><a href="/protect?p={esc(pid)}#engines-h">Google and Bing: {n} '
+                         f'step{"" if n == 1 else "s"} to do</a> for {esc(label)}</p>')
         body += '</section>'
     body += exposure
     body += '</div><h2>More</h2><div class="card">'

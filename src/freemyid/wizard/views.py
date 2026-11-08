@@ -219,8 +219,38 @@ def _checklist_item(c, done: bool, pid: str, csrf: str) -> str:
         "</button></form></div></div></details>")
 
 
+def engine_group(steps: list, pid: str, csrf: str) -> str:
+    """The 'Google and Bing' group: one card per guided step (engine tool, no auto-search)."""
+    from ..engine.search_engines import INTRO, STATUS_TEXT
+    if not steps:
+        return ""
+    out = ('<section class="card engines" aria-labelledby="engines-h"><h2 id="engines-h">'
+           f'Google and Bing</h2><p>{esc(INTRO)}</p>')
+    for g in steps:
+        cid = esc(g.checklist.id)
+        when = ""
+        if g.done_at:
+            when = f" Done on {_dt(g.done_at)}."
+        elif g.opened_at:
+            when = f" Opened on {_dt(g.opened_at)}."
+        done = g.status == "done"
+        base = f"/protect/{esc(pid)}/search/{cid}"
+        out += (f'<div class="engine-step" id="e-{cid}"><h3>{esc(g.step.engine)}: '
+                f'{esc(g.checklist.title)}</h3><p>{esc(g.step.why_now)}</p>'
+                f'<p class="progress" role="status">{esc(STATUS_TEXT[g.status])}{esc(when)}</p>'
+                f'<div class="actions"><form method="post" action="{base}/open" class="inline">'
+                f'{csrf_field(csrf)}<button type="submit" class="primary">Open the page for me'
+                f'</button></form> <a class="btn secondary" href="{esc(str(g.checklist.url))}" '
+                f'target="_blank" rel="noopener noreferrer">Or open the link yourself</a> '
+                f'<form method="post" action="{base}/{"undo" if done else "done"}" class="inline">'
+                f'{csrf_field(csrf)}<button type="submit" class="secondary">'
+                f'{"I have not done this" if done else "I did this"}</button></form></div></div>')
+    return out + "</section>"
+
+
 def protect_page(cf: ChecklistFile | None, people: list[Profile], cur: Profile | None,
-                 prog: dict[str, bool], csrf: str, flash: str = "") -> str:
+                 prog: dict[str, bool], csrf: str, flash: str = "",
+                 engines: list | None = None) -> str:
     body = (f'<h1>Protect yourself</h1>{_flash(flash)}<p class="lead">Removing your details from '
             'people-search sites is one part. These steps help stop someone using them. Each one '
             'is optional, most are free, and you can tick them off as you go. The ticks stay on '
@@ -232,6 +262,7 @@ def protect_page(cf: ChecklistFile | None, people: list[Profile], cur: Profile |
         body += '<p>' + " ".join(
             f'<a class="btn {"primary" if p.id == cur.id else "secondary"}" '
             f'href="/protect?p={esc(p.id)}">{esc(p.label)}</a>' for p in people) + "</p>"
+    body += engine_group(engines or [], cur.id, csrf)
     done = sum(1 for c in cf.checklists if prog.get(c.id))
     total = len(cf.checklists)
     body += (f'<p class="progress" role="status">{done} of {total} done for {esc(cur.label)}</p>'

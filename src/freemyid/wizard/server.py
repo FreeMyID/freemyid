@@ -28,6 +28,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Resp
 from fastapi.staticfiles import StaticFiles
 
 from .. import paths
+from ..engine import search_engines as se
 from ..models import (
     Actor,
     Event,
@@ -234,7 +235,8 @@ def create_app(store, token: str, allowed_hosts: set[str],
             filling=bool(app.state.fill["running"]),
             sent=sum(1 for r in store.list_requests(status=RequestStatus.SENT) if not r.dry_run),
             exposure="".join(views.exposure_card(store, pr) for pr in profiles),
-            protect=[(pr.id, pr.label, *protect.counts(store, pr.id)) for pr in profiles]))
+            protect=[(pr.id, pr.label, *protect.counts(store, pr.id)) for pr in profiles],
+            engines={pr.id: se.pending(se.guided_steps(store, pr.id)) for pr in profiles}))
 
     @app.get("/profile/{pid}")
     async def profile_view(pid: str, request: Request):
@@ -280,7 +282,19 @@ def create_app(store, token: str, allowed_hosts: set[str],
         want = request.query_params.get("p", "")
         cur = next((x for x in people if x.id == want), people[0])
         return html(views.protect_page(protect.load_checklists(), people, cur,
-                                       protect.progress(store, cur.id), csrf_token, flash(request)))
+                                       protect.progress(store, cur.id), csrf_token, flash(request),
+                                       se.guided_steps(store, cur.id)))
+
+    @app.post("/protect/{pid}/search/{cid}/{action}")
+    async def protect_search(pid: str, cid: str, action: str):
+        if (not store.get_profile(pid) or action not in ("open", "done", "undo")
+                or not se.is_search_step(cid)):
+            return redirect("/protect")
+        if action == "open":
+            se.open_step(store, pid, cid, opener=open_url)
+        else:
+            se.mark_done(store, pid, cid, action == "done")
+        return redirect(f"/protect?p={pid}#e-{cid}")
 
     @app.post("/protect/{pid}/{cid}/{action}")
     async def protect_act(pid: str, cid: str, action: str):
