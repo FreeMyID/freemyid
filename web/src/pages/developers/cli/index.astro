@@ -1,0 +1,62 @@
+---
+import Base from "@/layouts/Base.astro";
+import PageHead from "@/components/PageHead.astro";
+import Section from "@/components/Section.astro";
+import { pageProps } from "@/lib/site";
+import commandData from "./_commands.json";
+
+const parent = pageProps("developers");
+const crumbs = [...parent.crumbs, ["Command line", "developers/cli/"]];
+const source = (location: string) => `Source: ${location}`;
+---
+
+<Base {...parent} title="Free My ID command line reference"
+  description="A source-cited reference for the commands and options registered in the Free My ID command line."
+  out="developers/cli/" noindex={true} jsonldKinds={[]}>
+  <PageHead crumbs={crumbs} title="Command line reference"
+    lead="Commands and options registered in the Free My ID command line, with source lines for each entry.">
+  </PageHead>
+
+  <Section id="common-options" narrow title="Common options" titleId="common-options-title">
+    <p class="mt-s max-w-measure">Use <code>--help</code> to see the options for a command. The root command also provides these options. <small>(Source: {source(commandData.help_flag.source)}; root options are listed with their declarations.)</small></p>
+    <ul class="mt-s grid max-w-measure list-disc gap-2xs ps-l">
+      {commandData.help_flag.flags.map((flag) => <li><code>{flag}</code> — {commandData.help_flag.help} <small>({source(commandData.help_flag.source)})</small></li>)}
+      {commandData.root_options.map((option) => <li><code>{option.flags.join(", ")}</code>{option.help && <> — {option.help}</>} <small>({source(option.source)})</small></li>)}
+    </ul>
+  </Section>
+
+  <Section id="commands" tone="alt" narrow title="Commands" titleId="commands-title">
+    <p class="mt-s max-w-measure">The command names, short descriptions, arguments, and options below come from the registered CLI tree. <small>(CLI app: {source("src/freemyid/cli.py:21")}; each entry has its own source line.)</small></p>
+    <div class="mt-m grid max-w-measure gap-m">
+      {commandData.commands.map((command) => (
+        <article class="rounded-md border border-line bg-surface p-m">
+          <h3><code>freemyid {command.path}</code></h3>
+          {command.summary && <p class="mt-xs">{command.summary} <small>({source(command.summary_source)})</small></p>}
+          <p class="mt-s"><strong>Command source:</strong> <code>{command.source}</code></p>
+          {command.arguments.length > 0 && <>
+            <h4 class="mt-s">Arguments</h4>
+            <ul class="mt-xs grid list-disc gap-2xs ps-l">
+              {command.arguments.map((argument) => (
+                <li><code>{argument.name}</code> ({argument.required ? "required" : "optional"}) <small>({source(argument.source)})</small></li>
+              ))}
+            </ul>
+          </>}
+          {command.options.length > 0 && <>
+            <h4 class="mt-s">Options</h4>
+            <ul class="mt-xs grid list-disc gap-2xs ps-l">
+              {command.options.map((option) => (
+                <li>
+                  <code>{option.flags.join(", ")}{option.value ? ` ${option.value_name}` : ""}</code>
+                  {option.required && " (required)"}
+                  {option.help && <span> — {option.help}</span>}
+                  <small> ({source(option.source)})</small>
+                </li>
+              ))}
+            </ul>
+          </>}
+          {command.arguments.length === 0 && command.options.length === 0 && <p class="mt-s">No arguments or command-specific options are declared. <small>({source(command.source)})</small></p>}
+        </article>
+      ))}
+    </div>
+  </Section>
+</Base>
