@@ -143,7 +143,7 @@ def main() -> int:
          "trigger_metadata": {"mention_total_limit": 3}, "actions": actions("Too many mentions. Message removed.")},
         {"name": "Invites and scam words", "event_type": 1, "trigger_type": 1,
          "trigger_metadata": {"keyword_filter": ["*discord.gg*", "*discord.com/invite*", "nitro", "airdrop", "crypto",
-                                                 "recovery", "wallet", "investment", "telegram", "whatsapp"]},
+                                                 "investment", "telegram", "whatsapp"]},
          "actions": actions("Links to other servers and money offers are not allowed here.")},
         {"name": "Personal details", "event_type": 1, "trigger_type": 1,
          "trigger_metadata": {"regex_patterns": [r"\b\d{3}-\d{2}-\d{4}\b", r"\b(?:\d[ -]?){15}\d\b",
