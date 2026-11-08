@@ -21,3 +21,4 @@ Every outward-facing action (submission, post, PR, issue, contact) goes here, wi
 | 2026-11-07 | X | handed to owner | R-X-1 text + image path in handoff/report | n/a | owner-manual | 0 |
 | 2026-11-08 | Mastodon | post, own account (text only; media upload returned 403, token has write:statuses only) | R-MASTO-1: v0.2.0 is out, free open-source Windows app, no account, link freemyid.org | https://mastodon.social/@freemyid_usa/117579994415962637 | posted | 0 (own account) |
 | 2026-11-08 | Listings / PRs / Reddit | none | Growth wave: no new allowed actions (rows 5, 7, 8, 19, 20 unchanged; no reddit_* API keys in keyring, reddit.com blocked, not routed around; no Hacker News/Microsoft account) | n/a | 0 actions | 0 |
+| 2026-11-08 | Drafts | written, nothing sent (drafts-and-status session) | ready-to-send.md (5 entries), content plan refresh, credit-freeze outline | docs/marketing/seo/ready-to-send.md | queued for owner approval | 0 |

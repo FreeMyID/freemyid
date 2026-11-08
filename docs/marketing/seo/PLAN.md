@@ -31,3 +31,14 @@ Owner: seo-growth (Sam Okafor [freemyid]). Started 2026-11-07. Read with docs/PO
 - Once Search Console has 28 days of data, replace the guesses in keywords.md with real impressions and positions.
 - Write competitors.md.
 - Draft one article per week. Start with the opt-out how-to hub (content/how-to-remove-yourself-from-people-search-sites.md).
+
+## Content plan refresh 2026-11-08: v0.3 "See it, fix it" articles
+Publish each only when the matching v0.3 feature ships (ROADMAP.md lines 81, 97, 205; features are planned, not live). Until then drafts stay in content/.
+
+| # | Article | Intent / query (volume: guess) | Feature tie | Key sources |
+|---|---|---|---|---|
+| A | How to remove your phone number and address from Google search results | "remove my info from google" , "google results about you" | Google/Bing guided removal | Google: Results about you only removes from Google Search; the host site must be contacted separately (https://support.google.com/websearch/answer/9673730) |
+| B | Freeze your credit for free: a checklist for you and your parents | "how to freeze my credit", "freeze credit for elderly parent" | Credit freeze checklist | FTC: free to place or lift, lasts until lifted, contact Equifax, Experian, TransUnion (https://consumer.ftc.gov/articles/credit-freezes-and-fraud-alerts); Innovis/ChexSystems/NCTUE/LexisNexis: needs-verify (broker-researcher) |
+| C | Search results, people-search sites, credit files: which one to fix first | "what to do after finding myself on a people search site" | Exposure scan + score | internal; sources from A and B |
+
+Outline for B: content/credit-freeze-checklist-for-you-and-your-parents.md (draft).

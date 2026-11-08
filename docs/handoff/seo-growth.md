@@ -74,3 +74,9 @@ Next: once tokens exist, post Q-001, PR BADBOOL (row 4); skip pluja until ~2027-
 - Contacts today: 0/10. Listings: no allowed new actions (see outreach-log). Reddit: no reddit_* keys in keyring; owner posts by hand from reddit-queue.md.
 - Drafts protect-elderly-parents-information.md and who-is-selling-my-phone-number.md already exist (Wave 3); still need broker-researcher to clear needs-verify rows before WR publish.
 - BingSiteAuth.xml (repo root, untracked): Bing Webmaster verification file. It must be served at https://freemyid.org/BingSiteAuth.xml, i.e. placed in site/ next to the existing Google/IndexNow-style key txt (site root). web-developer/devops commit it (needs a build/site_src copy if the site is generated). Not committed by me.
+
+## Round 9 (2026-11-08), drafts and status only
+- Nothing posted, no logins, 0 contacts. Release posts: Bluesky R-BSKY-1 posted, Mastodon R-MASTO-1 posted (text-only), X R-X-1 still owner-manual (not posted as far as logs show). Poster ledger ~/.local/state/freemyid-poster/posted.jsonl does not exist yet (poster not installed), so Bluesky Q-002+ are unposted; our logs are the only record.
+- ready-to-send.md: 5 entries (awesome-python-applications issue, AlternativeTo, Show HN, OpenAlternative, Chocolatey held). Owner approval needed before any is sent.
+- PLAN.md: 3 v0.3 article ideas; outline content/credit-freeze-checklist-for-you-and-your-parents.md. broker-researcher must clear needs-verify rows.
+- Reminder: BingSiteAuth.xml still untracked at repo root, for web-developer/devops.
