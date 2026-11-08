@@ -113,3 +113,6 @@ R8 re-check site-v3 (971b1ec..cd35f9c): PASS, the BLOCK is lifted. SEC-60 (f683e
 - New: SEC-99 MED (matcher: household member CONFIRMED on city + shared relative; nickname groups cross genders; no age veto) -> automation-engineer, 2 strict xfails in tests/test_qa_wave_20261108.py. SEC-100 INFO (email guard empty-range message), SEC-101 INFO (stacked codings cap), SEC-102 LOW non-security (test_site_build red from 6a40368 legacy faq link to developers/).
 - Not done: action SHA re-verification for 2af6f37 (sandbox has no network for git ls-remote).
 - Left alone: untracked tests/test_exposure_previous_names.py (another agent's WIP).
+
+## 2026-11-08 re-check (4450775)
+- SEC-99/101/102 fixed and verified. New LOW SEC-103 (close-age spouse via cross-gender nickname; 2 strict xfails) and SEC-104 (stored match levels not re-scored; escalation uses them). Full suite at ac559fd: 1359 passed, 2 skipped; ruff clean.
