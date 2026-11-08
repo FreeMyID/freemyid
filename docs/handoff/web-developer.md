@@ -242,3 +242,15 @@ Web-v3 P3 left: SEC-66 headers (host), SEC-67 (devops), WR-51 (needs JS, won't d
 4. P2 WR: WR-73 done (e64f7db meets it), WR-72 (P3, but the stale text was LIVE in the v3 meta description) done 8cdfa89.
    WR-71 waits for the v0.3 release (brand note: fill from release-notes-v0.3.0.md, with WR-74), WR-74 HOLD until release.
 Checks at 8cdfa89: build + check OK (64 HTML, 58 indexable), content_check OK, web tests 113 passed, legacy build OK.
+
+## Guide art + credit freeze checklist (2026-11-08, web lead alone)
+663ee92 brand/illustrations phone-number + help-a-parent copied unchanged to site_src/static/assets/art/, <picture> with a
+prefers-color-scheme dark <source> (same pattern as /whats-coming/; the site has no data-theme toggle, so no JS needed),
+README alt text, 320x250; test_web_guide_art.py (bytes match brand/, no script).
+f882daa /protect/credit-freeze/ "Credit freeze checklist": what a freeze does, printable checkbox list for the three big
+bureaus (linking the existing /protect/freeze_* step pages), optional smaller files, federal timing (15 USC 1681c-1(i)),
+lift-only-where-checked (FTC), protected-consumer freeze for a parent (1681c-1(j), FTC), fraud alert vs freeze (FTC),
+SSN note. Only page-level facts from docs/research/credit-freeze-specifics-2026-11.md; TransUnion/ChexSystems snippet facts
+and the conflicting ChexSystems phone numbers are not used (test guards the numbers). Linked from the /protect/ credit section.
+Checks at f882daa: build + check OK (65 HTML, 59 indexable), content_check OK, web tests 117 passed, legacy build OK.
+Shots: /tmp/claude-shots/art-*-{360,1280}-{light,dark}.png, cf-{360,1280}-{light,dark}.png (full page), no horizontal scroll.
