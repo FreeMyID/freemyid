@@ -160,7 +160,7 @@ PYTHONPATH=src .venv/bin/python -m pytest -q <tests>, and update VENDOR_STATUS.m
     git "${SAFEGIT[@]}" -C "$wt" status --short ;;
   commit)
     wo_check "${1:-}"; wo="$1"; f="$(wo_file "$wo")"; wt="$(wt_of "$wo")"; role="$(agent_of "$f")"
-    changed="$(git "${SAFEGIT[@]}" -C "$wt" status --porcelain -z -uall | tr '\0' '\n' | sed -E 's/^...//' | grep -vE '^(VENDOR_STATUS\.md|web/node_modules(/.*)?)$' || true)"
+    changed="$(git "${SAFEGIT[@]}" -C "$wt" status --no-renames --porcelain -z -uall | tr '\0' '\n' | sed -E 's/^...//' | grep -vE '^(VENDOR_STATUS\.md|web/node_modules(/.*)?)$' || true)"
     [ -n "$changed" ] || { echo "nothing to commit in $wt" >&2; exit 2; }
     check_paths "$f" <<<"$changed" || { echo "refusing to commit: out-of-scope changes" >&2; exit 3; }
     n="$(name_of "$role")"; mapfile -t paths <<<"$changed"
@@ -178,7 +178,8 @@ PYTHONPATH=src .venv/bin/python -m pytest -q <tests>, and update VENDOR_STATUS.m
   scope)
     [[ "${1:-}" =~ ^[0-9]+$ ]] || { echo "usage: scope PR" >&2; exit 2; }
     wo="$(wo_of_pr "$1")"; [ -n "$wo" ] || { echo "PR #$1 title has no WO-NNN" >&2; exit 2; }
-    gh pr view "$1" --repo "$REPO" --json files -q '.files[].path' | check_paths "$(wo_file "$wo")" \
+    # SEC-109: list both sides of a rename (previous_filename), so a moved-away in-house file is checked too.
+    gh api "repos/$REPO/pulls/$1/files" --paginate -q '.[] | .filename, (.previous_filename // empty)' | check_paths "$(wo_file "$wo")" \
       && echo "PR #$1 ($wo): all files inside the allowed paths" ;;
   merge)
     [[ "${1:-}" =~ ^[0-9]+$ ]] || { echo "usage: merge PR" >&2; exit 2; }
@@ -188,7 +189,7 @@ PYTHONPATH=src .venv/bin/python -m pytest -q <tests>, and update VENDOR_STATUS.m
     title="$(gh pr view "$pr" --repo "$REPO" --json title -q .title)"; wo="$(wo_of_pr "$pr")"
     n="$(name_of "$(agent_of "$(wo_file "$wo")")")"
     git -C "$ROOT" fetch -q origin "pull/$pr/head:copilot/pr-$pr"
-    git -C "$ROOT" diff --name-only "main...copilot/pr-$pr" | check_paths "$(wo_file "$wo")" \
+    git -C "$ROOT" diff --no-renames --name-only "main...copilot/pr-$pr" | check_paths "$(wo_file "$wo")" \
       || { echo "refusing to merge: the fetched branch differs from the reviewed scope" >&2; exit 3; }
     git -C "$ROOT" merge --squash -q "copilot/pr-$pr"
     GIT_AUTHOR_NAME="${n:-Copilot team} [freemyid-copilot]" GIT_AUTHOR_EMAIL="$EMAIL" \

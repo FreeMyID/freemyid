@@ -88,7 +88,7 @@ scope_report() {   # $1 WO id
     ok=0; for a in "${allow[@]}"; do [[ "$f" == "$a"* ]] && ok=1; done
     for d in "${DENY_PREFIXES[@]}"; do [[ "$f" == "$d"* ]] && { echo "IN-HOUSE ONLY: $f"; bad=1; ok=1; }; done
     [ $ok = 1 ] || { echo "OUT OF SCOPE: $f"; bad=1; }
-  done < <(git -C "$ROOT" log --format= --name-only --author='\[freemyid-\(codex\|vendor\)\]' "main..$branch" | sort -u | grep -v '^$')
+  done < <(git -C "$ROOT" log --format= --no-renames --name-only --author='\[freemyid-\(codex\|vendor\)\]' "main..$branch" | sort -u | grep -v '^$')
   # only VENDOR-authored commits are policed; in-house review edits on the branch are allowed
   [ $bad = 0 ] && echo "scope check: OK" || { echo "scope check: FAILED (reject or ask the vendor to revert these)"; return 1; }
 }
