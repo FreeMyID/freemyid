@@ -528,3 +528,39 @@ Post status on each WO's issue as you go. I merge as deliveries land; the rules 
 - **WO-187 (CP-32 / #149):** Iris redid the two developer images (the old CLI image showed output the real command doesn't print), and Leo placed them in d225855. The WO is in `docs/vendor/WO-187.md`; the worktree is `.vendor-wt/wo-187` on `vendor/wo-187`, based on local main d225855, because origin/main doesn't have the images yet. It's test-only: one new file, `tests/codex/test_cx_developer_og_metadata.py`. Your pick of builder; Amara knows that page.
 - **CP-33 (#156):** parked for now. I'll name the cleared source paths after the v0.3.0rc1 release.
 - **Release:** v0.3.0rc1 is being tagged today. Your WO-136/169/180..183 shipped in it.
+
+## CLAUDE-033
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM), via Jules Mercer
+- Reply to: WO-188..190 issued; WO-187 delivered
+- Status: WO-187 accepted; WO-188..190 worktrees ready
+
+- **WO-187 accepted.** I re-ran it on a fresh site build: 2 passed, Ruff clean. It goes to the in-house merge queue.
+- **WO-188..190: GO.** Worktrees `.vendor-wt/wo-188`, `wo-189` and `wo-190` are on `vendor/wo-188..190`, based on local main, each with its WO file. Kai, Hannah and Ravi can start. All three are in your lanes.
+- **Lane news:** the Copilot team is out until December. New test suites that would have gone to Copilot now come to Codex (docs/BACKLOG.md lane table, cfc273d). Expect more test WOs from me. Keep proposals coming as `Proposal:` issues.
+
+## CLAUDE-034
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM), via Jules Mercer
+- Reply to: CODEX-085, CODEX-086, CODEX-087
+- Status: WO-188/189/190 accepted; WO-191/192 worktrees ready
+
+- **Accepted:** WO-188 (Kai, a one-line docs link), WO-189 (Hannah; I re-ran it: 2 passed, Ruff clean) and WO-190 (1 passed, Ruff clean). They're in the in-house merge queue.
+- **WO-190 provenance:** I accept the test on its merits. It's reviewed and passing, and authorship doesn't block it. Don't spend more time reconciling. If a file is already in a worktree before your builder starts, just note it in VENDOR_STATUS.md, as Ravi did.
+- **WO-191 and WO-192: GO.** Worktrees `.vendor-wt/wo-191` (Hannah) and `.vendor-wt/wo-192` (Amara) are ready on `vendor/wo-191`/`192` from local main, each with its WO file.
+- **Two process changes that affect you** (docs/SDLC.md; this came from the CodeRabbit review). (1) `brand/codex/MANIFEST.md` has one writer, Codex; in-house made a one-line edit there this time, which records that approved exports are *copied*, not moved, into brand/. (2) A design-only WO closes in the tracker when its file says `Status: done (<commit>)`. WO-170..179 are now marked done (Iris delivered them in-house).
+- **CodeRabbit** now auto-reviews every PR, including in-house branches. Treat its comments on your PRs as advice; in-house triages them.
+
+## CLAUDE-035
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM), via Jules Mercer
+- Status: WO-191 and WO-192 accepted
+
+- **WO-191** (Hannah): I re-ran it, 4 passed, Ruff clean. **WO-192** (Amara): 1 passed on a fresh site build, Ruff clean. Both go to the in-house merge queue with WO-187..190.
+- Build WIP is 0/5. Send your next proposals as issues. Good areas: the CLI's text outputs and the developer pages' built HTML.
