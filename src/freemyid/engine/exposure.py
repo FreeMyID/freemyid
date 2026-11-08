@@ -26,6 +26,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import random
+import string
 import time
 import zlib
 from collections.abc import Callable, Iterable, Iterator
@@ -462,31 +463,45 @@ def _read(profile: Profile, broker: Broker, url: str, fetch: Fetcher,
     return matcher.score_all(profile, broker.id, cands, now.date())
 
 
+def _read_extra(profile: Profile, broker: Broker, url: str, fetch: Fetcher, now: datetime,
+                what: str) -> list[Listing] | None:
+    """One extra search page (old address / previous name). None if it failed: the main
+    answer stands."""
+    try:
+        return _read(profile, broker, url, fetch, now)
+    except FetchFailed as e:
+        log.info("exposure: %s %s search skipped (%s)", broker.id, what, e.reason)
+    except Exception as e:  # noqa: BLE001 - the main answer still counts
+        log.warning("exposure: %s %s search failed (%s)", broker.id, what, type(e).__name__)
+    return None
+
+
 def _check_one(store: Store, profile: Profile, broker: Broker, url: str, fetch: Fetcher,
                now: datetime, old_url: str | None = None,
-               before_old: Callable[[], None] | None = None) -> ExposureEntry:
-    """Read the search page (and, if `old_url`, one old-address search page too), then
-    save the listings with ONE merge so the second page never marks the first page's
-    listings gone. A failed old-address page is ignored: the main answer stands."""
+               before_old: Callable[[], None] | None = None,
+               name_url: str | None = None) -> ExposureEntry:
+    """Read the search page (plus, if given, one old-address page `old_url` and one
+    previous-name page `name_url`), then save the listings with ONE merge so an extra page
+    never marks the main page's listings gone. A failed extra page is ignored: the main
+    answer stands. `before_old` runs before each extra page (the polite gap)."""
     from .runner import merge_listings, review_todo
     entry = ExposureEntry(broker_id=broker.id, broker_name=broker.name, status="check_by_hand",
                           check_url=url, checked_at=now)
     found = _read(profile, broker, url, fetch, now)
-    if old_url:
+    seen = {li.url for li in found}
+    for what, extra in (("old-address", old_url), ("previous-name", name_url)):
+        if not extra:
+            continue
         if before_old is not None:
             before_old()
-        try:
-            more = _read(profile, broker, old_url, fetch, now)
+        more = _read_extra(profile, broker, extra, fetch, now, what)
+        if more is None:
+            continue
+        if what == "old-address":
             entry.old_address_checked = True
-        except FetchFailed as e:
-            log.info("exposure: %s old-address search skipped (%s)", broker.id, e.reason)
-            more = []
-        except Exception as e:  # noqa: BLE001 - the main answer still counts
-            log.warning("exposure: %s old-address search failed (%s)", broker.id,
-                        type(e).__name__)
-            more = []
-        seen = {li.url for li in found}
-        for li in more:              # the same listing on both pages counts once
+        else:
+            entry.previous_name_checked = True
+        for li in more:              # the same listing on two pages counts once
             if li.url not in seen:
                 seen.add(li.url)
                 found.append(li)
@@ -502,7 +517,6 @@ _ADDRESS_FIELDS = {"city", "state", "state_name"}
 
 
 def _uses_address(broker: Broker) -> bool:
-    import string
     pat = broker.search_url_pattern or ""
     return any(f in _ADDRESS_FIELDS for _, f, _, _ in string.Formatter().parse(pat) if f)
 
@@ -526,19 +540,42 @@ def old_address_url(broker: Broker, profile: Profile) -> str | None:
     return None
 
 
+_NAME_FIELDS = {"first", "middle", "last"}
+
+
+def previous_name_url(broker: Broker, profile: Profile) -> str | None:
+    """The one extra search URL for a previous name (e.g. a maiden name), at the current
+    address, or None. Only for brokers whose search URL uses the name (all of them, in
+    practice); picks the first previous name, in the order the person listed them, that
+    gives a different URL from the main search."""
+    from ..submitters.web_form import search_url
+    pat = broker.search_url_pattern or ""
+    if not any(f in _NAME_FIELDS for _, f, _, _ in string.Formatter().parse(pat) if f):
+        return None
+    main = search_url(broker, profile)
+    for n in profile.previous_names:
+        u = search_url(broker, profile, name=n)
+        if u and u != main:
+            return u
+    return None
+
+
 def scan_exposure(store: Store, profile_id: str, *, registry: Registry | None = None,
                   offline: bool = False, refresh: bool = False,
                   cfg: cfgmod.Config | None = None, fetch: Fetcher | None = None,
                   browser_fetch: Fetcher | None = None, use_browser: bool = True,
                   broker_ids: list[str] | None = None, now: datetime | None = None,
                   sleep: Callable[[float], None] = time.sleep,
-                  old_addresses: bool | None = None) -> ExposureResult:
+                  old_addresses: bool | None = None,
+                  previous_names: bool | None = None) -> ExposureResult:
     """Run the exposure scan for one person and store it. Never raises for a broker's
     failure (that broker becomes "check by hand"). Raises ExposureRefused without consent.
 
     `fetch` / `browser_fetch` are injectable for tests. Fresh results from the last
     `CACHE_HOURS` are reused unless `refresh`. `old_addresses` (default: the config flag
-    `exposure_old_addresses`, off) adds at most one previous-address search per broker.
+    `exposure_old_addresses`, off) adds at most one previous-address search per broker;
+    `previous_names` (default: config `exposure_previous_names`, off) adds at most one
+    previous-name (maiden name) search per broker.
     """
     from ..consent import consent_ok
     from ..netpolicy import NetPolicy
@@ -546,6 +583,8 @@ def scan_exposure(store: Store, profile_id: str, *, registry: Registry | None = 
     cfg = cfg or cfgmod.load()
     if old_addresses is None:
         old_addresses = bool(getattr(cfg, "exposure_old_addresses", False))
+    if previous_names is None:
+        previous_names = bool(getattr(cfg, "exposure_previous_names", False))
     now = now or utcnow()
     profile = store.get_profile(profile_id)
     if profile is None:
@@ -574,7 +613,7 @@ def scan_exposure(store: Store, profile_id: str, *, registry: Registry | None = 
                 continue
             entries.append(_scan_broker(store, profile, broker, now, offline,
                                         prev.get(broker.id), fetch, browser_fetch, cfg, fast,
-                                        sleep, pace, old_addresses))
+                                        sleep, pace, old_addresses, previous_names))
     finally:
         if own_browser is not None:
             own_browser.close()
@@ -590,7 +629,8 @@ def _scan_broker(store: Store, profile: Profile, broker: Broker, now: datetime, 
                  prev: ExposureEntry | None, fetch: Fetcher | None,
                  browser_fetch: Fetcher | None, cfg: cfgmod.Config, fast: bool,
                  sleep: Callable[[float], None], pace: dict[str, bool],
-                 old_addresses: bool = False) -> ExposureEntry:
+                 old_addresses: bool = False,
+                 previous_names: bool = False) -> ExposureEntry:
     from ..submitters.web_form import search_url
     url = search_url(broker, profile)
 
@@ -632,8 +672,9 @@ def _scan_broker(store: Store, profile: Profile, broker: Broker, now: datetime, 
         gap()
     pace["fetched"] = True
     old_url = old_address_url(broker, profile) if old_addresses else None
+    name_url = previous_name_url(broker, profile) if previous_names else None
     try:
-        entry = _check_one(store, profile, broker, url, fetcher, now, old_url, gap)
+        entry = _check_one(store, profile, broker, url, fetcher, now, old_url, gap, name_url)
     except FetchFailed as e:
         entry = hand(e.reason)
     except RecursionError:
@@ -648,7 +689,8 @@ def _scan_broker(store: Store, profile: Profile, broker: Broker, now: datetime, 
                         "status": entry.status, "reason": entry.reason,
                         "level": entry.match_level.value if entry.match_level else None,
                         "listings": len(entry.listings),
-                        "old_address": entry.old_address_checked}))
+                        "old_address": entry.old_address_checked,
+                        "previous_name": entry.previous_name_checked}))
     return entry
 
 
@@ -675,6 +717,7 @@ def _save(store: Store, res: ExposureResult) -> None:
             "match_level": e.match_level.value if e.match_level else None,
             "signals": e.signals, "from_store": e.from_store,
             "old_address_checked": e.old_address_checked,
+            "previous_name_checked": e.previous_name_checked,
             "checked_at": e.checked_at.isoformat(),
             "listings": [{"listing_id": ids_by_url.get(li.url), "match_level":
                           li.match_level.value, "signals": li.signals,
@@ -717,6 +760,7 @@ def _from_event(store: Store, profile: Profile, ev: Event,
             check_url=_hand_check_url(b, profile) if b else None,
             from_store=bool(raw.get("from_store")),
             old_address_checked=bool(raw.get("old_address_checked")),
+            previous_name_checked=bool(raw.get("previous_name_checked")),
             checked_at=datetime.fromisoformat(raw["checked_at"])))
     return ExposureResult(
         profile_id=profile.id, created_at=ev.ts, offline=bool(d.get("offline")),

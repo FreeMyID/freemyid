@@ -29,6 +29,7 @@ from ..models import (
     Listing,
     ListingState,
     Method,
+    PersonName,
     Profile,
     Request,
     RequestKind,
@@ -94,15 +95,18 @@ def current_address(profile: Profile) -> Address:
     return next((a for a in profile.addresses if a.current), profile.addresses[0])
 
 
-def search_url(broker: Broker, profile: Profile, address: Address | None = None) -> str | None:
+def search_url(broker: Broker, profile: Profile, address: Address | None = None,
+               name: PersonName | None = None) -> str | None:
     """Fill Broker.search_url_pattern. Phone only with allow_phone_disclosure. `address`
-    (default: the current one) supplies city/state/zip, e.g. for an old-address search."""
+    (default: the current one) supplies city/state/zip, e.g. for an old-address search;
+    `name` (default: the current one) supplies first/middle/last, e.g. a maiden name."""
     if not broker.search_url_pattern:
         return None
     cur = address or current_address(profile)
+    nm = name or profile.name
     vals: dict[str, str | None] = {
-        "first": profile.name.first, "last": profile.name.last,
-        "middle": profile.name.middle, "city": cur.city, "state": cur.state,
+        "first": nm.first, "last": nm.last,
+        "middle": nm.middle, "city": cur.city, "state": cur.state,
         "state_name": matcher.STATE_NAMES.get(cur.state, cur.state), "zip": cur.zip,
         "phone": matcher.digits(profile.phones[0])
         if profile.phones and profile.permissions.allow_phone_disclosure else None,

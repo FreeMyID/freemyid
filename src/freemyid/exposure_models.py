@@ -62,6 +62,7 @@ class ExposureEntry(_M):
     check_url: str | None = None     # the search page to open by hand (built from the profile)
     from_store: bool = False         # listings come from earlier runs, not this fetch
     old_address_checked: bool = False   # one previous-address search was read as well
+    previous_name_checked: bool = False  # one previous-name (maiden name) search as well
     checked_at: datetime = Field(default_factory=utcnow)
 
 

@@ -173,7 +173,8 @@ When a headless run fails closed before starting, `--json` prints
    "drop_first": false, "first_checklist": null,
    "entries": [{"broker_id": "spokeo", "broker_name": "Spokeo", "status": "found",
      "reason": null, "match_level": "confirmed", "signals": ["age", "city"],
-     "from_store": false, "old_address_checked": false, "checked_at": "…",
+     "from_store": false, "old_address_checked": false,
+     "previous_name_checked": false, "checked_at": "…",
      "check_url": "https://…",
      "listings": [{"url": "https://…", "match_level": "confirmed", "signals": ["age", "city"],
        "contact_shown": false, "relatives_shown": 1}]}]}],
@@ -188,8 +189,9 @@ them; the text output shows them too.
 sites_total`; `sites_checked` = read automatically); show `coverage_note` next to the score.
 `drop_first` is true and `first_checklist` is `"ca_drop"` when the person's current address
 is in California. `old_address_checked` is true when one previous-address search was read
-for that site (config `exposure_old_addresses`, off by default). These fields were added in
-v0.3; `counts` is unchanged.
+for that site (config `exposure_old_addresses`, off by default); `previous_name_checked` is
+true when one previous-name (maiden name) search was read (config `exposure_previous_names`,
+off by default). These fields were added in v0.3; `counts` is unchanged.
 
 ### `checklists/1`
 

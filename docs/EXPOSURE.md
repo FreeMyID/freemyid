@@ -61,6 +61,25 @@ merge, so neither marks the other's listings gone. `old_address_checked` on the 
 whether the extra page was read. The matcher already counts any current or previous address
 as the location signal.
 
+### Previous names (optional, off by default)
+
+Set `exposure_previous_names: true` in config.yaml (or pass `previous_names=True` to
+`scan_exposure`) to also search ONE previous name (for example a maiden name) per broker, at
+the current address. The name used is the first entry of `Profile.previous_names`, in the
+order the person listed them, that gives a different URL from the main search. Same rules as
+the old-address search (polite gap, cache, a failed page is ignored, one merge). With both
+options on a broker gets at most three requests: main, old address, previous name.
+`previous_name_checked` on the entry says whether the extra page was read.
+
+### Name variants in the matcher (always on)
+
+The matcher tries every first name the person has had, their own `nicknames`, and the common
+nickname groups in `engine/nicknames.py` (Robert/Bob, Margaret/Peggy, Elizabeth/Liz...), each
+with every last name they have had. So "Peggy Oldname" matches Margaret Testperson whose
+maiden name is Oldname. Groups are looked up both ways but never chained ("Chris" reaches
+Christopher and Christina; Christopher never reaches Christina). This only widens the name
+check: a listing still needs two supporting signals to be confirmed.
+
 `--offline` fetches nothing. It lists every site as "check by hand", with its link, and counts
 what earlier scans and runs already found.
 
