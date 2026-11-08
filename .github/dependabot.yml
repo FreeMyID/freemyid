@@ -1,18 +1,27 @@
 # Weekly dependency update PRs (reviewed before merge; nothing auto-merges).
+# Minor/patch updates are grouped into one PR per ecosystem; majors are NOT grouped, so each major
+# arrives as its own PR with its own changelog to read (SEC-67).
+# Actions stay pinned to full commit SHAs with a "# vX.Y.Z" comment (SEC-61): Dependabot rewrites both.
+# The npm side also honours web/pnpm-workspace.yaml (minimumReleaseAge, no dependency build scripts).
 version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
     schedule: {interval: weekly}
-    groups: {actions: {patterns: ["*"]}}
+    groups:
+      actions-minor-patch: {update-types: [minor, patch], patterns: ["*"]}
   - package-ecosystem: pip
     directory: /
     schedule: {interval: weekly}
     open-pull-requests-limit: 5
+    groups:
+      python-minor-patch: {update-types: [minor, patch], patterns: ["*"]}
   - package-ecosystem: npm
     directory: /web
     schedule: {interval: weekly}
     open-pull-requests-limit: 5
-    groups: {web: {patterns: ["*"], update-types: [minor, patch]}}
-  # TODO(devops): add the docker ecosystem (directory /packaging/docker) once the Dockerfile is committed;
-  # Dependabot errors on a missing directory.
+    groups:
+      web-minor-patch: {update-types: [minor, patch], patterns: ["*"]}
+  - package-ecosystem: docker
+    directory: /packaging/docker
+    schedule: {interval: weekly}

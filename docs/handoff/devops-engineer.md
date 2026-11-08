@@ -43,3 +43,33 @@ Preferred: a channel webhook, no bot.
 
 ## 2026-11-07 commit-email guard (SEC-93c follow-up)
 `.github/workflows/commit-email-check.yml` + `tools/ci/check_commit_emails.sh BASE HEAD`: on push to main (before..after) and PRs (base.sha..head.sha) fails if any new commit's author or committer email is not `*@users.noreply.github.com` or `noreply@github.com`. Offenders are masked (`s***@e***`). Allowlisted SHAs: d647b58, f8f19a2, c52cab2 (full SHAs in the script). New-branch push (zero before) checks only commits not already on origin. Tested on a scratch repo (fails on a foreign address, passes on noreply forms) and on the real history tail (passes). Known: two other historical commits use `noreply@freemyid.org` (d6a6cf3, c3068f7); they are not flagged unless re-included in a range. Decision for orchestrator: add `noreply@freemyid.org` to the allowlist regex if it should count as acceptable. Not yet run on GitHub (unpushed).
+
+## 2026-11-07 dependency audit, Dependabot, pnpm audit gate (SEC-67)
+
+**Advisories (real ones only): none.**
+- npm (`cd web && pnpm audit --json`, 310 packages, registry.npmjs.org): 0 info/low/moderate/high/critical. `pnpm outdated`: nothing (every direct dependency is already at latest allowed by minimumReleaseAge 1440).
+- Python (`uvx pip-audit` against `pip freeze --exclude-editable` of `.venv`, PyPI/OSV): "No known vulnerabilities found". `pip list --outdated` only shows the rows in the matrix below.
+
+**Changes**
+- `.github/dependabot.yml`: github-actions, pip (/), npm (/web), plus docker (/packaging/docker, the Dockerfile now exists). Weekly. Minor/patch are grouped per ecosystem (`actions-minor-patch`, `python-minor-patch`, `web-minor-patch`); majors are not in any group, so each arrives as its own PR. SHA pins are kept (Dependabot rewrites SHA and `# vX.Y.Z` comment together; SEC-61).
+- `.github/workflows/pages.yml`: new step `Dependency audit` before the build: `pnpm audit --audit-level=high` fails the job on high/critical. Ignore list: `web/audit-ignore.txt` (one CVE id per line, `#` comments; pnpm's `--ignore` takes CVE ids). It is empty. Any entry needs a reason and an expiry date in a comment, and a note here. Note the step sends the dependency list to npm, so it runs in CI only (SEC-67 offline concern). If the registry errors the step fails; rerun, do not add `--ignore-registry-errors`.
+- Not done on purpose: no audit on a schedule yet (pages.yml only runs when web/** changes). Proposal: add a weekly `schedule` to pages.yml's audit, or rely on Dependabot security alerts (owner: turn on "Dependabot alerts" in repo Settings > Code security).
+
+**Upgrade matrix**
+
+| Package | Current | Target | Advisory / source | Risk | Rollback |
+|---|---|---|---|---|---|
+| astro, @tailwindcss/vite, tailwindcss, yaml, cva, clsx, tailwind-merge (npm) | exact, see web/package.json | none | no advisory, nothing outdated | none | n/a |
+| click (py, transitive of typer) | 8.5.0 | 8.5.1 | pip list --outdated, no advisory | low, patch | pin `click==8.5.0` in the venv |
+| fastapi | 0.162.0 | 0.162.2 | no advisory | low, patch; wizard server relies on it, run full pytest | `uv pip install fastapi==0.162.0` |
+| typer | 0.27.3 | 0.28.0 | no advisory | medium: 0.x minor, CLI surface and `--help` output tests | `uv pip install typer==0.27.3` |
+| pyee (transitive of playwright) | 14.0.0 | 16.0.1 | no advisory | do not touch: playwright pins its range; let playwright upgrade it | n/a |
+| pip | 26.2.2 | 26.3 | no advisory | dev tool only | n/a |
+| GitHub Actions, 14 actions (PR #4) | v4-era SHAs | see below | Dependabot PR #4 | medium: several majors | close PR, or `git revert` the merge commit |
+
+No patch-level security fix was needed, so I upgraded nothing. pyproject.toml uses lower bounds only (orchestrator-owned), so Python versions in CI float to latest anyway; the Windows installer build is the place a floating major would bite.
+
+**Dependabot PR #4 (actions group, 14 updates), branch dependabot/github_actions/actions-ad74ac4c96**
+- All 14 new SHAs resolve to the tag named in their `# vX` comment (checked with `git ls-remote`, peeled commit for annotated tags): cache v6.1.0, checkout v7.0.1, deploy-pages v5.0.1, download-artifact v8.0.2, setup-node v7.1.0, setup-python v7.1.0, upload-artifact v7.0.2, upload-pages-artifact v5.0.0, anchore/sbom-action v0.24.3, build-push-action v7.4.0, login-action v4.8.0, setup-buildx-action v4.4.1, pnpm/action-setup v6.1.1, cosign-installer v4.1.3. All pins preserved (SEC-61 holds), only the PR bot authored the commits. 5 workflows touched (build, docker, pages, pypi, registry-health), no non-action lines.
+- PR checks: build, build-smoke, dist, pipx smoke (ubuntu, macos), test (macos, windows) pass. NOT exercised by the PR: deploy (skipped), release publish (skipped), site-release-info (skipped), docker push/cosign/SBOM (tag only), pypi.
+- Verdict: pins are safe; the PR is mostly majors, so merge it only as a deliberate step. Things to check first: (1) upload-artifact v7 / download-artifact v8 must stay a compatible pair (both bumped here, fine) and artifact names must be unique per job; (2) upload-pages-artifact v5 with deploy-pages v5 (bumped together, fine); (3) pnpm/action-setup v6 with `version: 10.32.1`: read its release notes, this is the one third-party action that runs where the site is built; (4) checkout/setup-node/setup-python v7 need a recent runner (ubuntu-latest, macos-latest, windows-latest all fine). Recommendation: merge after a manual `workflow_dispatch` of pages.yml on the PR branch and a dry docker run; if the owner wants lower risk, close it and let the new config re-open it as minor/patch only (majors then come one PR each). Not merged.

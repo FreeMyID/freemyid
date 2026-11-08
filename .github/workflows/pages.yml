@@ -58,6 +58,15 @@ jobs:
           node -e 'const s=require(process.argv[1]||"./package.json").scripts;const bad=[];for(const[k,c]of Object.entries(s))for(const seg of c.split(/&&|\|\||[;|&]/)){if(/(^|\s)astro(\s|$)/.test(seg)&&!/^\s*ASTRO_TELEMETRY_DISABLED=1\s/.test(seg))bad.push(k)}if(bad.length){console.error("astro run without ASTRO_TELEMETRY_DISABLED=1:",[...new Set(bad)].join(", "));process.exit(1)}'
       - name: Install (exact versions from the lockfile)
         run: pnpm install --frozen-lockfile
+      # Fails on high/critical advisories (SEC-67). Sends the dependency list to registry.npmjs.org (CI only).
+      # Documented exceptions go in web/audit-ignore.txt (one CVE id per line, '#' comments); see docs/handoff/devops-engineer.md.
+      - name: Dependency audit (pnpm audit, high and critical fail)
+        run: |
+          ign=()
+          if [ -f audit-ignore.txt ]; then
+            while read -r id _; do case "$id" in ''|\#*) ;; *) ign+=(--ignore "$id");; esac; done < audit-ignore.txt
+          fi
+          pnpm audit --audit-level=high "${ign[@]}"
       - name: Design tokens are up to date (contrast pairs checked)
         run: node scripts/gen-tokens.mjs --check
       - name: Build (astro build + per-page CSP tightening)

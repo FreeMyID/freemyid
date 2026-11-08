@@ -1,0 +1,2 @@
+# CVE ids to ignore in `pnpm audit --audit-level=high` (pages.yml). One CVE id per line; add a reason and an expiry date as a comment.
+# Empty on purpose: no exceptions as of 2026-11-07.
