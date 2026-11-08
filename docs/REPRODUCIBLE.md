@@ -7,9 +7,10 @@ Status as of 2026-11-08 (roadmap 0.3, BL-IN-42). Owner: devops-engineer.
 What makes two builds of one commit byte-identical:
 
 - The build backend and its whole toolchain are pinned with hashes in `tools/ci/build-requirements.txt`
-  (hatchling, build, packaging, pathspec, pluggy, pyproject-hooks, trove-classifiers) plus twine and its dependencies
-  (resolved for Linux x86_64 and CPython 3.12, which is all CI uses). CI installs it with
-  `pip install --require-hashes`. `pyproject.toml` still lists `hatchling>=1.24` for people building by hand; the CI
+  (hatchling, build, packaging, pathspec, pluggy, pyproject-hooks, trove-classifiers; pure-Python wheels, any OS).
+  twine and its dependencies (used only for CI's `twine check`) are pinned separately in
+  `tools/ci/twine-requirements.txt`, with hashes resolved for Linux x86_64 and CPython 3.12 (all CI uses).
+  CI installs both files together with `pip install --require-hashes`. `pyproject.toml` still lists `hatchling>=1.24` for people building by hand; the CI
   build ignores that range because it runs `python -m build --no-isolation` against the pinned install.
 - `SOURCE_DATE_EPOCH` is the commit time of the built commit (`git log -1 --format=%ct`). Hatchling uses it for every
   file timestamp in the sdist and wheel. (The old fixed value `1700000000` in `pypi.yml` is gone.)
@@ -22,8 +23,8 @@ Checked locally on 2026-11-08: two builds of the same tree from two different di
 SHA-256 for `freemyid-0.2.0.tar.gz` and `freemyid-0.2.0-py3-none-any.whl`. Only CI proves it on the GitHub runner
 image.
 
-To reproduce a release yourself: check out the tag, `pip install --require-hashes -r tools/ci/build-requirements.txt`
-with Python 3.12, run `tools/ci/repro_build.sh dist`, and compare with the files on PyPI. Caveats: the same Python
+To reproduce a release yourself (Linux, macOS or Windows): check out the tag,
+`pip install --require-hashes -r tools/ci/build-requirements.txt` with Python 3.12 (twine is not needed), run `tools/ci/repro_build.sh dist`, and compare with the files on PyPI. Caveats: the same Python
 minor version is expected; the result does not depend on the OS for this pure-Python package, but that is only tested
 on Linux.
 
