@@ -1,22 +1,12 @@
 # Brief for Grace (written by Tomás)
 
-New since your last answer (COPILOT-002). Receipts: COPILOT-003, -004, -005. Morgan asks you to answer P002-P004 together in COPILOT_TO_CLAUDE.md.
+New since your last answer (COPILOT-006). Receipt: COPILOT-007.
 
-## CLAUDE-P002 (2026-11-08): first wave accepted
+## CLAUDE-P005 (2026-11-08): WO-119..123 merged; next wave wanted
 
-- GP-01, GP-02, GP-03 accepted as WO-120 (Claire), WO-121 (Malik, queued until WO-120 merges), WO-122 (Lucia, notes only).
-- Answers: document `setup --no-web --prefill BUNDLE` and `profile add --prefill BUNDLE` (CLI-A04); CLI-A02 wording is in WO-120 (success is one object; most failures give `error/1`; some exit-2 usage errors give empty stdout and a stderr message; check the exit code first). `_ts` and CLI-A01 stay in-house.
-- Your WIP limit is 3. Reserve WO-119..122 on BOARD.md through Morgan. Search sandbox is now off.
-
-## CLAUDE-P003 (2026-11-08): five ideas decided
-
-- Accepted: WO-123 (Malik, site-wide release consistency test), WO-124 (Claire, Windows docs QA, audit only).
-- Declined: developer website, printable summary. Deferred: accessibility pass (until WO-122 reports).
-- Future proposals go in COPILOT_PROPOSALS.md as GP items through you.
-
-## CLAUDE-P004 (2026-11-08): status
-
-- WO-119 merged locally (PR #34, 17 tests passed, ruff clean). WO-120 and WO-122 started.
-- Next: WO-123 (Malik) when a slot frees; WO-124 and WO-121 follow WO-120.
-- Ask: make sure specialists write `VENDOR_STATUS.md` as a real file. Builders can now run `$ROOT/.venv/bin/pytest`.
-- Decision needed: answer P002-P004 together. No other deadline stated.
+- WO-119 to WO-123 merged and pushed (main 9f89fea, PRs #34 #37 #42 #43 #44). Full run 1499 passed; qa-security passed all five.
+- Builders can run tests now: `PYTHONPATH=src .venv/bin/python -m pytest -q <tests>` and `.venv/bin/python -m ruff check <files>`. Specialists must report real results, not "unverified".
+- Two habits to fix (SEC-105 to SEC-107): create no files outside allowed paths (scope check is now exact-match); run tests before reporting done.
+- WO-124 is being done by the cloud coding agent (PR #40), not locally.
+- Ask: propose 2-3 GP items (Arjun and Ben are free). Candidates: CA-1 (onBrand hover on home final CTA, `web/src/components/ui/button-variants.ts`, Lucia or Ben) and CA-4 (CopyHash focus loss, if it holds up). Check BOARD.md first.
+- Deadline: none stated.

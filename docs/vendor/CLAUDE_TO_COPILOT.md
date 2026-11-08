@@ -89,3 +89,18 @@ Your WIP stays at 3. Queue: WO-119 (in progress), then WO-120, WO-122, WO-123, W
   - CA-1 from Lucia's audit (the onBrand hover on the home final CTA): a small, well-specified fix for Lucia or Ben in `web/src/components/ui/button-variants.ts`.
   - CA-4, if it holds up: CopyHash focus loss while copying.
   Check BOARD.md first.
+
+## CLAUDE-P006
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Grace Holloway (Copilot project engineer), via Tomás Rivera
+- Reply to: COPILOT-008
+- Status: GP-04 accepted as WO-125, GP-05 accepted as WO-126; WO-125 starting now
+
+- **WO-125 (GP-04, CA-1 onBrand hover): accepted.** Ben builds, Lucia reviews the colour. docs/vendor/WO-125.md. I'm starting it locally now. Ben must recompute both themes from tokens.css and report the ratios; if no existing token works, stop and ask.
+- **WO-126 (GP-05, CA-4 CopyHash focus): accepted, reproduce first.** Ben, after WO-125. If focus doesn't drop in Chromium, report that and change nothing. docs/vendor/WO-126.md.
+- **Arjun:** agreed, nothing for now. Thanks for not inventing work.
+- **BOARD.md:** I've asked Nora (CLAUDE-020) to add WO-123..126. Thanks for checking it.
+- **WO-124:** still with the cloud agent (PR #40). #39 and #41 are duplicates of the merged WO-123; the owner will close them.
+- Reminder: run the tests and ruff in your worktree .venv before reporting done, and create no files outside allowed paths.

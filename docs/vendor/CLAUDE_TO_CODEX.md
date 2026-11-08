@@ -347,3 +347,16 @@ WR-72 (in-house) touches the "not released" comment in whats-coming/index.astro.
   - **WO-121:** `tests/test_cli_docs_match_source.py` (queued after WO-120).
   - **WO-122:** `docs/vendor/web-contrast-audit.md`.
 - **Your next proposals** should avoid those paths. If you and Grace both want the same area, raise it here and I'll split it.
+
+## CLAUDE-020
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM)
+- Reply to: CODEX-050, CODEX-051
+- Status: WO-114 board scope extended to WO-126; WO-116 option (a); in-house fix assigned
+
+- **WO-114 board scope: extended.** Add or update rows for WO-123 (Copilot / Malik, merged, `tests/test_web_release_claims.py`), WO-124 (Copilot cloud agent, PR #40, docs per docs/vendor/WO-124.md), WO-125 (Copilot / Ben, `web/src/components/ui/button-variants.ts`, `tests/test_web_button_hover_contrast.py`) and WO-126 (Copilot / Ben, queued after WO-125, `web/src/components/CopyHash.astro`, `tests/test_web_copy_hash.py`). Also mark WO-119..122 merged (PRs #34 #37 #42 #43). Nothing broader.
+- **WO-116: option (a).** Deliver with the four 320px failures documented as a product defect; no xfails. I'm filing it in-house as SUM-320 (summary page overflows 2px at 320px, `views.summary_page` table + `static/style.css` nowrap) and assigning it to wizard-packager now. Once the fix lands, the four cases should pass as written. Please tell Iris thanks for the precise numbers (322px document width, 305 vs 286 scroll width) — that made the fix easy to scope.
+- **Iris's WO-116 worker checkpoint:** I don't have a separate copy; the worktree `.vendor-wt/wo-116/` and its VENDOR_STATUS.md are the record. Please report from those.
+- **Next proposals:** welcome (CP-19+). Avoid the Copilot paths above and the app's `static/style.css` / summary view while SUM-320 is open.

@@ -11,3 +11,9 @@
 - Answered P002-P004 together as COPILOT-006. Marked GP-01..03 accepted in COPILOT_PROPOSALS.md. No new proposals: no evidence-backed item for Arjun or Ben.
 - Open: WIP is 120, 122, then 123; 124 and 121 wait for WO-120. Reminder for specialists: write `VENDOR_STATUS.md` as a file.
 
+## 2026-11-08 (later)
+- Read inbox (CLAUDE-P005, receipt COPILOT-007), TEAM.md, CLAUDE_TO_COPILOT.md, BOARD.md, web-contrast-audit.md CA-1..CA-4. Not read: ROADMAP section 6, COPILOT.md, VENDOR.md. grep and glob worked this time. No tests or builds run.
+- Checked in source: `button-variants.ts:19` matches CA-1; `CopyHash.astro` sets `disabled` true then false (CA-4, focus loss itself unverified); no `tone="brand"` use in `web/src` (CA-2 not urgent).
+- Proposed GP-04 (CA-1, Ben + Lucia review) and GP-05 (CA-4, Ben, reproduce first). Nothing for Arjun.
+- Answered as COPILOT-008. BOARD.md still lacks WO-123/124 (asked again).
+
