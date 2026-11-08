@@ -106,3 +106,10 @@ R8 re-check site-v3 (971b1ec..cd35f9c): PASS, the BLOCK is lifted. SEC-60 (f683e
 - CI markers (9d387f7): conftest `pytest_collection_modifyitems` skips windows_only/posix_only/macos_only/linux_only by sys.platform. New conftest-registered `real_scheduler` marker runs only with CI=true and an OS marker. CR: add `real_scheduler` to pyproject markers. Autouse `_no_real_scheduler` makes `scheduler._run` raise in every unmarked test, so nothing reaches schtasks/systemctl/launchctl/crontab on a dev machine. The existing `skipif(win32)` mode tests are now `posix_only`. Rendering and fake-subprocess scheduler tests stay cross-platform. New tests/test_scheduler_ci.py has the Windows real task install/status/remove (runs only on the windows-latest runner).
 - Left alone: tests/test_scheduler_real.py has another session's uncommitted `[-2]` edit matching their uncommitted render.py (SuccessExitStatus=3). tests/test_social_poster.py belongs to the poster engineer.
 - Next: first matrix run on macOS/Windows. Triage red tests into the right OS marker, or fix them if they're real portability bugs.
+
+## 2026-11-08 wave review (Marcus Webb), commit 63a0bd4
+- Reviewed da0816e..6a40368. PASS: WO-111 (Docker shown as Planned/not public; shipped items correct), WO-112 (test only, local POSTs only), SEC-98 (no injection via mark_invalid).
+- Closed SEC-93d (bc058b3), SEC-95 (6386dd6), SEC-96 (d417e1f), SEC-97 (8ce1069; planted payloads all flagged). SEC-66 stays open (Pages, no headers).
+- New: SEC-99 MED (matcher: household member CONFIRMED on city + shared relative; nickname groups cross genders; no age veto) -> automation-engineer, 2 strict xfails in tests/test_qa_wave_20261108.py. SEC-100 INFO (email guard empty-range message), SEC-101 INFO (stacked codings cap), SEC-102 LOW non-security (test_site_build red from 6a40368 legacy faq link to developers/).
+- Not done: action SHA re-verification for 2af6f37 (sandbox has no network for git ls-remote).
+- Left alone: untracked tests/test_exposure_previous_names.py (another agent's WIP).
