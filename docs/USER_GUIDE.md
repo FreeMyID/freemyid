@@ -30,7 +30,7 @@ This guide is for the person using Free My ID. You don't need to be technical. I
 
 Free My ID does the repetitive part for you, on your own computer:
 
-- It asks the sites to delete your details, through each site's own removal process. Where your state has a privacy law, sites must answer. Elsewhere most sites honour the request but don't have to.
+- It asks the sites to delete your details, through each site's own removal process. Where your state has a privacy law, sites must answer. Elsewhere many sites honor the request, but they do not have to.
 - It searches each site for you.
 - It fills in each site's own removal form, or writes the removal email.
 - It clicks the "confirm your request" links that sites send.
@@ -140,7 +140,7 @@ The dashboard shows a colored label for each site. <!-- TODO verify: exact chip 
 | **Not checked yet** | Free My ID hasn't searched this site yet. | Nothing. |
 | **Not found** | No listing for you right now. | Nothing. Free My ID checks again later. |
 | **Your details are listed** | Your listing is there. A request will be sent on the next real run. | Nothing, unless it also says "needs you". |
-| **Asked** | The request was sent. | Nothing. Sites usually take days to weeks. |
+| **Asked** | The request was sent. | Nothing. Some sites finish in a few days. Where a privacy law applies, a site has up to 45 days to answer, and up to 90 if it tells you it needs more time. |
 | **Waiting for the site to reply** | The site sent a confirmation email, or will. Free My ID clicks the link when it arrives. | Nothing, unless a to-do appears. |
 | **Site confirmed** | The site accepted the request. Free My ID is waiting for the listing to disappear. | Nothing. |
 | **Not listed now** | Free My ID searched again and your listing was not on this site. That is for this one site only. | Nothing. Free My ID keeps checking. |
@@ -245,9 +245,9 @@ What you can do:
 
 **I posted "I do not consent". Did that work?** You were right to object. On its own that post does not reach the sites that sell your details. Free My ID sends your wish to them directly.
 
-**Will this remove me from Google?** No. Once a people-search page is gone, Google usually drops it over the following weeks, but Free My ID doesn't contact Google.
+**Will this remove me from Google?** No. Once a site has removed your listing, Google drops the page on its own schedule, which can take a while. Free My ID doesn't contact Google. Google's "Refresh outdated content" tool can speed it up.
 
-**How long does it take?** Most sites act within a few days to six weeks. Some take longer, and Free My ID follows up.
+**How long does it take?** Some sites remove you within a few days. Where a privacy law applies, a site has up to 45 days to answer, and can take up to 90 if it tells you. Free My ID follows up if a site is slow.
 
 **Does it cost anything?** Free My ID is free in this family version. It never pays a site, and it never uses paid removal services.
 
