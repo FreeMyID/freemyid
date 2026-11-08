@@ -27,13 +27,26 @@ file; I removed ONLY the strict-xfail marker on `test_sec89_parse_candidates_ref
 `urls` is non-empty, but the recommended fix drops the hostile result so nothing is stored.
 qa should drop the `urls and` part, then remove that marker.
 
-Next, in order:
-1. SEC-90 (letters.py, templates follow_up/legal_demand): response_deadline only from a
-   verified state_law.response_days; otherwise a `reply_requested_by`-style request wording.
-   Remove the SEC-90 xfail markers in tests/test_qa_v03_review.py when they pass.
-2. SEC-91 (exposure.http_fetcher): `cl.cookies.clear()` before each redirect hop; remove marker.
-3. (SEC-92 htmlsel deep nesting is in the qa file too; not assigned yet.)
-4. v0.3 remainder: optional `--old-addresses` CLI flag (needs orchestrator OK, cli.py);
+SEC-90..92 DONE (2026-11-07, Theo Park, not pushed):
+- b0247f3 SEC-90: `letters.letter_vars` sets `response_deadline` only from
+  `state_law.response_days` (already verified-only via `outbox.effective_law`). Otherwise
+  `reply_requested_days` / `reply_requested_by` (broker.typical_processing_days), and
+  follow_up / legal_demand say "I hoped for a reply within N days (by DATE)" / "I asked for a
+  reply, and N days (to DATE) is a reasonable time to respond". No "was due" / "period ended".
+- SEC-91 code + marker removal landed inside 298518e (Nina Alvarez, SEC-93a): her commit swept
+  my uncommitted exposure.py/test edit. Content is correct (`cl.cookies.clear()` before each hop
+  and in `finally`); attribution is not. History left as is (shared main).
+- 9ed7c84 SEC-92: htmlsel `MAX_DEPTH = 256` (deeper start tags dropped, text kept, their end
+  tags consumed by a counter), iterative `Node.text()`, `_ChainMatcher` memoizes (node, i) and
+  "some ancestor matches" (select is O(nodes x chain)); `http_fetcher(deadline_s=30,
+  clock=...)` total wall-clock budget across hops/body (per-hop httpx timeout = min(20, left)),
+  over budget -> FetchFailed("http_error"); RecursionError in a broker check ->
+  "page_unrecognized" (not "network"). Tests in tests/test_qa_v03_review.py: test_sec92_*.
+- Open: no HAND_REASONS key for "too slow" (exposure_models.py, not mine): deadline reuses
+  "http_error". Possible CR: add "too_slow". SEC-89 scan xfail still waits on qa (see above).
+
+Next:
+1. v0.3 remainder: optional `--old-addresses` CLI flag (needs orchestrator OK, cli.py);
    wizard exposure card can show `coverage_note` / DROP_NOTE once vendor PR #10 lands (not ours).
 Gate at checkpoint: ruff clean, mypy clean (61 files), full pytest green except
 tests/test_social_poster.py (3 failures, pre-existing, unrelated to these files).
