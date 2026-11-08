@@ -294,3 +294,13 @@ For Morgan (Copilot lane / not mine):
 - :239 is correct per base.py (never DOB, relatives or personal email); keep.
 - site_src/static/assets/free-my-id-fridge-card.pdf still has "bank card or passwords": needs a re-render from the updated
   docs/assets/fridge-card.html (graphic-designer/owner; I have no PDF tool).
+
+## SEC-115 age wording + data-driven OG images (2026-11-08, web lead): f1e0a13, 0ce0558
+- SEC-115 (engine 5f01a9c, base.shown_age): /safety/ #never-does, /families/ (+ legacy families.html), HELPER_GUIDE "It never",
+  FAMILY_QUICK_START:48 now say birth year is never sent and a form that asks for an age gets only the age the site's own
+  listing shows. Guard test_sec115_age_wording; fridge assertion loosened for WO-184 (6deb3e8) wording.
+- OG: pages.yaml `og_image: og-<name>` + `og_alt`; web/src/lib/og.ts (pure, Node-testable) resolves; site.ts pageProps passes
+  ogImage/ogAlt; [og].png.ts publishes every og-*.png in web/src/art/og. Missing file = og-home + home alt + build warning;
+  bad name or image-without-alt = build error. To land Codex art: copy PNG to web/src/art/og/, add og_image/og_alt to the entry.
+- Legacy site/ (v2, not deployed; Pages ships web/dist) is stale vs site_src from several owners' changes (13 diffs incl.
+  fridge PDF, art SVGs, BingSiteAuth). Not resynced here; `--out` preview builds OK.
