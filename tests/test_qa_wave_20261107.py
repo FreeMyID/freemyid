@@ -193,8 +193,6 @@ def test_guard_allowlist_is_exact_full_shas_only():
 
 
 @needs_git
-@pytest.mark.xfail(strict=True, reason="SEC-96: a git error inside the process substitution "
-                   "(unknown BASE, e.g. after a force push) is ignored and the guard passes")
 def test_sec96_guard_fails_closed_on_unknown_base(repo):
     _commit(repo, "one", email=BAD)
     head = _commit(repo, "two", email=BAD)
