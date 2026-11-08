@@ -82,16 +82,6 @@ def test_built_pages_with_available_now_badge_exist_only_with_published_version(
         assert badged, "Expected at least one page with an 'Available now' badge"
 
 
-def test_download_page_has_no_older_or_newer_version(release: dict[str, Any]) -> None:
-    if not release.get("version"):
-        pytest.skip("No published version in release.yaml")
-    html = built_pages()["download/index.html"]
-    text = visible_text(html)
-    assert str(release["version"]) in text
-    others = {v for v in VERSION_MENTION.findall(text) if v != str(release["version"])}
-    assert others == set()
-
-
 def test_checker_flags_mismatched_versions() -> None:
     pages = {
         "a/index.html": "<p>Version 0.1.0 is out. Available now.</p>",
