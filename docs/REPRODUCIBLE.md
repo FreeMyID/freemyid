@@ -39,7 +39,10 @@ PyPI workflow keeps its own SPDX SBOM as a workflow artifact. The Docker image h
 Residual risk (SEC-121): the syft version is pinned (`v1.18.1`), but `anchore/sbom-action` downloads the syft binary
 at run time and we have no independent hash pin for it. The action's own download step may compare against the
 checksums file published on the same GitHub release; that catches corruption, not a compromised release. The SBOM job
-has read-only permissions and cannot change the wheel, which limits the damage to a wrong or missing SBOM. Fix later by
+has read-only permissions and cannot change the wheel, which limits the damage to a wrong or missing SBOM, plus one
+more risk: the action holds the job's `GITHUB_TOKEN` (its `github-token` input defaults to it) and runs syft in that
+environment, so a compromised syft binary may be able to read and send out that token. Read-only permissions limit what that token can do (read this repository's contents until the
+job ends); they do not stop it being disclosed. Fix later by
 pinning the syft release archive by sha256 in a step of our own.
 
 What the SBOM does not cover: the Windows installer. It describes the Python wheel and its dependencies, not the
