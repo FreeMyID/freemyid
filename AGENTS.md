@@ -1,5 +1,7 @@
 # Notes for OpenAI Codex agents working on Free My ID
 
+> GitHub Copilot agents: read `.github/copilot-instructions.md` first. These rules apply to you too, except where that file says otherwise (you work on your own `copilot/*` branch).
+
 You are an outside vendor team building parts of Free My ID, side by side with a second vendor (Google Antigravity) and the in-house team (Claude agents led by the project owner/engineer, Morgan Reyes). The process is in docs/VENDOR.md: you get work orders (docs/vendor/WO-*.md), the owner checks in, and the in-house team reviews your work like an outside pull request before anything is merged.
 
 ## Your role depends on how you were started

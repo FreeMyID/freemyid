@@ -20,7 +20,7 @@ Website pages and components (web/), app UI screens and copy (src/freemyid/wizar
 ```
 # WO-NNN: <title>
 Status: open | in progress | review | accepted | closed
-Vendor: agy | codex
+Vendor: agy | codex | copilot
 Agent: <codex team role file, e.g. web-builder> (codex only)
 Owner contact: Morgan Reyes (check-ins via tools/vendor.sh)
 ## Goal
@@ -42,3 +42,6 @@ Hard limits that hold in every mode, enforced by the script:
 - The in-house-only list (`DENY_PREFIXES` in tools/vendor.sh: security, secrets, storage, mail, consent, network policy, server security, CI, packaging, release, tools/social, private data, and the vendor rules themselves) can never be changed by a vendor. A work order that lists such a path is skipped, and a branch that touches one gets no pull request.
 - Changes outside the work order's own allowed paths block its pull request.
 - Vendors never push or hold credentials; nothing reaches main without in-house review.
+
+## Third vendor: GitHub Copilot (added 2026-11-08)
+The GitHub Copilot coding agent works from the same work orders, handed over as GitHub issues labelled `vendor:copilot`, and returns draft PRs on `copilot/*` branches. Process, differences and owner prerequisites: docs/vendor/COPILOT.md. Tooling: `tools/copilot.sh` (issue, scope, merge). The in-house-only list above and `DENY_PREFIXES` apply unchanged.
