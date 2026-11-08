@@ -64,12 +64,15 @@ def exposure_card(store: Store, profile: Profile | None) -> str:
                        'Results will appear here after a check.</p></section>')
     found = len(result.by_status("found"))
     hand = len(result.by_status("check_by_hand"))
-    lines = "".join(f"<li>{esc(ln.text)}</li>" for ln in result.explanation)
+    lines = "".join(f"<li>{esc(ln.text)}</li>" for ln in result.explanation[:5])
+    hidden = len(result.explanation) - 5
+    if hidden > 0:
+        lines += f"<li>…and {hidden} more reason{'' if hidden == 1 else 's'}</li>"
     found_text = ("No listings found on the sites checked." if found == 0 else
                   f"Listings found on {found} site{'' if found == 1 else 's'}.")
-    hand_text = (f"{hand} site needs a manual check." if hand == 1 else
-                 f"{hand} sites need a manual check.")
-    return (head + f'<p>{found_text} {hand_text}</p>'
+    hand_text = (" 1 site needs a manual check." if hand == 1 else
+                 f" {hand} sites need a manual check." if hand > 1 else "")
+    return (head + f'<p>{found_text}{hand_text}</p>'
             '<p>These results cover only the sites checked, not every website.</p>'
             f'<p>Checked {esc(_dt(result.created_at))}.</p>'
             f'<p class="lead"><b>{esc(result.score)}</b> out of 100 '
