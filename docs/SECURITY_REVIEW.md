@@ -789,3 +789,28 @@ Runs at **6a2cc6e** (detached worktree, the main checkout's `.venv`, `PYTHONPATH
 | SEC-116 | LOW, Open | devops-engineer | .github/workflows/docker.yml (482c1c8) `cosign sign` step | `[ "$DH_ON" = "true" ] && cosign sign --yes "${DH_IMAGE}@${DIGEST}" \|\| true` hides a failed signature of the Docker Hub copy, so the Hub image could ship unsigned without anyone noticing. The attest step right below uses a proper `if`. | `if [ "$DH_ON" = "true" ]; then cosign sign --yes "${DH_IMAGE}@${DIGEST}"; fi`. |
 
 Runs at **62aa24f** (detached worktree, the main checkout's `.venv`, `PYTHONPATH=<worktree>/src`, web/dist built in the worktree first so the web tests run): `pytest -q` gave **1894 passed, 5 skipped, 0 xfailed** in 316 s. `ruff check src tests`: All checks passed. Main has since moved to 191a9ea, which is not reviewed here.
+
+### Review 2026-11-08: 62aa24f..c1d4424 (proof vault 68ffdd5/792fdc0, SEC-116 fix, SUM-320 follow-up), Marcus Webb
+
+**Verdict: PASS for pushing c1d4424.** Nothing meets a BLOCK criterion, and nothing at MED or above is open in code. SEC-116 is fixed. New: SEC-117 (LOW, functional, fails safe). Commits reviewed: 68ffdd5, 191a9ea, 43b8151, 792fdc0, 8d82e23, 60e6934, 189f6b3, 482216b and c1d4424. Theo's 29ee4a9, 47b0f1c and 3ea201b were already reviewed in the previous section.
+
+- **68ffdd5 (proof vault: broker replies as evidence): OK.**
+  - Each matched reply's raw message (capped at MAX_MESSAGE_BYTES) is saved through `Store.save_evidence`, which encrypts it to FREEMYID_HOME/evidence and records the sha256 of the plaintext (not reversible). The relpath comes from `sbase.evidence`, so no personal data is in the path.
+  - `ReplyScan.replies` is `repr=False`, and nothing serializes the dataclass (no `asdict` or dump).
+  - The `replies_saved` event carries a count only. Repeat saves are deduplicated by content hash.
+  - Linking: `answered_request` picks the latest real (not dry-run) SENT request sent at or before the message date (plus DATE_SLACK). The confirmation-page screenshot gets the same `request_id`.
+  - Note: a forged "broker" email that passes the reply matcher would also be stored. It is encrypted and labelled "reply from the site", so the risk is evidence clutter only.
+- **792fdc0 (send-it-yourself letters, "I did it" attestations): OK, with SEC-117.**
+  - The manual letter (To/Subject/Letter, already encrypted as to-do copy fields) is stored as encrypted LETTER evidence on a DRAFT request with listing IDs only.
+  - The `manual_letter_drafted` event carries request_id, kind and dry_run.
+  - The attestation text (time, the step, the to-do title with label and broker) is encrypted USER_ATTESTATION evidence. A save failure logs only the exception type and never blocks the to-do.
+  - "I sent it" marks only real (not dry-run) requests SENT.
+  - DRAFT never appears on the approval screens or in any send path: the CLI, the wizard and `approve_and_send` all list QUEUED_FOR_APPROVAL. So no letter can go out without approval.
+- **191a9ea (CSS wrap), c1d4424 (SEC-116: Hub tag and sign steps now use `if` blocks, so a failed signature fails the job): OK.** The PROGRESS and handoff commits contain no personal data.
+
+| ID | Severity / status | Owner | Where | Finding | Fix |
+|---|---|---|---|---|---|
+| SEC-116 | LOW, **Fixed 2026-11-08** (c1d4424, verified) | devops-engineer | .github/workflows/docker.yml | — | — |
+| SEC-117 | LOW, Open (functional; fails safe) | automation-engineer | engine/outbox.py `_open_request` (reuses any DRAFT) and `queue_email`; 792fdc0 `record_manual_letter` | **A send-it-yourself DRAFT blocks the real email once a mailbox is added.** Before 792fdc0, a non-dry-run request was never DRAFT. Now the manual letter is one. If the person later sets up a removal mailbox, `queue_email` finds that DRAFT through `_open_request` and returns it without queueing anything (`_auto_releasable` requires QUEUED_FOR_APPROVAL). The letter never reaches the approval screen and is never sent. The broker is stuck until the person clicks "I sent it". Nothing goes out without approval, so this isn't a gate bypass. Reproduced: `tests/test_qa_sec117.py` (strict xfail). | Give manual letters their own marker (e.g. `method=Method.MANUAL`, or skip non-dry-run DRAFTs in `queue_email`'s reuse), and when a mailbox now exists, queue a fresh QUEUED_FOR_APPROVAL request (optionally closing the old DRAFT as superseded). Remove the xfail marker when fixed. |
+
+Runs at **c1d4424** (detached worktree, the main checkout's `.venv`, `PYTHONPATH=<worktree>/src`, web/dist built first): `pytest -q` gave **1903 passed, 5 skipped** in 317 s. `ruff check src tests`: All checks passed. The new tests/test_qa_sec117.py was written after that run started. On its own it gives 1 xfailed (strict), and with `--runxfail` it fails on the expected assertion. ruff is clean. Main has since moved to 7e57910, which is not reviewed here.
