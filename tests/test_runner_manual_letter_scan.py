@@ -32,6 +32,7 @@ class _ScanRunner(Runner):
 
     found: bool = False
     unchecked: bool = False         # SEC-104: the listing sat on an unreadable extra page
+    level: MatchLevel = MatchLevel.CONFIRMED
 
     async def _scan(self, ctx, st, tier):
         if not self.found:
@@ -40,11 +41,12 @@ class _ScanRunner(Runner):
             ctx.scratch["unchecked_urls"] = {"https://fakeb.example/p/1"}
         li = Listing(profile_id=ctx.profile.id, broker_id=ctx.broker.id,
                      url="https://fakeb.example/p/1", match_score=95,
-                     match_level=MatchLevel.CONFIRMED)
+                     match_level=self.level)
         return [li], True
 
 
-def _run(store, p, now, *, found: bool, scan_only=False, dry_run=False, unchecked=False):
+def _run(store, p, now, *, found: bool, scan_only=False, dry_run=False, unchecked=False,
+         level=MatchLevel.CONFIRMED):
     reg = Registry(version="t", updated=T0.date(), brokers=[B])
     cfg = cfgmod.Config(real_submissions_enabled=True, min_delay_s=0, max_delay_s=0)
     r = _ScanRunner(store, reg, scan_only=scan_only, dry_run=dry_run, interactive=False,
@@ -52,6 +54,7 @@ def _run(store, p, now, *, found: bool, scan_only=False, dry_run=False, unchecke
                     state_laws={}, now=now)
     r.found = found
     r.unchecked = unchecked
+    r.level = level
     return asyncio.run(r.process(p, B))
 
 
@@ -176,3 +179,18 @@ def test_open_id_request_keeps_the_letter_so_the_hold_never_follows_a_retire(sto
     assert store.get_request(todo.request_id).status == RequestStatus.DRAFT
     assert not _opt_outs(store, p, RequestStatus.QUEUED_FOR_APPROVAL)
     assert not _retired_events(store, p)
+
+
+def test_possible_only_scan_with_open_letter_still_asks_is_this_you(store):
+    """CR #64: the kept-letter early return must not skip the REVIEW_MATCH to-do (rule 7)."""
+    p, todo = _letter_made(store)
+    st = _run(store, p, T0 + timedelta(days=8), found=True, scan_only=True, dry_run=True,
+              level=MatchLevel.POSSIBLE)
+    assert st.state == S.NEEDS_HUMAN
+    assert [t.id for t in _manual(store, p)] == [todo.id], "the letter is kept"
+    reviews = [t for t in store.list_todos(p.id) if t.kind == TodoKind.REVIEW_MATCH]
+    assert len(reviews) == 1 and reviews[0].broker_id == B.id
+    _run(store, p, T0 + timedelta(days=9), found=True, scan_only=True, dry_run=True,
+         level=MatchLevel.POSSIBLE)
+    assert len([t for t in store.list_todos(p.id) if t.kind == TodoKind.REVIEW_MATCH]) == 1
+    assert not _opt_outs(store, p, RequestStatus.QUEUED_FOR_APPROVAL), "POSSIBLE never auto-queues"

@@ -581,6 +581,8 @@ class Runner:
                 # _manual_to_email (SEC-117) and "I sent it" can still record the submission
                 self._event(profile, broker.id, "scanned", confirmed=len(conf),
                             possible=len(possible), kept="manual_letter")
+                if possible and not conf:   # still ask "Is this you?" (rule 7)
+                    self._review_todo(profile, broker, possible[0], len(possible))
                 return st.model_copy(update={"last_scan_at": self.now})
             new_state = after_scan(st, bool(conf), self.now)
             st = self._set(profile, st, new_state, "scanned", confirmed=len(conf),
