@@ -39,7 +39,10 @@ class ReleaseClaims(HTMLParser):
         self.badge_depth = 0
         self.badges: list[str] = []
         self.href: str | None = None
-        self.links: list[str] = []
+        self.link_text: list[str] = []
+        self.links: list[tuple[str, str]] = []
+        self.button_text: list[str] | None = None
+        self.buttons: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         if tag in {"head", "script", "style"}:
@@ -54,6 +57,9 @@ class ReleaseClaims(HTMLParser):
             self.badge_depth += 1
         if tag == "a":
             self.href = attributes.get("href") or ""
+            self.link_text = []
+        if tag == "button":
+            self.button_text = []
 
     def handle_endtag(self, tag: str) -> None:
         if tag in {"head", "script", "style"}:
@@ -67,14 +73,21 @@ class ReleaseClaims(HTMLParser):
                 self.badges.append(" ".join(" ".join(self.badge).split()))
                 self.badge = None
         if tag == "a" and self.href is not None:
-            self.links.append(self.href)
+            self.links.append((self.href, " ".join(self.link_text)))
             self.href = None
+        if tag == "button" and self.button_text is not None:
+            self.buttons.append(" ".join(self.button_text))
+            self.button_text = None
 
     def handle_data(self, data: str) -> None:
         if not self.ignored:
             self.text.append(data)
             if self.badge is not None:
                 self.badge.append(data)
+            if self.href is not None:
+                self.link_text.append(data)
+            if self.button_text is not None:
+                self.button_text.append(data)
 
 
 def current_versions(text: str) -> list[str]:
@@ -134,10 +147,17 @@ def test_no_installer_download_without_published_release(
     site = yaml.safe_load((ROOT / "site_src/site.yaml").read_text(encoding="utf-8"))
     for path, page in pages:
         downloads = [
-            href for href in page.links
-            if href == site["download_url"] or urlsplit(href).path.lower().endswith(".exe")
+            (href, label) for href, label in page.links
+            if href == site["download_url"]
+            or urlsplit(href).path.lower().endswith(".exe")
+            or re.search(r"\bdownload\s+(?:free\s*my\s*id|freemyidsetup)", label, re.IGNORECASE)
         ]
         assert not downloads, (path, downloads)
+        assert not [
+            label for label in page.buttons
+            if re.search(r"\bdownload\b", label, re.IGNORECASE)
+            and not re.search(r"\bcoming soon\b", label, re.IGNORECASE)
+        ], path
 
 
 @pytest.mark.parametrize(
@@ -165,7 +185,7 @@ def test_badges_and_links_are_read_from_visible_html() -> None:
     )
     assert current_versions(" ".join(page.text)) == []
     assert page.badges == ["Available now"]
-    assert page.links == ["/get/windows"]
+    assert page.links == [("/get/windows", "Download")]
 
 
 @pytest.mark.parametrize(
@@ -178,6 +198,8 @@ def test_badges_and_links_are_read_from_visible_html() -> None:
         ("Available <b>now</b>", ""),
         ("Also available: Linux", ""),
         ('<a href="/FreeMyIDSetup.exe">Download</a>', ""),
+        ('<a href="/download/">Download Free My ID</a>', ""),
+        ("<button>Download now</button>", ""),
     ],
 )
 def test_inconsistent_claims_are_rejected(html: str, version: str) -> None:
