@@ -1,5 +1,18 @@
 # broker-researcher handoff (registry refresh pass, 2026-11-07)
 
+## Pass 4 (2026-11-07): suppression lists and credit freezes (ROADMAP 3.4). Tools: Read, Write, WebFetch, WebSearch only. No git, no in-place edit.
+Compared the existing `brokers/checklists.yaml` (version 2026.11.07.2) against official pages re-fetched this pass. The file already covers every item requested (DMAchoice, optoutprescreen, national_do_not_call, freeze_equifax, _experian, _transunion, _innovis, _chexsystems, _nctue, _lexisnexis). I did NOT rewrite the 348-line file by hand (typo risk); nothing in it is wrong. Apply these small edits as Priya Shah [freemyid], explicit path `brokers/checklists.yaml` plus this handoff.
+
+Fetched today:
+- https://consumer.risk.lexisnexis.com/freeze : LOADS, matches. Says "LexisNexis Risk Solutions does not charge a fee to apply, lift or remove a security freeze". Online forms (freeze, temporary lift, permanent removal, replacement PIN; for self, a minor under 16 or a protected consumer); mail LexisNexis Risk Solutions Consumer Center, Attn: Security Freeze, P.O. Box 105108, Atlanta, GA 30348-5108; phone 1-800-456-1244. A confirmation letter arrives by mail. Page does not say what ID is needed or how a PIN is used by phone/mail. Applies only at LexisNexis. ANSWER: freeze_lexisnexis CAN be published (verification official_page, already set). Edits: (a) in `tips` add "A replacement PIN can be ordered on the same online form." (b) add tip "Parents and guardians can use the same online forms for a child under 16." (c) `notes`: "Re-read 2026-11-07, all steps and phone match. Page does not say what ID is needed."
+- https://www.equifax.com/personal/credit-report-services/credit-freeze/ : matches existing entry (free, (888) 298-0045, myEquifax 18+, text one-time PIN or credit-report questions). Add tip: "Under 18 or no online account? Call (888) 298-0045. Parents or guardians can freeze a child under 16 with Equifax's Minor Freeze Request form."
+- https://www.consumer.ftc.gov/articles/what-know-about-credit-freezes-fraud-alerts : "There's no cost to place or lift a credit freeze"; anyone can freeze for any reason; lasts until you lift it; contact all three bureaus; suggests lifting only at the bureau the lender will use, then putting it back. No PINs or phone numbers on the page. Add tip to freeze_transunion or freeze_equifax: "Applying for a loan? Ask the lender which bureau it uses, lift the freeze only there, then put it back."
+- Still HTTP 403, so UNVERIFIED and left as `partial`: transunion.com/credit-freeze, optoutprescreen.com, chexsystems.com/security-freeze/place-freeze. No workaround tried. Existing public text for these already stays within what the FTC/CFPB pages support.
+- donotcall.gov and donotcall.gov/faq.html load but return only navigation text (no steps), so national_do_not_call remains sourced from the FTC FAQ (official, previously read). Correct `verification` is arguably `official_page` (FTC is the owner); keep, and note in `notes` that donotcall.gov itself returns no step text to our fetcher.
+- DMAchoice, Innovis, NCTUE, Experian, IRS, SSA: no re-fetch this pass; entries unchanged from pass 3.
+
+No new files, no model changes. CHANGE REQUEST: none beyond the earlier list below.
+
 ## Refresh pass 3 (2026-11-07): tool limits and ready-to-apply edits
 This session had only WebFetch, WebSearch, Read and Write. No shell, no in-place edit, no git. I did NOT rewrite `brokers/registry.yaml` (large, not fully read) or `registry.sample.yaml` by hand (typo risk). Nothing is committed; `pytest -k registry` and the health check were NOT run. The two DROP/PSN edits below are small; apply them (as Priya Shah [freemyid], explicit paths `brokers/registry.yaml brokers/registry.sample.yaml`).
 
@@ -59,3 +72,5 @@ Do Not Call: FTC FAQ read, donotcall.gov not opened. IRS has no general opt-out.
 
 ## Still uncertain
 Whitepages `suppression_requests` vs `suppression-requests` (guides lean hyphen); BeenVerified live opt-out path; FastPeopleSearch `/removal` vs `/optout`; Cotality portal URL; whether DROP's email verification is mandatory.
+
+- 2026-11-08 (Morgan): ruling: publish freeze_lexisnexis on the site (verified against consumer.risk.lexisnexis.com/freeze, 2026-11-07). The web-developer picks it up next round. Optional checklist tips from Pass 4 are deferred.
