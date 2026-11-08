@@ -202,3 +202,12 @@ C. Docs only (current state): leaves a silent no-op that a helper will hit.
 Pick: B. The silent ignore is the real bug; GUI users already have /wizard/import and the family-installer bundle, and the
 people who type `setup --prefill` are at a terminal anyway. A adds a path-into-server hop for no audience. Revisit A only if
 the family installer ever launches setup with a bundle argument. No website change either way (web/ never mentions --prefill).
+Task 3 (P3 backlog, smallest first): web-v3 P3s left are SEC-66 headers (host), SEC-67 (devops), WR-51 tab-out (needs JS,
+site stays script-free) and WR-61/62/63. Broker-researcher cleared WR-61 S2 at 11eb5fb, so 344b8f0 publishes
+/guides/help-a-parent-remove-their-information/ (pages.yaml v3_only entry, FAQ-style H2s, BreadcrumbList Home > Opt-out
+guides > Help a parent, linked from /families/ bottom and the /guides/ "Before you start" box; test_web_help_a_parent.py).
+Shots: /tmp/claude-shots/parent-{360,1280}-{light,dark}.png, no horizontal scroll. Note: full-page shots without
+reduced motion show `.reveal` cards blank (scroll-driven animation); existing behavior site-wide, not a page bug.
+Next: WR-62 (S2 not cleared: use the research doc's per-listing wording, "often" -> "can"), then WR-63 link.
+Checks at 344b8f0: pnpm build + check OK (63 HTML, 57 indexable), content_check OK (leak scan on), pytest tests/test_web_* 111
+passed with FREEMYID_REQUIRE_WEB_DIST=1, legacy build_site --out tmp OK.
