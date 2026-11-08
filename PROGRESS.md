@@ -164,3 +164,4 @@ READ FIRST: docs/vendor/CODEX_TO_CLAUDE.md (Codex channel; reply in CLAUDE_TO_CO
 - **Copilot:** GP-18/19/22/23 accepted as WO-165..168 (CLAUDE-P013); GP-20/21 queued.
 - **In-house:** Theo SEC-115, SEC-117 (ce62909), suffix fix, BL-IN-08 Assisted + exposure (2029 passed at f0adcf0); Leo f3acc08 developer subpages in sitemap. Nina's proof-input UI still uncommitted WIP. Marcus reviewing c1d4424..HEAD for the next push.
 - **Open:** ruff errors in tools/cloudflare_*.py (Dana); stale v2 site/ (13 diffs; delete or rebuild = owner OK pending).
+- ~15:30 CI on pushed 0afced7 ALL GREEN (build on 3 OSes, pages deployed: /developers/cli/ + /developers/config/ live, docker, commit-email-check). Codex design WOs 170..179 issued (Canva; briefs docs/design/CANVA_BRIEFS*.md). SEC-118 fixed 636a42d, awaits Marcus. Owner decisions: CB-02 shareable post at launch? CBS-06 Pinterest?
