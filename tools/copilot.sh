@@ -22,7 +22,11 @@ EMAIL="242299803+GrayManSam@users.noreply.github.com"
 VD="docs/vendor"
 TEAM="$ROOT/$VD/copilot-team"
 SCRATCH="$ROOT/.vendor-wt"
-DESK="$SCRATCH/copilot-desk"
+# SEC-108/SEC-113: builder folders and the desk live OUTSIDE any repository, so git (and Copilot) cannot walk up to
+# $ROOT/.git or read the private, gitignored files in $ROOT. Legacy folders under $SCRATCH are used until closed.
+BUILD="${XDG_STATE_HOME:-$HOME/.local/state}/freemyid-builders"
+DESK="$BUILD/copilot-desk"
+export GIT_CEILING_DIRECTORIES="$BUILD"
 
 # Same in-house-only list as the other vendors: read from tools/vendor.sh so there is one source of truth.
 mapfile -t DENY < <(awk '/^DENY_PREFIXES=\(/{f=1} f{print} f&&/\)/{exit}' "$ROOT/tools/vendor.sh" \
@@ -74,16 +78,20 @@ SAFEGIT=(-c core.hooksPath=/dev/null -c core.fsmonitor=false)
 BASES="$SCRATCH/.bases"
 br_of() { echo "copilot/$(echo "$1" | tr 'A-Z' 'a-z')"; }
 is_legacy() { [ -e "$1/.git" ]; }
-G() { git "${SAFEGIT[@]}" --git-dir="$ROOT/.git" "$@"; }
-base_of() {   # the commit the folder's next commit builds on: the WO branch tip if it exists, else the export base
-  local b; b="$(br_of "$1")"
-  if git -C "$ROOT" rev-parse -q --verify "refs/heads/$b" >/dev/null; then git -C "$ROOT" rev-parse "refs/heads/$b"
-  else cat "$BASES/$1"; fi
+# Trusted git on an export: hooks/fsmonitor off, no LFS filter, and (callers pass --attr-source=<base>) attributes read
+# from the trusted base commit, never from the builder's folder.
+G() { git "${SAFEGIT[@]}" -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.required=false \
+  --git-dir="$ROOT/.git" "$@"; }
+base_of() {   # SEC-108: only ever the SHA this script recorded (export base, then each commit it made); never a branch tip
+  cat "$BASES/$1"
 }
 changes_of() {   # changes_of WO WT : changed paths vs base_of, one per line
   local idx; idx="$(mktemp "$BASES/idx.XXXXXX")"
-  GIT_INDEX_FILE="$idx" G --work-tree="$2" read-tree "$(base_of "$1")"
-  GIT_INDEX_FILE="$idx" G --work-tree="$2" status --no-renames --porcelain -z -uall | tr '\0' '\n' | sed -E 's/^...//' \
+  local b; b="$(base_of "$1")"
+  GIT_INDEX_FILE="$idx" G --attr-source="$b" --work-tree="$2" read-tree "$b"
+  # folder vs the base index only (status would also list base-vs-HEAD differences as "staged")
+  { GIT_INDEX_FILE="$idx" G --attr-source="$b" --work-tree="$2" diff --no-renames --name-only -z
+    GIT_INDEX_FILE="$idx" G --attr-source="$b" --work-tree="$2" ls-files --others --exclude-standard -z; } | tr '\0' '\n' | sort -u \
     | grep -vE '^(VENDOR_STATUS\.md|web/node_modules(/.*)?|\.venv(/.*)?)$' || true
   rm -f "$idx"
 }
@@ -94,7 +102,10 @@ wo_file() { local f="$ROOT/$VD/$1.md"; [ -f "$f" ] || { echo "no work order $f" 
 agent_of() { sed -nE 's/^Agent: *([a-z-]+).*/\1/p' "$1" | head -1; }
 name_of() { sed -nE 's/^Name: *(.+)$/\1/p' "$TEAM/$1.md" 2>/dev/null | head -1; }
 allowed_paths() { awk '/^## Allowed paths/{f=1;next} /^## /{f=0} f' "$1" | sed -nE 's/^[-*] *`?([^` ]+)`?.*/\1/p'; }
-wt_of() { echo "$SCRATCH/$(echo "$1" | tr 'A-Z' 'a-z')"; }
+wt_of() {   # legacy in-repo folder if it still exists, else the out-of-repo build folder
+  local n; n="$(echo "$1" | tr 'A-Z' 'a-z')"
+  if [ -e "$SCRATCH/$n" ]; then echo "$SCRATCH/$n"; else echo "$BUILD/$n"; fi
+}
 wo_of_pr() { gh pr view "$1" --repo "$REPO" --json title -q .title | grep -oE 'WO-[0-9]{3}' | head -1; }
 
 check_paths() {   # check_paths WO-FILE < paths ; prints problems, returns 1 if any
@@ -113,9 +124,8 @@ check_paths() {   # check_paths WO-FILE < paths ; prints problems, returns 1 if 
 
 # --- desk: a clean detached worktree of local main for Grace and Tomás (no gitignored private files) ---
 DESK_FILES=(CLAUDE_TO_COPILOT.md COPILOT_TO_CLAUDE.md COPILOT_PROPOSALS.md BOARD.md copilot-team/inbox.md copilot-team/lead-log.md)
-desk_prepare() {
-  git -C "$ROOT" worktree remove --force "$DESK" >/dev/null 2>&1 || true
-  git -C "$ROOT" worktree add -q --detach "$DESK" main
+desk_prepare() {   # SEC-113: a plain export of main outside the repo (no .git, no private files)
+  command rm -rf "$DESK"; mkdir -p "$DESK"; git -C "$ROOT" archive main | tar -x -C "$DESK"
   local f; for f in "${DESK_FILES[@]}"; do [ -f "$ROOT/$VD/$f" ] && cp "$ROOT/$VD/$f" "$DESK/$VD/$f"; done; return 0
 }
 desk_return() {   # copy back ONLY the files the role may write
@@ -130,7 +140,7 @@ run_role() {   # run_role ROLE PROMPT WRITABLE...
   local nosb=() a; for a in "${SAFE[@]}"; do [ "$a" = --sandbox ] || nosb+=("$a"); done
   copilot -C "$DESK" --agent "$role" "${nosb[@]}" "${allow[@]}" -p "$prompt" || true
   desk_return "$@"
-  git -C "$ROOT" worktree remove --force "$DESK" >/dev/null 2>&1 || true
+  command rm -rf "$DESK"
 }
 
 liaison() {
@@ -162,7 +172,7 @@ case "$cmd" in
     grep -qE '^Vendor: *copilot' "$f" || { echo "$wo is not a Copilot work order (Vendor: copilot)" >&2; exit 2; }
     role="$(agent_of "$f")"; [ -f "$ROOT/.github/agents/$role.agent.md" ] || { echo "no agent profile for '$role'" >&2; exit 2; }
     [ -e "$wt" ] && { echo "$wt exists: use checkin" >&2; exit 2; }
-    need_cli; mkdir -p "$BASES" "$wt"; git -C "$ROOT" rev-parse main > "$BASES/$wo"
+    need_cli; mkdir -p "$BASES" "$BUILD" "$wt"; git -C "$ROOT" rev-parse main > "$BASES/$wo"
     git -C "$ROOT" archive "$(cat "$BASES/$wo")" | tar -x -C "$wt"   # tracked files only; no .git, no private files
     # SEC-105: the builder gets its own throwaway copy of the venv (copy-on-write on btrfs), never the in-house one.
     cp -a --reflink=auto "$ROOT/.venv" "$wt/.venv"
@@ -194,12 +204,12 @@ PYTHONPATH=src .venv/bin/python -m pytest -q <tests>, and update VENDOR_STATUS.m
       mapfile -t paths <<<"$changed"
       for p in "${paths[@]}"; do [ -L "$wt/$p" ] && { echo "refusing to commit: $p is a symlink" >&2; exit 3; }; done
       n="$(name_of "$role")"; base="$(base_of "$wo")"; idx="$(mktemp "$BASES/idx.XXXXXX")"
-      GIT_INDEX_FILE="$idx" G --work-tree="$wt" read-tree "$base"
-      GIT_INDEX_FILE="$idx" G --work-tree="$wt" add -A -- "${paths[@]}"
+      GIT_INDEX_FILE="$idx" G --attr-source="$base" --work-tree="$wt" read-tree "$base"
+      GIT_INDEX_FILE="$idx" G --attr-source="$base" --work-tree="$wt" add -A -- "${paths[@]}"
       tree="$(GIT_INDEX_FILE="$idx" G write-tree)"; rm -f "$idx"
       c="$(GIT_AUTHOR_NAME="$n [freemyid-copilot]" GIT_AUTHOR_EMAIL="$EMAIL" GIT_COMMITTER_NAME="$n [freemyid-copilot]" \
            GIT_COMMITTER_EMAIL="$EMAIL" G commit-tree "$tree" -p "$base" -m "$(head -1 "$f" | sed 's/^# //')")"
-      G update-ref "refs/heads/$(br_of "$wo")" "$c"
+      G update-ref "refs/heads/$(br_of "$wo")" "$c"; echo "$c" > "$BASES/$wo"
       echo "committed $c on $(br_of "$wo") as $n [freemyid-copilot]"; exit 0
     fi
     # legacy linked worktree (made before the SEC-108 fix)
@@ -224,6 +234,10 @@ PYTHONPATH=src .venv/bin/python -m pytest -q <tests>, and update VENDOR_STATUS.m
     # SEC-109: list both sides of a rename (previous_filename), so a moved-away in-house file is checked too.
     gh api "repos/$REPO/pulls/$1/files" --paginate -q '.[] | .filename, (.previous_filename // empty)' | check_paths "$(wo_file "$wo")" \
       && echo "PR #$1 ($wo): all files inside the allowed paths" ;;
+  premerge)   # SEC-108 step 4: scope-check a local copilot/wo-NNN branch against main before merging it
+    wo_check "${1:-}"; wo="$1"
+    git -C "$ROOT" diff --no-renames --name-only "main...$(br_of "$wo")" | check_paths "$(wo_file "$wo")" \
+      && echo "$(br_of "$wo"): all files inside the allowed paths" ;;
   merge)
     [[ "${1:-}" =~ ^[0-9]+$ ]] || { echo "usage: merge PR" >&2; exit 2; }
     pr="$1"; "$0" scope "$pr" || { echo "refusing to merge: fix scope first" >&2; exit 3; }
