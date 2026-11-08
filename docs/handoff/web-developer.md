@@ -211,3 +211,17 @@ reduced motion show `.reveal` cards blank (scroll-driven animation); existing be
 Next: WR-62 (S2 not cleared: use the research doc's per-listing wording, "often" -> "can"), then WR-63 link.
 Checks at 344b8f0: pnpm build + check OK (63 HTML, 57 indexable), content_check OK (leak scan on), pytest tests/test_web_* 111
 passed with FREEMYID_REQUIRE_WEB_DIST=1, legacy build_site --out tmp OK.
+
+## Morgan approvals (2026-11-08): promise wording + WR-62/63 (web lead alone)
+00e8976 WO-101 promise replaced everywhere (home, /safety/, faq.yaml, legacy home/safety templates, test PROMISE):
+"Your details are stored only on your computer. They go out only to the people-search sites themselves: your name and town
+to look you up, and removal requests you approve." Legacy templates also got the notice, practice-mode, phone and fenced-in
+fixes from 63ce16e. The old sentence is on the banned list in test_web_absolute_claims.py.
+Note: committed legacy site/ was already stale before this (build_site --check: 4 problems); build.yml rebuilds it before
+--check, so not regenerated here.
+f94979d WR-62 /guides/get-your-phone-number-off-people-search-sites/ (per-listing S2 wording, "can" not "often", FTC Do Not
+Call wording with donotcall.gov / reportfraud.ftc.gov plain links) + WR-63 /guides/ link; test_web_phone_number_guide.py.
+CLI-A04 option B approved; Nina implements (not web).
+Checks at f94979d: pnpm build + check OK (64 HTML, 58 indexable), content_check OK (leak scan on), web tests 113 passed,
+legacy build to tmp OK. Shots /tmp/claude-shots/phone-{360,1280}-{light,dark}.png, no horizontal scroll.
+Web-v3 P3 left: SEC-66 headers (host), SEC-67 (devops), WR-51 (needs JS, won't do), WR-69 HOLD.
