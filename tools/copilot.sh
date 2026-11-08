@@ -33,8 +33,11 @@ DENY+=(tools/copilot.sh .github/ $VD/WO- $VD/BOARD.md $VD/COPILOT.md $VD/AGENT_C
 # Every local Copilot run: OS command sandbox, no GitHub MCP tools, no network, no git/gh, no installs, no memory.
 SAFE=(--trust-folder --sandbox --disable-builtin-mcps --disable-client-telemetry -s
   --deny-tool 'shell(git:*)' 'shell(gh:*)' 'shell(curl:*)' 'shell(wget:*)' 'shell(ssh:*)' 'shell(scp:*)'
-  'shell(pip:*)' 'shell(pip3:*)' 'shell(npm:*)' 'shell(npx:*)' 'shell(pnpm add)' 'shell(pnpm install)' 'shell(sudo:*)'
+  'shell(pip:*)' 'shell(pip3:*)' 'shell(npm:*)' 'shell(npx:*)' 'shell(pnpm add:*)' 'shell(pnpm install:*)' 'shell(sudo:*)'
+  'shell(bash:*)' 'shell(sh:*)' 'shell(zsh:*)' 'shell(env:*)' 'shell(uv:*)' 'shell(pipx:*)' 'shell(/usr/bin/git:*)'
   'url' 'memory')
+# Builders: the OS sandbox is the real barrier (SEC-107); name-based deny rules are only a second layer. Builders get no
+# access to the in-house .venv (SEC-105): if they can run tests at all, it is with tools inside their own worktree.
 
 need_cli() { command -v copilot >/dev/null || { echo "copilot CLI not installed" >&2; exit 4; }; }
 wo_check() { [[ "${1:-}" =~ ^WO-[0-9]{3}$ ]] || { echo "work order id must look like WO-001" >&2; exit 2; }; }
@@ -52,7 +55,8 @@ check_paths() {   # check_paths WO-FILE < paths ; prints problems, returns 1 if 
     [ -n "$path" ] || continue
     [[ "$path" == VENDOR_STATUS.md ]] && continue
     for d in "${DENY[@]}"; do [[ "$path" == "$d"* ]] && { echo "IN-HOUSE ONLY: $path"; bad=1; continue 2; }; done
-    ok=0; for a in "${allow[@]}"; do [[ "$path" == "$a"* ]] && ok=1; done
+    ok=0   # SEC-106: an allowed file matches exactly; only an allowed entry ending in '/' covers what is under it
+    for a in "${allow[@]}"; do if [[ "$a" == */ ]]; then [[ "$path" == "$a"* ]] && ok=1; else [[ "$path" == "$a" ]] && ok=1; fi; done
     [ $ok = 1 ] || { echo "OUT OF SCOPE: $path"; bad=1; }
   done
   return $bad
@@ -110,9 +114,11 @@ case "$cmd" in
     role="$(agent_of "$f")"; [ -f "$ROOT/.github/agents/$role.agent.md" ] || { echo "no agent profile for '$role'" >&2; exit 2; }
     [ -e "$wt" ] && { echo "$wt exists: use checkin" >&2; exit 2; }
     need_cli; git -C "$ROOT" worktree add -q -b "copilot/$(echo "$wo" | tr 'A-Z' 'a-z')" "$wt" main
-    copilot -C "$wt" --agent "$role" "${SAFE[@]}" --add-dir "$ROOT/.venv" --allow-all-tools -p "You are $(name_of "$role") in BUILDER mode for work
-order $wo, working LOCALLY in this folder (no git: the owner commits). Change ONLY the allowed paths. Tests:
-PYTHONPATH=src $ROOT/.venv/bin/pytest -q <tests> and $ROOT/.venv/bin/ruff check <files>. End by WRITING THE FILE VENDOR_STATUS.md in this folder (not only in your reply)
+    copilot -C "$wt" --agent "$role" "${SAFE[@]}" --allow-all-tools -p "You are $(name_of "$role") in BUILDER mode for work
+order $wo, working LOCALLY in this folder (no git: the owner commits). Change ONLY the allowed paths, and create no
+other files (no scratch, backup or .new/.tmp copies). If a shell is available, run only read-only commands and the tests
+you can run inside this folder; otherwise say the owner must run them. End by WRITING THE FILE VENDOR_STATUS.md in this
+folder (not only in your reply)
 (Done / Next / Questions for the owner / How to test).
 
 $(cat "$f")"
@@ -120,14 +126,14 @@ $(cat "$f")"
   checkin)
     wo_check "${1:-}"; [ $# -ge 2 ] || { echo 'usage: checkin WO-NNN "notes"' >&2; exit 2; }
     wo="$1"; f="$(wo_file "$wo")"; wt="$(wt_of "$wo")"; role="$(agent_of "$f")"; need_cli
-    copilot -C "$wt" --agent "$role" "${SAFE[@]}" --add-dir "$ROOT/.venv" --allow-all-tools -p "Owner check-in for $wo from Morgan Reyes:
+    copilot -C "$wt" --agent "$role" "${SAFE[@]}" --allow-all-tools -p "Owner check-in for $wo from Morgan Reyes:
 $2
 
-Continue within the allowed paths only, rerun the tests, and update VENDOR_STATUS.md."
+Continue within the allowed paths only (create no other files), and update VENDOR_STATUS.md."
     git -C "$wt" status --short ;;
   commit)
     wo_check "${1:-}"; wo="$1"; f="$(wo_file "$wo")"; wt="$(wt_of "$wo")"; role="$(agent_of "$f")"
-    changed="$(git -C "$wt" status --porcelain | sed -E 's/^...//' | grep -vE '^(VENDOR_STATUS\.md|web/node_modules)$' || true)"
+    changed="$(git -C "$wt" status --porcelain -z -uall | tr '\0' '\n' | sed -E 's/^...//' | grep -vE '^(VENDOR_STATUS\.md|web/node_modules(/.*)?)$' || true)"
     [ -n "$changed" ] || { echo "nothing to commit in $wt" >&2; exit 2; }
     check_paths "$f" <<<"$changed" || { echo "refusing to commit: out-of-scope changes" >&2; exit 3; }
     n="$(name_of "$role")"; mapfile -t paths <<<"$changed"
@@ -155,6 +161,8 @@ Continue within the allowed paths only, rerun the tests, and update VENDOR_STATU
     title="$(gh pr view "$pr" --repo "$REPO" --json title -q .title)"; wo="$(wo_of_pr "$pr")"
     n="$(name_of "$(agent_of "$(wo_file "$wo")")")"
     git -C "$ROOT" fetch -q origin "pull/$pr/head:copilot/pr-$pr"
+    git -C "$ROOT" diff --name-only "main...copilot/pr-$pr" | check_paths "$(wo_file "$wo")" \
+      || { echo "refusing to merge: the fetched branch differs from the reviewed scope" >&2; exit 3; }
     git -C "$ROOT" merge --squash -q "copilot/pr-$pr"
     GIT_AUTHOR_NAME="${n:-Copilot team} [freemyid-copilot]" GIT_AUTHOR_EMAIL="$EMAIL" \
       git -C "$ROOT" commit -q -m "$title (vendor: copilot, PR #$pr)"
