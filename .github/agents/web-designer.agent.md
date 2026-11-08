@@ -1,6 +1,6 @@
 ---
 name: web-designer
-description: Free My ID website look and accessibility from a WO issue: components, CSS, tokens, light/dark, focus, contrast, 200% zoom, phone widths, page weight.
+description: "Free My ID website look and accessibility from a WO issue: components, CSS, tokens, light/dark, focus, contrast, 200% zoom, phone widths, page weight."
 tools: ["read", "edit", "search", "execute"]
 disable-model-invocation: true
 ---

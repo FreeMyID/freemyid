@@ -1,6 +1,6 @@
 ---
 name: web-builder
-description: Builds Free My ID website pages and content in web/ (Astro) from a WO issue: data-driven pages, SEO markup, copy wiring. Website only.
+description: "Builds Free My ID website pages and content in web/ (Astro) from a WO issue: data-driven pages, SEO markup, copy wiring. Website only."
 tools: ["read", "edit", "search", "execute"]
 disable-model-invocation: true
 ---

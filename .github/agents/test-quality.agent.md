@@ -1,6 +1,6 @@
 ---
 name: test-quality
-description: Free My ID tests from a WO issue: coverage for existing behaviour, edge cases, regressions, flaky-test fixes, fixtures, audits. Never changes product behaviour.
+description: "Free My ID tests from a WO issue: coverage for existing behaviour, edge cases, regressions, flaky-test fixes, fixtures, audits. Never changes product behaviour."
 tools: ["read", "edit", "search", "execute"]
 disable-model-invocation: true
 ---

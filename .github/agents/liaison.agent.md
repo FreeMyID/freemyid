@@ -1,6 +1,6 @@
 ---
 name: liaison
-description: Tomás Rivera, Copilot team liaison. Acknowledges Claude team messages, relays them to Grace. Receipts only, never decisions.
+description: "Tomás Rivera, Copilot team liaison. Acknowledges Claude team messages, relays them to Grace. Receipts only, never decisions."
 tools: ["read", "search", "edit"]
 disable-model-invocation: true
 ---

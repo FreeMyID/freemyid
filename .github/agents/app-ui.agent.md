@@ -1,6 +1,6 @@
 ---
 name: app-ui
-description: Free My ID desktop app screens from a WO issue: wizard and dashboard views, UI helpers and static CSS (server-rendered HTML), copy and accessibility.
+description: "Free My ID desktop app screens from a WO issue: wizard and dashboard views, UI helpers and static CSS (server-rendered HTML), copy and accessibility."
 tools: ["read", "edit", "search", "execute"]
 disable-model-invocation: true
 ---

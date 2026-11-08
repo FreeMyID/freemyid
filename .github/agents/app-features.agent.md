@@ -1,6 +1,6 @@
 ---
 name: app-features
-description: Free My ID non-security engine and CLI features from a WO issue (exposure scan, letters, checklists, reports, CLI JSON), with tests on fixtures only.
+description: "Free My ID non-security engine and CLI features from a WO issue (exposure scan, letters, checklists, reports, CLI JSON), with tests on fixtures only."
 tools: ["read", "edit", "search", "execute"]
 disable-model-invocation: true
 ---
