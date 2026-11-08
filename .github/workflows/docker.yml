@@ -85,7 +85,19 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ github.token }}
-      - name: Build and push (latest + version)
+      - name: Image tags (no "latest" for pre-releases)
+        id: tags
+        if: steps.has.outputs.present == 'true'
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          {
+            echo "list<<EOF"
+            echo "${IMAGE}:${TAG}"
+            if [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then echo "${IMAGE}:latest"; fi
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+      - name: Build and push
         id: push
         if: steps.has.outputs.present == 'true'
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
@@ -95,9 +107,7 @@ jobs:
           push: true
           provenance: mode=max
           sbom: false
-          tags: |
-            ${{ env.IMAGE }}:latest
-            ${{ env.IMAGE }}:${{ github.ref_name }}
+          tags: ${{ steps.tags.outputs.list }}
           cache-from: type=gha
       - name: Sign the image (cosign keyless)
         if: steps.has.outputs.present == 'true'

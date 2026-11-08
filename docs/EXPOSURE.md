@@ -44,6 +44,23 @@ adds an “Is this you?” review to-do to the dashboard, using the same review 
 `scan`. An open review for that site is reused on later scans. Confirmed matches and
 sites that need to be checked by hand create no new review to-do.
 
+### Old addresses (optional, off by default)
+
+Set `exposure_old_addresses: true` in config.yaml (or pass `old_addresses=True` to
+`scan_exposure`) to also search ONE previous address per broker. Only brokers whose
+`search_url_pattern` uses `{city}`, `{state}` or `{state_name}` get the extra search. The
+address used is the most recent one not marked current (highest `to_year`, then `from_year`,
+then list order) that gives a different URL from the current-address search; a broker whose
+URL only uses `{state}` gets no extra request when you moved within the same state.
+
+Same rules as the main search: the same fetcher and `search_access`, the polite random gap
+before the request, consent and practice mode, the 24-hour cache (a cached site gets no
+extra request either). The extra search only runs when the main search was read; a failed
+old-address page is ignored and the main answer stands. Both pages' listings are saved in one
+merge, so neither marks the other's listings gone. `old_address_checked` on the entry says
+whether the extra page was read. The matcher already counts any current or previous address
+as the location signal.
+
 `--offline` fetches nothing. It lists every site as "check by hand", with its link, and counts
 what earlier scans and runs already found.
 
@@ -67,6 +84,33 @@ so it also runs in practice mode. People without valid permission are skipped.
 - No HTML is kept. Names, ages and addresses from the pages never go into the scan record.
   Listing URLs are kept only in the listings table, and "check by hand" links are rebuilt
   from the profile when the record is read.
+
+## Coverage
+
+A score is always shown with its coverage (ROADMAP 3.2). `ExposureResult.coverage`:
+
+| Field | Meaning |
+|---|---|
+| `sites_total` | Sites with a search page we know about |
+| `sites_checked` | Read automatically, in this scan or from the 24-hour cache |
+| `found` | Shows a confirmed listing of you (also counts what earlier runs found when the site could not be read now) |
+| `uncertain` | Shows only "possible" listings: needs an "Is this you?" answer |
+| `not_found` | Read, and shows nothing that matches |
+| `check_by_hand` | Not read and nothing known: open the link yourself |
+
+`found + uncertain + not_found + check_by_hand == sites_total`. `ExposureResult.coverage_note`
+is one plain-English line for the UI, for example "This score is based on the 12 sites we
+could check, out of 40. A low score does not mean you are safe. 28 sites need checking by
+hand." It never says "you are safe". Coverage is worked out from the entries, so older stored
+scans get it too.
+
+## California: DROP first
+
+When the person's current address is in California (`checklist_state.drop_first(profile)`,
+which uses `Profile.state_of_residence`), `ExposureResult.drop_first` is true and
+`first_checklist` is `"ca_drop"`. The CLI prints `exposure_models.DROP_NOTE` under the score,
+and `freemyid checklist list` shows `ca_drop` first. Everyone else: false / null. This is
+worked out from the profile when the result is read, so it follows a move.
 
 ## Exposure score (0-100)
 

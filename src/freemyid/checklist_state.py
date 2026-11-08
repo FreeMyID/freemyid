@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from .models import Actor, Checklist, ChecklistFile, Event
+from .models import Actor, Checklist, ChecklistFile, Event, Profile
 
 log = logging.getLogger(__name__)
 
@@ -26,6 +26,27 @@ DONE, UNDONE = "checklist_done", "checklist_undone"
 TAG = "_checklist"           # reserved Event.broker_id for ticks (never a real broker id)
 _TAGGED_LIMIT = 100_000      # every tick ever made for one person; ticks are rare
 _LEGACY_SCAN = 5000          # untagged ticks from the first dashboard version
+DROP_ID = "ca_drop"          # exposure_models.DROP_CHECKLIST_ID
+
+
+def drop_first(profile: Profile) -> bool:
+    """True when the person lives in California (current address): point them to the
+    ca_drop checklist before anything else (law matrix: "point Californians to DROP
+    first"). A person with no address marked current falls back to their first address,
+    the same rule as `Profile.state_of_residence`."""
+    return profile.state_of_residence.upper() == "CA"
+
+
+def first_checklist(profile: Profile | None, cf: ChecklistFile | None) -> str | None:
+    """The checklist id to show first for this person, or None. Only ids in the file."""
+    if profile is None or cf is None or not drop_first(profile):
+        return None
+    return DROP_ID if any(c.id == DROP_ID for c in cf.checklists) else None
+
+
+def ordered(cf: ChecklistFile, first: str | None) -> list[Checklist]:
+    """The checklists in file order, with `first` (if any) moved to the top."""
+    return sorted(cf.checklists, key=lambda c: c.id != first) if first else list(cf.checklists)
 
 
 @dataclass(frozen=True)
@@ -102,11 +123,13 @@ def item_doc(c: Checklist, tick: Tick | None, *, full: bool = False) -> dict[str
     return d
 
 
-def list_doc(cf: ChecklistFile, tk: dict[str, Tick], profile_id: str | None) -> dict[str, Any]:
-    items = [item_doc(c, tk.get(c.id)) for c in cf.checklists]
+def list_doc(cf: ChecklistFile, tk: dict[str, Tick], profile_id: str | None,
+             first: str | None = None) -> dict[str, Any]:
+    """`first` (from `first_checklist`) is listed first and named in "start_with"."""
+    items = [item_doc(c, tk.get(c.id)) for c in ordered(cf, first)]
     return {"schema": "checklists/1", "version": cf.version, "profile_id": profile_id,
             "done": sum(1 for i in items if i["done"]), "total": len(items),
-            "checklists": items}
+            "start_with": first, "checklists": items}
 
 
 def show_doc(c: Checklist, tick: Tick | None, profile_id: str | None) -> dict[str, Any]:

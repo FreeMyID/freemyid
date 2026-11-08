@@ -166,9 +166,14 @@ When a headless run fails closed before starting, `--json` prints
  "profiles": [{"profile_id": "…", "label": "Mom", "created_at": "…", "practice_mode": true,
    "score": 17, "explanation": [{"points": 15, "text": "1 site shows a listing that is you …"}],
    "counts": {"confirmed_sites": 1, "possible_sites": 0, "check_by_hand": 1, "not_found": 0},
+   "coverage": {"sites_total": 2, "sites_checked": 1, "found": 1, "not_found": 0,
+     "check_by_hand": 1, "uncertain": 0},
+   "coverage_note": "This score is based on the 1 site we could check, out of 2. …",
+   "drop_first": false, "first_checklist": null,
    "entries": [{"broker_id": "spokeo", "broker_name": "Spokeo", "status": "found",
      "reason": null, "match_level": "confirmed", "signals": ["age", "city"],
-     "from_store": false, "checked_at": "…", "check_url": "https://…",
+     "from_store": false, "old_address_checked": false, "checked_at": "…",
+     "check_url": "https://…",
      "listings": [{"url": "https://…", "match_level": "confirmed", "signals": ["age", "city"],
        "contact_shown": false, "relatives_shown": 1}]}]}],
  "skipped": []}
@@ -178,18 +183,27 @@ When a headless run fails closed before starting, `--json` prints
 docs/EXPOSURE.md. Listing and check URLs are included because the person needs to open
 them; the text output shows them too.
 
+`coverage` says what the score is based on (`found + uncertain + not_found + check_by_hand ==
+sites_total`; `sites_checked` = read automatically); show `coverage_note` next to the score.
+`drop_first` is true and `first_checklist` is `"ca_drop"` when the person's current address
+is in California. `old_address_checked` is true when one previous-address search was read
+for that site (config `exposure_old_addresses`, off by default). These fields were added in
+v0.3; `counts` is unchanged.
+
 ### `checklists/1`
 
 `freemyid checklist list --json`:
 
 ```json
 {"schema": "checklists/1", "version": "…", "profile_id": "…", "done": 0, "total": 1,
+ "start_with": null,
  "checklists": [{"id": "example_checklist", "title": "Example checklist", "done": false,
    "done_at": null, "url": "https://example.com/", "cost": "Free",
    "time_needed": "10 minutes"}]}
 ```
 
-`done` at the top level counts completed checklists; each item's `done` is a boolean.
+`start_with` is the checklist to do first, or null: `"ca_drop"` for a person whose current
+address is in California (it is then also listed first). `done` at the top level counts completed checklists; each item's `done` is a boolean.
 `done_at` is an ISO timestamp when done, otherwise null. `profile_id` is always the selected person (the command asks for `--profile` when more than one is set up). `version` is the checklist
 file version.
 

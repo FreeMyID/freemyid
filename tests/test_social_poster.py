@@ -1354,6 +1354,7 @@ def test_sec77_damaged_ledger_blocks_posting(files, ledger_dir):
 @pytest.mark.posix_only
 def test_sec77_ledger_inside_a_git_repo_is_refused(files, tmp_path):
     (tmp_path / "repo" / ".git").mkdir(parents=True)
+    (tmp_path / "repo" / ".git" / "HEAD").write_text("ref: refs/heads/main\n")
     rec = Recorder()
     q, o = files
     rc = poster.run(
@@ -1526,3 +1527,10 @@ def test_qa_sec87_release_log_never_prints_a_bad_uri(files, ledger_dir, caplog):
     with caplog.at_level(logging.INFO):
         assert poster.main(["--release", "Q-002"]) == poster.EXIT_USAGE
     assert "\x1b" not in caplog.text and "no valid uri" in caplog.text
+
+
+def test_empty_dot_git_dir_is_not_a_repository(tmp_path):
+    """Codex's sandbox can leave an empty /tmp/.git mount point; that must not block the ledger."""
+    (tmp_path / ".git").mkdir()
+    ledger = poster.Ledger(tmp_path / "state" / "posted.jsonl")
+    assert ledger.location_error() is None

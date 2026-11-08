@@ -9,10 +9,10 @@ on:
   push:
     branches: [main]
     paths: ["web/**", "site_src/**", "brokers/registry.sample.yaml", "tools/site_check.py",
-            ".github/workflows/pages.yml"]
+            "tests/test_web_*.py", "tests/conftest.py", ".github/workflows/pages.yml"]
   pull_request:
     paths: ["web/**", "site_src/**", "brokers/registry.sample.yaml", "tools/site_check.py",
-            ".github/workflows/pages.yml"]
+            "tests/test_web_*.py", "tests/conftest.py", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
@@ -69,6 +69,25 @@ jobs:
       - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
         with:
           path: web/dist
+      # Built-site regression tests (tests/test_web_*.py, marker web_dist). The Python job in
+      # build.yml skips them because it does not build web/; here they must run. They run after the
+      # Pages artifact upload so nothing a test writes into dist can be published; a failure still
+      # fails this job, so deploy does not run.
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+      - name: Install the package (for the test suite)
+        working-directory: .
+        run: pip install ".[dev]"
+      - name: Install Chromium (browser-driven site tests)
+        working-directory: .
+        run: python -m playwright install --with-deps chromium
+      - name: Built-site tests (pytest -m web_dist)
+        working-directory: .
+        env:
+          FREEMYID_REQUIRE_WEB_DIST: "1"
+        # exit 5 = no web_dist tests collected (none exist yet on this branch): not a failure
+        run: pytest -q -m web_dist || [ $? -eq 5 ]
 
   deploy:
     needs: build

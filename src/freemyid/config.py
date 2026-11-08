@@ -28,6 +28,8 @@ class Config(BaseModel):
     user_agent_suffix: str = "FreeMyID/0.1 (personal privacy opt-out tool)"
     wizard_port: int = 8765
     real_submissions_enabled: bool = False   # flipped only after explicit user approval
+    # Exposure scan: also search ONE previous address per broker (docs/EXPOSURE.md). Off.
+    exposure_old_addresses: bool = False
     # Where the data key and mailbox passwords live (secret_backends). None = auto: OS
     # keychain if usable, else passphrase. Change with `freemyid secrets migrate`.
     secrets_backend: Literal["keyring", "passphrase", "systemd-creds"] | None = None

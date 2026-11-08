@@ -12,10 +12,15 @@ const { items, openFirst = 0 } = Astro.props;
   {items.map((q, i) => (
     <details class="faq-item group" id={`q-${q.id}`} open={i < openFirst}>
       <summary class="flex min-h-tap items-center justify-between gap-s px-m py-s text-lead font-bold text-heading hover:bg-brand-soft">
-        <span>{q.q}</span>
+        <span class="faq-question">{q.q}</span>
         <Icon name="chevron-down" class="faq-chevron size-6 text-brand transition-transform duration-200 motion-reduce:transition-none" />
       </summary>
       <div class="prose-fmid px-m pb-m"><RichText nodes={rich(q.a)} /></div>
     </details>
   ))}
 </div>
+
+<style>
+  .faq-item { overflow-wrap: anywhere; }
+  .faq-question { min-inline-size: 0; }
+</style>

@@ -60,7 +60,63 @@ class ExposureEntry(_M):
     listings: list[ExposureListing] = []
     check_url: str | None = None     # the search page to open by hand (built from the profile)
     from_store: bool = False         # listings come from earlier runs, not this fetch
+    old_address_checked: bool = False   # one previous-address search was read as well
     checked_at: datetime = Field(default_factory=utcnow)
+
+
+class Coverage(_M):
+    """How much of the registry the score is based on (ROADMAP 3.2: a score is always shown
+    with its coverage). `found + uncertain + not_found + check_by_hand == sites_total`."""
+    sites_total: int = 0      # sites with a search page we know about
+    sites_checked: int = 0    # read automatically (this scan, or the 24-hour cache)
+    found: int = 0            # shows a confirmed listing of you (incl. earlier runs)
+    not_found: int = 0        # read and shows nothing that matches
+    check_by_hand: int = 0    # not read, nothing known: open `check_url` yourself
+    uncertain: int = 0        # shows only "possible" listings: needs "Is this you?"
+
+
+def coverage_of(entries: list[ExposureEntry]) -> Coverage:
+    return Coverage(
+        sites_total=len(entries),
+        sites_checked=sum(1 for e in entries
+                          if e.status in ("found", "not_found") and not e.from_store),
+        found=sum(1 for e in entries
+                  if e.status == "found" and e.match_level == MatchLevel.CONFIRMED),
+        not_found=sum(1 for e in entries if e.status == "not_found"),
+        check_by_hand=sum(1 for e in entries if e.status == "check_by_hand"),
+        uncertain=sum(1 for e in entries
+                      if e.status == "found" and e.match_level != MatchLevel.CONFIRMED))
+
+
+def _n(n: int, one: str, many: str) -> str:
+    return f"{n} {one if n == 1 else many}"
+
+
+def coverage_note(cov: Coverage) -> str:
+    """One plain-English line to show next to the score. Never says "you are safe"."""
+    if cov.sites_total == 0:
+        return "No sites could be searched for you yet."
+    if cov.sites_checked == 0:
+        out = (f"We could not check any of the {_n(cov.sites_total, 'site', 'sites')} "
+               "automatically, so this score does not mean you are safe.")
+    else:
+        out = (f"This score is based on the {_n(cov.sites_checked, 'site', 'sites')} we "
+               f"could check, out of {cov.sites_total}. A low score does not mean you are "
+               "safe.")
+    if cov.check_by_hand:
+        out += (f" {_n(cov.check_by_hand, 'site needs', 'sites need')} checking by hand.")
+    if cov.uncertain:
+        out += (f" {_n(cov.uncertain, 'site', 'sites')} may show you; please tell us if "
+                f"{'it is' if cov.uncertain == 1 else 'they are'} you.")
+    return out
+
+
+#: The checklist Californians should do first (brokers/checklists.yaml; matrix: "point
+#: Californians to DROP first"). `checklist_state.drop_first(profile)` decides.
+DROP_CHECKLIST_ID = "ca_drop"
+DROP_NOTE = ("You live in California. Start with California's free DROP request: one request "
+             "asks every registered data broker to delete your information. Then deal with "
+             "the sites below.")
 
 
 class ScoreLine(_M):
@@ -77,6 +133,19 @@ class ExposureResult(_M):
     score: int = Field(ge=0, le=100)
     explanation: list[ScoreLine] = []
     entries: list[ExposureEntry] = []
+    drop_first: bool = False         # California: do the ca_drop checklist first
+
+    @property
+    def coverage(self) -> Coverage:
+        return coverage_of(self.entries)
+
+    @property
+    def coverage_note(self) -> str:
+        return coverage_note(self.coverage)
+
+    @property
+    def first_checklist(self) -> str | None:
+        return DROP_CHECKLIST_ID if self.drop_first else None
 
     def by_status(self, status: EntryStatus) -> list[ExposureEntry]:
         return [e for e in self.entries if e.status == status]

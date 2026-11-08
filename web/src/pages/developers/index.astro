@@ -53,13 +53,14 @@ cd freemyid
 python3 -m venv .venv
 .venv/bin/pip install -e .
 .venv/bin/freemyid --help`;
+// source: docs/CLI.md, doctor and setup --from; docs/examples/setup-config.example.yaml.
 const firstRun = `# check browser, key store, scheduler and mail
 freemyid doctor
 
-# the Windows wizard's questions, in the terminal
-freemyid setup
+# validate the file and show the plan; save nothing
+freemyid setup --from config.yaml --check
 
-# or no questions at all
+# then review the plan and permission text, and confirm in a terminal
 freemyid setup --from config.yaml`;
 const sched = `# systemd user timer on Linux, launchd agent on macOS
 freemyid schedule install
@@ -78,8 +79,8 @@ const cron = `0 10 * * * freemyid run --headless --scheduled
 const pass = `install -m 600 /dev/null ~/.config/freemyid/passphrase
 $EDITOR ~/.config/freemyid/passphrase
 export FREEMYID_PASSPHRASE_FILE=~/.config/freemyid/passphrase`;
-const json = `freemyid status --json | jq .
-freemyid run --headless; echo "exit code: $?"`;
+// source: docs/CLI.md, status and --json rules (status/1). Read-only example.
+const json = `freemyid status --json`;
 ---
 <Base {...p}>
 <PageHead crumbs={p.crumbs} title="Your data-removal tool, on your own machine. Open source."
@@ -134,10 +135,12 @@ freemyid run --headless; echo "exit code: $?"`;
 
 <Section id="first-run" tone="alt" narrow title="First run" titleId="first-run-title">
   <p class="flex flex-wrap items-center gap-xs"><Badge variant="brand">{soon}</Badge></p>
-  {/* source: ROADMAP 3.8 (doctor checks browser, keychain, scheduler, mail; YAML config alternative to the wizard, schema published) */}
-  <p class="mt-s max-w-measure"><code>freemyid doctor</code> checks that everything Free My ID needs is in place and tells you what to fix. Then set up your profile with questions, or from a file for a box with no one at the keyboard.</p>
+  {/* source: docs/CLI.md, doctor and setup --from; schema/setup-config.schema.json (version 1); docs/examples/setup-config.example.yaml. Release status: docs/ROADMAP.md 3.8. */}
+  <p class="mt-s max-w-measure"><code>freemyid doctor</code> checks that everything Free My ID needs is in place and tells you what to fix. For v0.2, you will be able to open the web wizard with <code>freemyid setup</code>, or prepare a YAML file and validate it before importing it.</p>
   <pre class={pre} tabindex="0" aria-label="First run commands"><code>{firstRun}</code></pre>
-  <p class="mt-s max-w-measure">The config file format will be published with v0.2. Keep the file private: it holds the details you want removed.</p>
+  <p class="mt-s max-w-measure">Start with the <a href={`${site.repo_url}/blob/main/schema/setup-config.schema.json`}>version 1 setup schema</a> and the <a href={`${site.repo_url}/blob/main/docs/examples/setup-config.example.yaml`}>fake example YAML</a> in the repository. Save your edited file as <code>config.yaml</code>. Keep the file private: it holds the details you want removed.</p>
+  {/* source: docs/CLI.md, setup --from (--check saves nothing; interactive import asks for confirmation). */}
+  <p class="mt-s max-w-measure"><code>--check</code> validates the file and prints the plan; validation saves nothing. Then run the second setup command in a terminal to review the plan and permission text and confirm. Without a terminal, nothing is saved.</p>
 </Section>
 
 <Section id="scheduling" narrow title="Headless scheduling" titleId="scheduling-title">
@@ -168,9 +171,9 @@ freemyid run --headless; echo "exit code: $?"`;
 
 <Section id="json" narrow title="JSON output and exit codes" titleId="json-title">
   <p class="flex flex-wrap items-center gap-xs"><Badge variant="brand">{soon}</Badge></p>
-  {/* source: ROADMAP 3.8 (--json on every read command; stable exit codes); docs/CLI.md being written (orchestrator, v0.2) */}
-  <p class="mt-s max-w-measure">Every command that reads data will take <code>--json</code>, and exit codes will be stable, so scripts and monitoring can rely on them.</p>
-  <pre class={pre} tabindex="0" aria-label="JSON and exit code example"><code>{json}</code></pre>
+  {/* source: docs/CLI.md, command table, --json rules, status/1 and Exit codes. Release status: docs/ROADMAP.md 3.8. */}
+  <p class="mt-s max-w-measure">In v0.2, <code>freemyid status --json</code> will read the saved status without changing it. JSON output will contain exactly one JSON object on stdout; human messages, such as warnings, will go to stderr. Each object will identify its versioned schema, such as <code>"schema": "status/1"</code>. Within a version, fields may be added, but will not be renamed or removed.</p>
+  <pre class={pre} tabindex="0" aria-label="JSON output example"><code>{json}</code></pre>
   <p class="mt-s max-w-measure"><a href={cliRef}>The full command and exit code reference (CLI.md on GitHub)</a></p>
 </Section>
 

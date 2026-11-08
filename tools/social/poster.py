@@ -732,7 +732,10 @@ class Ledger:
         if where == own_dir or own_dir in where.parents:
             return "the ledger is inside the poster's own (hash-pinned) directory"
         for p in (where, *where.parents):
-            if (p / ".git").exists():
+            g = p / ".git"
+            # a real repo: a .git dir with HEAD, or a worktree's .git pointer file. An empty
+            # .git dir (e.g. a sandbox mount point left in /tmp) is not a repository.
+            if g.is_file() or (g.is_dir() and (g / "HEAD").exists()):
                 return "the ledger is inside a git repository"
         return None
 

@@ -434,10 +434,14 @@ def exposure(profile: Annotated[str | None, typer.Option("--profile", "-p")] = N
         cj.emit(cj.exposure_doc(rows, offline=offline, headless=headless,
                                 exit_code=cj.EXIT_OK, skipped=skipped))
         return
-    from .exposure_models import HAND_REASONS
+    from .exposure_models import DROP_NOTE, HAND_REASONS
     for p, r in rows:
         con.print(f"[bold]{escape(p.label)}[/]: exposure score [bold]{r.score}[/] / 100"
                   + (" (practice mode)" if r.practice_mode else ""))
+        con.print(f"  {r.coverage_note}", markup=False)
+        if r.first_checklist:
+            con.print(f"  [bold]First:[/] {escape(DROP_NOTE)} See: freemyid checklist show "
+                      f"{r.first_checklist}")
         for ln in r.explanation:
             sign = f"+{ln.points}" if ln.points > 0 else str(ln.points) if ln.points else "  "
             con.print(f"  {sign:>4}  {escape(ln.text)}")
@@ -774,11 +778,16 @@ def checklist_list(profile: ChecklistProfileOpt = None, as_json: JsonOpt = False
     _set_json(as_json)
     cf, _item, store, p = _checklist_context(profile)
     tk = cs.ticks(store, p.id)
+    first = cs.first_checklist(p, cf)
     if as_json:
-        cj.emit(cs.list_doc(cf, tk, p.id))
+        cj.emit(cs.list_doc(cf, tk, p.id, first))
         return
+    if first:
+        con.print(f"You live in California: start with {first} (one free request to every "
+                  f"registered data broker). See it with: freemyid checklist show {first}\n",
+                  markup=False)
     done = 0
-    for c in cf.checklists:
+    for c in cs.ordered(cf, first):
         t = tk.get(c.id)
         mark = "[x]" if t and t.done else "[ ]"
         done += bool(t and t.done)

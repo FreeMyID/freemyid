@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "freemyid"
-version = "0.1.2"
+version = "0.2.0rc1"
 description = "Local-first personal data broker opt-out tool with scheduled re-checks."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -86,6 +86,7 @@ markers = [
     "macos_only: runs only on macOS",
     "linux_only: runs only on Linux",
     "browser: needs Playwright Chromium",
+    "web_dist: reads the built website web/dist (auto for tests/test_web_*.py; skips if not built)",
     "real_scheduler: touches the real OS scheduler; CI=true only, needs an OS marker",
 ]
 
