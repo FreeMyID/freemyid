@@ -16,7 +16,7 @@ Free My ID 0.3.0 is out. The free, open-source Windows app that asks people-sear
 ## R-BSKY-3B
 status: held
 ```text
-New in Free My ID 0.3.0: it finds you under nicknames (Bob for Robert), asks before it acts on a doubtful match, and ends setup with a plain "what happens next" timeline. Free, open source, runs on your computer. https://freemyid.org
+New in Free My ID 0.3.0: it finds you under nicknames (Bob for Robert), can optionally check a previous name, and ends setup with a plain "what happens next" timeline. Free, open source, runs on your computer. https://freemyid.org
 ```
 
 ## Mastodon (500 character limit)
