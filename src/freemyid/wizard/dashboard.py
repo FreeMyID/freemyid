@@ -442,7 +442,9 @@ def settings_page(*, people: list[Profile], schedule_status: str, practice: bool
 
 
 def mailbox_settings_page(p: Profile, body_html: str, csrf: str, errs: list[str]) -> str:
-    from .ui import errors_html
+    from .ui import errors_html, mark_invalid
+    if errs:
+        body_html = mark_invalid(body_html, "mailbox", errs)
     return layout("Email for removals", (
         f'<h1>Email for removals: {esc(p.label)}</h1>{errors_html(errs)}'
         f'<form method="post" action="/settings/{esc(p.id)}/mailbox" class="card" '

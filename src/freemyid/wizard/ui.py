@@ -1,6 +1,7 @@
 """HTML rendering helpers. Plain server-side HTML, no external assets."""
 from __future__ import annotations
 
+import re
 from html import escape as _e
 from typing import Any
 
@@ -85,8 +86,69 @@ def csrf_field(csrf: str) -> str:
     return f'<input type="hidden" name="csrf" value="{esc(csrf)}">'
 
 
-def errors_html(errs: list[str]) -> str:
-    return "".join(f'<div class="error" role="alert">{esc(x)}</div>' for x in errs)
+def errors_html(errs: list[str], prefix: str = "err") -> str:
+    return "".join(f'<div class="error" role="alert" id="{prefix}-{i}">{esc(x)}</div>'
+                   for i, x in enumerate(errs))
+
+
+# Which form fields each server-side error message belongs to (SEC-98). Messages are plain
+# strings from draft.py, so match on their wording. Radios are left out on purpose.
+_FIELD_HINTS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("type your full name", ("attested_by",)),
+    ("tick the box", ("ack",)),
+    ("file is too large", ("authorization",)),
+    ("First and last name", ("first", "last")),
+    ("a first and last name for", ("previous_names",)),
+    ("Birth year", ("birth_year",)),
+    ("under 18", ("birth_year",)),
+    ("Ports must", ("imap_port", "smtp_port")),
+    ("unprotected", ("imap_ssl", "imap_starttls")),
+    ("mailbox's email address", ("address",)),
+    ("valid mail server", ("imap_host", "smtp_host")),
+    ("app password", ("password",)),
+)
+
+
+def error_fields(step: str, errs: list[str]) -> dict[str, list[int]]:
+    """Map field name -> indexes of the errors that concern it."""
+    out: dict[str, list[int]] = {}
+    for i, msg in enumerate(errs):
+        names: tuple[str, ...] = ()
+        m = re.search(r"for address (\d)\.", msg)
+        if m:
+            n = int(m.group(1)) - 1
+            names = (f"city{n}", f"state{n}")
+        elif step == "address" and "at least one city" in msg:
+            names = ("city0", "state0")
+        else:
+            for needle, fields in _FIELD_HINTS:
+                if needle in msg:
+                    names = fields
+                    break
+        for n in names:
+            out.setdefault(n, []).append(i)
+    return out
+
+
+def mark_invalid(body: str, step: str, errs: list[str], prefix: str = "err") -> str:
+    """Give each rejected input aria-invalid and aria-describedby (keeping existing ids)."""
+    for name, idxs in error_fields(step, errs).items():
+        ids = " ".join(f"{prefix}-{i}" for i in idxs)
+        pat = re.compile(r'<(input|textarea)\b[^>]*?\b(?:id|name)="' + re.escape(name) + r'"[^>]*>')
+
+        def fix(m: re.Match[str], ids: str = ids) -> str:
+            tag = m.group(0)
+            if "aria-invalid" in tag:
+                return tag
+            d = re.search(r'\baria-describedby="([^"]*)"', tag)
+            if d:
+                tag = tag.replace(d.group(0), f'aria-describedby="{d.group(1)} {ids}"')
+                extra = ' aria-invalid="true"'
+            else:
+                extra = f' aria-invalid="true" aria-describedby="{ids}"'
+            return tag[:-1].rstrip("/").rstrip() + extra + ">"
+        body = pat.sub(fix, body, count=1)
+    return body
 
 
 def _inp(name: str, label: str, value: Any = "", typ: str = "text", hint: str = "",
@@ -326,6 +388,8 @@ def _mailbox_body(d: Draft) -> str:
 
 def step_page(step: str, d: Draft, csrf: str, errs: list[str], summary: str = "") -> str:
     body = summary or _screen_body(step, d)
+    if errs:
+        body = mark_invalid(body, step, errs)
     multipart = ' enctype="multipart/form-data"' if step == "consent" else ""
     vs = visible_steps(d)
     i = vs.index(step) if step in vs else 0
