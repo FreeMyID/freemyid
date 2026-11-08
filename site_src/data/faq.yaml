@@ -88,10 +88,11 @@
     <p>Windows shows a blue "Windows protected your PC" box for new programs that haven't bought a publisher certificate. Free My ID hasn't bought one yet. <a href="{{ url('download/#smartscreen') }}">See what to click, with pictures</a>.</p>
 - id: mac
   home: true
-  # source: PLAN_V1 (Windows 10/11 only in v1); "made for" until a release exists (WR-26)
+  # source: PLAN_V1 (Windows 10/11 app); docs/marketing/release-notes-v0.2.0.md "Honest limits" (macOS and Linux are
+  # command line only in v0.2.0, no desktop apps or packages); data/release.yaml (v0.2.0 published). No phone version planned in ROADMAP 6.
   q: 'Is there a Mac or phone version?'
   a: |-
-    <p>Not yet. Free My ID is made for Windows 10 and Windows 11.</p>
+    <p>Not as an app yet, and there is no phone version. Free My ID is made for Windows 10 and Windows 11.{% if release.version %} People who are comfortable typing commands can run it on a Mac from the command line: <a href="{{ url('developers/') }}">see the developer page</a>.{% endif %}</p>
 - id: government
   # source: project fact: independent open-source project (LICENSE, AGPL); no agency, Meta or broker affiliation
   q: 'Is this a government service?'
