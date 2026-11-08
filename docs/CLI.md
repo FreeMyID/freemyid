@@ -49,6 +49,7 @@ Codes are stable: a number never changes meaning.
 | `scan` | Searches brokers; never submits. `-p/--profile`, `-b/--broker` (repeatable), `--headless` | `run/1` |
 | `run` | Scan, submit, verify, escalate. `--dry-run`, `--headless`, `-p`, `-b` | `run/1` |
 | `exposure` | Which sites show you, with a 0-100 exposure score; reads only (works in practice mode). `-p`, `--offline`, `--refresh`, `--old-addresses` (also search each site once at your previous address; off by default), `--headless` ([EXPOSURE.md](EXPOSURE.md)) | `exposure/1` |
+| `monitor` | For maintainers and the weekly CI job: does each broker's opt-out page still load and its form still match? Reads only, needs no profile, never fills in or submits. `--registry`, `--previous last.json`, `--broker ID`, `--browser` ([MONITOR.md](MONITOR.md)) | `monitor/1` |
 | `search-engines` | Google and Bing guided steps: on its own it lists them (there is no `list` word; `-p` picks the person). `open ID` opens the official page in your browser and records when; `done ID` / `undo ID` record that you did it. ID may be a prefix or `google` / `bing`. Never searches Google or Bing ([EXPOSURE.md](EXPOSURE.md)) | `search_engines/1` |
 | `fill BROKER` | Opens the broker's form in a window and fills it; you submit | |
 | `status` | Per-broker state for each person. `-p` | `status/1` |
