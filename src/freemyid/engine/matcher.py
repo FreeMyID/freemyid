@@ -7,6 +7,11 @@ A broker search result is turned into a `Candidate` by a parser, then `score()` 
 
 Signals: location (city+state, or state alone counts only together with a city), age +-2,
 relative, phone, email. `match_reasons` holds signal NAMES only (never values).
+
+SEC-99 household guard (a spouse or parent shares the city and the relatives): CONFIRMED is
+capped at POSSIBLE when the shown age is more than AGE_CONFLICT_YEARS off, or when the name
+matched only through a nickname group or fuzzily and no personal signal (age, phone, email)
+backs it up.
 """
 from __future__ import annotations
 
@@ -22,6 +27,12 @@ from . import nicknames
 
 NAME_THRESHOLD = 88.0       # token_sort_ratio on normalized "first last"
 RELATIVE_THRESHOLD = 85.0
+#: SEC-99: an age shown more than this many years off the person's caps the match at POSSIBLE
+#: (a spouse or parent in the same house shares the city and the relatives).
+AGE_CONFLICT_YEARS = 5
+#: SEC-99: signals a household does not share. A name that is not an exact match (only via a
+#: nickname group, or only fuzzy) needs one of these to reach CONFIRMED.
+PERSONAL_SIGNALS = frozenset({"age", "phone", "email"})
 USER_CONFIRMED = "user_confirmed"
 
 _US_STATES = {
@@ -99,14 +110,14 @@ def parse_location(text: str) -> tuple[str, str | None]:
     return norm(city), _US_STATES.get(st.lower())
 
 
-def _profile_name_variants(p: Profile) -> list[str]:
+def _profile_name_variants(p: Profile, groups: bool = True) -> list[str]:
     out: list[str] = []
-    # given names: current and previous first names, the profile's own nicknames, and the
-    # common nickname groups for each (Robert <-> Bob). Every first is tried with every
-    # last name the person has had (maiden name included).
+    # given names: current and previous first names, the profile's own nicknames, and (if
+    # `groups`) the common nickname groups for each (Robert <-> Bob). Every first is tried
+    # with every last name the person has had (maiden name included).
     firsts: set[str] = set()
     for f in [*(n.first for n in p.all_names()), *p.nicknames]:
-        firsts |= nicknames.expand(norm(f))
+        firsts |= nicknames.expand(norm(f)) if groups else {norm(f)}
     lasts = [n.last for n in p.all_names()]
     for f in firsts:
         for la in lasts:
@@ -118,7 +129,7 @@ def _profile_name_variants(p: Profile) -> list[str]:
     return sorted({o for o in out if o})
 
 
-def name_score(p: Profile, shown: str | None) -> float:
+def name_score(p: Profile, shown: str | None, groups: bool = True) -> float:
     s = norm(shown)
     if not s:
         return 0.0
@@ -126,9 +137,15 @@ def name_score(p: Profile, shown: str | None) -> float:
     # drop single-letter middle initials so "Jane Q Testperson" ~ "Jane Testperson"
     s2 = " ".join(t for t in toks if len(t) > 1) or s
     best = 0.0
-    for v in _profile_name_variants(p):
+    for v in _profile_name_variants(p, groups):
         best = max(best, fuzz.token_sort_ratio(v, s), fuzz.token_sort_ratio(v, s2))
     return float(best)
+
+
+def exact_name(p: Profile, shown: str | None) -> bool:
+    """The shown name is one the person has actually had or uses (their own first names and
+    nicknames, any of their last names), not just a nickname-group or fuzzy match."""
+    return name_score(p, shown, groups=False) >= 100.0
 
 
 def score(profile: Profile, c: Candidate, today: date | None = None) -> MatchResult:
@@ -166,6 +183,14 @@ def score(profile: Profile, c: Candidate, today: date | None = None) -> MatchRes
     n = len(reasons)
     level = MatchLevel.CONFIRMED if n >= 2 else MatchLevel.POSSIBLE if n == 1 else \
         MatchLevel.NO_MATCH
+    if level == MatchLevel.CONFIRMED:
+        # SEC-99: never auto-submit for another member of the household
+        age_conflict = est is not None and c.age is not None and \
+            abs(est - c.age) > AGE_CONFLICT_YEARS
+        loose_name = not exact_name(profile, c.name) and \
+            not PERSONAL_SIGNALS.intersection(reasons)
+        if age_conflict or loose_name:
+            level = MatchLevel.POSSIBLE
     sc = min(100.0, round(ns * 0.5 + 12.5 * n, 1))
     return MatchResult(level, sc, reasons)
 

@@ -70,3 +70,39 @@ def test_default_profile_unchanged():
     assert matcher.name_score(p, "Jane Q Testperson") == 100.0
     assert matcher.score(p, _c("Jane Testperson", age=None, phones=["2175550142"]),
                          TODAY).level == MatchLevel.CONFIRMED
+
+
+# ------------------------------------------------------------ SEC-99 household guard
+
+
+def _house(first, shown, age, **kw):
+    p = make_profile(name=PersonName(first=first, last="Testperson"),
+                     relatives=["Kim Testperson"], phones=["217-555-0142"], emails=[])
+    c = matcher.Candidate(url="https://devauto.example/p/1", name=shown, age=age,
+                          locations=["Springfield, IL"], relatives=["Kim Testperson"], **kw)
+    return matcher.score(p, c, TODAY)
+
+
+def test_age_gap_caps_at_possible_even_with_exact_name_and_phone():
+    r = _house("Pat", "Pat Testperson", 60, phones=["2175550142"])
+    assert r.level == MatchLevel.POSSIBLE
+    assert _house("Pat", "Pat Testperson", 51).level == MatchLevel.CONFIRMED  # 5 off: ok
+    assert _house("Pat", "Pat Testperson", 52).level == MatchLevel.POSSIBLE
+
+
+def test_nickname_group_name_needs_a_personal_signal():
+    # city + relative only: the household shares both
+    assert _house("Pat", "Patrick Testperson", None).level == MatchLevel.POSSIBLE
+    assert _house("Pat", "Patrick Testperson", 46).level == MatchLevel.CONFIRMED
+    assert _house("Pat", "Patrick Testperson", None,
+                  phones=["217-555-0142"]).level == MatchLevel.CONFIRMED
+
+
+def test_exact_name_with_household_signals_still_confirms_when_age_unknown():
+    assert _house("Pat", "Pat Testperson", None).level == MatchLevel.CONFIRMED
+
+
+def test_own_nickname_counts_as_exact():
+    p = make_profile(name=PersonName(first="Patricia", last="Testperson"), nicknames=["Trish"])
+    assert matcher.exact_name(p, "Trish Testperson")
+    assert not matcher.exact_name(p, "Patty Testperson")

@@ -29,7 +29,6 @@ def test_nickname_expansion_is_symmetric_without_chaining():
     assert "christina" not in nicknames.expand("christopher")
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-99: household member CONFIRMED on city + shared relative")
 @pytest.mark.parametrize(("first", "shown"), [("Pat", "Patrick Testperson"),
                                               ("Alexandra", "Alex Testperson")])
 def test_sec99_household_member_with_wrong_age_is_not_confirmed(first, shown):
