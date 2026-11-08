@@ -82,14 +82,22 @@ Leave **"Yes, keep checking for me automatically"** ticked. This adds one small 
 - **Uninstall:** Windows **Settings → Apps** → **Free My ID** → **Uninstall**. It asks whether to **delete the saved records too**. Answer **Yes** to remove everything Free My ID stored on this computer (records, screenshots and saved mailbox password). The daily task is removed either way.
 - **Remove just one person** (when several are set up): see "For helpers" in the User Guide (`freemyid profile remove <name>`).
 
-## 6. What Free My ID will never ask for
+## 6. What Free My ID will never ask for, and never do
 
-- Social Security number
+Short form (the same words on the website, the quick start and the fridge card): Free My ID never asks for your Social Security number or bank or card details, and never charges you. The full list is on the website's "Is it safe?" page, and matches this one.
+
+It never asks for:
+- A Social Security number
 - Bank account, credit or debit card details
-- A photo of an ID card
+- A payment of any kind
+- A full birthday (setup asks only for a year of birth, and it can be left blank)
 - Their Facebook, Google or everyday email password (only a separate app password for the optional removal mailbox)
-- Money: the app is free
 
-It also **never** creates accounts, uploads ID or gives out a phone number unless you've explicitly allowed it for that person. It never solves "are you a robot?" checks.
+It never:
+- Sends their year of birth or relatives' names to a site (they only help it recognize the right listing)
+- Gives a site a phone number, unless you've switched that on for that person
+- Sends a photo of ID, unless you've switched that on for a site that insists on it
+- Creates an account on a site
+- Solves "are you a robot?" checks (it hands those to the person)
 
 *Free My ID is free, open-source software that runs on this computer only. It isn't a government service and isn't connected to Facebook/Meta or any data broker.*

@@ -12,8 +12,8 @@ OLD_CLAIMS = ("never sent to anyone", "stay on the box", "stay with you")
 FAMILIES_DETAILS = (
     "Optional: year of birth, phone number, relatives' names. "
     "These help Free My ID recognize the right listing. "
-    "They are stored on your computer and sent only when a site's removal form asks for them, "
-    "in a request you approve."
+    "They are stored on your computer. Year of birth and relatives' names are never sent to a site, "
+    "and a phone number goes to a site only if you allow it."
 )
 
 

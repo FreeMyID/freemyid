@@ -22,7 +22,7 @@ COMMENTS = re.compile(r"\{/\*.*?\*/\}|^\s*//.*$", re.DOTALL | re.MULTILINE)
 # (built page, astro source, phrase that must be there)
 FIXED = [
     ("index.html", "index.astro",
-     "Never a payment. It gives a site your phone number only if you switch that on."),
+     "It gives a site your phone number only if you switch that on."),
     ("index.html", "index.astro",
      "Practice mode comes first, so no removal requests go out until you say so."),
     ("how-it-works/index.html", "how-it-works/index.astro",

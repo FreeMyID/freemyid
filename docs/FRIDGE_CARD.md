@@ -14,7 +14,7 @@ You don't need to do anything. It works quietly in the background.
 ### A card with a big button means a website needs you.
 Click the button and follow the steps. If you see **"I'm not a robot"**, tick it and press **Submit** yourself.
 
-### It will NEVER ask for your Social Security number, bank card or passwords.
+### It will NEVER ask for your Social Security number, bank or card details, or your everyday email password.
 If something asks for those, **it isn't us. Stop and call your helper.**
 
 **My helper:** ______________________  **Phone:** ______________________

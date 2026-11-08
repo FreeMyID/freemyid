@@ -42,13 +42,13 @@ const h2 = "mt-xl";
       <li>Some sites take weeks, and some list people again later. That's why it keeps checking.</li>
     </ul>
 
-    {/* source: docs/HELPER_GUIDE.md section 1 "Have ready"; privacy scope corrected per docs/vendor/WO-107.md and docs/ROADMAP.md section 1; permission = USER_GUIDE.md section 3, HELPER_GUIDE.md section 3 screen 1 */}
+    {/* source: docs/HELPER_GUIDE.md section 1 "Have ready"; never sent = submitters/base.py _NEVER (DOB), relatives not a sendable field, phone = allow_phone_disclosure (WO-162); privacy scope corrected per docs/vendor/WO-107.md and docs/ROADMAP.md section 1; permission = USER_GUIDE.md section 3, HELPER_GUIDE.md section 3 screen 1 */}
     <h2>Before you sit down</h2>
     <p>Have ready:</p>
     <ul>
       <li>Their full name, and any maiden or earlier names</li>
       <li>The towns they've lived in over the last 10 years</li>
-      <li>Optional: year of birth, phone number, relatives' names. These help Free My ID recognize the right listing. They are stored on your computer and sent only when a site's removal form asks for them, in a request you approve.</li>
+      <li>Optional: year of birth, phone number, relatives' names. These help Free My ID recognize the right listing. They are stored on your computer. Year of birth and relatives' names are never sent to a site, and a phone number goes to a site only if you allow it.</li>
     </ul>
   </div>
   <Alert variant="note" icon="shield"><p><strong>Permission comes first.</strong> Each adult gives their own permission. If you're helping an adult, they sign a short permission form, and Free My ID won't work on them without it. For a child under 18, a parent or guardian sets it up.</p></Alert>
@@ -103,7 +103,7 @@ const h2 = "mt-xl";
   {/* source: docs/HELPER_GUIDE.md section 4 "Tell them" and section 6; no installer emails or calls = policy (docs/marketing/families-page.md) */}
   <blockquote><Alert variant="note" icon="shield"><p><strong>If it ever asks for your Social Security number, a bank card or a password for Facebook, it isn't Free My ID. Call me.</strong></p></Alert></blockquote>
   <div class="prose-fmid">
-    <p>Free My ID never asks for: a Social Security number; bank, credit or debit card details; a photo of an ID card; their Facebook, Google or everyday email password; or money. It never creates accounts, uploads ID or gives out a phone number unless you've explicitly allowed it for that person. It never solves "are you a robot?" checks. We will never email you an installer, and we will never call you.</p>
+    <p>Free My ID never asks for your Social Security number or bank or card details, and never charges you. It never asks for their Facebook, Google or everyday email password. It never creates accounts or solves "are you a robot?" checks, and it gives a site a phone number or a photo of ID only if you've allowed it for that person. <a href={url("safety/#never-asks")}>See the full list</a>. We will never email you an installer, and we will never call you.</p>
 
     <h2 id="fridge-card">Printable card for the fridge</h2>
     {/* source: docs/assets/fridge-card.html (three things to remember, helper name and phone space) */}

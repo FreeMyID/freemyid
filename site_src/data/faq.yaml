@@ -13,7 +13,7 @@
   # source: teardown section 11 Q2; POSITIONING.md rule 4; LICENSE (public code); download page SHA256SUMS check
   q: 'Is this a scam? How do I know?'
   a: |-
-    <p>We never ask for your Social Security number, bank or card details, and the app never asks for a payment. The code is public, and {% if release.version %}you can check the download's fingerprint{% else %}each download will come with a fingerprint you can check{% endif %}. <a href="{{ url('safety/#open-source') }}">How to check that Free My ID is genuine</a>.</p>
+    <p>The app never asks for your Social Security number or bank or card details, and never charges you. The code is public, and {% if release.version %}you can check the download's fingerprint{% else %}each download will come with a fingerprint you can check{% endif %}. <a href="{{ url('safety/#open-source') }}">How to check that Free My ID is genuine</a>.</p>
 - id: where-data
   home: true
   # source: teardown section 11 Q4; opening per WR-25 (web-qa); D8 "Nothing is sent to us" (src/freemyid/netpolicy.py, shared rule 4)
@@ -36,7 +36,7 @@
   # source: POSITIONING.md rule 4; /safety/ never-asks list
   q: 'Will it ask for my Social Security number or bank details?'
   a: |-
-    <p>No. Free My ID never asks for your Social Security number, bank account, or credit or debit card details. If anything claiming to be Free My ID asks you for these, it isn't us. <a href="{{ url('safety/#never-asks') }}">See everything we will never ask for</a>.</p>
+    <p>No. Free My ID never asks for your Social Security number or bank or card details, and never charges you. If anything claiming to be Free My ID asks you for these, it isn't us. <a href="{{ url('safety/#never-asks') }}">See the full list of what it never asks for and never does</a>.</p>
 - id: parents
   # source: docs/USER_GUIDE.md section 3 "Setting up a family member" (family setup file) and "-p Mom" (several people per install)
   q: 'Can I set it up for my parents?'

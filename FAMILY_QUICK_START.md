@@ -5,8 +5,8 @@ sell it. These are called people-search sites (also known as data brokers). They
 addresses and phone numbers. Free My ID asks each one to delete yours, through that site's own
 removal process (a formal legal request where your state has a privacy law).
 
-**No account. No cloud. Never asks for your Social Security number, bank or card details. Free
-and open source. Uninstall anytime.** It runs on your own computer, and nothing is sent to us.
+**No account. No cloud. Never asks for your Social Security number or bank or card details, and never charges
+you. Free and open source. Uninstall anytime.** It runs on your own computer, and nothing is sent to us.
 
 **Please know:** a few sites need you to click a button yourself. Sites can put your details back
 up later, which is why Free My ID keeps checking. When a site says it deleted you, that is true
@@ -45,7 +45,7 @@ Free My ID opens in its own window. Each screen asks one thing. Press **Next** t
 | 1. Welcome | Choose who this is for (you, your child, or someone who asked you to help). Type your full name and tick the box. |
 | 2. Name | Type the name. Add nicknames or a maiden name if there are any. |
 | 3. Address | Type the city and the 2-letter state, for example Springfield, IL. |
-| 4. A few details | Birth year, a phone number and an email. These are only used to recognize the right person. They are never sent to anyone. |
+| 4. A few details | Birth year, a phone number and an email. These help it recognize the right person. Year of birth is never sent to a site, and a phone number goes to a site only if you switch that on. |
 | 5. Email for removals | Pick your email company and follow the little instructions on screen, **or** choose **Skip, I'll do these by hand**. Skipping is fine. |
 | 6. Run automatically? | Leave the box ticked so Free My ID keeps checking by itself. Click **Finish**. |
 

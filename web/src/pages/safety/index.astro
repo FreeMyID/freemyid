@@ -48,11 +48,20 @@ const v = release.version;
     {/* source: teardown section 8 column 2; shared rule 6 ("Never pay") */}
     <li><Icon name="x" /><span>A payment of any kind</span></li>
     <li><Icon name="x" /><span>Your full birthday. The setup asks only for a year of birth, and you can leave that blank</span></li>
-    {/* source: teardown section 8 column 2; shared rule 6 (phone only with the Profile.permissions flag) */}
-    <li><Icon name="x" /><span>Your phone number, unless you choose to share it with a site that needs it</span></li>
-    <li><Icon name="x" /><span>A photo of your ID, unless you switch that on yourself in Settings for a site that insists on it</span></li>
     {/* WR-30: only the everyday email password in the list; app password explained below */}
     <li><Icon name="x" /><span>The password to your everyday email</span></li>
+  </CheckList>
+  {/* WO-162 (master list, Morgan 2026-11-08): what it never does, kept apart from what it never asks for.
+     source: phone = submitters/base.py allowed_fields + engine/tiers.py (allow_phone_disclosure); year of birth and relatives =
+     base.py _NEVER / not a sendable field, web_form.search_url (name, town, phone only with permission); ID = tiers.py + no upload
+     code in engine/; accounts = no account-creation code, tiers.py sends ACCOUNT_REQUIRED to you; robot checks = PLAN_V1 D9, rule 5 */}
+  <h3 id="never-does" class="mt-l">What it never does</h3>
+  <CheckList class="mt-s [&>li>svg]:text-muted">
+    <li><Icon name="x" /><span>Send your year of birth or your relatives' names to a site. They only help it recognize the right listing</span></li>
+    <li><Icon name="x" /><span>Give a site your phone number, unless you switch that on</span></li>
+    <li><Icon name="x" /><span>Send a photo of your ID, unless you switch that on for a site that insists on it</span></li>
+    <li><Icon name="x" /><span>Create an account on a site for you</span></li>
+    <li><Icon name="x" /><span>Solve "are you a robot?" checks. It hands those to you</span></li>
   </CheckList>
   {/* source: families.html Gmail step (separate free mailbox + app password); PLAN_V1 D2 (mailbox optional) */}
   <p class="mt-m max-w-measure">If you want Free My ID to send requests for you, you give it an app password for a separate removal mailbox. That's optional.</p>
