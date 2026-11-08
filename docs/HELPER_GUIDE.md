@@ -22,11 +22,12 @@
 ## 2. Download and install
 
 1. On the Windows 10 or 11 computer, open the Free My ID website and click **Download**. Download only from the official site or the GitHub releases page.
-2. Open **FreeMyIDSetup.exe**.
-3. Windows may show a blue box: **"Windows protected your PC."** This happens because Free My ID is free and hasn't bought a publisher certificate yet. Click the small words **More info**, check that the app is **FreeMyIDSetup.exe**, then click **Run anyway**.
+2. Open the **FreeMyIDSetup** file you downloaded. Its name may include a version number.
+3. Windows may show a blue box: **"Windows protected your PC."** This happens because Free My ID is free and hasn't bought a publisher certificate yet. Click the small words **More info**, check that the app is **FreeMyIDSetup**, then click **Run anyway**. If you do not see this box, carry on with the normal installer.
    [screenshot: SmartScreen "Windows protected your PC" with "More info" highlighted]
    [screenshot: SmartScreen after "More info", with "Run anyway" highlighted]
-4. Click **Install**. No administrator password is needed. Free My ID opens by itself.
+4. Click **Next** when shown, then click **Install**. No administrator password is needed. Leave **Open Free My ID now** ticked and click **Finish**. Free My ID opens by itself.
+   *From version 0.3:* the first opening can take up to 15 seconds. Wait for the **Free My ID is starting** window and do not click again. If nothing opens after 15 seconds, try the Start Menu shortcut once, then ask for help rather than clicking again.
    [screenshot: installer finished, with "Start Free My ID now" ticked]
 
 ## 3. The six setup screens
@@ -79,7 +80,7 @@ Leave **"Yes, keep checking for me automatically"** ticked. This adds one small 
 - **Pause the daily checks:** **Settings → Run automatically → Turn off.** Turn it back on the same way.
 - **Stop sending real requests:** switch back to practice mode in **Settings** at any time.
 - **Close the app:** **Settings → Close Free My ID.**
-- **Uninstall:** Windows **Settings → Apps** → **Free My ID** → **Uninstall**. It asks whether to **delete the saved records too**. Answer **Yes** to remove everything Free My ID stored on this computer (records, screenshots and saved mailbox password). The daily task is removed either way.
+- **Uninstall:** Windows **Settings → Apps** → **Free My ID** → **Uninstall**. It asks whether to **delete the saved records too**. Answer **Yes** to remove the saved information (people, reports and screenshots). Answer **No** to keep it for later. The daily task is removed either way.
 - **Remove just one person** (when several are set up): see "For helpers" in the User Guide (`freemyid profile remove <name>`).
 
 ## 6. What Free My ID will never ask for, and never do

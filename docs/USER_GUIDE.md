@@ -4,7 +4,7 @@
 
 This guide is for the person using Free My ID. You don't need to be technical. If you only want the short version, read `FAMILY_QUICK_START.md` first and come back here when you have a question.
 
-> Free My ID is still being built. Anything marked `TODO verify` describes how it is *planned* to work and may change before release.
+> Free My ID works today. Some parts are still being checked. Anything marked `TODO verify` may change.
 
 ## Contents
 
@@ -81,7 +81,7 @@ Proton encrypts your mail, so other programs can only reach it through the free 
 2. Install **Proton Mail Bridge** from Proton's website and sign in.
 3. In Bridge, open the mailbox settings and copy the **Bridge password** it shows you. This is different from your Proton password.
 4. In the Free My ID setup wizard, choose **Proton Bridge**. The settings are filled in for you (server `127.0.0.1`, ports 1143 and 1025). Paste the Bridge password.
-5. Free My ID shows you the mail app's **security code** (a long row of letters and numbers) and asks you once whether to trust it. If you just installed and started Bridge yourself, click **Yes**. <!-- TODO verify: wizard confirm screen (helper freemyid.engine.mail_tls.trust_on_first_use exists; wizard hook pending) -->
+5. Free My ID shows you the mail app's **security code** (a long row of letters and numbers) and asks you once whether to trust it. If you just installed and started Bridge yourself, click **Yes**.
 6. Click **Test connection**.
 
 Free My ID remembers that security code. If it ever changes, Free My ID won't sign in and tells you instead. That usually just means Bridge was reinstalled or reset: run the setup's mailbox step again to trust the new code. If you didn't change anything, don't trust it, and ask someone you trust to check your computer.
@@ -92,7 +92,7 @@ Bridge has to be running whenever Free My ID checks mail, including scheduled ba
 
 ## 3. Setting up
 
-On Windows you do not need a terminal. Double-click the **Free My ID** icon on your Desktop (or find it in the Start Menu). Free My ID opens in its own window. It runs only on your computer, and nothing you type is sent to a website.
+On Windows you do not need a terminal. Double-click the **Free My ID** icon on your Desktop (or find it in the Start Menu). Free My ID opens in its own window. It runs only on your computer, and during setup, your answers stay on this computer. Nothing real is sent until you choose to start requests.
 
 The setup has **six screens**. Each asks one thing. Press **Next** to go on, or **Back** if you change your mind.
 
@@ -104,7 +104,7 @@ The setup has **six screens**. Each asks one thing. Press **Next** to go on, or 
    Type your full name to sign, and tick the box. Free My ID won't work on anyone without this step.
 2. **Name.** Full name, plus any nicknames or maiden or earlier names. Example: *Jane Q Testperson*, nickname *Janie*, earlier name *Jane Q Example*.
 3. **Address.** The city and state where you live now (for example *Springfield, IL*). Add past cities if you like. They help Free My ID recognize *your* listing among people with the same name.
-4. **A few details.** Birth year, a phone number and an email. These are **only used on this computer to tell you apart from other people with your name.** Birth year and relatives are never sent to a site. A phone number goes to a site only if you switch that on.
+4. **A few details.** Birth year, a phone number and an email. These are **only used on this computer to tell you apart from other people with your name.** Birth year and relatives are never sent to a site. If a site's form asks for an age, it gets only the age that site's own listing already shows, never one worked out from your birth year. A phone number goes to a site only if you switch that on.
 5. **Email for removals.** The separate mailbox from [section 2](#2-before-you-start-a-separate-email-address-for-removals). Pick your email company and follow the short steps on screen, **or** choose **Skip, I'll do these by hand**. Skipping is fine. Permissions for ID, accounts and phone numbers stay **off** unless you turn them on later in Settings.
 6. **Run automatically?** Leave the box ticked so Free My ID keeps checking by itself. Click **Finish**.
 
@@ -195,7 +195,7 @@ The site showed something Free My ID didn't recognize, for example a redesigned 
 
 Many sites take removal requests by email. In **Approve each email** mode (the default), Free My ID writes each email but **doesn't send it until you approve it**.
 
-- On the Home page, open **Emails**, read the email, and click **Approve and send**. <!-- TODO verify: dashboard outbox UI -->
+- On the Home page, open **Emails**, read the email, and click **Approve and send**.
 
 Each email comes from your removal mailbox and includes only the details that site already shows about you. A copy of every sent email is kept in your encrypted records.
 
@@ -234,7 +234,7 @@ What you can do:
 - **Everything stays on your computer.** Free My ID has no account, no cloud and no tracking.
 - **Your information is encrypted.** The database and screenshots are encrypted, and the key is kept in your computer's secure password store.
 - **Free My ID talks only to the removal sites themselves and your removal mailbox.** It's blocked from contacting anything else.
-- **Sites get as little as possible:** only what they already show about you, plus your removal email address. Never your birth date, relatives, or personal email.
+- **Sites get as little as possible:** only what they already show about you, plus your removal email address. Never your birth date, relatives, or personal email. If a site asks for an age, it gets only the age its own listing already shows, never one worked out from your birth year.
 - **To delete everything about a person:** `freemyid profile remove <name>`. This removes their profile, screenshots, records and saved mailbox password.
 
 ## 11. Questions
