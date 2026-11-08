@@ -313,8 +313,9 @@ def collect(root: Path = ROOT, git_log: str | None = None) -> list[dict]:
                 "agent": s.get("owner", ""), "wo": "", "release": "",
                 "sec_severity": s.get("severity", ""), "sec_owner": s.get("owner", ""),
                 "sec_status": s.get("status", "open"),
-                "project_status": "Done" if closed else (
-                    "In progress" if s.get("status") == "in progress" else "Ready"),
+                "project_status": "Done" if closed else {
+                    "in progress": "In progress", "in review": "In review",
+                }.get(s.get("status", ""), "Ready"),
                 "closed": closed, "merge_sha": "",
             })
         for o in tracked.get("owner_tasks", []):
