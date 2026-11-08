@@ -466,6 +466,25 @@ def exposure(profile: Annotated[str | None, typer.Option("--profile", "-p")] = N
         if clean:
             con.print(f"  [green]Not found[/] on {len(clean)} site(s): "
                       + escape(", ".join(e.broker_name for e in clean)))
+    _search_engine_footer(store, [p for p, _r in rows])
+
+
+def _search_engine_footer(store, people: list[Profile]) -> None:
+    """'Google and Bing: N steps to do.' per person with N > 0 (never fails exposure)."""
+    from .engine import search_engines as se
+    for p in people:
+        try:
+            n = se.pending(se.guided_steps(store, p.id))
+        except Exception as e:  # noqa: BLE001  a hint line must not break the report
+            log.warning("search-engine steps unavailable: %s", type(e).__name__)
+            continue
+        if n <= 0:
+            continue
+        who = f"{p.label}: " if len(people) > 1 else ""
+        cmd = f"freemyid search-engines -p {p.id[:12]}" if len(people) > 1 \
+            else "freemyid search-engines"
+        con.print(f"{who}Google and Bing: {n} step{'s' if n != 1 else ''} to do. "
+                  f"Run {cmd}.", markup=False, highlight=False)
 
 
 @app.command()
@@ -847,6 +866,82 @@ def checklist_undo(checklist_id: Annotated[str, typer.Argument(help="Checklist i
                    profile: ChecklistProfileOpt = None, as_json: JsonOpt = False):
     """Mark a checklist as not done again."""
     _checklist_tick(checklist_id, profile, as_json, False)
+
+
+# ------------------------------------------------------------------------ search engines
+
+_SE_ACTIONS = ("open", "done", "undo")
+
+
+def _open_url(url: str) -> bool:
+    import webbrowser
+    return webbrowser.open(url)
+
+
+@app.command("search-engines")
+def search_engines(
+        action: Annotated[str | None, typer.Argument(
+            help="open ID | done ID | undo ID (leave out to list the steps)")] = None,
+        step_id: Annotated[str | None, typer.Argument(
+            help="Step id, e.g. google_results_about_you (or just google / bing)")] = None,
+        profile: ChecklistProfileOpt = None, as_json: JsonOpt = False):
+    """Google and Bing: guided steps to ask them to stop showing pages about you.
+
+    Free My ID never searches Google or Bing. `open` opens their official page in your
+    browser; `done` records that you did the steps there; `undo` takes that back."""
+    from .engine import search_engines as se
+    _set_json(as_json)
+    if action is not None and action not in _SE_ACTIONS:
+        _fail(cj.EXIT_USAGE, f"unknown action {action!r}; use open, done or undo")
+    if action is not None and not step_id:
+        _fail(cj.EXIT_USAGE, f"`{action}` needs a step id; see: freemyid search-engines")
+    if action is None and step_id is not None:
+        _fail(cj.EXIT_USAGE, "give an action before the step id: open, done or undo")
+    cf = _checklists_or_fail()
+    store = _open_store_or_fail()
+    p = _checklist_profile(store, profile)
+    steps = se.guided_steps(store, p.id, cf)
+    if action is not None:
+        assert step_id is not None
+        g = _pick_one(steps, step_id, "search-engine step", lambda g: g.checklist.id,
+                      lambda g: g.checklist.title, alias=lambda g: g.step.engine)
+        cid = g.checklist.id
+        if action == "open":
+            if not se.open_step(store, p.id, cid, opener=_open_url, cf=cf):
+                _fail(cj.EXIT_ERROR, f"could not open the page for {cid}")
+            _ui().print(f"Opened {g.step.engine}'s page in your browser. If nothing opened, "
+                        f"copy this address: {g.checklist.url}", markup=False,
+                        highlight=False, soft_wrap=True)
+        elif not se.mark_done(store, p.id, cid, action == "done", cf=cf):
+            _fail(cj.EXIT_ERROR, f"could not record {cid}")
+        else:
+            _ui().print(f"{'Done' if action == 'done' else 'Not done'}: {g.checklist.title}",
+                        markup=False)
+        steps = se.guided_steps(store, p.id, cf)
+    if as_json:
+        cj.emit(se.doc(steps, p.id))
+        return
+    if action is not None:
+        return
+    if not steps:
+        con.print("No Google or Bing steps are available right now.", markup=False)
+        return
+    con.print(se.INTRO + "\n", markup=False, highlight=False)
+    for g in steps:
+        when = (f" (done {g.done_at.date().isoformat()})" if g.status == "done" and g.done_at
+                else f" (opened {g.opened_at.date().isoformat()})"
+                if g.status == "opened" and g.opened_at else "")
+        mark = "[x]" if g.status == "done" else "[ ]"
+        con.print(f"{mark} {g.checklist.id:<26} {g.step.engine}: {g.checklist.title}",
+                  markup=False, highlight=False)
+        con.print(f"    {g.step.why_now}", markup=False, highlight=False)
+        con.print(f"    {se.STATUS_TEXT[g.status]}{when}", markup=False, highlight=False)
+        con.print(f"    {g.checklist.url}", markup=False, highlight=False, soft_wrap=True)
+        for i, s in enumerate(g.checklist.steps, 1):
+            con.print(f"      {i}. {s}", markup=False, highlight=False)
+    con.print(f"\n{p.label}: {se.pending(steps)} of {len(steps)} to do. "
+              "Open one with: freemyid search-engines open ID, then: "
+              "freemyid search-engines done ID", markup=False, highlight=False)
 
 
 # --------------------------------------------------------------------------- secrets

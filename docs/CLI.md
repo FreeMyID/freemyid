@@ -36,6 +36,7 @@ Codes are stable: a number never changes meaning.
 | `scan` | Searches brokers; never submits. `-p/--profile`, `-b/--broker` (repeatable), `--headless` | `run/1` |
 | `run` | Scan, submit, verify, escalate. `--dry-run`, `--headless`, `-p`, `-b` | `run/1` |
 | `exposure` | Which sites show you, with a 0-100 exposure score; reads only (works in practice mode). `-p`, `--offline`, `--refresh`, `--headless` ([EXPOSURE.md](EXPOSURE.md)) | `exposure/1` |
+| `search-engines` | Google and Bing guided steps: lists them (`-p`). `open ID` opens the official page in your browser and records when; `done ID` / `undo ID` record that you did it. ID may be a prefix or `google` / `bing`. Never searches Google or Bing ([EXPOSURE.md](EXPOSURE.md)) | `search_engines/1` |
 | `fill BROKER` | Opens the broker's form in a window and fills it; you submit | |
 | `status` | Per-broker state for each person. `-p` | `status/1` |
 | `report` | Writes an HTML or PDF report. `-p`, `--format html\|pdf` | `reports/1` |
@@ -226,6 +227,32 @@ Includes the list item's fields plus the full instructions. `need_on_hand`, `ste
 `source_urls` are arrays of strings; `date_checked` is an ISO date. `profile_id` and
 `done_at` have the same meaning as in `checklists/1`.
 `verification` is `official_page` or `partial`; `notes` and `status_note` may be null.
+
+### `search_engines/1`
+
+`freemyid search-engines --json` (also returned by `open`, `done` and `undo` with `--json`,
+after the action):
+
+```json
+{"schema": "search_engines/1", "profile_id": "…", "intro": "Google and Bing can show …",
+ "pending": 1,
+ "steps": [{"id": "google_results_about_you", "engine": "Google",
+   "title": "…", "why_now": "…", "url": "https://goo.gle/…",
+   "status": "done", "status_text": "Done.", "opened_at": "…", "done_at": "…",
+   "steps": ["…"], "tips": ["…"]}]}
+```
+
+`status` is `not_started`, `opened` (the page was opened, not yet ticked), `done`, or
+`do_again` (Bing only: a site removed a listing after the last tick, so Bing may still show
+the old copy). `pending` counts steps that are not `done`. `opened_at` / `done_at` are ISO
+timestamps or null. A step is listed only when its checklist entry exists and its URL is
+https on that engine's own hosts. `done` / `undo` use the normal checklist tick, so
+`freemyid checklist` shows the same state. Exit codes: unknown action, missing or unknown
+id, unknown or ambiguous profile: 2; checklist file missing or the step could not be opened
+or recorded: 1; nobody set up: 4.
+
+`freemyid exposure` (text output only) ends with "Google and Bing: N steps to do. Run
+freemyid search-engines." when N > 0 for that person.
 
 ### `doctor/1`
 
