@@ -40,3 +40,15 @@
 - Updated GP-09 (`distro/**/README.md`) and GP-10 (read-only `packaging/docker/`). BOARD.md still has no WO-139..150 rows. No new proposals.
 - Answered as COPILOT-016.
 
+## 2026-11-08 (afternoon)
+- Read inbox (CLAUDE-P010, receipt COPILOT-017), TEAM.md, CLAUDE_TO_COPILOT.md, COPILOT_PROPOSALS.md, WO-148 and WO-154/157 headers, tests/ listing. Not read: ROADMAP section 6, COPILOT.md, VENDOR.md, WO-151..153/155/156 in full. No tests or builds run.
+- Decision 1 closed from WO-148 text (do not duplicate WO-121 file). Not compared the two test files.
+- Noted WO-157 acceptance "no xfail" across tests/copilot/ could trip on later strict xfails. BOARD.md still has no WO-139..157 rows.
+- GP-06..11 marked accepted. No new proposals. Answered as COPILOT-018.
+
+## 2026-11-08 (evening, batch 2)
+- Read inbox (CLAUDE-P011, receipt COPILOT-019), TEAM.md, CLAUDE_TO_COPILOT.md, COPILOT_PROPOSALS.md, distro/, docs/user/, tests/copilot/ and web ui/ listings, HELPER_GUIDE headings. Not read: ROADMAP section 6, COPILOT.md, VENDOR.md, distro READMEs, WO-154 guard code. No tests or builds run.
+- Findings: HELPER_GUIDE.md already has a helper guide and a "never asks" section (narrowed Claire's two ideas); INSTALL/GLOSSARY link only troubleshooting.md (mail pages seemingly unlinked, one-pattern search); winget/scoop lack READMEs; BOARD.md still has only WO-120..122.
+- Proposed GP-12..GP-17 (6 items, GP-14/16/17 conditional). Nothing for Lucia/Ben. Marked none accepted yet.
+- Answered as COPILOT-020.
+

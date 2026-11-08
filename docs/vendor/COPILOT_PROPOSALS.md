@@ -30,6 +30,11 @@ Status, 2026-11-08 (CLAUDE-P009): recipes live in `distro/`, not `packaging/`. G
 GP-10 only reads `packaging/docker/`. GP-06..GP-11 still open. Decision on WO-148 versus
 `tests/test_cli_docs_match_source.py` still waits for Morgan.
 
+Status, 2026-11-08 (CLAUDE-P010): GP-06 accepted as WO-151, GP-07 as WO-152 (Claire), GP-08 as WO-153, GP-09 as
+WO-154 (after 151/152), GP-10 as WO-155 (Malik), GP-11 as WO-156 (Lucia). Morgan added WO-157 (Claire, CLI.md
+`app`/`fill`/`wipe` examples). The WO-148 versus `tests/test_cli_docs_match_source.py` question is closed: WO-148
+says not to duplicate. No open proposals.
+
 ## GP-01: CLI docs fixes (CLI-A03, CLI-A05)
 - Agent: app-features (Claire Dubois)
 - Evidence: `docs/vendor/v02-cli-doc-audit.md` rows CLI-A03 (CLI.md command table omits `checklist list/show/done/undo`) and CLI-A05 (README and USER_GUIDE do not link to CLI.md). Both are labelled P3 and narrow in the audit.
@@ -122,5 +127,53 @@ GP-10 only reads `packaging/docker/`. GP-06..GP-11 still open. Decision on WO-14
 - Deliverable: a source-level test (labelled as such, not a browser run) that every interactive component in `web/src/components/ui/` has a visible focus style and does not set `.disabled` in a click handler. Report any hits as findings; do not fix them in the same work order.
 - Collisions: new file; WO-149 edits the components, so land this after WO-149.
 
+## GP-12: Local-test sections for distro recipes (answers CLAUDE-P011)
+- Agent: app-ui (Arjun Rao)
+- Evidence: `distro/` has READMEs for aur, flatpak, homebrew and nix only. winget and scoop have manifests (`distro/winget/`, `distro/scoop/freemyid.json`) and no README. I have not read the four existing READMEs, so I do not know which already have a test section.
+- Proposed allowed paths: `distro/aur/README.md`, `distro/flatpak/README.md`, `distro/homebrew/README.md`, `distro/nix/README.md` (add a "Try it locally" section only if missing); `distro/winget/README.md`, `distro/scoop/README.md` (new).
+- Deliverable: per channel, the exact local-test commands a maintainer runs, hashes still marked as placeholders, channel marked "coming" (release.yaml lists none). Commands not run on a real system are labelled unverified.
+- Collisions: WO-139..143 and WO-150 merged; BOARD.md has no distro rows, so unchecked there.
+
+## GP-13: Every docs/user/ page is reachable from INSTALL or the glossary
+- Agent: test-quality (Malik Johnson)
+- Evidence: a search of `docs/user/INSTALL.md` and `GLOSSARY.md` finds one link to another page, `troubleshooting.md`. Nothing found linking `mail-gmail.md`, `mail-other.md` or `mail-proton.md`. Searched with one pattern only, so a link in another form could be missed.
+- Proposed allowed paths: `tests/copilot/test_cp_user_docs_reachable.py` (new).
+- Deliverable: fail if any `docs/user/*.md` is not linked, directly or through one hop, from INSTALL or the glossary. If the mail pages really are unlinked, mark the test strict xfail and name the fix in GP-14.
+- Collisions: new file; reuse the link parser in `test_cp_doc_links.py` by copying, not importing.
+
+## GP-14: Link the how-tos from INSTALL (only if GP-13 finds a gap)
+- Agent: app-features (Claire Dubois)
+- Evidence: see GP-13.
+- Proposed allowed paths: `docs/user/INSTALL.md`, `docs/user/GLOSSARY.md`.
+- Deliverable: one plain sentence and link per missing how-tos page, where the reader first meets the email step. Remove the xfail from GP-13 in the same pass only if Morgan allows; otherwise Malik does it.
+- Collisions: WO-151/152 merged; sequential with GP-13.
+
+## GP-15: Helper path through docs/user/ (narrower than Morgan's idea)
+- Agent: app-features (Claire Dubois)
+- Evidence: `docs/HELPER_GUIDE.md` already exists, with six sections including "What Free My ID will never ask for" (section 6). A second helper guide would duplicate it and could drift.
+- Proposed allowed paths: `docs/user/HELPING.md` (new).
+- Deliverable: a short signpost page (under one screen): who it is for, which parts of INSTALL and the mail how-tos to do together, then a link to HELPER_GUIDE for the screens. Every claim cited to a repo file or marked "not sure". No consent or practice-mode wording beyond what HELPER_GUIDE says.
+- Collisions: new file.
+
+## GP-16: "What the app will never ask you for" (conditional)
+- Agent: app-features (Claire Dubois)
+- Evidence: the same content exists in `docs/HELPER_GUIDE.md` section 6 and on the website (`web/src/components/Footer.astro` links `safety/#never-asks`). I have not checked that the three versions agree.
+- Proposed allowed paths: `docs/vendor/never-asks-consistency.md` (new, notes only; needs a WO that allows it).
+- Deliverable: compare the app guide, the HELPER_GUIDE and the website list; report differences. A new docs/user/ page only after that, to avoid a third copy.
+- Collisions: new file.
+
+## GP-17: Wording guard covers new pages automatically
+- Agent: test-quality (Malik Johnson)
+- Evidence: WO-154's guard scans README, USER_GUIDE, `docs/user/*.md` and `distro/**/README.md`. GP-12 and GP-15 add files. I have not read how the guard finds files, so cannot say if a glob already covers them.
+- Proposed allowed paths: `tests/copilot/test_cp_wording_guard.py` (only if it uses a fixed file list).
+- Deliverable: switch to globs, and include `docs/HELPER_GUIDE.md` if it is not already scanned. If a glob already covers everything, report that and change nothing.
+- Collisions: after GP-12 and GP-15 land.
+
 ## Arjun Rao (app UI)
-Packaging work is WO-139..143. No further proposal. The wizard finish step is in-house work in progress and I have no evidence-backed item elsewhere.
+GP-12 is the only item with evidence. The wizard finish step remains in-house.
+
+## Lucia Ferraro / Ben Adler (web)
+No proposal. `web/src/components/ui/` has Alert, Badge, Card and button-variants.ts; WO-149 and WO-156 covered the audit findings. I have no new evidence-backed finding and have not re-read the components.
+
+## Arjun Rao (app UI), earlier note
+Packaging work is WO-139..143. The wizard finish step is in-house work in progress and I have no evidence-backed item elsewhere.
