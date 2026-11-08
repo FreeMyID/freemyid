@@ -404,6 +404,10 @@ def exposure(profile: Annotated[str | None, typer.Option("--profile", "-p")] = N
                  "--offline", help="Fetch nothing; use what earlier runs found")] = False,
              refresh: Annotated[bool, typer.Option(
                  "--refresh", help="Check every site again, even if checked today")] = False,
+             old_addresses: Annotated[bool, typer.Option(
+                 "--old-addresses",
+                 help="Also search each site once at your previous address (off by default; "
+                      "at most one extra page per site)")] = False,
              headless: Annotated[bool, typer.Option(
                  "--headless", help="No prompts or windows; fail closed (cron/Docker)")
              ] = False,
@@ -433,7 +437,8 @@ def exposure(profile: Annotated[str | None, typer.Option("--profile", "-p")] = N
     for p in people:
         try:
             rows.append((p, ex.scan_exposure(store, p.id, registry=reg, offline=offline,
-                                             refresh=refresh, use_browser=not offline)))
+                                             refresh=refresh, use_browser=not offline,
+                                             old_addresses=True if old_addresses else None)))
         except ex.ExposureRefused as refused:
             skipped.append(cj.skipped_entry(p, refused.reason))
     if as_json:

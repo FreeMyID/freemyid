@@ -35,7 +35,7 @@ Codes are stable: a number never changes meaning.
 | `doctor` | Readiness checks (`--offline` skips the mail server check) | `doctor/1` |
 | `scan` | Searches brokers; never submits. `-p/--profile`, `-b/--broker` (repeatable), `--headless` | `run/1` |
 | `run` | Scan, submit, verify, escalate. `--dry-run`, `--headless`, `-p`, `-b` | `run/1` |
-| `exposure` | Which sites show you, with a 0-100 exposure score; reads only (works in practice mode). `-p`, `--offline`, `--refresh`, `--headless` ([EXPOSURE.md](EXPOSURE.md)) | `exposure/1` |
+| `exposure` | Which sites show you, with a 0-100 exposure score; reads only (works in practice mode). `-p`, `--offline`, `--refresh`, `--old-addresses` (also search each site once at your previous address; off by default), `--headless` ([EXPOSURE.md](EXPOSURE.md)) | `exposure/1` |
 | `search-engines` | Google and Bing guided steps: on its own it lists them (there is no `list` word; `-p` picks the person). `open ID` opens the official page in your browser and records when; `done ID` / `undo ID` record that you did it. ID may be a prefix or `google` / `bing`. Never searches Google or Bing ([EXPOSURE.md](EXPOSURE.md)) | `search_engines/1` |
 | `fill BROKER` | Opens the broker's form in a window and fills it; you submit | |
 | `status` | Per-broker state for each person. `-p` | `status/1` |
@@ -214,7 +214,7 @@ them; the text output shows them too.
 sites_total`; `sites_checked` = read automatically); show `coverage_note` next to the score.
 `drop_first` is true and `first_checklist` is `"ca_drop"` when the person's current address
 is in California. `old_address_checked` is true when one previous-address search was read
-for that site (config `exposure_old_addresses`, off by default); `previous_name_checked` is
+for that site (`--old-addresses` or config `exposure_old_addresses`, off by default); `previous_name_checked` is
 true when one previous-name (maiden name) search was read (config `exposure_previous_names`,
 off by default). These fields were added in v0.3; `counts` is unchanged.
 
