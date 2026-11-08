@@ -407,6 +407,10 @@ def check_gate(env: dict | None = None) -> None:
         raise ApplyRefused("--apply refused: set FREEMYID_PM_APPLY=1 to confirm GitHub writes")
 
 
+TRUSTED_AUTHORS = frozenset(
+    a.strip() for a in os.environ.get("FREEMYID_PM_TRUSTED", "GrayManSam").split(",") if a.strip())
+
+
 def _json(run, args):
     return json.loads(run(args) or "{}")
 
@@ -428,8 +432,11 @@ def apply_plan(p: list[dict], mapping: dict, repo: str, owner: str, project: int
             # Codex can open issues itself now (GitHub plugin): adopt an existing "KEY: ..." issue
             # instead of making a duplicate.
             found = _json(run, ["gh", "issue", "list", "--repo", repo, "--state", "all", "--search",
-                                f'"{x["key"]}" in:title', "--json", "number,title,url,state"])
-            hit = next((i for i in found if i["title"].startswith(x["key"] + ":")), None)
+                                f'"{x["key"]}" in:title', "--json", "number,title,url,state,author"])
+            # SEC-120: adopt only issues opened by a trusted account (the owner's, which Codex
+            # also uses); anyone else's "WO-NNN: ..." issue is ignored and a fresh one is made.
+            hit = next((i for i in found if i["title"].startswith(x["key"] + ":")
+                        and (i.get("author") or {}).get("login") in TRUSTED_AUTHORS), None)
             if hit:
                 rec = {"number": hit["number"], "url": hit["url"], "state": hit["state"].lower()}
                 items[x["key"]] = rec

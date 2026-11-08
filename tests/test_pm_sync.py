@@ -113,7 +113,8 @@ def test_existing_issue_is_adopted_not_duplicated():
         out.append(args)
         if args[:3] == ["gh", "issue", "list"]:
             return json.dumps([{"number": 9, "title": "WO-2: made by Codex",
-                                "url": "https://github.com/o/r/issues/9", "state": "OPEN"}])
+                                "url": "https://github.com/o/r/issues/9", "state": "OPEN",
+                                "author": {"login": "GrayManSam"}}])
         raise AssertionError(f"unexpected call {args}")
 
     m = pm.apply_plan(p, {"items": {}}, "o/r", "o", None, run=run, env={"FREEMYID_PM_APPLY": "1"})
@@ -150,3 +151,21 @@ def test_tracked_json_sec_and_owner_items(tmp_path):
 def test_merged_wos_accepts_pr_merges():
     log = "aaaaaaa Merge PR #49 WO-165 (Copilot): x\nbbbbbbb Merge WO-129 (Codex)\n"
     assert pm.merged_wos(log) == {"WO-165": "aaaaaaa", "WO-129": "bbbbbbb"}
+
+
+def test_untrusted_author_issue_is_not_adopted():
+    p = pm.plan([{"key": "WO-3", "title": "t", "team": "Codex", "lane": "CX", "kind": "Work order",
+                  "priority": "P2", "closed": False, "project_status": "Ready", "merge_sha": ""}],
+                {"items": {}})
+    out = []
+
+    def run(args):
+        out.append(args)
+        if args[:3] == ["gh", "issue", "list"]:
+            return json.dumps([{"number": 5, "title": "WO-3: squatted", "state": "OPEN",
+                                "url": "https://github.com/o/r/issues/5",
+                                "author": {"login": "someone-else"}}])
+        return "https://github.com/o/r/issues/6\n"
+
+    m = pm.apply_plan(p, {"items": {}}, "o/r", "o", None, run=run, env={"FREEMYID_PM_APPLY": "1"})
+    assert m["items"]["WO-3"]["number"] == 6  # a fresh issue, not #5
