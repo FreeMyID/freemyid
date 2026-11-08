@@ -46,3 +46,12 @@ def test_uninstaller_closes_running_app_first():
     assert "taskkill.exe" in iss and "FreeMyID.exe" in iss
     assert iss.index("CloseRunningApp;") < iss.index("wipe --yes")
     assert "DisableReadyPage" not in iss
+
+
+def test_installer_explains_first_start_wait():
+    """Every wait has a reason: the finish page warns that the first launch is slow (unverified
+    on Windows; read from the .iss only)."""
+    iss = (ROOT / "packaging" / "windows" / "freemyid.iss").read_text()
+    assert "[Messages]" in iss and "FinishedLabel=" in iss
+    assert "15 seconds" in iss and "That is normal" in iss
+    assert iss.index("[Messages]") < iss.index("[Files]")

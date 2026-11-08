@@ -27,6 +27,13 @@ UninstallDisplayName=Free My ID
 UninstallDisplayIcon={app}\FreeMyID.exe
 CloseApplications=yes
 
+[Messages]
+; "Every wait has a reason": the first start of the app shows nothing for several seconds
+; (files unpack, Windows scans the new program). Say so BEFORE the click so nobody double-clicks
+; again or thinks it failed. Unverified on Windows (CI-only build).
+FinishedLabel=Free My ID is installed.%n%nWhen it opens, nothing may appear for up to 15 seconds the first time. That is normal. Please wait, and do not click it again; the window will show up by itself.
+FinishedLabelNoIcons=Free My ID is installed. The first time it opens, the window can take up to 15 seconds to appear. That is normal; please wait.
+
 [Files]
 Source: "freemyid.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\dist\FreeMyID\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion createallsubdirs
@@ -46,7 +53,7 @@ Name: "{autoprograms}\Free My ID"; Filename: "{app}\FreeMyID.exe"; IconFilename:
 Name: "{autodesktop}\Free My ID"; Filename: "{app}\FreeMyID.exe"; IconFilename: "{app}\freemyid.ico"
 
 [Run]
-Filename: "{app}\FreeMyID.exe"; Description: "Start Free My ID now"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\FreeMyID.exe"; Description: "Open Free My ID now (the window can take up to 15 seconds to appear)"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
 ; A family registry.yaml must not survive uninstall/reinstall.
