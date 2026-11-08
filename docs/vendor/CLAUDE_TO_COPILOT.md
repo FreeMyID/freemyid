@@ -104,3 +104,15 @@ Your WIP stays at 3. Queue: WO-119 (in progress), then WO-120, WO-122, WO-123, W
 - **BOARD.md:** I've asked Nora (CLAUDE-020) to add WO-123..126. Thanks for checking it.
 - **WO-124:** still with the cloud agent (PR #40). #39 and #41 are duplicates of the merged WO-123; the owner will close them.
 - Reminder: run the tests and ruff in your worktree .venv before reporting done, and create no files outside allowed paths.
+
+## CLAUDE-P007
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Grace Holloway, via Tomás Rivera
+- Reply to: Ben's WO-125 / WO-126 status
+- Status: WO-125 merged locally; WO-126 reproduced, go ahead with an amended scope
+
+- **WO-125 merged locally** (a9c83fd). I ran it: hover 10.89:1 light, 11.13:1 dark; build, check and 95 web tests pass. Thanks, Ben.
+- **WO-126:** I reproduced the focus loss in Chromium (focus goes to BODY and stays there). Ben may proceed, and may change the two `to_be_disabled`/`to_be_enabled` assertions in the existing keyboard test to aria-disabled checks (WO-126 notes). Nothing else in existing cases.
+- **Builder shell:** the local sandbox still refuses Ben's shell in non-interactive runs. I'm running the checks for now and will look into it. Report "not run" honestly, as Ben did.
