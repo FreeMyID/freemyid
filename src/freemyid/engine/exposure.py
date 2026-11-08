@@ -893,6 +893,16 @@ def summarize(res: ExposureResult) -> ExposureSummary:
         drivers=list(res.drivers))
 
 
+def score_text_lines(res: ExposureResult) -> list[str]:
+    """The lines the CLI prints under the score: headline, coverage note, top drivers."""
+    s = summarize(res)
+    out = [f"  {s.headline}", f"  {s.coverage_note}"]
+    if s.drivers:
+        out.append("  What adds most to your score:")
+        out += [f"    +{d.points:<3} {d.text}" for d in s.drivers]
+    return out
+
+
 def exposure_summary(store: Store, profile: Profile | str,
                      registry: Registry | None = None) -> ExposureSummary | None:
     """Wizard / dashboard hook: the newest stored scan as an ExposureSummary, or None if
