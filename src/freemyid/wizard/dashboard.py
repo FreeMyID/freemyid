@@ -337,10 +337,30 @@ def profile_page(p: Profile, statuses: list[BrokerStatus], names: dict[str, str]
     return layout(p.label, body)
 
 
+def outbox_releases(store, items, names: dict[str, str]) -> dict[str, list[str]]:
+    """SEC-47: request id -> site names of the OTHER emails approving it would also send.
+    Empty when the engine is not installed."""
+    try:
+        from ..engine.outbox import released_by_approval
+    except ImportError:
+        return {}
+    profiles = {p.id: p for p in store.list_profiles()}
+    out: dict[str, list[str]] = {}
+    for r, *_ in items:
+        prof = profiles.get(r.profile_id)
+        others = released_by_approval(store, prof, r) if prof else []
+        if others:
+            out[r.id] = [names.get(o.broker_id, o.broker_id) for o in others]
+    return out
+
+
 def outbox_page(items: list[tuple[Request, str, str, tuple[str, str, str]]], csrf: str, flash: str = "",
-                releases: dict[str, list[str]] | None = None) -> str:
+                releases: dict[str, list[str]] | None = None, *, store=None,
+                names: dict[str, str] | None = None) -> str:
     """`releases` maps a request id to the site names of the OTHER emails its approval would
     also send (SEC-47, first-email release). Every value is escaped here."""
+    if releases is None and store is not None:
+        releases = outbox_releases(store, items, names or {})
     releases = releases or {}
     body = f'<h1>Emails waiting for your approval</h1>{_flash(flash)}'
     if not items:

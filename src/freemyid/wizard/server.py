@@ -491,18 +491,8 @@ def create_app(store, token: str, allowed_hosts: set[str],
                 letter = ("", "", "(the letter could not be read)")
             items.append((r, who.get(r.profile_id, "?"), nm.get(r.broker_id, r.broker_id),
                           letter))
-        releases: dict[str, list[str]] = {}
-        try:
-            from ..engine.outbox import released_by_approval
-            profiles = {p.id: p for p in store.list_profiles()}
-            for r, *_ in items:
-                prof = profiles.get(r.profile_id)
-                others = released_by_approval(store, prof, r) if prof else []
-                if others:
-                    releases[r.id] = [nm.get(o.broker_id, o.broker_id) for o in others]
-        except ImportError:
-            pass
-        return html(dash.outbox_page(items, csrf_token, flash(request), releases))
+        return html(dash.outbox_page(items, csrf_token, flash(request),
+                                  store=store, names=nm))
 
     @app.post("/outbox/{rid}/approve")
     async def outbox_approve(rid: str):
