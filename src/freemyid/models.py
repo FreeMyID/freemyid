@@ -212,6 +212,9 @@ class EvidenceKind(StrEnum):
     EMAIL_SENT = "email_sent"
     EMAIL_RECEIVED = "email_received"
     LETTER = "letter"
+    USER_ATTESTATION = "user_attestation"   # the person's "I did it" (what, when, how)
+    PHONE_CALL_NOTE = "phone_call_note"     # the call script plus the person's note
+    POSTAL_RECEIPT = "postal_receipt"       # a photo/scan of a mailing receipt they attach
 
 
 # --------------------------------------------------------------------------- profile
