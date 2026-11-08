@@ -107,7 +107,9 @@ export const PROTECT_GROUPS: { key: string; title: string; ids: string[] }[] = [
 // Entries held back from the public site until the orchestrator rules. freeze_lexisnexis: its official
 // host is in the private registry, so the leak scan (tools/site_check.py private_host_hashes) flags it.
 // The page is not built and the hub doesn't link it; nothing is obfuscated to get past the scan.
-const HOLD = new Set<string>([]);   // freeze_lexisnexis released 2026-11-07 (PUBLIC_OK_HOSTS)
+// freeze_child_equifax (9acd2e6): held until the orchestrator places it (a "freeze a child's credit" page or the credit
+// group) and copy is written; held entries need no group.
+const HOLD = new Set<string>(["freeze_child_equifax"]);   // freeze_lexisnexis released 2026-11-07 (PUBLIC_OK_HOSTS)
 
 // Entries whose phone numbers are unverified and must never be shown (orchestrator brief: ChexSystems).
 const HIDE_PHONE_STEPS = new Set(["freeze_chexsystems"]);
@@ -123,7 +125,7 @@ const file = loadFile();
 const byId = new Map(file.items.map((c) => [c.id, c]));
 for (const g of PROTECT_GROUPS) for (const id of g.ids) if (!byId.has(id)) throw new Error(`/protect/ group ${g.key}: no checklist ${id}`);
 const grouped = new Set(PROTECT_GROUPS.flatMap((g) => g.ids));
-for (const id of byId.keys()) if (!grouped.has(id)) throw new Error(`checklist ${id} is not in a /protect/ group (web/src/lib/protect.ts)`);
+for (const id of byId.keys()) if (!grouped.has(id) && !HOLD.has(id)) throw new Error(`checklist ${id} is not in a /protect/ group (web/src/lib/protect.ts)`);
 
 export const protectPages: ProtectPage[] = PROTECT_GROUPS.flatMap((g) => g.ids.filter((id) => !HOLD.has(id)).map((id) => {
   const c = byId.get(id)!;
