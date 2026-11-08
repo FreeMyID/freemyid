@@ -24,7 +24,9 @@ import sys
 from dataclasses import dataclass, field
 
 REPO = "FreeMyID/freemyid"
-BOT = re.compile(r"coderabbit", re.IGNORECASE)
+# Exact app login only: any GitHub user can name themselves "coderabbit-something", but the
+# "[bot]" suffix is reserved for GitHub Apps, so this is the one identity we trust.
+BOT_LOGIN = "coderabbitai[bot]"
 SEVERITIES = ("Critical", "Major", "Minor", "Nitpick")
 _SEV = re.compile(r"\*\*(?:<picture>.*?</picture>\s*)?(Critical|Major|Minor|Nitpick)\*\*", re.DOTALL)
 _COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
@@ -58,7 +60,7 @@ def _strip_details(body: str) -> str:
 
 def parse_comment(c: dict, pr: int) -> Finding | None:
     """One CodeRabbit inline comment -> Finding (None for non-bot or empty comments)."""
-    if not BOT.search((c.get("user") or {}).get("login", "")):
+    if (c.get("user") or {}).get("login") != BOT_LOGIN:
         return None
     body = _strip_details(_COMMENT.sub("", c.get("body") or ""))
     m = _SEV.search(body)
@@ -71,6 +73,9 @@ def parse_comment(c: dict, pr: int) -> Finding | None:
     return Finding(c.get("path", "?"), line, sev, title, [pr], [c.get("html_url", "")])
 
 
+_RANK = {s: i for i, s in enumerate(SEVERITIES)}
+
+
 def merge(findings: list[Finding]) -> list[Finding]:
     out: dict[tuple, Finding] = {}
     for f in findings:
@@ -78,10 +83,11 @@ def merge(findings: list[Finding]) -> list[Finding]:
             g = out[f.key]
             g.prs += [p for p in f.prs if p not in g.prs]
             g.urls += [u for u in f.urls if u not in g.urls]
+            if _RANK.get(f.severity, 9) < _RANK.get(g.severity, 9):
+                g.severity = f.severity  # an incremental review escalated it: keep the highest
         else:
             out[f.key] = f
-    rank = {s: i for i, s in enumerate(SEVERITIES)}
-    return sorted(out.values(), key=lambda f: (rank.get(f.severity, 9), f.path, f.line or 0))
+    return sorted(out.values(), key=lambda f: (_RANK.get(f.severity, 9), f.path, f.line or 0))
 
 
 def render(findings: list[Finding], prs: list[int]) -> str:
@@ -110,15 +116,20 @@ def _gh(args: list[str]) -> str:
     return subprocess.run(["gh", *args], check=True, capture_output=True, text=True).stdout
 
 
+def _pages(endpoint: str) -> list[dict]:
+    """Every item of a paginated list endpoint. --slurp wraps the pages in one JSON array
+    ([[page1...], [page2...]]), so the text is parsed as-is and never edited."""
+    raw = _gh(["api", "--paginate", "--slurp", endpoint])
+    return [item for page in (json.loads(raw) if raw.strip() else []) for item in page]
+
+
 def fetch(pr: int, repo: str = REPO) -> list[dict]:
-    raw = _gh(["api", "--paginate", f"repos/{repo}/pulls/{pr}/comments?per_page=100"])
-    # --paginate concatenates JSON arrays ("][") when there are several pages.
-    return json.loads("[" + raw.strip()[1:-1].replace("][", ",") + "]") if raw.strip() else []
+    return _pages(f"repos/{repo}/pulls/{pr}/comments?per_page=100")
 
 
 def open_prs(repo: str = REPO) -> list[int]:
-    return [p["number"] for p in json.loads(
-        _gh(["pr", "list", "-R", repo, "--state", "open", "--json", "number", "--limit", "100"]))]
+    """All open PRs, every page (gh pr list --limit is a cap, not a page size)."""
+    return [p["number"] for p in _pages(f"repos/{repo}/pulls?state=open&per_page=100")]
 
 
 def main(argv: list[str] | None = None) -> int:
