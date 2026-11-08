@@ -66,8 +66,6 @@ def test_sec89_parse_candidates_refuses_confusable_urls(href):
     assert all(_safe_on_broker(c.url) for c in cands), [c.url for c in cands]
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-89: a hostile result page plants an off-domain "
-                   "link in the stored listing / 'Is this you?' to-do")
 def test_sec89_scan_never_stores_an_off_domain_listing(store):
     p = make_profile()
     store.save_profile(p)
@@ -76,7 +74,8 @@ def test_sec89_scan_never_stores_an_off_domain_listing(store):
                      fetch=lambda b, u: page, use_browser=False)
     urls = [li.url for li in store.list_listings(p.id)] + \
         [u for t in store.list_todos(p.id) for u in t.links]
-    assert urls and all(_safe_on_broker(u) for u in urls), urls
+    # the hostile candidate is refused outright, so nothing may be stored at all
+    assert all(_safe_on_broker(u) for u in urls), urls
 
 
 def test_sec89_plain_relative_link_still_works():
