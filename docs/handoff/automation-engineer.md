@@ -718,5 +718,13 @@ extra polite requests per open site, only for people who entered them).
 If the flags stay off by default, a "Also search my old addresses and previous names"
 checkbox on the scan screen could pass `old_addresses=True, previous_names=True`.
 
-Next: the runner's own scan (`runner` / `web_form` search) still searches current name and
-address only; reuse `previous_name_url` / `old_address_url` there.
+- dc18764 SEC-99 household guard: `matcher.AGE_CONFLICT_YEARS = 5` (an age shown more than 5
+  years off caps at POSSIBLE); a name that is not exact (`matcher.exact_name`: the person's
+  own first names, own nicknames and last names) needs age, phone or email to be CONFIRMED.
+  qa's two strict xfails in tests/test_qa_wave_20261108.py removed (they pass).
+- ae936e8 The runner scan (`web_form.search_listings`) reads the same extra pages per
+  `runner.search_variants(cfg)` (passed in `ctx.scratch["search_variants"]`). An extra page
+  that cannot be read (incl. a challenge, never bypassed) keeps the stored listings via
+  `runner.keep_unchecked`, so nothing is falsely marked gone; the exposure scan does the same.
+  Known edge: turning a flag OFF later lets the next scan mark extra-page-only listings gone.
+- 0c5f419 SEC-101: more than 2 stacked Content-Encoding values -> http_error.
