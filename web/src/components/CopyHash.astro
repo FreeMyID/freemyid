@@ -1,0 +1,38 @@
+---
+// Clipboard button for the download fingerprint, without React (replaces the CopyHash.tsx island: ~78 KiB of
+// React on /download/ down to one small same-origin module). Without JavaScript the button stays hidden and the
+// code above remains selectable. With JavaScript but no Clipboard API, the status line explains manual copy.
+import { buttonVariants } from "./ui/button-variants";
+interface Props { value: string }
+const { value } = Astro.props;
+---
+<span class="inline-flex flex-wrap items-center gap-2" data-copy-hash={value}>
+  <button type="button" class={buttonVariants({ variant: "secondary", size: "sm" })} hidden>Copy the code</button>
+  <span role="status" aria-live="polite" class="text-small text-text"></span>
+</span>
+
+<script>
+  const FAILED = "Couldn't copy the code. You can select and copy the code above.";
+  for (const root of document.querySelectorAll<HTMLElement>("[data-copy-hash]")) {
+    const button = root.querySelector("button");
+    const status = root.querySelector<HTMLElement>("[role=status]");
+    if (!button || !status) continue;
+    if (typeof navigator.clipboard?.writeText !== "function") {
+      status.textContent = FAILED;
+      continue;
+    }
+    button.hidden = false;
+    button.addEventListener("click", async () => {
+      button.disabled = true;
+      status.textContent = "Copying…";
+      try {
+        await navigator.clipboard.writeText(root.dataset.copyHash ?? "");
+        status.textContent = "Copied";
+      } catch {
+        status.textContent = FAILED;
+      } finally {
+        button.disabled = false;
+      }
+    });
+  }
+</script>

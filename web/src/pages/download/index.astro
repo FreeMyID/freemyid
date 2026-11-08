@@ -1,6 +1,6 @@
 ---
 // Download. Same copy and source comments as site_src/templates/pages/download.html (WR-9/10/19/26/29).
-// Islands: TimelineBeam (decorative) and CopyHash (copy button for the fingerprint), both client:visible.
+// No islands: CopyHash is a plain same-origin module script (no React). Every other part is static HTML.
 import Base from "@/layouts/Base.astro";
 import PageHead from "@/components/PageHead.astro";
 import Section from "@/components/Section.astro";
@@ -12,7 +12,7 @@ import SmartScreen from "@/components/SmartScreen.astro";
 import Timeline from "@/components/aceternity/Timeline.astro";
 import TimelineItem from "@/components/aceternity/TimelineItem.astro";
 import BorderBeam from "@/components/magicui/BorderBeam.astro";
-import CopyHash from "@/components/CopyHash.tsx";
+import CopyHash from "@/components/CopyHash.astro";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { pageProps, release, releaseDate, site, url } from "@/lib/site";
 const p = pageProps("download");
@@ -92,7 +92,7 @@ const v = release.version;
       {release.sha256 && (
         <>
           <p>For version {v}, the code is: <code class="block break-all rounded-md bg-surface p-xs text-text">{release.sha256}</code></p>
-          <CopyHash client:visible value={release.sha256} />
+          <CopyHash value={release.sha256} />
         </>
       )}
     </div>

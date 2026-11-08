@@ -2,7 +2,6 @@
 // Content comes from ../site_src (site.yaml, pages.yaml, data/*.yaml, static/) and
 // ../brokers/registry.sample.yaml at build time: one source of truth with the v2 site.
 import { defineConfig } from "astro/config";
-import react from "@astrojs/react";
 import tailwindcss from "@tailwindcss/vite";
 import { fileURLToPath } from "node:url";
 import { readFileSync } from "node:fs";
@@ -32,7 +31,6 @@ export default defineConfig({
   },
   compressHTML: true,
   devToolbar: { enabled: false },
-  integrations: [react()],
   security: {
     // Astro writes a <meta http-equiv="Content-Security-Policy"> into every page and hashes
     // its own inline island bootstrap script (pages with islands only). No 'unsafe-inline'.

@@ -17,14 +17,10 @@
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview"
   },
   "dependencies": {
-    "@astrojs/react": "7.1.4",
-    "@radix-ui/react-slot": "1.5.0",
     "@tailwindcss/vite": "4.3.5",
     "astro": "7.4.7",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
-    "react": "19.3.1",
-    "react-dom": "19.3.1",
     "tailwind-merge": "3.7.0",
     "tailwindcss": "4.3.5",
     "yaml": "2.9.1"
