@@ -109,9 +109,9 @@ case "$cmd" in
     role="$(agent_of "$f")"; [ -f "$ROOT/.github/agents/$role.agent.md" ] || { echo "no agent profile for '$role'" >&2; exit 2; }
     [ -e "$wt" ] && { echo "$wt exists: use checkin" >&2; exit 2; }
     need_cli; git -C "$ROOT" worktree add -q -b "copilot/$(echo "$wo" | tr 'A-Z' 'a-z')" "$wt" main
-    copilot -C "$wt" --agent "$role" "${SAFE[@]}" --allow-all-tools -p "You are $(name_of "$role") in BUILDER mode for work
+    copilot -C "$wt" --agent "$role" "${SAFE[@]}" --add-dir "$ROOT/.venv" --allow-all-tools -p "You are $(name_of "$role") in BUILDER mode for work
 order $wo, working LOCALLY in this folder (no git: the owner commits). Change ONLY the allowed paths. Tests:
-PYTHONPATH=src $ROOT/.venv/bin/pytest -q <tests> and $ROOT/.venv/bin/ruff check <files>. End by writing VENDOR_STATUS.md
+PYTHONPATH=src $ROOT/.venv/bin/pytest -q <tests> and $ROOT/.venv/bin/ruff check <files>. End by WRITING THE FILE VENDOR_STATUS.md in this folder (not only in your reply)
 (Done / Next / Questions for the owner / How to test).
 
 $(cat "$f")"
@@ -119,7 +119,7 @@ $(cat "$f")"
   checkin)
     wo_check "${1:-}"; [ $# -ge 2 ] || { echo 'usage: checkin WO-NNN "notes"' >&2; exit 2; }
     wo="$1"; f="$(wo_file "$wo")"; wt="$(wt_of "$wo")"; role="$(agent_of "$f")"; need_cli
-    copilot -C "$wt" --agent "$role" "${SAFE[@]}" --allow-all-tools -p "Owner check-in for $wo from Morgan Reyes:
+    copilot -C "$wt" --agent "$role" "${SAFE[@]}" --add-dir "$ROOT/.venv" --allow-all-tools -p "Owner check-in for $wo from Morgan Reyes:
 $2
 
 Continue within the allowed paths only, rerun the tests, and update VENDOR_STATUS.md."
