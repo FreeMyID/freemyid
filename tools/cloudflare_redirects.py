@@ -13,7 +13,11 @@ Token: read from ~/.config/freemyid/cf_token (chmod 600), never printed.
 Needs token permission: Zone > Single Redirect (a.k.a. "Zone Rulesets": Edit) on freemyid.org, plus Zone: Read.
 Rollback by hand: Cloudflare dashboard > freemyid.org > Rules > Redirect Rules > delete the three "Free My ID get/*" rules.
 """
-import json, os, sys, urllib.request, urllib.error
+import json
+import os
+import sys
+import urllib.error
+import urllib.request
 
 ZONE = "freemyid.org"
 PHASE = "http_request_dynamic_redirect"
@@ -44,7 +48,7 @@ def api(method, path, body=None):
     except urllib.error.HTTPError as e:
         try:
             return json.load(e)
-        except Exception:
+        except (ValueError, OSError):
             return {"success": False, "errors": [{"message": f"HTTP {e.code}"}]}
 
 

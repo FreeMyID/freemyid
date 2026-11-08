@@ -1,6 +1,8 @@
 # Free My ID: Cloudflare zone hardening applied 2026-11-07 (idempotent-ish; re-running re-adds CAA records).
 # Needs tools/cf.py-style helper with token from ~/.config/freemyid/cf_token. Kept for reference.
-from cf import api, Z
+from cf import Z, api
+
+
 def show(label, r): print(label, r.get("success"), [e.get("message") for e in r.get("errors", [])])
 # 1) proxy the web records (A/AAAA apex + www); mail/verification records untouched
 for x in api("GET", f"/zones/{Z}/dns_records?per_page=100")["result"]:
