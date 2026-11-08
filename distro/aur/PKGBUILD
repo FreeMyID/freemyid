@@ -1,0 +1,48 @@
+# Maintainer: Free My ID <https://github.com/FreeMyID/freemyid/issues>
+# Version is taken from pyproject.toml ([project] version).
+pkgname=python-freemyid
+_name=freemyid
+pkgver=0.2.0
+pkgrel=1
+pkgdesc='Local-first personal data broker opt-out tool with scheduled re-checks'
+arch=('any')
+url='https://freemyid.org'
+license=('AGPL-3.0-or-later')
+depends=(
+  'python>=3.11'
+  'python-pydantic'
+  'python-yaml'
+  'typer'
+  'python-rich'
+  'python-jinja'
+  'python-keyring'
+  'python-cryptography'
+  'python-rapidfuzz'
+  'python-playwright'
+  'python-fastapi'
+  'uvicorn'
+  'python-multipart'
+  'python-httpx'
+  'python-platformdirs'
+  'python-desktop-notifier'
+  'python-jsonschema'
+)
+makedepends=(
+  'python-build'
+  'python-installer'
+  'python-hatchling'
+)
+source=("https://files.pythonhosted.org/packages/source/${_name::1}/${_name}/${_name}-${pkgver}.tar.gz")
+# FIXME: placeholder, release tooling replaces this with the real sdist checksum.
+sha256sums=('SKIP')
+
+build() {
+  cd "${_name}-${pkgver}"
+  python -m build --wheel --no-isolation
+}
+
+package() {
+  cd "${_name}-${pkgver}"
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -Dm644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname/"
+}
