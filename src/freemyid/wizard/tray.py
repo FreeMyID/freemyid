@@ -76,8 +76,8 @@ class CheckNow:
 
 def available() -> bool:
     try:
-        import PIL  # noqa: F401  # type: ignore[import-not-found,import-untyped,unused-ignore]
-        import pystray  # noqa: F401  # type: ignore[import-not-found,import-untyped,unused-ignore]
+        import PIL  # type: ignore[import-not-found,import-untyped,unused-ignore]  # noqa: F401
+        import pystray  # type: ignore[import-not-found,import-untyped,unused-ignore]  # noqa: F401
     except Exception:  # noqa: BLE001  ImportError, or no display backend on import
         return False
     return True
