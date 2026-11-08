@@ -635,3 +635,60 @@ ticks protect.py has already written, and the newest tick wins. Until protect.py
 CLI ticks show in the dashboard (it reads them from its recent window), but dashboard ticks
 age out as described. If the profile page lists events by broker, skip `_checklist` the
 same way `_consent` evidence is skipped.
+
+## 2026-11-07 SEC-93d, too_slow, search-engine guided step (Theo Park)
+- bc058b3 SEC-93d. `http_fetcher` sends `Accept-Encoding: gzip, deflate`, reads `iter_raw()`
+  and decodes in `_decoded()` with zlib `max_length` capped at MAX_BYTES+1 per call, so a
+  gzip/deflate bomb stops at 2 MB (tested: a ~100 KB bomb that inflates to ~100 MB, peak
+  memory under 12 MB). Raw deflate is accepted. Other encodings (br, zstd) and corrupt
+  streams are `http_error`. The body is a bytearray. New reason `too_slow` ("The site took
+  too long to answer.") for the 30 s deadline and httpx timeouts.
+  tests/test_qa_v03_review.py::test_sec92_fetch_has_a_total_deadline now expects `too_slow`.
+- bd6fb4d `engine/search_engines.py`: a guided Google/Bing step on the checklist mechanism.
+  It never queries a search engine. See docs/EXPOSURE.md "Search engines".
+
+### CHANGE REQUEST (broker-researcher, Priya): Bing entry in brokers/checklists.yaml
+Add it after `google_results_about_you`. Until it exists, only the Google step shows. I could
+not open Microsoft's pages from here (no network for research), so the public text below
+stays generic, it is `verification: partial`, and both URLs must be opened and confirmed
+before upgrading. If the form needs a Microsoft account, add that to need_on_hand.
+```yaml
+  - id: bing_content_removal
+    title: "Ask Bing to drop old copies of pages that were removed"
+    why: "After a people-search site removes your page, Bing can keep showing the old page or its preview for a while. This form asks Bing to check the page again."
+    url: https://www.bing.com/webmaster/tools/contentremovalform
+    cost: "Free."
+    time_needed: "A few minutes per page."
+    need_on_hand: ["The web address of the page that was removed (copy it from the Bing result)"]
+    steps:
+      - "First make sure the people-search site has removed your page. Open the page: it should be gone or no longer show you."
+      - "Open the Bing web address above."
+      - "Paste the web address of the removed page and send the form."
+      - "Come back here and tick 'I did this'."
+    how_to_undo: "Nothing to undo. Bing only refreshes its copy of the page."
+    tips:
+      - "This works only after the site has removed or changed the page. Ask the site first."
+      - "For other personal-information problems, Microsoft has a 'Report a Concern to Bing' page: https://www.microsoft.com/en-us/concern/bing"
+    source_urls: [https://www.bing.com/webmaster/tools/contentremovalform, https://www.microsoft.com/en-us/concern/bing]
+    date_checked: 2026-11-07
+    verification: partial
+    notes: "Drafted by automation-engineer without opening the pages. Confirm the form URL, whether sign-in is needed, and the exact field names before marking official_page. The Google entry's URL (goo.gle short link) is also on the allowed host list; myactivity.google.com/results-about-you is accepted too."
+```
+The step's allowed hosts (`search_engines.STEPS`): Google `goo.gle`, `myactivity.google.com`,
+`support.google.com`; Bing `www.bing.com`, `bing.com`, `www.microsoft.com`. A URL elsewhere is
+never shown or opened, so tell me if an official URL moves.
+
+### CHANGE REQUEST (wizard-packager, Nina): Protect page and Today card
+On /protect?p=<id>, show `search_engines.guided_steps(store, pid)` as a "Google and Bing"
+group at the top, with `INTRO`, each step's `why_now`, `STATUS_TEXT[status]` and the date
+(opened_at / done_at). "Open the page for me" should POST to a CSRF-protected route that
+calls `open_step(store, pid, id)` (it opens the system browser and records the time), with
+the plain link as a fallback. "I did this" = `mark_done`. On the Today card,
+`pending(steps)` > 0 could add "Google and Bing: N steps to do" for that person (per person,
+SEC-95).
+
+### CHANGE REQUEST (orchestrator, Morgan): CLI
+`freemyid search-engines [-p PROFILE] [--json] [open ID | done ID | undo ID]` backed by
+`guided_steps` / `doc` (schema `search_engines/1`) / `open_step` / `mark_done`. Also, at the
+end of `freemyid exposure` text output: "Google and Bing: N steps to do. Run freemyid
+search-engines." Add search_engines/1 to docs/CLI.md.
