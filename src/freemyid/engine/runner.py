@@ -458,6 +458,7 @@ class Runner:
                 self.store.save_status(st)
             return st
         st = st.model_copy(update={"tier": tier})
+        st = self._manual_to_email(profile, broker, st, tier)
         ctx = self._ctx(profile, broker)
 
         # 3. scan (or blind)
@@ -493,6 +494,25 @@ class Runner:
             broker, st.state, self.now, weekly=profile.schedule.weekly_recheck)})
         self.store.save_status(st)
         return st
+
+    def _manual_to_email(self, profile: Profile, broker: Broker, st: Any, tier: Tier) -> Any:
+        """SEC-117: a mailbox was added after a "send it yourself" opt-out letter was made.
+        If the person hasn't sent it yet (nothing submitted), retire that to-do and put the
+        site back to FOUND, so this run queues the real email for approval (queue_email
+        then cancels the old DRAFT copy). Only the plain opt-out letter to-do; any other
+        open human to-do for the site keeps it waiting."""
+        if tier != Tier.EMAIL or st.state != S.NEEDS_HUMAN or st.last_submitted_at:
+            return st
+        tok = f"manual_email:{broker.id}"
+        mine = [t for t in self.store.list_todos(profile.id)
+                if t.broker_id == broker.id and t.kind != TodoKind.REVIEW_MATCH]
+        manual = [t for t in mine if t.resume_token == tok]
+        if not manual or len(manual) != len(mine):
+            return st
+        for t in manual:
+            self.store.complete_todo(t.id)
+        new = self._set(profile, st, S.FOUND, "manual_letter_superseded")
+        return new.model_copy(update={"needs_human_reason": None})
 
     def _ctx(self, profile: Profile, broker: Broker, **scratch: Any) -> RunContext:
         from ..netpolicy import NetPolicy

@@ -6,13 +6,10 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-import pytest
-
 from freemyid.models import RequestStatus
 from tests.test_proof_vault import MB, T0, B, _manual_todo, _no_mailbox_person, _run_once
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-117: a manual-letter DRAFT blocks the real email queue")
 def test_sec117_adding_a_mailbox_later_queues_the_email(store):
     p = _no_mailbox_person(store)
     _run_once(store, p)

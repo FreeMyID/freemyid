@@ -210,7 +210,7 @@ def record_manual_letter(store, todo: Todo, listings: list[Listing], *,
         return todo
     f = todo.copy_fields or {}
     to, subject, body = f.get("To", ""), f.get("Subject", ""), f.get("Letter", "")
-    req = _open_request(store, todo.profile_id, todo.broker_id, kind, dry_run)
+    req = _open_manual(store, todo.profile_id, todo.broker_id, kind, dry_run)
     if req is None:
         req = Request(profile_id=todo.profile_id, broker_id=todo.broker_id, kind=kind,
                       method=Method.EMAIL, listing_ids=[li.id for li in listings],
@@ -249,10 +249,24 @@ def _save_blob(store, profile_id: str, broker_id: str, kind: EvidenceKind, data:
 
 def _open_request(store, profile_id: str, broker_id: str, kind: RequestKind,
                   dry_run: bool) -> Request | None:
+    """The open email request of this kind to reuse: QUEUED_FOR_APPROVAL, or a dry-run
+    DRAFT. SEC-117: a non-dry-run DRAFT is a "send it yourself" letter
+    (record_manual_letter), never something queue_email may reuse, or the email would never
+    reach the approval screen."""
     for r in store.list_requests(profile_id, broker_id):
         if r.kind != kind or r.dry_run != dry_run:
             continue
-        if r.status in (RequestStatus.QUEUED_FOR_APPROVAL, RequestStatus.DRAFT):
+        if r.status == RequestStatus.QUEUED_FOR_APPROVAL or \
+                (r.status == RequestStatus.DRAFT and r.dry_run):
+            return r
+    return None
+
+
+def _open_manual(store, profile_id: str, broker_id: str, kind: RequestKind,
+                 dry_run: bool) -> Request | None:
+    """The open "send it yourself" DRAFT of this kind (record_manual_letter reuses it)."""
+    for r in store.list_requests(profile_id, broker_id):
+        if r.kind == kind and r.dry_run == dry_run and r.status == RequestStatus.DRAFT:
             return r
     return None
 
@@ -344,6 +358,12 @@ def queue_email(store, profile: Profile, broker: Broker, listings: list[Listing]
                   original_request_id=original.id if original else None,
                   status=RequestStatus.DRAFT if dry_run else RequestStatus.QUEUED_FOR_APPROVAL)
     store.save_request(req)
+    if not dry_run and (manual := _open_manual(store, profile.id, broker.id, kind, False)):
+        # SEC-117: a mailbox now exists, so this email replaces the "send it yourself" copy
+        store.save_request(manual.model_copy(update={"status": RequestStatus.CANCELLED}))
+        store.log(Event(profile_id=profile.id, broker_id=broker.id, actor=Actor.ENGINE,
+                        action="manual_letter_replaced",
+                        detail={"request_id": manual.id, "by": req.id}))
     _save_blob(store, profile.id, broker.id, EvidenceKind.LETTER,
                _letter_blob(broker.opt_out_email, subject, body), req.id,
                f"{kind.value} letter", "txt")

@@ -243,3 +243,33 @@ def test_dry_run_request_is_never_marked_sent(store):
     store.save_status(BrokerStatus(profile_id=p.id, broker_id=B.id, state=ListingState.FOUND))
     handoff.mark_manual_submitted(store, p.id, B.id, r.id)
     assert store.get_request(r.id).status == RequestStatus.DRAFT
+
+
+def test_sec117_mailbox_added_later_replaces_the_manual_letter(store):
+    from freemyid.models import TodoKind
+    p = _no_mailbox_person(store)
+    _run_once(store, p)
+    draft_id = _manual_todo(store, p).request_id
+    p = p.model_copy(update={"mailbox": MB})
+    store.save_profile(p)
+    _run_once(store, p, T0 + timedelta(days=8))
+    assert store.get_request(draft_id).status == RequestStatus.CANCELLED
+    live = [r for r in store.list_requests(p.id, B.id)
+            if r.status == RequestStatus.QUEUED_FOR_APPROVAL]
+    assert len(live) == 1 and live[0].id != draft_id
+    assert not [t for t in store.list_todos(p.id) if t.kind == TodoKind.SEND_EMAIL_MANUALLY]
+    acts = [e.action for e in store.events(p.id, B.id)]
+    assert "manual_letter_superseded" in acts and "manual_letter_replaced" in acts
+
+
+def test_sec117_already_sent_manual_letter_is_left_alone(store):
+    from freemyid.engine import handoff
+    p = _no_mailbox_person(store)
+    _run_once(store, p)
+    todo = _manual_todo(store, p)
+    handoff.mark_resolved(store, todo)                     # the person sent it themselves
+    p = p.model_copy(update={"mailbox": MB})
+    store.save_profile(p)
+    _run_once(store, p, T0 + timedelta(days=8))
+    assert store.get_request(todo.request_id).status == RequestStatus.SENT
+    assert not store.list_requests(p.id, B.id, status=RequestStatus.QUEUED_FOR_APPROVAL)
