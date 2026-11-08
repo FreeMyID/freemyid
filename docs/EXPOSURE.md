@@ -144,6 +144,27 @@ If the weights change, change `score_entries` and this table together.
 so a gzip/deflate bomb stops early (SEC-93d). `too_slow`: the 30-second total budget for
 one fetch ran out, or a read timed out (SEC-92). The plain-English text for each is in `exposure_models.HAND_REASONS`.
 
+## Search engines (Google, Bing): guided, never scraped
+
+Google and Bing are never searched by Free My ID. Their terms forbid automated queries, and
+they would be blocked anyway. `engine/search_engines.py` is a guided step built on the
+identity-safety checklists (`brokers/checklists.yaml`, read with `checklists.load`):
+
+- `STEPS`: `google_results_about_you` (Google "Results about you") and
+  `bing_content_removal` (Bing's content removal form), in that order. An entry missing from
+  the checklist file is skipped. An entry whose URL is not https on that engine's own hosts
+  is never shown or opened.
+- `open_step(store, pid, id)` opens the official page in the user's browser and logs a USER
+  Event `search_step_opened`. `mark_done` is the normal checklist tick
+  (`checklist_state.set_done`), so the Protect page and `freemyid checklist` show it too.
+  Both events use broker_id `_checklist` and carry only {"checklist": id}.
+- Status: `not_started`, `opened`, `done`, or `do_again`. `do_again` applies to Bing only,
+  when a broker status turned `removed` after the last tick, because Bing can keep showing
+  the old copy of a removed page. Google's tool keeps watching by itself.
+- `doc(...)` returns the `search_engines/1` JSON document, with the plain-words `INTRO`.
+
+These steps are not part of the exposure score: nothing is measured, so nothing is scored.
+
 ## Exit codes
 
 The same as for `scan` (docs/CLI.md):
