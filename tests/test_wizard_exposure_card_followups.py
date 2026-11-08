@@ -7,6 +7,7 @@ from html import escape
 import pytest
 
 from freemyid.exposure_models import ExposureResult, ScoreLine
+from freemyid.models import Profile
 from freemyid.wizard.views import exposure_card
 from tests.test_wizard_exposure_card import PROFILE, STORE, fake_result, install_engine
 
@@ -83,3 +84,19 @@ def test_unavailable_result_stays_distinct_from_zero_found(
     assert "No listings found on the sites checked." in zero
     assert "not available right now" not in zero
     assert "<b>37</b> out of 100" in zero
+
+
+def test_card_names_the_person_escaped(monkeypatch) -> None:
+    install_engine(monkeypatch, lambda s, p: fake_result())
+    p = Profile.model_construct(id="b" * 32, label="Jane <b>X</b>")
+    html = exposure_card(STORE, p)
+    assert "Results for Jane &lt;b&gt;X&lt;/b&gt;" in html
+    assert "<b>X</b>" not in html
+
+
+def test_each_person_gets_their_own_labelled_card(monkeypatch) -> None:
+    install_engine(monkeypatch, lambda s, p: fake_result())
+    jane = Profile.model_construct(id="c" * 32, label="Jane")
+    both = exposure_card(STORE, PROFILE) + exposure_card(STORE, jane)
+    assert both.count("Results for ") == 2
+    assert "Results for Pat Testperson" in both and "Results for Jane" in both

@@ -233,7 +233,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
             running=bool(app.state.running), fill=True,
             filling=bool(app.state.fill["running"]),
             sent=sum(1 for r in store.list_requests(status=RequestStatus.SENT) if not r.dry_run),
-            exposure=views.exposure_card(store, profiles[0]),
+            exposure="".join(views.exposure_card(store, pr) for pr in profiles),
             protect=protect.counts(store, profiles[0].id)))
 
     @app.get("/profile/{pid}")

@@ -139,8 +139,6 @@ def test_http_fetcher_sends_no_cookie_on_first_hop():
     assert seen == [None]
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-91: the client's cookie jar replays a redirect "
-                   "hop's Set-Cookie on the next hop ('no cookies' is the contract)")
 def test_sec91_no_cookie_replayed_across_redirect_hops():
     seen: list[str | None] = []
 

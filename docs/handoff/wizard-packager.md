@@ -101,3 +101,8 @@ Installer artifact is FreeMyIDSetup-0.1.1 (pyproject still says 0.1.1, so this i
 - Nav is now Today / Protect yourself / Emails / Settings; "Add a person" moved to the Today "More" card.
 - Tests: `tests/test_wizard_v03.py`. Screenshots (fake data): `brand/screenshots/app-v0.3/` (683x512 = 1024x768 at 150%, dark, 200% zoom, full pages).
 - Not done / ideas: real screen-reader pass (needs NVDA on the VM), keyboard walk of the wizard pages on Windows, PDF of the summary, unrestyled wizard screens only inherit the new CSS (not individually reviewed).
+
+## SEC-93a + v0.1.3 backlog audit (Nina Alvarez)
+- SEC-93a: `views.exposure_card` now starts with "Results for <label>" (escaped) in every state except "Coming soon". Today shows one card per person (`server.py` joins a card per profile instead of only profiles[0]). WO-106 behaviour (5 explanations cap, hidden 0 manual line) untouched. Tests: `tests/test_wizard_exposure_card_followups.py` (escaped label, two people). Protect counts on Today still use profiles[0].
+- v0.1.3 backlog, all already on main in bb2cf2a: uninstall closes the app (`CloseApplications=yes` plus `taskkill /F /T /IM FreeMyID.exe` at usUninstall; no AppMutex), calm Bridge-unreachable copy (`draft.unreachable_message`), honest "password saved" hint (`Draft.saved_password`). Ready page stays on purpose (b7fb97e, bb2cf2a).
+- Needs a Windows VM check: silent uninstall while the app runs leaves no files; Bridge-off message wording on screen.

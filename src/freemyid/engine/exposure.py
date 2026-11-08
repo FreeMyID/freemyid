@@ -127,6 +127,8 @@ def http_fetcher(policy: NetPolicy, fixture_base: str | None = None,
                 if not _on_broker(broker, cur, policy):
                     raise FetchFailed("blocked_by_policy")
                 real = fixture_url(fixture_base, cur) if fixture_base else cur
+                # SEC-91: "no cookies" holds per hop too; a 30x Set-Cookie is never replayed
+                cl.cookies.clear()
                 try:
                     with cl.stream("GET", real, headers=_HEADERS) as r:
                         if r.status_code in (301, 302, 303, 307, 308):
@@ -146,6 +148,7 @@ def http_fetcher(policy: NetPolicy, fixture_base: str | None = None,
                     raise FetchFailed("network") from e
             raise FetchFailed("http_error")       # too many redirects
         finally:
+            cl.cookies.clear()
             if client is None:
                 cl.close()
 

@@ -53,6 +53,8 @@ def exposure_card(store: Store, profile: Profile | None) -> str:
     except ImportError:   # engine module not shipped in this build
         return head + ('<p><b>Coming soon.</b> This version does not include the listing '
                        'check.</p></section>')
+    if profile is not None:
+        head += f'<p><b>Results for {esc(profile.label)}</b></p>'
     try:
         result = latest_exposure(store, profile) if profile else None
     except Exception as e:  # noqa: BLE001  a broken helper must never break the home page
