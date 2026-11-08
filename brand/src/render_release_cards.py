@@ -17,7 +17,7 @@ def card(w, h, sq):
 <div style="display:flex;align-items:center;gap:{u*.03}px">{mark(u*.13)}<div style="font:bold {u*.075}px Georgia,'DejaVu Serif',serif">Free My ID</div></div>
 <div><div style="font:bold {big}px Georgia,'DejaVu Serif',serif;line-height:1.1">Version 0.2 is here</div>
 <div style="font-size:{sub*1.15}px;line-height:1.3;margin-top:{u*.025}px;color:#fff">Now for Windows, Mac and Linux.</div></div>
-<div style="font-size:{sub*.8}px;line-height:1.35;color:#d6e2fa">The Windows app is unchanged. Mac and Linux use the command line, with scheduled runs that need no one at the keyboard.</div>
+<div style="font-size:{sub*.8}px;line-height:1.35;color:#d6e2fa">Windows: the same easy app. Mac and Linux: the command line, with scheduled runs that need no one at the keyboard.</div>
 <div style="font-size:{sub*.9}px;font-weight:bold;color:#fff">freemyid.org &nbsp;·&nbsp; free and open source</div>
 </div></body></html>'''
 sizes = {"release-0.2-x-bluesky-1200x675":(1200,675,False),"release-0.2-square-1080x1080":(1080,1080,True),"release-0.2-github-1280x640":(1280,640,False)}

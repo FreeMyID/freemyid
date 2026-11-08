@@ -10,4 +10,4 @@ Wording check (docs/RELEASE_v0.2.md, docs/ROADMAP.md 3.8): v0.2 = Linux/macOS he
 | `release-0.2-square-1080x1080.png` | 1080x1080 | Mastodon, Facebook |
 | `release-0.2-github-1280x640.png` | 1280x640 | GitHub release / social preview |
 
-Alt text (all three): "Free My ID version 0.2 is here. Now for Windows, Mac and Linux. The Windows app is unchanged. Mac and Linux use the command line, with scheduled runs that need no one at the keyboard. freemyid.org, free and open source."
+Alt text (all three): "Free My ID version 0.2 is here. Now for Windows, Mac and Linux. Windows: the same easy app. Mac and Linux: the command line, with scheduled runs that need no one at the keyboard. freemyid.org, free and open source."
