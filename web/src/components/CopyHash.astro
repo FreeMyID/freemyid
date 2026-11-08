@@ -40,7 +40,9 @@ const { value } = Astro.props;
     }
     button.hidden = false;
     button.addEventListener("click", async () => {
-      button.disabled = true;
+      // aria-disabled (not disabled) so a keyboard user's focus stays on the button while copying.
+      if (button.getAttribute("aria-disabled") === "true") return;
+      button.setAttribute("aria-disabled", "true");
       // Pending stays visible without announcing it on every activation.
       status.textContent = "";
       pending.hidden = false;
@@ -51,7 +53,7 @@ const { value } = Astro.props;
         status.textContent = FAILED;
       } finally {
         pending.hidden = true;
-        button.disabled = false;
+        button.removeAttribute("aria-disabled");
       }
     });
   }

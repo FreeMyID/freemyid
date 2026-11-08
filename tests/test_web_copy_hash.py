@@ -88,7 +88,7 @@ def test_rejection_retry_keyboard_and_pending_success(browser: Browser) -> None:
             page.evaluate("value => { window.outcome = value; }", outcome)
             button.focus()
             button.press(key)
-            expect(button).to_be_disabled()
+            expect(button).to_have_attribute("aria-disabled", "true")
             expect(status).to_have_text("")
             expect(pending).to_be_visible()
             expect(pending).to_have_text("Copying…")
@@ -96,11 +96,58 @@ def test_rejection_retry_keyboard_and_pending_success(browser: Browser) -> None:
             assert pending.evaluate("el => !el.closest('[aria-live], [role=status]')")
             page.evaluate("window.finishCopy()")
             expect(status).to_have_text(message)
-            expect(button).to_be_enabled()
+            expect(button).not_to_have_attribute("aria-disabled", "true")
             expect(pending).to_be_hidden()
             assert status.evaluate("el => el === window.originalStatus")
         assert page.evaluate("window.calls") == [code, code, code]
         expect(page.locator("#checksum code.block")).to_have_text(code)
+    finally:
+        page.context.close()
+
+
+PENDING_CLIPBOARD = """
+    window.calls = [];
+    Object.defineProperty(navigator, 'clipboard', {value: {
+        writeText(value) {
+            window.calls.push(value);
+            return new Promise(resolve => { window.finishCopy = resolve; });
+        }
+    }});
+"""
+
+
+def test_focus_stays_on_button_while_copying(browser: Browser) -> None:
+    page = open_checksum(browser, PENDING_CLIPBOARD)
+    try:
+        button = page.get_by_role("button", name="Copy the code", exact=True)
+        status = page.locator("#checksum [role=status]")
+        button.focus()
+        button.press("Enter")
+        expect(button).to_have_attribute("aria-disabled", "true")
+        expect(button).to_be_focused()
+        page.evaluate("window.finishCopy()")
+        expect(status).to_have_text("Copied")
+        expect(button).to_be_focused()
+        assert page.evaluate("document.activeElement.tagName") == "BUTTON"
+    finally:
+        page.context.close()
+
+
+def test_double_activation_copies_once(browser: Browser) -> None:
+    page = open_checksum(browser, PENDING_CLIPBOARD)
+    try:
+        button = page.get_by_role("button", name="Copy the code", exact=True)
+        status = page.locator("#checksum [role=status]")
+        button.focus()
+        button.press("Enter")
+        button.press("Space")
+        button.press("Enter")
+        assert page.evaluate("window.calls.length") == 1
+        page.evaluate("window.finishCopy()")
+        expect(status).to_have_text("Copied")
+        assert page.evaluate("window.calls.length") == 1
+        button.press("Enter")
+        assert page.evaluate("window.calls.length") == 2
     finally:
         page.context.close()
 
