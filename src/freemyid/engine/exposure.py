@@ -437,20 +437,42 @@ def _fill(entry: ExposureEntry, listings: list[Listing]) -> ExposureEntry:
     return entry
 
 
-def scan_brokers(registry: Registry) -> list[Broker]:
-    """Enabled brokers with a search URL pattern, highest priority first."""
-    return sorted((b for b in registry.brokers if b.enabled and b.search_url_pattern),
+def scan_brokers(registry: Registry, profile: Profile | None = None) -> list[Broker]:
+    """Enabled brokers with a search URL pattern, highest priority first. For a phone/email-
+    only person (BL-IN-08): the brokers with that scope's reverse-lookup pattern."""
+    from .tiers import lookup_pattern
+
+    def has(b: Broker) -> bool:
+        if profile is not None and profile.value_only:
+            return bool(lookup_pattern(b, profile))
+        return bool(b.search_url_pattern)
+    return sorted((b for b in registry.brokers if b.enabled and has(b)),
                   key=lambda b: (-b.priority, b.id))
 
 
+def _lookup(profile: Profile) -> str | None:
+    """The lookup kind ("phone" or "email") for a value-only person, else None."""
+    return str(profile.removal_scope) if profile.value_only else None
+
+
+def _main_urls(broker: Broker, profile: Profile) -> list[str]:
+    """The search page(s) to read: the name search, or a value-only person's lookups."""
+    from ..submitters.web_form import search_url, value_search_urls
+    if profile.value_only:
+        return value_search_urls(broker, profile)
+    u = search_url(broker, profile)
+    return [u] if u else []
+
+
 def _hand_check_url(broker: Broker, profile: Profile) -> str:
-    from ..submitters.web_form import search_url
-    return search_url(broker, profile) or str(broker.search_page_url or broker.url)
+    urls = _main_urls(broker, profile)
+    return urls[0] if urls else str(broker.search_page_url or broker.url)
 
 
 def _read(profile: Profile, broker: Broker, url: str, fetch: Fetcher,
           now: datetime) -> list[Listing]:
-    """Fetch one search page and score what it shows. Raises FetchFailed."""
+    """Fetch one search page and score what it shows (a value-only person's lookup page is
+    scored by value, BL-IN-08). Raises FetchFailed."""
     from .browser import detect_challenge
     page = fetch(broker, url)
     if detect_challenge(page.html, status=page.status):
@@ -468,6 +490,9 @@ def _read(profile: Profile, broker: Broker, url: str, fetch: Fetcher,
         raise FetchFailed("no_parser") from e
     if not cands and spec.no_results_text:
         raise FetchFailed("page_unrecognized")
+    kind = _lookup(profile)
+    if kind:
+        return matcher.score_lookup(profile, broker.id, cands, kind, now.date())
     return matcher.score_all(profile, broker.id, cands, now.date())
 
 
@@ -487,7 +512,8 @@ def _read_extra(profile: Profile, broker: Broker, url: str, fetch: Fetcher, now:
 def _check_one(store: Store, profile: Profile, broker: Broker, url: str, fetch: Fetcher,
                now: datetime, old_url: str | None = None,
                before_old: Callable[[], None] | None = None,
-               name_url: str | None = None) -> ExposureEntry:
+               name_url: str | None = None,
+               value_urls: list[str] | None = None) -> ExposureEntry:
     """Read the search page (plus, if given, one old-address page `old_url` and one
     previous-name page `name_url`), then save the listings with ONE merge so an extra page
     never marks the main page's listings gone. A failed extra page is ignored: the main
@@ -498,7 +524,9 @@ def _check_one(store: Store, profile: Profile, broker: Broker, url: str, fetch: 
     found = _read(profile, broker, url, fetch, now)
     seen = {li.url for li in found}
     unread = False
-    for what, extra in (("old-address", old_url), ("previous-name", name_url)):
+    extras = [("old-address", old_url), ("previous-name", name_url),
+              *(("other-value", u) for u in value_urls or [])]
+    for what, extra in extras:
         if not extra:
             continue
         if before_old is not None:
@@ -509,7 +537,7 @@ def _check_one(store: Store, profile: Profile, broker: Broker, url: str, fetch: 
             continue
         if what == "old-address":
             entry.old_address_checked = True
-        else:
+        elif what == "previous-name":
             entry.previous_name_checked = True
         for li in more:              # the same listing on two pages counts once
             if li.url not in seen:
@@ -620,7 +648,7 @@ def scan_exposure(store: Store, profile_id: str, *, registry: Registry | None = 
     entries: list[ExposureEntry] = []
     pace = {"fetched": False}
     try:
-        for broker in scan_brokers(registry):
+        for broker in scan_brokers(registry, profile):
             if broker_ids and broker.id not in broker_ids:
                 continue
             entries.append(_scan_broker(store, profile, broker, now, offline,
@@ -643,8 +671,8 @@ def _scan_broker(store: Store, profile: Profile, broker: Broker, now: datetime, 
                  sleep: Callable[[float], None], pace: dict[str, bool],
                  old_addresses: bool = False,
                  previous_names: bool = False) -> ExposureEntry:
-    from ..submitters.web_form import search_url
-    url = search_url(broker, profile)
+    urls = _main_urls(broker, profile)
+    url = urls[0] if urls else None
 
     def hand(reason: str) -> ExposureEntry:
         e = ExposureEntry(broker_id=broker.id, broker_name=broker.name,
@@ -686,7 +714,8 @@ def _scan_broker(store: Store, profile: Profile, broker: Broker, now: datetime, 
     old_url = old_address_url(broker, profile) if old_addresses else None
     name_url = previous_name_url(broker, profile) if previous_names else None
     try:
-        entry = _check_one(store, profile, broker, url, fetcher, now, old_url, gap, name_url)
+        entry = _check_one(store, profile, broker, url, fetcher, now, old_url, gap, name_url,
+                           value_urls=urls[1:])
     except FetchFailed as e:
         entry = hand(e.reason)
     except RecursionError:
