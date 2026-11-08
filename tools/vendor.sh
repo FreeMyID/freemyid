@@ -85,7 +85,8 @@ scope_report() {   # $1 WO id
   echo "== changed files"; git -C "$ROOT" diff --stat "main...$branch" | tail -20
   while read -r f; do
     [ "$f" = "VENDOR_STATUS.md" ] && continue
-    ok=0; for a in "${allow[@]}"; do [[ "$f" == "$a"* ]] && ok=1; done
+    # SEC-110: an allowed file matches exactly; only an allowed entry ending in '/' covers what is under it
+    ok=0; for a in "${allow[@]}"; do if [[ "$a" == */ ]]; then [[ "$f" == "$a"* ]] && ok=1; else [[ "$f" == "$a" ]] && ok=1; fi; done
     for d in "${DENY_PREFIXES[@]}"; do [[ "$f" == "$d"* ]] && { echo "IN-HOUSE ONLY: $f"; bad=1; ok=1; }; done
     [ $ok = 1 ] || { echo "OUT OF SCOPE: $f"; bad=1; }
   done < <(git -C "$ROOT" log --format= --no-renames --name-only --author='\[freemyid-\(codex\|vendor\)\]' "main..$branch" | sort -u | grep -v '^$')
