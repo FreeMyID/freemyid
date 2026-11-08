@@ -225,3 +225,54 @@ def test_lookup_hit_review_todo_asks_about_the_number(store):
     t = next(t for t in store.list_todos(p.id) if t.kind == TodoKind.REVIEW_MATCH)
     assert t.title == "Is this T's phone number? (Dev Phone)"
     assert PHONE not in t.title and PHONE not in t.body
+
+
+# ------------------------------------------------------------------ Assisted card
+
+
+def _web_broker(**over):
+    data = {"phone_search_url_pattern": "https://devphone.example/phone/{phone_digits}",
+            "method": "web_form", "opt_out_email": None,
+            "opt_out_url": "https://devphone.example/optout"}
+    data.update(over)
+    return broker(**data)
+
+
+def test_value_copy_fields_hold_only_the_value_links_and_mailbox():
+    from freemyid.submitters import base
+    p = phone_person(mailbox=MB, name=make_profile().name)
+    out = base.copy_fields(p, _web_broker(), [_listing(p)])
+    assert out == {"Phone number": PHONE, "Listing link": "https://devphone.example/p/1",
+                   "Email for removals": "removals@example.org"}
+    assert base.copy_fields(phone_person(permissions=Permissions()), _web_broker(), []) == {}
+    em = base.copy_fields(email_person(phones=[PHONE]), _web_broker(), [])
+    assert em == {"Email address": EMAIL}
+
+
+def test_value_only_web_form_site_gets_the_value_card():
+    from freemyid.models import TodoKind
+    from freemyid.submitters import assisted
+    p = phone_person()
+    t = assisted.todo_for(p, _web_broker(), [_listing(p)], None)
+    assert t.kind is TodoKind.ASSISTED_OPT_OUT
+    assert t.title == "Remove T's phone number from Dev Phone"
+    assert "search for the phone number" in t.body and "not for a name" in t.body
+    assert "Full name" not in t.copy_fields and t.copy_fields["Phone number"] == PHONE
+
+
+def test_value_only_never_gets_a_postal_letter_or_phone_script():
+    from freemyid.models import TodoKind
+    from freemyid.submitters import assisted
+    p = phone_person()
+    post = _web_broker(method="postal", postal={"recipient": "Dev Phone Privacy",
+                                                "lines": ["1 Main St", "Springfield IL"]})
+    assert assisted.todo_for(p, post, [], None).kind is TodoKind.ASSISTED_OPT_OUT
+
+
+def test_value_only_email_site_gets_the_value_letter_to_send():
+    from freemyid.models import TodoKind
+    from freemyid.submitters import assisted
+    p = phone_person(name=make_profile().name)
+    t = assisted.todo_for(p, broker(), [], None)
+    assert t.kind is TodoKind.SEND_EMAIL_MANUALLY
+    assert PHONE in t.copy_fields["Letter"] and "Testperson" not in t.copy_fields["Letter"]

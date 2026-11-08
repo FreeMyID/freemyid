@@ -85,9 +85,14 @@ def assisted_todo(profile: Profile, broker: Broker, listings: list[Listing], *,
     title = f"Remove {profile.label} from {broker.name}"
     if again:
         title = f"Ask {broker.name} again to remove {profile.label}"
+    body = _steps(broker, reason, has_mailbox=profile.mailbox is not None)
+    if profile.value_only:
+        what = "phone number" if profile.removal_scope == "phone" else "email address"
+        title = f"Remove {profile.label}'s {what} from {broker.name}"
+        body = (f"This removal is for a {what} only. Where the site asks you to search, "
+                f"search for the {what} (use the Copy button), not for a name.\n" + body)
     return Todo(profile_id=profile.id, broker_id=broker.id, kind=TodoKind.ASSISTED_OPT_OUT,
-                title=title,
-                body=_steps(broker, reason, has_mailbox=profile.mailbox is not None), links=[opt_out_link(broker)],
+                title=title, body=body, links=[opt_out_link(broker)],
                 copy_fields=base.copy_fields(profile, broker, listings),
                 resume_token=f"assisted:{broker.id}")
 
@@ -146,6 +151,14 @@ def todo_for(profile: Profile, broker: Broker, listings: list[Listing],
     """The right human to-do for a broker handled in the Assisted tier."""
     from ..engine.outbox import compose
     from ..engine.tiers import has_email_route
+    if profile.value_only:
+        # BL-IN-08: the value letter if the site takes email, else the card. Never the
+        # postal letter or phone script, which are built from the name and address.
+        if has_email_route(broker):
+            subject, body = compose(profile, broker, base.confirmed(listings) or listings,
+                                    None)
+            return manual_email_todo(profile, broker, subject, body)
+        return assisted_todo(profile, broker, listings, reason=reason, again=again)
     if broker.method == Method.EMAIL and has_email_route(broker):
         subject, body = compose(profile, broker, base.confirmed(listings) or listings,
                                 state_law)

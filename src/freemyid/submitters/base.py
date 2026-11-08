@@ -57,8 +57,28 @@ def _current(profile: Profile):
     return next((a for a in profile.addresses if a.current), profile.addresses[0])
 
 
+def value_copy_fields(profile: Profile, listings: list[Listing]) -> dict[str, str]:
+    """BL-IN-08 Assisted card for a phone/email-only removal: the value(s) to remove (only
+    with the matching explicit permission), the listing links and the removal mailbox.
+    Never a name or an address."""
+    out: dict[str, str] = {}
+    if profile.removal_scope == "phone" and profile.permissions.allow_phone_disclosure:
+        for i, ph in enumerate(profile.phones[:3]):
+            out["Phone number" if i == 0 else f"Phone number {i + 1}"] = ph
+    elif profile.removal_scope == "email" and profile.permissions.allow_email_disclosure:
+        for i, em in enumerate(profile.emails[:3]):
+            out["Email address" if i == 0 else f"Email address {i + 1}"] = em
+    for i, li in enumerate(confirmed(listings) or listings):
+        out["Listing link" if i == 0 else f"Listing link {i + 1}"] = li.url
+    if profile.mailbox:
+        out["Email for removals"] = profile.mailbox.address
+    return out
+
+
 def copy_fields(profile: Profile, broker: Broker, listings: list[Listing]) -> dict[str, str]:
     """Label -> value for the Assisted card's Copy buttons. Minimized (see module doc)."""
+    if profile.value_only:
+        return value_copy_fields(profile, listings)
     allowed = allowed_fields(profile, broker, listings)
     cur = _current(profile)
     out: dict[str, str] = {}
