@@ -12,6 +12,7 @@ KEYS = [
     ("github_token", "GitHub token (FreeMyID-USA, starts with ghp_)"),
     ("bluesky_token", "Bluesky app password (xxxx-xxxx-xxxx-xxxx)"),
     ("mastodon_token", "Mastodon access token"),
+    ("discord_bot_token", "Discord bot token (Developer Portal > your app > Bot > Reset Token; leave blank to skip)"),
 ]
 
 for name, label in KEYS:
