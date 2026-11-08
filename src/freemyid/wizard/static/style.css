@@ -3,6 +3,10 @@
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 html[data-text="large"] { font-size: 125%; }
+/* long unbroken words (site names, ids, addresses) wrap instead of widening the page */
+main h1, main h2, main h3, main p, main li, main td, main th, main a, main .hint, main .note,
+main figcaption, main summary { overflow-wrap: anywhere; }
+main .btn, main button { max-width: 100%; white-space: normal; }
 body { font: 1.25rem/1.55 var(--fmi-font-sans); color: var(--fmi-color-text);
   background: var(--fmi-color-bg-alt); margin: 0; }
 a { color: var(--fmi-color-link); text-underline-offset: .15em; }
