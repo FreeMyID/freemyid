@@ -30,6 +30,9 @@ class Config(BaseModel):
     real_submissions_enabled: bool = False   # flipped only after explicit user approval
     # Exposure scan: also search ONE previous address per broker (docs/EXPOSURE.md). Off.
     exposure_old_addresses: bool = False
+    # Exposure scan: also search ONE previous name (e.g. maiden name) per broker. Off: searching
+    # sends that name to people-search sites, so it is the person's explicit choice (opt-in).
+    exposure_previous_names: bool = False
     # Where the data key and mailbox passwords live (secret_backends). None = auto: OS
     # keychain if usable, else passphrase. Change with `freemyid secrets migrate`.
     secrets_backend: Literal["keyring", "passphrase", "systemd-creds"] | None = None
