@@ -41,6 +41,10 @@ PERSONAL_SIGNALS = frozenset({"age", "phone", "email"})
 #: SEC-103: signals that tell two people of similar age in one household apart.
 CONTACT_SIGNALS = frozenset({"phone", "email"})
 USER_CONFIRMED = "user_confirmed"
+_RANK = {MatchLevel.NO_MATCH: 0, MatchLevel.POSSIBLE: 1, MatchLevel.CONFIRMED: 2}
+#: signals a listing does not keep the values for (Listing has no phones/emails): carried
+#: over from the stored reasons when re-scoring. Both are exact-value checks.
+_CARRIED = ("phone", "email")
 
 _US_STATES = {
     "alabama": "AL", "alaska": "AK", "arizona": "AZ", "arkansas": "AR", "california": "CA",
@@ -186,7 +190,9 @@ def other_persons_name(p: Profile, shown: str | None) -> bool:
     return not any(len(g := nicknames.groups_of(f)) == 1 and groups == g for f in own)
 
 
-def score(profile: Profile, c: Candidate, today: date | None = None) -> MatchResult:
+def score(profile: Profile, c: Candidate, today: date | None = None,
+          carried: list[str] | tuple[str, ...] = ()) -> MatchResult:
+    """`carried`: phone/email signals already established for a stored listing (rescore)."""
     ns = name_score(profile, c.name)
     if ns < NAME_THRESHOLD:
         return MatchResult(MatchLevel.NO_MATCH, round(ns * 0.5, 1), [])
@@ -217,6 +223,7 @@ def score(profile: Profile, c: Candidate, today: date | None = None) -> MatchRes
     pemails = {e.strip().lower() for e in profile.emails}
     if pemails and any(e.strip().lower() in pemails for e in c.emails):
         reasons.append("email")
+    reasons += [x for x in carried if x in _CARRIED and x not in reasons]
 
     n = len(reasons)
     level = MatchLevel.CONFIRMED if n >= 2 else MatchLevel.POSSIBLE if n == 1 else \
@@ -234,6 +241,22 @@ def score(profile: Profile, c: Candidate, today: date | None = None) -> MatchRes
             level = MatchLevel.POSSIBLE
     sc = min(100.0, round(ns * 0.5 + 12.5 * n, 1))
     return MatchResult(level, sc, reasons)
+
+
+def rescore(profile: Profile, li: Listing, today: date | None = None) -> Listing:
+    """SEC-104: re-score a stored listing with the current rules, from its saved fields.
+    Only ever lowers the level (a stored listing never becomes a new send target this way).
+    The person's own answers (user_confirmed / user_rejected) are kept as they are."""
+    if USER_CONFIRMED in li.match_reasons or "user_rejected" in li.match_reasons:
+        return li
+    c = Candidate(url=li.url, name=li.name_shown, age=li.age_shown,
+                  locations=list(li.locations_shown), relatives=list(li.relatives_shown))
+    carried = [r for r in _CARRIED if r in li.match_reasons]
+    r = score(profile, c, today, carried=carried)
+    if _RANK[r.level] >= _RANK[li.match_level]:
+        return li
+    return li.model_copy(update={"match_level": r.level, "match_reasons": r.reasons,
+                                 "match_score": min(li.match_score, r.score)})
 
 
 def shown_fields(c: Candidate) -> list[ProfileField]:

@@ -64,7 +64,7 @@ from ..state import (
 from ..submitters import assisted
 from ..submitters import base as sbase
 from . import handoff as hmod
-from . import plugins, tiers
+from . import matcher, plugins, tiers
 from .mail import ReplyScan
 from .outbox import OutboxError, dev_fixture_base
 
@@ -182,8 +182,31 @@ def keep_unchecked(store: Store, profile: Profile, broker: Broker,
     (old address / previous name) could not be read: a listing seen only on that page is
     unknown now, not gone, so merge_listings must not stamp it `gone_since`."""
     have = {li.url for li in found}
-    return [*found, *(li for li in store.list_listings(profile.id, broker.id)
+    # SEC-104: kept listings are re-scored with the current rules (never raised)
+    return [*found, *(matcher.rescore(profile, li)
+                      for li in store.list_listings(profile.id, broker.id)
                       if li.gone_since is None and li.url not in have)]
+
+
+def rescore_stored(store: Store, profile: Profile, broker: Broker, now: datetime) -> int:
+    """SEC-104: re-score this broker's stored listings with the current matcher, so one saved
+    under older, looser rules is not escalated or re-sent. Only lowers levels; the person's
+    own answers are kept. If that leaves no CONFIRMED listing, the best downgraded one gets
+    an 'Is this you?' to-do. Returns how many listings were lowered."""
+    stored = [li for li in store.list_listings(profile.id, broker.id) if li.gone_since is None]
+    lowered: list[Listing] = []
+    live: list[Listing] = []
+    for li in stored:
+        new = matcher.rescore(profile, li, now.date())
+        if new is not li:
+            store.save_listing(new)
+            lowered.append(new)
+        live.append(new)
+    if lowered:
+        possible = [li for li in lowered if li.match_level == MatchLevel.POSSIBLE]
+        if possible and not any(li.match_level == MatchLevel.CONFIRMED for li in live):
+            review_todo(store, profile, broker, possible[0], len(possible))
+    return len(lowered)
 
 
 def search_variants(cfg: cfgmod.Config) -> dict[str, bool]:
@@ -380,6 +403,9 @@ class Runner:
 
     # ------------------------------------------------------------------ one broker
     async def process(self, profile: Profile, broker: Broker) -> Any:
+        n = rescore_stored(self.store, profile, broker, self.now)
+        if n:
+            self._event(profile, broker.id, "rescored", downgraded=n)
         st = self.store.get_status(profile.id, broker.id)
         tier = tiers.tier_for(broker, profile, self.cfg, registry=self.registry)
         target = tiers.submit_target(broker, self.registry)
@@ -402,9 +428,16 @@ class Runner:
             st = self._set(profile, st, S.NEEDS_HUMAN, "id_request_open")
             st = st.model_copy(update={"needs_human_reason": ID_REQUEST_REASON})
         if should_submit(st.state) and not self.scan_only:
-            st = await self._submit(profile, broker, target, st, tier,
-                                    sbase.confirmed(listings) or
-                                    ([] if scanned else listings))
+            # SEC-104: a listing only kept because an extra page was unreadable is never a
+            # new send target; wait for a clean scan instead
+            unchecked = ctx.scratch.get("unchecked_urls") or set()
+            conf = sbase.confirmed(listings)
+            fresh = [li for li in conf if li.url not in unchecked]
+            if scanned and conf and not fresh:
+                self._event(profile, broker.id, "submit_deferred", why="unchecked_page")
+            else:
+                st = await self._submit(profile, broker, target, st, tier,
+                                        fresh or ([] if scanned else listings))
 
         # 5. verification mail
         if st.state in (S.SUBMITTED, S.AWAITING_VERIFICATION):

@@ -228,6 +228,8 @@ async def search_listings(ctx: RunContext) -> list[Listing]:
     if unread:
         from ..engine.runner import keep_unchecked
         listings = keep_unchecked(ctx.store, ctx.profile, ctx.broker, listings)
+        # SEC-104: the runner never treats these as new send targets
+        ctx.scratch["unchecked_urls"] = {li.url for li in listings} - seen
     if shot is not None:
         ctx.scratch["search_screenshot"] = shot
     return listings
