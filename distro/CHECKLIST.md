@@ -13,8 +13,11 @@ checklist was written; this work order did not run them.
 
 Release tooling **must** run `python tools/ci/check_distro_hashes.py` and see
 exit 0 before any upstream submission (AUR push, Flathub, Homebrew, Scoop,
-winget, Nix). It lists every `SKIP`, all-zero or `REPLACE_WITH_*` hash in
-`distro/` and exits 1. Normal CI does not run it, because placeholders are
+winget, Nix). It lists, and exits 1 on: `SKIP` in any checksum array
+(`md5sums`, `sha1sums`, `sha224sums`, `sha256sums`, `sha384sums`, `sha512sums`,
+`b2sums`, `cksums`, arch-specific variants too, on one line or spread over
+several), any all-zero 64-hex hash, any `REPLACE_WITH_*` token, and any recipe
+in `distro/` that is not valid UTF-8. Normal CI does not run it, because placeholders are
 expected until release day. Tests: `tests/test_distro_hash_gate.py`.
 
 Nix: `distro/nix/flake.nix` follows `nixos-unstable` and there is no
