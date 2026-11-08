@@ -9,6 +9,7 @@ Owner rule (2026-11-08): CodeRabbit reviews every pull request automatically, in
 - **In-house work** gets a draft PR too, before it merges:
   `git push origin <branch>` then `gh pr create --draft --base main --head <branch> --title "<area>: <what>" --body "<WO/SEC/BL id, tests run>"`.
   The branch is reviewed in public, like any open-source PR. No secrets, no private files and no real personal data, as always.
+- **Wait for the review before merging.** Merge only after CodeRabbit has finished reviewing the current PR head (its review shows on the PR, not "review in progress") and every finding from that review has a disposition (section 3). Any new push to the PR head starts a new review: wait for it and triage it again before merging.
 - The merge itself stays local `--no-ff` under the noreply identity (docs/SDLC.md, SEC-93c). When main is pushed, GitHub marks the PR merged. Never use the web merge button or `gh pr merge`.
 
 ## 2. Collect the findings
@@ -29,6 +30,8 @@ qa-security (Marcus) owns the triage. Each row gets one disposition, checked aga
 | **VALID** | The owning in-house agent fixes it with a regression test (failing first for bugs). The commit message names the finding. |
 | **ALREADY FIXED** | Name the commit that fixed it. |
 | **INVALID** | One line on why: wrong premise, out of scope, or it conflicts with a project rule. Never weaken a test to make a finding go away. |
+
+**Unrated rows:** the tool prints `Unrated` when it cannot read a severity from the comment. Triage first assigns each Unrated row a real severity (Critical, Major, Minor or Nitpick) from the comment text, and records it in the disposition table, before the gate below is applied. If in doubt, treat it as Major. An Unrated row is never skipped.
 
 Critical/Major VALID findings block the push, the same as MED+ SEC findings (docs/AUTONOMY.md). Minor and Nitpick VALID findings are fixed in the same cycle or get a tracked row in `docs/pm/tracked.json`. The disposition table goes in `docs/handoff/qa-security.md` under the review date.
 
