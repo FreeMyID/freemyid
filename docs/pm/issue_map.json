@@ -603,6 +603,20 @@
       "state": "open",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/128"
     },
+    "OWN-canva-host": {
+      "fields": {
+        "Agent": "Owner",
+        "Kind": "Owner task",
+        "Lane": "IN",
+        "Priority": "P2",
+        "Status": "Ready",
+        "Team": "In-house"
+      },
+      "number": 153,
+      "project_item": "PVTI_lADOFRHvjs4BquOFzhHBLhM",
+      "state": "open",
+      "url": "https://github.com/FreeMyID/freemyid-pm/issues/153"
+    },
     "OWN-copilot-prs": {
       "fields": {
         "Agent": "Owner",
@@ -644,6 +658,20 @@
       "project_item": "PVTI_lADOFRHvjs4BquOFzhG-ifg",
       "state": "open",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/122"
+    },
+    "OWN-fridge-pdf": {
+      "fields": {
+        "Agent": "Owner",
+        "Kind": "Owner task",
+        "Lane": "IN",
+        "Priority": "P2",
+        "Status": "Ready",
+        "Team": "In-house"
+      },
+      "number": 154,
+      "project_item": "PVTI_lADOFRHvjs4BquOFzhHBLoM",
+      "state": "open",
+      "url": "https://github.com/FreeMyID/freemyid-pm/issues/154"
     },
     "OWN-gh-project-scope": {
       "fields": {
@@ -2144,6 +2172,66 @@
       "project_item": "PVTI_lADOFRHvjs4BquOFzhG-pns",
       "state": "open",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/146"
+    },
+    "WO-180": {
+      "fields": {
+        "Agent": "test-quality",
+        "Kind": "Work order",
+        "Lane": "CX",
+        "Priority": "P2",
+        "Status": "Ready",
+        "Team": "Codex",
+        "WO": "WO-180"
+      },
+      "number": 147,
+      "project_item": "PVTI_lADOFRHvjs4BquOFzhHBK-w",
+      "state": "open",
+      "url": "https://github.com/FreeMyID/freemyid-pm/issues/147"
+    },
+    "WO-181": {
+      "fields": {
+        "Agent": "app-features",
+        "Kind": "Work order",
+        "Lane": "CX",
+        "Priority": "P2",
+        "Status": "Ready",
+        "Team": "Codex",
+        "WO": "WO-181"
+      },
+      "number": 150,
+      "project_item": "PVTI_lADOFRHvjs4BquOFzhHBLJs",
+      "state": "open",
+      "url": "https://github.com/FreeMyID/freemyid-pm/issues/150"
+    },
+    "WO-182": {
+      "fields": {
+        "Agent": "web-builder",
+        "Kind": "Work order",
+        "Lane": "CX",
+        "Priority": "P2",
+        "Status": "Ready",
+        "Team": "Codex",
+        "WO": "WO-182"
+      },
+      "number": 151,
+      "project_item": "PVTI_lADOFRHvjs4BquOFzhHBLR0",
+      "state": "open",
+      "url": "https://github.com/FreeMyID/freemyid-pm/issues/151"
+    },
+    "WO-183": {
+      "fields": {
+        "Agent": "web-designer",
+        "Kind": "Work order",
+        "Lane": "CX",
+        "Priority": "P2",
+        "Status": "Ready",
+        "Team": "Codex",
+        "WO": "WO-183"
+      },
+      "number": 152,
+      "project_item": "PVTI_lADOFRHvjs4BquOFzhHBLYs",
+      "state": "open",
+      "url": "https://github.com/FreeMyID/freemyid-pm/issues/152"
     }
   },
   "repo": "FreeMyID/freemyid-pm"

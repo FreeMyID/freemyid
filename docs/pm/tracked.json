@@ -90,6 +90,14 @@
     {
       "key": "OWN-old-watcher",
       "title": "Restart the old Copilot watcher (pid 337338) so SEC-108/113 close on the desk"
+    },
+    {
+      "key": "OWN-canva-host",
+      "title": "Fix Codex's Canva plugin: 'browser access host unavailable' (design WO-170..179 wait on it)"
+    },
+    {
+      "key": "OWN-fridge-pdf",
+      "title": "(in-house, Iris) re-render the fridge-card PDF from the new FRIDGE_CARD.md"
     }
   ],
   "backlog": {
