@@ -140,3 +140,18 @@ def test_main_without_prs_is_a_usage_error(monkeypatch):
     with pytest.raises(SystemExit) as e:
         crf.main([])
     assert e.value.code == 2
+
+
+def test_escalated_row_links_to_the_escalating_comment():
+    minor = crf.parse_comment(_c(sev="Minor", url="https://github.com/o/r/pull/1#discussion_r1"), 1)
+    major = crf.parse_comment(_c(sev="Major", url="https://github.com/o/r/pull/2#discussion_r2"), 2)
+    [row] = crf.merge([minor, major])
+    assert row.severity == "Major" and row.urls[0].endswith("discussion_r2")
+
+
+def test_unrated_duplicate_stays_visible():
+    rated = crf.parse_comment(_c(sev="Minor"), 1)
+    unrated = crf.parse_comment(_c(sev="Minor"), 2)
+    unrated.severity = "Unrated"
+    [row] = crf.merge([rated, unrated])
+    assert row.unrated_dup and "Unrated" in crf.render([row], [1, 2])

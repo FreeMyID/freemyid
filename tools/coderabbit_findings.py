@@ -41,6 +41,7 @@ class Finding:
     title: str
     prs: list[int] = field(default_factory=list)
     urls: list[str] = field(default_factory=list)
+    unrated_dup: bool = False
 
     @property
     def key(self) -> tuple[str, int | None, str]:
@@ -83,8 +84,11 @@ def merge(findings: list[Finding]) -> list[Finding]:
             g = out[f.key]
             g.prs += [p for p in f.prs if p not in g.prs]
             g.urls += [u for u in f.urls if u not in g.urls]
+            if "Unrated" in (f.severity, g.severity) and f.severity != g.severity:
+                g.unrated_dup = True  # keep it visible: triage must still rate that comment
             if _RANK.get(f.severity, 9) < _RANK.get(g.severity, 9):
                 g.severity = f.severity  # an incremental review escalated it: keep the highest
+                g.urls = [u for u in f.urls if u] + [u for u in g.urls if u not in f.urls]
         else:
             out[f.key] = f
     return sorted(out.values(), key=lambda f: (_RANK.get(f.severity, 9), f.path, f.line or 0))
@@ -107,6 +111,8 @@ def render(findings: list[Finding], prs: list[int]) -> str:
         link = f.urls[0] if f.urls and f.urls[0] else ""
         title = f.title.replace("|", "\\|")
         title = f"[{title}]({link})" if link else title
+        if f.unrated_dup:
+            title += " (a duplicate comment was Unrated: rate it in triage)"
         lines.append(f"| {i} | {f.severity} | {where} | {title} | "
                      f"{' '.join('#' + str(p) for p in f.prs)} | |")
     return "\n".join(lines) + "\n"
