@@ -162,6 +162,10 @@ def main(window: bool = True, on_started: Callable[[], None] | None = None) -> i
         return 0
 
     running = start_background(0)
+    with contextlib.suppress(Exception):    # a missing toast must never stop the app
+        from ..notify import maybe_monthly_progress
+        from ..storage import Store
+        maybe_monthly_progress(Store())
     write_instance(running.port, running.token)
     stop = threading.Event()
     try:
