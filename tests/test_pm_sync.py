@@ -145,3 +145,8 @@ def test_tracked_json_sec_and_owner_items(tmp_path):
     body = issue_body(sec)
     assert "Severity: LOW" in body and "secret" not in body and not sec["closed"]
     assert items["OWN-x"]["closed"] is False and items["OWN-y"]["closed"] is True
+
+
+def test_merged_wos_accepts_pr_merges():
+    log = "aaaaaaa Merge PR #49 WO-165 (Copilot): x\nbbbbbbb Merge WO-129 (Codex)\n"
+    assert pm.merged_wos(log) == {"WO-165": "aaaaaaa", "WO-129": "bbbbbbb"}

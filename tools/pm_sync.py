@@ -95,7 +95,8 @@ def merged_wos(git_log: str) -> dict[str, str]:
     """Parse `git log --format='%H %s' --grep 'Merge WO-'` into {WO-NNN: sha}."""
     out: dict[str, str] = {}
     for line in git_log.splitlines():
-        m = re.match(r"([0-9a-f]{7,40})\s+Merge (WO-\d+)", line.strip())
+        # "Merge WO-NNN ..." (worktree merges) or "Merge PR #N WO-NNN ..." (PR merges)
+        m = re.match(r"([0-9a-f]{7,40})\s+Merge (?:PR #\d+ )?(WO-\d+)", line.strip())
         if m and m.group(2) not in out:  # newest first: keep the first seen
             out[m.group(2)] = m.group(1)
     return out
@@ -279,7 +280,7 @@ def labels_for(item: dict) -> list[str]:
 def collect(root: Path = ROOT, git_log: str | None = None) -> list[dict]:
     if git_log is None:
         git_log = subprocess.run(
-            ["git", "-C", str(root), "log", "--format=%H %s", "--grep", "Merge WO-"],
+            ["git", "-C", str(root), "log", "--format=%H %s", "-E", "--grep", "^Merge (PR #[0-9]+ )?WO-"],
             capture_output=True, text=True, check=True,
         ).stdout
     merged = merged_wos(git_log)

@@ -1954,13 +1954,13 @@
         "Kind": "Work order",
         "Lane": "CP",
         "Priority": "P2",
-        "Status": "Ready",
+        "Status": "Done",
         "Team": "Copilot",
         "WO": "WO-165"
       },
       "number": 131,
       "project_item": "PVTI_lADOFRHvjs4BquOFzhG-eD0",
-      "state": "open",
+      "state": "closed",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/131"
     },
     "WO-166": {
@@ -1969,13 +1969,13 @@
         "Kind": "Work order",
         "Lane": "CP",
         "Priority": "P2",
-        "Status": "Ready",
+        "Status": "Done",
         "Team": "Copilot",
         "WO": "WO-166"
       },
       "number": 132,
       "project_item": "PVTI_lADOFRHvjs4BquOFzhG-eKc",
-      "state": "open",
+      "state": "closed",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/132"
     },
     "WO-167": {
@@ -1984,13 +1984,13 @@
         "Kind": "Work order",
         "Lane": "CP",
         "Priority": "P2",
-        "Status": "Ready",
+        "Status": "Done",
         "Team": "Copilot",
         "WO": "WO-167"
       },
       "number": 133,
       "project_item": "PVTI_lADOFRHvjs4BquOFzhG-eQ0",
-      "state": "open",
+      "state": "closed",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/133"
     },
     "WO-168": {
@@ -1999,13 +1999,13 @@
         "Kind": "Work order",
         "Lane": "CP",
         "Priority": "P2",
-        "Status": "Ready",
+        "Status": "Done",
         "Team": "Copilot",
         "WO": "WO-168"
       },
       "number": 134,
       "project_item": "PVTI_lADOFRHvjs4BquOFzhG-eWg",
-      "state": "open",
+      "state": "closed",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/134"
     },
     "WO-169": {
