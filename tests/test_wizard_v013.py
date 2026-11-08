@@ -55,3 +55,11 @@ def test_installer_explains_first_start_wait():
     assert "[Messages]" in iss and "FinishedLabel=" in iss
     assert "15 seconds" in iss and "That is normal" in iss
     assert iss.index("[Messages]") < iss.index("[Files]")
+
+
+def test_finish_step_timeline_is_honest():
+    from freemyid.wizard import ui
+    from freemyid.wizard.draft import Draft
+    html = ui._screen_body("finish", Draft())
+    for w in ("Right after you finish", "Over the next weeks", "that one site only"):
+        assert w in html

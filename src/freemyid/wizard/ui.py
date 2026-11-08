@@ -317,12 +317,17 @@ def _screen_body(step: str, d: Draft) -> str:
     if step == "mailbox":
         return _mailbox_body(d)
     if step == "finish":
-        items = ["Free My ID looks for the person on people-search sites.",
-                 "Where it can, it sends the request asking the site to delete the details.",
-                 ("When a website needs a real person, a card appears with one big button "
-                 "to help you."),
-                 "Details can come back, so Free My ID keeps checking."]
-        lis = "".join(f"<li>{esc(x)}</li>" for x in items)
+        items = [("Right after you finish", "Free My ID looks for the person on people-search "
+                  "sites. This takes a few minutes. You can close the window."),
+                 ("Within a day", "Where a site allows it, Free My ID sends the request asking it "
+                  "to delete the details. Some emails wait for your OK first."),
+                 ("When a site needs a person", "A card appears with one big button to help you. "
+                  "Some sites need a few steps by hand. That is normal."),
+                 ("Over the next weeks", "Sites reply or confirm at their own pace, often 2 to 6 "
+                  "weeks. The dashboard shows each one as it changes."),
+                 ("After that", "Details can reappear, so Free My ID keeps checking. "
+                  "Removed means removed from that one site only.")]
+        lis = "".join(f"<li><b>{esc(w)}:</b> {esc(x)}</li>" for w, x in items)
         auto = ("" if d.editing else _check(
             "weekly_recheck", "Yes, keep checking for me automatically", d.weekly_recheck,
             "This adds one small Free My ID task to Windows (Task Scheduler) that runs once a "
