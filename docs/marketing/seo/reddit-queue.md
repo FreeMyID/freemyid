@@ -28,3 +28,20 @@ Body:
 > Hi mods, I work on Free My ID, a free open-source Windows app for removing your listing from people-search sites. We have plain step-by-step guides that work without the app. Would a single post sharing them fit this sub, or would you prefer I do not? I will follow your decision.
 
 Follow-up: record each post URL in outreach-log.md.
+
+## Owner-ready pack (2026-11-08): top 3, polished
+Status: waiting on API keys (reddit_client_id, reddit_client_secret, reddit_refresh_token are NOT in keyring freemyid-social). All subreddit rules below are UNCONFIRMED: I cannot read reddit.com. Every sub must be checked at https://www.reddit.com/r/<name>/about/rules before posting. Flair: unknown for all three until the sidebar is read; pick the closest "Guide / Resource / Discussion" flair if one is required, and never a "Question" flair.
+
+Do not post cold. Order: 1) r/privacy (modmail first), 2) r/degoogle (modmail first), 3) r/SeniorCitizens (modmail first; it is the audience closest to our users). One sub per day.
+
+1. r/privacy. Rules: not confirmed (self-promotion and link-post rules unknown). Flair: unknown. Send the "Modmail text" above first. If mods say yes, post the R1 title/body above.
+2. r/degoogle. Rules: not confirmed. Flair: unknown. Modmail first, then the R2 title/body above (Google "Results about you" guide only).
+3. r/SeniorCitizens. Rules: not confirmed. Flair: unknown. Modmail first. If allowed:
+   Title: `A plain guide to getting your name and address off people-search sites (free, no account)`
+   Body: `I work on Free My ID, a free open-source project, so please weigh that. We wrote plain step-by-step guides for removing your listing from the common people-search sites. They work with or without our software: https://freemyid.org/guides/ . Each guide says where the opt-out page is and what it asks for (never a Social Security number or card). Sites can re-list people, so check again in a few months. If something is wrong or out of date, tell me and I will fix it.`
+
+Owner steps:
+1. Log in to reddit.com as u/FreeMyID. Go to https://www.reddit.com/prefs/apps and choose "create another app".
+2. Name "Free My ID", type "script", redirect URI http://localhost:8080 , create. Note the client id (under the app name) and the secret.
+3. Run `.venv/bin/python tools/store_social_keys.py` and enter reddit_client_id, reddit_client_secret and reddit_refresh_token (the script flow needs a refresh token or the account password per tools/store_social_keys.py; follow its prompts). Note: Reddit's Responsible Builder / API access approval may be needed; if the app page asks for approval, request it describing a non-commercial, owner-supervised account.
+4. Tell Sam; the first action will be the modmail to r/privacy through the API, not a post.
