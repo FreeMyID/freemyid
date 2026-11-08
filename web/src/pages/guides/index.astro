@@ -24,6 +24,8 @@ const p = pageProps("guides");
       <li>You should never have to pay to be removed. If a people-search site asks for money or your Social Security number, stop.</li>
       <li>Sites often list people again later. Check back every few months.</li>
     </ul>
+    {/* WR-61 */}
+    <p class="mt-xs">Helping a parent or grandparent? Start with <a href={url("guides/help-a-parent-remove-their-information/")}>how to help a parent get their details off people-search sites</a>.</p>
   </Alert>
   {GROUPS.map(([key, label]) => {
     const items = guides.filter((g) => g.group === key);

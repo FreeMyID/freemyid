@@ -25,6 +25,15 @@
   title: "Free opt-out guides for people-search sites"
   description: Step-by-step, plain-English guides to remove yourself from Spokeo, Whitepages, BeenVerified and other people-search sites. Free, no app needed.
   jsonld: [breadcrumbs]
+- id: help-a-parent
+  out: guides/help-a-parent-remove-their-information/
+  template: pages/help-a-parent.html   # not used: v3_only (web/src/pages/guides/help-a-parent-remove-their-information/index.astro)
+  v3_only: true
+  label: Help a parent
+  nav: guides
+  title: "Help a parent get their details off people-search sites"
+  description: A calm, step-by-step way to help a parent or grandparent ask people-search sites to take down their name, address and phone number.
+  jsonld: [breadcrumbs]
 - id: protect
   out: protect/
   template: pages/protect.html   # not used: v3_only (web/src/pages/protect/index.astro, from brokers/checklists.yaml)
