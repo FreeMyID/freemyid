@@ -114,10 +114,13 @@ case "$cmd" in
     role="$(agent_of "$f")"; [ -f "$ROOT/.github/agents/$role.agent.md" ] || { echo "no agent profile for '$role'" >&2; exit 2; }
     [ -e "$wt" ] && { echo "$wt exists: use checkin" >&2; exit 2; }
     need_cli; git -C "$ROOT" worktree add -q -b "copilot/$(echo "$wo" | tr 'A-Z' 'a-z')" "$wt" main
+    # SEC-105: the builder gets its own throwaway copy of the venv (copy-on-write on btrfs), never the in-house one.
+    cp -a --reflink=auto "$ROOT/.venv" "$wt/.venv"
     copilot -C "$wt" --agent "$role" "${SAFE[@]}" --allow-all-tools -p "You are $(name_of "$role") in BUILDER mode for work
 order $wo, working LOCALLY in this folder (no git: the owner commits). Change ONLY the allowed paths, and create no
 other files (no scratch, backup or .new/.tmp copies). If a shell is available, run only read-only commands and the tests
-you can run inside this folder; otherwise say the owner must run them. End by WRITING THE FILE VENDOR_STATUS.md in this
+you can run inside this folder: PYTHONPATH=src .venv/bin/python -m pytest -q <tests> and .venv/bin/python -m ruff check <files> (that .venv is
+your own throwaway copy). No network, no installs; otherwise say the owner must run them. End by WRITING THE FILE VENDOR_STATUS.md in this
 folder (not only in your reply)
 (Done / Next / Questions for the owner / How to test).
 
@@ -129,7 +132,8 @@ $(cat "$f")"
     copilot -C "$wt" --agent "$role" "${SAFE[@]}" --allow-all-tools -p "Owner check-in for $wo from Morgan Reyes:
 $2
 
-Continue within the allowed paths only (create no other files), and update VENDOR_STATUS.md."
+Continue within the allowed paths only (create no other files), rerun the tests with
+PYTHONPATH=src .venv/bin/python -m pytest -q <tests>, and update VENDOR_STATUS.md."
     git -C "$wt" status --short ;;
   commit)
     wo_check "${1:-}"; wo="$1"; f="$(wo_file "$wo")"; wt="$(wt_of "$wo")"; role="$(agent_of "$f")"
