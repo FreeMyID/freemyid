@@ -80,6 +80,7 @@ jobs:
         timeout-minutes: 25
         env:
           FREEMYID_REQUIRE_BROWSER: "1"   # real-browser tests must run here, never skip
+          _TYPER_FORCE_DISABLE_TERMINAL: "1"   # typer forces ANSI help output when GITHUB_ACTIONS is set; tests read plain text
         run: pytest -q
 
   # Build sdist + wheel once, then prove a clean pipx install works on Linux and macOS.
