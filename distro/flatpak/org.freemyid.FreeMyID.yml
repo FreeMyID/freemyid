@@ -1,0 +1,48 @@
+# DRAFT Flatpak manifest for the Free My ID CLI and local dashboard.
+# Not built or tested yet, and not on Flathub. See README.md in this folder.
+app-id: org.freemyid.FreeMyID
+runtime: org.freedesktop.Platform
+runtime-version: "24.08"
+sdk: org.freedesktop.Sdk
+command: freemyid-flatpak
+
+finish-args:
+  - --share=network
+  # Lets the keyring package reach the desktop secret service.
+  - --talk-name=org.freedesktop.secrets
+  # No --filesystem=home. Data lives in the app's own xdg-data folder (see the launcher below).
+
+modules:
+  # Version 0.2.0 matches `version` in pyproject.toml. Update both together.
+  # Dependencies are installed from PyPI sdists/wheels listed in python3-freemyid-deps.json
+  # (generate with flatpak-pip-generator; Flatpak builds have no network, so every
+  # dependency needs a pinned url and sha256). That file does not exist yet.
+  - name: python3-freemyid-deps
+    buildsystem: simple
+    build-commands:
+      - pip3 install --verbose --exists-action=i --no-index --find-links="file://${PWD}"
+        --prefix=${FLATPAK_DEST} --no-build-isolation
+        "pydantic" "pyyaml" "typer" "rich" "jinja2" "keyring" "cryptography" "rapidfuzz"
+        "playwright" "fastapi" "uvicorn" "python-multipart" "httpx" "platformdirs"
+        "desktop-notifier" "jsonschema"
+    sources: []  # TODO: pinned PyPI files from flatpak-pip-generator
+
+  - name: freemyid
+    buildsystem: simple
+    build-commands:
+      - pip3 install --verbose --exists-action=i --no-index --find-links="file://${PWD}"
+        --prefix=${FLATPAK_DEST} --no-build-isolation --no-deps freemyid
+      - |
+        cat > ${FLATPAK_DEST}/bin/freemyid-flatpak <<'EOF'
+        #!/bin/sh
+        export FREEMYID_HOME="${XDG_DATA_HOME}/freemyid"
+        if [ "$#" -eq 0 ]; then
+          exec freemyid dashboard
+        fi
+        exec freemyid "$@"
+        EOF
+      - chmod +x ${FLATPAK_DEST}/bin/freemyid-flatpak
+    sources:
+      - type: file
+        url: https://files.pythonhosted.org/packages/source/f/freemyid/freemyid-0.2.0.tar.gz
+        sha256: "0000000000000000000000000000000000000000000000000000000000000000"  # placeholder: release tooling must set the real checksum
