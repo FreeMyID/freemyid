@@ -86,6 +86,36 @@ def can_scan(broker: Broker, cfg: Config | None = None) -> bool:
     )
 
 
+def lookup_pattern(broker: Broker, profile: Profile) -> str | None:
+    """BL-IN-08: the broker's reverse-lookup pattern for this person's removal scope."""
+    if profile.removal_scope == "phone":
+        return broker.phone_search_url_pattern
+    if profile.removal_scope == "email":
+        return broker.email_search_url_pattern
+    return None
+
+
+def can_scan_value(broker: Broker, profile: Profile, cfg: Config | None = None) -> bool:
+    """A phone/email-only person's reverse lookup on this broker may run in the browser."""
+    return (
+        bool(lookup_pattern(broker, profile))
+        and broker.search is not None
+        and bool(broker.search.result_selector)
+        and broker.verification_status == VerificationStatus.VERIFIED
+        and not broker.has_captcha
+        and browser_automation_allowed(cfg)
+    )
+
+
+def value_applicable(broker: Broker, profile: Profile,
+                     registry: Registry | None = None) -> bool:
+    """BL-IN-08: brokers a phone/email-only removal goes to: those with a reverse lookup
+    for the scope, or an email route (a letter naming only the value). Everything else is
+    skipped, so the person never gets a to-do per site."""
+    target = submit_target(broker, registry)
+    return bool(lookup_pattern(broker, profile)) or has_email_route(target)
+
+
 def submit_target(broker: Broker, registry: Registry | None) -> Broker:
     """The broker that actually receives the opt-out (`covered_by` parent, else itself)."""
     if broker.covered_by and registry is not None:
@@ -100,6 +130,11 @@ def tier_for(broker: Broker, profile: Profile, cfg: Config | None = None, *,
              registry: Registry | None = None) -> Tier:
     """Tier for (broker, profile). With `registry`, a covered_by broker gets its parent's tier."""
     target = submit_target(broker, registry)
+    if profile.value_only:
+        # BL-IN-08: form steps fill a name/address; a value-only removal never runs them
+        if has_email_route(target) and profile.mailbox is not None:
+            return Tier.EMAIL
+        return Tier.ASSISTED
     if automatic_eligible(target, profile, cfg):
         return Tier.AUTOMATIC
     if has_email_route(target) and profile.mailbox is not None:

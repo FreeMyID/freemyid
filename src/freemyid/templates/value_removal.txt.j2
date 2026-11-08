@@ -1,0 +1,23 @@
+{# BL-IN-08 phone-only / email-only removal. Names only the value(s) the person asked to
+   remove and the listing URLs; no name, no address. #}
+Subject: {% if is_follow_up %}Follow-up: {% endif %}Please delete the records for {{ value_label }}{% if reference %} (ref {{ reference }}){% endif %}
+
+To {{ broker_name or "the privacy team" }},
+
+{% if is_follow_up %}This is a reminder about my request{% if original_request_date %} of {{ original_request_date }}{% endif %}.
+{% endif %}I ask you to delete every record you hold that is linked to the following {{ value_noun }}, and to stop showing, selling or sharing it:
+{% for v in values %}
+  - {{ v }}
+{% endfor %}
+{% if listing_urls %}
+It appears on these pages:
+{% for u in listing_urls %}
+  - {{ u }}
+{% endfor %}
+{% endif %}
+Please do not use this request to add any information to your records.
+{% if mailbox %}Please confirm at {{ mailbox }} when it is done.
+{% else %}Please confirm when it is done.
+{% endif %}
+
+Thank you.

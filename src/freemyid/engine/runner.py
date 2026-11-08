@@ -408,6 +408,8 @@ class Runner:
 
     # ------------------------------------------------------------------ one broker
     async def process(self, profile: Profile, broker: Broker) -> Any:
+        if profile.value_only and not tiers.value_applicable(broker, profile, self.registry):
+            return self.store.get_status(profile.id, broker.id)    # BL-IN-08: not for this
         n = rescore_stored(self.store, profile, broker, self.now)
         if n:
             self._event(profile, broker.id, "rescored", downgraded=n)
@@ -479,7 +481,9 @@ class Runner:
 
     # ------------------------------------------------------------------ scan
     async def _scan(self, ctx: RunContext, st: Any, tier: Tier) -> tuple[list[Listing], bool]:
-        if not tiers.can_scan(ctx.broker, self.cfg):
+        scannable = (tiers.can_scan_value(ctx.broker, ctx.profile, self.cfg)
+                     if ctx.profile.value_only else tiers.can_scan(ctx.broker, self.cfg))
+        if not scannable:
             return [], False
         bm = await self.browser()
         if bm is None:

@@ -100,8 +100,8 @@ def search_url(broker: Broker, profile: Profile, address: Address | None = None,
     """Fill Broker.search_url_pattern. Phone only with allow_phone_disclosure. `address`
     (default: the current one) supplies city/state/zip, e.g. for an old-address search;
     `name` (default: the current one) supplies first/middle/last, e.g. a maiden name."""
-    if not broker.search_url_pattern:
-        return None
+    if not broker.search_url_pattern or profile.value_only:
+        return None          # BL-IN-08: a phone/email-only removal has no name search
     cur = address or current_address(profile)
     nm = name or profile.name
     vals: dict[str, str | None] = {
@@ -162,9 +162,33 @@ async def parse_results(page: Page, broker: Broker) -> list[matcher.Candidate]:
     return out
 
 
-async def _search_page(bm: BrowserManager, ctx: RunContext, url: str
-                       ) -> tuple[list[Listing], bytes | None]:
-    """Read one search page: (scored listings, screenshot when any were found)."""
+def value_search_urls(broker: Broker, profile: Profile) -> list[str]:
+    """BL-IN-08: reverse-lookup URLs for a phone/email-only removal (one per value, at most
+    3). Each value goes out only with its explicit disclosure permission."""
+    from urllib.parse import quote
+
+    from ..engine.tiers import lookup_pattern
+    pat = lookup_pattern(broker, profile)
+    if not pat:
+        return []
+    out: list[str] = []
+    if profile.removal_scope == "phone" and profile.permissions.allow_phone_disclosure:
+        for ph in profile.phones[:3]:
+            d = matcher.digits(ph)
+            if len(d) == 10:
+                out.append(pat.format(phone_digits=d,
+                                      phone_dashed=f"{d[:3]}-{d[3:6]}-{d[6:]}"))
+    elif profile.removal_scope == "email" and profile.permissions.allow_email_disclosure:
+        for em in profile.emails[:3]:
+            if "@" in em:
+                out.append(pat.format(email=quote(em.strip().lower(), safe="")))
+    return [u for u in dict.fromkeys(out) if on_broker_url(broker, u)]
+
+
+async def _search_page(bm: BrowserManager, ctx: RunContext, url: str, *,
+                       lookup: str | None = None) -> tuple[list[Listing], bytes | None]:
+    """Read one search page: (scored listings, screenshot when any were found).
+    `lookup` ("phone" / "email"): a BL-IN-08 reverse-lookup page, scored by value."""
     bctx = await bm.new_context(ctx.broker.domains)
     try:
         page = await bctx.new_page()
@@ -180,8 +204,9 @@ async def _search_page(bm: BrowserManager, ctx: RunContext, url: str
         if not cands and spec and spec.no_results_text:
             # neither results nor the site's "no results" text: the page changed
             raise UnexpectedPage("search_page_unrecognized")
-        listings = matcher.score_all(ctx.profile, ctx.broker.id, cands,
-                                     (ctx.now or utcnow()).date())
+        today = (ctx.now or utcnow()).date()
+        listings = (matcher.score_lookup(ctx.profile, ctx.broker.id, cands, lookup, today)
+                    if lookup else matcher.score_all(ctx.profile, ctx.broker.id, cands, today))
         shot = await page.screenshot(full_page=True) if listings else None
         return listings, shot
     finally:
@@ -206,6 +231,8 @@ async def search_listings(ctx: RunContext) -> list[Listing]:
     pages (old address / previous name) are merged in; if one cannot be read, the listings
     stored from earlier searches are kept as they are (unknown, never marked gone)."""
     bm: BrowserManager = ctx.scratch["browser"]
+    if ctx.profile.value_only:
+        return await _search_values(bm, ctx)
     url = search_url(ctx.broker, ctx.profile)
     if url is None:
         raise UnexpectedPage("search_url_unavailable")
@@ -230,6 +257,28 @@ async def search_listings(ctx: RunContext) -> list[Listing]:
         listings = keep_unchecked(ctx.store, ctx.profile, ctx.broker, listings)
         # SEC-104: the runner never treats these as new send targets
         ctx.scratch["unchecked_urls"] = {li.url for li in listings} - seen
+    if shot is not None:
+        ctx.scratch["search_screenshot"] = shot
+    return listings
+
+
+async def _search_values(bm: BrowserManager, ctx: RunContext) -> list[Listing]:
+    """BL-IN-08: read each reverse-lookup page. Any unreadable page fails the whole search
+    (never read as "nothing there"); the runner then treats the broker as not scanned."""
+    urls = value_search_urls(ctx.broker, ctx.profile)
+    if not urls:
+        raise UnexpectedPage("search_url_unavailable")
+    kind = str(ctx.profile.removal_scope)
+    listings: list[Listing] = []
+    seen: set[str] = set()
+    shot = None
+    for url in urls:
+        found, more_shot = await _search_page(bm, ctx, url, lookup=kind)
+        shot = shot or more_shot
+        for li in found:
+            if li.url not in seen:
+                seen.add(li.url)
+                listings.append(li)
     if shot is not None:
         ctx.scratch["search_screenshot"] = shot
     return listings

@@ -153,7 +153,15 @@ def compose(profile: Profile, broker: Broker, listings: list[Listing],
             original: Request | None = None, today: date | None = None,
             matrix: law_matrix.Matrix | None = None) -> tuple[str, str]:
     """(subject, body) for a request letter. Data-minimized via letters.letter_vars.
-    Statutes are cited only when `effective_law` says so."""
+    Statutes are cited only when `effective_law` says so. A phone/email-only removal
+    (BL-IN-08) gets the value_removal letter: the value and URLs only, no law cited."""
+    if profile.value_only:
+        v = letters.value_letter_vars(
+            profile, broker, listings, follow_up=kind != RequestKind.OPT_OUT,
+            original_request_date=(original.sent_at or original.created_at)
+            if original else None,
+            reference=original.reference if original else None)
+        return letters.split_subject(letters.render("value_removal", **v))
     law = effective_law(profile, state_law, today, matrix)
     v = letters.letter_vars(
         profile, broker, listings, law,

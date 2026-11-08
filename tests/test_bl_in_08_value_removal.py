@@ -1,0 +1,216 @@
+"""BL-IN-08 engine: phone-only / email-only removal. Reverse-lookup hits are never
+CONFIRMED by the matcher (rule 7), the letter names only the value, and the value goes out
+only with its explicit permission. Fake people and brokers only, no network."""
+from __future__ import annotations
+
+import asyncio
+from types import SimpleNamespace
+
+import pytest
+
+from freemyid.consent import CURRENT_TEXT_VERSION
+from freemyid.engine import _dev, matcher, outbox, tiers
+from freemyid.models import (
+    Broker,
+    Consent,
+    ConsentBasis,
+    MailboxConfig,
+    MatchLevel,
+    Permissions,
+    Profile,
+    ProfileField,
+    RequestKind,
+    Tier,
+)
+from freemyid.submitters import web_form
+from tests.conftest import make_profile
+
+C = Consent(basis=ConsentBasis.SELF, attested_by="Jane Q Testperson",
+            text_version=CURRENT_TEXT_VERSION)
+MB = MailboxConfig(address="removals@example.org", imap_host="imap.example.org",
+                   smtp_host="smtp.example.org", username="removals@example.org")
+PHONE = "217-555-0142"
+EMAIL = "Jane.Testperson@example.com"
+
+
+def phone_person(**over):
+    kw = {"label": "T", "consent": C, "removal_scope": "phone", "phones": [PHONE],
+          "permissions": Permissions(allow_phone_disclosure=True)}
+    kw.update(over)
+    return Profile(**kw)
+
+
+def email_person(**over):
+    kw = {"label": "T", "consent": C, "removal_scope": "email", "emails": [EMAIL],
+          "permissions": Permissions(allow_email_disclosure=True)}
+    kw.update(over)
+    return Profile(**kw)
+
+
+def broker(**over):
+    data = {"id": "devphone", "name": "Dev Phone", "url": "https://devphone.example/",
+            "category": "people_search", "domains": ["devphone.example"], "method": "email",
+            "opt_out_email": "privacy@devphone.example",
+            "phone_search_url_pattern": "https://devphone.example/phone/{phone_dashed}",
+            "email_search_url_pattern": "https://devphone.example/email/{email}"}
+    data.update(over)
+    return Broker.model_validate(data)
+
+
+def cand(**kw):
+    return matcher.Candidate(url="https://devphone.example/p/1", **kw)
+
+
+# ------------------------------------------------------------------ matcher (rule 7)
+
+
+def test_lookup_hit_is_possible_never_confirmed():
+    p = phone_person()
+    for c in (cand(), cand(name="Anyone Testperson", phones=["(217) 555-0142"],
+                           locations=["Springfield, IL"], age=46)):
+        r = matcher.score_value(p, c, "phone")
+        assert r.level is MatchLevel.POSSIBLE and r.reasons == ["phone_lookup"]
+
+
+def test_lookup_page_showing_another_number_is_not_a_hit():
+    assert matcher.score_value(phone_person(), cand(phones=["217-555-0199"]),
+                               "phone").level is MatchLevel.NO_MATCH
+    assert matcher.score_value(email_person(), cand(emails=["other@example.com"]),
+                               "email").level is MatchLevel.NO_MATCH
+    assert matcher.score_value(email_person(), cand(emails=[EMAIL.lower()]),
+                               "email").level is MatchLevel.POSSIBLE
+
+
+def test_score_lookup_listings_and_rescore_leaves_them_alone():
+    p = phone_person()
+    out = matcher.score_lookup(p, "devphone", [cand(), cand()], "phone")
+    assert len(out) == 1
+    li = out[0]
+    assert li.match_level is MatchLevel.POSSIBLE and ProfileField.PHONE in li.shown_fields
+    assert matcher.rescore(p, li) is li
+
+
+def test_value_profile_never_name_matches():
+    p = phone_person()
+    c = cand(name=" ", locations=["Springfield, IL"])
+    assert matcher.score(p, c).level is MatchLevel.NO_MATCH
+
+
+# ------------------------------------------------------------------ search URLs
+
+
+def test_value_search_urls_need_permission_and_stay_on_domain():
+    b = broker()
+    assert web_form.value_search_urls(b, phone_person()) == [
+        "https://devphone.example/phone/217-555-0142"]
+    assert web_form.value_search_urls(b, phone_person(
+        permissions=Permissions())) == []
+    assert web_form.value_search_urls(b, email_person()) == [
+        "https://devphone.example/email/jane.testperson%40example.com"]
+    assert web_form.value_search_urls(b, email_person(
+        permissions=Permissions(allow_phone_disclosure=True))) == []
+    many = phone_person(phones=["217-555-0101", "217-555-0102", "217-555-0103",
+                                "217-555-0104", "12345"])
+    assert len(web_form.value_search_urls(b, many)) == 3
+
+
+def test_value_profile_has_no_name_search():
+    b = broker(search_url_pattern="https://devphone.example/name/{first}-{last}")
+    assert web_form.search_url(b, phone_person()) is None
+
+
+def test_search_values_reads_each_lookup_page(monkeypatch):
+    seen = []
+
+    async def page(bm, ctx, url, *, lookup=None):
+        seen.append((url, lookup))
+        return matcher.score_lookup(ctx.profile, ctx.broker.id, [cand()], lookup), b"png"
+
+    monkeypatch.setattr(web_form, "_search_page", page)
+    p = phone_person(phones=["217-555-0142", "217-555-0143"])
+    ctx = SimpleNamespace(broker=broker(), profile=p, store=None, now=None,
+                          scratch={"browser": object()})
+    out = asyncio.run(web_form.search_listings(ctx))
+    assert [lk for _, lk in seen] == ["phone", "phone"] and len(out) == 1
+    assert ctx.scratch["search_screenshot"] == b"png"
+
+
+def test_search_values_unreadable_page_fails_the_search(monkeypatch):
+    async def page(bm, ctx, url, *, lookup=None):
+        raise web_form.UnexpectedPage("search_http_503")
+
+    monkeypatch.setattr(web_form, "_search_page", page)
+    ctx = SimpleNamespace(broker=broker(), profile=phone_person(), store=None, now=None,
+                          scratch={"browser": object()})
+    with pytest.raises(web_form.UnexpectedPage):
+        asyncio.run(web_form.search_listings(ctx))
+
+
+# ------------------------------------------------------------------ tiers
+
+
+def test_value_only_is_never_automatic():
+    p = phone_person(mailbox=MB)
+    assert tiers.tier_for(broker(), p) is Tier.EMAIL
+    assert tiers.tier_for(broker(), phone_person()) is Tier.ASSISTED
+
+
+def test_value_applicable():
+    p = phone_person()
+    assert tiers.value_applicable(broker(), p)                               # lookup
+    assert tiers.value_applicable(broker(phone_search_url_pattern=None), p)  # email route
+    web = broker(phone_search_url_pattern=None, method="web_form", opt_out_email=None,
+                 opt_out_url="https://devphone.example/optout")
+    assert not tiers.value_applicable(web, p)
+    assert tiers.value_applicable(web.model_copy(update={
+        "phone_search_url_pattern": "https://devphone.example/phone/{phone_digits}"}), p)
+
+
+# ------------------------------------------------------------------ letter
+
+
+def _listing(p):
+    return matcher.score_lookup(p, "devphone", [cand()], str(p.removal_scope))[0]
+
+
+def test_phone_letter_names_only_the_number():
+    p = phone_person(mailbox=MB, name=make_profile().name)   # even if a name is on file
+    subject, body = outbox.compose(p, broker(), [_listing(p)], None)
+    assert "Please delete the records for a phone number" in subject
+    assert PHONE in body and "https://devphone.example/p/1" in body
+    assert "removals@example.org" in body
+    for leak in ("Jane", "Testperson", "Springfield", "Evergreen"):
+        assert leak not in body and leak not in subject
+
+
+def test_email_letter_names_only_the_address_and_follow_up_wording():
+    p = email_person(phones=[PHONE])
+    subject, body = outbox.compose(p, broker(), [], None, RequestKind.FOLLOW_UP)
+    assert subject.startswith("Follow-up: ") and EMAIL in body
+    assert PHONE not in body and "reminder" in body
+
+
+def test_letter_refuses_without_permission():
+    p = phone_person(permissions=Permissions())
+    with pytest.raises(ValueError, match="permission"):
+        outbox.compose(p, broker(), [], None)
+
+
+# ------------------------------------------------------------------ runner
+
+
+def test_dry_run_skips_brokers_a_value_removal_does_not_use(store):
+    from freemyid.engine.runner import run
+    p = phone_person(mailbox=MB)
+    store.save_profile(p)
+    reg = _dev.fixture_registry()
+    with _dev.fixture_server():
+        run(store, reg, [p], scan_only=False, dry_run=True, interactive=False,
+            notifier=SimpleNamespace(notify=lambda *a, **k: None))
+    touched = {e.broker_id for e in store.events(p.id) if e.broker_id}
+    assert "devmail" in touched                    # the email route still gets a letter
+    assert any(e.action == "email_drafted" for e in store.events(p.id, "devmail"))
+    for b in reg.brokers:
+        if not tiers.value_applicable(b, p, reg):
+            assert b.id not in touched, b.id
+    assert all(t.kind.value != "automatic" for t in store.list_todos(p.id))

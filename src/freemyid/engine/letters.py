@@ -20,7 +20,7 @@ from .matcher import STATE_NAMES
 
 TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
 TEMPLATES = ("generic_removal", "ccpa", "state_privacy", "follow_up", "legal_demand",
-             "postal_letter", "phone_script")
+             "postal_letter", "phone_script", "value_removal")
 _ALIASES = {"generic": "generic_removal", "cpra": "ccpa", "california": "ccpa",
             "state": "state_privacy"}
 
@@ -94,6 +94,34 @@ def choose_template(state_law: StateLaw | None) -> str:
     if state_law.state.upper() == "CA":
         return "ccpa"
     return "state_privacy" if state_law.statute_name else "generic_removal"
+
+
+def value_letter_vars(profile: Profile, broker: Broker, listings: list[Listing], *,
+                      follow_up: bool = False,
+                      original_request_date: datetime | None = None,
+                      reference: str | None = None) -> dict[str, Any]:
+    """BL-IN-08 phone-only / email-only letter: the values to delete (only with the
+    matching explicit permission), the listing URLs and the removal mailbox. Never the
+    person's name, address or the other kind of value."""
+    from ..models import RemovalScope
+    if profile.removal_scope == RemovalScope.PHONE:
+        allowed = profile.permissions.allow_phone_disclosure
+        values, label, noun = profile.phones, "a phone number", "phone number(s)"
+    elif profile.removal_scope == RemovalScope.EMAIL:
+        allowed = profile.permissions.allow_email_disclosure
+        values, label, noun = profile.emails, "an email address", "email address(es)"
+    else:
+        raise ValueError("value_letter_vars is only for phone/email-only removals")
+    if not allowed:
+        raise ValueError("this removal needs permission to share the value")
+    return {
+        "values": list(values), "value_label": label, "value_noun": noun,
+        "broker_name": broker.name, "listing_urls": [li.url for li in listings],
+        "mailbox": profile.mailbox.address if profile.mailbox else None,
+        "is_follow_up": follow_up, "reference": reference,
+        "original_request_date": original_request_date.date().isoformat()
+        if original_request_date else None,
+    }
 
 
 def letter_vars(profile: Profile, broker: Broker, listings: list[Listing],

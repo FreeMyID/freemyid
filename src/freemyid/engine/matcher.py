@@ -45,6 +45,9 @@ _RANK = {MatchLevel.NO_MATCH: 0, MatchLevel.POSSIBLE: 1, MatchLevel.CONFIRMED: 2
 #: signals a listing does not keep the values for (Listing has no phones/emails): carried
 #: over from the stored reasons when re-scoring. Both are exact-value checks.
 _CARRIED = ("phone", "email")
+#: BL-IN-08: a reverse-lookup hit (the broker's page for one phone number / email address).
+#: Rule 7: it is never CONFIRMED by the matcher, only by the person ("Is this your number?").
+LOOKUP_REASONS = {"phone": "phone_lookup", "email": "email_lookup"}
 
 _US_STATES = {
     "alabama": "AL", "alaska": "AK", "arizona": "AZ", "arkansas": "AR", "california": "CA",
@@ -249,6 +252,8 @@ def rescore(profile: Profile, li: Listing, today: date | None = None) -> Listing
     The person's own answers (user_confirmed / user_rejected) are kept as they are."""
     if USER_CONFIRMED in li.match_reasons or "user_rejected" in li.match_reasons:
         return li
+    if any(r in LOOKUP_REASONS.values() for r in li.match_reasons):
+        return li          # BL-IN-08 lookup hits are POSSIBLE already; no name to re-check
     c = Candidate(url=li.url, name=li.name_shown, age=li.age_shown,
                   locations=list(li.locations_shown), relatives=list(li.relatives_shown))
     carried = [r for r in _CARRIED if r in li.match_reasons]
@@ -257,6 +262,41 @@ def rescore(profile: Profile, li: Listing, today: date | None = None) -> Listing
         return li
     return li.model_copy(update={"match_level": r.level, "match_reasons": r.reasons,
                                  "match_score": min(li.match_score, r.score)})
+
+
+def score_value(profile: Profile, c: Candidate, kind: str) -> MatchResult:
+    """BL-IN-08: score a result from a reverse phone/email lookup page. The lookup itself
+    is the signal. If the page also shows phones/emails, one must be the person's, or it is
+    not a hit. Never CONFIRMED (rule 7): the person answers "Is this your number?"."""
+    if kind == "phone":
+        mine = {digits(x) for x in profile.phones if digits(x)}
+        shown = [digits(x) for x in c.phones if digits(x)]
+    else:
+        mine = {e.strip().lower() for e in profile.emails}
+        shown = [e.strip().lower() for e in c.emails]
+    if shown and not mine.intersection(shown):
+        return MatchResult(MatchLevel.NO_MATCH, 0.0, [])
+    return MatchResult(MatchLevel.POSSIBLE, 50.0, [LOOKUP_REASONS[kind]])
+
+
+def score_lookup(profile: Profile, broker_id: str, cands: list[Candidate], kind: str,
+                 today: date | None = None) -> list[Listing]:
+    """`score_all` for a reverse-lookup page (BL-IN-08): POSSIBLE listings, by URL."""
+    best: dict[str, Listing] = {}
+    now = utcnow()
+    for c in cands:
+        r = score_value(profile, c, kind)
+        if r.level == MatchLevel.NO_MATCH:
+            continue
+        fields = shown_fields(c)
+        if kind == "phone" and ProfileField.PHONE not in fields:
+            fields.append(ProfileField.PHONE)       # the page is the number's own page
+        best.setdefault(c.url, Listing(
+            profile_id=profile.id, broker_id=broker_id, url=c.url, name_shown=c.name,
+            age_shown=c.age, locations_shown=c.locations[:10],
+            relatives_shown=c.relatives[:20], match_score=r.score, match_level=r.level,
+            match_reasons=r.reasons, shown_fields=fields, first_seen=now, last_seen=now))
+    return list(best.values())
 
 
 def shown_fields(c: Candidate) -> list[ProfileField]:
