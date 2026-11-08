@@ -45,3 +45,4 @@ Replaces the Codex/Canva plan: no `brand/codex/` or MANIFEST; files sit in `soci
 | File | Size | Use | Alt text |
 |---|---|---|---|
 | `social/og/og-developers-cli.png` | 1200x630, 14 KB | WO-170 OG image for /developers/cli/ (not wired). | Free My ID command line: a terminal window showing a status command. Scriptable, local, no account. |
+| `social/og/og-developers-config.png` | 1200x630, 17 KB | WO-171 OG image for /developers/config/, pair of WO-170 (grey ground, file tab instead of window dots). Keys taken from the page example. | Free My ID settings file: a short plain-text file with a few options. |
