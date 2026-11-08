@@ -41,6 +41,8 @@ from ..models import (
     RequestKind,
     RequestStatus,
     StateLaw,
+    Todo,
+    TodoKind,
     utcnow,
 )
 from ..models import ListingState as S
@@ -193,6 +195,37 @@ def _parse_letter(blob: bytes) -> tuple[str, str, str]:
     head, _, body = blob.decode().partition("\n\n")
     hdr = dict(line.split(": ", 1) for line in head.splitlines() if ": " in line)
     return hdr.get("To", ""), hdr.get("Subject", ""), body
+
+
+def record_manual_letter(store, todo: Todo, listings: list[Listing], *,
+                         kind: RequestKind = RequestKind.OPT_OUT,
+                         original: Request | None = None, dry_run: bool = False,
+                         now: datetime | None = None) -> Todo:
+    """Proof vault: a "send it yourself" letter (no removal mailbox) becomes a stored
+    Request + LETTER evidence, and the to-do carries its request_id, so "I sent it" marks
+    that request SENT. The status is DRAFT, not QUEUED_FOR_APPROVAL: there is nothing for
+    Free My ID to send, so it must not show up on the approval screens. An open request of
+    the same kind is reused (one per letter, not one per run). Other to-dos pass through."""
+    if store is None or todo.kind != TodoKind.SEND_EMAIL_MANUALLY or not todo.broker_id:
+        return todo
+    f = todo.copy_fields or {}
+    to, subject, body = f.get("To", ""), f.get("Subject", ""), f.get("Letter", "")
+    req = _open_request(store, todo.profile_id, todo.broker_id, kind, dry_run)
+    if req is None:
+        req = Request(profile_id=todo.profile_id, broker_id=todo.broker_id, kind=kind,
+                      method=Method.EMAIL, listing_ids=[li.id for li in listings],
+                      created_at=now or utcnow(), dry_run=dry_run,
+                      original_request_id=original.id if original else None,
+                      status=RequestStatus.DRAFT)
+        store.save_request(req)
+        _save_blob(store, todo.profile_id, todo.broker_id, EvidenceKind.LETTER,
+                   _letter_blob(to, subject, body), req.id,
+                   f"{kind.value} letter (to send yourself)", "txt")
+        store.log(Event(profile_id=todo.profile_id, broker_id=todo.broker_id,
+                        actor=Actor.ENGINE, action="manual_letter_drafted",
+                        detail={"request_id": req.id, "kind": kind.value,
+                                "dry_run": dry_run}))
+    return todo.model_copy(update={"request_id": req.id})
 
 
 def letter_for(store, req: Request) -> tuple[str, str, str]:

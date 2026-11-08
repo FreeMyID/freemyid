@@ -155,3 +155,91 @@ def test_confirmation_screenshot_carries_its_request(store):
     assert asyncio.run(run._click(p, B, "https://fakeb.example/confirm?t=1"))
     (ev,) = [e for e in store.list_evidence(p.id, B.id) if e.kind == EvidenceKind.SCREENSHOT]
     assert ev.request_id == r.id and ev.caption == "confirmation link page"
+
+
+# ------------------------------------------------------------------ send it yourself
+
+
+def _no_mailbox_person(store):
+    c = Consent(basis=ConsentBasis.SELF, attested_by="Jane Q Testperson",
+                text_version=CURRENT_TEXT_VERSION)
+    p = make_profile(consent=c, mailbox=None)
+    store.save_profile(p)
+    return p
+
+
+def _run_once(store, p, now=T0):
+    reg = Registry(version="t", updated=T0.date(), brokers=[B])
+    cfg = cfgmod.Config(real_submissions_enabled=True, min_delay_s=0, max_delay_s=0)
+    r = Runner(store, reg, scan_only=False, dry_run=False, interactive=False,
+               broker_ids=None, only_due=False, mailer=FakeMailer(), cfg=cfg,
+               state_laws={}, now=now)
+    return asyncio.run(r.process(p, B))
+
+
+def _manual_todo(store, p):
+    from freemyid.models import TodoKind
+    return next(t for t in store.list_todos(p.id) if t.kind == TodoKind.SEND_EMAIL_MANUALLY)
+
+
+def test_send_it_yourself_creates_a_request_with_its_letter(store):
+    from freemyid.engine import outbox
+    p = _no_mailbox_person(store)
+    _run_once(store, p)
+    todo = _manual_todo(store, p)
+    assert todo.request_id
+    req = store.get_request(todo.request_id)
+    assert req.status == RequestStatus.DRAFT and not req.dry_run
+    assert req.kind == RequestKind.OPT_OUT
+    to, subject, body = outbox.letter_for(store, req)
+    assert to == "privacy@fakeb.example" and subject == todo.copy_fields["Subject"]
+    assert body == todo.copy_fields["Letter"]
+    # never on the approval screens (nothing for Free My ID to send)
+    assert not store.list_requests(status=RequestStatus.QUEUED_FOR_APPROVAL)
+    # a second run reuses the same request
+    _run_once(store, p, T0 + timedelta(days=8))
+    assert len(store.list_requests(p.id, B.id)) == 1
+
+
+def test_i_sent_it_marks_the_request_sent_and_saves_an_attestation(store):
+    from freemyid.engine import handoff
+    p = _no_mailbox_person(store)
+    _run_once(store, p)
+    todo = _manual_todo(store, p)
+    handoff.mark_resolved(store, todo)
+    req = store.get_request(todo.request_id)
+    assert req.status == RequestStatus.SENT and req.sent_at is not None
+    assert store.get_status(p.id, B.id).state == ListingState.SUBMITTED
+    (att,) = [e for e in store.list_evidence(p.id, B.id)
+              if e.kind == EvidenceKind.USER_ATTESTATION]
+    assert att.request_id == req.id
+    assert b"sent the removal letter from their own email" in store.read_evidence(att)
+
+
+def test_manual_follow_up_is_recorded_and_marked_sent(store):
+    from freemyid.engine import handoff
+    from freemyid.models import TodoKind
+    p = _no_mailbox_person(store)
+    orig = _req(store, p, T0)
+    reg = Registry(version="t", updated=T0.date(), brokers=[B])
+    cfg = cfgmod.Config(real_submissions_enabled=True, min_delay_s=0, max_delay_s=0)
+    r = Runner(store, reg, scan_only=False, dry_run=False, interactive=False,
+               broker_ids=None, only_due=False, mailer=FakeMailer(), cfg=cfg,
+               state_laws={}, now=T0 + timedelta(days=50))
+    assert r._letter(p, B, [], None, RequestKind.FOLLOW_UP, orig) == "manual_todo"
+    todo = next(t for t in store.list_todos(p.id) if t.kind == TodoKind.SEND_EMAIL_MANUALLY)
+    req = store.get_request(todo.request_id)
+    assert req.kind == RequestKind.FOLLOW_UP and req.original_request_id == orig.id
+    handoff.mark_resolved(store, todo)
+    assert store.get_request(req.id).status == RequestStatus.SENT
+
+
+def test_dry_run_request_is_never_marked_sent(store):
+    from freemyid.engine import handoff
+    p = _no_mailbox_person(store)
+    r = Request(profile_id=p.id, broker_id=B.id, kind=RequestKind.OPT_OUT,
+                method=Method.EMAIL, status=RequestStatus.DRAFT, dry_run=True)
+    store.save_request(r)
+    store.save_status(BrokerStatus(profile_id=p.id, broker_id=B.id, state=ListingState.FOUND))
+    handoff.mark_manual_submitted(store, p.id, B.id, r.id)
+    assert store.get_request(r.id).status == RequestStatus.DRAFT

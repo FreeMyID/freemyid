@@ -21,6 +21,7 @@ from ..models import (
     ListingState,
     Method,
     Profile,
+    RequestKind,
     StateLaw,
     SubmitOutcome,
     Todo,
@@ -165,7 +166,12 @@ class AssistedSubmitter(Submitter):
         return []
 
     async def submit(self, ctx: RunContext, listings: list[Listing]) -> SubmitOutcome:
+        from ..engine.outbox import record_manual_letter
         todo = todo_for(ctx.profile, ctx.broker, listings, ctx.state_law,
                         reason=ctx.scratch.get("reason"), again=ctx.scratch.get("again", False))
+        todo = record_manual_letter(ctx.store, todo, listings,
+                                    kind=ctx.scratch.get("kind", RequestKind.OPT_OUT),
+                                    original=ctx.scratch.get("original"),
+                                    dry_run=ctx.dry_run, now=ctx.now)
         return SubmitOutcome(new_state=ListingState.NEEDS_HUMAN, todos=[todo],
                              message=f"assisted:{todo.kind.value}")

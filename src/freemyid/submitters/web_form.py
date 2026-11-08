@@ -399,7 +399,11 @@ class WebFormSubmitter(Submitter):
 
     def _fallback(self, ctx: RunContext, listings: list[Listing], reason: str,
                   detail: str | None = None) -> SubmitOutcome:
+        from ..engine.outbox import record_manual_letter
         todo = assisted.todo_for(ctx.profile, ctx.broker, listings, ctx.state_law,
                                  reason="challenge" if reason == "challenge" else "error")
+        todo = record_manual_letter(ctx.store, todo, listings,
+                                    kind=ctx.scratch.get("kind", RequestKind.OPT_OUT),
+                                    dry_run=ctx.dry_run, now=ctx.now)
         msg = f"fallback_assisted:{reason}" + (f":{detail}" if detail else "")
         return SubmitOutcome(new_state=ListingState.NEEDS_HUMAN, todos=[todo], message=msg)

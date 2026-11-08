@@ -882,14 +882,16 @@ class Runner:
                 law: StateLaw | None, kind: RequestKind, original: Request | None) -> str:
         if not tiers.has_email_route(broker):
             return "no_email_route"
-        from .outbox import compose, queue_email
+        from .outbox import compose, queue_email, record_manual_letter
         if profile.mailbox is None:
             subject, body = compose(profile, broker, listings, law, kind, original=original)
             word = "follow-up" if kind == RequestKind.FOLLOW_UP else "formal demand"
-            hmod.persist_todo(self.store, assisted.manual_email_todo(
+            todo = assisted.manual_email_todo(
                 profile, broker, subject, body,
                 title=f"Send a {word} to {broker.name} for {profile.label}").model_copy(
-                    update={"resume_token": f"manual_email:{broker.id}:{kind.value}"}))
+                    update={"resume_token": f"manual_email:{broker.id}:{kind.value}"})
+            hmod.persist_todo(self.store, record_manual_letter(
+                self.store, todo, listings, kind=kind, original=original, now=self.now))
             return "manual_todo"
         req = queue_email(self.store, profile, broker, listings, kind=kind, state_law=law,
                           dry_run=False, mailer=self.mailer_for(profile), original=original,

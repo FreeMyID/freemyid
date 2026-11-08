@@ -19,14 +19,16 @@ class EmailSubmitter(Submitter):
         return []          # email brokers are not searched; the letter names the person
 
     async def submit(self, ctx: RunContext, listings: list[Listing]) -> SubmitOutcome:
-        from ..engine.outbox import compose, queue_email
+        from ..engine.outbox import compose, queue_email, record_manual_letter
         kind: RequestKind = ctx.scratch.get("kind", RequestKind.OPT_OUT)
         original = ctx.scratch.get("original")
         use = base.confirmed(listings) or listings
         if ctx.profile.mailbox is None:
             subject, body = compose(ctx.profile, ctx.broker, use, ctx.state_law, kind,
                                     original=original)
-            todo = assisted.manual_email_todo(ctx.profile, ctx.broker, subject, body)
+            todo = record_manual_letter(
+                ctx.store, assisted.manual_email_todo(ctx.profile, ctx.broker, subject, body),
+                use, kind=kind, original=original, dry_run=ctx.dry_run, now=ctx.now)
             return SubmitOutcome(new_state=ListingState.NEEDS_HUMAN, todos=[todo],
                                  message="manual_email")
         req = queue_email(ctx.store, ctx.profile, ctx.broker, use, kind=kind,

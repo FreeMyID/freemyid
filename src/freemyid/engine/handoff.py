@@ -184,7 +184,7 @@ def mark_manual_submitted(store: Store, profile_id: str, broker_id: str,
     st = store.get_status(profile_id, broker_id)
     new = transition(st, S.SUBMITTED, now)
     store.save_status(new)
-    if request_id and (r := store.get_request(request_id)):
+    if request_id and (r := store.get_request(request_id)) and not r.dry_run:
         store.save_request(r.model_copy(update={"status": RequestStatus.SENT, "sent_at": now}))
     store.log(Event(profile_id=profile_id, broker_id=broker_id, actor=Actor.USER,
                     action="manual_submitted", from_state=st.state, to_state=new.state))
@@ -192,6 +192,33 @@ def mark_manual_submitted(store: Store, profile_id: str, broker_id: str,
 
 _SUBMIT_KINDS = frozenset({"assisted_opt_out", "send_email_manually", "postal_letter",
                            "phone_call", "account_required"})
+
+
+_ATTEST_WHAT = {
+    "assisted_opt_out": "filled in the site's removal form",
+    "send_email_manually": "sent the removal letter from their own email",
+    "postal_letter": "mailed the removal letter",
+    "phone_call": "phoned the site to ask for removal",
+    "account_required": "made the removal request through an account on the site",
+}
+
+
+def save_attestation(store: Store, todo: Todo) -> None:
+    """Proof vault: the person's "I did it" as encrypted USER_ATTESTATION evidence (what,
+    when, for which request). Never blocks resolving the to-do."""
+    from ..models import EvidenceKind, utcnow
+    from ..submitters import base
+    if not todo.broker_id:
+        return
+    what = _ATTEST_WHAT.get(todo.kind.value, "did the step by hand")
+    text = (f"Marked done in Free My ID on {utcnow().isoformat(timespec='seconds')}.\n"
+            f"The person says they {what}.\nTo-do: {todo.title}\n")
+    try:
+        ev = base.evidence(todo.profile_id, todo.broker_id, EvidenceKind.USER_ATTESTATION,
+                           "txt", request_id=todo.request_id, caption="marked done by you")
+        store.save_evidence(ev, text.encode())
+    except Exception as e:  # noqa: BLE001 - a proof copy must never block "I did it"
+        log.warning("attestation not saved (%s)", type(e).__name__)
 
 
 def mark_resolved(store: Store, todo: Todo) -> None:
@@ -207,7 +234,13 @@ def mark_resolved(store: Store, todo: Todo) -> None:
     if not todo.broker_id or todo.kind.value not in _SUBMIT_KINDS:
         return
     tok = todo.resume_token or ""
+    save_attestation(store, todo)
     if tok.count(":") >= 2:          # manual_email:<broker>:<follow_up|legal_demand>
+        from ..models import RequestStatus, utcnow
+        if todo.request_id and (r := store.get_request(todo.request_id)) and \
+                not r.dry_run and r.status != RequestStatus.SENT:
+            store.save_request(r.model_copy(update={"status": RequestStatus.SENT,
+                                                    "sent_at": utcnow()}))
         store.log(Event(profile_id=todo.profile_id, broker_id=todo.broker_id,
                         actor=Actor.USER, action="manual_letter_sent",
                         detail={"todo_kind": todo.kind.value}))
