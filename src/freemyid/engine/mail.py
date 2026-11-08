@@ -155,13 +155,17 @@ def sender_domain(raw: bytes) -> str | None:
 
 @dataclass
 class ReplyScan:
-    """What the broker's replies say, PII-free (links are confirmation URLs only)."""
+    """What the broker's replies say. Everything but `replies` is PII-free (links are
+    confirmation URLs only). `replies` holds the matched raw messages for the encrypted
+    proof vault only; never log or serialize it."""
     links: list[str] = field(default_factory=list)   # newest message first, ranked inside
     id_requested: bool = False      # some reply asks for an ID document -> human to-do
     extension_claimed: bool = False  # some reply says the broker is taking more time
     messages: int = 0               # distinct broker messages considered
     duplicates: int = 0             # same Message-ID (or same bytes) seen again
     stale: int = 0                  # older than the submission this reply would answer
+    #: (Date header, raw bytes) of each matched broker message, newest first. Evidence only.
+    replies: list[tuple[datetime | None, bytes]] = field(default_factory=list, repr=False)
 
 
 def message_date(raw: bytes) -> datetime | None:
@@ -243,6 +247,7 @@ def scan_replies(raws: list[bytes], broker: Broker, since: datetime | None = Non
     out.messages = len(msgs)
     floor = datetime.min.replace(tzinfo=UTC)
     msgs.sort(key=lambda m: (m[0] or floor, m[1]), reverse=True)
+    out.replies = [(d, raw[:MAX_MESSAGE_BYTES]) for d, _i, raw in msgs]
     for _d, _i, raw in msgs:
         if claims_extension(raw):
             out.extension_claimed = True

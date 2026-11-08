@@ -24,7 +24,7 @@ import asyncio
 import logging
 from collections import Counter
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 from .. import config as cfgmod
@@ -65,7 +65,7 @@ from ..submitters import assisted
 from ..submitters import base as sbase
 from . import handoff as hmod
 from . import matcher, plugins, tiers
-from .mail import ReplyScan
+from .mail import DATE_SLACK, ReplyScan
 from .outbox import OutboxError, dev_fixture_base
 
 if TYPE_CHECKING:
@@ -79,6 +79,7 @@ log = logging.getLogger(__name__)
 LEGAL_WINDOW_DAYS = 45
 LEGAL_EXTENSION_DAYS = 45
 EXTENSION_EVENT = "broker_extension"
+_EPOCH = datetime.min.replace(tzinfo=UTC)
 _SUBMITTED_STATES = (S.SUBMITTED, S.AWAITING_VERIFICATION, S.CONFIRMED)
 ID_REQUEST_REASON = "id_requested"
 CPPA_COMPLAINT_URL = "https://cppa.ca.gov/webapplications/complaint"
@@ -191,6 +192,39 @@ def keep_unchecked(store: Store, profile: Profile, broker: Broker,
     return [*found, *(matcher.rescore(profile, li)
                       for li in store.list_listings(profile.id, broker.id)
                       if li.gone_since is None and li.url not in have)]
+
+
+def answered_request(store: Store, profile_id: str, broker_id: str,
+                     at: datetime | None) -> Request | None:
+    """The request a broker message (or confirmation page) dated `at` answers: the latest
+    real (not dry-run) SENT request sent at or before `at`; the latest one if `at` is None."""
+    sent = [r for r in store.list_requests(profile_id, broker_id, status=RequestStatus.SENT)
+            if r.sent_at is not None and not r.dry_run]
+    if at is not None:
+        ref = at if at.tzinfo else at.replace(tzinfo=UTC)
+        sent = [r for r in sent if r.sent_at is not None and r.sent_at <= ref + DATE_SLACK]
+    return max(sent, key=lambda r: r.sent_at or _EPOCH, default=None)
+
+
+def save_replies(store: Store, profile_id: str, broker_id: str,
+                 replies: list[tuple[datetime | None, bytes]], now: datetime) -> int:
+    """Proof vault: each matched broker reply as encrypted EMAIL_RECEIVED evidence, tied to
+    the request it answers. The same message is saved once (by content hash). Returns how
+    many were new."""
+    import hashlib
+    have = {e.sha256 for e in store.list_evidence(profile_id, broker_id)
+            if e.kind == EvidenceKind.EMAIL_RECEIVED}
+    n = 0
+    for when, raw in replies:
+        if hashlib.sha256(raw).hexdigest() in have:
+            continue
+        req = answered_request(store, profile_id, broker_id, when or now)
+        ev = sbase.evidence(profile_id, broker_id, EvidenceKind.EMAIL_RECEIVED, "eml",
+                            request_id=req.id if req else None, caption="reply from the site")
+        saved = store.save_evidence(ev, raw)
+        have.add(saved.sha256)
+        n += 1
+    return n
 
 
 def rescore_stored(store: Store, profile: Profile, broker: Broker, now: datetime) -> int:
@@ -645,6 +679,9 @@ class Runner:
         except Exception as e:  # noqa: BLE001
             self._event(profile, broker.id, "mail_check_failed", error=type(e).__name__)
             return st
+        n = save_replies(self.store, profile.id, target.id, scan.replies, self.now)
+        if n:
+            self._event(profile, broker.id, "replies_saved", count=n)
         if scan.duplicates or scan.stale:
             self._event(profile, broker.id, "mail_replies_skipped",
                         duplicates=scan.duplicates, stale=scan.stale)
@@ -706,7 +743,9 @@ class Runner:
             page = await bctx.new_page()
             await bm.goto(page, url)
             png = await page.screenshot(full_page=True)
+            req = answered_request(self.store, profile.id, broker.id, self.now)
             ev = sbase.evidence(profile.id, broker.id, EvidenceKind.SCREENSHOT, "png",
+                                request_id=req.id if req else None,
                                 caption="confirmation link page")
             self.store.save_evidence(ev, png)
             return True
