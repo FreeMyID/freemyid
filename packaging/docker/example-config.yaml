@@ -1,6 +1,21 @@
-# Fake person for a trial run. The exact keys follow the `setup --from` YAML schema (schema/), still being finalised; illustrative until then.
-profile:
-  full_name: Jane Q Testperson
-  city: Springfield
-  state: IL
-  removal_email: jane.removals@example.invalid
+# Fake person for a trial run (Jane Q Testperson, Springfield IL). No real data.
+# Follows schema/setup-config.schema.json (`freemyid setup --from`). To use it for real, replace
+# every value with your own and read the consent text that `freemyid setup --from` prints first:
+# `agreed` and `signed_name` are your own signature, not ours.
+version: 1
+consent:
+  agreed: true
+  signed_name: Jane Q Testperson
+  basis: self
+person:
+  name:
+    first: Jane
+    middle: Q
+    last: Testperson
+  addresses:
+    - city: Springfield
+      state: IL
+      current: true
+mailbox:
+  provider: other
+  address: jane.removals@example.invalid
