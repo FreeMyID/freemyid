@@ -56,13 +56,6 @@ def _citation_id(case: tuple[Path, int, str, int, str]) -> str:
 
 CASES = _citations()
 KNOWN_BROKEN_UI_CITATIONS = {
-    ("docs/user/mail-gmail.md", 65, "draft.py", 455): "docs/user/mail-gmail.md:65: stale UI text",
-    ("docs/user/mail-gmail.md", 66, "draft.py", 493): "docs/user/mail-gmail.md:66: stale UI text",
-    ("docs/user/mail-other.md", 79, "draft.py", 455): "docs/user/mail-other.md:79: stale UI text",
-    ("docs/user/mail-other.md", 80, "draft.py", 493): "docs/user/mail-other.md:80: stale UI text",
-    ("docs/user/mail-proton.md", 70, "draft.py", 490): "docs/user/mail-proton.md:70: stale UI text",
-    ("docs/user/mail-proton.md", 71, "server.py", 717): "docs/user/mail-proton.md:71: stale UI text",
-    ("docs/user/mail-proton.md", 72, "draft.py", 497): "docs/user/mail-proton.md:72: stale UI text",
 }
 
 
@@ -116,7 +109,11 @@ def test_quoted_ui_text_exists_in_cited_source(
     matches = _source_matches(reference)
     assert len(matches) == 1, f"{_relative(doc)}:{doc_line}: cannot check {reference}"
     source = matches[0].read_text(encoding="utf-8")
-    missing = [phrase for phrase in _quoted_ui_text(text) if phrase not in source]
+    # UI text in Python is often split across adjacent string literals on several lines
+    # ("...approved "\n    "it. ..."): also search a copy with those joins removed.
+    joined = re.sub(r"""(["'])\s*\n\s*[rbfu]{0,2}\1""", "", source)
+    missing = [phrase for phrase in _quoted_ui_text(text)
+               if phrase not in source and phrase not in joined]
     assert not missing, (
         f"{_relative(doc)}:{doc_line}: {reference}:{source_line} does not contain "
         f"quoted UI text {missing}"
