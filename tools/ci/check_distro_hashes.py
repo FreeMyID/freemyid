@@ -18,7 +18,7 @@ CHECKS = [
     (re.compile(r"\b0{64}\b"), "all-zero sha256"),
     (re.compile(r"REPLACE_WITH_\w*"), "REPLACE_WITH_ token"),
 ]
-_SUMS = re.compile(r"^\s*(?:md5|sha1|sha224|sha256|sha384|sha512|b2|ck)sums(?:_\w+)?\s*=(.*)$")
+_SUMS = re.compile(r"^\s*(?:md5|sha1|sha224|sha256|sha384|sha512|b2|ck)sums(?:_\w+)?\s*\+?=(.*)$")  # = or += (bash append)
 _SKIP = re.compile(r"\bSKIP\b")
 
 
@@ -28,18 +28,19 @@ def _skip_lines(lines: list[str]) -> list[int]:
     hits, in_array = [], False
     for n, line in enumerate(lines, 1):
         if in_array:
-            if _SKIP.search(line.split("#", 1)[0]):
+            code = line.split("#", 1)[0]  # a ")" or SKIP in a comment doesn't count
+            if _SKIP.search(code):
                 hits.append(n)
-            if ")" in line:
+            if ")" in code:
                 in_array = False
             continue
         m = _SUMS.match(line)
         if not m:
             continue
-        rest = m.group(1)
-        if _SKIP.search(rest.split("#", 1)[0]):
+        code = m.group(1).split("#", 1)[0]
+        if _SKIP.search(code):
             hits.append(n)
-        if rest.lstrip().startswith("(") and ")" not in rest:
+        if code.lstrip().startswith("(") and ")" not in code:
             in_array = True
     return hits
 

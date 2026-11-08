@@ -95,3 +95,21 @@ def test_a_recipe_that_is_not_utf8_fails(tmp_path: Path) -> None:
 def test_the_real_distro_tree_is_scannable() -> None:
     """The live tree may hold placeholders (exit 1) or real hashes (exit 0), never a crash."""
     assert _run(ROOT / "distro").returncode in (0, 1)
+
+
+def test_skip_appended_with_plus_equals_fails(tmp_path: Path) -> None:
+    d = _tree(tmp_path, {"aur/PKGBUILD": f"sha256sums=('{REAL}')\nsha256sums+=('SKIP')\n"})
+    r = _run(d)
+    assert r.returncode == 1 and "distro/aur/PKGBUILD:2: SKIP checksum" in r.stdout
+
+
+def test_paren_in_a_comment_does_not_end_the_array(tmp_path: Path) -> None:
+    d = _tree(tmp_path, {"aur/PKGBUILD": f"sha256sums=(\n  '{REAL}'  # first (sdist)\n  'SKIP'\n)\n"})
+    r = _run(d)
+    assert r.returncode == 1 and "distro/aur/PKGBUILD:3: SKIP checksum" in r.stdout
+
+
+def test_paren_in_a_comment_on_the_assignment_line_still_starts_the_array(tmp_path: Path) -> None:
+    d = _tree(tmp_path, {"aur/PKGBUILD": "sha256sums=( # checksums (see CHECKLIST)\n  'SKIP'\n)\n"})
+    r = _run(d)
+    assert r.returncode == 1 and "distro/aur/PKGBUILD:2: SKIP checksum" in r.stdout
