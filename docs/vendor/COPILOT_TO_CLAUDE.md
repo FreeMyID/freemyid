@@ -179,3 +179,73 @@ Thanks, Morgan.
 5. **BOARD.md.** I searched it again for WO-123..126 and found no match. Only reporting what I saw; no action asked.
 
 Nothing here was verified by running tests or builds.
+
+## COPILOT-013
+
+- Date: 2026-11-08
+- From: Tomás Rivera / Copilot liaison
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CLAUDE-P008
+- Status: receipt acknowledged; relayed to Grace Holloway
+
+Morgan started docs/BACKLOG.md, a three-team backlog with a lane table; Copilot owns `tests/copilot/`, `packaging/`, `docs/user/`, `docs/USER_GUIDE.md`, `docs/CLI.md`, `README.md`, and `web/src/components/ui/` plus `CopyHash.astro`, and only in-house changes `src/`. The Copilot bulk lane CP is WO-139..WO-150 (Arjun: WO-139..143 packaging recipes; Claire: WO-144..147 user docs, one at a time; Malik: WO-148 then WO-150 after Arjun's recipes; Lucia: WO-149; Ben: WO-126 running), with test files named `test_cp_*.py`. Morgan is starting WO-139 and WO-144 locally alongside WO-126, and asks Grace to propose 5-10 more CP-lane items as GP-06+ in COPILOT_PROPOSALS.md and to critique the IN and CX lanes in BACKLOG.md for anything missing, mis-scoped or risky. This receipt is not approval or acceptance.
+
+## COPILOT-015
+
+- Date: 2026-11-08
+- From: Tomás Rivera / Copilot liaison
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CLAUDE-P009
+- Status: receipt acknowledged; relayed to Grace Holloway
+
+Morgan corrects the lane table: `packaging/` already holds the real Windows installer and Docker build, so it stays in-house only. Community recipes go in a new top-level `distro/` (`distro/homebrew/`, `distro/aur/`, `distro/nix/`, `distro/flatpak/`, `distro/winget/`, `distro/scoop/`), and WO-139..143 and WO-150 are updated. Morgan moved Arjun's Homebrew files there and merged WO-139. This receipt is not approval or acceptance.
+
+## COPILOT-014
+
+- Date: 2026-11-08
+- From: Grace Holloway / Copilot project engineer
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CLAUDE-P008
+- Status: answered; 6 proposals (GP-06..GP-11) and a backlog critique; two decisions needed from you
+
+Thanks, Morgan. I read docs/BACKLOG.md, WO-139/148/150 headers and the current `packaging/` and `tests/` trees.
+
+**Proposals.** GP-06..GP-11 are in COPILOT_PROPOSALS.md: install guide by platform, plain-words glossary, doc link checker, wording and released-versus-coming guard, Docker example config schema check, and a source-level focus guard for `web/src/components/ui/`. All are new files in the CP lane.
+
+**Decisions I need**
+1. **tests/ lane clash.** The lane table lets IN own "existing `tests/test_*.py`", while CP owns `tests/copilot/`. WO-121 already made `tests/test_cli_docs_match_source.py`, and WO-148 (CP-10) covers the same ground in `tests/copilot/`. Please say whether WO-148 extends the old file's checks or replaces them, so we do not keep two copies that drift.
+2. **packaging/ is in-house only today.** `.github/copilot-instructions.md` lists `packaging/` as never-touch, and `packaging/windows/` and `packaging/docker/` already exist. BACKLOG gives the whole of `packaging/` to CP. I will assume WO-139..143 name only new subfolders (`packaging/homebrew/` and so on, as WO-139 does) and that Windows and Docker files stay in-house. Please confirm; the instruction file itself is yours to change.
+
+**Critique of IN and CX** (evidence is the backlog text only; I did not check the code)
+- **IN, BL-IN-62 vs BL-IN-60/61.** If builder shells stay refused, vendors cannot run tests, and CP tests in this batch go unrun. Suggest ranking BL-IN-62 first.
+- **IN, BL-IN-43.** It says CP writes `.deb/.rpm/AppImage` recipes, but CP-01..05 have none. Add a CP item or drop the claim.
+- **IN, BL-IN-03/07 (legal letters, complaints).** Highest-risk copy in the plan: statute citations and "lawful request" wording need a source check and POSITIONING review before shipping. Suggest a research item with Priya first.
+- **IN, BL-IN-10.** The 45-day decision should come before BL-IN-03 and BL-IN-07, since both depend on it.
+- **IN, BL-IN-22 (read-aloud).** Large for 0.4. If it means a browser or cloud speech feature it could add a third-party or network dependency; state "local only" in the item.
+- **IN, missing (suggestion, not evidence-backed).** A plain "what leaves this computer" page and an uninstall check, which scam-wary users are likely to ask about.
+- **CX, CX-06 vs GP-11.** CX-06 covers app screens and GP-11 website components; keep that split explicit.
+- **CX, CX-04 vs GP-10.** Similar topic; GP-10 covers only the shipped Docker example.
+- **CX, CX-11/12.** Generated reference pages must mark commands "coming" where they are not in a published release.
+- **CX, CX-07.** Name fixtures must stay obviously fake ("Pat Testperson"); say so in the WO.
+- **CX, CX-01.** Fuzz tests need a fixed seed and a time cap so they do not flake.
+- **BOARD.md.** My copy has no WO-139..150 rows (checked by search). Reporting only.
+
+Nothing here was verified by running tests or builds.
+
+## COPILOT-016
+
+- Date: 2026-11-08
+- From: Grace Holloway / Copilot project engineer
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CLAUDE-P009
+- Status: answered; decision 2 closed, decision 1 still open; GP-09 and GP-10 paths updated
+
+Thanks, Morgan. That settles my decision 2 from COPILOT-014: `packaging/` stays in-house, and recipes go in `distro/`.
+
+- **What I checked.** `distro/homebrew/` has `freemyid.rb` and `README.md`. docs/BACKLOG.md lines 14, 16 and 54 now say `distro/`. A search of docs/vendor/BOARD.md and docs/BACKLOG.md still finds no WO-139..150 rows in BOARD.md. I have not read the recipe contents.
+- **What I changed.** In COPILOT_PROPOSALS.md, GP-09 now scans `distro/**/README.md` instead of `packaging/**/README.md`. GP-10 only reads `packaging/docker/example-config.yaml` and does not edit it. Reading is not a change, but tell me if you want it out of scope until the Docker files are yours to share.
+- **Still open (decision 1).** Should WO-148 extend `tests/test_cli_docs_match_source.py` (WO-121) or replace it? That file is in the IN lane, so my suggestion is that WO-148 adds only new cases in `tests/copilot/` for things WO-121 does not check, and does not touch the old file. Please confirm, or name the cases to move.
+- **BOARD.md.** Please ask Nora to add WO-139..150 so the path guard covers `distro/` and `tests/copilot/`.
+- **New proposals.** None this time; I have no evidence-backed item beyond GP-06..GP-11.
+
+Nothing here was verified by running tests or builds.

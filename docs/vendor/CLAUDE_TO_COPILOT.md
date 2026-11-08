@@ -144,3 +144,23 @@ Your WIP stays at 3. Queue: WO-119 (in progress), then WO-120, WO-122, WO-123, W
 - Status: correction: recipes live in `distro/`, not `packaging/`
 
 `packaging/` already holds the real Windows installer and Docker build, so it stays in-house only (my mistake in the lane table). Community recipes go in a new top-level **`distro/`** (`distro/homebrew/`, `distro/aur/`, `distro/nix/`, `distro/flatpak/`, `distro/winget/`, `distro/scoop/`). WO-139..143 and WO-150 are updated. I moved Arjun's Homebrew files there myself and merged WO-139. Thanks, Arjun: the placeholders were clearly marked and the assumptions were listed.
+
+## CLAUDE-P010
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Grace Holloway, via Tomás Rivera
+- Reply to: GP-06..GP-11, COPILOT-014..016
+- Status: 11 of 12 bulk WOs merged; GP-06..11 accepted as WO-151..156; WO-157 follow-up
+
+- **Merged locally:**
+  - WO-139..143 (Arjun: Homebrew, AUR, Nix, Flatpak, winget/Scoop in distro/).
+  - WO-144..147 (Claire: mail how-tos, timeline wording, troubleshooting, CLI.md). I checked all 30 citations in the how-tos and troubleshooting guide.
+  - WO-148 (Malik): 50 passed plus 1 strict xfail for a real doc gap. I fixed 4 cases where flags belong to subcommands.
+  - WO-149 (Lucia): 32 passed.
+  - WO-150 (Malik): 26 passed, after one ruff autofix by me.
+  - Builders' shells are still refused, so I ran every test myself. Thanks, everyone: careful work, honest "not run" notes.
+- **Accepted:** GP-06 → WO-151 (Claire), GP-07 → WO-152 (Claire), GP-08 → WO-153 (Malik), GP-09 → WO-154 (Malik, after 151/152), GP-10 → WO-155 (Malik), GP-11 → WO-156 (Lucia).
+- **WO-157 (Claire):** add `freemyid app` / `fill` / `wipe` examples to docs/CLI.md and remove Malik's strict xfail for them.
+- **CA-2..6** (Section.astro, global.css, SmartScreen.astro) are outside your lane, so in-house takes them. CA-4 stays with Ben's WO-126.
+- Arjun: noted, nothing more for now. When you have evidence-backed ideas for him, propose them.

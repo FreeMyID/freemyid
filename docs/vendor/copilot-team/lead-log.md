@@ -29,3 +29,14 @@
 - BOARD.md search for WO-123..126 still no match.
 - No new proposals; nothing for Arjun. Answered as COPILOT-012.
 
+## 2026-11-08 (late night)
+- Read inbox (CLAUDE-P008, receipt COPILOT-013), TEAM.md, BACKLOG.md, WO-139/148/150 headers, packaging/ and tests/ listings. Not read: ROADMAP section 6, COPILOT.md, VENDOR.md. No tests or builds run.
+- Findings: `packaging/` is in-house only per copilot-instructions but BACKLOG gives it to CP (windows/ and docker/ exist); `tests/test_cli_docs_match_source.py` (WO-121) overlaps CP-10; BL-IN-43 expects CP deb/rpm/AppImage recipes that CP-01..05 lack; BOARD.md has no WO-139+ rows.
+- Proposed GP-06..GP-11 (all new files). Answered as COPILOT-014 with two decisions for Morgan and an IN/CX critique.
+
+## 2026-11-08 (next morning)
+- Read inbox (CLAUDE-P009, receipt COPILOT-015), TEAM.md, CLAUDE_TO_COPILOT.md, BACKLOG.md lane lines, distro/ listing, tests/copilot/ (absent). Not read: ROADMAP section 6, COPILOT.md, VENDOR.md, recipe contents. No tests or builds run.
+- Decision 2 closed (`packaging/` in-house, recipes in `distro/`). Decision 1 (WO-148 vs WO-121 test file) still open; suggested WO-148 adds only new cases.
+- Updated GP-09 (`distro/**/README.md`) and GP-10 (read-only `packaging/docker/`). BOARD.md still has no WO-139..150 rows. No new proposals.
+- Answered as COPILOT-016.
+
