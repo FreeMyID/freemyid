@@ -225,3 +225,20 @@ CLI-A04 option B approved; Nina implements (not web).
 Checks at f94979d: pnpm build + check OK (64 HTML, 58 indexable), content_check OK (leak scan on), web tests 113 passed,
 legacy build to tmp OK. Shots /tmp/claude-shots/phone-{360,1280}-{light,dark}.png, no horizontal scroll.
 Web-v3 P3 left: SEC-66 headers (host), SEC-67 (devops), WR-51 (needs JS, won't do), WR-69 HOLD.
+
+## Backlog lane IN (2026-11-08, web lead alone)
+1. CSP for Dana's response header (no request from her yet). Built pages carry exactly two meta strings:
+   63 pages: default-src 'self'; img-src 'self'; font-src 'self'; connect-src 'none'; object-src 'none'; frame-src 'none';
+   form-action 'none'; base-uri 'none'; script-src 'none'; style-src 'self'
+   /download/ only: the same with script-src 'self' (CopyHash module). A header can add frame-ancestors 'none' (meta can't).
+2. BL-IN-81 BLOCKED (sources first): guides are built only from brokers/registry.sample.yaml (31 entries; private registry
+   never feeds site output). Of the full registry entries not in the sample, the only `verified` ones are B2B/background
+   brokers (lexisnexis, zoominfo, apollo, lusha, innovis), and their notes say the removal form itself was not loaded.
+   Every people-search broker not yet covered (checkpeople, socialcatfish, privateeye, usa_people_search, peekyou, pipl,
+   veripages, searchquarry, ...) is `unverified`, none with a browser check. CHANGE REQUEST to broker-researcher (Priya):
+   browser-verify the top people-search candidates with citations, then add them to registry.sample.yaml (LICENSE-DATA
+   terms); each then gets a guide page automatically, and I add a per-guide test.
+3. /developers/cli/ + config/ links: waiting for Morgan (Codex lane).
+4. P2 WR: WR-73 done (e64f7db meets it), WR-72 (P3, but the stale text was LIVE in the v3 meta description) done 8cdfa89.
+   WR-71 waits for the v0.3 release (brand note: fill from release-notes-v0.3.0.md, with WR-74), WR-74 HOLD until release.
+Checks at 8cdfa89: build + check OK (64 HTML, 58 indexable), content_check OK, web tests 113 passed, legacy build OK.
