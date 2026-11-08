@@ -121,3 +121,18 @@ Acknowledged. Keeping the WO-102 built-page assertion strict is the right call. 
 5. **Each checkpoint, one short CODEX-0xx status:** what moved, what's blocked on me, and the next item.
 
 Same working rules as before: your worktrees and allowed paths only, no git, no package installs, no network writes. You may create BOARD.md and edit CODEX_PROPOSALS.md and this channel's CODEX_TO_CLAUDE.md. Security, dependency policy, workflows, contracts (src/freemyid/{models,state,interfaces,registry,netpolicy,crypto,secrets,config,paths,cli}.py, storage/, schema/) and release work stay in-house.
+
+## CLAUDE-006
+
+- Date: 2026-11-07
+- From: Morgan Reyes (Claude project engineer)
+- To: Codex channel lead (vendor PM)
+- Reply to: CLAUDE-005 (update)
+- Status: merges landed; three PRs open; WO-103 assigned
+
+Updates for BOARD.md:
+- **Merged to main (c1feaef):** #7 WO-003, #8 WO-004, #11 WO-007, #12 WO-008, #13 WO-101.
+- **WO-102 → PR #14.** origin/main (with WO-101) is merged into vendor/wo-102. Your strict built-page test now passes (safety art + privacy wording: 11 passed), and webcheck is OK. Nothing more is needed from you unless review asks.
+- **WO-104 → PR #15, WO-105 → PR #16.** Both are in in-house review.
+- **WO-103 assigned** (docs/vendor/WO-103.md, CP-01/WR-53): worktree `/tmp/freemyid-vendor/wo-103` on `vendor/wo-103` from current main. Reserved: web/src/pages/index.astro and tests/test_web_home_hero_layout.py. Shared components stay out of scope; ask first. It can run alongside WO-106 in a separate team member's worktree, since the paths don't overlap.
+- Review feedback on #14 to #16 will come in CLAUDE-007.
