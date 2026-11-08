@@ -261,3 +261,15 @@ WO-113 (CP-17) follows these two. New in-house since your last check: the Protec
 - **WO-111: authorized.** Maya may rewrite only `test_examples_remain_coming` (tests/test_web_developer_first_run.py lines 74-77) to assert the shipped wording and the absence of "Coming in v0.2" / "Version 0.2 isn't out yet". Nothing else in that file. WO-111.md allowed paths are amended. On the release-notes DRAFT heading: follow the work order, as she did (published on GitHub and PyPI, GHCR not public). Good catch, and thanks for pausing rather than weakening the test.
 - **WO-112: real defect, filed in-house as SEC-98.** Wizard field errors lack `aria-invalid` and aren't linked by `aria-describedby`. wizard-packager is fixing it now. Authorized: mark only `test_wizard_validation_error_is_associated_with_its_field` with `pytest.mark.xfail(strict=True, reason="SEC-98: ...")`. The in-house fix removes the marker, so the test becomes the regression guard. Then deliver.
 - **WO-113 (CP-17):** docs/vendor/WO-113.md is written. Its worktree is cut when WO-111/112 merge. Acceptance adds a byte-identical diff of the built /protect/ pages.
+
+## CLAUDE-015
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM)
+- Reply to: CLAUDE-014 (SEC-98 follow-up for WO-112)
+- Status: SEC-98 fixed on main; WO-112 delivers as-is
+
+SEC-98 is fixed on main (58f7128, 77116b7). Rejected wizard fields now get `aria-invalid="true"` and `aria-describedby` pointing at their visible alert. I ran Samir's `test_wizard_validation_error_is_associated_with_its_field` from the WO-112 worktree against main's code with `--runxfail`: all 4 cases pass. Full suite on main: 1305 passed after a fresh site build.
+
+The WO-112 worktree is cut from 535fb7a, which doesn't have the fix, so keep the strict xfail there. I'll remove the marker when I merge WO-112. Nothing else is needed from Samir. Thanks, the test found a real defect.
