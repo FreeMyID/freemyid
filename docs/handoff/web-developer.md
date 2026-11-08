@@ -160,3 +160,45 @@ Open (orchestrator): ROADMAP 3.7 puts "multiple profiles" in 0.4, but v0.2.0 alr
 (dashboard.py) and `profile add` in the CLI, and the FAQ says you can protect several family members from one computer.
 /whats-coming/ "Planned for 0.4: family profiles, each giving their own consent" reads as the consent-per-person part;
 please confirm or reword ROADMAP 3.7. Legacy site/ (not deployed; Pages builds web/) still has the old FAQ text.
+
+## Absolute-claims pass + CLI-A04 note (2026-11-08, web lead alone)
+
+63ce16e absolute claims made literally true for the shipped app (v0.2.0 code read, not docs):
+- The listing check sends name + city/state/zip to people-search search pages (engine/exposure.py,
+  submitters/web_form.search_url), outside any "request you approve". /developers/ and /whats-coming/ now say details go
+  only to the people-search sites (a name-and-town lookup, then removal requests you approve); "Nothing is sent to us".
+- Practice mode still looks people up: home + /how-it-works/ "nothing is sent until you say so" -> "no removal requests go out".
+- Email approval: EmailMode.AUTO is opt-in, so /families/ says "Unless they switch on automatic sending, no email goes out
+  until they press OK".
+- Desktop notice: shipped text is "Free My ID needs 5 minutes of your help" / "N things need you" (runner.py, no name);
+  /families/ example "Mom: 2 sites need you" replaced with the real text.
+- Home "Never a phone number or ID unless you choose to" (the wizard does ask for an optional phone) -> "It gives a site
+  your phone number only if you switch that on" (tiers.py/base.py/letters.py gate on allow_phone_disclosure).
+- /safety/ "Fenced in" now lists our public list of sites (registry update URL) alongside sites + mailbox.
+- Checked and kept (true): never SSN/bank/card (filler skips SSN fields), never pays, never solves robot checks, never
+  creates accounts / uploads ID (no code does either even with the permission on), consent gate (runner re-checks), "we will
+  never email you an installer or call you" (policy), guides "never have to pay".
+Guard: tests/test_web_absolute_claims.py (fixed phrases in source + build; banned phrases on every built page and in astro
+sources with comments stripped); WO-107 test expectations updated. Legacy site_src/templates not touched (not deployed).
+OPEN for Morgan (WO-101 scope, test-guarded, so not changed): the PROMISE "They go out only in a removal request you
+approve, sent straight to that one site" (home, /safety/, FAQ) is not literally true either: the listing check sends name
+and town to each site's search page first. Proposed: "Your details are stored only on your computer. They go out only to
+the people-search sites themselves: your name and town to look you up, and removal requests you approve." Needs your OK,
+then a change to tests/test_web_privacy_wording.py PROMISE, home, safety, faq.yaml and the legacy templates in one commit.
+
+### CLI-A04 recommendation (web prefill wiring; decision for Morgan, not implemented)
+Facts: `freemyid setup --prefill X` defaults to --web, and the web branch calls serve() and silently ignores X. Only
+--no-web passes it to setup_cli. `profile add --prefill X` already forces the terminal. The web wizard already has its own
+import screen (/wizard/import: file picker or the bundle shipped next to the exe, passphrase typed in the browser, consent
+re-asked, mailbox never imported). Docs (CLI.md, README via WO-120) already document the --no-web spelling.
+Options:
+A. Wire it: pass the path into serve(), open the browser at /wizard/import with that file pre-selected. Needs cli.py
+   (contract) + server.py; the local server would read a path handed in from argv (new surface, small); the passphrase
+   still has to be typed in the browser.
+B. Make it honest, not wired: `--prefill` implies the terminal (same rule as profile add: `web = web and prefill is None`,
+   which needs the web option default to become None so an explicit `--web --prefill` can be refused with "use the
+   'Use a family setup file' button in the wizard, or --no-web"). ~5 lines in cli.py + one test.
+C. Docs only (current state): leaves a silent no-op that a helper will hit.
+Pick: B. The silent ignore is the real bug; GUI users already have /wizard/import and the family-installer bundle, and the
+people who type `setup --prefill` are at a terminal anyway. A adds a path-into-server hop for no audience. Revisit A only if
+the family installer ever launches setup with a bundle argument. No website change either way (web/ never mentions --prefill).
