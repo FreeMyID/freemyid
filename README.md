@@ -81,18 +81,21 @@ export FREEMYID_TEST_KEY=dev-only-not-a-secret
 
 ## Commands
 
-Run `freemyid --help` or `freemyid <command> --help` for full options. `-v/--verbose` turns on debug logging (still redacted).
+Run `freemyid --help` or `freemyid <command> --help` for full options. `-v/--verbose` turns on debug logging (still redacted). Full command reference (exit codes, `--json` schemas): [docs/CLI.md](docs/CLI.md).
 
 | Command | What it does |
 |---|---|
-| `freemyid setup [--no-web] [--prefill FILE]` | Add a person. Opens the local web wizard by default; `--no-web` uses terminal prompts. `--prefill` imports a family bundle. |
+| `freemyid doctor [--offline]` | Check this computer is ready (Python, data folder, secrets, browser, schedule, mail servers). |
+| `freemyid setup [--no-web]` | Add a person. Opens the local web wizard by default; `--no-web` uses terminal prompts. |
+| `freemyid setup --no-web --prefill FILE` | Add a person from a family bundle, with terminal prompts. Plain `setup --prefill FILE` opens the web wizard and does not import the bundle. |
+| `freemyid setup --from FILE.yaml [--check] [--yes] [--update]` | Set up one person from a YAML file, no wizard. `--check` validates the file and saves nothing. |
 | `freemyid dashboard` | Open the local dashboard: status, evidence, to-dos, outbox approvals. |
 | `freemyid scan [-p PROFILE] [-b BROKER ...]` | Search brokers for listings. Never submits anything. |
 | `freemyid run --dry-run [-p ...] [-b ...]` | Full pipeline, but submits nothing. Run this first. |
 | `freemyid run [-p ...] [-b ...]` | Scan, submit opt-outs, check verifications, escalate ignored requests. Refuses to run until real submissions are enabled. |
 | `freemyid status [-p PROFILE]` | Per-broker state, last update, next check and escalation level for each person. |
 | `freemyid report [-p PROFILE] [--format html\|pdf]` | Export a report to the artifacts folder. |
-| `freemyid profile add [--prefill FILE]` | Same as `setup`. |
+| `freemyid profile add [--prefill FILE]` | Add a person. Without `--prefill` it opens the web wizard; with `--prefill` it imports the family bundle using terminal prompts. |
 | `freemyid profile list` | List people, consent basis and whether a mailbox is configured. |
 | `freemyid profile edit PROFILE` | Edit a person (terminal flow). |
 | `freemyid profile remove PROFILE [--yes]` | Delete a person, all their evidence, and their mailbox password from the keychain. |
@@ -101,6 +104,8 @@ Run `freemyid --help` or `freemyid <command> --help` for full options. `-v/--ver
 | `freemyid registry show` | List brokers: method, verification, CAPTCHA, `covered_by`. |
 | `freemyid registry validate [PATH]` | Validate a registry file against the model and JSON Schema. |
 | `freemyid registry update` | Fetch and validate a new registry from `registry_url`. |
+| `freemyid search-engines [open\|done\|undo ID] [-p PROFILE]` | Guided steps for Google and Bing. `open` opens the official page in your browser; `done` and `undo` record your progress. It does not search either engine. |
+| `freemyid checklist list\|show ID\|done ID\|undo ID [-p PROFILE]` | Identity-safety checklists (for example credit freezes). |
 | `freemyid todo list [-p PROFILE]` | Items that need a person. |
 | `freemyid todo done ID` | Mark a to-do done (an ID prefix is enough). |
 | `freemyid outbox list` | Emails waiting for your approval. |

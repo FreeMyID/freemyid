@@ -29,7 +29,7 @@ Codes are stable: a number never changes meaning.
 
 | Command | What it does | `--json` |
 |---|---|---|
-| `setup` | Opens the web wizard. `--web/--no-web`, `--prefill BUNDLE`, `--from FILE [--yes] [--check] [--update]` | |
+| `setup` | Opens the web wizard. `--web/--no-web`, `--from FILE [--yes] [--check] [--update]`. `--prefill BUNDLE` only takes effect with `--no-web` (terminal prompts): `freemyid setup --no-web --prefill BUNDLE`. Plain `setup --prefill BUNDLE` opens the web wizard and ignores the bundle | |
 | `app` | Opens the app window (`--no-window` uses the browser) | |
 | `dashboard` | Opens the local dashboard | |
 | `doctor` | Readiness checks (`--offline` skips the mail server check) | `doctor/1` |
@@ -41,7 +41,11 @@ Codes are stable: a number never changes meaning.
 | `status` | Per-broker state for each person. `-p` | `status/1` |
 | `report` | Writes an HTML or PDF report. `-p`, `--format html\|pdf` | `reports/1` |
 | `profile list` | Everyone set up | `profiles/1` |
-| `profile add / edit / remove / export` | Manage people | |
+| `profile add [--prefill BUNDLE]` | Add a person. Without `--prefill`: the web wizard. With `--prefill BUNDLE`: imports the bundle with terminal prompts (same as `setup --no-web --prefill BUNDLE`) | |
+| `profile edit / remove / export` | Manage people | |
+| `checklist list` | Identity-safety checklists and which are done. `-p/--profile` (needed only when more than one person is set up) | [`checklists/1`](#checklists1) |
+| `checklist show ID` | Steps for one checklist. `-p/--profile`. ID may be a prefix | [`checklist/1`](#checklist1) |
+| `checklist done ID` / `checklist undo ID` | Mark a checklist done, or not done again. `-p/--profile` | [`checklist/1`](#checklist1) |
 | `todo list` | Things that need a person. `-p` | `todos/1` |
 | `todo done ID` | Mark a to-do done | |
 | `outbox list` | Emails waiting for approval | `outbox/1` |
@@ -59,7 +63,10 @@ Codes are stable: a number never changes meaning.
 
 ## `--json` rules
 
-* stdout is exactly one JSON object. Messages for people (warnings, "Skipping ...") go to
+* A successful command prints exactly one JSON object on stdout. A failure exits nonzero.
+  Most failures print an `error/1` object, but some usage or selection errors (exit 2, for
+  example an unknown or ambiguous id) print nothing on stdout and a message on stderr. Check
+  the exit code before parsing stdout. Messages for people (warnings, "Skipping ...") go to
   stderr.
 * Every object has `"schema": "<name>/<version>"`. Within a version fields are only ever
   added, never renamed or removed. Treat unknown fields as optional.

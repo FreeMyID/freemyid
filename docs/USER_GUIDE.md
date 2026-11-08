@@ -128,6 +128,7 @@ Helpers and developers can do the same things in a terminal. Normal users can sk
 - `freemyid schedule install | status | remove` manages the background check.
 - `freemyid run --dry-run` is a practice run. `freemyid config enable-submissions` turns on real requests. `freemyid run` does a real run. Add `-p Mom` for one person or `-b spokeo` for one site.
 - `freemyid status`, `freemyid dashboard`, `freemyid todo list`, `freemyid outbox list`, `freemyid report`.
+- Full command reference: [CLI.md](CLI.md).
 - Mail server details for the presets: Gmail `imap.gmail.com` and `smtp.gmail.com`; Proton Bridge `127.0.0.1` ports 1143 (IMAP) and 1025 (SMTP) with STARTTLS.
 
 ## 5. What each status means
