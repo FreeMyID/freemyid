@@ -13,3 +13,7 @@ Open: owner approval to post any draft (seo-growth posts); verify PyPI install, 
 ## 2026-11-08 v0.3 release drafts
 Done: docs/marketing/release-notes-v0.3.0.md (HELD; every bullet tagged to a commit since v0.2.0; corrects that v3 look and dark mode were already in 0.2.0), docs/marketing/seo/release-posts-v0.3.0.md (R-BSKY-3A/B, R-MASTO-3A/B, R-FB-3, all held, lengths checked). WR-71/72/73 annotated, WR-74 filed (release-time /whats-new/). WR-69 still held.
 Open: release manager checks the HTML-comment list in the notes against the real release; owner OK before posting; web-developer to mark WR-73 done and decide on legacy WR-72; Bing step is partial (12baff6); PyPI install and /protect/ live still unverified by me.
+
+## 2026-11-08 lane IN follow-up
+Done: docs/marketing/v0.4-messaging.md (4 open questions for Morgan), developer CLI/config intros in MARKETING_COPY.md, docs/marketing/packaging-announcements.md (held per recipe). WR walk: nothing further stale; 71/72/73 annotated earlier, 74 held, 69 held, 61-63 are seo rows waiting on broker-researcher.
+Open: relist-detection tier (Plus?), report PDF vs existing --format pdf, monthly summary form, helper-bundle consent wording; no 0.4 WR filed until Morgan confirms.
