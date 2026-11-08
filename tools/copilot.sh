@@ -39,6 +39,29 @@ SAFE=(--trust-folder --sandbox --disable-builtin-mcps --disable-client-telemetry
 # Builders: the OS sandbox is the real barrier (SEC-107); name-based deny rules are only a second layer. Builders get no
 # access to the in-house .venv (SEC-105): if they can run tests at all, it is with tools inside their own worktree.
 
+# SEC-108: the builder sandbox can write the main repo's .git (a linked worktree needs it). Until builders get a separate
+# clone, snapshot everything in .git that can make git run code (config, hooks, info, this worktree's admin files) before
+# each builder run and refuse to continue if any of it changed. Refs are not hashed (in-house agents commit meanwhile).
+git_guard() {   # git_guard WT -> prints a digest of the code-bearing parts of .git
+  local gd="$ROOT/.git" name; name="$(basename "$1")"
+  { for x in "$gd/config" "$gd/config.worktree" "$gd/worktrees/$name/config.worktree" "$gd/worktrees/$name/commondir" \
+             "$gd/worktrees/$name/gitdir"; do [ -f "$x" ] && sha256sum "$x"; done
+    find "$gd/hooks" "$gd/info" -type f -print0 2>/dev/null | sort -z | xargs -0r sha256sum
+    find "$gd/hooks" "$gd/info" -mindepth 1 -printf '%m %p\n' 2>/dev/null | sort; } | sha256sum | cut -d' ' -f1
+}
+guarded_copilot() {   # guarded_copilot WT ARGS... : run a builder, then verify .git is unchanged
+  local wt="$1"; shift; local before after; before="$(git_guard "$wt")"
+  copilot -C "$wt" "$@" || true
+  after="$(git_guard "$wt")"
+  if [ "$before" != "$after" ]; then
+    echo "SEC-108 INCIDENT: .git config/hooks/info changed during the builder run in $wt. Do NOT run git in the main" >&2
+    echo "checkout until it is inspected (git config --list --local; ls .git/hooks .git/info). Nothing was committed." >&2
+    exit 9
+  fi
+}
+# Every git call on a builder worktree runs with hooks and fsmonitor forced off.
+SAFEGIT=(-c core.hooksPath=/dev/null -c core.fsmonitor=false)
+
 need_cli() { command -v copilot >/dev/null || { echo "copilot CLI not installed" >&2; exit 4; }; }
 wo_check() { [[ "${1:-}" =~ ^WO-[0-9]{3}$ ]] || { echo "work order id must look like WO-001" >&2; exit 2; }; }
 wo_file() { local f="$ROOT/$VD/$1.md"; [ -f "$f" ] || { echo "no work order $f" >&2; exit 2; }; echo "$f"; }
@@ -116,7 +139,7 @@ case "$cmd" in
     need_cli; git -C "$ROOT" worktree add -q -b "copilot/$(echo "$wo" | tr 'A-Z' 'a-z')" "$wt" main
     # SEC-105: the builder gets its own throwaway copy of the venv (copy-on-write on btrfs), never the in-house one.
     cp -a --reflink=auto "$ROOT/.venv" "$wt/.venv"
-    copilot -C "$wt" --agent "$role" "${SAFE[@]}" --allow-all-tools -p "You are $(name_of "$role") in BUILDER mode for work
+    guarded_copilot "$wt" --agent "$role" "${SAFE[@]}" --allow-all-tools -p "You are $(name_of "$role") in BUILDER mode for work
 order $wo, working LOCALLY in this folder (no git: the owner commits). Change ONLY the allowed paths, and create no
 other files (no scratch, backup or .new/.tmp copies). If a shell is available, run only read-only commands and the tests
 you can run inside this folder: PYTHONPATH=src .venv/bin/python -m pytest -q <tests> and .venv/bin/python -m ruff check <files> (that .venv is
@@ -125,25 +148,25 @@ folder (not only in your reply)
 (Done / Next / Questions for the owner / How to test).
 
 $(cat "$f")"
-    git -C "$wt" status --short ;;
+    git "${SAFEGIT[@]}" -C "$wt" status --short ;;
   checkin)
     wo_check "${1:-}"; [ $# -ge 2 ] || { echo 'usage: checkin WO-NNN "notes"' >&2; exit 2; }
     wo="$1"; f="$(wo_file "$wo")"; wt="$(wt_of "$wo")"; role="$(agent_of "$f")"; need_cli
-    copilot -C "$wt" --agent "$role" "${SAFE[@]}" --allow-all-tools -p "Owner check-in for $wo from Morgan Reyes:
+    guarded_copilot "$wt" --agent "$role" "${SAFE[@]}" --allow-all-tools -p "Owner check-in for $wo from Morgan Reyes:
 $2
 
 Continue within the allowed paths only (create no other files), rerun the tests with
 PYTHONPATH=src .venv/bin/python -m pytest -q <tests>, and update VENDOR_STATUS.md."
-    git -C "$wt" status --short ;;
+    git "${SAFEGIT[@]}" -C "$wt" status --short ;;
   commit)
     wo_check "${1:-}"; wo="$1"; f="$(wo_file "$wo")"; wt="$(wt_of "$wo")"; role="$(agent_of "$f")"
-    changed="$(git -C "$wt" status --porcelain -z -uall | tr '\0' '\n' | sed -E 's/^...//' | grep -vE '^(VENDOR_STATUS\.md|web/node_modules(/.*)?)$' || true)"
+    changed="$(git "${SAFEGIT[@]}" -C "$wt" status --porcelain -z -uall | tr '\0' '\n' | sed -E 's/^...//' | grep -vE '^(VENDOR_STATUS\.md|web/node_modules(/.*)?)$' || true)"
     [ -n "$changed" ] || { echo "nothing to commit in $wt" >&2; exit 2; }
     check_paths "$f" <<<"$changed" || { echo "refusing to commit: out-of-scope changes" >&2; exit 3; }
     n="$(name_of "$role")"; mapfile -t paths <<<"$changed"
-    git -C "$wt" add -- "${paths[@]}"
-    git -C "$wt" -c user.name="$n [freemyid-copilot]" -c user.email="$EMAIL" commit -q -m "$(head -1 "$f" | sed 's/^# //')"
-    echo "committed on $(git -C "$wt" rev-parse --abbrev-ref HEAD) as $n [freemyid-copilot]" ;;
+    git "${SAFEGIT[@]}" -C "$wt" add -- "${paths[@]}"
+    git "${SAFEGIT[@]}" -C "$wt" -c user.name="$n [freemyid-copilot]" -c user.email="$EMAIL" commit -q -m "$(head -1 "$f" | sed 's/^# //')"
+    echo "committed on $(git "${SAFEGIT[@]}" -C "$wt" rev-parse --abbrev-ref HEAD) as $n [freemyid-copilot]" ;;
   issue)
     wo_check "${1:-}"; f="$(wo_file "$1")"
     grep -qE '^Vendor: *copilot' "$f" || { echo "$1 is not a Copilot work order (Vendor: copilot)" >&2; exit 2; }
