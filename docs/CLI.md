@@ -36,7 +36,7 @@ Codes are stable: a number never changes meaning.
 | `scan` | Searches brokers; never submits. `-p/--profile`, `-b/--broker` (repeatable), `--headless` | `run/1` |
 | `run` | Scan, submit, verify, escalate. `--dry-run`, `--headless`, `-p`, `-b` | `run/1` |
 | `exposure` | Which sites show you, with a 0-100 exposure score; reads only (works in practice mode). `-p`, `--offline`, `--refresh`, `--headless` ([EXPOSURE.md](EXPOSURE.md)) | `exposure/1` |
-| `search-engines` | Google and Bing guided steps: lists them (`-p`). `open ID` opens the official page in your browser and records when; `done ID` / `undo ID` record that you did it. ID may be a prefix or `google` / `bing`. Never searches Google or Bing ([EXPOSURE.md](EXPOSURE.md)) | `search_engines/1` |
+| `search-engines` | Google and Bing guided steps: on its own it lists them (there is no `list` word; `-p` picks the person). `open ID` opens the official page in your browser and records when; `done ID` / `undo ID` record that you did it. ID may be a prefix or `google` / `bing`. Never searches Google or Bing ([EXPOSURE.md](EXPOSURE.md)) | `search_engines/1` |
 | `fill BROKER` | Opens the broker's form in a window and fills it; you submit | |
 | `status` | Per-broker state for each person. `-p` | `status/1` |
 | `report` | Writes an HTML or PDF report. `-p`, `--format html\|pdf` | `reports/1` |
@@ -59,7 +59,25 @@ Codes are stable: a number never changes meaning.
 | `secrets migrate --to B` | Move the key and saved passwords to `keyring`, `passphrase` or `systemd-creds` (exit 2 on failure; nothing is lost) | |
 | `config set KEY VALUE` | Change a setting | |
 | `config enable-submissions` | One-time opt-in to real submissions (leaves practice mode) | |
-| `wipe` | Delete everything Free My ID saved on this computer | |
+| `wipe` | Delete everything Free My ID saved on this computer (`--yes` skips the question) | |
+
+### Where this table comes from
+
+Each statement above was checked against `src/freemyid/cli.py` (unless another file is named):
+
+* `setup` options and the `--prefill` rules: `cli.py:148-176`. With `--prefill` alone the terminal
+  prompts are used (`cli.py:168-169`). `--web --prefill` prints a pointer to `/wizard/import`
+  and exits 2 (`cli.py:164-167`). `--from` is handled first (`cli.py:161-163`).
+* `profile add [--prefill]`: `cli.py:520-522`.
+* `search-engines`: `cli.py:879` (the three words `open`, `done`, `undo`), `cli.py:887-953`
+  (a missing, unknown or misplaced word or id exits 2: `cli.py:901-905`; the page could not be
+  opened or recorded exits 1: `cli.py:917`, `cli.py:922`). With no word it lists the steps
+  (`cli.py:932-950`).
+* Exit code numbers: `src/freemyid/cli_json.py:25-29`.
+* `scan`, `run`, `exposure`, `status`, `report`, `wipe` options: `cli.py:328-344`, `cli.py:402-408`,
+  `cli.py:372`, `cli.py:497-498`, `cli.py:566`.
+* `checklist` commands and `-p/--profile`: `cli.py:761-762`, `cli.py:799-872`.
+* `doctor --offline`; Python 3.12 or newer: `cli.py:181`, `src/freemyid/doctor.py:56-62`.
 
 ## `--json` rules
 
