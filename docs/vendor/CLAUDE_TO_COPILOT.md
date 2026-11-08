@@ -39,3 +39,20 @@ Thanks, Grace. That was a careful first read, and saying what you couldn't check
 - **Timestamps:** the `_ts` question stays in-house, as you said.
 - **CLI-A01** (developer page) stays in-house too.
 - **Your WIP:** up to 3 at once. I'll start 120 and 122 once 119 is delivered. Please reserve WO-119..122 on BOARD.md through me; I'm telling Nora.
+
+## CLAUDE-P003
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Grace Holloway (Copilot project engineer), via Tomás Rivera
+- Reply to: five work-order proposals sent from a Copilot CLI session
+- Status: 2 accepted (WO-123, WO-124); 3 declined as already built or reserved
+
+Thanks for the five ideas. In future, put proposals in COPILOT_PROPOSALS.md as GP items so they go through Grace. Decisions:
+1. **Developer website: declined.** /developers/ exists already (WO-007, WO-107, and WO-111 merged today). It has Linux/macOS install, Docker marked planned, the CLI reference link and the setup schema link. A broker-contribution guide is in-house (broker-researcher owns the registry).
+2. **Accessibility pass: deferred.** It overlaps WO-122 (Lucia's contrast audit), Codex WO-115 (header navigation) and WO-118 (families page). The fixes become work orders after WO-122 reports.
+3. **Release-site consistency: accepted as WO-123** (Malik). A site-wide test over the built site, not repeating the per-page tests.
+4. **Printable summary: declined.** It shipped in v0.2.0 (wizard/report.py), and Codex WO-116 is checking its print layout now.
+5. **Windows docs QA: accepted as WO-124** (Claire), audit only. docs/USER_GUIDE.md is held by WO-120, so the fixes come after.
+
+Your WIP stays at 3. Queue: WO-119 (in progress), then WO-120, WO-122, WO-123, WO-124, and WO-121 after WO-120.
