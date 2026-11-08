@@ -27,7 +27,8 @@ import asyncio
 import logging
 import random
 import time
-from collections.abc import Callable
+import zlib
+from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
@@ -62,8 +63,9 @@ TIMEOUT_S = 20.0
 # timeout is per read, so a slow-drip server could otherwise hold a broker forever
 DEADLINE_S = 30.0
 CACHE_HOURS = 24
+# SEC-93d: only encodings `_decoded` can stream with a running size limit
 _HEADERS = {"User-Agent": USER_AGENT, "Accept": "text/html,application/xhtml+xml",
-            "Accept-Language": "en-US,en;q=0.8"}
+            "Accept-Language": "en-US,en;q=0.8", "Accept-Encoding": "gzip, deflate"}
 _MAX_RESULTS = 25
 
 # score weights (docs/EXPOSURE.md; change both together)
@@ -114,6 +116,76 @@ def _on_broker(broker: Broker, url: str, policy: NetPolicy) -> bool:
             and _host_ok(host, set(broker.domains)) and policy.is_allowed(url))
 
 
+def _decoders(content_encoding: str) -> list[Any]:
+    """zlib decompressors for a Content-Encoding header, in the order to apply them.
+    Unknown codings (br, zstd, compress...) are refused: we never asked for them."""
+    out: list[Any] = []
+    for c in reversed([c.strip().lower() for c in content_encoding.split(",") if c.strip()]):
+        if c in ("identity",):
+            continue
+        if c in ("gzip", "x-gzip"):
+            out.append(zlib.decompressobj(16 + zlib.MAX_WBITS))
+        elif c == "deflate":
+            out.append(_Deflate())
+        else:
+            raise FetchFailed("http_error")
+    return out
+
+
+class _Deflate:
+    """HTTP "deflate" is meant to be zlib-wrapped, but some servers send raw deflate: try
+    the zlib wrapper on the first bytes and fall back to raw deflate if the header is wrong."""
+
+    def __init__(self) -> None:
+        self._d: Any = zlib.decompressobj(zlib.MAX_WBITS)
+        self._first = True
+        self.unconsumed_tail = b""
+
+    def decompress(self, data: bytes, max_length: int = 0) -> bytes:
+        if self._first:
+            self._first = False
+            try:
+                got = self._d.decompress(data, max_length)
+            except zlib.error:
+                self._d = zlib.decompressobj(-zlib.MAX_WBITS)
+                got = self._d.decompress(data, max_length)
+        else:
+            got = self._d.decompress(data, max_length)
+        self.unconsumed_tail = self._d.unconsumed_tail
+        return got
+
+
+def _decoded(raw: Iterable[bytes], content_encoding: str, limit: int) -> Iterator[bytes]:
+    """SEC-93d: decompress `raw` piece by piece and stop as soon as more than `limit` decoded
+    bytes come out, so a gzip/deflate bomb never expands in memory. Every decompress call is
+    capped with `max_length`; leftover input is fed back in bounded steps."""
+    decs = _decoders(content_encoding)
+    total = 0
+
+    def through(i: int, data: bytes) -> Iterator[bytes]:
+        if i == len(decs):
+            yield data
+            return
+        d = decs[i]
+        while data:
+            try:
+                piece = d.decompress(data, limit + 1)
+            except zlib.error as e:
+                raise FetchFailed("http_error") from e
+            data = d.unconsumed_tail
+            if piece:
+                yield from through(i + 1, piece)
+            elif data:      # no output but input left: a stuck stream, never spin
+                raise FetchFailed("http_error")
+
+    for chunk in raw:
+        for out in through(0, chunk):
+            total += len(out)
+            if total > limit:
+                raise FetchFailed("too_large")
+            yield out
+
+
 def http_fetcher(policy: NetPolicy, fixture_base: str | None = None,
                  client: Any = None, deadline_s: float = DEADLINE_S,
                  clock: Callable[[], float] = time.monotonic) -> Fetcher:
@@ -130,7 +202,7 @@ def http_fetcher(policy: NetPolicy, fixture_base: str | None = None,
         def left() -> float:
             rest = end - clock()
             if rest <= 0:
-                raise FetchFailed("http_error")      # too slow: the site did not answer normally
+                raise FetchFailed("too_slow")
             return rest
 
         try:
@@ -150,14 +222,24 @@ def http_fetcher(policy: NetPolicy, fixture_base: str | None = None,
                                 raise FetchFailed("http_error")
                             cur = urljoin(cur, loc)
                             continue
-                        body = b""
-                        for chunk in r.iter_bytes():
-                            body += chunk
+                        # SEC-93d: raw bytes, decoded here with a running limit (httpx would
+                        # inflate a whole chunk first); a bytearray, never `body += chunk`
+                        body = bytearray()
+                        if r.is_stream_consumed:
+                            # an in-memory test transport already read (and decoded) it
+                            body.extend(r.content)
                             if len(body) > MAX_BYTES:
                                 raise FetchFailed("too_large")
-                            left()
+                        else:
+                            ce = r.headers.get("content-encoding", "")
+                            for piece in _decoded(r.iter_raw(), ce, MAX_BYTES):
+                                body.extend(piece)
+                                left()
                         enc = r.encoding or "utf-8"
-                        return Fetched(cur, r.status_code, body.decode(enc, errors="replace"))
+                        return Fetched(cur, r.status_code,
+                                       bytes(body).decode(enc, errors="replace"))
+                except httpx.TimeoutException as e:
+                    raise FetchFailed("too_slow") from e
                 except httpx.HTTPError as e:
                     raise FetchFailed("network") from e
             raise FetchFailed("http_error")       # too many redirects

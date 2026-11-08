@@ -272,6 +272,97 @@ def test_http_fetcher_honest_ua_and_redirect_policy():
     assert e.value.reason == "too_large"
 
 
+def _bomb(coding: str, size: int) -> bytes:
+    import gzip
+    import zlib
+    raw = b"<p>" + b"A" * size
+    if coding == "gzip":
+        return gzip.compress(raw, 9)
+    if coding == "deflate":
+        return zlib.compress(raw, 9)
+    c = zlib.compressobj(9, zlib.DEFLATED, -zlib.MAX_WBITS)      # raw deflate
+    return c.compress(raw) + c.flush()
+
+
+@pytest.mark.parametrize("coding,header", [("gzip", "gzip"), ("deflate", "deflate"),
+                                           ("rawdeflate", "deflate")])
+def test_sec93d_compression_bomb_stops_at_the_cap(coding, header):
+    from freemyid.netpolicy import NetPolicy
+    reg = fixture_registry()
+    b = reg.get("devauto")
+    bomb = _bomb(coding, 50 * ex.MAX_BYTES)      # ~100 MB inflated, ~100 KB on the wire
+    assert len(bomb) < ex.MAX_BYTES // 10
+    import tracemalloc
+    pieces = [bomb[i:i + 65536] for i in range(0, len(bomb), 65536)]
+    served: list[int] = []
+
+    def stream():
+        for p in pieces:
+            served.append(len(p))
+            yield p
+
+    def h(req):
+        # a streamed body, as from a real socket (bytes content is pre-read by httpx)
+        return httpx.Response(200, headers={"content-encoding": header}, content=stream())
+
+    tracemalloc.start()
+    try:
+        with pytest.raises(ex.FetchFailed) as e:
+            ex.http_fetcher(NetPolicy(reg), client=_client(h))(b, "https://devauto.example/")
+        peak = tracemalloc.get_traced_memory()[1]
+    finally:
+        tracemalloc.stop()
+    assert e.value.reason == "too_large"
+    # it stopped early: not all of the bomb was read, and memory stayed near the cap
+    assert sum(served) < len(bomb)
+    assert peak < 6 * ex.MAX_BYTES
+
+
+@pytest.mark.parametrize("coding,header", [("gzip", "gzip"), ("deflate", "deflate"),
+                                           ("rawdeflate", "deflate")])
+def test_sec93d_compressed_page_under_the_cap_reads(coding, header):
+    from freemyid.netpolicy import NetPolicy
+    reg = fixture_registry()
+    b = reg.get("devauto")
+
+    def h(req):
+        assert req.headers["accept-encoding"] == "gzip, deflate"
+        return httpx.Response(200, headers={"content-encoding": header,
+                                            "content-type": "text/html; charset=utf-8"},
+                              content=iter([_bomb(coding, 1000)]))
+
+    got = ex.http_fetcher(NetPolicy(reg), client=_client(h))(b, "https://devauto.example/")
+    assert got.html == "<p>" + "A" * 1000
+
+
+def test_sec93d_unrequested_encoding_and_bad_stream_are_refused():
+    from freemyid.netpolicy import NetPolicy
+    reg = fixture_registry()
+    b = reg.get("devauto")
+    for ce, body in (("br", b"\x0b\x02\x80hi\x03"), ("gzip", b"not gzip at all")):
+        def h(req, ce=ce, body=body):
+            return httpx.Response(200, headers={"content-encoding": ce},
+                                  content=iter([body]))
+        with pytest.raises(ex.FetchFailed) as e:
+            ex.http_fetcher(NetPolicy(reg), client=_client(h))(b, "https://devauto.example/")
+        assert e.value.reason == "http_error"
+
+
+def test_read_timeout_is_too_slow_with_plain_wording():
+    from freemyid.exposure_models import HAND_REASONS
+    from freemyid.netpolicy import NetPolicy
+    reg = fixture_registry()
+
+    def h(req):
+        raise httpx.ReadTimeout("slow", request=req)
+
+    with pytest.raises(ex.FetchFailed) as e:
+        ex.http_fetcher(NetPolicy(reg), client=_client(h))(reg.get("devauto"),
+                                                           "https://devauto.example/")
+    assert e.value.reason == "too_slow"
+    assert HAND_REASONS["too_slow"] == "The site took too long to answer."
+
+
 # ------------------------------------------------------------------ CLI
 
 

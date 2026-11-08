@@ -215,7 +215,7 @@ def test_sec92_fetch_has_a_total_deadline():
     fetch = ex.http_fetcher(NetPolicy(fixture_registry()), client=_drip(1000), clock=clock)
     with pytest.raises(ex.FetchFailed) as e:
         fetch(DEV, "https://devauto.example/")
-    assert e.value.reason == "http_error" and t[0] < 40
+    assert e.value.reason == "too_slow" and t[0] < 40
     # a quick page under the same budget is fine
     ok = ex.http_fetcher(NetPolicy(fixture_registry()), client=_drip(3), clock=clock)
     assert ok(DEV, "https://devauto.example/").status == 200

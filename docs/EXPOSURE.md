@@ -139,8 +139,10 @@ If the weights change, change `score_entries` and this table together.
 ## Check-by-hand reasons (`reason`)
 
 `bot_blocked`, `unknown_access`, `needs_browser`, `challenge`, `http_error`, `network`,
-`blocked_by_policy`, `page_unrecognized`, `no_parser`, `offline`, `too_large`,
-`missing_details`. The plain-English text for each is in `exposure_models.HAND_REASONS`.
+`blocked_by_policy`, `page_unrecognized`, `no_parser`, `offline`, `too_large`, `too_slow`,
+`missing_details`. `too_large`: more than 2 MB after decompression, counted while streaming
+so a gzip/deflate bomb stops early (SEC-93d). `too_slow`: the 30-second total budget for
+one fetch ran out, or a read timed out (SEC-92). The plain-English text for each is in `exposure_models.HAND_REASONS`.
 
 ## Exit codes
 
