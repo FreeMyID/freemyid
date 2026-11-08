@@ -111,3 +111,8 @@ Installer artifact is FreeMyIDSetup-0.1.1 (pyproject still says 0.1.1, so this i
 - Tokens/dark mode were already in (2b3d2c9). This pass: Protect checklist sub-headings were h3 under h1 (skipped level), now `h2.sub`; checkbox rows get a 44px tap area.
 - Tests: `tests/test_wizard_a11y.py` (landmarks, one h1, no skipped levels, labels point at real ids, no dup ids, no positive tabindex, alt on img, chips carry words, no px font sizes or motion, AA contrast of every token pair used, both themes) and `tests/test_wizard_a11y_browser.py` (real Chromium at 640px = 200% zoom and 320px, light and dark: no sideways scroll, 44px targets on Today/Sites/broker/Protect/Settings/Emails; keyboard order, skip link, 3px focus ring; manual dark toggle persists). Set `FREEMYID_A11Y_SHOTS=<dir>` to save screenshots.
 - Not done: wizard pages are covered by HTML checks only (not the browser test); no real screen-reader pass (needs NVDA on the VM).
+
+## SEC-98 wizard field errors (Nina Alvarez) DONE
+- `ui.errors_html` gives each alert an id (`err-N`); `ui.mark_invalid` adds `aria-invalid="true"` and `aria-describedby` (existing ids kept) to the rejected input, matched from the server message via `ui.error_fields`. Used by `step_page` (consent, name, address, about, mailbox) and the Settings mailbox page. Alerts stay visible; no copy or layout change; no JS. Radios and the Outlook/choose-one errors are not field-linked (group-level).
+- New fields must be added to `_FIELD_HINTS` in `ui.py` if their error wording is new. Tests: `tests/test_wizard_field_errors_sec98.py`.
+- WO-112 browser test: drop the `@pytest.mark.xfail(strict=True, ...)` line above `test_wizard_validation_error_is_associated_with_its_field` once merged (strict xfail would otherwise fail on XPASS).
