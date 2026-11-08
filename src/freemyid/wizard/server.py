@@ -352,7 +352,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
                 log.warning("call note not saved (%s)", type(e).__name__)
         up = form.get("receipt")
         if proof_input.wants_receipt(t) and hasattr(up, "read"):
-            data = await up.read()  # type: ignore[union-attr]
+            data = await up.read(proof_input.MAX_RECEIPT_BYTES + 1)  # type: ignore[union-attr]
             if data:
                 if proof_input.check_receipt(data):
                     return False
@@ -679,7 +679,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
         up = form.get("authorization")
         if not p or not hasattr(up, "read"):
             return redirect("/")
-        data = await up.read()  # type: ignore[union-attr]
+        data = await up.read(dr.MAX_AUTH_BYTES + 1)  # type: ignore[union-attr]
         if not data or len(data) > dr.MAX_AUTH_BYTES:
             return redirect(f"/profile/{pid}")
         doc = dr.save_authorization(store, pid, getattr(up, "filename", "") or "", data)
