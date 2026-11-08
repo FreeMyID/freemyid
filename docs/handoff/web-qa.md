@@ -55,3 +55,9 @@ Tools: fixed `site_shots.py -h` crash (unescaped % in help text).
 | ID | Page | Sev | Problem |
 |---|---|---|---|
 | WR-36 | faq, families, 404 templates | P3 | claims without source comments |
+
+## Vendor PR review 2026-11-07 (PR #14 WO-102, #15 WO-104, #16 WO-105)
+No new site-defect WR rows. All three: `vendor.sh webcheck` OK, `pytest tests/test_web_*.py` pass (27 / 3 / 4).
+- #14 PASS: title fixed in the built /safety/, card text replaced by bars, SVG copies byte-identical, no horizontal scroll at 360/768/1280 light+dark. Only /safety/ uses the art.
+- #15 PASS (P3 notes): CSP header identical to baseline, JS budget OK, no-JS fallback and no-clipboard path tested. P3: "Copying..." is announced on every click (chatty); the no-clipboard message is injected after hydration so some screen readers may not announce it.
+- #16 PASS: tests are meaningful; P3 brittle to copy edits (exact H1 text and link labels).
