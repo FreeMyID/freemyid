@@ -49,14 +49,21 @@ function str(v: unknown, where: string, max?: number): string {
 function strList(v: unknown, where: string, min = 0): string[] {
   if (v == null && min === 0) return [];
   if (!Array.isArray(v) || v.length < min) throw new Error(`${where}: expected a list (at least ${min})`);
-  return v.map((x, i) => str(x, `${where}[${i}]`));
+  const values: unknown[] = v;
+  return values.map((x, i) => str(x, `${where}[${i}]`));
 }
 
-function validate(raw: any): Checklist {
-  const where = `checklists.yaml ${raw?.id ?? "?"}`;
+function record(v: unknown, where: string): Record<string, unknown> {
+  if (v === null || typeof v !== "object" || Array.isArray(v)) throw new Error(`${where}: expected an object`);
+  return v as Record<string, unknown>;
+}
+
+function validate(value: unknown): Checklist {
+  const raw = record(value, "checklists.yaml item");
+  const where = `checklists.yaml ${raw.id ?? "?"}`;
   for (const k of Object.keys(raw)) if (!FIELDS.includes(k)) throw new Error(`${where}: unknown field ${k}`);
   for (const k of REQUIRED) if (raw[k] == null) throw new Error(`${where}: missing ${k}`);
-  if (!/^[a-z0-9_]{2,40}$/.test(raw.id)) throw new Error(`${where}: bad id`);
+  if (typeof raw.id !== "string" || !/^[a-z0-9_]{2,40}$/.test(raw.id)) throw new Error(`${where}: bad id`);
   if (raw.verification !== "official_page" && raw.verification !== "partial") throw new Error(`${where}: bad verification`);
   return {
     id: raw.id, title: str(raw.title, `${where}.title`, 120), why: str(raw.why, `${where}.why`),
@@ -66,16 +73,22 @@ function validate(raw: any): Checklist {
     how_to_undo: str(raw.how_to_undo, `${where}.how_to_undo`),
     source_urls: strList(raw.source_urls, `${where}.source_urls`, 1).map((u, i) => httpUrl(u, `${where}.source_urls[${i}]`)),
     date_checked: isoDate(raw.date_checked, `${where}.date_checked`), verification: raw.verification,
-    notes: raw.notes ?? null, tips: strList(raw.tips ?? [], `${where}.tips`), status_note: raw.status_note ?? null,
+    // Compatibility: these optional fields were passed through without validation. Keep that
+    // policy here; introducing string-only rejection needs a separate validation-policy decision.
+    notes: (raw.notes ?? null) as Checklist["notes"], tips: strList(raw.tips ?? [], `${where}.tips`),
+    status_note: (raw.status_note ?? null) as Checklist["status_note"],
   };
 }
 
 function loadFile() {
   const text = readFileSync(FILE, "utf8");
   if (Buffer.byteLength(text) > MAX_BYTES) throw new Error("checklists.yaml is too large");
-  const doc = parse(text);
+  const parsed: unknown = parse(text);
+  const doc = record(parsed, "checklists.yaml");
   for (const k of Object.keys(doc)) if (!["version", "updated", "checklists"].includes(k)) throw new Error(`checklists.yaml: unknown key ${k}`);
-  const items = (doc.checklists as any[]).map(validate);
+  if (!Array.isArray(doc.checklists)) throw new Error("checklists.yaml checklists: expected a list");
+  const checklists: unknown[] = doc.checklists;
+  const items = checklists.map(validate);
   const ids = items.map((c) => c.id);
   if (new Set(ids).size !== ids.length) throw new Error("checklists.yaml: duplicate checklist id");
   return { version: String(doc.version), updated: isoDate(doc.updated, "checklists.yaml updated"), items };
