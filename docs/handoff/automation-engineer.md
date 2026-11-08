@@ -771,3 +771,34 @@ Nothing else in the engine is open for me without a decision.
 - Limits: an extension is only detected while `_verify` polls replies (SUBMITTED or
   AWAITING_VERIFICATION, mailbox set, email tier or verification broker). A bare "extension" in
   a mail footer counts too, which only makes us wait longer (the safe direction).
+
+## 2026-11-08 BL-IN-01/02 exposure scan + score: what ships, the gap, next slice (Theo Park)
+Already ships (0.3):
+- BL-IN-01: `scan_exposure` covers every registry broker with a search URL. Each broker's
+  search is data-driven (`search_url_pattern` + parse), not a Python adapter class. Fresh
+  results are cached for `CACHE_HOURS = 24` (`--refresh` overrides). Requests are paced, and
+  bot-blocked or unknown sites are never fetched (they become check_by_hand with the link).
+  Optional old-address search (now also `--old-addresses`, 61d65f8) and previous-name search.
+- BL-IN-02: `score_entries` gives 0-100 with explanation lines. `ExposureResult.coverage`
+  (checked / by hand / uncertain) and `coverage_note`, in CLI text and exposure/1.
+  `exposure_history` -> [(when, score)].
+Gap:
+1. Trend over time had no user-facing form. `exposure_history` counted offline re-reads as
+   scans, kept several scans a day, and had no coverage per point. -> exposure_trend (below).
+2. Nothing surfaces the trend: no CLI line, no exposure/1 field, no wizard card.
+3. The 24 h cache is per broker for the latest scan only. There is no cross-person sharing,
+   which is correct (no PII crossing people), so I'm not counting it as a gap.
+4. "Per-broker adapters" stay out on purpose (PLAN_V1: per-broker parsers dropped).
+Next slice built: `exposure.exposure_trend(store, pid, limit=52) -> Trend` (points per day,
+offline skipped, `change`, `since`, plain `note` with a fewer-sites warning, never "safe").
+tests/test_exposure_trend.py (7). Docs: EXPOSURE.md.
+
+### CHANGE REQUEST (orchestrator, Morgan): surface the trend
+- cli.py `exposure` text: after the coverage note, print `exposure_trend(store, p.id).note`,
+  but only when there are 2 or more points.
+- cli_json.py exposure_doc: per person, add `"trend": {"change": int|null, "since":
+  "YYYY-MM-DD"|null, "note": str, "points": [{"day", "score", "sites_total",
+  "sites_checked", "found"}]}`. It's additive to exposure/1 and needs a docs/CLI.md line.
+### CHANGE REQUEST (wizard-packager, Nina)
+- Exposure card: show `Trend.note` under the score, plus a small sparkline of `points[].score`
+  when there are 2 or more points.

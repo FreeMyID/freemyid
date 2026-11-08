@@ -31,7 +31,7 @@ import time
 import zlib
 from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urljoin, urlsplit
 
@@ -810,3 +810,68 @@ def exposure_history(store: Store, profile_id: str,
     """(when, score) for past scans, oldest first, for a trend line."""
     out = [(ev.ts, int(ev.detail.get("score", 0))) for ev in _scan_events(store, profile_id)]
     return list(reversed(out[:limit]))
+
+
+# ------------------------------------------------------------------ trend (BL-IN-02)
+
+
+@dataclass(frozen=True)
+class TrendPoint:
+    """One day's exposure: the last fresh scan of that day. Counts only, no PII."""
+    day: date
+    score: int
+    sites_total: int
+    sites_checked: int
+    found: int
+
+
+@dataclass(frozen=True)
+class Trend:
+    points: list[TrendPoint]          # oldest first
+    change: int | None                # latest score minus the previous day's; None if < 2
+    since: date | None                # the day `change` is measured from
+    note: str                         # one plain-English line; never says "safe"
+
+
+def _point(ev: Event) -> TrendPoint:
+    entries = ev.detail.get("entries") or []
+    return TrendPoint(
+        day=ev.ts.date(), score=int(ev.detail.get("score", 0)), sites_total=len(entries),
+        sites_checked=sum(1 for e in entries if e.get("status") in ("found", "not_found")
+                          and not e.get("from_store")),
+        found=sum(1 for e in entries if e.get("status") == "found" and
+                  e.get("match_level") == MatchLevel.CONFIRMED.value))
+
+
+def trend_note(points: list[TrendPoint]) -> str:
+    if not points:
+        return "No scans yet."
+    if len(points) == 1:
+        return "This is the first scan. Later scans will show whether your score goes down."
+    prev, last = points[-2], points[-1]
+    d = last.score - prev.score
+    when = prev.day.isoformat()
+    if d < 0:
+        out = f"Your score went down {-d} {'point' if d == -1 else 'points'} since {when}."
+    elif d > 0:
+        out = f"Your score went up {d} {'point' if d == 1 else 'points'} since {when}."
+    else:
+        out = f"Your score is the same as on {when}."
+    if last.sites_checked < prev.sites_checked:
+        out += " Fewer sites could be checked this time, so the change may not be real."
+    return out
+
+
+def exposure_trend(store: Store, profile_id: str, limit: int = 52) -> Trend:
+    """BL-IN-02: the score over time, one point per day (the day's last scan). Offline scans
+    are skipped: they only re-read stored results, so they say nothing new."""
+    by_day: dict[date, TrendPoint] = {}
+    for ev in reversed(_scan_events(store, profile_id)):         # oldest first
+        if ev.detail.get("offline"):
+            continue
+        p = _point(ev)
+        by_day[p.day] = p
+    points = [by_day[d] for d in sorted(by_day)][-limit:]
+    change = points[-1].score - points[-2].score if len(points) >= 2 else None
+    since = points[-2].day if len(points) >= 2 else None
+    return Trend(points=points, change=change, since=since, note=trend_note(points))

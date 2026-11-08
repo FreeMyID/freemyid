@@ -5,9 +5,15 @@ removal is sent, and gives a 0-100 exposure score with plain-English reasons.
 
 Code: `src/freemyid/engine/exposure.py` (scan, score, storage), `src/freemyid/exposure_models.py`
 (result models), `src/freemyid/engine/htmlsel.py` (static HTML reading).
-CLI: `freemyid exposure [--profile P] [--json] [--offline] [--refresh] [--headless]`.
+CLI: `freemyid exposure [--profile P] [--json] [--offline] [--refresh] [--old-addresses] [--headless]`.
 Dashboard hook: `exposure.latest_exposure(store, profile) -> ExposureResult | None` and
 `exposure.exposure_history(store, profile_id) -> [(when, score)]` for a trend line.
+`exposure.exposure_trend(store, profile_id) -> Trend` is the better input for a trend: one
+point per day (the day's last scan) with `score`, `sites_total`, `sites_checked` and `found`.
+Offline scans are skipped because they only re-read stored results. It also has `change` and
+`since` (the latest score against the previous day's) and `note`, one plain line such as
+"Your score went down 12 points since 2026-10-01." The note adds a warning when fewer sites
+could be checked than last time, and it never says "safe".
 
 ## What it checks
 
