@@ -164,4 +164,7 @@ def test_static_page_renders_reference_data_without_client_javascript() -> None:
     assert "argument.source" in page
     assert "<script" not in page.lower()
     assert "client:" not in page
-    assert "noindex" in page
+    # f3acc08 (Leo): the page became a real, indexed page with its props from
+    # site_src/pages.yaml, replacing the WO-137 noindex placeholder
+    assert 'pageProps("developers-cli")' in page
+    assert "noindex" not in page
