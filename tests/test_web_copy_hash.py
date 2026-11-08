@@ -1,4 +1,4 @@
-"""WO-104: exercise built checksum feedback with a fake clipboard, offline."""
+"""WO-104/108: exercise built checksum feedback with a fake clipboard, offline."""
 
 from collections.abc import Iterator
 from mimetypes import guess_type
@@ -43,13 +43,16 @@ def serve(route: Route) -> None:
     route.fulfill(body=path.read_bytes(), content_type=guess_type(path.name)[0] or "text/plain")
 
 
-def open_checksum(browser: Browser, script: str, *, javascript: bool = True) -> Page:
+def open_checksum(
+    browser: Browser, script: str, *, javascript: bool = True, open_disclosure: bool = True,
+) -> Page:
     context = browser.new_context(java_script_enabled=javascript)
     context.route("**/*", serve)
     context.add_init_script(script)
     page = context.new_page()
     page.goto(ORIGIN + "/download/", wait_until="load")
-    page.locator("#checksum summary").click()
+    if open_disclosure:
+        page.locator("#checksum summary").click()
     return page
 
 
@@ -72,6 +75,10 @@ def test_rejection_retry_keyboard_and_pending_success(browser: Browser) -> None:
         status = page.locator("#checksum [role=status]")
         expect(button).to_be_visible()
         expect(status).to_have_attribute("aria-live", "polite")
+        expect(status).to_have_attribute("aria-atomic", "true")
+        expect(status).to_have_text("")
+        status.evaluate("el => { window.originalStatus = el; }")
+        pending = page.locator("#checksum [data-copy-pending]")
         code = page.locator("#checksum code.block").inner_text()
         for key, outcome, message in [
             ("Enter", "reject", FAILURE),
@@ -82,10 +89,16 @@ def test_rejection_retry_keyboard_and_pending_success(browser: Browser) -> None:
             button.focus()
             button.press(key)
             expect(button).to_be_disabled()
-            expect(status).to_have_text("Copying…")
+            expect(status).to_have_text("")
+            expect(pending).to_be_visible()
+            expect(pending).to_have_text("Copying…")
+            expect(pending).to_have_attribute("aria-hidden", "true")
+            assert pending.evaluate("el => !el.closest('[aria-live], [role=status]')")
             page.evaluate("window.finishCopy()")
             expect(status).to_have_text(message)
             expect(button).to_be_enabled()
+            expect(pending).to_be_hidden()
+            assert status.evaluate("el => el === window.originalStatus")
         assert page.evaluate("window.calls") == [code, code, code]
         expect(page.locator("#checksum code.block")).to_have_text(code)
     finally:
@@ -95,9 +108,20 @@ def test_rejection_retry_keyboard_and_pending_success(browser: Browser) -> None:
 def test_unavailable_clipboard_explains_manual_copy(browser: Browser) -> None:
     page = open_checksum(browser, """
         Object.defineProperty(navigator, 'clipboard', {value: undefined});
-    """)
+    """, open_disclosure=False)
     try:
-        expect(page.locator("#checksum [role=status]")).to_have_text(FAILURE)
+        status = page.locator("#checksum [role=status]")
+        expect(status).to_have_count(1)
+        expect(status).to_have_text("")
+        status.evaluate("el => { window.originalStatus = el; }")
+        summary = page.locator("#checksum summary")
+        summary.focus()
+        summary.press("Enter")
+        expect(status).to_have_text(FAILURE)
+        expect(status).to_have_attribute("aria-live", "polite")
+        expect(status).to_have_attribute("aria-atomic", "true")
+        assert status.evaluate("el => el === window.originalStatus")
+        expect(page.locator("#checksum [data-copy-pending]")).to_be_hidden()
         expect(page.get_by_role("button", name="Copy the code", exact=True)).to_have_count(0)
         expect(page.locator("#checksum code.block")).to_be_visible()
     finally:
@@ -111,6 +135,9 @@ def test_without_javascript_checksum_remains_selectable(browser: Browser) -> Non
         expect(code).to_be_visible()
         assert len(code.inner_text().strip()) == 64
         assert code.evaluate("el => getComputedStyle(el).userSelect") != "none"
+        expect(page.locator("#checksum [role=status]")).to_have_count(1)
+        expect(page.locator("#checksum [role=status]")).to_have_text("")
+        expect(page.locator("#checksum [data-copy-pending]")).to_be_hidden()
         expect(page.get_by_role("button", name="Copy the code", exact=True)).to_have_count(0)
     finally:
         page.context.close()
