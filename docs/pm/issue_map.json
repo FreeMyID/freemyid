@@ -1519,13 +1519,13 @@
         "Kind": "Work order",
         "Lane": "CX",
         "Priority": "P2",
-        "Status": "Ready",
+        "Status": "Done",
         "Team": "Codex",
         "WO": "WO-136"
       },
       "number": 44,
       "project_item": "PVTI_lADOFRHvjs4BquOFzhG-bXY",
-      "state": "open",
+      "state": "closed",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/44"
     },
     "WO-137": {
@@ -2014,13 +2014,13 @@
         "Kind": "Work order",
         "Lane": "CX",
         "Priority": "P2",
-        "Status": "Ready",
+        "Status": "Done",
         "Team": "Codex",
         "WO": "WO-169"
       },
       "number": 135,
       "project_item": "PVTI_lADOFRHvjs4BquOFzhG-ebc",
-      "state": "open",
+      "state": "closed",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/135"
     },
     "WO-170": {
@@ -2179,13 +2179,13 @@
         "Kind": "Work order",
         "Lane": "CX",
         "Priority": "P2",
-        "Status": "Ready",
+        "Status": "Done",
         "Team": "Codex",
         "WO": "WO-180"
       },
       "number": 147,
       "project_item": "PVTI_lADOFRHvjs4BquOFzhHBK-w",
-      "state": "open",
+      "state": "closed",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/147"
     },
     "WO-181": {
@@ -2194,13 +2194,13 @@
         "Kind": "Work order",
         "Lane": "CX",
         "Priority": "P2",
-        "Status": "Ready",
+        "Status": "Done",
         "Team": "Codex",
         "WO": "WO-181"
       },
       "number": 150,
       "project_item": "PVTI_lADOFRHvjs4BquOFzhHBLJs",
-      "state": "open",
+      "state": "closed",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/150"
     },
     "WO-182": {
@@ -2209,13 +2209,13 @@
         "Kind": "Work order",
         "Lane": "CX",
         "Priority": "P2",
-        "Status": "Ready",
+        "Status": "Done",
         "Team": "Codex",
         "WO": "WO-182"
       },
       "number": 151,
       "project_item": "PVTI_lADOFRHvjs4BquOFzhHBLR0",
-      "state": "open",
+      "state": "closed",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/151"
     },
     "WO-183": {
@@ -2224,13 +2224,13 @@
         "Kind": "Work order",
         "Lane": "CX",
         "Priority": "P2",
-        "Status": "Ready",
+        "Status": "Done",
         "Team": "Codex",
         "WO": "WO-183"
       },
       "number": 152,
       "project_item": "PVTI_lADOFRHvjs4BquOFzhHBLYs",
-      "state": "open",
+      "state": "closed",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/152"
     }
   },
