@@ -3,7 +3,9 @@ name: claude
 # Claude on GitHub, review and comment only (owner decision 2026-11-08).
 # Start it with the "claude" label on an issue or PR, or "@claude" in a comment.
 # Only people with write access can trigger it (the action's default; allowed_non_write_users is unset).
-# It can never push: the job token has contents: read, and file-editing and git tools are blocked.
+# It can never push: the job token has contents: read, and file editing, Bash (so no git, gh approve
+# or merge, no running PR code) and web tools are blocked. PR text from outsiders is untrusted input:
+# with no shell, a prompt injection cannot run commands or reach the token.
 # Merges stay local --no-ff under the noreply identity (docs/SDLC.md).
 on:
   issues:
@@ -44,5 +46,5 @@ jobs:
           label_trigger: claude
           trigger_phrase: "@claude"
           claude_args: >-
-            --disallowedTools Edit,Write,NotebookEdit,Bash(git push:*),Bash(git commit:*),Bash(gh pr merge:*)
+            --disallowedTools Edit,Write,NotebookEdit,Bash,WebFetch,WebSearch
             --append-system-prompt "You review and advise only; never write commits. Follow CLAUDE.md and docs/SDLC.md. Never quote or ask for personal data."
