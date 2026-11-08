@@ -33,11 +33,12 @@ jobs:
       - name: Build and check
         env:
           TAG: ${{ github.ref_name }}
-          SOURCE_DATE_EPOCH: "1700000000"   # fixed timestamps in the wheel/sdist (reproducible)
         run: |
           set -euo pipefail
-          python -m pip install --disable-pip-version-check build twine
-          python -m build
+          # BL-IN-42: pinned hash-checked toolchain, SOURCE_DATE_EPOCH = commit time (see docs/REPRODUCIBLE.md)
+          python -m pip install --disable-pip-version-check --require-hashes -r tools/ci/build-requirements.txt
+          python -m pip install --disable-pip-version-check twine
+          tools/ci/repro_build.sh dist
           python -m twine check --strict dist/*
           ver=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
           test "v$ver" = "$TAG" || { echo "tag $TAG does not match pyproject version $ver"; exit 1; }
