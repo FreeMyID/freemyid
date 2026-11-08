@@ -11,7 +11,7 @@ https://www.checkpeople.com/opt-out (broker's own page, fetched 2026-11-08) [1]
 - Only an email address at the first step, plus a tick box agreeing to its Terms of Service and Privacy Policy. [1]
 - The box also agrees to "transactional emails" about the tool. [1]
 - No ID and no phone number are mentioned on that page. [1]
-- Never asks for: SSN, bank or card details, a payment.
+- Free My ID never asks for your SSN, bank or card details, or a payment (see /safety/). The removal shouldn't need them either: if a site asks for any of these, stop and close it.
 
 ## Steps
 1. Open the link above.

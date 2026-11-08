@@ -10,13 +10,13 @@ https://www.usa-people-search.com/manage/ (broker's own page, fetched 2026-11-08
 ## What it asks for
 - Your name and email, and a "not a robot" check; then a form with first name, last name and email (middle name optional). [1]
 - No ID and no phone number are mentioned. [1]
-- Never asks for: SSN, bank or card details, a payment.
+- Free My ID never asks for your SSN, bank or card details, or a payment (see /safety/). The removal shouldn't need them either: if a site asks for any of these, stop and close it.
 
 ## Steps
 1. Open the link above.
-2. Enter your name and email, and do the check.
+2. Enter your name and email, do the check, and press the button to send it (UNVERIFIED button name).
 3. Open the email and click the link in it. It "may take some time to arrive"; if you wait more than 24 hours you must ask for a new one. [1]
-4. Fill in the form so it matches the listing.
+4. Fill in the form so it matches the listing, then submit it.
 5. You see a confirmation page and get an email. Keep it. [1]
 
 ## How long

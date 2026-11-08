@@ -13,7 +13,7 @@ https://www.cyberbackgroundchecks.com/removal [1]. UNVERIFIED: another vendor li
 - First, middle and last name and an email, plus a "not a robot" check. [1]
 - On the second form: "personal information" (fields not named by the guide). Phone number is optional ("it is not mandatory"). [1] FLAG: may ask for a phone number and date of birth; the phone is optional. Another summary says the form also has date of birth and address [2], UNVERIFIED.
 - No ID mentioned. [1]
-- Never asks for: SSN, bank or card details, a payment.
+- Free My ID never asks for your SSN, bank or card details, or a payment (see /safety/). The removal shouldn't need them either: if a site asks for any of these, stop and close it.
 
 ## Steps (per [1], UNVERIFIED)
 1. Open the link above.

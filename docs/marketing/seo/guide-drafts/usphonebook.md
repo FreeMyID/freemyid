@@ -12,11 +12,11 @@ https://www.usphonebook.com/opt-out, reached from the "Do Not Sell My Personal I
 ## What it asks for
 - An email address for the confirmation, a "not a robot" check, and your phone number to find your listing. [1] FLAG: it asks for a phone number to look you up. That is the number already on your listing; you are not adding a new one.
 - No government ID mentioned. [1]
-- Never asks for: SSN, bank or card details, a payment.
+- Free My ID never asks for your SSN, bank or card details, or a payment (see /safety/). The removal shouldn't need them either: if a site asks for any of these, stop and close it.
 
 ## Steps (per [1], UNVERIFIED)
 1. Open usphonebook.com, go to the bottom, click "Do Not Sell My Personal Information".
-2. Enter an email address (a separate one for removals is best) and do the check.
+2. Enter an email address (a separate one for removals is best), do the check, and click **Begin Removal Request**. [1]
 3. Type your phone number and search. Open the matching profile.
 4. Make sure it is you, then click "Remove Record".
 5. Open the confirmation email (look in spam too) and click its link. One guide says the link works for 24 hours. [2]
