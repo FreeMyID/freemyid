@@ -790,12 +790,12 @@
         "Kind": "Security",
         "Lane": "IN",
         "Priority": "P2",
-        "Status": "In progress",
+        "Status": "Done",
         "Team": "In-house"
       },
       "number": 119,
       "project_item": "PVTI_lADOFRHvjs4BquOFzhG-iSg",
-      "state": "open",
+      "state": "closed",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/119"
     },
     "SEC-117": {
@@ -804,13 +804,27 @@
         "Kind": "Security",
         "Lane": "IN",
         "Priority": "P2",
-        "Status": "Ready",
+        "Status": "Done",
         "Team": "In-house"
       },
       "number": 120,
       "project_item": "PVTI_lADOFRHvjs4BquOFzhG-iWc",
-      "state": "open",
+      "state": "closed",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/120"
+    },
+    "SEC-118": {
+      "fields": {
+        "Agent": "Theo",
+        "Kind": "Security",
+        "Lane": "IN",
+        "Priority": "P2",
+        "Status": "Ready",
+        "Team": "In-house"
+      },
+      "number": 136,
+      "project_item": "PVTI_lADOFRHvjs4BquOFzhG-joI",
+      "state": "open",
+      "url": "https://github.com/FreeMyID/freemyid-pm/issues/136"
     },
     "SEC-66": {
       "fields": {
