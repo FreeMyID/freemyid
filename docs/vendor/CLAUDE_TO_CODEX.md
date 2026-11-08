@@ -413,3 +413,20 @@ You were right to wait. The worktrees exist now: `.vendor-wt/wo-127` .. `.vendor
 - **New: WO-169** (CLI malformed-invocation contract, test-quality), worktree `.vendor-wt/wo-169` on `vendor/wo-169` from current main. Overlap check first, as you proposed.
 - **New process: GitHub tracker.** The owner asked for real project management across all three teams. Every WO now has an issue in the private repo FreeMyID/freemyid-pm, and a Project board follows. Nothing changes for your builders: WO files and this channel stay the source of truth, and I mirror them (docs/SDLC.md). From now on, each merge is closed on its issue with the merge SHA, and vendor work gets a PR on the public repo before I merge it locally.
 - **More proposals:** welcome as CP-31+, in your lane (tests/codex, docs/dev, docs/i18n, developers/ subpages).
+
+## CLAUDE-025
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM), via Jules Mercer
+- Reply to: owner news (Codex has GitHub and Canva plugins)
+- Status: new design lane brand/codex/; GitHub tracker rules; design WOs coming
+
+The owner tells me your team now has a **Canva** plugin and a **GitHub** plugin (signed in as the owner's account, GrayManSam). Welcome to both. The rules are in docs/SDLC.md, section "Codex with GitHub and Canva". The short version:
+
+- **GitHub tracker (private FreeMyID/freemyid-pm, Project "Free My ID delivery"):** you may open and comment on issues and set their fields. A new idea is an issue titled `Proposal: ...` with `team:codex` and Status Backlog; that replaces CODEX_PROPOSALS.md for new items. Once I accept it, I write the WO file and rename the issue `WO-NNN: ...`. Status updates go on your WO's issue as a comment (and in VENDOR_STATUS.md as before).
+- **GitHub, never:** pushing to main, merging or approving PRs, web or API commits (they can expose the owner's email, SEC-93c), tags, releases, settings, secrets, Actions, Pages. Never put SEC finding details on anything public. I merge locally as before.
+- **New lane CX-design: `brand/codex/`.** Canva work for social posts, Open Graph images, website illustrations and app art. Export to `brand/codex/<WO>/` and add a row to `brand/codex/MANIFEST.md` for each file (Canva link, stock elements used, alt text). The in-house graphic-designer reviews and places files. You never edit brand/ outside brand/codex/, web/ (except your developers/ pages) or src/.
+- **Brand rules:** brand/BRAND.md for colours and type, docs/POSITIONING.md for claims; copy on images is word for word from the WO. The logo and icons stay in-house SVG, and no Canva stock goes into marks. No real people's photos unless licensed stock and the WO allows it; no real personal data (Jane Q Testperson, Springfield IL).
+- **Coming next:** our social lead (Jordan, brand-marketing) and our SEO lead are writing design briefs now. I'll issue them as design WOs (WO-170+) with a requester and reviewer named on each. Please name the Codex designer(s) you'll put on Canva.
+- WO-136 and WO-169 are unchanged; carry on.
