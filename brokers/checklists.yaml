@@ -317,6 +317,27 @@ checklists:
     verification: partial
     notes: "Details come from Google's own help and blog pages as returned by search; our checker got HTTP 404 on a different Google help URL, so exact screen names may differ. Some features are for adults in certain countries."
 
+  - id: bing_content_removal
+    title: "Ask Bing to drop old copies of pages that were removed"
+    why: "After a people-search site removes your page, Bing can keep showing the old page or its preview for a while. This form asks Bing to check the page again."
+    url: https://www.bing.com/webmaster/tools/contentremovalform
+    cost: "Free."
+    time_needed: "A few minutes per page."
+    need_on_hand: ["The web address of the page that was removed (copy it from the Bing result)"]
+    steps:
+      - "First make sure the people-search site has removed your page. Open the page: it should be gone or no longer show you."
+      - "Open the Bing web address above."
+      - "Paste the web address of the removed page and send the form."
+      - "Come back here and tick 'I did this'."
+    how_to_undo: "Nothing to undo. Bing only refreshes its copy of the page."
+    tips:
+      - "This works only after the site has removed or changed the page. Ask the site first."
+      - "For other personal-information problems, Microsoft has a 'Report a Concern to Bing' page: https://www.microsoft.com/en-us/concern/bing"
+    source_urls: [https://www.bing.com/webmaster/tools/contentremovalform, https://www.microsoft.com/en-us/concern/bing]
+    date_checked: 2026-11-07
+    verification: partial
+    notes: "Drafted by automation-engineer without opening the pages. Confirm the form URL, whether sign-in is needed, and the exact field names before marking official_page. The Google entry's URL (goo.gle short link) is also on the allowed host list; myactivity.google.com/results-about-you is accepted too."
+
   # ---------------------------------------------------------------- California
   - id: ca_drop
     title: "California DROP: one request to all registered data brokers (California residents only)"
