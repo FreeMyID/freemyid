@@ -100,8 +100,6 @@ def test_sec93a_one_card_per_person_without_cross_profile_leakage(store, monkeyp
         assert "https://" not in x and "Springfield" not in x and "Testperson" not in x
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-95: Today's Protect card shows profiles[0] "
-                   "counts without naming the person")
 def test_sec95_protect_card_names_the_person_when_several(store, monkeypatch):
     monkeypatch.setattr(keyring, "set_password", lambda *a: None)
     from freemyid import checklist_state as cs

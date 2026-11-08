@@ -234,7 +234,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
             filling=bool(app.state.fill["running"]),
             sent=sum(1 for r in store.list_requests(status=RequestStatus.SENT) if not r.dry_run),
             exposure="".join(views.exposure_card(store, pr) for pr in profiles),
-            protect=protect.counts(store, profiles[0].id)))
+            protect=[(pr.id, pr.label, *protect.counts(store, pr.id)) for pr in profiles]))
 
     @app.get("/profile/{pid}")
     async def profile_view(pid: str, request: Request):

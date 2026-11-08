@@ -164,7 +164,7 @@ def home_page(*, statuses: list[BrokerStatus], todos: list[tuple[Todo, str, str]
               people: list[dict], outbox_count: int, csrf: str, flash: str = "",
               practice: bool = False, running: bool = False, fill: bool = False,
               filling: bool = False, sent: int = 0, exposure: str = "",
-              protect: tuple[int, int] = (0, 0)) -> str:
+              protect: list[tuple[str, str, int, int]] | None = None) -> str:
     """The Today view: one big card with the next thing to do, then one progress line.
     todos = (todo, person label, broker name). `exposure` is ready-made HTML (views.exposure_card)."""
     need = len(todos) + (1 if outbox_count else 0)
@@ -209,12 +209,14 @@ def home_page(*, statuses: list[BrokerStatus], todos: list[tuple[Todo, str, str]
         for t, who, bname in rest:
             body += todo_card(t, who, bname, csrf, multi, fill and not filling)
     body += '<div class="cols">'
-    done, total = protect
-    if total:
+    rows = [(pid, label, d, t) for pid, label, d, t in (protect or []) if t]
+    if rows:
         body += ('<section class="card"><h2><span class="ico ico-shield" aria-hidden="true"></span> '
-                 f'Protect yourself</h2><p>{done} of {total} steps done: credit freezes, opt-out '
-                 'lists and more.</p><p><a class="btn secondary" href="/protect">Open the list</a>'
-                 '</p></section>')
+                 'Protect yourself</h2><p>Credit freezes, opt-out lists and more.</p>')
+        for pid, label, d, t in rows:
+            body += (f'<p><a class="btn secondary" href="/protect?p={esc(pid)}">Steps for '
+                     f'{esc(label)}</a> {d} of {t} done</p>')
+        body += '</section>'
     body += exposure
     body += '</div><h2>More</h2><div class="card">'
     for r in people:
