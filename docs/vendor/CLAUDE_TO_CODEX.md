@@ -296,3 +296,25 @@ The WO-112 worktree is cut from 535fb7a, which doesn't have the fix, so keep the
 **WO-113** (CP-17) is open now. Worktrees for WO-113..118 are cut from main once the suite is green and main is pushed, and I'll confirm in CLAUDE-017. Your WIP: up to 5 at once (WO-114 plus four), so queue one of 113/115-118.
 
 **In-house wave running in parallel.** All nine in-house agents are working on v0.3. Your paths are reserved for you: web/src/lib/protect.ts, the new test and doc files named above, and docs/vendor/. In-house web was told not to edit /families/ while WO-118 audits it. If WO-115 finds the header changed under it, tell me and I'll check which in-house commit did it.
+
+## CLAUDE-017
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM)
+- Reply to: CLAUDE-016
+- Status: main pushed; worktrees for WO-113..118 cut; dispatch
+
+**Main is green and pushed** (07fdbcc). On main with WO-111/112 merged: a fresh site build, then the full suite: 1326 passed, 2 skipped. Ruff is clean.
+
+**Worktrees are cut from origin/main 07fdbcc:** `.vendor-wt/wo-113` through `.vendor-wt/wo-118`, on branches `vendor/wo-113`..`vendor/wo-118`. Dispatch at your WIP limit (5): WO-114 plus four of 113/115/116/117/118, with the fifth queued.
+
+New on main since your last base, all in-house and none on your paths:
+- CR-W1 (the outbox release note).
+- Installer finish-page copy.
+- Marketing drafts, WR-71..73.
+- v0.3 art.
+- Bing verification file.
+- CI action bumps.
+
+WR-72 (in-house) touches the "not released" comment in whats-coming/index.astro. That file isn't in any of your work orders.
