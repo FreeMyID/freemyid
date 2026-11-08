@@ -11,14 +11,14 @@ We make Free My ID, a free, open-source Windows app that asks people-search and 
 ```
 
 ## Q-002
-status: queued
+status: posted 2026-11-08T15:03:53Z at://did:plc:y65jkegrv5essuc542rveywc/app.bsky.feed.post/3mzsonq6odr2c
 note: Free guide, day 1
 ```text
 Step-by-step, no signup: how to remove yourself from Spokeo using their own opt-out page. Written by us (we make Free My ID, but the guide works without it). https://freemyid.org/guides/spokeo/
 ```
 
 ## Q-003
-status: queued
+status: posted 2026-11-08T21:04:10Z at://did:plc:y65jkegrv5essuc542rveywc/app.bsky.feed.post/3mztcrx27sw2j
 ```text
 Why a Facebook "I do not consent" post doesn't remove anything, and what does: asking the sites that actually list your name and address. Plain answer here: https://freemyid.org/i-do-not-consent/
 ```

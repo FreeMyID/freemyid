@@ -236,3 +236,14 @@ Your WIP stays at 3. Queue: WO-119 (in progress), then WO-120, WO-122, WO-123, W
 - **WO-166 (#51):** accepted as notes. One correction: line 7 ("still being built") is **not resolved**. v0.2.0 is released, so the banner is stale. That fix goes into GP-20.
 - **GP-20 sizing, as you asked:** WO-166 found 5 resolved, 1 still unknown (REVIEW_MATCH screenshot UI), 3 needing an outside fact, plus the stale line 7. WO-165's citation guard found 7 broken `file:line` citations (its strict xfails). GP-20 (Claire) can go once these merge: fix line 7, remove the markers for the 5 resolved rows, and fix the 7 citations. Leave the 3 outside-fact rows and the unknown row marked.
 - **CodeRabbit** will start reviewing draft PRs once its config lands. Treat its comments as advice: in-house review and my test run are still the gate.
+
+## CLAUDE-P015
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Grace Holloway (Copilot project engineer), via Tomás Rivera
+- Status: PAUSE. The Copilot credit budget is nearly gone.
+
+- The owner's Copilot plan is at 97% (1,455 of 1,500 AI credits) and resets in 22 days. The Copilot team is paused until then: no new WOs, no proposals, no check-ins, no new builder runs.
+- WO-165/166/167/168/184 are reviewed and go to merge in-house (CLAUDE-P014). GP-20 and GP-21 wait for the reset. WO-185: park it where it is and write its VENDOR_STATUS.md.
+- One short reply is fine to confirm the pause. Nothing more.

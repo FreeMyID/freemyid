@@ -1,6 +1,6 @@
 # Codex vendor work board
 
-Sole writer: Nora Bennett, interactive vendor PM. Last checkpoint: CLAUDE-012, 2026-11-08. v0.2.0 released per owner report.
+Sole writer: Nora Bennett, interactive vendor PM. Last checkpoint: CLAUDE-035 / CODEX-092, 2026-11-08. Release and merge states are owner-reported.
 States are owner reports and local document evidence, not independently verified remote PR state. No git or network used. Local merges are distinguished from pushed merges. Work-order status headers may be stale; latest owner channel controls.
 
 Before dispatch or proposals, check this board, exact work-order paths and Claude's stay-off lists. This board grants no additional edit permission. Completed WO-001/002/005/006 path lists are historical scopes, not active reservations. WO-005 scope is exposure_card and its exclusive helpers only, never all views.py functions.
@@ -32,6 +32,16 @@ Before dispatch or proposals, check this board, exact work-order paths and Claud
 | WO-120 | — | Copilot / Claire Dubois | open (owner report) | none | docs/CLI.md; README.md; docs/USER_GUIDE.md; VENDOR_STATUS.md | 2026-11-08 CLAUDE-019 |
 | WO-121 | — | Copilot / Malik Johnson | queued after WO-120 (owner report) | WO-120 merge | tests/test_cli_docs_match_source.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-019 |
 | WO-122 | — | Copilot / Lucia Ferraro | open (owner report) | none | docs/vendor/web-contrast-audit.md (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-019 |
+| WO-180 | CP-31 / #147 | channel / Hannah | accepted by owner; merge pending | none | tests/codex/test_cx_dev_broker_citations.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-031 |
+| WO-181 | #150 | channel / Ravi | accepted by owner; merge pending | none | tests/codex/test_cx_cli_profile_scoping.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-031 |
+| WO-182 | #151 | channel / Kai | accepted by owner; merge pending | none | docs/dev/TESTING.md (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-031 |
+| WO-183 | #152 | channel / Amara | accepted by owner; merge pending | none | tests/codex/test_cx_dev_config_constraints.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-031 |
+| WO-187 | CP-32 / #149 | channel / Amara | accepted by owner; merge queue | Iris design images on main | tests/codex/test_cx_developer_og_metadata.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-033 |
+| WO-188 | CP-34 / #159 | channel / Kai | accepted by owner; in-house merge queue | WO-180 locally merged (owner/work-order report) | docs/dev/CONTRIBUTING_BROKERS.md; VENDOR_STATUS.md | 2026-11-08 CLAUDE-034 |
+| WO-189 | CP-35 / #160 | channel / Hannah | accepted by owner; in-house merge queue | none | tests/codex/test_cx_dev_home_scheduler_examples.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-034 |
+| WO-190 | CP-36 / #162 | channel / Ravi | accepted by owner; in-house merge queue | none | tests/codex/test_cx_cli_registry_table.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-034 |
+| WO-191 | — / #163 | channel / Hannah | delivered; 4 tests and Ruff pass; owner review requested | none | tests/codex/test_cx_cli_checklist_text.py (new); VENDOR_STATUS.md | 2026-11-08 CODEX-089 |
+| WO-192 | — / #164 | channel / Amara | delivered; build, 1 test and Ruff pass; owner review requested | none | tests/codex/test_cx_developer_hero_art.py (new); VENDOR_STATUS.md | 2026-11-08 CODEX-089 |
 
 WO-107 workspace: .vendor-wt/wo-107. Merged PR #19, owner report (103d79a).
 
@@ -50,7 +60,7 @@ CP-03 navigation tests; CP-04 guide-print audit; CP-07 printable-summary visual 
 
 ## Next checkpoint
 
-WO-108..110 are delivered; owner reports PRs #25–27 merged on main, with final full-suite result pending in latest channel. WO-111/112 are delivered for owner review; their worker status files contain all check details. WO-112 preserves SEC-98 as four strict expected failures pending the in-house product fix. WO-113 is written and its worktree follows the 111/112 merge. Morgan has also been asked for a docs-only work order to implement the shared team workflow; none is recorded yet. CP-18 moved in-house to SEC-67. Elena wave remains owner-run; current status requested.
+CLAUDE-035 accepts WO-191 and WO-192; WO-187..192 are in the in-house merge queue. Builder WIP is 0/5. CP-37 / issue #165 proposes a built-output guard for the developer CLI reference; CP-38 / issue #166 proposes coverage for the `registry source` summary text; CP-39 / issue #167 proposes exposure result text coverage. All await Morgan's review. CP-33 remains parked for cleared source paths. Respect CLAUDE-034's process notes: Codex is the sole writer of `brand/codex/MANIFEST.md`, and design WOs close when their status records `done (<commit>)`.
 
 ## Elena proposed path collision reference
 

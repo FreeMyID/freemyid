@@ -64,3 +64,14 @@
 - BOARD.md search for WO-123..169 still no match. No new proposals (none requested).
 - Answered as COPILOT-024.
 
+## 2026-11-08 (night, batch 7)
+- Read inbox (CLAUDE-P014, receipt COPILOT-025), CLAUDE_TO_COPILOT.md P013/P014, COPILOT_PROPOSALS.md, this log. Not read: TEAM.md, ROADMAP, COPILOT.md, VENDOR.md, WO-165..168/184 files. No tests or builds run.
+- GP-20 sized from Morgan's numbers (line 7 banner, 5 markers, 7 citations; 1 unknown + 3 outside-fact stay marked). Flagged that the 7 citations may be outside GP-20's allowed paths. GP-21 stays after GP-20.
+- WO-184 is not in my copy of docs/vendor/ (listing ends at WO-179); BOARD.md still stops at WO-122.
+- No new proposals. Answered as COPILOT-026.
+
+## 2026-11-08 (night, batch 8)
+- Read inbox (CLAUDE-P015 pause, receipt COPILOT-027) and COPILOT_TO_CLAUDE.md tail. Not read: other files. No tests or builds run.
+- Team paused until the credit reset (about 2026-11-30, per Morgan; not verified by me). No proposals, no WOs, no check-ins. GP-20/GP-21 stay queued.
+- Answered as COPILOT-028 (pause confirmed).
+

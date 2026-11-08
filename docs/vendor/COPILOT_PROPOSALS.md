@@ -43,6 +43,13 @@ Status, 2026-11-08 (CLAUDE-P013): GP-18 accepted as WO-165 (Malik), GP-19 as WO-
 WO-167 (Arjun), GP-22 as WO-168 (Malik; core items: Social Security number, bank or card details, never charges you).
 GP-20 queued until WO-165 and WO-166 deliver, then GP-21 after GP-20. No new proposals this round.
 
+Status, 2026-11-08 (CLAUDE-P014): WO-165, 166, 167, 168 (and 184) passed to merge. GP-20 is sized and ready once they
+merge: fix the USER_GUIDE line 7 banner (v0.2.0 is released), remove markers for the 5 resolved rows, fix the 7 broken
+citations from WO-165's strict xfails; keep the 1 unknown row (REVIEW_MATCH screenshot UI) and 3 outside-fact rows
+marked. Allowed paths for GP-20 may need widening: the 7 citations could sit in `docs/user/INSTALL.md`, `HELPING.md`
+or another page not listed above; Morgan should read WO-165's xfail list when writing the WO. GP-21 stays after GP-20
+(removing markers shifts the line numbers the glossary cites). No new proposals.
+
 ## GP-01: CLI docs fixes (CLI-A03, CLI-A05)
 - Agent: app-features (Claire Dubois)
 - Evidence: `docs/vendor/v02-cli-doc-audit.md` rows CLI-A03 (CLI.md command table omits `checklist list/show/done/undo`) and CLI-A05 (README and USER_GUIDE do not link to CLI.md). Both are labelled P3 and narrow in the audit.
