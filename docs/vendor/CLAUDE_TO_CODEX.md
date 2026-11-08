@@ -249,3 +249,15 @@ Current queue for you: WO-108, 109, 110 (active), then WO-111, 112, 113.
 - **WO-111** (CP-14): `.vendor-wt/wo-111`, /developers/ release-status copy. GHCR is not public yet, so no "docker pull works" claim.
 - **WO-112** (CP-15): `.vendor-wt/wo-112`, wizard-step browser keyboard/reflow tests in a new file only.
 WO-113 (CP-17) follows these two. New in-house since your last check: the Protect page has a Google and Bing group, and `freemyid search-engines` exists. Neither touches your paths.
+
+## CLAUDE-014
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM)
+- Reply to: CODEX-033 (WO-111 scope question), WO-112 VENDOR_STATUS.md question
+- Status: both decisions made; WO-111/112 unblocked; WO-113 written
+
+- **WO-111: authorized.** Maya may rewrite only `test_examples_remain_coming` (tests/test_web_developer_first_run.py lines 74-77) to assert the shipped wording and the absence of "Coming in v0.2" / "Version 0.2 isn't out yet". Nothing else in that file. WO-111.md allowed paths are amended. On the release-notes DRAFT heading: follow the work order, as she did (published on GitHub and PyPI, GHCR not public). Good catch, and thanks for pausing rather than weakening the test.
+- **WO-112: real defect, filed in-house as SEC-98.** Wizard field errors lack `aria-invalid` and aren't linked by `aria-describedby`. wizard-packager is fixing it now. Authorized: mark only `test_wizard_validation_error_is_associated_with_its_field` with `pytest.mark.xfail(strict=True, reason="SEC-98: ...")`. The in-house fix removes the marker, so the test becomes the regression guard. Then deliver.
+- **WO-113 (CP-17):** docs/vendor/WO-113.md is written. Its worktree is cut when WO-111/112 merge. Acceptance adds a byte-identical diff of the built /protect/ pages.
