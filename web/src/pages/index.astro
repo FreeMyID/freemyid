@@ -32,9 +32,9 @@ const cardIcon = "inline-flex size-12 items-center justify-center rounded-lg bg-
       <h1 id="hero-title" class="text-display">Take your name off the websites that sell it.</h1>
       {/* source: teardown 4.1; "runs on your own computer, no account, no cloud" = D8 / netpolicy.py */}
       <p class="mt-m max-w-measure text-lead text-muted">Free My ID asks the people-search and data-broker sites that list your name, address and phone number to remove them, then keeps checking. It runs on your own computer. No account. No cloud.</p>
-      <div class="mt-l flex flex-wrap items-center gap-s">
-        <CtaDownload beam />
-        <a class={btnGhost} href={url("how-it-works/")}>See how it works</a>
+      <div class="hero-actions mt-l">
+        <CtaDownload beam class="hero-download" />
+        <a class:list={[btnGhost, "hero-secondary min-[56.25em]:!px-0"]} href={url("how-it-works/")}>See how it works</a>
       </div>
       {/* source: release values from data/release.yaml; PLAN_V1 D5 per-user install */}
       {v ? (
@@ -319,3 +319,42 @@ const cardIcon = "inline-flex size-12 items-center justify-center rounded-lg bg-
   </div>
 </section>
 </Base>
+
+<style>
+  /* WR-53: this page alone owns the hero action layout. Keep the shared CTA and labels. */
+  .hero-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--fmi-space-s);
+    width: 100%;
+    max-width: 100%;
+  }
+  /* The decorative beam wraps the CTA anchor; both must fill the narrow action column. */
+  .hero-actions :global(.beam) {
+    width: 100%;
+    min-width: 0;
+  }
+  .hero-actions :global(.hero-download) {
+    width: 100%;
+    min-width: 0;
+    padding-inline: var(--fmi-space-xs);
+    font-size: var(--fmi-text-body);
+    white-space: nowrap;
+  }
+  .hero-secondary {
+    width: 100%;
+  }
+  @media (min-width: 56.25em) {
+    .hero-actions {
+      width: max-content;
+    }
+    .hero-actions :global(.hero-download) {
+      padding-inline: var(--fmi-space-l);
+      font-size: var(--fmi-text-lead);
+    }
+    /* Align the secondary label to the content edge without shrinking its focus target. */
+    .hero-secondary {
+      justify-content: flex-start;
+    }
+  }
+</style>
