@@ -1,0 +1,81 @@
+---
+// Credit freeze checklist (BL-IN-71 research). Only page-level facts from docs/research/credit-freeze-specifics-2026-11.md
+// (Priya Shah, accessed 2026-11-08); snippet-only facts (TransUnion, ChexSystems) are not used. Per-bureau steps live on the
+// existing /protect/<id>/ pages (brokers/checklists.yaml). Free My ID is not involved in any of this.
+import Base from "@/layouts/Base.astro";
+import PageHead from "@/components/PageHead.astro";
+import Alert from "@/components/ui/Alert.astro";
+import { pageProps, pages, url, type Crumb } from "@/lib/site";
+import { protectPages } from "@/lib/protect";
+const p = pageProps("credit-freeze");
+const crumbs: Crumb[] = [["Home", ""], [pages.protect.label, pages.protect.out], [pages["credit-freeze"].label, p.out]];
+const byId = new Map(protectPages.map((c) => [c.id, c]));
+const big = ["freeze_equifax", "freeze_experian", "freeze_transunion"].map((id) => byId.get(id)!);
+const more = ["freeze_innovis", "freeze_nctue", "freeze_lexisnexis", "freeze_chexsystems"].map((id) => byId.get(id)!);
+const box = "mt-[0.3em] size-6 shrink-0 accent-[var(--fmi-color-brand)]";
+---
+<Base {...p} crumbs={crumbs}>
+<PageHead crumbs={crumbs} title="Credit freeze checklist"
+  lead="A credit freeze is free. It stops a thief from opening new credit in your name. Freeze each of the three big credit bureaus, one at a time.">
+  <picture slot="art">
+    {/* source: brand/illustrations/credit-freeze-*.svg (graphic-designer), alt from brand/illustrations/README.md */}
+    <source srcset={url("assets/art/credit-freeze-dark.svg")} media="(prefers-color-scheme: dark)" />
+    <img src={url("assets/art/credit-freeze-light.svg")} width="320" height="250" class="h-auto w-full"
+      alt="A credit card with a snowflake showing a frozen file." />
+  </picture>
+</PageHead>
+<div class="wrap-narrow pb-2xl">
+  <h2 id="what">What does a freeze do?</h2>
+  {/* source: research doc section 5 (suggested public-safe wording); FTC "What To Know About Credit Freezes and Fraud Alerts" (free, lasts
+     until lifted, anyone can place one); CFPB ask-cfpb 1341 (stops new credit, existing creditors can still see the file, each bureau
+     separately); checklists.yaml freeze_*.why (does not hurt your score) */}
+  <p class="mt-s">It stops lenders from seeing your credit file when someone applies for new credit, so a thief can't open an account in your name. It doesn't hurt your credit score, and it doesn't close the accounts you already have. Companies you already do business with can still check your file. It's free, and it stays on until you lift it.</p>
+
+  <h2 class="mt-xl" id="checklist">The checklist</h2>
+  {/* source: CFPB ask-cfpb 1341 ("contact each of Equifax, Experian and TransUnion separately"); FTC page; Experian help page
+     (a freeze is not shared with other bureaus) */}
+  <p class="mt-s">A freeze at one bureau doesn't freeze the others. Tick each one when it's done. You can print this page.</p>
+  <ul class="mt-s grid gap-s" role="list">
+    {big.map((c) => (
+      <li class="flex items-start gap-xs">
+        <input type="checkbox" id={`cf-${c.id}`} class={box} />
+        <label for={`cf-${c.id}`}><strong>{c.title}</strong>. <span class="text-muted">{c.time_needed}</span> <a href={url(c.out)}>Step-by-step for {c.title.replace(/^.* at /, "")}</a></label>
+      </li>
+    ))}
+    <li class="flex items-start gap-xs">
+      <input type="checkbox" id="cf-safe" class={box} />
+      {/* source: checklists.yaml freeze_equifax step 4 (write down user name and password); Innovis page (10-digit PIN letter) */}
+      <label for="cf-safe"><strong>Keep each bureau's sign-in or PIN somewhere safe.</strong> <span class="text-muted">You'll need it to lift the freeze later.</span></label>
+    </li>
+  </ul>
+
+  <h3 class="mt-l" id="more">Want to go further?</h3>
+  {/* source: checklists.yaml group "credit" (Innovis, NCTUE, LexisNexis pages read; ChexSystems page has no phone number on purpose) */}
+  <p class="mt-xs">These smaller companies also keep files. Freezing them is optional and free.</p>
+  <ul class="mt-xs list-disc ps-m">
+    {more.map((c) => <li><a href={url(c.out)}>{c.title}</a></li>)}
+  </ul>
+
+  <h2 class="mt-xl" id="timing">How fast does it work?</h2>
+  {/* source: 15 U.S.C. 1681c-1(i)(2)(A) (place: 1 business day phone/online, 3 business days mail) and (i)(3)(C) (lift: 1 hour
+     phone/online, 3 business days mail), law.cornell.edu, read 2026-11-08 */}
+  <p class="mt-s">By federal law, a freeze you ask for online or by phone must be in place within one business day (three business days by mail). When you need credit, a lift asked for online or by phone must happen within one hour.</p>
+  {/* source: FTC page (lift only at the bureau the lender will check) */}
+  <p class="mt-s">Applying for a loan or card? Ask the lender which bureau it checks, and lift the freeze only there.</p>
+
+  <h2 class="mt-xl" id="parent">Helping a parent who can't do it themselves?</h2>
+  {/* source: research doc section 3 / 5: 15 U.S.C. 1681c-1(j)(1)(B),(C),(F),(G) (protected consumer: under 16, or incapacitated adult with
+     a guardian or conservator; proof of authority = court order or valid power of attorney; proof of identity); (j)(2)(A) free; FTC
+     "Managing someone else's money" page. Mail-only: Equifax incapacitated-adult form (mail only); Experian minors by mail. */}
+  <p class="mt-s">For a child under 16, or an adult with a court-appointed guardian or conservator, the guardian or someone holding a valid power of attorney can place the freeze. You send proof of who you are and proof of your authority, such as a court order or the power of attorney. It's free. Each bureau has its own process, and some only take these requests by mail.</p>
+  <p class="mt-s">If your parent can still decide for themselves, sit with them and do the checklist together on their computer.</p>
+
+  <h2 class="mt-xl" id="fraud-alert">Is a fraud alert the same thing?</h2>
+  {/* source: FTC page (initial alert 1 year, renewable, one bureau tells the other two; extended 7 years needs an FTC identity theft report
+     or police report; free) */}
+  <p class="mt-s">No. A fraud alert is a separate, free step. A first alert lasts one year, and you only need to contact one bureau, which tells the other two. A freeze is what stops lenders from seeing your file when someone applies for new credit.</p>
+
+  {/* source: POSITIONING.md rule 4 (look unlike a scam); checklists.yaml need_on_hand (the bureaus ask for a Social Security number) */}
+  <Alert variant="note" icon="shield" class="mt-xl"><p>The bureaus' own websites will ask for your Social Security number to find your file. Type their web address yourself or use the links on our step pages, and never follow a link in an email or text that offers to freeze your credit. Free My ID is not involved in any of this and never asks for your Social Security number.</p></Alert>
+</div>
+</Base>

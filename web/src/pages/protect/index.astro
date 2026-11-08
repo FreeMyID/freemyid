@@ -45,6 +45,7 @@ const paid = protectPages.filter((c) => !c.free);
     <section class="mt-xl" aria-labelledby={g.key}>
       <h2 id={g.key}>{g.title}</h2>
       <p class="mt-xs max-w-measure text-lead text-muted">{intros[g.key]}</p>
+      {g.key === "credit" && <p class="mt-xs max-w-measure"><a href={url("protect/credit-freeze/")}>Use the printable credit freeze checklist</a></p>}
       <ul class="mt-m grid gap-s [grid-template-columns:repeat(auto-fill,minmax(min(100%,20rem),1fr))]" role="list">
         {protectPages.filter((c) => c.group === g.key).map((c) => (
           <li>

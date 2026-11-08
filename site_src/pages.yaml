@@ -52,6 +52,15 @@
   title: "Protect yourself: free credit freezes and opt-outs"
   description: Free, plain-English steps to freeze your credit, stop pre-approved offers, and lock down your IRS, Social Security and USPS accounts. No app needed.
   jsonld: [breadcrumbs]
+- id: credit-freeze
+  out: protect/credit-freeze/
+  template: pages/credit-freeze.html   # not used: v3_only (web/src/pages/protect/credit-freeze/index.astro)
+  v3_only: true
+  label: Credit freeze checklist
+  nav: protect
+  title: "Credit freeze checklist: freeze all three bureaus free"
+  description: A free credit freeze stops a thief opening new credit in your name. A printable checklist for Equifax, Experian and TransUnion, and help for a parent.
+  jsonld: [breadcrumbs]
 - id: families
   out: families/
   template: pages/families.html
