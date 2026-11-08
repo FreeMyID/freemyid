@@ -254,3 +254,17 @@ SSN note. Only page-level facts from docs/research/credit-freeze-specifics-2026-
 and the conflicting ChexSystems phone numbers are not used (test guards the numbers). Linked from the /protect/ credit section.
 Checks at f882daa: build + check OK (65 HTML, 59 indexable), content_check OK, web tests 117 passed, legacy build OK.
 Shots: /tmp/claude-shots/art-*-{360,1280}-{light,dark}.png, cf-{360,1280}-{light,dark}.png (full page), no horizontal scroll.
+
+## Contrast audit CA-2/3/5/6 (2026-11-08, web lead alone; CA-1/CA-4 = Copilot WO-126)
+c868a3c. Ratios recomputed from tokens.css, light / dark:
+- CA-2 Section tone="brand": `[&_a]` -> `[&_a:not(.no-underline)]` (button links always carry no-underline). Before: onBrand
+  1:1 / 1:1 (ink on ink), primary text 12.27 / 1.57. After: onBrand 13.09 / 13.44, primary text 12.27 / 10.45, prose links in
+  the band 13.09 / 13.44. No page uses tone="brand" today; primary vs the band itself is 1.07:1, so the comment says use onBrand.
+- CA-3: no change needed (gold 1.82 / 10.24 vs bg; inner ring 17.26 / 16.44; gold vs inner 9.49 light). Added "do not remove
+  the inner ring" note; test checks the pair on bg, bg-alt, card, band-brand in both themes and that the box-shadow stays.
+- CA-5 SmartScreen: unchanged on purpose (imitates Windows): #fff on #0b5394 7.84, gold ring on #0b5394 4.31. Comment + test.
+- CA-6: `@media (forced-colors: active)` in global.css: focus outline 3px Highlight (box-shadow dropped), 2px currentColor
+  border on button links, buttons and number bubbles. Playwright forced_colors="active" test checks the CTA border and the
+  focus outline on the built home page.
+Test: tests/test_web_contrast_inhouse.py (14 cases, browser ones offline-routed). Checks: build + check OK (65 HTML, 59
+indexable), content_check OK, gen-tokens --check OK, web tests 131 passed.
