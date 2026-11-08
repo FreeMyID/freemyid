@@ -12,7 +12,7 @@
   ],
   "owner_tasks": [
     {"key": "OWN-gh-project-scope", "title": "Grant gh the project scope: gh auth refresh -h github.com -s project,read:project"},
-    {"key": "OWN-dockerhub-password", "title": "Change the Docker Hub password (it was pasted in chat)"},
+    {"key": "OWN-dockerhub-password", "title": "Rotate the Docker Hub password"},
     {"key": "OWN-csp-go", "title": "Say go on the CSP header (Dana's rule in her handoff)"},
     {"key": "OWN-ghcr-public", "title": "Make the GHCR package public"},
     {"key": "OWN-copilot-prs", "title": "Approve or close Copilot cloud PRs #39-41"},
