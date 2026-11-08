@@ -14,7 +14,7 @@
 # stays out of public fields and is described in notes.
 # Nothing here asks a user to pay, except DMAchoice, which charges its own small fee (see entry).
 # Licence: CC BY-NC 4.0, same as brokers/LICENSE-DATA.md.
-version: "2026.11.08.1"
+version: "2026.11.08.2"
 updated: 2026-11-08
 
 checklists:
@@ -161,6 +161,28 @@ checklists:
     date_checked: 2026-11-07
     verification: official_page
     notes: "The page does not list what details the form needs."
+
+  - id: freeze_child_equifax
+    title: "Freeze your child's credit at Equifax (child under 16)"
+    why: "A child's clean credit file is a target for thieves. A freeze stops anyone opening new credit in the child's name."
+    url: https://www.equifax.com/personal/education/identity-theft/articles/-/learn/freezing-your-childs-credit-report-faq/
+    cost: "Free. Equifax says freezes are free."
+    time_needed: "About 20 minutes to gather papers, plus mailing. Equifax says up to 3 business days after it gets everything."
+    need_on_hand: ["The Equifax Minor Freeze form (from the web address above)", "Copy of ONE ID for you: driver's license or other government ID, Social Security card, or birth certificate", "Proof you are the parent or guardian (one): the child's birth certificate, a court order, a valid power of attorney or a foster care certification", "Copies of BOTH the child's Social Security card and the child's birth certificate", "An envelope and a stamp"]
+    steps:
+      - "Open the Equifax web address above and download the Minor Freeze form. Fill it in."
+      - "Make copies of the papers listed. Send copies, never the originals."
+      - "Mail the form and copies to: Equifax Information Services LLC, P.O. Box 105788, Atlanta, GA 30348."
+      - "Equifax makes a credit file for the child and freezes it. You get a confirmation letter, or a request for more information."
+    how_to_undo: "A parent or guardian sends a written request by mail with the same kind of proof."
+    tips:
+      - "A freeze must be placed at each bureau separately. Do the child at Experian and TransUnion too."
+      - "Teens aged 16 and 17 can ask for their own freeze by phone or mail."
+      - "Equifax's page says minors cannot make a myEquifax online account. This is a mail request."
+    source_urls: [https://www.equifax.com/personal/education/identity-theft/articles/-/learn/freezing-your-childs-credit-report-faq/, https://www.equifax.com/personal/credit-report-services/credit-freeze/, https://consumer.ftc.gov/articles/credit-freezes-and-fraud-alerts]
+    date_checked: 2026-11-08
+    verification: official_page
+    notes: "Both Equifax pages opened and read 2026-11-08. The page lists mail only for a minor and no phone number for it."
 
   # ---------------------------------------------------------------- junk offers and calls
   - id: optoutprescreen

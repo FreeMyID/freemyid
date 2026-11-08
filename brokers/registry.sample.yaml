@@ -415,6 +415,8 @@ brokers:
     search_url_pattern: https://thatsthem.com/name/{first}-{last}
     listing_url_pattern: ^/name/[A-Za-z0-9-]+$
     search_access: bot_blocked
+    phone_search_url_pattern: https://thatsthem.com/phone/{phone_dashed}
+    email_search_url_pattern: https://thatsthem.com/email/{email}
     search_access_note: City/state variant /name/John-Smith/Springfield-IL returned HTTP 403 to fetch and is NOT confirmed. Indexed pages are /name/First-M-Last, which are name pages (several people per page), not single-person pages. There is also an origin.production.thatsthem.com host in search results; do not use it.
     search_url_checked: '2026-11-07'
     slug_case: title
