@@ -580,8 +580,8 @@ def profile_remove(profile: str, yes: Annotated[bool, typer.Option("--yes")] = F
 
 @app.command()
 def wipe(yes: Annotated[bool, typer.Option("--yes")] = False):
-    """Delete everything Free My ID saved on this computer: people, evidence, mailbox passwords,
-    the encryption key and the background task. Used by the Windows uninstaller."""
+    """Delete everything Free My ID saved on this computer.
+    People, evidence, mailbox passwords, the encryption key and the background task go. Used by the Windows uninstaller."""
     import shutil
 
     from . import crypto
@@ -1060,8 +1060,8 @@ def monitor(registry: Annotated[Path | None, typer.Option(
                 "--browser", help="Also load forms built by JavaScript in a headless "
                                   "browser (opens the page only)")] = False,
             as_json: JsonOpt = False):
-    """For maintainers: check that each broker's opt-out page still loads and its form
-    still matches the registry (BL-IN-06, docs/MONITOR.md).
+    """For maintainers: check each broker's opt-out page and form against the registry.
+    The page must still load and its form selectors still match (BL-IN-06, docs/MONITOR.md).
 
     Reads only: never fills in, clicks or submits anything, and needs no profile. A
     "prove you are human" page is reported as blocked, never worked around."""

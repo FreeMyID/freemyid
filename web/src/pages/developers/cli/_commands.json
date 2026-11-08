@@ -458,7 +458,7 @@
     },
     {
       "path": "wipe",
-      "summary": "Delete everything Free My ID saved on this computer: people, evidence, mailbox passwords,",
+      "summary": "Delete everything Free My ID saved on this computer.",
       "source": "src/freemyid/cli.py:581",
       "summary_source": "src/freemyid/cli.py:583",
       "arguments": [],
@@ -518,7 +518,7 @@
     },
     {
       "path": "monitor",
-      "summary": "For maintainers: check that each broker's opt-out page still loads and its form",
+      "summary": "For maintainers: check each broker's opt-out page and form against the registry.",
       "source": "src/freemyid/cli.py:1052",
       "summary_source": "src/freemyid/cli.py:1063",
       "arguments": [],
