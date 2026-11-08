@@ -91,5 +91,71 @@
       "key": "OWN-old-watcher",
       "title": "Restart the old Copilot watcher (pid 337338) so SEC-108/113 close on the desk"
     }
-  ]
+  ],
+  "backlog": {
+    "BL-IN-02": {
+      "status": "In progress",
+      "agent": "Theo Park"
+    },
+    "BL-IN-08": {
+      "status": "In progress",
+      "agent": "Theo / Priya / Nina / Morgan"
+    },
+    "BL-IN-71": {
+      "status": "In progress",
+      "agent": "Priya"
+    },
+    "BL-IN-42": {
+      "status": "In progress",
+      "agent": "Dana Ortiz"
+    },
+    "BL-IN-11": {
+      "status": "Done",
+      "agent": "Theo Park"
+    },
+    "BL-IN-10": {
+      "status": "Done",
+      "agent": "Theo Park"
+    },
+    "BL-IN-22": {
+      "status": "Done",
+      "agent": "Nina"
+    },
+    "BL-IN-23": {
+      "status": "Done",
+      "agent": "Nina"
+    },
+    "BL-IN-25": {
+      "status": "Done",
+      "agent": "Nina"
+    },
+    "BL-IN-40": {
+      "status": "Done",
+      "agent": "Dana Ortiz"
+    },
+    "BL-IN-60": {
+      "status": "Done",
+      "agent": "Morgan"
+    },
+    "BL-IN-61": {
+      "status": "Done",
+      "agent": "Morgan"
+    },
+    "BL-IN-83": {
+      "status": "Done",
+      "agent": "Nina"
+    },
+    "BL-IN-20": {
+      "status": "In progress",
+      "agent": "Theo / Nina"
+    },
+    "BL-IN-41": {
+      "status": "Blocked",
+      "agent": "Owner (CSP go)"
+    },
+    "BL-IN-27": {
+      "status": "Blocked",
+      "agent": "Owner (Windows VM)"
+    }
+  }
 }

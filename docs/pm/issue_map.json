@@ -17,12 +17,12 @@
     },
     "BL-IN-02": {
       "fields": {
-        "Agent": "Theo",
+        "Agent": "Theo Park",
         "Kind": "Feature",
         "Lane": "IN",
         "Priority": "P2",
         "Release": "v0.3",
-        "Status": "Backlog",
+        "Status": "In progress",
         "Team": "In-house"
       },
       "number": 74,
@@ -107,12 +107,12 @@
     },
     "BL-IN-08": {
       "fields": {
-        "Agent": "Theo",
+        "Agent": "Theo / Priya / Nina / Morgan",
         "Kind": "Feature",
         "Lane": "IN",
         "Priority": "P2",
         "Release": "v0.4",
-        "Status": "Backlog",
+        "Status": "In progress",
         "Team": "In-house"
       },
       "number": 80,
@@ -137,40 +137,40 @@
     },
     "BL-IN-10": {
       "fields": {
-        "Agent": "Theo",
+        "Agent": "Theo Park",
         "Kind": "Feature",
         "Lane": "IN",
         "Priority": "P2",
-        "Status": "Backlog",
+        "Status": "Done",
         "Team": "In-house"
       },
       "number": 82,
       "project_item": "PVTI_lADOFRHvjs4BquOFzhG-fQY",
-      "state": "open",
+      "state": "closed",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/82"
     },
     "BL-IN-11": {
       "fields": {
-        "Agent": "Theo",
+        "Agent": "Theo Park",
         "Kind": "Security",
         "Lane": "IN",
         "Priority": "P2",
-        "Status": "Backlog",
+        "Status": "Done",
         "Team": "In-house"
       },
       "number": 83,
       "project_item": "PVTI_lADOFRHvjs4BquOFzhG-fUo",
-      "state": "open",
+      "state": "closed",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/83"
     },
     "BL-IN-20": {
       "fields": {
-        "Agent": "Nina",
+        "Agent": "Theo / Nina",
         "Kind": "Feature",
         "Lane": "IN",
         "Priority": "P2",
         "Release": "v0.4",
-        "Status": "Backlog",
+        "Status": "In progress",
         "Team": "In-house"
       },
       "number": 84,
@@ -200,12 +200,12 @@
         "Lane": "IN",
         "Priority": "P2",
         "Release": "v0.4",
-        "Status": "Backlog",
+        "Status": "Done",
         "Team": "In-house"
       },
       "number": 86,
       "project_item": "PVTI_lADOFRHvjs4BquOFzhG-fl4",
-      "state": "open",
+      "state": "closed",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/86"
     },
     "BL-IN-23": {
@@ -215,12 +215,12 @@
         "Lane": "IN",
         "Priority": "P2",
         "Release": "v0.4",
-        "Status": "Backlog",
+        "Status": "Done",
         "Team": "In-house"
       },
       "number": 87,
       "project_item": "PVTI_lADOFRHvjs4BquOFzhG-fsM",
-      "state": "open",
+      "state": "closed",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/87"
     },
     "BL-IN-24": {
@@ -245,12 +245,12 @@
         "Lane": "IN",
         "Priority": "P2",
         "Release": "v0.4",
-        "Status": "Backlog",
+        "Status": "Done",
         "Team": "In-house"
       },
       "number": 89,
       "project_item": "PVTI_lADOFRHvjs4BquOFzhG-f5M",
-      "state": "open",
+      "state": "closed",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/89"
     },
     "BL-IN-26": {
@@ -270,11 +270,11 @@
     },
     "BL-IN-27": {
       "fields": {
-        "Agent": "Nina",
+        "Agent": "Owner (Windows VM)",
         "Kind": "Owner task",
         "Lane": "IN",
         "Priority": "P2",
-        "Status": "Backlog",
+        "Status": "Blocked",
         "Team": "In-house"
       },
       "number": 91,
@@ -312,25 +312,25 @@
     },
     "BL-IN-40": {
       "fields": {
-        "Agent": "Dana",
+        "Agent": "Dana Ortiz",
         "Kind": "Ops",
         "Lane": "IN",
         "Priority": "P2",
-        "Status": "Backlog",
+        "Status": "Done",
         "Team": "In-house"
       },
       "number": 94,
       "project_item": "PVTI_lADOFRHvjs4BquOFzhG-gXI",
-      "state": "open",
+      "state": "closed",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/94"
     },
     "BL-IN-41": {
       "fields": {
-        "Agent": "Dana",
+        "Agent": "Owner (CSP go)",
         "Kind": "Security",
         "Lane": "IN",
         "Priority": "P2",
-        "Status": "Backlog",
+        "Status": "Blocked",
         "Team": "In-house"
       },
       "number": 95,
@@ -340,12 +340,12 @@
     },
     "BL-IN-42": {
       "fields": {
-        "Agent": "Dana",
+        "Agent": "Dana Ortiz",
         "Kind": "Ops",
         "Lane": "IN",
         "Priority": "P2",
         "Release": "v0.3",
-        "Status": "Backlog",
+        "Status": "In progress",
         "Team": "In-house"
       },
       "number": 96,
@@ -401,12 +401,12 @@
         "Kind": "Security",
         "Lane": "IN",
         "Priority": "P2",
-        "Status": "Backlog",
+        "Status": "Done",
         "Team": "In-house"
       },
       "number": 100,
       "project_item": "PVTI_lADOFRHvjs4BquOFzhG-g1w",
-      "state": "open",
+      "state": "closed",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/100"
     },
     "BL-IN-61": {
@@ -415,12 +415,12 @@
         "Kind": "Security",
         "Lane": "IN",
         "Priority": "P2",
-        "Status": "Backlog",
+        "Status": "Done",
         "Team": "In-house"
       },
       "number": 101,
       "project_item": "PVTI_lADOFRHvjs4BquOFzhG-g7I",
-      "state": "open",
+      "state": "closed",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/101"
     },
     "BL-IN-62": {
@@ -471,7 +471,7 @@
         "Kind": "Feature",
         "Lane": "IN",
         "Priority": "P2",
-        "Status": "Backlog",
+        "Status": "In progress",
         "Team": "In-house"
       },
       "number": 105,
@@ -564,15 +564,16 @@
     },
     "BL-IN-83": {
       "fields": {
+        "Agent": "Nina",
         "Kind": "Bug",
         "Lane": "IN",
         "Priority": "P2",
-        "Status": "Backlog",
+        "Status": "Done",
         "Team": "In-house"
       },
       "number": 112,
       "project_item": "PVTI_lADOFRHvjs4BquOFzhG-hrY",
-      "state": "open",
+      "state": "closed",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/112"
     },
     "BL-IN-84": {

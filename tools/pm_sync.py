@@ -291,12 +291,19 @@ def collect(root: Path = ROOT, git_log: str | None = None) -> list[dict]:
         it["project_status"] = wo_status_to_field(it["wo_status"], bool(sha))
         it["closed"] = it["project_status"] == "Done"
         items.append(it)
+    tp0 = root / "docs" / "pm" / "tracked.json"
+    t0 = json.loads(tp0.read_text(encoding="utf-8")) if tp0.exists() else {}
+    backlog_status = {k: v["status"] for k, v in t0.get("backlog", {}).items()}
+    backlog_agent = {k: v.get("agent", "") for k, v in t0.get("backlog", {}).items()}
     bl = root / "docs" / "BACKLOG.md"
     if bl.exists():
         for it in parse_backlog(bl.read_text(encoding="utf-8")):
             if it["key"].startswith(("CX-", "CP-")):  # these became WO-127..150: no duplicates
                 continue
-            it.update(project_status="Backlog", closed=False, merge_sha="")
+            st = backlog_status.get(it["key"], "Backlog")  # curated in docs/pm/tracked.json
+            it.update(project_status=st, closed=st == "Done", merge_sha="")
+            if agent := backlog_agent.get(it["key"]):
+                it["agent"] = agent
             items.append(it)
     # SEC findings and owner tasks come from the curated docs/pm/tracked.json: the narrative
     # handoff is too loose to parse statuses from (wrong open/closed guesses), and owner-task keys
