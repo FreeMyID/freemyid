@@ -344,6 +344,24 @@ const cardIcon = "inline-flex size-12 items-center justify-center rounded-lg bg-
   .hero-secondary {
     width: 100%;
   }
+  /* Tablet (one-column hero, 768-899px): full-width stacked buttons stretched to ~700px. Put the two
+     actions side by side at their natural width instead; wrap is only a safety net for large text. */
+  @media (min-width: 48em) and (max-width: 56.2499em) {
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--fmi-space-s) var(--fmi-space-m);
+    }
+    .hero-actions :global(.beam),
+    .hero-actions :global(.hero-download),
+    .hero-secondary {
+      width: auto;
+    }
+    .hero-actions :global(.hero-download) {
+      padding-inline: var(--fmi-space-l);
+    }
+  }
   @media (min-width: 56.25em) {
     .hero-actions {
       width: max-content;

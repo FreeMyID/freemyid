@@ -86,8 +86,8 @@ GEOMETRY = """(actions) => {
 @pytest.mark.parametrize("theme", ["light", "dark"])
 @pytest.mark.parametrize(
     ("width", "scale"),
-    [(320, 1), (360, 1), (390, 1), (1280, 1), (640, 2)],
-    ids=["320", "360", "390", "1280", "desktop-200pct-reflow"],
+    [(320, 1), (360, 1), (390, 1), (768, 1), (1280, 1), (640, 2)],
+    ids=["320", "360", "390", "768", "1280", "desktop-200pct-reflow"],
 )
 def test_home_hero_actions_fit_and_keep_the_brand_together(
     browser: Browser, theme: str, width: int, scale: int,
@@ -113,12 +113,20 @@ def test_home_hero_actions_fit_and_keep_the_brand_together(
         assert geometry["scroll"] <= width + 1
         outer = geometry["actions"]
         primary, secondary = geometry["links"]
+        row = 768 <= width < 900  # one-column hero on tablets: actions side by side at natural width
         for link in (primary, secondary):
             assert link["left"] >= 0 and link["right"] <= width + 1
             assert link["width"] >= 44 and link["height"] >= 44
-            assert abs(link["left"] - outer["left"]) <= 1
-            assert abs(link["width"] - outer["width"]) <= 1
-        assert abs(secondary["top"] - primary["bottom"] - geometry["gap"]) <= 1
+            if not row:
+                assert abs(link["left"] - outer["left"]) <= 1
+                assert abs(link["width"] - outer["width"]) <= 1
+        if row:
+            assert abs(primary["left"] - outer["left"]) <= 1
+            assert secondary["left"] > primary["right"]
+            assert abs((primary["top"] + primary["bottom"]) - (secondary["top"] + secondary["bottom"])) <= 4
+            assert primary["width"] < outer["width"] / 2, "primary should not stretch across the column"
+        else:
+            assert abs(secondary["top"] - primary["bottom"] - geometry["gap"]) <= 1
         if RELEASE["version"]:
             assert len(geometry["brand"]) == 1, "Free My ID must stay on one line"
             brand = geometry["brand"][0]
