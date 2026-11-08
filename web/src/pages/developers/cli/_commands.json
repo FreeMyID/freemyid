@@ -1,0 +1,1011 @@
+{
+  "source_file": "src/freemyid/cli.py",
+  "help_flag": {
+    "flags": [
+      "--help"
+    ],
+    "help": "Show this message and exit.",
+    "source": "src/freemyid/cli.py:21"
+  },
+  "root_options": [
+    {
+      "flags": [
+        "--verbose",
+        "-v"
+      ],
+      "help": "",
+      "source": "src/freemyid/cli.py:138"
+    },
+    {
+      "flags": [
+        "--install-completion"
+      ],
+      "help": "Install completion for the current shell.",
+      "source": "src/freemyid/cli.py:21"
+    },
+    {
+      "flags": [
+        "--show-completion"
+      ],
+      "help": "Show completion for the current shell, to copy it or customize the installation.",
+      "source": "src/freemyid/cli.py:21"
+    }
+  ],
+  "commands": [
+    {
+      "path": "setup",
+      "summary": "Walk through setup for a person (opens the local web wizard by default).",
+      "source": "src/freemyid/cli.py:147",
+      "summary_source": "src/freemyid/cli.py:160",
+      "arguments": [],
+      "options": [
+        {
+          "flags": [
+            "--prefill"
+          ],
+          "help": "Family bundle (.freemyid-profile)",
+          "required": false,
+          "source": "src/freemyid/cli.py:148",
+          "value": true,
+          "value_name": "PREFILL"
+        },
+        {
+          "flags": [
+            "--web",
+            "--no-web"
+          ],
+          "help": "Open the web wizard (else terminal prompts; --prefill implies terminal)",
+          "required": false,
+          "source": "src/freemyid/cli.py:150",
+          "value": false,
+          "value_name": "WEB"
+        },
+        {
+          "flags": [
+            "--from"
+          ],
+          "help": "Set up from a YAML file, no wizard (docs/CLI.md)",
+          "required": false,
+          "source": "src/freemyid/cli.py:152",
+          "value": true,
+          "value_name": "FROM_FILE"
+        },
+        {
+          "flags": [
+            "--yes"
+          ],
+          "help": "With --from: confirm without asking",
+          "required": false,
+          "source": "src/freemyid/cli.py:154",
+          "value": false,
+          "value_name": "YES"
+        },
+        {
+          "flags": [
+            "--check"
+          ],
+          "help": "With --from: validate and show the plan; save nothing",
+          "required": false,
+          "source": "src/freemyid/cli.py:156",
+          "value": false,
+          "value_name": "CHECK"
+        },
+        {
+          "flags": [
+            "--update"
+          ],
+          "help": "With --from: replace the person with the same label",
+          "required": false,
+          "source": "src/freemyid/cli.py:158",
+          "value": false,
+          "value_name": "UPDATE"
+        }
+      ]
+    },
+    {
+      "path": "doctor",
+      "summary": "Check this computer is ready: Python, data folder, secrets, browser, schedule, mail.",
+      "source": "src/freemyid/cli.py:179",
+      "summary_source": "src/freemyid/cli.py:183",
+      "arguments": [],
+      "options": [
+        {
+          "flags": [
+            "--offline"
+          ],
+          "help": "Skip the mail server reachability check",
+          "required": false,
+          "source": "src/freemyid/cli.py:180",
+          "value": false,
+          "value_name": "OFFLINE"
+        },
+        {
+          "flags": [
+            "--json"
+          ],
+          "help": "Machine-readable output (docs/CLI.md)",
+          "required": false,
+          "source": "src/freemyid/cli.py:182",
+          "value": false,
+          "value_name": "AS_JSON"
+        }
+      ]
+    },
+    {
+      "path": "app",
+      "summary": "Open Free My ID in its own window (wizard on first launch, dashboard after).",
+      "source": "src/freemyid/cli.py:242",
+      "summary_source": "src/freemyid/cli.py:245",
+      "arguments": [],
+      "options": [
+        {
+          "flags": [
+            "--no-window"
+          ],
+          "help": "Use the web browser instead of an app window",
+          "required": false,
+          "source": "src/freemyid/cli.py:243",
+          "value": false,
+          "value_name": "NO_WINDOW"
+        }
+      ]
+    },
+    {
+      "path": "dashboard",
+      "summary": "Open the local dashboard (status, evidence, to-dos, approvals).",
+      "source": "src/freemyid/cli.py:250",
+      "summary_source": "src/freemyid/cli.py:252",
+      "arguments": [],
+      "options": []
+    },
+    {
+      "path": "scan",
+      "summary": "Search brokers for listings. Never submits anything.",
+      "source": "src/freemyid/cli.py:327",
+      "summary_source": "src/freemyid/cli.py:333",
+      "arguments": [],
+      "options": [
+        {
+          "flags": [
+            "--profile",
+            "-p"
+          ],
+          "help": "",
+          "required": false,
+          "source": "src/freemyid/cli.py:328",
+          "value": true,
+          "value_name": "PROFILE"
+        },
+        {
+          "flags": [
+            "--broker",
+            "-b"
+          ],
+          "help": "",
+          "required": false,
+          "source": "src/freemyid/cli.py:329",
+          "value": true,
+          "value_name": "BROKER"
+        },
+        {
+          "flags": [
+            "--headless"
+          ],
+          "help": "No prompts or windows; fail closed (cron/Docker)",
+          "required": false,
+          "source": "src/freemyid/cli.py:330",
+          "value": false,
+          "value_name": "HEADLESS"
+        },
+        {
+          "flags": [
+            "--json"
+          ],
+          "help": "Machine-readable output (docs/CLI.md)",
+          "required": false,
+          "source": "src/freemyid/cli.py:332",
+          "value": false,
+          "value_name": "AS_JSON"
+        }
+      ]
+    },
+    {
+      "path": "run",
+      "summary": "Scan, submit opt-outs, check verifications and escalate ignored requests.",
+      "source": "src/freemyid/cli.py:338",
+      "summary_source": "src/freemyid/cli.py:348",
+      "arguments": [],
+      "options": [
+        {
+          "flags": [
+            "--profile",
+            "-p"
+          ],
+          "help": "",
+          "required": false,
+          "source": "src/freemyid/cli.py:339",
+          "value": true,
+          "value_name": "PROFILE"
+        },
+        {
+          "flags": [
+            "--broker",
+            "-b"
+          ],
+          "help": "",
+          "required": false,
+          "source": "src/freemyid/cli.py:340",
+          "value": true,
+          "value_name": "BROKER"
+        },
+        {
+          "flags": [
+            "--dry-run"
+          ],
+          "help": "Search + report, submit nothing",
+          "required": false,
+          "source": "src/freemyid/cli.py:341",
+          "value": false,
+          "value_name": "DRY_RUN"
+        },
+        {
+          "flags": [
+            "--headless"
+          ],
+          "help": "No prompts or windows; fail closed (cron/systemd/Docker)",
+          "required": false,
+          "source": "src/freemyid/cli.py:343",
+          "value": false,
+          "value_name": "HEADLESS"
+        },
+        {
+          "flags": [
+            "--json"
+          ],
+          "help": "Machine-readable output (docs/CLI.md)",
+          "required": false,
+          "source": "src/freemyid/cli.py:346",
+          "value": false,
+          "value_name": "AS_JSON"
+        },
+        {
+          "flags": [
+            "--scheduled"
+          ],
+          "help": "",
+          "required": false,
+          "source": "src/freemyid/cli.py:347",
+          "value": false,
+          "value_name": "SCHEDULED"
+        }
+      ]
+    },
+    {
+      "path": "fill",
+      "summary": "Open the broker's form in a visible window and fill it in; you tick the box and Submit.",
+      "source": "src/freemyid/cli.py:353",
+      "summary_source": "src/freemyid/cli.py:357",
+      "arguments": [
+        {
+          "name": "broker",
+          "required": true,
+          "source": "src/freemyid/cli.py:354"
+        }
+      ],
+      "options": [
+        {
+          "flags": [
+            "--profile",
+            "-p"
+          ],
+          "help": "",
+          "required": false,
+          "source": "src/freemyid/cli.py:355",
+          "value": true,
+          "value_name": "PROFILE"
+        },
+        {
+          "flags": [
+            "--timeout"
+          ],
+          "help": "",
+          "required": false,
+          "source": "src/freemyid/cli.py:356",
+          "value": true,
+          "value_name": "TIMEOUT"
+        }
+      ]
+    },
+    {
+      "path": "status",
+      "summary": "Per-broker status for each person.",
+      "source": "src/freemyid/cli.py:371",
+      "summary_source": "src/freemyid/cli.py:374",
+      "arguments": [],
+      "options": [
+        {
+          "flags": [
+            "--profile",
+            "-p"
+          ],
+          "help": "",
+          "required": false,
+          "source": "src/freemyid/cli.py:372",
+          "value": true,
+          "value_name": "PROFILE"
+        },
+        {
+          "flags": [
+            "--json"
+          ],
+          "help": "Machine-readable output (docs/CLI.md)",
+          "required": false,
+          "source": "src/freemyid/cli.py:373",
+          "value": false,
+          "value_name": "AS_JSON"
+        }
+      ]
+    },
+    {
+      "path": "exposure",
+      "summary": "Find me first: which people-search sites show you, with a 0-100 exposure score.",
+      "source": "src/freemyid/cli.py:401",
+      "summary_source": "src/freemyid/cli.py:411",
+      "arguments": [],
+      "options": [
+        {
+          "flags": [
+            "--profile",
+            "-p"
+          ],
+          "help": "",
+          "required": false,
+          "source": "src/freemyid/cli.py:402",
+          "value": true,
+          "value_name": "PROFILE"
+        },
+        {
+          "flags": [
+            "--offline"
+          ],
+          "help": "Fetch nothing; use what earlier runs found",
+          "required": false,
+          "source": "src/freemyid/cli.py:403",
+          "value": false,
+          "value_name": "OFFLINE"
+        },
+        {
+          "flags": [
+            "--refresh"
+          ],
+          "help": "Check every site again, even if checked today",
+          "required": false,
+          "source": "src/freemyid/cli.py:405",
+          "value": false,
+          "value_name": "REFRESH"
+        },
+        {
+          "flags": [
+            "--old-addresses"
+          ],
+          "help": "Also search each site once at your previous address (off by default; at most one extra page per site)",
+          "required": false,
+          "source": "src/freemyid/cli.py:401",
+          "value": false,
+          "value_name": "OLD_ADDRESSES"
+        },
+        {
+          "flags": [
+            "--headless"
+          ],
+          "help": "No prompts or windows; fail closed (cron/Docker)",
+          "required": false,
+          "source": "src/freemyid/cli.py:407",
+          "value": false,
+          "value_name": "HEADLESS"
+        },
+        {
+          "flags": [
+            "--json"
+          ],
+          "help": "Machine-readable output (docs/CLI.md)",
+          "required": false,
+          "source": "src/freemyid/cli.py:410",
+          "value": false,
+          "value_name": "AS_JSON"
+        }
+      ]
+    },
+    {
+      "path": "report",
+      "summary": "Export a report (HTML or PDF).",
+      "source": "src/freemyid/cli.py:496",
+      "summary_source": "src/freemyid/cli.py:500",
+      "arguments": [],
+      "options": [
+        {
+          "flags": [
+            "--profile",
+            "-p"
+          ],
+          "help": "",
+          "required": false,
+          "source": "src/freemyid/cli.py:497",
+          "value": true,
+          "value_name": "PROFILE"
+        },
+        {
+          "flags": [
+            "--format"
+          ],
+          "help": "html | pdf",
+          "required": false,
+          "source": "src/freemyid/cli.py:498",
+          "value": true,
+          "value_name": "FMT"
+        },
+        {
+          "flags": [
+            "--json"
+          ],
+          "help": "Machine-readable output (docs/CLI.md)",
+          "required": false,
+          "source": "src/freemyid/cli.py:499",
+          "value": false,
+          "value_name": "AS_JSON"
+        }
+      ]
+    },
+    {
+      "path": "wipe",
+      "summary": "Delete everything Free My ID saved on this computer: people, evidence, mailbox passwords,",
+      "source": "src/freemyid/cli.py:565",
+      "summary_source": "src/freemyid/cli.py:567",
+      "arguments": [],
+      "options": [
+        {
+          "flags": [
+            "--yes"
+          ],
+          "help": "",
+          "required": false,
+          "source": "src/freemyid/cli.py:566",
+          "value": false,
+          "value_name": "YES"
+        }
+      ]
+    },
+    {
+      "path": "search-engines",
+      "summary": "Google and Bing: guided steps to ask them to stop showing pages about you.",
+      "source": "src/freemyid/cli.py:887",
+      "summary_source": "src/freemyid/cli.py:894",
+      "arguments": [
+        {
+          "name": "action",
+          "required": false,
+          "source": "src/freemyid/cli.py:889"
+        },
+        {
+          "name": "step_id",
+          "required": false,
+          "source": "src/freemyid/cli.py:891"
+        }
+      ],
+      "options": [
+        {
+          "flags": [
+            "--profile",
+            "-p"
+          ],
+          "help": "Whose list (needed only when more than one person is set up)",
+          "required": false,
+          "source": "src/freemyid/cli.py:893",
+          "value": true,
+          "value_name": "PROFILE"
+        },
+        {
+          "flags": [
+            "--json"
+          ],
+          "help": "Machine-readable output (docs/CLI.md)",
+          "required": false,
+          "source": "src/freemyid/cli.py:893",
+          "value": false,
+          "value_name": "AS_JSON"
+        }
+      ]
+    },
+    {
+      "path": "profile add",
+      "summary": "",
+      "source": "src/freemyid/cli.py:520",
+      "summary_source": "",
+      "arguments": [],
+      "options": [
+        {
+          "flags": [
+            "--prefill"
+          ],
+          "help": "",
+          "required": false,
+          "source": "src/freemyid/cli.py:521",
+          "value": true,
+          "value_name": "PREFILL"
+        }
+      ]
+    },
+    {
+      "path": "profile list",
+      "summary": "Everyone set up on this computer.",
+      "source": "src/freemyid/cli.py:525",
+      "summary_source": "src/freemyid/cli.py:527",
+      "arguments": [],
+      "options": [
+        {
+          "flags": [
+            "--json"
+          ],
+          "help": "Machine-readable output (docs/CLI.md)",
+          "required": false,
+          "source": "src/freemyid/cli.py:526",
+          "value": false,
+          "value_name": "AS_JSON"
+        }
+      ]
+    },
+    {
+      "path": "profile edit",
+      "summary": "",
+      "source": "src/freemyid/cli.py:542",
+      "summary_source": "",
+      "arguments": [
+        {
+          "name": "profile",
+          "required": true,
+          "source": "src/freemyid/cli.py:543"
+        }
+      ],
+      "options": []
+    },
+    {
+      "path": "profile remove",
+      "summary": "Delete a person and all their stored data from this computer.",
+      "source": "src/freemyid/cli.py:550",
+      "summary_source": "src/freemyid/cli.py:552",
+      "arguments": [
+        {
+          "name": "profile",
+          "required": true,
+          "source": "src/freemyid/cli.py:551"
+        }
+      ],
+      "options": [
+        {
+          "flags": [
+            "--yes"
+          ],
+          "help": "",
+          "required": false,
+          "source": "src/freemyid/cli.py:551",
+          "value": false,
+          "value_name": "YES"
+        }
+      ]
+    },
+    {
+      "path": "profile export",
+      "summary": "Create a passphrase-protected pre-filled profile for a family installer.",
+      "source": "src/freemyid/cli.py:615",
+      "summary_source": "src/freemyid/cli.py:617",
+      "arguments": [
+        {
+          "name": "profile",
+          "required": true,
+          "source": "src/freemyid/cli.py:616"
+        },
+        {
+          "name": "dest",
+          "required": true,
+          "source": "src/freemyid/cli.py:616"
+        }
+      ],
+      "options": []
+    },
+    {
+      "path": "schedule install",
+      "summary": "",
+      "source": "src/freemyid/cli.py:629",
+      "summary_source": "",
+      "arguments": [],
+      "options": []
+    },
+    {
+      "path": "schedule remove",
+      "summary": "",
+      "source": "src/freemyid/cli.py:635",
+      "summary_source": "",
+      "arguments": [],
+      "options": []
+    },
+    {
+      "path": "schedule status",
+      "summary": "",
+      "source": "src/freemyid/cli.py:641",
+      "summary_source": "",
+      "arguments": [],
+      "options": [
+        {
+          "flags": [
+            "--json"
+          ],
+          "help": "Machine-readable output (docs/CLI.md)",
+          "required": false,
+          "source": "src/freemyid/cli.py:642",
+          "value": false,
+          "value_name": "AS_JSON"
+        }
+      ]
+    },
+    {
+      "path": "registry update",
+      "summary": "",
+      "source": "src/freemyid/cli.py:658",
+      "summary_source": "",
+      "arguments": [],
+      "options": []
+    },
+    {
+      "path": "registry validate",
+      "summary": "",
+      "source": "src/freemyid/cli.py:665",
+      "summary_source": "",
+      "arguments": [
+        {
+          "name": "path",
+          "required": false,
+          "source": "src/freemyid/cli.py:666"
+        }
+      ],
+      "options": []
+    },
+    {
+      "path": "registry source",
+      "summary": "Which broker list is in use: update, family, full or sample.",
+      "source": "src/freemyid/cli.py:673",
+      "summary_source": "src/freemyid/cli.py:676",
+      "arguments": [],
+      "options": [
+        {
+          "flags": [
+            "--plain"
+          ],
+          "help": "",
+          "required": false,
+          "source": "src/freemyid/cli.py:674",
+          "value": false,
+          "value_name": "PLAIN"
+        },
+        {
+          "flags": [
+            "--json"
+          ],
+          "help": "Machine-readable output (docs/CLI.md)",
+          "required": false,
+          "source": "src/freemyid/cli.py:675",
+          "value": false,
+          "value_name": "AS_JSON"
+        }
+      ]
+    },
+    {
+      "path": "registry show",
+      "summary": "Every broker in the registry in use, highest priority first.",
+      "source": "src/freemyid/cli.py:690",
+      "summary_source": "src/freemyid/cli.py:692",
+      "arguments": [],
+      "options": [
+        {
+          "flags": [
+            "--json"
+          ],
+          "help": "Machine-readable output (docs/CLI.md)",
+          "required": false,
+          "source": "src/freemyid/cli.py:691",
+          "value": false,
+          "value_name": "AS_JSON"
+        }
+      ]
+    },
+    {
+      "path": "todo list",
+      "summary": "Open to-dos (things that need a person).",
+      "source": "src/freemyid/cli.py:710",
+      "summary_source": "src/freemyid/cli.py:713",
+      "arguments": [],
+      "options": [
+        {
+          "flags": [
+            "--profile",
+            "-p"
+          ],
+          "help": "",
+          "required": false,
+          "source": "src/freemyid/cli.py:711",
+          "value": true,
+          "value_name": "PROFILE"
+        },
+        {
+          "flags": [
+            "--json"
+          ],
+          "help": "Machine-readable output (docs/CLI.md)",
+          "required": false,
+          "source": "src/freemyid/cli.py:712",
+          "value": false,
+          "value_name": "AS_JSON"
+        }
+      ]
+    },
+    {
+      "path": "todo done",
+      "summary": "",
+      "source": "src/freemyid/cli.py:725",
+      "summary_source": "",
+      "arguments": [
+        {
+          "name": "todo_id",
+          "required": true,
+          "source": "src/freemyid/cli.py:726"
+        }
+      ],
+      "options": []
+    },
+    {
+      "path": "outbox list",
+      "summary": "Emails waiting for your approval.",
+      "source": "src/freemyid/cli.py:734",
+      "summary_source": "src/freemyid/cli.py:736",
+      "arguments": [],
+      "options": [
+        {
+          "flags": [
+            "--json"
+          ],
+          "help": "Machine-readable output (docs/CLI.md)",
+          "required": false,
+          "source": "src/freemyid/cli.py:735",
+          "value": false,
+          "value_name": "AS_JSON"
+        }
+      ]
+    },
+    {
+      "path": "outbox approve",
+      "summary": "",
+      "source": "src/freemyid/cli.py:747",
+      "summary_source": "",
+      "arguments": [
+        {
+          "name": "request_id",
+          "required": true,
+          "source": "src/freemyid/cli.py:748"
+        }
+      ],
+      "options": []
+    },
+    {
+      "path": "config set",
+      "summary": "",
+      "source": "src/freemyid/cli.py:1005",
+      "summary_source": "",
+      "arguments": [
+        {
+          "name": "key",
+          "required": true,
+          "source": "src/freemyid/cli.py:1006"
+        },
+        {
+          "name": "value",
+          "required": true,
+          "source": "src/freemyid/cli.py:1006"
+        }
+      ],
+      "options": []
+    },
+    {
+      "path": "config enable-submissions",
+      "summary": "One-time explicit opt-in to real (non-dry-run) opt-out submissions.",
+      "source": "src/freemyid/cli.py:1025",
+      "summary_source": "src/freemyid/cli.py:1027",
+      "arguments": [],
+      "options": []
+    },
+    {
+      "path": "secrets status",
+      "summary": "Which backend holds the encryption key (keyring, passphrase or systemd-creds).",
+      "source": "src/freemyid/cli.py:956",
+      "summary_source": "src/freemyid/cli.py:958",
+      "arguments": [],
+      "options": [
+        {
+          "flags": [
+            "--json"
+          ],
+          "help": "Machine-readable output (docs/CLI.md)",
+          "required": false,
+          "source": "src/freemyid/cli.py:957",
+          "value": false,
+          "value_name": "AS_JSON"
+        }
+      ]
+    },
+    {
+      "path": "secrets migrate",
+      "summary": "Move the encryption key (and saved mailbox passwords) to another backend.",
+      "source": "src/freemyid/cli.py:972",
+      "summary_source": "src/freemyid/cli.py:980",
+      "arguments": [],
+      "options": [
+        {
+          "flags": [
+            "--to"
+          ],
+          "help": "passphrase | keyring | systemd-creds",
+          "required": true,
+          "source": "src/freemyid/cli.py:974",
+          "value": true,
+          "value_name": "TO"
+        },
+        {
+          "flags": [
+            "--remove-keychain-key"
+          ],
+          "help": "Also delete the key from the system keychain. Only if this is the ONLY Free My ID folder on this computer: other folders that use the keychain share that key and would lose their data.",
+          "required": false,
+          "source": "src/freemyid/cli.py:975",
+          "value": false,
+          "value_name": "REMOVE_KEYCHAIN_KEY"
+        }
+      ]
+    },
+    {
+      "path": "checklist list",
+      "summary": "Every checklist, and which ones are done.",
+      "source": "src/freemyid/cli.py:799",
+      "summary_source": "src/freemyid/cli.py:801",
+      "arguments": [],
+      "options": [
+        {
+          "flags": [
+            "--profile",
+            "-p"
+          ],
+          "help": "Whose list (needed only when more than one person is set up)",
+          "required": false,
+          "source": "src/freemyid/cli.py:800",
+          "value": true,
+          "value_name": "PROFILE"
+        },
+        {
+          "flags": [
+            "--json"
+          ],
+          "help": "Machine-readable output (docs/CLI.md)",
+          "required": false,
+          "source": "src/freemyid/cli.py:800",
+          "value": false,
+          "value_name": "AS_JSON"
+        }
+      ]
+    },
+    {
+      "path": "checklist show",
+      "summary": "The steps for one checklist.",
+      "source": "src/freemyid/cli.py:824",
+      "summary_source": "src/freemyid/cli.py:827",
+      "arguments": [
+        {
+          "name": "checklist_id",
+          "required": true,
+          "source": "src/freemyid/cli.py:825"
+        }
+      ],
+      "options": [
+        {
+          "flags": [
+            "--profile",
+            "-p"
+          ],
+          "help": "Whose list (needed only when more than one person is set up)",
+          "required": false,
+          "source": "src/freemyid/cli.py:826",
+          "value": true,
+          "value_name": "PROFILE"
+        },
+        {
+          "flags": [
+            "--json"
+          ],
+          "help": "Machine-readable output (docs/CLI.md)",
+          "required": false,
+          "source": "src/freemyid/cli.py:826",
+          "value": false,
+          "value_name": "AS_JSON"
+        }
+      ]
+    },
+    {
+      "path": "checklist done",
+      "summary": "Mark a checklist as done.",
+      "source": "src/freemyid/cli.py:863",
+      "summary_source": "src/freemyid/cli.py:866",
+      "arguments": [
+        {
+          "name": "checklist_id",
+          "required": true,
+          "source": "src/freemyid/cli.py:864"
+        }
+      ],
+      "options": [
+        {
+          "flags": [
+            "--profile",
+            "-p"
+          ],
+          "help": "Whose list (needed only when more than one person is set up)",
+          "required": false,
+          "source": "src/freemyid/cli.py:865",
+          "value": true,
+          "value_name": "PROFILE"
+        },
+        {
+          "flags": [
+            "--json"
+          ],
+          "help": "Machine-readable output (docs/CLI.md)",
+          "required": false,
+          "source": "src/freemyid/cli.py:865",
+          "value": false,
+          "value_name": "AS_JSON"
+        }
+      ]
+    },
+    {
+      "path": "checklist undo",
+      "summary": "Mark a checklist as not done again.",
+      "source": "src/freemyid/cli.py:870",
+      "summary_source": "src/freemyid/cli.py:873",
+      "arguments": [
+        {
+          "name": "checklist_id",
+          "required": true,
+          "source": "src/freemyid/cli.py:871"
+        }
+      ],
+      "options": [
+        {
+          "flags": [
+            "--profile",
+            "-p"
+          ],
+          "help": "Whose list (needed only when more than one person is set up)",
+          "required": false,
+          "source": "src/freemyid/cli.py:872",
+          "value": true,
+          "value_name": "PROFILE"
+        },
+        {
+          "flags": [
+            "--json"
+          ],
+          "help": "Machine-readable output (docs/CLI.md)",
+          "required": false,
+          "source": "src/freemyid/cli.py:872",
+          "value": false,
+          "value_name": "AS_JSON"
+        }
+      ]
+    }
+  ]
+}
