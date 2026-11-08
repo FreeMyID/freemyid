@@ -92,17 +92,13 @@
       "title": "Restart the old Copilot watcher (pid 337338) so SEC-108/113 close on the desk"
     },
     {
-      "key": "OWN-canva-host",
-      "title": "Fix Codex's Canva plugin: 'browser access host unavailable' (design WO-170..179 wait on it)"
-    },
-    {
       "key": "OWN-fridge-pdf",
-      "title": "(in-house, Iris) re-render the fridge-card PDF from the new FRIDGE_CARD.md"
+      "title": "(in-house, Iris) re-render the fridge-card PDF from the new FRIDGE_CARD.md (dispatched)"
     }
   ],
   "backlog": {
     "BL-IN-02": {
-      "status": "In progress",
+      "status": "In review",
       "agent": "Theo Park"
     },
     "BL-IN-08": {
@@ -110,11 +106,11 @@
       "agent": "Theo / Priya / Nina / Morgan"
     },
     "BL-IN-71": {
-      "status": "In progress",
-      "agent": "Priya"
+      "status": "In review",
+      "agent": "Priya / Morgan"
     },
     "BL-IN-42": {
-      "status": "In progress",
+      "status": "In review",
       "agent": "Dana Ortiz"
     },
     "BL-IN-11": {

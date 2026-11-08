@@ -22,7 +22,7 @@
         "Lane": "IN",
         "Priority": "P2",
         "Release": "v0.3",
-        "Status": "In progress",
+        "Status": "In review",
         "Team": "In-house"
       },
       "number": 74,
@@ -345,7 +345,7 @@
         "Lane": "IN",
         "Priority": "P2",
         "Release": "v0.3",
-        "Status": "In progress",
+        "Status": "In review",
         "Team": "In-house"
       },
       "number": 96,
@@ -467,11 +467,11 @@
     },
     "BL-IN-71": {
       "fields": {
-        "Agent": "Priya",
+        "Agent": "Priya / Morgan",
         "Kind": "Feature",
         "Lane": "IN",
         "Priority": "P2",
-        "Status": "In progress",
+        "Status": "In review",
         "Team": "In-house"
       },
       "number": 105,
@@ -2029,13 +2029,13 @@
         "Kind": "Work order",
         "Lane": "CX",
         "Priority": "P2",
-        "Status": "Ready",
+        "Status": "Done",
         "Team": "Codex",
         "WO": "WO-170"
       },
       "number": 137,
       "project_item": "PVTI_lADOFRHvjs4BquOFzhG-oL4",
-      "state": "open",
+      "state": "closed",
       "url": "https://github.com/FreeMyID/freemyid-pm/issues/137"
     },
     "WO-171": {
