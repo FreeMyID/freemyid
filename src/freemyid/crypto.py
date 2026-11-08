@@ -193,6 +193,13 @@ def import_with_passphrase(blob: bytes, passphrase: str) -> bytes:
 
     if blob[:3] != b"VP1":
         raise ValueError("not a Free My ID profile file")
+    from cryptography.exceptions import InvalidTag
+
     salt, nonce, ct = blob[3:19], blob[19:31], blob[31:]
+    if len(ct) < 16:  # shorter than the GCM tag: truncated before we spend time on scrypt
+        raise ValueError("wrong passphrase, or the file is damaged")
     key = Scrypt(salt=salt, length=32, n=2**15, r=8, p=1).derive(passphrase.encode())
-    return AESGCM(key).decrypt(nonce, ct, b"freemyid-profile")
+    try:
+        return AESGCM(key).decrypt(nonce, ct, b"freemyid-profile")
+    except InvalidTag:  # wrong passphrase, truncated or tampered: one calm error for all three
+        raise ValueError("wrong passphrase, or the file is damaged") from None

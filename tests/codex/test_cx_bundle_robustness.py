@@ -63,10 +63,6 @@ def test_public_export_import_round_trip_does_not_import_mailbox(tmp_path: Path)
     assert draft.tls_pin == ""
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="src/freemyid/crypto.py:198 leaks InvalidTag instead of a calm import error",
-)
 def test_wrong_passphrase_is_rejected(tmp_path: Path) -> None:
     blob = _exported_bundle(tmp_path)
 
@@ -75,10 +71,6 @@ def test_wrong_passphrase_is_rejected(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize("damage", ["truncate", "tamper"])
-@pytest.mark.xfail(
-    strict=True,
-    reason="src/freemyid/crypto.py:198 leaks InvalidTag instead of a calm import error",
-)
 def test_truncated_or_tampered_bundle_is_rejected(tmp_path: Path, damage: str) -> None:
     blob = _exported_bundle(tmp_path)
     if damage == "truncate":

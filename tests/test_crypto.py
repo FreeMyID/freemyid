@@ -87,7 +87,7 @@ def test_passphrase_roundtrip():
     blob = export_with_passphrase(b"profile json", "correct horse")
     assert blob[:3] == b"VP1"
     assert import_with_passphrase(blob, "correct horse") == b"profile json"
-    with pytest.raises(InvalidTag):
+    with pytest.raises(ValueError, match="wrong passphrase"):  # calm error, never InvalidTag
         import_with_passphrase(blob, "wrong")
     with pytest.raises(ValueError):
         import_with_passphrase(b"nope" + blob, "correct horse")
