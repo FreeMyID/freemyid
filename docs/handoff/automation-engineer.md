@@ -758,3 +758,16 @@ checkbox on the scan screen could pass `old_addresses=True, previous_names=True`
 
 Next: the optional `--old-addresses` CLI flag still needs the orchestrator's OK (cli.py).
 Nothing else in the engine is open for me without a decision.
+
+## 2026-11-08 BL-IN-10 legal window (Theo Park, not pushed)
+- 0992333. `Runner.legal_window_end`: the window starts at the first SENT non-dry-run
+  OPT_OUT/RESUBMIT request (falls back to `last_submitted_at`). It is 45 days, or the verified
+  `response_days` from `outbox.effective_law`. Once a `broker_extension` event exists, it adds
+  45 days, or the verified `extension_days`. Before the window ends, FOLLOW_UP is composed with
+  no law, so the template starts "This is a friendly reminder..." with no statute and no
+  deadline. LEGAL_DEMAND and COMPLAINT wait (`escalation_waiting`, why=legal_window, until=date)
+  without climbing. `escalated` / `escalation_due` events carry `reminder`.
+  Tests: tests/test_bl_in_10_legal_window.py (10).
+- Limits: an extension is only detected while `_verify` polls replies (SUBMITTED or
+  AWAITING_VERIFICATION, mailbox set, email tier or verification broker). A bare "extension" in
+  a mail footer counts too, which only makes us wait longer (the safe direction).
