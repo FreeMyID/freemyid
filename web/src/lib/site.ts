@@ -210,6 +210,13 @@ export function jsonld(kind: string, crumbs: Crumb[], renderText: (html: string)
   throw new Error(`unknown jsonld kind ${kind}`);
 }
 
+/** OG image for a broker guide, by convention: web/src/art/og/og-guide-<slug>.png (brand/src/build_wo172.py),
+ * alt from brand/README.md "WO-170..179 art". No file = og-home. */
+export function guideOg(g: { slug: string; name: string }) {
+  return resolveOg({ id: `guide ${g.slug}`, og_image: `og-guide-${g.slug}`,
+    og_alt: `Free guide: how to remove yourself from ${g.name}, step by step.` }, ogImages);
+}
+
 /** Props for Base.astro from the pages.yaml entry `id` (one manifest for both builds). */
 export function pageProps(id: string) {
   const p = pages[id];

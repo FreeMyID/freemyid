@@ -95,3 +95,38 @@ def test_build_uses_pages_yaml_og_and_publishes_every_image() -> None:
     assert meta("faq/index.html", "og:image") == BASE + "assets/og-home.png"
     for png in OG_DIR.glob("og-*.png"):
         assert (DIST / "assets" / png.name).read_bytes() == png.read_bytes(), png.name
+
+
+# WO-170..179 placement (Iris's art, 389138e). Held back for Iris: og-developers-cli (terminal output is not what
+# `freemyid status` prints) and og-developers-config ("settings" vs the page's setup-file reference).
+WIRED = {
+    "i-do-not-consent/index.html": "og-i-do-not-consent",
+    "families/index.html": "og-families",
+    "protect/credit-freeze/index.html": "og-credit-freeze",
+    "guides/help-a-parent-remove-their-information/index.html": "og-guide-help-a-parent",
+    "guides/spokeo/index.html": "og-guide-spokeo",
+    "guides/whitepages/index.html": "og-guide-whitepages",
+    "guides/beenverified/index.html": "og-guide-beenverified",
+    "guides/intelius/index.html": "og-home",          # no og-guide-intelius.png yet: falls back
+    "developers/cli/index.html": "og-home",
+    "developers/config/index.html": "og-home",
+}
+
+
+@pytest.mark.skipif(not (DIST / "index.html").is_file(), reason="web/dist not built")
+@pytest.mark.parametrize(("page", "name"), sorted(WIRED.items()))
+def test_wo17x_art_placed(page: str, name: str) -> None:
+    assert meta(page, "og:image") == f"{BASE}assets/{name}.png"
+    alt = meta(page, "og:image:alt")
+    if name.startswith("og-guide-") and page.startswith("guides/") and "help-a-parent" not in page:
+        assert alt.startswith("Free guide: how to remove yourself from ") and alt.endswith(", step by step.")
+
+
+@pytest.mark.skipif(not (DIST / "index.html").is_file(), reason="web/dist not built")
+def test_wo178_step_art_on_how_it_works() -> None:
+    html = (DIST / "how-it-works/index.html").read_text(encoding="utf-8")
+    assert "<script src" not in html
+    for n in ("step-1-who", "step-2-sent", "step-3-checked"):
+        assert f'assets/art/{n}-dark.svg" media="(prefers-color-scheme: dark)"' in html, n
+        assert re.search(rf'<img src="[^"]*assets/art/{n}-light\.svg"[^>]*width="320" height="250"[^>]*alt="[^"]+"', html), n
+        assert (DIST / f"assets/art/{n}-light.svg").is_file() and (DIST / f"assets/art/{n}-dark.svg").is_file()

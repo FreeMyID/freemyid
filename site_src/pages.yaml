@@ -29,6 +29,8 @@
   jsonld: [breadcrumbs]
 - id: help-a-parent
   out: guides/help-a-parent-remove-their-information/
+  og_image: og-guide-help-a-parent   # brand/social/og (WO-17x, Iris), alt from brand/README.md
+  og_alt: "Guide: helping a parent get their details off people-search sites, step by step and free."
   template: pages/help-a-parent.html   # not used: v3_only (web/src/pages/guides/help-a-parent-remove-their-information/index.astro)
   v3_only: true
   label: Help a parent
@@ -56,6 +58,8 @@
   jsonld: [breadcrumbs]
 - id: credit-freeze
   out: protect/credit-freeze/
+  og_image: og-credit-freeze   # brand/social/og (WO-17x, Iris), alt from brand/README.md
+  og_alt: "Checklist graphic: freeze your credit for free at Equifax, Experian and TransUnion."
   template: pages/credit-freeze.html   # not used: v3_only (web/src/pages/protect/credit-freeze/index.astro)
   v3_only: true
   label: Credit freeze checklist
@@ -65,6 +69,8 @@
   jsonld: [breadcrumbs]
 - id: families
   out: families/
+  og_image: og-families   # brand/social/og (WO-17x, Iris), alt from brand/README.md
+  og_alt: "Free My ID. Helping a parent with their privacy online. Free, no account, built so your grandparents can use it."
   template: pages/families.html
   label: Helping a parent
   nav: families
@@ -99,6 +105,8 @@
   og_alt: Download Free My ID for Windows.
 - id: i-do-not-consent
   out: i-do-not-consent/
+  og_image: og-i-do-not-consent   # brand/social/og (WO-17x, Iris), alt from brand/README.md
+  og_alt: "Free My ID. That post didn't stop anyone. This does. Free My ID asks the people-search sites to take your details down."
   template: pages/i-do-not-consent.html
   label: The "I do not consent" post
   title: "Does the \"I do not consent\" Facebook post work?"

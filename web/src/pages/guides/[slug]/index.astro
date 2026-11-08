@@ -11,7 +11,7 @@ import CheckList from "@/components/CheckList.astro";
 import Timeline from "@/components/aceternity/Timeline.astro";
 import TimelineItem from "@/components/aceternity/TimelineItem.astro";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { guideDescription, guides, guidesMeta, guideLd, guideTitle, ldJson, moreGuides, pages, url, type Crumb, type Guide } from "@/lib/site";
+import { guideDescription, guideOg, guides, guidesMeta, guideLd, guideTitle, ldJson, moreGuides, pages, url, type Crumb, type Guide } from "@/lib/site";
 
 export function getStaticPaths() {
   return guides.map((g) => ({ params: { slug: g.slug }, props: { g } }));
@@ -24,7 +24,8 @@ const sourceNote = `Source: brokers/registry.sample.yaml entry "${g.id}" (CC BY-
   .replace(/[^A-Za-z0-9 .,:;/_?=&%#@()+"'~-]/g, "").replace(/-{2,}/g, "-");
 const needs = g.required.length > 0 || g.needs_email_verification || g.has_captcha || g.needs_id_upload;
 ---
-<Base title={guideTitle(g)} description={guideDescription(g)} out={g.out} nav="guides" jsonldKinds={["breadcrumbs"]} crumbs={crumbs}>
+<Base title={guideTitle(g)} description={guideDescription(g)} out={g.out} nav="guides" jsonldKinds={["breadcrumbs"]} crumbs={crumbs}
+  ogImage={guideOg(g).ogImage} ogAlt={guideOg(g).ogAlt}>
 <Fragment set:html={`<!-- ${sourceNote} -->`} />
 {/* WR-41: WebPage node beside the BreadcrumbList (in the body; tighten-csp exempts ld+json) */}
 <script type="application/ld+json" is:inline set:html={ldJson(guideLd(g))} />
