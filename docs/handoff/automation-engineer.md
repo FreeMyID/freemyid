@@ -919,3 +919,58 @@ Engine fixes I can make with no contract change (say go):
 2. Give `runner._click` evidence the request_id.
 3. The manual-email path creates a QUEUED Request + LETTER evidence, and the todo carries
    the request_id, so "I sent it" marks that request SENT.
+
+## 2026-11-08 Trend display + BL-IN-08 built (Theo Park, not pushed)
+- 2d6fbcd trend display (approved one-off cli.py/cli_json.py). The text output prints
+  `Trend.note` once there are 2 or more points. exposure/1 gets an additive per-person `trend`
+  {change, since, note, points[day, score, sites_total, sites_checked, found]}, and the
+  schema string is unchanged. Documented in docs/CLI.md. Test in tests/test_cli_old_addresses.py.
+- d927434 BL-IN-08 contract (approved one-off models.py + consent.py, schema regenerated):
+  - `RemovalScope` full|phone|email and `Profile.removal_scope` (default full). Full still
+    needs an explicit name and at least 1 address. Phone needs at least 1 phone, email at
+    least 1 email. `name` defaults to an empty PersonName, which never name-matches.
+  - `Profile.value_only`. `state_of_residence` is "" with no address, so no law is cited.
+  - `Permissions.allow_email_disclosure` (default false).
+  - `Broker.phone_search_url_pattern` ({phone_digits} {phone_dashed}) and
+    `email_search_url_pattern` ({email}), with the same https-on-broker-domains check.
+  - consent_ok refuses phone scope without allow_phone_disclosure, and email scope without
+    allow_email_disclosure. It is never implied, and the phone flag doesn't count for email.
+    Permissions are enforced at the gate, not in the model, so a stored profile still loads
+    after a flag is switched off.
+  - Tests: tests/test_bl_in_08_scope.py (7).
+- 2ff0dab + afe8a3c BL-IN-08 engine:
+  - Matcher: `matcher.score_value` / `score_lookup`. A reverse-lookup hit is POSSIBLE with
+    reason phone_lookup / email_lookup, and never CONFIRMED (rule 7). If the page shows a
+    different number it's NO_MATCH. `rescore` leaves lookup hits alone.
+  - Search: `web_form.value_search_urls` gives at most 3 values, each only with its
+    permission, and drops anything off the broker's domain. `search_listings` reads those
+    pages for value-only people; an unreadable page fails the whole search (it's never read
+    as "nothing there"). `search_url` returns None for value-only people.
+  - Tiers: `lookup_pattern`, `can_scan_value`, `value_applicable`. A broker gets a
+    value-only removal if it has a reverse lookup for the scope or an email route. Every
+    other broker is skipped, so there's no to-do per site. Value-only is never AUTOMATIC:
+    EMAIL with a mailbox, otherwise ASSISTED.
+  - Letters: `templates/value_removal.txt.j2` + `letters.value_letter_vars`, used by
+    `outbox.compose` for every kind. It names only the values, the listing URLs and the
+    removal mailbox: no name, no address, no law.
+  - The review to-do reads "Is this <label>'s phone number? (<site>)" and never shows the
+    value.
+  - Tests: tests/test_bl_in_08_value_removal.py (15).
+- Gate: full suite 1877 passed, 2 skipped (before afe8a3c; its affected tests are green).
+  Ruff is clean on src.
+- For Marcus (review before anything builds on it): the consent gate check, the
+  data-minimization of value_letter_vars, the URL building in value_search_urls (quote with
+  safe="", pattern validated), and rule 7 in score_value plus the runner submit path. Only
+  `confirmed(listings)` is submitted, and lookup hits reach CONFIRMED only through the
+  person's "yes".
+Still open for BL-IN-08:
+1. Assisted card for value-only brokers without an email route (submitters/assisted.py).
+   Today it is built from the full-profile fields, so it would show an empty name. It
+   needs a "copy the number" field. That's mine, next.
+2. Exposure scan for value-only people: `search_url` is None, so each site shows as
+   check-by-hand. A reverse-lookup read in exposure is mine, next.
+3. Registry: Priya fills `phone_search_url_pattern` / `email_search_url_pattern` + search
+   selectors (CR). Until then only email-route brokers get value letters.
+4. Wizard (Nina): the scope choice "Remove just a phone number / email address", the
+   permission checkbox wording, and a setup that doesn't ask for a name or address.
+5. CLI setup (Morgan): `freemyid setup --from config.yaml` accepting removal_scope.
