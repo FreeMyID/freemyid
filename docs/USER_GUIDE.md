@@ -26,7 +26,7 @@ This guide is for the person using Free My ID. You don't need to be technical. I
 
 "People-search" sites (also called data brokers) such as Spokeo, Whitepages and BeenVerified collect your name, age, addresses, phone numbers and relatives, and show them to anyone. Many of them have a way to ask them to take your details down, but doing it by hand across dozens of sites takes hours, and the details come back.
 
-**No account. No cloud. Free My ID never asks for your Social Security number, bank or card details. It is free and open source, and you can uninstall it anytime.**
+**No account. No cloud. Free My ID never asks for your Social Security number or bank or card details, and never charges you. It is free and open source, and you can uninstall it anytime.**
 
 Free My ID does the repetitive part for you, on your own computer:
 
@@ -104,7 +104,7 @@ The setup has **six screens**. Each asks one thing. Press **Next** to go on, or 
    Type your full name to sign, and tick the box. Free My ID won't work on anyone without this step.
 2. **Name.** Full name, plus any nicknames or maiden or earlier names. Example: *Jane Q Testperson*, nickname *Janie*, earlier name *Jane Q Example*.
 3. **Address.** The city and state where you live now (for example *Springfield, IL*). Add past cities if you like. They help Free My ID recognize *your* listing among people with the same name.
-4. **A few details.** Birth year, a phone number and an email. These are **only used on this computer to tell you apart from other people with your name.** Free My ID does not send them to any site as your details.
+4. **A few details.** Birth year, a phone number and an email. These are **only used on this computer to tell you apart from other people with your name.** Birth year and relatives are never sent to a site. A phone number goes to a site only if you switch that on.
 5. **Email for removals.** The separate mailbox from [section 2](#2-before-you-start-a-separate-email-address-for-removals). Pick your email company and follow the short steps on screen, **or** choose **Skip, I'll do these by hand**. Skipping is fine. Permissions for ID, accounts and phone numbers stay **off** unless you turn them on later in Settings.
 6. **Run automatically?** Leave the box ticked so Free My ID keeps checking by itself. Click **Finish**.
 
@@ -232,7 +232,7 @@ What you can do:
 
 ## 10. Your privacy
 
-- **Free My ID will never ask you for a Social Security number, bank details or a card number, and it never charges you.**
+- **Free My ID never asks for your Social Security number or bank or card details, and never charges you.** Full list: the website's Is it safe? page (https://freemyid.org/safety/).
 - **Everything stays on your computer.** Free My ID has no account, no cloud and no tracking.
 - **Your information is encrypted.** The database and screenshots are encrypted, and the key is kept in your computer's secure password store.
 - **Free My ID talks only to the removal sites themselves and your removal mailbox.** It's blocked from contacting anything else.
