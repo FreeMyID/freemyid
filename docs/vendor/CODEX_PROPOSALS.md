@@ -28,6 +28,12 @@ These are proposals, not work orders or claims that paths are available. Claude 
 | CP-09 | Families/helper page accessibility audit | Existing helper journey serves older readers | Audit first | Allocated to Elena and specialists, owner-numbered WO-0xx |
 | CP-10 | Safety illustration cleanup | Open WR-55 plus WO-101 source-title follow-up | WO-102, Codex channel session | WO-102 source/visual QA delivered; awaiting WO-101 integration |
 
+| CP-14 | Reconcile developer-page release status copy | release.yaml says v0.2.0 published; developer page still says unreleased | After WO-107 merge; feature-by-feature verification | Delivered in WO-111; 13 targeted tests and build/site/content/Ruff pass |
+| CP-15 | Browser checks for wizard-step accessibility | wizard-packager handoff says wizard pages lack browser checks/keyboard pass | Test-only; fake values | Delivered in WO-112; 183 pass, 4 strict xfails track in-house SEC-98 until its fix |
+| CP-16 | Regression test per-person Protect progress on Today | server/dashboard render per-profile counts, with no two-profile assertion found | Test-only; fake profiles | Proposed; unallocated |
+| CP-17 | Narrow TypeScript hardening for public checklist parser | web/src/lib/protect.ts has `any` at untrusted YAML record/list boundaries despite unknown helper signatures | Audit first; one parser only | Queued as WO-113 after WO-111/112 merge (CLAUDE-012/014) |
+| CP-18 | Frontend dependency upgrade planning (owner-run) | web-v3/qa-security handoffs identify SEC-67 pnpm audit/Dependabot as open and audit was skipped offline | In-house owner first; Codex may help with compatibility notes after approved versions are supplied | Owner referral; not a vendor implementation assignment |
+
 Each candidate below is intended to fit one or two vendor sessions. Existing browser tooling must be available; missing browser/assistive-technology checks are reported unverified, never replaced by a claimed pass.
 
 ## CP-01 — Homepage hero wrapping and alignment
@@ -140,3 +146,88 @@ Each candidate below is intended to fit one or two vendor sessions. Existing bro
 ## Suggested selection
 
 Choose one small independent item now (CP-02, CP-05 or CP-08), while WO-101 is reviewed. Queue CP-01 after WO-101 acceptance. Handle CP-06 only once the exposure-card branch is accepted and its reviewer agrees. CP-10 can go directly to the graphic designer. Audit-only items can produce further work orders without competing for product source files.
+
+## Next-wave proposals CP-11 through CP-13
+
+Prepared after WO-103/106 delivery, 2026-11-07. Owner allocation required; all proposed paths are unreserved. Checked against BOARD.md and CLAUDE-002/005/007/008. These do not implement Elena's allocated CP-03/04/07/08/09 or edit WO-107's copy paths.
+
+### CP-11 — Quieter, reliable checksum status announcements
+
+**Evidence:** CLAUDE-007 and docs/handoff/web-qa.md review of PR #15 record optional P3s: repeated "Copying…" announcements and a no-clipboard message inserted after hydration that some screen readers may miss. This is owner-reported feedback, not a reproduced assistive-technology failure here.
+
+**Proposed allowed paths:** `web/src/components/CopyHash.tsx`, `tests/test_web_copy_hash.py`, own worktree `VENDOR_STATUS.md`.
+
+**Deliverable:** review the current status lifecycle, retain visible pending feedback while avoiding unnecessary polite announcements, and establish a stable status region before terminal feedback. Preserve unavailable/rejected/success/retry behavior, selectable no-JavaScript fallback, keyboard activation and truthful success timing. Extend existing meaningful browser tests rather than add tooling. Build/site/content checks, download budget and targeted tests pass. Report actual screen-reader validation as unverified unless performed; DOM checks alone cannot prove announcements.
+
+**Collision/dependency:** WO-104 is merged. Recheck CopyHash ownership with in-house before dispatch; no download-page/CSP/build-config/dependency changes. Optional polish, not a release blocker.
+
+### CP-12 — Published download metadata consistency regression tests
+
+**Evidence:** ROADMAP section 6 says only published release plus release.yaml counts as available. `web/src/pages/download/index.astro` renders version, size, fingerprint, release notes and conditional links; `CtaDownload.astro` branches between published asset and coming-soon state. Current tests focus on copy feedback and developer examples, rather than this combined contract. No metadata defect is claimed.
+
+**Proposed allowed paths:** `tests/test_web_download_metadata.py` (new), own worktree `VENDOR_STATUS.md`.
+
+**Deliverable:** inspect the existing built /download/ and its current checked-in public release/site data. Assert displayed version, optional size/fingerprint, internal checksum fragment, and primary CTA destination agree with the current configuration; test only applicable current branch and clearly state coverage limits. Check the unreleased branch only if an existing isolated harness supports it without editing release data or configuration. No arbitrary exact marketing-text pins, duplicate global link/CSP checks or invented prerelease publication status. stdlib/YAML parsing and existing tooling only. Clearly require built output; `test_web_` prefix uses existing CI convention; Ruff and targeted tests pass.
+
+**Collision/dependency:** test-only, disjoint from active WO-107 and Elena's test paths. Owner retains release.yaml/site data, workflows, release and publishing. A tag by itself must not be treated as a stable release. Report mismatch to owner rather than fix publication metadata.
+
+### CP-13 — FAQ keyboard and zoom interaction regression coverage
+
+**Evidence:** WO-004 is merged. `tests/test_web_faq_accessibility.py` checks native details markup, IDs/open state and token contrast, but does not exercise actual keyboard toggling/focus and wrapped content in a browser. ROADMAP v0.3 includes accessibility. This is a coverage proposal, not a newly observed defect.
+
+**Proposed allowed paths:** `tests/test_web_faq_keyboard.py` (new), own worktree `VENDOR_STATUS.md`.
+
+**Deliverable:** offline existing-browser tests of representative home and /faq/ disclosures with JavaScript disabled: Tab focus, visible focus indicator, Enter/Space expansion and collapse, answer visibility and reachable answer links. Exercise narrow light/dark views and explicitly modeled 200% reflow; distinguish equivalent viewport checks from native toolbar zoom. Assert no clipped question/answer text or horizontal overflow. Reuse current built metadata and avoid repeating static-markup/contrast tests. No dependencies or network requests; build/site/content and focused tests pass. Report product defects for separate owner-scoped changes.
+
+**Collision/dependency:** does not change FaqList, FAQ copy or home markup and does not duplicate Elena CP-03 header navigation. Confirm owner has no parallel FAQ browser-test reservation. No consent, sending or security work.
+
+
+## CP-14 — Reconcile developer-page release status after v0.2.0
+
+**Evidence:** `site_src/data/release.yaml` identifies published v0.2.0 (2026-11-08). `/developers/` still says “Version 0.2 isn't out yet,” labels Linux/macOS, pipx, Docker, headless and JSON as “Coming in v0.2,” and uses future tense for setup and JSON. These statements may be stale after release. This source comparison does not establish which advertised features actually shipped.
+
+**Proposed allowed paths:** `web/src/pages/developers/index.astro`; new `tests/test_web_developer_release_status.py`; own worktree `VENDOR_STATUS.md`.
+
+**Deliverable:** compare each claim and command on the page with published v0.2.0 release notes/artifacts and current source/docs. Remove outdated pre-release framing only where shipped behavior is verified. Keep unshipped features clearly marked as planned for a later release. Add built-page regression coverage for release version/status and ensure the page no longer globally claims v0.2 is unreleased. Do not assert every planned item shipped. Build/site/content and focused tests pass. Keep copy plain and sourced.
+
+**Collision/dependency:** wait for WO-107 to merge because it changed this same page. No `site_src/data/release.yaml`, workflow, release, security, secrets or CLI contract edits. Ask Morgan about any feature whose shipment cannot be established from public release materials; do not infer release scope from the tag alone.
+
+## CP-15 — Cover wizard-step keyboard and reflow behavior in a browser
+
+**Evidence:** `docs/handoff/wizard-packager.md` says wizard pages have HTML checks only and a keyboard walk is outstanding. `tests/test_wizard_a11y_browser.py` covers Today, Sites, broker detail, Protect, Settings and Emails; it does not cover wizard steps. This is a documented coverage gap, not a claimed current defect.
+
+**Proposed allowed paths:** new `tests/test_wizard_flow_a11y_browser.py`; own worktree `VENDOR_STATUS.md`.
+
+**Deliverable:** using existing Playwright and fake deterministic values, cover representative non-secret wizard steps at 320px and 640px (modeled 200% reflow), both themes, with JavaScript as the product requires. Check visible keyboard focus and logical traversal, labels linked to inputs, field/error text visibility, no horizontal overflow, and 44px targets where applicable. Exclude mailbox credentials, certificate trust, consent/practice behavior, network submission and real personal data. Distinguish browser emulation from Windows/assistive-technology validation. No product changes or new dependencies; targeted tests and Ruff pass.
+
+**Collision/dependency:** test-only new file; do not edit shared `tests/test_wizard_a11y_browser.py`. In-house retains wizard logic, consent, practice mode, CSRF/origin checks, email/security and Windows VM validation. Stop and report if deterministic fixtures cannot reach a step without touching those paths.
+
+## CP-16 — Guard per-person Protect progress on Today
+
+**Evidence:** `src/freemyid/wizard/server.py` builds Today’s Protect tuples by iterating profiles and calling `protect.counts(store, pr.id)`. `wizard/dashboard.py` renders one “Steps for [label]” link and count per tuple. Existing tests found in `test_wizard_v03.py` and `test_wizard_protect_tips.py` cover one profile; no two-profile Today assertion was found in this read. No bug is asserted.
+
+**Proposed allowed paths:** new `tests/test_wizard_dashboard_protect_profiles.py`; own worktree `VENDOR_STATUS.md`.
+
+**Deliverable:** with two obviously fake profiles and different checklist completion counts, assert Today shows each person's own label, count and `/protect?p=<their-id>` destination, and one person's ticks do not alter the other's displayed count. Include HTML escaping of labels and repeat-render stability if existing fixtures support it. Do not edit server/dashboard code; report any defect for a separate owner-scoped assignment. Targeted tests and Ruff pass.
+
+**Collision/dependency:** test-only new file; no path overlap with WO-106 or Elena's summary work. No real personal details, storage/consent behavior changes or protected files.
+
+## CP-17 — Remove unsafe `any` from checklist parser boundaries
+
+**Evidence:** `web/src/lib/protect.ts` accepts parsed YAML and declares `validate(raw: any)`, `load<T = any>`, `load<any>`, and casts a parsed checklist list as `any[]`. Nearby helpers already accept `unknown`. The YAML is checked into the public repository and validated during site build. This is a localized type-safety opportunity; no runtime defect is claimed.
+
+**Proposed allowed paths:** `web/src/lib/protect.ts`; focused tests in an existing compatible test harness (identify before assignment); own worktree `VENDOR_STATUS.md`.
+
+**Deliverable:** replace `any` at checklist parse/validation boundaries with `unknown` and narrow object/array/string fields before access. Preserve current validation errors where practical, size limits, accepted data, rendered guide output, research-note privacy and build behavior. Add meaningful malformed-root/record/list tests only if an existing no-install harness can exercise the parser; otherwise first report the harness gap rather than adding tooling. Build/site/content checks pass; run TypeScript checking only if already supported locally without changing CI/config/dependencies. No output changes for current checklist data.
+
+**Collision/dependency:** this parser reads `brokers/checklists.yaml`; that file is broker-researcher-owned and strictly out of scope. Edit only the parser module; do not modify registry/checklist data, scripts, tsconfig, package files, workflow or validation policy. Confirm no in-house parser hardening reservation before allocation.
+
+## CP-18 — Plan frontend dependency upgrades (owner-run, not vendor implementation)
+
+**Evidence:** `docs/handoff/web-v3.md` and `docs/handoff/qa-security.md` list SEC-67 (pnpm audit and Dependabot) as open; the QA handoff says `pnpm audit` was skipped because it requires network. No current advisory or outdated-package claim is made by this proposal.
+
+**Proposed vendor paths:** none for package manifests, lockfiles, scripts or CI. Request an in-house owner to run the approved dependency/security review and identify exact versions, advisory sources, compatibility constraints and scope. After that, Codex can propose compatibility test coverage or update user-facing migration notes in a separate, explicitly allowed work order.
+
+**Deliverable if owner later scopes vendor support:** a reviewable upgrade matrix naming package, current and approved target version, source/advisory, compatibility check and rollback owner. No packages changed by this proposal.
+
+**Collision/dependency:** dependency policy, package installation and security review are in-house-only under `docs/VENDOR.md` and CLAUDE-005. Codex must not edit `package.json`, lockfiles, Dependabot or workflow files, install packages, run network audits or claim packages need updates without owner-approved evidence.
