@@ -108,6 +108,22 @@
   title: "Free My ID for developers: Linux, macOS and headless"
   description: "Free My ID on Linux and macOS from the command line: pipx install, doctor, scheduling, secrets, JSON output. Docker image coming. Windows: get the app."   # WR-72 (release-notes-v0.2.0, WO-111: Docker not public)
   jsonld: [breadcrumbs]
+- id: developers-cli
+  out: developers/cli/
+  template: pages/developers.html   # not used: v3_only (web/src/pages/developers/cli/index.astro, WO-137)
+  v3_only: true
+  label: Command reference
+  title: "Free My ID command line reference"
+  description: "The commands and options registered in the Free My ID command line, with the source line for each entry. Read-only reference."
+  jsonld: [breadcrumbs]
+- id: developers-config
+  out: developers/config/
+  template: pages/developers.html   # not used: v3_only (web/src/pages/developers/config/index.astro, WO-138)
+  v3_only: true
+  label: Setup file reference
+  title: "Free My ID setup file reference (YAML)"
+  description: "The fields of the YAML file for freemyid setup --from: person, permissions, mailbox and schedule, with a full made-up example."
+  jsonld: [breadcrumbs]
 - id: styleguide
   out: styleguide/
   template: pages/styleguide.html

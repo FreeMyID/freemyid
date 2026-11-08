@@ -2,17 +2,16 @@
 import Base from "@/layouts/Base.astro";
 import PageHead from "@/components/PageHead.astro";
 import Section from "@/components/Section.astro";
-import { pageProps } from "@/lib/site";
+import { pageProps, type Crumb } from "@/lib/site";
 import commandData from "./_commands.json";
 
+const p = pageProps("developers-cli");
 const parent = pageProps("developers");
-const crumbs = [...parent.crumbs, ["Command line", "developers/cli/"]];
+const crumbs: Crumb[] = [...parent.crumbs, [p.crumbs[1][0], p.out]];
 const source = (location: string) => `Source: ${location}`;
 ---
 
-<Base {...parent} title="Free My ID command line reference"
-  description="A source-cited reference for the commands and options registered in the Free My ID command line."
-  out="developers/cli/" noindex={true} jsonldKinds={[]}>
+<Base {...p} crumbs={crumbs}>
   <PageHead crumbs={crumbs} title="Command line reference"
     lead="Commands and options registered in the Free My ID command line, with source lines for each entry.">
   </PageHead>

@@ -2,9 +2,11 @@
 import Base from "@/layouts/Base.astro";
 import PageHead from "@/components/PageHead.astro";
 import Section from "@/components/Section.astro";
-import { pageProps, site } from "@/lib/site";
+import { pageProps, site, type Crumb } from "@/lib/site";
 
-const p = pageProps("developers");
+const p = pageProps("developers-config");
+const parent = pageProps("developers");
+const crumbs: Crumb[] = [...parent.crumbs, [p.crumbs[1][0], p.out]];
 const schemaUrl = `${site.repo_url}/blob/main/schema/setup-config.schema.json`;
 const example = `# Fake example only. Keep your real file private.
 version: 1
@@ -47,8 +49,8 @@ schedule:
 const pre = "mt-s max-w-full overflow-x-auto rounded-md border border-line bg-surface p-s text-small leading-snug text-text";
 ---
 
-<Base {...p}>
-  <PageHead crumbs={p.crumbs} title="Setup YAML reference" lead="Prepare a file for the terminal setup command." />
+<Base {...p} crumbs={crumbs}>
+  <PageHead crumbs={crumbs} title="Setup YAML reference" lead="Prepare a file for the terminal setup command." />
 
   <div class="wrap pb-l">
     {/* Source: docs/CLI.md:323-340; schema/setup-config.schema.json:478-538. */}
