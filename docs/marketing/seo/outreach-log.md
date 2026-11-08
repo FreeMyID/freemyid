@@ -13,3 +13,6 @@ Every outward-facing action (submission, post, PR, issue, contact) goes here, wi
 | 2026-11-07 | GitHub list rows 5, 7, 8, 19, 20 | checked, no PR | Re-read each CONTRIBUTING: row 5 4-month rule (2027-03-07); 7 unsigned exe/silent-install unchecked; 8 issue+approval first, notability; 19 needs 50 stars (we have 1); 20 archived | see listings.md Wave 5 | 0 PRs | 0 |
 | 2026-11-07 | BADBOOL PR #131 | observed | Closed by maintainer 15:37Z, no comment (untrusted data, no action) | https://github.com/yaelwrites/Big-Ass-Data-Broker-Opt-Out-List/pull/131 | closed, not resubmitting | 0 |
 | 2026-11-07 | Mastodon | none | M-002 deferred: intro already posted today; cap is one a day, next on 2026-11-08 | n/a | n/a | 0 |
+| 2026-11-07 | Mastodon | none | Round 6: M-002 not due (one post a day; intro already used today's slot; due 2026-11-08). No hand post. | n/a | deferred | 0 |
+| 2026-11-07 | Listings / PRs | none | Round 6: nothing newly allowed (rows 5, 7, 8, 19, 20 unchanged since Wave 5; no new accounts; Discord invite not chosen, none published; v0.2.0rc1 is pre-release, not promoted). | n/a | 0 actions | 0 |
+| 2026-11-07 | Drafts | written, not posted | release-posts-v0.2.0.md (Bluesky, Mastodon, X), held until final v0.2.0 | docs/marketing/seo/release-posts-v0.2.0.md | held | 0 |

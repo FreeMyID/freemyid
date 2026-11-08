@@ -59,3 +59,7 @@ Next: once tokens exist, post Q-001, PR BADBOOL (row 4); skip pluja until ~2027-
 - Draft for owner review: content/why-free-my-id-is-free.md (from ROADMAP 1-2, no prices named; two review notes at the bottom).
 - Bluesky queue untouched (the scheduled poster owns it).
 - Escalation: none (no replies mentioning legal, press or money).
+
+## Round 6 (2026-11-07), orchestrator
+- Posted: nothing. Mastodon M-002 not due until 2026-11-08 (one a day; intro used today). Listings: no new allowed actions. Contacts used today: 1/10 (BADBOOL, closed).
+- Drafted, held: release-posts-v0.2.0.md (Bluesky, Mastodon, X) for the final v0.2.0 only. No Discord invite published. Escalations: none.
