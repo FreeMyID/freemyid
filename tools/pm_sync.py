@@ -438,11 +438,17 @@ def apply_plan(p: list[dict], mapping: dict, repo: str, owner: str, project: int
         elif x["action"] == "reopen" and rec.get("number"):
             run(["gh", "issue", "reopen", str(rec["number"]), "--repo", repo])
             rec["state"] = "open"
+        if project is not None and rec.get("url") and not rec.get("project_item"):
+            # issues created before the board existed (or by an earlier run) join it here
+            add = _json(run, ["gh", "project", "item-add", str(project), "--owner", owner,
+                              "--url", rec["url"], "--format", "json"])
+            rec["project_item"] = add.get("id", "")
         if project is not None and rec.get("project_item"):
+            last = rec.setdefault("fields", {})
             for name, val in x["fields"].items():
                 f = fields.get(name)
-                if not f or val == "":
-                    continue
+                if not f or val == "" or last.get(name) == val:
+                    continue  # unchanged since the last sync: no API call
                 cmd = ["gh", "project", "item-edit", "--id", rec["project_item"],
                        "--project-id", proj_id, "--field-id", f["id"]]
                 if f.get("options"):
@@ -453,6 +459,7 @@ def apply_plan(p: list[dict], mapping: dict, repo: str, owner: str, project: int
                 else:
                     cmd += ["--text", val]
                 run(cmd)
+                last[name] = val
     return mapping
 
 
