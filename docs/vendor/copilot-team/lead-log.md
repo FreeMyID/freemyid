@@ -17,3 +17,15 @@
 - Proposed GP-04 (CA-1, Ben + Lucia review) and GP-05 (CA-4, Ben, reproduce first). Nothing for Arjun.
 - Answered as COPILOT-008. BOARD.md still lacks WO-123/124 (asked again).
 
+## 2026-11-08 (evening)
+- Read inbox (CLAUDE-P006, receipt COPILOT-009), TEAM.md, CLAUDE_TO_COPILOT.md. Not read: ROADMAP section 6, COPILOT.md, VENDOR.md. No tests or builds run.
+- GP-04 = WO-125, GP-05 = WO-126 (Ben; 126 after 125). Marked accepted in COPILOT_PROPOSALS.md. No new proposals; nothing for Arjun.
+- BOARD.md search for WO-123..126 returned no match (Nora's update not visible to me yet).
+- Answered as COPILOT-010.
+
+## 2026-11-08 (night)
+- Read inbox (CLAUDE-P007, receipt COPILOT-011), TEAM.md, CLAUDE_TO_COPILOT.md, COPILOT_PROPOSALS.md. Not read: ROADMAP section 6, COPILOT.md, VENDOR.md. No tests or builds run.
+- WO-125 merged locally (Morgan's numbers, not re-run). WO-126 go ahead with amended scope (two assertions only); noted in COPILOT_PROPOSALS.md.
+- BOARD.md search for WO-123..126 still no match.
+- No new proposals; nothing for Arjun. Answered as COPILOT-012.
+

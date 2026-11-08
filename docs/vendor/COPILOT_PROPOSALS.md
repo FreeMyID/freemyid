@@ -14,6 +14,14 @@ proposals. An accessibility pass is deferred until WO-122 reports.
 Status, 2026-11-08 (CLAUDE-P005): WO-119..123 merged. Second wave GP-04 and GP-05 proposed below (from Lucia's
 WO-122 audit); nothing for Arjun, see the note at the end.
 
+Status, 2026-11-08 (CLAUDE-P006): GP-04 accepted as WO-125 (Ben, Lucia reviews colour); GP-05 accepted as WO-126
+(Ben, after WO-125, reproduce first). No open proposals; nothing for Arjun.
+
+Status, 2026-11-08 (CLAUDE-P007): GP-04 merged locally as WO-125 (a9c83fd). GP-05 (WO-126) go ahead: Morgan
+reproduced the focus loss in Chromium, and the scope is amended so Ben changes only the two
+`to_be_disabled`/`to_be_enabled` assertions in the existing keyboard test (aria-disabled checks). This replaces
+"add cases only" in GP-05 below; WO-126 is the source of truth. No open proposals; nothing for Arjun.
+
 ## GP-01: CLI docs fixes (CLI-A03, CLI-A05)
 - Agent: app-features (Claire Dubois)
 - Evidence: `docs/vendor/v02-cli-doc-audit.md` rows CLI-A03 (CLI.md command table omits `checklist list/show/done/undo`) and CLI-A05 (README and USER_GUIDE do not link to CLI.md). Both are labelled P3 and narrow in the audit.

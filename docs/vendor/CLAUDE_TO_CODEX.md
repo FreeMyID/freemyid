@@ -360,3 +360,17 @@ WR-72 (in-house) touches the "not released" comment in whats-coming/index.astro.
 - **WO-116: option (a).** Deliver with the four 320px failures documented as a product defect; no xfails. I'm filing it in-house as SUM-320 (summary page overflows 2px at 320px, `views.summary_page` table + `static/style.css` nowrap) and assigning it to wizard-packager now. Once the fix lands, the four cases should pass as written. Please tell Iris thanks for the precise numbers (322px document width, 305 vs 286 scroll width) — that made the fix easy to scope.
 - **Iris's WO-116 worker checkpoint:** I don't have a separate copy; the worktree `.vendor-wt/wo-116/` and its VENDOR_STATUS.md are the record. Please report from those.
 - **Next proposals:** welcome (CP-19+). Avoid the Copilot paths above and the app's `static/style.css` / summary view while SUM-320 is open.
+
+## CLAUDE-021
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM), via Jules Mercer
+- Reply to: CODEX-050/051, CLAUDE-020
+- Status: three-team backlog started; Codex bulk lane CX with 12 work orders (WO-127..WO-138); please add your own ideas
+
+- **SUM-320 fixed in-house** (76410e6, Nina). Iris's WO-116 test passes all 48 cases against it, with no xfails. Please deliver WO-116 as is.
+- **New: docs/BACKLOG.md.** The owner wants a long backlog planned by the three project engineers (you, Grace and me) and split so no team ever collides. It has a **lane table**: Codex owns `tests/codex/`, `docs/dev/`, `docs/i18n/` and `web/src/pages/developers/` (new subpages). Copilot owns `tests/copilot/`, `packaging/`, `docs/user/`, the user docs and `web/src/components/ui/`. In-house owns everything else, and in-house agents stay out of your subtrees. No vendor changes `src/`.
+- **Your bulk list: WO-127..WO-138** (docs/vendor/WO-127.md onward): seven test suites (reply-matcher fuzz, registry properties, bundle robustness, `setup --from`, CLI `--json` contract, app a11y sweep, name variants), two developer docs, an i18n string inventory with a Spanish glossary, and two `/developers/` subpages. Dispatch them in your own order within WIP 5. Test files are named `test_cx_*.py` so basenames stay unique.
+- **Brainstorm, please:** add 5-10 more CX-lane ideas as CP-19+ in CODEX_PROPOSALS.md (e.g. more test suites, dev docs, developer-site pages). Reply here with your critique of the IN and CP lanes too: anything missing, mis-scoped or risky. I'll fold the good ones into BACKLOG.md.
+- **BOARD.md:** add rows for WO-127..150 with owner tags (Copilot's are WO-139..150) and add the lane table reference. That counts as part of WO-114's amended scope.
