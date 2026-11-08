@@ -33,30 +33,57 @@ Owner: Dana Ortiz (devops). Status 2026-11-07: dry runs passed, NOT tagged. A mi
 - Real keyring behaviour on macOS/GNOME; Docker with a persistent `/data` volume over several runs.
 - GitHub-side behaviour of cosign/SBOM/provenance steps (first run).
 
-## Cutting the release (needs the owner's explicit OK for each push and tag)
-Prep (one commit on main, via PR if main is protected). Version in all three places, then green CI on main:
-```
-# edit: pyproject.toml  version = "0.2.0rc1"
-#       src/freemyid/__init__.py  __version__ = "0.2.0rc1"
-#       packaging/windows/freemyid.iss  AppVersion default "0.2.0rc1"
-git commit -m "Release 0.2.0rc1" -- pyproject.toml src/freemyid/__init__.py packaging/windows/freemyid.iss
-git push origin main            # owner OK; wait for build, docker, pages green
-```
-Release candidate:
-```
-git tag -a v0.2.0rc1 -m "Free My ID 0.2.0rc1"
-git push origin v0.2.0rc1       # owner OK
-gh run list --limit 6           # build, pypi, docker
-```
-Verify: `pipx install --pip-args=--pre freemyid==0.2.0rc1 && freemyid --version`; `docker pull ghcr.io/freemyid/freemyid:v0.2.0rc1` (after making it public), `cosign verify` keyless; GitHub release is marked Pre-release and `latest` still points at the old stable; website unchanged. Then do the GHCR clicks above.
+## State after rc1 (2026-11-07)
+- `v0.2.0rc1` is out (tag cut by the owner on 107c9f0): GitHub pre-release with FreeMyIDSetup-0.2.0rc1.exe, FreeMyIDSetup.exe, SHA256SUMS.txt; `releases/latest` still v0.1.2; docker image pushed for the tag only.
+- PyPI: a GitHub trusted publisher is now configured on the existing `freemyid` project (FreeMyID/freemyid, `pypi.yml`, env `pypi`). 0.2.0rc1 is published. Future tags publish by themselves; nothing more to set up.
+- GHCR: the package is still PRIVATE. The org blocks public packages, so this is an owner action (below). `:latest` does not exist yet; the first final tag creates it.
+- Agents cannot push tags (the auto-mode classifier blocks "Create Public Surface", even with full permissions). The OWNER runs every tag command below from a terminal.
 
-Final (only after the rc checks pass and the owner OKs; bump the same three files to `0.2.0`):
-```
-git commit -m "Release 0.2.0" -- pyproject.toml src/freemyid/__init__.py packaging/windows/freemyid.iss
-git push origin main            # owner OK; wait for green
-git tag -a v0.2.0 -m "Free My ID 0.2.0"
-git push origin v0.2.0          # owner OK
-```
-Verify: PyPI page shows 0.2.0 and `pipx install freemyid` works on a clean machine; GHCR `:latest` and `:v0.2.0` share a digest; GitHub release v0.2.0 has FreeMyIDSetup.exe, FreeMyIDSetup-0.2.0.exe, SHA256SUMS.txt, and `sha256sum -c` passes; `site-release-info` committed "Site: v0.2.0 release info" and Pages redeployed (check freemyid.org/download shows 0.2.0 and the same SHA256).
+## Owner action: GHCR public (do before or right after v0.2.0)
+1. github.com/organizations/FreeMyID/settings/packages: allow members to create/publish **public** packages (org setting that is currently off).
+2. github.com/orgs/FreeMyID/packages > `freemyid` > Package settings > link repository `FreeMyID/freemyid` if empty.
+3. Danger Zone > Change package visibility > Public > type `freemyid`.
+4. Check logged out: `docker pull ghcr.io/freemyid/freemyid:v0.2.0rc1`.
+If you decide to keep it private, say so and the docs will stop pointing at ghcr.io.
+
+## Checklist: rc1 to v0.2.0
+Each push and tag needs the owner's OK. Do the steps in order; stop on any red.
+
+1. Windows VM re-check of the rc1 installer (Windows 10 and/or 11, clean snapshot, a normal non-admin user):
+   - Download `FreeMyIDSetup-0.2.0rc1.exe` from the pre-release page, run `sha256sum -c SHA256SUMS.txt` (or `Get-FileHash -Algorithm SHA256 .\FreeMyIDSetup-0.2.0rc1.exe` and compare to SHA256SUMS.txt).
+   - SmartScreen shows "unknown publisher" (unsigned): expected. Install by clicking through; no admin prompt expected.
+   - Wizard opens in the browser on 127.0.0.1; walk all 6 screens with fake data only (Jane Q Testperson, Springfield IL); no real email sent.
+   - Scheduled task exists: `schtasks /Query /TN "Free My ID" /V /FO LIST` (name as set in the .iss); run it once with `schtasks /Run /TN "Free My ID"`.
+   - Uninstall from Settings > Apps: files and task removed, user data kept/removed as the uninstaller says.
+   - Record result in PROGRESS.md; any failure blocks 0.2.0.
+2. Other rc1 checks (any machine):
+   ```
+   pipx install --pip-args=--pre freemyid==0.2.0rc1 && freemyid --version
+   gh release view v0.2.0rc1 --json isPrerelease,assets
+   gh release view --json tagName          # must still say v0.1.2
+   ```
+3. CI green on main (including `commit-email-check`): `gh run list --branch main --limit 8`.
+4. Bump the version in the three places to `0.2.0` (devops commits, orchestrator pushes with the owner's OK):
+   ```
+   # pyproject.toml                       version = "0.2.0"
+   # src/freemyid/__init__.py             __version__ = "0.2.0"
+   # packaging/windows/freemyid.iss       #define AppVersion "0.2.0"  and the iscc comment line
+   git commit -m "Release 0.2.0" -- pyproject.toml src/freemyid/__init__.py packaging/windows/freemyid.iss
+   git push origin main
+   gh run list --branch main --limit 6      # wait for build, docker, pages green
+   ```
+5. Owner tags (replace SHA with the green release-bump commit: `git rev-parse origin/main`):
+   ```
+   git fetch origin && git tag -a v0.2.0 "$(git rev-parse origin/main)" -m "Free My ID v0.2.0"
+   git push origin v0.2.0
+   ```
+6. Watch: `gh run list --limit 8` then `gh run watch <id>` for build, pypi, docker. If pypi asks for environment approval, approve it in the Actions UI. Re-run only failed jobs: `gh run rerun <id> --failed`.
+7. Verify (devops does this):
+   - GitHub release v0.2.0 is NOT a pre-release and is `latest`; assets FreeMyIDSetup.exe, FreeMyIDSetup-0.2.0.exe, SHA256SUMS.txt; `sha256sum -c SHA256SUMS.txt` passes.
+   - `site-release-info` committed "Site: v0.2.0 release info"; pages.yml redeployed; `curl -s https://freemyid.org/download/ | grep -c 0.2.0` and the shown SHA256 equals SHA256SUMS.txt; `curl -sIL https://freemyid.org/get/windows | grep -i -E '^(HTTP|location)'` ends 200 with the new exe.
+   - PyPI: `pip index versions freemyid` lists 0.2.0 (non-pre-release); clean-machine `pipx install freemyid && freemyid --version`.
+   - GHCR (only if public): `docker pull ghcr.io/freemyid/freemyid:v0.2.0`, `:latest` has the same digest; `cosign verify` keyless (identity = the docker.yml workflow of FreeMyID/freemyid, issuer https://token.actions.githubusercontent.com).
+8. Windows VM re-check once more with the final `FreeMyIDSetup-0.2.0.exe`, including an upgrade install over the rc1 install (settings and scheduled task survive).
+9. Record in PROGRESS.md and docs/handoff/devops-engineer.md; then announce (Discord, once the webhook exists).
 
 Rollback: PyPI = yank the version in the project's page and publish a higher one; GHCR = delete the version in package settings; GitHub release = `gh release delete vX --cleanup-tag` (owner OK); site = revert the automatic site commit and dispatch pages.yml.
