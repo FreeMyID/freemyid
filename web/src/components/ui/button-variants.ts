@@ -16,7 +16,7 @@ export const buttonVariants = cva(
         // outline: line-strong border meets 3:1, brand text meets 4.5:1
         secondary: "border-2 border-line-strong bg-card text-brand hover:bg-brand-soft",
         ghost: "!px-xs text-link underline underline-offset-[0.18em] hover:bg-brand-soft",
-        onBrand: "bg-band-brand-ink text-band-brand hover:bg-bg-alt",
+        onBrand: "bg-band-brand-ink text-band-brand hover:bg-band-brand-ink/90",
       },
       size: {
         sm: "min-h-tap px-s py-2xs text-body",
