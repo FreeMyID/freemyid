@@ -1,8 +1,9 @@
 // Checks for the built v3 site (web/dist). Node stdlib only. Exit 1 on any problem.
 //   node scripts/check-site.mjs dist
 // Every page: lang, one <h1>, title <= 60, description <= 155, canonical, referrer meta, CSP meta
-// (no 'unsafe-inline'/'unsafe-eval'; script hashes match the inline scripts present), no style=""
-// attributes, no inline event handlers, no third-party asset URLs, every <img> has alt/width/height,
+// (no 'unsafe-inline'/'unsafe-eval'; script hashes match the inline scripts present; script-src exactly
+// 'none', or exactly 'self' on SCRIPT_PAGES), and, read from every start tag by a quote-aware tokenizer
+// (SEC-97): no style="" attributes, no inline event handlers, no javascript: URLs, no third-party asset URLs, every <img> has alt/width/height,
 // internal links and #anchors resolve, sitemap lists every indexable page and nothing else,
 // no mention of the private registry file, no deployed .js that no page loads. Then budgets
 // (gzip, KiB = 1024 bytes): home first view < 300 KiB, JS on home < 80 KiB, CSS < 20 KiB.
@@ -58,6 +59,69 @@ function resolveLocal(fromFile, href) {
   return [decodeURIComponent(path), frag];
 }
 
+// SEC-97: start tags read the way a browser's tokenizer reads them, so a `>` inside a quoted value can't
+// end the tag early and a `/` can separate attributes (`<img/onerror=x>`). Comments are skipped; script,
+// style, textarea and title bodies are raw text, not markup. Returns [{ name, raw, attrs: [[name, value]] }].
+const RAW_TEXT = new Set(["script", "style", "textarea", "title", "xmp", "noembed", "noframes"]);
+function startTags(html) {
+  const out = [];
+  const n = html.length;
+  const ws = (c) => c === " " || c === "\t" || c === "\n" || c === "\r" || c === "\f";
+  let i = 0;
+  while (i < n) {
+    const lt = html.indexOf("<", i);
+    if (lt < 0) break;
+    if (html.startsWith("<!--", lt)) { const e = html.indexOf("-->", lt + 4); i = e < 0 ? n : e + 3; continue; }
+    if (!/[a-z]/i.test(html[lt + 1] || "")) { i = lt + 1; continue; }
+    let j = lt + 1;
+    while (j < n && !ws(html[j]) && html[j] !== "/" && html[j] !== ">") j++;
+    const name = html.slice(lt + 1, j).toLowerCase();
+    const attrs = [];
+    while (j < n && html[j] !== ">") {
+      if (ws(html[j]) || html[j] === "/") { j++; continue; }
+      const a0 = j;
+      j++; // the first character is part of the name even if it is "=" (spec)
+      while (j < n && !ws(html[j]) && html[j] !== "/" && html[j] !== ">" && html[j] !== "=") j++;
+      const an = html.slice(a0, j).toLowerCase();
+      let k = j;
+      while (k < n && ws(html[k])) k++;
+      let val = "";
+      if (html[k] === "=") {
+        k++;
+        while (k < n && ws(html[k])) k++;
+        const q = html[k];
+        if (q === '"' || q === "'") {
+          const e = html.indexOf(q, k + 1);
+          val = html.slice(k + 1, e < 0 ? n : e);
+          k = e < 0 ? n : e + 1;
+        } else {
+          const v0 = k;
+          while (k < n && !ws(html[k]) && html[k] !== ">") k++;
+          val = html.slice(v0, k);
+        }
+        j = k;
+      }
+      attrs.push([an, val]);
+    }
+    out.push({ name, raw: html.slice(lt, j + 1), attrs });
+    i = j + 1;
+    if (RAW_TEXT.has(name)) {
+      const m = html.slice(i).search(new RegExp(`</${name}[\\s/>]`, "i"));
+      i = m < 0 ? n : i + m;
+    }
+  }
+  return out;
+}
+// Character references and the tab/newline a browser strips from a URL, so `java&#x09;script:` is still caught.
+const decodeAttr = (v) => v
+  .replace(/&#x([0-9a-f]+);?/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+  .replace(/&#(\d+);?/g, (_, d) => String.fromCodePoint(Number(d)))
+  .replace(/&(tab|newline|colon);?/gi, (_, e) => ({ tab: "\t", newline: "\n", colon: ":" })[e.toLowerCase()])
+  .replace(/[\t\n\r]/g, "");
+const URL_ATTRS = new Set(["href", "src", "action", "formaction", "xlink:href", "data", "poster", "srcdoc"]);
+// SEC-97c: script-src per page. Only these pages may load scripts, and only same-origin files.
+const SCRIPT_PAGES = new Set(["download/index.html"]);
+
 const indexable = [];
 for (const f of htmlFiles) {
   const html = read(f);
@@ -81,6 +145,14 @@ for (const f of htmlFiles) {
     if (/unsafe-inline|unsafe-eval/.test(csp)) err(f, "CSP allows unsafe-inline/unsafe-eval");
     for (const d of ["default-src 'self'", "object-src 'none'", "base-uri 'none'", "form-action 'none'"])
       if (!csp.includes(d)) err(f, `CSP lacks ${d}`);
+    const directives = csp.split(";").map((d) => d.trim().split(/\s+/)).filter((d) => d[0]);
+    const scriptSrc = directives.filter((d) => d[0].toLowerCase() === "script-src");
+    const want = SCRIPT_PAGES.has(f) ? "'self'" : "'none'";
+    if (scriptSrc.length !== 1) err(f, `CSP has ${scriptSrc.length} script-src directives (want exactly one)`);
+    else if (scriptSrc[0].length !== 2 || scriptSrc[0][1].toLowerCase() !== want)
+      err(f, `CSP script-src is "${scriptSrc[0].slice(1).join(" ")}", want exactly ${want}`);
+    for (const d of directives)
+      if (/^script-src-(elem|attr)$/i.test(d[0])) err(f, `CSP has ${d[0]} (it overrides script-src)`);
     const scripts = [...html.matchAll(/<script(\s[^>]*)?>([\s\S]*?)<\/script>/gi)];
     for (const [, attrs = "", body] of scripts) {
       if (/type="application\/ld\+json"/.test(attrs)) { try { JSON.parse(body); } catch { err(f, "invalid JSON-LD"); } continue; }
@@ -90,26 +162,28 @@ for (const f of htmlFiles) {
     for (const [, , body] of html.matchAll(/<style(\s[^>]*)?>([\s\S]*?)<\/style>/gi))
       if (!csp.includes(sha(body))) err(f, "inline <style> not covered by a CSP hash");
   }
-  if (/\sstyle="/.test(html)) err(f, 'style="" attribute (blocked by the CSP)');
-  // WR-60/SEC-65: look only inside start tags (comments and script/style bodies removed), any quoting or spacing.
-  const tagsOnly = html.replace(/<!--[\s\S]*?-->/g, "").replace(/<(script|style)\b([^>]*)>[\s\S]*?<\/\1>/gi, "<$1$2>");
-  for (const [tag] of tagsOnly.matchAll(/<[a-z][^>]*>/gi)) {
-    if (/\son[a-z]+\s*=/i.test(tag)) err(f, `inline event handler attribute: ${tag.slice(0, 80)}`);
-    if (/\s(?:href|src|action|formaction|xlink:href)\s*=\s*["']?\s*javascript:/i.test(tag)) err(f, `javascript: URL: ${tag.slice(0, 80)}`);
+  // WR-60/SEC-65/SEC-97: every attribute of every start tag, any quoting, spacing or "/" separator.
+  const tags = startTags(html);
+  const ASSET_TAGS = new Set(["img", "script", "source", "iframe", "video", "audio", "embed", "track", "input"]);
+  for (const t of tags) {
+    const tag = t.raw.slice(0, 80);
+    const at = new Map(t.attrs.slice().reverse()); // first occurrence wins, as in a browser
+    for (const [an, av] of t.attrs) {
+      if (an === "style") err(f, `style="" attribute (blocked by the CSP): ${tag}`);
+      if (/^on/.test(an)) err(f, `inline event handler attribute: ${tag}`);
+      if (URL_ATTRS.has(an) && /^[\x00-\x20]*javascript:/i.test(decodeAttr(av))) err(f, `javascript: URL: ${tag}`);
+    }
+    // third-party assets: src / srcset / link href must be local
+    const ext = (u) => /^\s*(https?:)?\/\//i.test(decodeAttr(u || ""));
+    if (ASSET_TAGS.has(t.name) || t.name === "picture") {
+      if (ext(at.get("src"))) err(f, `third-party asset ${at.get("src")}`);
+      for (const part of (at.get("srcset") || "").split(",")) if (ext(part.trim())) err(f, `third-party asset ${part.trim()}`);
+    }
+    if (t.name === "link" && !/^canonical$/i.test(at.get("rel") || "") && ext(at.get("href"))) err(f, `third-party <link> ${at.get("href")}`);
+    if (t.name === "img") for (const a of ["alt", "width", "height"]) if (!at.has(a)) err(f, `<img> without ${a}`);
   }
-  // third-party assets: src / link href / srcset must be local
-  for (const m of html.matchAll(/<(?:img|script|source|iframe|video|audio|embed)\b[^>]*\ssrc="([^"]+)"/gi))
-    if (/^(https?:)?\/\//.test(m[1])) err(f, `third-party asset ${m[1]}`);
-  for (const m of html.matchAll(/<link\b[^>]*>/gi)) {
-    const href = m[0].match(/href="([^"]+)"/)?.[1] || "";
-    if (/rel="canonical"/.test(m[0])) continue;
-    if (/^(https?:)?\/\//.test(href)) err(f, `third-party <link> ${href}`);
-  }
-  if (/<iframe|<embed|<object/i.test(html)) err(f, "embed/iframe/object");
-  if (/<form\b/i.test(html)) err(f, "form element (the site has no forms)");
-  for (const m of html.matchAll(/<img\b[^>]*>/gi)) {
-    for (const a of ["alt", "width", "height"]) if (!new RegExp(`\\s${a}="`).test(m[0])) err(f, `<img> without ${a}`);
-  }
+  if (tags.some((t) => ["iframe", "embed", "object", "frame"].includes(t.name))) err(f, "embed/iframe/object");
+  if (tags.some((t) => t.name === "form")) err(f, "form element (the site has no forms)");
   // links and anchors
   for (const m of html.matchAll(/<a\b[^>]*\shref="([^"]*)"/gi)) {
     const href = m[1].replace(/&amp;/g, "&");
@@ -172,8 +246,9 @@ function pageWeight(f) {
   const css = [...html.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map((m) => resolveLocal(f, m[1])[0]);
   const js = pageScripts(f, html);
   // first-view images: eager <img> (no loading="lazy") and inline art is already in the HTML
-  const imgs = [...html.matchAll(/<img\b[^>]*>/g)].filter((m) => !/loading="lazy"/.test(m[0]))
-    .map((m) => resolveLocal(f, m[0].match(/\ssrc="([^"]+)"/)[1])[0]);
+  const imgs = startTags(html).filter((t) => t.name === "img").map((t) => new Map(t.attrs.slice().reverse()))
+    .filter((a) => a.get("loading") !== "lazy" && a.get("src")).map((a) => resolveLocal(f, a.get("src"))?.[0])
+    .filter((p) => p && files.includes(p));
   const size = (list) => list.reduce((n, p) => n + gz(readFileSync(join(dist, p))), 0);
   return { html: gz(Buffer.from(html)), css: size(css), js: size([...js]), img: imgs.reduce((n, p) => n + statSync(join(dist, p)).size, 0) };
 }
