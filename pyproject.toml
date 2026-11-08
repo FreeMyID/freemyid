@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "freemyid"
-version = "0.2.0"
+version = "0.3.0rc1"
 description = "Local-first personal data broker opt-out tool with scheduled re-checks."
 readme = "README.md"
 requires-python = ">=3.11"
