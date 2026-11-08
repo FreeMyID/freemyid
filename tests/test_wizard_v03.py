@@ -196,7 +196,8 @@ def test_exposure_card_with_and_without_engine(env, monkeypatch):
     mod.latest_exposure = lambda s, pr: res                              # type: ignore[attr-defined]
     monkeypatch.setitem(sys.modules, "freemyid.engine.exposure", mod)
     t = views.exposure_card(store, p)
-    assert "<b>40</b> out of 100" in t and "1 site list you, 1 to look at by hand" in t
+    assert "<b>40</b> out of 100" in t and "Listings found on 1 site." in t \
+        and "1 site needs a manual check." in t
     mod.latest_exposure = lambda s, pr: None                             # type: ignore[attr-defined]
     assert "No picture yet" in views.exposure_card(store, p)
 

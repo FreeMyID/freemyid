@@ -3,6 +3,10 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..storage import Store
 
 from fastapi import HTTPException
 
@@ -40,29 +44,37 @@ ACTION_WORDS = {
 
 
 # ------------------------------------------------------------------ exposure placeholder
-def exposure_card(store, profile: Profile | None) -> str:
+def exposure_card(store: Store, profile: Profile | None) -> str:
     """Wired to freemyid.engine.exposure.latest_exposure(store, profile) when it exists."""
     head = ('<section class="card"><h2><span class="ico ico-map" aria-hidden="true"></span> '
             'Where you are listed</h2>')
     try:
         from ..engine.exposure import latest_exposure
     except ImportError:   # engine module not shipped in this build
-        return head + ('<p><b>Coming soon.</b> A simple picture of which kinds of sites list you '
-                       'will show here.</p></section>')
+        return head + ('<p><b>Coming soon.</b> This version does not include the listing '
+                       'check.</p></section>')
     try:
         result = latest_exposure(store, profile) if profile else None
     except Exception as e:  # noqa: BLE001  a broken helper must never break the home page
         log.warning("exposure unavailable: %s", type(e).__name__)
-        return head + "<p>This is not available right now. Nothing is wrong with your setup.</p></section>"
+        return head + ('<p>Your saved result is not available right now. '
+                       'This does not tell us whether any sites list you.</p></section>')
     if result is None:
-        return head + ('<p>No picture yet. After the next check, this shows which kinds of sites '
-                       'list you.</p></section>')
+        return head + ('<p>No picture yet. There is no saved result to show. '
+                       'Results will appear here after a check.</p></section>')
     found = len(result.by_status("found"))
     hand = len(result.by_status("check_by_hand"))
-    lines = "".join(f"<li>{esc(ln.text)}</li>" for ln in result.explanation[:4])
-    return (head + f'<p class="lead"><b>{result.score}</b> out of 100 <span class="hint">'
-            f'(lower is better)</span></p><p>{found} site{"" if found == 1 else "s"} list you'
-            f"{f', {hand} to look at by hand' if hand else ''}. Checked {_dt(result.created_at)}.</p>"
+    lines = "".join(f"<li>{esc(ln.text)}</li>" for ln in result.explanation)
+    found_text = ("No listings found on the sites checked." if found == 0 else
+                  f"Listings found on {found} site{'' if found == 1 else 's'}.")
+    hand_text = (f"{hand} site needs a manual check." if hand == 1 else
+                 f"{hand} sites need a manual check.")
+    return (head + f'<p>{found_text} {hand_text}</p>'
+            '<p>These results cover only the sites checked, not every website.</p>'
+            f'<p>Checked {esc(_dt(result.created_at))}.</p>'
+            f'<p class="lead"><b>{esc(result.score)}</b> out of 100 '
+            '<span class="hint">(lower is better)</span></p>'
+            '<p>This score describes this check, not your overall safety.</p>'
             + (f'<ul class="hint">{lines}</ul>' if lines else "")
             + "</section>")
 
