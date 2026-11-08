@@ -503,6 +503,10 @@ class Runner:
         open human to-do for the site keeps it waiting."""
         if tier != Tier.EMAIL or st.state != S.NEEDS_HUMAN or st.last_submitted_at:
             return st
+        if self.dry_run:
+            # SEC-118: scan-only, dry-run and practice runs (all set self.dry_run) can't
+            # queue the real email, so the letter the person can send stays put
+            return st
         tok = f"manual_email:{broker.id}"
         mine = [t for t in self.store.list_todos(profile.id)
                 if t.broker_id == broker.id and t.kind != TodoKind.REVIEW_MATCH]

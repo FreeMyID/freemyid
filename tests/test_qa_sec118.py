@@ -27,7 +27,6 @@ def _run(store, p, now, *, scan_only: bool, dry_run: bool, real: bool):
     return asyncio.run(r.process(p, B))
 
 
-@pytest.mark.xfail(strict=True, raises=AssertionError, reason="SEC-118: non-real runs retire the manual to-do")
 @pytest.mark.parametrize("mode", [
     {"scan_only": True, "dry_run": True, "real": True},
     {"scan_only": False, "dry_run": True, "real": True},
