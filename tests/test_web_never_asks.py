@@ -48,7 +48,8 @@ def test_master_list_on_safety() -> None:
 
 def test_printed_copies_and_old_wording_gone() -> None:
     fridge = norm((ROOT / "docs/FRIDGE_CARD.md").read_text(encoding="utf-8"))
-    assert "bank or card details, or your everyday email password" in fridge
+    # WO-184 (6deb3e8): the card now mirrors /safety/ (adds "money or a payment of any kind")
+    assert "bank or card details" in fridge and "your everyday email password" in fridge
     for path in ("docs/FRIDGE_CARD.md", "docs/assets/fridge-card.html"):
         assert "bank card or passwords" not in (ROOT / path).read_text(encoding="utf-8"), path
     qs = norm((ROOT / "FAMILY_QUICK_START.md").read_text(encoding="utf-8"))
@@ -56,3 +57,14 @@ def test_printed_copies_and_old_wording_gone() -> None:
     for page in DIST.rglob("*.html"):
         text = norm(text_of(page.read_text(encoding="utf-8")))
         assert not re.search(r"never asks for your social security number, bank or card details", text), page
+
+
+def test_sec115_age_wording() -> None:
+    # SEC-115 (5f01a9c): birth year is never sent; an age goes only when the listing itself shows one and a form asks
+    safety = norm(text_of((DIST / "safety/index.html").read_text(encoding="utf-8")))
+    assert "send your year of birth or your relatives' names to a site" in safety
+    assert "it gets only the age that site's own listing already shows, never one worked out from your year of birth" in safety
+    fam = norm(text_of((DIST / "families/index.html").read_text(encoding="utf-8")))
+    assert "if a site's form asks for an age, it gets only the age its own listing shows" in fam
+    for path in ("FAMILY_QUICK_START.md", "docs/HELPER_GUIDE.md"):
+        assert "only the age" in norm((ROOT / path).read_text(encoding="utf-8")), path

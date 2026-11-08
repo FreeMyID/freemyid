@@ -45,7 +45,7 @@ Free My ID opens in its own window. Each screen asks one thing. Press **Next** t
 | 1. Welcome | Choose who this is for (you, your child, or someone who asked you to help). Type your full name and tick the box. |
 | 2. Name | Type the name. Add nicknames or a maiden name if there are any. |
 | 3. Address | Type the city and the 2-letter state, for example Springfield, IL. |
-| 4. A few details | Birth year, a phone number and an email. These help it recognize the right person. Year of birth is never sent to a site, and a phone number goes to a site only if you switch that on. |
+| 4. A few details | Birth year, a phone number and an email. These help it recognize the right person. Year of birth is never sent to a site. If a site's form asks for an age, it gets only the age its own listing shows. A phone number goes to a site only if you switch that on. |
 | 5. Email for removals | Pick your email company and follow the little instructions on screen, **or** choose **Skip, I'll do these by hand**. Skipping is fine. |
 | 6. Run automatically? | Leave the box ticked so Free My ID keeps checking by itself. Click **Finish**. |
 

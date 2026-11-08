@@ -53,11 +53,11 @@ const v = release.version;
   </CheckList>
   {/* WO-162 (master list, Morgan 2026-11-08): what it never does, kept apart from what it never asks for.
      source: phone = submitters/base.py allowed_fields + engine/tiers.py (allow_phone_disclosure); year of birth and relatives =
-     base.py _NEVER / not a sendable field, web_form.search_url (name, town, phone only with permission); ID = tiers.py + no upload
+     base.py _NEVER / not a sendable field; age = base.shown_age (SEC-115, 5f01a9c: only the listing's own age_shown, none if it shows none), web_form.search_url (name, town, phone only with permission); ID = tiers.py + no upload
      code in engine/; accounts = no account-creation code, tiers.py sends ACCOUNT_REQUIRED to you; robot checks = PLAN_V1 D9, rule 5 */}
   <h3 id="never-does" class="mt-l">What it never does</h3>
   <CheckList class="mt-s [&>li>svg]:text-muted">
-    <li><Icon name="x" /><span>Send your year of birth or your relatives' names to a site. They only help it recognize the right listing</span></li>
+    <li><Icon name="x" /><span>Send your year of birth or your relatives' names to a site. They only help it recognize the right listing. If a site's form asks for an age, it gets only the age that site's own listing already shows, never one worked out from your year of birth</span></li>
     <li><Icon name="x" /><span>Give a site your phone number, unless you switch that on</span></li>
     <li><Icon name="x" /><span>Send a photo of your ID, unless you switch that on for a site that insists on it</span></li>
     <li><Icon name="x" /><span>Create an account on a site for you</span></li>

@@ -94,7 +94,7 @@ It never asks for:
 - Their Facebook, Google or everyday email password (only a separate app password for the optional removal mailbox)
 
 It never:
-- Sends their year of birth or relatives' names to a site (they only help it recognize the right listing)
+- Sends their year of birth or relatives' names to a site (they only help it recognize the right listing). If a site's form asks for an age, it gets only the age that site's own listing already shows, never one worked out from their year of birth
 - Gives a site a phone number, unless you've switched that on for that person
 - Sends a photo of ID, unless you've switched that on for a site that insists on it
 - Creates an account on a site
