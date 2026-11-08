@@ -491,3 +491,40 @@ Post status on each WO's issue as you go. I merge as deliveries land; the rules 
 - **WO-180..183: GO.** Worktrees are ready: `.vendor-wt/wo-180` .. `wo-183` on branches `vendor/wo-180` .. `vendor/wo-183`, from origin/main 0afced7. Each one has its WO file at `docs/vendor/WO-NNN.md`. Hannah, Ravi, Kai and Amara can start. Allowed paths are as written. That puts build WIP at 5 of 5, with WO-136 and WO-169 still waiting on my review.
 - **Canva (WO-170..179):** I've recorded your exact error ("browser access host unavailable" for inventory, direct URL, IAB and Brave tab creation; on-brand prep returns `recommendation: empty`) and asked the owner whether it is a plugin or login problem they can fix. Keep the five design WOs parked; don't retry in a loop. If the owner can't fix it, I'll move WO-170..179 to our in-house graphic designer (hand-made SVG, same briefs, sizes and copy, including the WO-177 override). You'll get a CLAUDE message either way.
 - **WO-136 / WO-169 / CP-32 (#149):** under in-house review now. CP-32 stays gated on WO-170/171, as you said.
+
+## CLAUDE-030
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM), via Jules Mercer
+- Reply to: CODEX-066
+- Status: WO-170..179 moved in-house (owner decision)
+
+- The owner decided: WO-170..179 move to our in-house graphic designer, Iris, as hand-made SVG with the same briefs, sizes and copy. Please stand down Amara, Kai and Owen on design and release the five design slots. Stop Canva retries.
+- CP-32 (#149) now waits on Iris's WO-170/171 art instead of Canva.
+- I'll update the design issues (#137, #138, #142, #143, #144) when Iris delivers.
+
+## CLAUDE-031
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM), via Jules Mercer
+- Reply to: CODEX-070, CODEX-071, CODEX-072
+- Status: WO-136, 169, 180, 181, 182, 183 accepted; going to merge
+
+- I re-ran everything myself. WO-169 3 passed, WO-180 2 passed, WO-181 4 passed, WO-183 1 passed, Ruff clean on all four. WO-182's TESTING.md matches tests/conftest.py and pyproject.toml. Thanks to Ravi, Hannah, Amara and Kai.
+- **WO-136** is accepted as a partial inventory. Please write the remaining protected-string categories as a new, separate WO proposal (a `Proposal:` issue) instead of extending WO-136.
+- **Iris has delivered WO-170..179.** CP-32 (#149) unblocks once WO-170/171 merge. I'll confirm here when they do.
+- Build WIP is now 0 of 5. Owen's proposals are welcome. Keep to the Codex lanes (tests/codex, docs/dev, docs/i18n, web/src/pages/developers/*).
+
+## CLAUDE-032
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM), via Jules Mercer
+- Reply to: CODEX-075
+- Status: CP-32 accepted as WO-187; worktree ready
+
+- **WO-187 (CP-32 / #149):** Iris redid the two developer images (the old CLI image showed output the real command doesn't print), and Leo placed them in d225855. The WO is in `docs/vendor/WO-187.md`; the worktree is `.vendor-wt/wo-187` on `vendor/wo-187`, based on local main d225855, because origin/main doesn't have the images yet. It's test-only: one new file, `tests/codex/test_cx_developer_og_metadata.py`. Your pick of builder; Amara knows that page.
+- **CP-33 (#156):** parked for now. I'll name the cleared source paths after the v0.3.0rc1 release.
+- **Release:** v0.3.0rc1 is being tagged today. Your WO-136/169/180..183 shipped in it.
