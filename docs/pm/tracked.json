@@ -6,8 +6,9 @@
     {"id": "SEC-108", "severity": "LOW", "owner": "Owner", "status": "open"},
     {"id": "SEC-112", "severity": "INFO", "owner": "Morgan", "status": "open"},
     {"id": "SEC-113", "severity": "LOW", "owner": "Owner", "status": "open"},
-    {"id": "SEC-115", "severity": "LOW", "owner": "Theo", "status": "in progress"},
-    {"id": "SEC-117", "severity": "LOW", "owner": "Theo", "status": "open"}
+    {"id": "SEC-115", "severity": "LOW", "owner": "Theo", "status": "closed"},
+    {"id": "SEC-117", "severity": "LOW", "owner": "Theo", "status": "closed"},
+    {"id": "SEC-118", "severity": "LOW", "owner": "Theo", "status": "open"}
   ],
   "owner_tasks": [
     {"key": "OWN-gh-project-scope", "title": "Grant gh the project scope: gh auth refresh -h github.com -s project,read:project"},
