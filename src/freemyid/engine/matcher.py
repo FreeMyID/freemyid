@@ -18,6 +18,7 @@ from datetime import date
 from rapidfuzz import fuzz
 
 from ..models import Listing, MatchLevel, Profile, ProfileField, utcnow
+from . import nicknames
 
 NAME_THRESHOLD = 88.0       # token_sort_ratio on normalized "first last"
 RELATIVE_THRESHOLD = 85.0
@@ -100,7 +101,12 @@ def parse_location(text: str) -> tuple[str, str | None]:
 
 def _profile_name_variants(p: Profile) -> list[str]:
     out: list[str] = []
-    firsts = [p.name.first, *p.nicknames]
+    # given names: current and previous first names, the profile's own nicknames, and the
+    # common nickname groups for each (Robert <-> Bob). Every first is tried with every
+    # last name the person has had (maiden name included).
+    firsts: set[str] = set()
+    for f in [*(n.first for n in p.all_names()), *p.nicknames]:
+        firsts |= nicknames.expand(norm(f))
     lasts = [n.last for n in p.all_names()]
     for f in firsts:
         for la in lasts:
