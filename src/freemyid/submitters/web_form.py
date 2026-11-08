@@ -22,6 +22,7 @@ from ..engine import matcher
 from ..engine.browser import BlockedByPolicy, ChallengeEncountered
 from ..interfaces import RunContext, Submitter
 from ..models import (
+    Address,
     Broker,
     EvidenceKind,
     FormStep,
@@ -73,11 +74,17 @@ def _slug(s: str, case: str = "lower") -> str:
     return quote(s, safe="-")
 
 
-def search_url(broker: Broker, profile: Profile) -> str | None:
-    """Fill Broker.search_url_pattern. Phone only with allow_phone_disclosure."""
+def current_address(profile: Profile) -> Address:
+    """The address searches use: the one marked current, else the first."""
+    return next((a for a in profile.addresses if a.current), profile.addresses[0])
+
+
+def search_url(broker: Broker, profile: Profile, address: Address | None = None) -> str | None:
+    """Fill Broker.search_url_pattern. Phone only with allow_phone_disclosure. `address`
+    (default: the current one) supplies city/state/zip, e.g. for an old-address search."""
     if not broker.search_url_pattern:
         return None
-    cur = next((a for a in profile.addresses if a.current), profile.addresses[0])
+    cur = address or current_address(profile)
     vals: dict[str, str | None] = {
         "first": profile.name.first, "last": profile.name.last,
         "middle": profile.name.middle, "city": cur.city, "state": cur.state,

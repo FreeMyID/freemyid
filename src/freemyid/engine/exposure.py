@@ -35,6 +35,7 @@ from urllib.parse import urljoin, urlsplit
 
 from .. import __version__
 from .. import config as cfgmod
+from ..checklist_state import drop_first
 from ..exposure_models import (
     ExposureEntry,
     ExposureListing,
@@ -340,12 +341,10 @@ def _hand_check_url(broker: Broker, profile: Profile) -> str:
     return search_url(broker, profile) or str(broker.search_page_url or broker.url)
 
 
-def _check_one(store: Store, profile: Profile, broker: Broker, url: str, fetch: Fetcher,
-               now: datetime) -> ExposureEntry:
+def _read(profile: Profile, broker: Broker, url: str, fetch: Fetcher,
+          now: datetime) -> list[Listing]:
+    """Fetch one search page and score what it shows. Raises FetchFailed."""
     from .browser import detect_challenge
-    from .runner import merge_listings, review_todo
-    entry = ExposureEntry(broker_id=broker.id, broker_name=broker.name, status="check_by_hand",
-                          check_url=url, checked_at=now)
     page = fetch(broker, url)
     if detect_challenge(page.html, status=page.status):
         raise FetchFailed("challenge")
@@ -355,15 +354,44 @@ def _check_one(store: Store, profile: Profile, broker: Broker, url: str, fetch: 
     if spec is None or not spec.result_selector:
         raise FetchFailed("no_parser")
     if spec.no_results_text and spec.no_results_text.lower() in page.html.lower():
-        found: list[Listing] = []
-    else:
+        return []
+    try:
+        cands = parse_candidates(broker, page.url, page.html)
+    except htmlsel.UnsupportedSelector as e:
+        raise FetchFailed("no_parser") from e
+    if not cands and spec.no_results_text:
+        raise FetchFailed("page_unrecognized")
+    return matcher.score_all(profile, broker.id, cands, now.date())
+
+
+def _check_one(store: Store, profile: Profile, broker: Broker, url: str, fetch: Fetcher,
+               now: datetime, old_url: str | None = None,
+               before_old: Callable[[], None] | None = None) -> ExposureEntry:
+    """Read the search page (and, if `old_url`, one old-address search page too), then
+    save the listings with ONE merge so the second page never marks the first page's
+    listings gone. A failed old-address page is ignored: the main answer stands."""
+    from .runner import merge_listings, review_todo
+    entry = ExposureEntry(broker_id=broker.id, broker_name=broker.name, status="check_by_hand",
+                          check_url=url, checked_at=now)
+    found = _read(profile, broker, url, fetch, now)
+    if old_url:
+        if before_old is not None:
+            before_old()
         try:
-            cands = parse_candidates(broker, page.url, page.html)
-        except htmlsel.UnsupportedSelector as e:
-            raise FetchFailed("no_parser") from e
-        if not cands and spec.no_results_text:
-            raise FetchFailed("page_unrecognized")
-        found = matcher.score_all(profile, broker.id, cands, now.date())
+            more = _read(profile, broker, old_url, fetch, now)
+            entry.old_address_checked = True
+        except FetchFailed as e:
+            log.info("exposure: %s old-address search skipped (%s)", broker.id, e.reason)
+            more = []
+        except Exception as e:  # noqa: BLE001 - the main answer still counts
+            log.warning("exposure: %s old-address search failed (%s)", broker.id,
+                        type(e).__name__)
+            more = []
+        seen = {li.url for li in found}
+        for li in more:              # the same listing on both pages counts once
+            if li.url not in seen:
+                seen.add(li.url)
+                found.append(li)
     saved = merge_listings(store, profile, broker, found, now)
     possible = [li for li in saved if li.match_level == MatchLevel.POSSIBLE]
     if possible and not any(li.match_level == MatchLevel.CONFIRMED for li in saved):
@@ -372,22 +400,54 @@ def _check_one(store: Store, profile: Profile, broker: Broker, url: str, fetch: 
     return _fill(entry, saved)
 
 
+_ADDRESS_FIELDS = {"city", "state", "state_name"}
+
+
+def _uses_address(broker: Broker) -> bool:
+    import string
+    pat = broker.search_url_pattern or ""
+    return any(f in _ADDRESS_FIELDS for _, f, _, _ in string.Formatter().parse(pat) if f)
+
+
+def old_address_url(broker: Broker, profile: Profile) -> str | None:
+    """The one extra search URL for a previous address (Address.current False), or None.
+    Only for brokers whose search URL uses city/state; picks the most recent previous
+    address (highest to_year, then from_year, then list order) that gives a different URL
+    from the current-address search."""
+    from ..submitters.web_form import current_address, search_url
+    if not _uses_address(broker):
+        return None
+    cur = current_address(profile)
+    main = search_url(broker, profile)
+    prev = [a for a in profile.addresses if a is not cur and not a.current]
+    prev.sort(key=lambda a: (-(a.to_year or 0), -(a.from_year or 0)))   # stable
+    for a in prev:
+        u = search_url(broker, profile, a)
+        if u and u != main:
+            return u
+    return None
+
+
 def scan_exposure(store: Store, profile_id: str, *, registry: Registry | None = None,
                   offline: bool = False, refresh: bool = False,
                   cfg: cfgmod.Config | None = None, fetch: Fetcher | None = None,
                   browser_fetch: Fetcher | None = None, use_browser: bool = True,
                   broker_ids: list[str] | None = None, now: datetime | None = None,
-                  sleep: Callable[[float], None] = time.sleep) -> ExposureResult:
+                  sleep: Callable[[float], None] = time.sleep,
+                  old_addresses: bool | None = None) -> ExposureResult:
     """Run the exposure scan for one person and store it. Never raises for a broker's
     failure (that broker becomes "check by hand"). Raises ExposureRefused without consent.
 
     `fetch` / `browser_fetch` are injectable for tests. Fresh results from the last
-    `CACHE_HOURS` are reused unless `refresh`.
+    `CACHE_HOURS` are reused unless `refresh`. `old_addresses` (default: the config flag
+    `exposure_old_addresses`, off) adds at most one previous-address search per broker.
     """
     from ..consent import consent_ok
     from ..netpolicy import NetPolicy
     from .outbox import dev_fixture_base
     cfg = cfg or cfgmod.load()
+    if old_addresses is None:
+        old_addresses = bool(getattr(cfg, "exposure_old_addresses", False))
     now = now or utcnow()
     profile = store.get_profile(profile_id)
     if profile is None:
@@ -416,14 +476,14 @@ def scan_exposure(store: Store, profile_id: str, *, registry: Registry | None = 
                 continue
             entries.append(_scan_broker(store, profile, broker, now, offline,
                                         prev.get(broker.id), fetch, browser_fetch, cfg, fast,
-                                        sleep, pace))
+                                        sleep, pace, old_addresses))
     finally:
         if own_browser is not None:
             own_browser.close()
     score, lines = score_entries(entries)
     res = ExposureResult(profile_id=profile.id, created_at=now, offline=offline,
                          practice_mode=not cfg.real_submissions_enabled, score=score,
-                         explanation=lines, entries=entries)
+                         explanation=lines, entries=entries, drop_first=drop_first(profile))
     _save(store, res)
     return res
 
@@ -431,7 +491,8 @@ def scan_exposure(store: Store, profile_id: str, *, registry: Registry | None = 
 def _scan_broker(store: Store, profile: Profile, broker: Broker, now: datetime, offline: bool,
                  prev: ExposureEntry | None, fetch: Fetcher | None,
                  browser_fetch: Fetcher | None, cfg: cfgmod.Config, fast: bool,
-                 sleep: Callable[[float], None], pace: dict[str, bool]) -> ExposureEntry:
+                 sleep: Callable[[float], None], pace: dict[str, bool],
+                 old_addresses: bool = False) -> ExposureEntry:
     from ..submitters.web_form import search_url
     url = search_url(broker, profile)
 
@@ -463,11 +524,18 @@ def _scan_broker(store: Store, profile: Profile, broker: Broker, now: datetime, 
     fetcher = fetch if access == "open" else browser_fetch
     if fetcher is None:
         return hand("needs_browser")
-    if pace["fetched"] and not fast:      # polite gap between sites
-        sleep(random.uniform(max(0.0, cfg.min_delay_s), max(cfg.min_delay_s, cfg.max_delay_s)))
+
+    def gap() -> None:                    # polite gap between requests
+        if not fast:
+            sleep(random.uniform(max(0.0, cfg.min_delay_s),
+                                 max(cfg.min_delay_s, cfg.max_delay_s)))
+
+    if pace["fetched"]:
+        gap()
     pace["fetched"] = True
+    old_url = old_address_url(broker, profile) if old_addresses else None
     try:
-        entry = _check_one(store, profile, broker, url, fetcher, now)
+        entry = _check_one(store, profile, broker, url, fetcher, now, old_url, gap)
     except FetchFailed as e:
         entry = hand(e.reason)
     except Exception as e:  # noqa: BLE001 - one broker never stops the scan
@@ -477,7 +545,8 @@ def _scan_broker(store: Store, profile: Profile, broker: Broker, now: datetime, 
                     action=CHECK_ACTION, detail={
                         "status": entry.status, "reason": entry.reason,
                         "level": entry.match_level.value if entry.match_level else None,
-                        "listings": len(entry.listings)}))
+                        "listings": len(entry.listings),
+                        "old_address": entry.old_address_checked}))
     return entry
 
 
@@ -503,6 +572,7 @@ def _save(store: Store, res: ExposureResult) -> None:
             "broker_id": e.broker_id, "status": e.status, "reason": e.reason,
             "match_level": e.match_level.value if e.match_level else None,
             "signals": e.signals, "from_store": e.from_store,
+            "old_address_checked": e.old_address_checked,
             "checked_at": e.checked_at.isoformat(),
             "listings": [{"listing_id": ids_by_url.get(li.url), "match_level":
                           li.match_level.value, "signals": li.signals,
@@ -544,10 +614,12 @@ def _from_event(store: Store, profile: Profile, ev: Event,
             signals=raw.get("signals", []), listings=lis,
             check_url=_hand_check_url(b, profile) if b else None,
             from_store=bool(raw.get("from_store")),
+            old_address_checked=bool(raw.get("old_address_checked")),
             checked_at=datetime.fromisoformat(raw["checked_at"])))
     return ExposureResult(
         profile_id=profile.id, created_at=ev.ts, offline=bool(d.get("offline")),
         practice_mode=bool(d.get("practice_mode", True)), score=int(d.get("score", 0)),
+        drop_first=drop_first(profile),     # from the profile now, not stored
         explanation=[ScoreLine(points=int(p), text=str(t)) for p, t in d.get("explanation",
                                                                             [])],
         entries=entries)
