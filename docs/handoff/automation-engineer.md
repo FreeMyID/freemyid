@@ -728,3 +728,33 @@ checkbox on the scan screen could pass `old_addresses=True, previous_names=True`
   `runner.keep_unchecked`, so nothing is falsely marked gone; the exposure scan does the same.
   Known edge: turning a flag OFF later lets the next scan mark extra-page-only listings gone.
 - 0c5f419 SEC-101: more than 2 stacked Content-Encoding values -> http_error.
+
+## 2026-11-08 SEC-103 / SEC-104 (Theo Park, not pushed)
+- 0fb72f4 SEC-103: `matcher.other_persons_name(profile, shown)`: the shown given name
+  (`shown_first`: first non-initial token that is not one of the person's last names) is a
+  known given name the person does not use, and is not tied to them through exactly one
+  nickname group on both sides (`nicknames.groups_of`). If so, only phone or email
+  (`CONTACT_SIGNALS`) can make it CONFIRMED; age is not enough. Examples: Patrick for a Pat,
+  Alex for an Alexandra, Chris for a Christina, Bert for a Robert, Jan for a Jane -> POSSIBLE.
+  Peggy/Margaret, Bob/Robert, the person's own name or own `nicknames` entry, and fuzzy
+  spellings that are not known names (Jayne) are unchanged. Removed qa's 2 strict xfail markers
+  in tests/test_qa_wave_20261108.py (`test_sec103_*`, both pass now). Updated my own
+  tests/test_matcher_variants.py (Pat vs "Patrick" at 46 is now POSSIBLE) and added
+  test_sec103_* regressions there.
+- c721ccb SEC-104: `matcher.rescore(profile, listing)` re-scores from the saved fields. It only
+  lowers levels, keeps user_confirmed/user_rejected, and carries stored phone/email reasons
+  because Listing keeps no phone or email values. `runner.rescore_stored` runs at the top of
+  `Runner.process` for every broker (this is also the one-time upgrade pass). It logs a
+  `rescored` event with `downgraded=N` and opens a REVIEW_MATCH todo when none is CONFIRMED
+  any more. `keep_unchecked` re-scores the listings it keeps. `web_form.search_listings` puts
+  them in `ctx.scratch["unchecked_urls"]`, and the runner never makes them new send targets:
+  if they are the only CONFIRMED listings, the submit is deferred (`submit_deferred` event).
+  Tests: tests/test_sec104_rescore.py (10).
+- Gate: full pytest 1559 passed, 2 skipped. ruff clean. mypy has 2 errors in
+  src/freemyid/wizard/ui.py:128-129 (not mine, wizard).
+- For qa (Marcus): SEC-103 and SEC-104 are ready to verify. Known INFO residue: a husband
+  listed exactly as "Pat" is still CONFIRMED (no matcher can tell), and a parent or child
+  with the same exact first name and no age shown also still confirms.
+
+Next: the optional `--old-addresses` CLI flag still needs the orchestrator's OK (cli.py).
+Nothing else in the engine is open for me without a decision.
