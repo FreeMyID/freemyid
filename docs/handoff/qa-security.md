@@ -124,3 +124,75 @@ R8 re-check site-v3 (971b1ec..cd35f9c): PASS, the BLOCK is lifted. SEC-60 (f683e
 - SEC-120 LOW (Morgan): tools/pm_sync.py apply_plan adopts any issue whose title starts with "KEY:" (public repo: anyone can open "WO-200: ..." first and it gets added to the Project, closed and commented on). Filter by author (owner/bot logins) before adopting.
 - SEC-121 INFO (Dana): twine is installed unpinned/unhashed next to the hash-checked toolchain (build.yml dist, pypi.yml build); anchore/sbom-action downloads syft v1.18.1 at runtime without a hash. Pin twine in build-requirements.txt.
 - Re-check beaf662 (Marcus Webb): SEC-119 closed (7c83c81: issues/issue_comment only, both gated on `issue.pull_request == null`, review-comment trigger gone, so no PR-head checkout). SEC-120 closed (beaf662: adopt only when author login is in FREEMYID_PM_TRUSTED; test_pm_sync 13 passed). INFO: claude.yml can drop `pull-requests: write` now that PRs are not handled.
+
+## 2026-11-08 CodeRabbit cycle 2 dispositions, PRs #62-#65 (Marcus Webb)
+
+Input: 101 rows from `tools/coderabbit_findings.py` (32 Major, 67 Minor, 2 Unrated), deduped by file, line and point to **63 findings**. Each was checked against the current file. Result: **63 VALID** (62 fixed in code or docs, 1 flagged to the lead with no code needed), **0 ALREADY FIXED**, **0 INVALID**. Unrated rows were given a real severity first (both Minor). Branches: CL = `infra/coderabbit-loop` (PR #62), SEC = `inhouse/fix-sec100-112` (PR #63), RUN = `inhouse/fix-review-runner` (PR #64), C2 = `inhouse/fix-review-cycle2` (from main fabcd40). Research facts were re-read on official pages on 2026-11-08; anything I could not read (ssa.gov blocks scripted fetches, faq.usps.com needs JavaScript) is marked UNVERIFIED in the doc.
+
+| # | Finding (rows) | File:line | Sev | Class | Branch / commit |
+|---|---|---|---|---|---|
+| 1 | Type the image helpers (1-3) | brand/src/build_wo170_171.py:8 | Major | VALID: signatures annotated, images not re-rendered | C2 9da1ad0 |
+| 2 | Wait for the review before merging (4) | docs/REVIEW_LOOP.md:12 | Major | VALID | CL 1b53408 |
+| 3 | Define Unrated handling (5) | docs/REVIEW_LOOP.md:33 | Major | VALID | CL 1b53408 |
+| 4 | "Nothing real is sent" is wrong: mailbox test, practice searches (6, 46) | docs/USER_GUIDE.md:95 | Major | VALID | C2 f163ced |
+| 5 | Age rule only from 0.3; v0.2.0 still sends a birth-year age (7) | docs/USER_GUIDE.md:107, :237 | Major | VALID (checked v0.2.0 submitters/base.py:70,102) | C2 f163ced |
+| 6 | Qualify ACP protection (existing and property records, exceptions) (8-10) | docs/research/address-confidentiality-programs.md:12 | Major | VALID (IL AG, NCDOJ, VT SOS) | C2 01d5069 |
+| 7 | CA patients and volunteers (11) | same:50 | Major | VALID (CA SOS) | C2 01d5069 |
+| 8 | MD move-to-unknown-address and change-of-address warning (12-14) | same:66 | Major | VALID (MD SOS FAQ) | C2 01d5069 |
+| 9 | IP PIN: e-file rejected, paper reviewed (15, 16) | docs/research/identity-lock-checklists.md:19-20 | Major | VALID (IRS lost-PIN page) | C2 6fc097d |
+| 10 | Continuous vs one-time enrollment (17, 18) | same:35 | Major | VALID (IRS FAQ Q3) | C2 6fc097d |
+| 11 | Mailed PIN limits, first-year and maintenance exceptions, paper fallback, non-filer (19, 66, 68) | same:42-45 | Major | VALID (IRS lost-PIN page) | C2 6fc097d |
+| 12 | Direct-deposit block covers named channels only (20) | same:75 | Major | VALID, worded as UNVERIFIED (ssa.gov blocked) | C2 6fc097d |
+| 13 | Informed Delivery does not reserve the address (21-23) | same:109 | Major | VALID, multi-account detail UNVERIFIED | C2 6fc097d |
+| 14 | Separate searches from removal requests (24) | docs/vendor/windows-docs-audit.md:35 | Major | VALID | C2 73b39d3 |
+| 15 | Offline tests for fetch/open_prs/main --out (25) | tests/test_coderabbit_findings.py:75 | Major | VALID | CL bdd291b |
+| 16 | Annotate test return types (26) | tests/test_distro_hash_gate.py:13 | Major | VALID | SEC 5bba52c |
+| 17 | Fixture instead of the live distro dir (27) | tests/test_distro_hash_gate.py:19 | Major | VALID: fake tree; live dir now only "scannable" | SEC 5bba52c |
+| 18 | Test developer-page rendered alt (28) | tests/test_web_og_images.py:111 | Major | VALID (ran against a fresh web build: 21 passed) | C2 0610b9d |
+| 19 | Portable rebuild toolchain (29, 93, 94) | tools/ci/build-requirements.txt:13-15 | Major | VALID: twine pins split into tools/ci/twine-requirements.txt, CI installs both | C2 52c5cf9 |
+| 20 | SKIP in multiline checksum arrays (30) | tools/ci/check_distro_hashes.py:18 | Major | VALID: real gap, old gate said "OK" on it; all *sums arrays now | SEC 5bba52c |
+| 21 | Exact CodeRabbit login (CWE-290) (31) | tools/coderabbit_findings.py:62 | Major | VALID: only `coderabbitai[bot]` | CL bdd291b |
+| 22 | Paginate without editing JSON text (32) | tools/coderabbit_findings.py:116 | Major | VALID: `--paginate --slurp` | CL bdd291b |
+| 23 | Name the Download Free My ID click (33, 34) | FAMILY_QUICK_START.md:20 | Minor | VALID | C2 73b39d3 |
+| 24 | v0.2.0 "Start Free My ID now" label (35, 36) | FAMILY_QUICK_START.md:37, docs/HELPER_GUIDE.md:29 | Minor | VALID | C2 73b39d3 |
+| 25 | Stale "not wired" (37, 38) | brand/README.md:47 | Minor | VALID | C2 bcee0f3 |
+| 26 | State the gate's real SKIP coverage (39) | distro/CHECKLIST.md:17 | Minor | VALID | SEC d6fe90a |
+| 27 | Monitor checks only the goto page (40) | docs/MONITOR.md:14 | Minor | VALID: limitation documented | C2 fb2fe88 |
+| 28 | Residual risk: job-token disclosure by syft (41) | docs/REPRODUCIBLE.md:41 | Minor | VALID | C2 bcee0f3 |
+| 29 | SEC-112 is a release gate, not CI (42) | docs/SECURITY_REVIEW.md:697 | Minor | VALID | SEC d6fe90a |
+| 30 | Visible "still being checked" marks (43) | docs/USER_GUIDE.md:7 (+68, 78, 168, 213) | Minor | VALID; also: no confirm/reject button exists for possible matches, guide now says so | C2 f163ced |
+| 31 | Test before the trust prompt (44, 45) | docs/USER_GUIDE.md:84 | Minor | VALID | C2 f163ced |
+| 32 | Settings has no person selector (47, 48) | docs/USER_GUIDE.md:176 | Minor | VALID | C2 f163ced |
+| 33 | Slug social-catfish (49) | docs/marketing/seo/guide-drafts/README.md:18 | Minor | VALID (file renamed) | C2 8709da5 |
+| 34 | AnyWho phone wording (50) | guide-drafts/anywho.md:14 | Minor | VALID | C2 8709da5 |
+| 35 | Manage My Suppression Rules step (51) | guide-drafts/anywho.md:19 | Minor | VALID | C2 8709da5 |
+| 36 | "Free My ID never asks" names who, says stop (52, 53) | all 10 drafts | Minor | VALID | C2 8709da5 |
+| 37 | Submit steps (54-57, 60) | guide-drafts/smartbackgroundchecks.md:18-20, usa-people-search.md:19 | Minor | VALID | C2 8709da5 |
+| 38 | Social Catfish email verification (58, 59) | guide-drafts/social-catfish.md:21 | Minor | VALID (their ToS) | C2 8709da5 |
+| 39 | Begin Removal Request click (61) | guide-drafts/usphonebook.md:19 | Minor | VALID | C2 8709da5 |
+| 40 | NC/MD/VA eligibility conditions (62) | address-confidentiality-programs.md:36, 66, 90 | Minor | VALID (G.S. 15C-4, VA OAG) | C2 01d5069 |
+| 41 | Vermont in-person Blind Ballot voting (63, 64) | same:106 | Minor | VALID (VT Election Procedures 2026) | C2 01d5069 |
+| 42 | "Individuals" income wording (65) | identity-lock-checklists.md:36 | Minor | VALID (Form 15227) | C2 6fc097d |
+| 43 | IP PIN on Form 1040-X (67) | same:43 | Minor | VALID (IRS FAQ Q23) | C2 6fc097d |
+| 44 | Foreign mailing address (69) | same:79 | Minor | VALID, worded as UNVERIFIED | C2 6fc097d |
+| 45 | Mail previews: machine-processed letters only, may arrive later (70-72) | same:106-107 | Minor | VALID (usps.com footnote 1) | C2 6fc097d |
+| 46 | How to check the new Bridge code (73) | docs/user/mail-proton.md:71 | Minor | VALID: helper check via Export TLS certificates + SHA-256 | C2 bcee0f3 |
+| 47 | Build in a subshell (74, 75) | docs/vendor/WO-187.md:18 | Minor | VALID | C2 bcee0f3 |
+| 48 | Pages trigger for the WO-187 test (76, 77) | docs/vendor/WO-187.md:21, .github/workflows/pages.yml | Minor | VALID | C2 bcee0f3 |
+| 49 | Pin audited revision, follow-up status (78, 82) | windows-docs-audit.md:23, 31 | Minor | VALID | C2 73b39d3 |
+| 50 | Both installer names are valid (79) | windows-docs-audit.md:24 | Minor | VALID (v0.2.0 build.yml:213-238) | C2 73b39d3 |
+| 51 | v0.2.0 finish label (80, 81) | windows-docs-audit.md:27 | Minor | VALID | C2 73b39d3 |
+| 52 | Truncated monitor summary (83, 98, 99); same bug found in `wipe` | src/freemyid/cli.py:1064, _commands.json:521 | Minor | VALID + test that no summary stops mid-sentence | C2 f37c47e |
+| 53 | Kept-letter early return skips "Is this you?" (84) | src/freemyid/engine/runner.py:584 | Minor | VALID: regression test failed first (rule 7) | RUN 7d41982 |
+| 54 | Body read not capped by the 30 s budget (85) | src/freemyid/monitor.py:79 | Minor | VALID: TimeoutError -> unreachable | C2 fb2fe88 |
+| 55 | data-* attributes match id/name/type (86) | src/freemyid/monitor.py:130, 140 | Minor | VALID (also fixes registry_health) | C2 fb2fe88 |
+| 56 | No pause before the browser load (87, 88) | src/freemyid/monitor.py:234 | Minor | VALID | C2 fb2fe88 |
+| 57 | Join only literals Python concatenates (89-91) | tests/copilot/test_cp_source_citations.py:114 | Minor | VALID: ast-based, negative cases | C2 455b2ab |
+| 58 | Ineffective time.sleep patch (92) | tests/test_monitor.py:191 | Minor | VALID: patch _pauser, 2-request test | C2 fb2fe88 |
+| 59 | Fail on undecodable recipes (95) | tools/ci/check_distro_hashes.py:28 | Minor | VALID | SEC 5bba52c |
+| 60 | Keep highest severity on merge (96) | tools/coderabbit_findings.py:80 | Minor | VALID | CL bdd291b |
+| 61 | --open stops at 100 PRs (97) | tools/coderabbit_findings.py:121 | Minor | VALID | CL bdd291b |
+| 62 | Call out the CLI contract change (100) | src/freemyid/cli.py:1109 | Unrated -> Minor | VALID, no code: flagged to Morgan (new `monitor` command, options and `monitor/1` schema are a CLI contract change) | report |
+| 63 | CLI test for --browser and ChallengeSeen (101) | tests/test_monitor.py:224 | Unrated -> Minor | VALID | C2 fb2fe88 |
+
+Notes for owners: workflow edits (build.yml, pypi.yml, pages.yml) are small path and install-line changes for Dana to review. Product gap found while checking #30: `handoff.confirm_review` has no UI caller, so a REVIEW_MATCH to-do can't be answered "this is me / not me" in the app (Theo/Nina).
