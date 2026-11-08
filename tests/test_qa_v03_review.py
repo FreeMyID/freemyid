@@ -60,8 +60,6 @@ HOSTILE_HREFS = [
 ]
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-89: listing URLs are checked with urlsplit, not "
-                   "host_of; backslash host confusion and control chars pass")
 @pytest.mark.parametrize("href", HOSTILE_HREFS)
 def test_sec89_parse_candidates_refuses_confusable_urls(href):
     cands = ex.parse_candidates(DEV, PAGE_URL, _result(href))
