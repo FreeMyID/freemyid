@@ -1,8 +1,8 @@
 ; Inno Setup script. Build after PyInstaller:
-;   iscc /DAppVersion=0.2.0rc1 packaging\windows\freemyid.iss
+;   iscc /DAppVersion=0.2.0 packaging\windows\freemyid.iss
 ; Optional family installer: add /DFamilyBundle=C:\path\Mom.freemyid-profile
 #ifndef AppVersion
-  #define AppVersion "0.2.0rc1"
+  #define AppVersion "0.2.0"
 #endif
 
 [Setup]
