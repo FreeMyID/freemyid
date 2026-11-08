@@ -8,3 +8,8 @@ Status 2026-11-08 (later): app v3 screenshot set made: brand/screenshots/app-v3/
 Status 2026-11-08 (BL-IN lane): app-v3 screenshots regenerated with consistent demo data (12 sent, 7 confirmed, listing + request history). Packaging icons: brand/icons/packaging/ (svg, png 16-1024, ico, README). Guide spot art: brand/illustrations/ (3 topics, light+dark, README) for Leo. Not wired anywhere; packaging/ untouched.
 
 Status 2026-11-08 (WO-170..179, in-house, replaces Codex/Canva): order 170,171,175,177,176,178,179,172..174; CB-02 on hold. Outputs in brand/social/ and brand/web/, rows in brand/README.md. Not wired (Leo owns OG plumbing). Run scripts with /home/geekedsilicon/Documents/CODE/Data_Removal/.venv/bin/python from brand/src (worktree has no venv). Done so far: WO-170, WO-171, WO-175, WO-177, WO-176, WO-178, WO-179, WO-172, WO-173, WO-174. All ten done; CB-02 not made (on hold).
+
+## 2026-11-08 fridge card re-render (WO-184 wording)
+- docs/assets/fridge-card.html item 3 now reads "...bank or card details, money or a payment of any kind, or your everyday email password." (matches docs/FRIDGE_CARD.md). Re-rendered site_src/static/assets/free-my-id-fridge-card.pdf with brand/src/render_fridge_card.py (36 KB, 1 page, Letter).
+- Layout, font sizes (22px body, 23px bold) and QR unchanged; QR region pixel-identical to the previous render.
+- Known pre-existing defect, not touched (asked to keep layout): the QR caption "Scan with your phone for help" overlaps the end of item 2's heading line. Needs a small layout fix (narrower item 2 or move caption) if Morgan wants it.
