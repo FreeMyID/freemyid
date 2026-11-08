@@ -72,7 +72,9 @@ run_role() {   # run_role ROLE PROMPT WRITABLE...
   local role="$1" prompt="$2"; shift 2
   local allow=() f; for f in "$@"; do allow+=(--allow-tool "write($DESK/$VD/$f)"); done
   need_cli; desk_prepare
-  copilot -C "$DESK" --agent "$role" "${SAFE[@]}" "${allow[@]}" -p "$prompt" || true
+  # No --sandbox here: Grace and Tomás get no shell at all (non-interactive denies it) and may write only their
+  # channel files; the OS sandbox only broke their read-only search tools.
+  copilot -C "$DESK" --agent "$role" "${SAFE[@]/--sandbox}" "${allow[@]}" -p "$prompt" || true
   desk_return "$@"
   git -C "$ROOT" worktree remove --force "$DESK" >/dev/null 2>&1 || true
 }
