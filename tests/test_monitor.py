@@ -188,7 +188,8 @@ def _cli(monkeypatch, routes, *args):
     from tests.conftest import ROOT
     net = FakeNet(routes)
     monkeypatch.setattr(mon, "httpx_requester", lambda *a, **k: (net, lambda: None))
-    monkeypatch.setattr(mon.time, "sleep", lambda s: None)
+    # run_monitor binds time.sleep as a default at import, so patch the pauser itself (CR #63)
+    monkeypatch.setattr(mon, "_pauser", lambda delay, sleep: (lambda: None))
     r = CliRunner().invoke(cli.app, ["monitor", "--registry", str(ROOT / DEV_REG),
                                      "--broker", "devauto", *args])
     return r, net
@@ -222,3 +223,136 @@ def test_cli_monitor_text_and_bad_inputs(monkeypatch, tmp_path):
     r = CliRunner().invoke(cli.app, ["monitor", "--json", "--registry",
                                      str(tmp_path / "missing.yaml")])
     assert r.exit_code == 1 and json.loads(r.stdout)["schema"] == "error/1"
+
+
+
+def test_cli_pauser_patch_really_stops_sleeping(monkeypatch):
+    """Two requests through the CLI path must not sleep for real."""
+    import time as _time
+    t0 = _time.monotonic()
+    moved = {OPT: (302, "https://devauto.example/optout2", b""),
+             "https://devauto.example/optout2": (200, None, FORM_OK)}
+    r, net = _cli(monkeypatch, moved, "--json")
+    assert r.exit_code == 0 and len(net.calls) == 2
+    assert _time.monotonic() - t0 < 1.5
+
+
+# ------------------------------------------------------------------ CR cycle 2
+
+def test_data_attributes_are_not_ids_names_or_types():
+    assert mon.selector_present("#email", '<input data-id="email">') is False
+    assert mon.selector_present("[name=email]", '<input data-name="email">') is False
+    assert mon.selector_present("#email", '<input data-x="1" id="email">') is True
+    assert mon.selector_present("[name=email]", "<input name='email'>") is True
+    html = '<input type="text" name="url" data-name="x" data-type="y">'
+    assert mon.form_fields(html) == [("input", "text", "url")]
+
+
+def test_browser_load_waits_its_turn():
+    """The headless load is another request to the same host: it gets a pause too."""
+    def loader(broker, url):
+        return 200, url, FORM_OK.decode()
+    doc, net, sleeps = _run({OPT: (200, None, b"<div id=app></div>")}, loader=loader)
+    assert _one(doc)["used_browser"]
+    assert len(net.calls) == 1 and len(sleeps) == 1 and 2.0 <= sleeps[0] <= 5.0
+
+
+def test_slow_body_is_cut_off_by_the_read_budget():
+    import httpx
+    ticks = iter(range(0, 1000, 10))        # every clock() call is 10 s later
+
+    def slow_body():
+        for _ in range(20):
+            yield b"<p>" + b"x" * 100 + b"</p>"
+
+    transport = httpx.MockTransport(lambda request: httpx.Response(200, content=slow_body()))
+    req, close = mon.httpx_requester(transport=transport, clock=lambda: float(next(ticks)))
+    with pytest.raises(TimeoutError):
+        req("GET_BODY", OPT)
+    close()
+
+
+def test_slow_body_makes_the_broker_unreachable_not_form_changed():
+    def slow(method, url):
+        raise TimeoutError()
+    doc = mon.run_monitor(fixture_registry(), requester=slow, sleep=lambda s: None, now=NOW,
+                          broker_ids=["devauto"])
+    b = _one(doc)
+    assert b["health"] == "unreachable" and b["detail"] == "request failed: TimeoutError"
+
+
+def test_fast_body_is_read_whole():
+    import httpx
+    transport = httpx.MockTransport(lambda request: httpx.Response(200, content=FORM_OK))
+    req, close = mon.httpx_requester(transport=transport)
+    assert req("GET_BODY", OPT) == (200, None, FORM_OK)
+    close()
+
+
+class _Close:
+    def __init__(self):
+        self.n = 0
+
+    def __call__(self):
+        self.n += 1
+
+
+def test_cli_browser_flag_wires_the_loader_and_always_closes(monkeypatch):
+    seen, closer = [], _Close()
+
+    def fake_loader_factory(policy, cfg):
+        def load(broker, url):
+            seen.append((broker.id, url))
+            return 200, url, FORM_OK.decode()
+        return load, closer
+    monkeypatch.setattr(mon, "browser_page_loader", fake_loader_factory)
+    r, _ = _cli(monkeypatch, {OPT: (200, None, b"<div id=app></div>")}, "--json", "--browser")
+    assert r.exit_code == 0, r.output
+    doc = json.loads(r.stdout)
+    assert _one(doc)["used_browser"] and seen == [("devauto", OPT)] and closer.n == 1
+
+    closer2 = _Close()
+    monkeypatch.setattr(mon, "browser_page_loader", lambda policy, cfg: (lambda b, u: None, closer2))
+
+    def boom(*a, **k):
+        raise RuntimeError("run failed")
+    monkeypatch.setattr(mon, "run_monitor", boom)
+    r, _ = _cli(monkeypatch, {}, "--json", "--browser")
+    assert r.exit_code != 0 and closer2.n == 1
+
+
+def test_browser_page_loader_maps_a_challenge_to_challenge_seen(monkeypatch):
+    from freemyid.engine import exposure
+
+    class FakeFetcher:
+        def __init__(self, policy, cfg):
+            self.closed = False
+
+        def __call__(self, broker, url):
+            raise exposure.FetchFailed("challenge" if "chal" in url else "error")
+
+        def close(self):
+            self.closed = True
+    monkeypatch.setattr(exposure, "BrowserFetcher", FakeFetcher)
+    load, close = mon.browser_page_loader(None, None)
+    with pytest.raises(mon.ChallengeSeen):
+        load(None, "https://devauto.example/chal")
+    with pytest.raises(exposure.FetchFailed):
+        load(None, "https://devauto.example/other")
+    close()
+
+
+def test_no_browser_load_after_the_broker_budget_is_spent():
+    calls = []
+    import itertools
+    t = itertools.chain([0.0, 1.0], itertools.repeat(99.0))   # budget spent after the GET
+
+    def loader(broker, url):
+        calls.append(url)
+        return 200, url, FORM_OK.decode()
+    b = next(x for x in fixture_registry().brokers if x.id == "devauto")
+    from freemyid.netpolicy import NetPolicy
+    net = FakeNet({OPT: (200, None, b"<div id=app></div>")})
+    h = mon.check_broker(b, NetPolicy(fixture_registry()), net, lambda: None,
+                         page_loader=loader, clock=lambda: next(t))
+    assert h.health == "unknown" and "took longer" in h.detail and calls == []
