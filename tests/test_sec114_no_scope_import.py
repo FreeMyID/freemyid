@@ -41,6 +41,6 @@ def test_bundle_import_drops_removal_scope():
                     "addresses": [{"city": "Testville", "state": "NC",
                                    "current": True}]}}).encode(), "pw-test-1234")
     d = flows.load_bundle(blob, "pw-test-1234")
-    assert not hasattr(d, "removal_scope") or getattr(d, "removal_scope") in (None, "full")
+    assert not hasattr(d, "removal_scope") or d.removal_scope in (None, "full")
     assert not getattr(d, "allow_email_disclosure", False)
     assert "removal_scope" not in yaml.safe_dump(vars(d))
