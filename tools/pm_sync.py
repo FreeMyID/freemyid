@@ -416,6 +416,16 @@ def apply_plan(p: list[dict], mapping: dict, repo: str, owner: str, project: int
     for x in p:
         rec = items.get(x["key"], {})
         if x["action"] == "create":
+            # Codex can open issues itself now (GitHub plugin): adopt an existing "KEY: ..." issue
+            # instead of making a duplicate.
+            found = _json(run, ["gh", "issue", "list", "--repo", repo, "--state", "all", "--search",
+                                f'"{x["key"]}" in:title', "--json", "number,title,url,state"])
+            hit = next((i for i in found if i["title"].startswith(x["key"] + ":")), None)
+            if hit:
+                rec = {"number": hit["number"], "url": hit["url"], "state": hit["state"].lower()}
+                items[x["key"]] = rec
+                x = {**x, "action": "adopted"}
+        if x["action"] == "create":
             cmd = ["gh", "issue", "create", "--repo", repo, "--title", x["title"], "--body", x["body"]]
             for lab in x["labels"]:
                 cmd += ["--label", lab]
@@ -429,7 +439,7 @@ def apply_plan(p: list[dict], mapping: dict, repo: str, owner: str, project: int
                 add = _json(run, ["gh", "project", "item-add", str(project), "--owner", owner,
                                   "--url", url, "--format", "json"])
                 rec["project_item"] = add.get("id", "")
-        if x["action"] in ("create", "close") and x["close"] and rec.get("number"):
+        if x["action"] in ("create", "close", "adopted") and x["close"] and rec.get("number"):
             cmd = ["gh", "issue", "close", str(rec["number"]), "--repo", repo]
             if x["merge_sha"]:
                 cmd += ["--comment", f"Merged locally as {x['merge_sha']}."]
