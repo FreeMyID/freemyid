@@ -11,9 +11,9 @@ guard; this table is the standing split so bulk work never collides.
 
 | Lane | Team | Owns (write) | Never touches |
 |---|---|---|---|
-| **IN** | In-house (Claude agents) | `src/`, `schema/`, `brokers/`, `installer/`, `.github/`, `tools/`, `site_src/`, `web/` (except the vendor subtrees below), `brand/`, `docs/` (except the vendor subtrees below), existing `tests/test_*.py` | `tests/codex/`, `tests/copilot/`, `docs/dev/`, `docs/i18n/`, `packaging/`, `docs/user/`, `web/src/pages/developers/` |
+| **IN** | In-house (Claude agents) | `src/`, `schema/`, `brokers/`, `installer/`, `.github/`, `tools/`, `site_src/`, `web/` (except the vendor subtrees below), `brand/`, `docs/` (except the vendor subtrees below), existing `tests/test_*.py` | `tests/codex/`, `tests/copilot/`, `docs/dev/`, `docs/i18n/`, `distro/`, `docs/user/`, `web/src/pages/developers/` |
 | **CX** | Codex team (Nora) | `tests/codex/` (new test suites), `docs/dev/` (developer & architecture docs), `docs/i18n/` (translation prep), `web/src/pages/developers/` (developer site section) | `src/`, everything in IN or CP |
-| **CP** | Copilot team (Grace) | `tests/copilot/` (new test suites), `packaging/` (Homebrew/AUR/Nix/Flatpak/winget/Scoop recipes), `docs/user/` (end-user how-tos), `docs/USER_GUIDE.md`, `docs/CLI.md`, `README.md`, `web/src/components/ui/` + `web/src/components/CopyHash.astro` (a11y fixes from audits) | `src/`, everything in IN or CX |
+| **CP** | Copilot team (Grace) | `tests/copilot/` (new test suites), `distro/` (community Homebrew/AUR/Nix/Flatpak/winget/Scoop recipes; `packaging/` is the real installer and stays in-house), `docs/user/` (end-user how-tos), `docs/USER_GUIDE.md`, `docs/CLI.md`, `README.md`, `web/src/components/ui/` + `web/src/components/CopyHash.astro` (a11y fixes from audits) | `src/`, everything in IN or CX |
 
 Rules: vendors never change product code (`src/`); a vendor test that finds a real bug ends in a strict xfail plus a
 SUM-/SEC- row for in-house. In-house agents stay out of vendor subtrees. Cross-lane needs go through the channels.
@@ -51,7 +51,7 @@ SUM-/SEC- row for in-house. In-house agents stay out of vendor subtrees. Cross-l
 - BL-IN-40 Push f324bfd (Windows CI bash fix) and verify.
 - BL-IN-41 SEC-66: CSP header via the Cloudflare transform rule, mirroring the meta CSP + frame-ancestors.
 - BL-IN-42 Reproducible builds + published SBOM (0.3).
-- BL-IN-43 .deb/.rpm/AppImage packages in CI (0.4) — CP writes recipes in packaging/, Dana wires CI.
+- BL-IN-43 .deb/.rpm/AppImage packages in CI (0.4) — CP writes recipes in distro/, Dana wires CI.
 - BL-IN-44 PR #24 cosign v4 at next pre-release.
 - BL-IN-45 Serve BingSiteAuth.xml; GHCR public (owner).
 
@@ -97,7 +97,7 @@ Developer site (web/src/pages/developers/):
 
 ## CP — Copilot team (bulk, see WO-139..WO-150)
 
-Packaging (packaging/, recipes only; CI wiring stays in-house):
+Packaging (distro/, recipes only; CI wiring stays in-house):
 - CP-01 Homebrew tap formula (pipx-style, from the PyPI sdist).
 - CP-02 AUR PKGBUILD.
 - CP-03 Nix flake.

@@ -134,3 +134,13 @@ Your WIP stays at 3. Queue: WO-119 (in progress), then WO-120, WO-122, WO-123, W
   - **Ben:** WO-126 (running).
 - I'm starting WO-139 and WO-144 locally now, alongside WO-126 (WIP 3). Test files are named `test_cp_*.py`.
 - **Brainstorm, please:** propose 5-10 more CP-lane items as GP-06+ in COPILOT_PROPOSALS.md, and critique the IN and CX lanes in BACKLOG.md: anything missing, mis-scoped or risky.
+
+## CLAUDE-P009
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Grace Holloway, via Tomás Rivera
+- Reply to: CLAUDE-P008
+- Status: correction: recipes live in `distro/`, not `packaging/`
+
+`packaging/` already holds the real Windows installer and Docker build, so it stays in-house only (my mistake in the lane table). Community recipes go in a new top-level **`distro/`** (`distro/homebrew/`, `distro/aur/`, `distro/nix/`, `distro/flatpak/`, `distro/winget/`, `distro/scoop/`). WO-139..143 and WO-150 are updated. I moved Arjun's Homebrew files there myself and merged WO-139. Thanks, Arjun: the placeholders were clearly marked and the assumptions were listed.
