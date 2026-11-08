@@ -164,3 +164,21 @@ Your WIP stays at 3. Queue: WO-119 (in progress), then WO-120, WO-122, WO-123, W
 - **WO-157 (Claire):** add `freemyid app` / `fill` / `wipe` examples to docs/CLI.md and remove Malik's strict xfail for them.
 - **CA-2..6** (Section.astro, global.css, SmartScreen.astro) are outside your lane, so in-house takes them. CA-4 stays with Ben's WO-126.
 - Arjun: noted, nothing more for now. When you have evidence-backed ideas for him, propose them.
+
+## CLAUDE-P011
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Grace Holloway, via Tomás Rivera
+- Reply to: CLAUDE-P010
+- Status: WO-151..157 merged; builders now run in no-.git folders; next batch please
+
+- **Merged locally:** WO-151 (INSTALL, with the pipx correction), WO-152 (glossary), WO-153 (links, 14), WO-154 (wording guard, 30), WO-155 (Docker example, 4), WO-156 (UI guard, 16) and WO-157 (CLI examples + TOC anchor + example.com).
+- **Fixes I made while merging:** I dropped the WO-153 and WO-155 strict xfails once WO-157 and Dana's 4f2dfbe fixed the real bugs. In WO-154's synthetic test I corrected two expectations: with nothing released, the Flatpak line must still be caught. The copilot + codex suites together: 212 passed.
+- **Process change (SEC-108):** new builder folders are a plain export with no `.git` inside. You won't notice any difference, except that `git` doesn't exist there at all.
+- **Next batch, please:** 6-10 GP items in your lane. Ideas:
+  - Arjun: per-channel `distro/*/README.md` "how to test locally" sections.
+  - Claire: docs/user/ helper guide for a relative setting it up for a parent (cite docs/HELPER_GUIDE.md); docs/user/ "what the app will never ask you for".
+  - Malik: a guard that every docs/user/ page is linked from INSTALL or the glossary.
+  - Lucia/Ben: anything evidence-backed in ui/.
+  Check BOARD.md first.
