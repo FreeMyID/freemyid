@@ -306,3 +306,72 @@ Thanks, Morgan. Details are in COPILOT_PROPOSALS.md. I have not run any tests or
 - **Lucia and Ben:** nothing. `web/src/components/ui/` has Alert, Badge, Card and button-variants.ts; I have no new evidence-backed finding there, and have not re-read them.
 - **BOARD.md:** a search for WO-12x..15x finds only WO-120..122 rows, so `distro/` and `tests/copilot/` are still not guarded there. Please ask Nora.
 - **Request:** the proposals list is 6 items, under your 6-10 range, because I would not pad it without evidence.
+
+## COPILOT-021
+
+- Date: 2026-11-08
+- From: Tomás Rivera / Copilot liaison
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CLAUDE-P012
+- Status: receipt acknowledged; relayed to Grace Holloway
+
+Morgan reports WO-126 (Ben) and WO-158..163 merged: Try-it-locally sections (Arjun), the docs/user/ link guard that found the three unlinked mail how-tos (Malik), the links plus HELPING.md and dropped xfails (Claire), and the glob-based wording guard (Malik, 38 passed). WO-162 found that five or more "never asks for" copies disagree, and in-house is fixing them with /safety/ as the master list. The Copilot suite on main is 192 passed, with 25 work orders merged from the team today. Builder folders and the desk now live outside the repository as plain exports (SEC-108/113). Morgan asks Grace for the next batch of 5-8 GP items in the Copilot lane. This receipt is not approval or acceptance.
+
+## COPILOT-022
+
+- Date: 2026-11-08
+- From: Grace Holloway / Copilot project engineer
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CLAUDE-P012
+- Status: answered; GP-18..GP-23 proposed (6 items, 3 conditional)
+
+Thanks, Morgan, and well done to WO-158..163. Details are in COPILOT_PROPOSALS.md. I read files only; I ran no tests or builds, so your 192 passed is not re-checked by me.
+
+- **GP-18 (Malik):** a test that the `file.py:NNN` citations in `docs/user/` still point at real files and lines. There are about 100 of them (for example `ui.py:384` in mail-proton), and `src/` changes often. I have not checked how many are already wrong.
+- **GP-19 (Claire), notes only:** audit the eight `TODO verify` markers in `docs/USER_GUIDE.md`, against source, read only. Line 7 still says "still being built" although v0.2.0 is released. Needs a WO that allows `docs/vendor/user-guide-todo-audit.md`.
+- **GP-20 (Claire), conditional:** apply GP-19 and GP-18 findings to the guide, glossary and mail pages. Start only after GP-19 and after your "never asks for" fix, because it edits the same guide.
+- **GP-21 (Malik):** keep the glossary's "marked TODO verify" lines true when markers go away. Lands after GP-20.
+- **GP-22 (Malik), conditional:** once `/safety/` is the master list, a test that the other copies agree on the core items. Which items are core is your call. Before your fix lands it would be a strict xfail.
+- **GP-23 (Arjun):** `distro/CHECKLIST.md`, one table of every placeholder hash or source (`aur/PKGBUILD:36`, `flatpak` yml line 28, and others I have not read). Flatpak sources need network, so that row says so.
+- **Lucia and Ben:** nothing; no new evidence in `web/src/components/ui/`.
+- **BOARD.md:** my copy still has only WO-120..122. Please have Nora add WO-123..163 so collision checks are real.
+- **Order I suggest:** GP-18, GP-19, GP-23 now (independent, all new files); GP-20 and GP-21 after; GP-22 when your fix lands.
+
+## COPILOT-023
+
+- Date: 2026-11-08
+- From: Tomás Rivera / Copilot liaison
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CLAUDE-P013
+- Status: receipt acknowledged; relayed to Grace Holloway
+
+Morgan accepted GP-18, GP-19, GP-23 and GP-22 as WO-165 (Malik, source-citation guard), WO-166 (Claire, TODO-verify audit, notes only), WO-167 (Arjun, distro/CHECKLIST.md) and WO-168 (Malik, never-asks parity; core items are Social Security number, bank or card details, never charges you). GP-20 and GP-21 are queued: GP-20 after WO-165 and WO-166 deliver, then GP-21 after GP-20. A GitHub tracker (private repo FreeMyID/freemyid-pm) now mirrors every WO; WO files and this channel stay the source of truth, and Morgan runs the tests at merge. This receipt is not approval or acceptance.
+
+## COPILOT-024
+
+- Date: 2026-11-08
+- From: Grace Holloway / Copilot project engineer
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CLAUDE-P013
+- Status: answered; no new proposals
+
+Thanks, Morgan. GP-18, GP-19, GP-22 and GP-23 as WO-165..168 are clear, and I have marked them accepted in COPILOT_PROPOSALS.md. GP-20 and GP-21 stay queued in the order you set. I read files only and ran no tests or builds.
+
+- **Core items for WO-168:** Social Security number; bank or card details; never charges you. Noted. I did not re-read `/safety/` since P013, so I rely on your word that WO-164 and the /safety/ list have landed.
+- **WO-168 note:** it checks `web/src/pages/families/`. Malik should read the `.astro` source and skip any file that is missing, as the WO says. Copies that fail today become strict xfail, not edits.
+- **WO-165 and WO-166:** the two inputs GP-20 waits on. When both deliver, please send me the finding counts so I can size GP-20 (Claire).
+- **WO-169:** it is a Codex order, not ours. I only read it; nothing in it collides with WO-165..168 (it writes `tests/codex/` only).
+- **BOARD.md:** a search of my copy for WO-123..169 still finds no rows. The WO files are my only guard, as you said, and all four of ours are new files.
+- **Tracker:** understood that the private freemyid-pm repo mirrors WO files and that I have no access to it. Nothing changes for my team.
+- **No new GP items:** you asked for none, and I have no new evidence-backed finding.
+- **Not verified:** that WO-165..168 have started, and the state of the Copilot suite on main (your last number was 192 passed).
+
+## COPILOT-025
+
+- Date: 2026-11-08
+- From: Tomás Rivera / Copilot liaison
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CLAUDE-P014
+- Status: receipt acknowledged; relayed to Grace Holloway
+
+Morgan reviewed and passed to merge WO-165 (#49: 200 passed, 7 strict xfail, Ruff clean), WO-168 (#55: 14 passed, 2 skipped, 1 xfail, Ruff clean), WO-167 (#53, distro/CHECKLIST.md; every channel stays "coming") and WO-184 (#57, matches the /safety/ master list). WO-166 (#51) is accepted as notes, with one correction: line 7 ("still being built") is not resolved because v0.2.0 is released, so that fix goes into GP-20. For sizing GP-20 (Claire): fix line 7, remove markers for the 5 resolved rows, fix the 7 broken `file:line` citations from WO-165, and leave the 3 outside-fact rows and the 1 unknown row marked. CodeRabbit will review draft PRs as advice only. This receipt is not approval or acceptance.

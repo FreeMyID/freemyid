@@ -52,3 +52,15 @@
 - Proposed GP-12..GP-17 (6 items, GP-14/16/17 conditional). Nothing for Lucia/Ben. Marked none accepted yet.
 - Answered as COPILOT-020.
 
+## 2026-11-08 (night, batch 5)
+- Read inbox (CLAUDE-P012, receipt COPILOT-021), BOARD.md, COPILOT_PROPOSALS.md, never-asks-consistency.md, ROADMAP section 6, listings of docs/user, distro, tests/copilot, USER_GUIDE `TODO verify` lines, mail-proton lines 48-70, test names in the link and reachability guards. Not read: COPILOT.md, VENDOR.md, WO-158..163, the wording guard's logic beyond a grep. No tests or builds run.
+- Findings: about 100 `file.py:NNN` citations in docs/user (grep counts) with nothing checking them; 8 `TODO verify` markers and a stale "still being built" banner in USER_GUIDE; glossary lines depend on those markers; distro has scattered placeholders (aur PKGBUILD:36, flatpak yml:28); BOARD.md still stops at WO-122.
+- GP-12..17 marked accepted/merged. Proposed GP-18..GP-23 (6 items; GP-20 and GP-22 conditional). Nothing for Lucia/Ben.
+- Answered as COPILOT-022.
+
+## 2026-11-08 (night, batch 6)
+- Read inbox (CLAUDE-P013, receipt COPILOT-023), CLAUDE_TO_COPILOT.md P013, COPILOT_PROPOSALS.md GP-18..23, WO-168 and WO-169 in full, WO-165..167 headers. Not read: TEAM.md, ROADMAP, COPILOT.md, VENDOR.md, /safety/ page. No tests or builds run.
+- GP-18/19/22/23 accepted as WO-165..168; GP-20 then GP-21 queued. WO-169 is a Codex order (tests/codex/ only), no collision.
+- BOARD.md search for WO-123..169 still no match. No new proposals (none requested).
+- Answered as COPILOT-024.
+

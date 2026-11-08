@@ -35,6 +35,14 @@ WO-154 (after 151/152), GP-10 as WO-155 (Malik), GP-11 as WO-156 (Lucia). Morgan
 `app`/`fill`/`wipe` examples). The WO-148 versus `tests/test_cli_docs_match_source.py` question is closed: WO-148
 says not to duplicate. No open proposals.
 
+Status, 2026-11-08 (CLAUDE-P012): GP-12..GP-17 accepted as WO-158..163 and merged (Malik's WO-163 is the glob-based
+wording guard). WO-126 merged. Fifth batch GP-18..GP-23 below. Evidence is from reading the repo only; no tests or
+builds run. BOARD.md (my copy) has no rows after WO-122, so collisions were checked against paths only.
+
+Status, 2026-11-08 (CLAUDE-P013): GP-18 accepted as WO-165 (Malik), GP-19 as WO-166 (Claire, notes only), GP-23 as
+WO-167 (Arjun), GP-22 as WO-168 (Malik; core items: Social Security number, bank or card details, never charges you).
+GP-20 queued until WO-165 and WO-166 deliver, then GP-21 after GP-20. No new proposals this round.
+
 ## GP-01: CLI docs fixes (CLI-A03, CLI-A05)
 - Agent: app-features (Claire Dubois)
 - Evidence: `docs/vendor/v02-cli-doc-audit.md` rows CLI-A03 (CLI.md command table omits `checklist list/show/done/undo`) and CLI-A05 (README and USER_GUIDE do not link to CLI.md). Both are labelled P3 and narrow in the audit.
@@ -169,11 +177,50 @@ says not to duplicate. No open proposals.
 - Deliverable: switch to globs, and include `docs/HELPER_GUIDE.md` if it is not already scanned. If a glob already covers everything, report that and change nothing.
 - Collisions: after GP-12 and GP-15 land.
 
-## Arjun Rao (app UI)
-GP-12 is the only item with evidence. The wizard finish step remains in-house.
+## GP-18: Source citations in docs/user/ still point at real code
+- Agent: test-quality (Malik Johnson)
+- Evidence: the pages carry many `file.py:NNN` citations (grep count of that pattern: mail-proton 25, mail-other 26, mail-gmail 28, troubleshooting 17, INSTALL 4, HELPING 1, GLOSSARY 1), for example `ui.py:384` and `server.py:738` in `docs/user/mail-proton.md`. In-house changes `src/` often, so line numbers drift silently. I have not checked how many are already wrong.
+- Proposed allowed paths: `tests/copilot/test_cp_source_citations.py` (new).
+- Deliverable: for each citation, the file resolves under `src/freemyid/` (bare names like `ui.py` must match exactly one file, otherwise report as ambiguous) and the line number is within the file. Where the same line quotes a UI string in backticks or quotes, check the string exists in the cited file. Report stale citations as findings; fix them in GP-20, not here. If many fail today, mark the failing cases strict xfail with the list.
+- Collisions: new file; reads `src/` only. WO-153 (link checker) covers links, not citations.
+
+## GP-19: Audit the `TODO verify` markers in USER_GUIDE (notes only)
+- Agent: app-features (Claire Dubois)
+- Evidence: `docs/USER_GUIDE.md` lines 68, 78, 84, 136, 168, 178, 200, 215 carry `TODO verify`, and line 7 still says "Free My ID is still being built" although `site_src/data/release.yaml` lists v0.2.0. `docs/user/GLOSSARY.md` lines 38, 41 and 69 say "not sure" because of those markers. WO-162 shows copies of the same facts drift.
+- Proposed allowed paths: `docs/vendor/user-guide-todo-audit.md` (new, notes only; the WO must allow it).
+- Deliverable: one row per marker: what the guide claims, what the source says (file and line, read only), and one of resolved / still unknown / needs an outside fact (for example Google app passwords, Proton Bridge plan: say "not sure", do not fetch). No edits to the guide in this order.
+- Collisions: new file.
+
+## GP-20: Apply the audit to the guide, glossary and stale citations (conditional)
+- Agent: app-features (Claire Dubois)
+- Evidence: see GP-18 and GP-19.
+- Proposed allowed paths: `docs/USER_GUIDE.md`, `docs/user/GLOSSARY.md`, `docs/user/mail-gmail.md`, `docs/user/mail-other.md`, `docs/user/mail-proton.md`, `docs/user/troubleshooting.md`.
+- Deliverable: remove only the markers GP-19 marked resolved, update the glossary "not sure" lines to match, fix citations GP-18 flagged, and update the line 7 banner to the released state. Anything marked unknown keeps its marker. The "never asks for" wording stays out: in-house is fixing it.
+- Collisions: `docs/USER_GUIDE.md` is also named in WO-162's table, but WO-162 was notes only. Start after GP-19 and after in-house finishes the "never asks for" fix, since that edits the same file.
+
+## GP-21: Keep `TODO verify` markers and glossary "not sure" lines in step
+- Agent: test-quality (Malik Johnson)
+- Evidence: `docs/user/GLOSSARY.md:38,41,69` say a fact is "marked TODO verify" in the guide. When GP-20 removes a marker, those lines become false and nothing would notice.
+- Proposed allowed paths: `tests/copilot/test_cp_todo_markers.py` (new).
+- Deliverable: (a) a glossary line that cites a `TODO verify` marker at `USER_GUIDE.md:N` must point at a line that still has one; (b) while any marker exists, the USER_GUIDE banner must still warn readers. No count ratchet.
+- Collisions: new file; land after GP-20.
+
+## GP-22: "Never asks for" copies agree (conditional on the in-house fix)
+- Agent: test-quality (Malik Johnson)
+- Evidence: `docs/vendor/never-asks-consistency.md` found at least five hand-written copies that disagree (differences 1, 2, 5), for example `docs/FRIDGE_CARD.md:17` says "passwords" while setup asks for an app password. WO-163's guard bans "never sent" but does not compare lists.
+- Proposed allowed paths: `tests/copilot/test_cp_never_asks_parity.py` (new).
+- Deliverable: once in-house names `/safety/` the master list, check that each copy it names (USER_GUIDE, HELPER_GUIDE, FRIDGE_CARD, FAMILY_QUICK_START, families page) mentions the core items (SSN, bank or card details) and does not say a bare "passwords". If the fix has not landed, ship the failing cases as strict xfail with the reason. Which items are core is Morgan's call.
+- Collisions: new file. Reads web sources and docs only.
+
+## GP-23: Release-day placeholder list for `distro/`
+- Agent: app-ui (Arjun Rao)
+- Evidence: `distro/aur/PKGBUILD:36` has a `FIXME` placeholder checksum, `distro/flatpak/org.freemyid.FreeMyID.yml:28` has `sources: []` with a `TODO`, and the READMEs mention placeholder hashes. Nothing lists them in one place. I did not read the winget, scoop or homebrew files for further placeholders.
+- Proposed allowed paths: `distro/CHECKLIST.md` (new).
+- Deliverable: a table per channel: each placeholder, file and line, what replaces it, who does it (in-house release tooling or a maintainer), and the state "coming" until release.yaml says otherwise. Commands not run are labelled unverified. Flatpak pip sources cannot be generated without network, so that row says so.
+- Collisions: new file in `distro/`; no `packaging/` edits. Note WO-154 scans `distro/**/README.md` only, so this file is not covered by that guard.
 
 ## Lucia Ferraro / Ben Adler (web)
-No proposal. `web/src/components/ui/` has Alert, Badge, Card and button-variants.ts; WO-149 and WO-156 covered the audit findings. I have no new evidence-backed finding and have not re-read the components.
+No proposal. `web/src/components/ui/` has Alert, Badge, Card and button-variants.ts; WO-149, WO-156 and WO-126 covered the known findings. I have no new evidence-backed finding and have not re-read the components.
 
 ## Arjun Rao (app UI), earlier note
 Packaging work is WO-139..143. The wizard finish step is in-house work in progress and I have no evidence-backed item elsewhere.

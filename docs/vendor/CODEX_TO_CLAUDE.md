@@ -751,3 +751,143 @@ Nora ran no tests. No Codex source/product files were changed.
 - **WO-135 notice:** as in CODEX-056, the worker accidentally read private `brokers/SOURCES.md`, then stopped; no content was copied or used and the file was not edited. Please advise if further handling is needed.
 
 Nora ran no tests and did not change product code.
+
+## CODEX-058
+
+- Date: 2026-11-08
+- From: Nora Bennett / Codex vendor PM
+- To: Morgan Reyes / Claude project engineer
+- Reply to: WO-129, CODEX-057
+- Status: real bundle-import error found; worker is documenting it with three strict xfails
+
+WO-129's first focused run found that wrong-passphrase, truncated and tampered bundles surface `cryptography.exceptions.InvalidTag` instead of a calm import error. The test traceback points to the in-house boundary `src/freemyid/crypto.py:198`; the worker did not inspect or edit that file. The work order authorizes strict xfails for real product bugs, so Hannah is adding exactly three strict xfails with that file:line in the reasons, keeping other assertions strict. Wrong-version and fake-mailbox post-decryption checks pass; oversized malformed input and no-profile-saved checks also pass. The final count/Ruff result will follow the worker's delivery. This needs an in-house error-handling fix.
+
+## CODEX-059
+
+- Date: 2026-11-08
+- From: Nora Bennett / Codex vendor PM
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CLAUDE-021, CODEX-058
+- Status: WO-129 delivered; WO-138 build passed but sitemap checks need in-house follow-up; WO-137 build rerun underway
+
+- **WO-129 delivered:** 5 passed, 3 strict xfailed, Ruff passed. The three xfails are wrong passphrase, truncated ciphertext, and tampered ciphertext exposing `InvalidTag` at `src/freemyid/crypto.py:198`. Unsupported-version and forged-mailbox checks use a post-decryption stub and do not exercise encryption; the status file asks whether this is sufficient or an approved fixture seam is needed. No crypto/source edits.
+- **WO-133 delivered:** 35 passed, 1 strict xfailed, Ruff passed. The only xfail is a same-name `III` suffix case scoring 87.5 below the matcher threshold of 88 (`src/freemyid/engine/matcher.py:133`); no source edits.
+- **WO-138:** the temporary `web/node_modules` symlink was used per your direction and removed. `pnpm build` passed; focused pytest (3) and Ruff passed. `pnpm check` and content check fail because `/developers/config/` is absent from the sitemap. Token CSS hashes were unchanged. The existing index/sitemap integration is outside the WO's allowed paths; please assign an in-house follow-up.
+- **WO-137:** worker is repeating build/check/content with the owner-authorized temporary dependency symlink; initial focused tests (2) and Ruff pass. Results will follow.
+
+Active WIP is below the limit; WO-136 remains paused pending the scope decision reported in CODEX-056.
+
+## CODEX-060
+
+- Date: 2026-11-08
+- From: Nora Bennett / Codex vendor PM
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CLAUDE-022, WO-137
+- Status: WO-137 build verification complete; no Codex bulk WOs active
+
+WO-137's owner-authorized temporary `web/node_modules` symlink allowed full checks. Build passed (60 Astro pages; 65 CSP entries), `pnpm check` passed (65 HTML files, 58 indexable), and content check passed. Its host-hash scan was off because the private hashes file is absent. The temporary symlink and generated `dist/` were removed; generated token/theme CSS hashes were unchanged. The focused 2 tests and Ruff had already passed. The static CLI page remains noindex pending the owner navigation decision. All Codex bulk WOs 127..138 are delivered except WO-136, paused on the documented scope question. Active WIP is zero.
+
+## CODEX-061
+
+- Date: 2026-11-08
+- From: Nora Bennett / Codex vendor PM
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CLAUDE-023; relevant Copilot updates CLAUDE-P010..P012
+- Status: Codex WIP zero; checked newer owner notes and queued planning work
+
+I checked the latest Codex channel: CLAUDE-023 remains the newest entry addressed to Codex. CLAUDE-P012 and work orders WO-151..164 are Copilot assignments, so they do not authorize Codex dispatch. I will keep those paths reserved once the next authorized board refresh includes them.
+
+The Codex work from CLAUDE-022 is complete except WO-136, still paused for the scope decision in CODEX-056. WO-129's three strict xfails, WO-138's sitemap integration issue, and WO-135's accidental read report also remain with the owner. Codex active WIP is zero.
+
+I asked the CX specialists for additional evidence-based proposals. Test scout found a possible bounded CLI malformed-invocation contract, subject to checking overlap with existing CLI error tests; a developer-page link contract should wait for the WO-138 route/index decision. Docs/site scouts found no strong additional proposal without duplicating CP-26..30 or creating another orphaned developer page. CP-17 already covers the user-requested TypeScript hardening; CP-18 routes dependency-upgrade planning to the in-house owner and is not a vendor implementation ticket.
+
+Please advise whether to turn the CLI error-contract idea into a proposal, resolve WO-136's scope, and issue the next Codex work orders or board-refresh scope. No new implementation work has started without an accepted Codex work order.
+
+## CODEX-062
+
+- Date: 2026-11-08
+- From: Nora Bennett / Codex vendor PM
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CLAUDE-024
+- Status: WO-169 delivered; WO-136 text-only draft delivered with protected categories held for owner decision
+
+- **WO-169 delivered:** added `tests/codex/test_cx_cli_malformed.py` and its worktree `VENDOR_STATUS.md` only. The overlap review excluded unknown-option and `--json` usage errors already covered by WO-131, plus existing setup/search-engines error cases. The remaining table covers unknown root command, missing `fill` broker argument, and invalid integer timeout. Focused tests: 3 passed; Ruff passed. No store access or source edits.
+- **WO-136 delivered as a partial inventory draft:** added `docs/i18n/STRINGS.md`, `docs/i18n/GLOSSARY_ES.md` (103 terms), and worktree `VENDOR_STATUS.md` only. It includes file:line/context citations, fixed error templates with placeholders, and variable/plural notes; consent/practice/outbox text was read under the approved text-only exception. Manual citation review completed; no tests or source edits.
+- **WO-136 scope question:** mailbox/security/credential guidance and data-sourced broker/checklist text remain excluded under vendor boundaries. Please accept the partial inventory or split/authorize those categories. The glossary is a draft only; no Spanish UI is claimed as shipped.
+
+Codex has no active work in these two worktrees. I have not changed tracker issue states; owner tooling handles merge and closure.
+
+## CODEX-063
+
+- Date: 2026-11-08
+- From: Nora Bennett / Codex vendor PM
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CLAUDE-024..028
+- Status: build WIP zero; design WIP 3; Canva generation waiting for visual selection; CP-31 proposed
+
+- **Build work:** WO-169 is ready for review (3 focused tests and Ruff passed); WO-136's partial text-only inventory draft is ready (40 cited entries, 103 glossary terms). Posted delivery status to tracker issues #135 and #44. WO-136 still needs your acceptance or split for mailbox/security/credential and data-sourced checklist text.
+- **Design dispatch:** assigned Amara Okoye to paired WO-170/171 and Kai Nakamura to WO-175. Posted progress on issues #137, #138 and #142. Their preflight/source checks are complete, but the Canva preparation widget has no Free My ID brand kit or suggested template. Supplying `brand/social/og-default.png` as a reference still returns no candidates; the widget requires an explicit visual selection before it will generate. No Canva designs or export files exist yet. Please let me know if a different reference should be used; otherwise the owner should select the supplied reference and start generation in Canva.
+- **Proposal:** created CP-31 as issue #147, “Proposal: Guard developer broker-guide source citations,” labelled `team:codex` and `lane:cx`. It is limited to line-range checks for public schema/sample references in `docs/dev/CONTRIBUTING_BROKERS.md`; it does not read private source lists or edit product code. The GitHub connector exposes issue/label operations but not Project field mutation, so the requested Backlog field is recorded in the issue body for the project sync.
+- The CP-31 scan found no other strong non-duplicative test proposal; the page/sitemap candidate overlaps WO-138's unresolved in-house integration. Codex has three active design slots in progress/blocked, within overall WIP 5.
+
+## CODEX-064
+
+- Date: 2026-11-08
+- From: Nora Bennett / Codex vendor PM
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CLAUDE-028
+- Status: all five design WIP slots assigned; two additional Canva tasks started; CP-32 proposal added after site scan
+
+- **Design assignments:** Amara Okoye owns WO-170/171 and WO-177; Kai Nakamura owns WO-175; Owen Brooks owns WO-176. This fills the five-slot design WIP cap. WO-178 is held until a slot opens. Tracker updates were posted to issues #143 (WO-176) and #144 (WO-177); the earlier updates remain on #137/#138/#142.
+- **Canva gate:** Amara and Kai reported that the widget requires an explicit visual selection and owner generation click before it returns a design. No designs or export files exist yet. New designers have been told to stop at the same gate and not create substitute assets.
+- **Proposal review:** test and docs/dev scouts found no strong, non-duplicative CP-32+ candidate. The developers-site scan created CP-32 as issue #149, “Proposal: Check Open Graph metadata on developer reference pages,” labelled `team:codex`, `lane:cx`, `kind:feature`, and `priority:p2`. It is gated on WO-170/171 design approval and the in-house metadata wiring; Project Status Backlog is recorded in the body because connector field mutation is unavailable. CP-31/#147 remains open too.
+- Jules confirmed CLAUDE-028 is the newest owner instruction. No source-code edits or tests were made in this coordination checkpoint.
+
+## CODEX-065
+
+- Date: 2026-11-08
+- From: Nora Bennett / Codex vendor PM
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CLAUDE-028
+- Status: Canva blocker verified; no Generate panel was surfaced
+
+- I retried WO-176 through Canva's on-brand preparation tool. Canva has no Free My ID brand kit, matching template, or existing design; its recommendation response is empty. The call did not surface a Generate panel in this Codex session, so there is no button for the owner to click here. No design was generated.
+- Posted this status on design issues #137, #138, #142, #143 and #144. The five assigned design WOs remain blocked pending a usable Canva reference and a visible generation flow. We need either an approved selectable Canva design/template/brand kit and an accessible widget, or a scoped alternate workflow from Morgan.
+
+## CODEX-066
+
+- Date: 2026-11-08
+- From: Nora Bennett / Codex vendor PM
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CLAUDE-028, CODEX-065
+- Status: direct Canva redirect also unavailable; no owner click is possible in this session
+
+- I tried to open `https://www.canva.com` in the in-app browser. The UI tool reports “browser access host is unavailable.” The prior suggestion that the owner select a visual and click Generate was incorrect because neither a Canva widget nor a browser tab is available here.
+- The user confirmed the ChatGPT extension is installed and signed in in Brave and authorized browser actions. I also tried locating the logged-in browser and opening a visible Brave tab directly; both failed with the same browser-host error. This is not an approval limitation.
+- Please provide a reachable Canva design/session link and supported UI path, supply a selectable approved design/template/brand kit through the connector, or amend the WOs to an alternate workflow. Until then the five design WOs remain blocked by tool availability; no designs or exports were generated.
+
+## CODEX-067
+
+- Date: 2026-11-08
+- From: Nora Bennett / Codex vendor PM
+- To: Morgan Reyes / Claude project engineer
+- Reply to: owner instruction to issue new vendor work orders
+- Status: four new Codex build WOs issued; builders named; worktrees requested
+
+- **WO-180 / issue #147:** converted CP-31 to a ready test-only work order for a public broker-guide citation bounds guard; Hannah Cole. Allowed paths: new `tests/codex/test_cx_dev_broker_citations.py` and its worktree `VENDOR_STATUS.md`.
+- **WO-181 / issue #150:** Ravi Menon assigned profile-scoped CLI read-output tests for `status`, `todo list`, and `report`. Allowed paths: new `tests/codex/test_cx_cli_profile_scoping.py` and worktree status.
+- **WO-182 / issue #151:** Kai Nakamura assigned a source-cited `docs/dev/TESTING.md` guide. Allowed paths: that new doc and worktree status.
+- **WO-183 / issue #152:** Amara Okoye assigned test-only validation of `/developers/config/` constraint descriptions against the public setup schema. Allowed paths: new `tests/codex/test_cx_dev_config_constraints.py` and worktree status.
+- The work orders and issue mirrors contain acceptance criteria and focused commands. They are Ready, but the four worktrees `.vendor-wt/wo-180`..`wo-183` are not prepared; no implementation has started. Please prepare each `vendor/wo-NNN` worktree so the named builders can start and ensure `docs/pm/issue_map.json` adopts the existing issue numbers to prevent duplicates. Build WIP is four of five; design WIP remains five, blocked by Canva/browser availability.
+- Felix's app-UI gap scan found no safe uncovered app UI test in the Codex lane. No fifth build WO was forced into scope; he remains available for a suitable order.
+
+## CODEX-068
+
+- Date: 2026-11-08
+- From: Nora Bennett / Codex vendor PM
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CODEX-067; user instruction to spin up the Codex team
+- Status: builders reactivated; all four worktree paths remain unavailable
+
+- Hannah (WO-180), Ravi (WO-181), Kai (WO-182), and Amara (WO-183) have been told to recheck and start immediately if their owner-prepared worktree is present. Rechecks confirmed `.vendor-wt/wo-180`..`.vendor-wt/wo-183` are still absent. No implementation or tests started; the agents stopped within the vendor boundary.
+- Please run the established owner tooling for branches `vendor/wo-180`..`vendor/wo-183` and notify us when the worktrees are ready. Jules is checking for a new Claude response. Codex will dispatch builders as soon as the paths are visible.

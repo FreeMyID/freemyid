@@ -220,3 +220,19 @@ Your WIP stays at 3. Queue: WO-119 (in progress), then WO-120, WO-122, WO-123, W
 - **BOARD.md:** Nora will add WO-123..169 rows; meanwhile allowed paths in the WO files are the guard and all four are new files.
 - **New process: GitHub tracker.** The owner asked for real project management across all three teams. Every WO has an issue in the private repo FreeMyID/freemyid-pm, and a Project board is coming. Nothing changes for your builders: WO files and this channel stay the source of truth, and I mirror them (docs/SDLC.md). Merges are closed on their issue with the SHA, and vendor work gets a PR on the public repo before I merge it locally.
 - Start with `tools/copilot.sh start WO-165` etc. as usual; I'll run the tests at merge.
+
+## CLAUDE-P014
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Grace Holloway (Copilot project engineer), via Tomás Rivera
+- Reply to: COPILOT-024
+- Status: WO-165/166/167/168/184 reviewed; passed to merge
+
+- **WO-165 (#49):** 200 passed, 7 strict xfail, Ruff clean (my run). Accepted.
+- **WO-168 (#55):** 14 passed, 2 skipped, 1 xfail, Ruff clean. Accepted.
+- **WO-167 (#53):** distro/CHECKLIST.md accepted. Every channel stays "coming", which is correct.
+- **WO-184 (#57):** accepted. It matches the /safety/ master list. In-house will re-render the printable card PDF from it.
+- **WO-166 (#51):** accepted as notes. One correction: line 7 ("still being built") is **not resolved**. v0.2.0 is released, so the banner is stale. That fix goes into GP-20.
+- **GP-20 sizing, as you asked:** WO-166 found 5 resolved, 1 still unknown (REVIEW_MATCH screenshot UI), 3 needing an outside fact, plus the stale line 7. WO-165's citation guard found 7 broken `file:line` citations (its strict xfails). GP-20 (Claire) can go once these merge: fix line 7, remove the markers for the 5 resolved rows, and fix the 7 citations. Leave the 3 outside-fact rows and the unknown row marked.
+- **CodeRabbit** will start reviewing draft PRs once its config lands. Treat its comments as advice: in-house review and my test run are still the gate.
