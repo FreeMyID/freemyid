@@ -860,3 +860,62 @@ page or a changed form is flagged before a person hits it.
   by users.
 - Rate: one GET per URL per week, same pacing and UA as the exposure scan, robots.txt
   respected for non-opt-out pages.
+
+## 2026-11-08 BL-IN-06 job spec for Dana (devops), approved by Morgan; Theo does not edit .github/
+Workflow `.github/workflows/broker-monitor.yml` (Dana writes it):
+- Triggers: `schedule: cron "17 6 * * 1"` (Mondays 06:17 UTC) + `workflow_dispatch`.
+- Runner: ubuntu-latest, `permissions: contents: read, issues: write`. No secrets except
+  GITHUB_TOKEN. No user data exists in CI, and the job must not create a profile.
+- Steps: checkout; set up Python 3.12; `pip install -e .`; run
+  `freemyid monitor --json --registry brokers/registry.yaml > monitor.json` (the command is
+  still to be built by Theo, schema `monitor/1`; until it exists the job is a no-op);
+  upload monitor.json as an artifact (90 days); a small script compares it with the previous
+  run's artifact and opens or updates ONE issue titled "Broker monitor: N sites changed"
+  (label `broker-monitor`), listing broker id, old -> new health, and first_seen_bad. Never
+  page text, and never URLs with query strings.
+- Health values per broker: ok / moved (final host or path changed) / form_changed
+  (a registry `form` selector is missing, or the fingerprint changed) / blocked (challenge,
+  never bypassed) / unreachable / unknown (JS-only page).
+- Two bad weeks in a row (the same non-ok value in two consecutive artifacts): the issue
+  says "demote to Assisted" and tags Priya. Demotion means a registry edit by Priya
+  (verification_status off "verified"), shipped through the normal registry update. CI
+  never writes the registry.
+- Limits: one GET per opt-out URL and per search page per week, 2-5 s random pacing,
+  honest UA (`config.user_agent_suffix`), NetPolicy allowlist, 30 s budget per broker,
+  whole job timeout 60 min. robots.txt is respected for non-opt-out pages.
+
+## 2026-11-08 Proof vault prep (for Nina): what is saved as Evidence today
+Outgoing email, all tied to `request_id`:
+- Every letter the engine composes (opt-out, resubmit, follow-up, legal demand; queued,
+  draft or dry-run) -> `LETTER` evidence (to, subject, body) in `outbox.queue_email`.
+- Every email actually sent -> `EMAIL_SENT` evidence (the raw .eml when the mailer
+  provides `last_raw`, otherwise the letter text) in `outbox.send_request`. That is the only
+  SMTP send path, so nothing goes out without it.
+- Gap: the no-mailbox path (`assisted.manual_email_todo`, "Send it yourself") creates a
+  todo, not a Request. When the person clicks "I sent it", `mark_manual_submitted` has no
+  request_id to update and saves no evidence, so there's no copy of the letter they sent.
+  The letter text is only in the todo body.
+Replies: NOT saved. `EvidenceKind.EMAIL_RECEIVED` exists (and wizard/views.py reads it), but no
+engine code writes it. `mail.scan_replies` is pure, and the mailers return links only. So
+a matched broker reply (confirmation, ID request, extension notice) leaves no evidence,
+only a PII-free event.
+Screenshots:
+- Web-form steps and confirmation pages -> `SCREENSHOT` with request_id
+  (submitters/web_form.py).
+- Search-results pages -> listing_id but no request (correct).
+- The confirmation-link page the runner opens after a reply (`runner._click`) -> SCREENSHOT
+  with neither request_id nor listing_id. Gap: it should carry the request it confirms.
+Missing EvidenceKind values (contract, Morgan's) for a complete vault:
+- `USER_ATTESTATION`: "I did it" on Assisted / manual email / postal / phone, with what and
+  when, written by mark_resolved / mark_manual_submitted.
+- `PHONE_CALL_NOTE`: the phone script plus the person's note of the call.
+- `POSTAL_RECEIPT`: optional photo or scan of a certified-mail receipt the person attaches.
+  `LETTER` already covers the printed letter itself.
+`EMAIL_RECEIVED` already exists, and `CONFIRMATION_PAGE` can stay a SCREENSHOT with a caption.
+Engine fixes I can make with no contract change (say go):
+1. Save each matched reply as `EMAIL_RECEIVED`, linked to the request it answers (the last
+   SENT request at or before the reply date). Raw bytes are capped at MAX_MESSAGE_BYTES and
+   encrypted like all evidence.
+2. Give `runner._click` evidence the request_id.
+3. The manual-email path creates a QUEUED Request + LETTER evidence, and the todo carries
+   the request_id, so "I sent it" marks that request SENT.
