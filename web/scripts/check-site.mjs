@@ -75,6 +75,8 @@ for (const f of htmlFiles) {
   if (h1 !== 1) err(f, `${h1} <h1> elements`);
   const csp = html.match(/<meta http-equiv="Content-Security-Policy" content="([^"]*)">/)?.[1];
   if (!csp) err(f, "missing CSP meta (did tighten-csp run?)");
+  else if (!/<head>\s*<meta charset="utf-8">\s*<meta http-equiv="Content-Security-Policy"/.test(html))
+    err(f, "CSP meta is not directly after <meta charset> (SEC-66)");
   else {
     if (/unsafe-inline|unsafe-eval/.test(csp)) err(f, "CSP allows unsafe-inline/unsafe-eval");
     for (const d of ["default-src 'self'", "object-src 'none'", "base-uri 'none'", "form-action 'none'"])

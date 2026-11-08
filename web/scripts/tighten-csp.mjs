@@ -36,7 +36,11 @@ for (const f of htmlFiles(dist)) {
     .filter((d) => !/^(script-src|style-src)\b/.test(d))
     .concat([`script-src ${scriptSrc}`, `style-src ${styleSrc}`])
     .join("; ");
-  html = html.replace(m[0], `<meta http-equiv="Content-Security-Policy" content="${policy}">`);
+  // SEC-66: the policy goes directly after <meta charset>, before any <link>, JSON-LD or other <meta>.
+  const meta = `<meta http-equiv="Content-Security-Policy" content="${policy}">`;
+  const charset = '<meta charset="utf-8">';
+  if (!html.includes(charset)) throw new Error(`${f}: no <meta charset="utf-8"> to anchor the CSP after`);
+  html = html.replace(m[0], "").replace(charset, charset + meta);
   writeFileSync(f, html);
   changed++;
 }
