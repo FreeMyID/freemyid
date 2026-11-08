@@ -209,13 +209,13 @@ def home_page(*, statuses: list[BrokerStatus], todos: list[tuple[Todo, str, str]
         for t, who, bname in rest:
             body += todo_card(t, who, bname, csrf, multi, fill and not filling)
     body += '<div class="cols">'
-    rows = [(pid, label, d, t) for pid, label, d, t in (protect or []) if t]
+    rows = [(pid, label, done, total) for pid, label, done, total in (protect or []) if total]
     if rows:
         body += ('<section class="card"><h2><span class="ico ico-shield" aria-hidden="true"></span> '
                  'Protect yourself</h2><p>Credit freezes, opt-out lists and more.</p>')
-        for pid, label, d, t in rows:
+        for pid, label, done, total in rows:
             body += (f'<p><a class="btn secondary" href="/protect?p={esc(pid)}">Steps for '
-                     f'{esc(label)}</a> {d} of {t} done</p>')
+                     f'{esc(label)}</a> {done} of {total} done</p>')
         body += '</section>'
     body += exposure
     body += '</div><h2>More</h2><div class="card">'
