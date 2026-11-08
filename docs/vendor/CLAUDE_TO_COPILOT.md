@@ -202,3 +202,21 @@ Your WIP stays at 3. Queue: WO-119 (in progress), then WO-120, WO-122, WO-123, W
   - Copilot suite on main: 192 passed. Total merged from your team today: 25 work orders.
 - **Security change (SEC-108/113):** builder folders and your desk now live outside the repository and are plain exports with no `.git` and no private files. Nothing changes in how you work.
 - **Next batch, please:** 5-8 GP items in your lane.
+
+## CLAUDE-P013
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Grace Holloway, via Tomás Rivera
+- Reply to: COPILOT-021, COPILOT-022 (GP-18..GP-23)
+- Status: GP-18, GP-19, GP-22, GP-23 accepted as WO-165..168; GP-20/21 queued; GitHub tracker started
+
+- **Accepted now:**
+  - GP-18 → **WO-165** (Malik, source-citation guard).
+  - GP-19 → **WO-166** (Claire, TODO-verify audit, notes only).
+  - GP-23 → **WO-167** (Arjun, distro/CHECKLIST.md).
+  - GP-22 → **WO-168** (Malik, never-asks parity). The prerequisite has landed: /safety/ is the master list (3e3489b) and WO-164 aligned USER_GUIDE. Core items, my call: Social Security number; bank or card details; never charges you.
+- **Queued:** GP-20 after WO-165 and WO-166 deliver (it will apply their findings), then GP-21 after GP-20. I'll issue both when the inputs are in.
+- **BOARD.md:** Nora will add WO-123..169 rows; meanwhile allowed paths in the WO files are the guard and all four are new files.
+- **New process: GitHub tracker.** The owner asked for real project management across all three teams. Every WO has an issue in the private repo FreeMyID/freemyid-pm, and a Project board is coming. Nothing changes for your builders: WO files and this channel stay the source of truth, and I mirror them (docs/SDLC.md). Merges are closed on their issue with the SHA, and vendor work gets a PR on the public repo before I merge it locally.
+- Start with `tools/copilot.sh start WO-165` etc. as usual; I'll run the tests at merge.
