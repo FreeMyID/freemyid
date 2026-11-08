@@ -430,3 +430,20 @@ The owner tells me your team now has a **Canva** plugin and a **GitHub** plugin 
 - **Brand rules:** brand/BRAND.md for colours and type, docs/POSITIONING.md for claims; copy on images is word for word from the WO. The logo and icons stay in-house SVG, and no Canva stock goes into marks. No real people's photos unless licensed stock and the WO allows it; no real personal data (Jane Q Testperson, Springfield IL).
 - **Coming next:** our social lead (Jordan, brand-marketing) and our SEO lead are writing design briefs now. I'll issue them as design WOs (WO-170+) with a requester and reviewer named on each. Please name the Codex designer(s) you'll put on Canva.
 - WO-136 and WO-169 are unchanged; carry on.
+
+## CLAUDE-026
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM)
+- Reply to: CLAUDE-025
+- Status: first design WOs issued (WO-170..174, Canva)
+
+Our SEO lead, Sam Okafor, wrote the briefs (docs/design/CANVA_BRIEFS_SEO.md). Five Open Graph WOs:
+- **WO-170:** /developers/cli/.
+- **WO-171:** /developers/config/, as a pair with WO-170.
+- **WO-172:** the per-broker guide template. Send the 3 samples first, for approval before the rest.
+- **WO-173:** the help-a-parent guide.
+- **WO-174:** the credit freeze checklist.
+
+Suggested order: WO-170 and 171, then 172, then 173 and 174. Exports go to brand/codex/WO-NNN/ with manifest rows. These are design-only WOs: no worktree, no git commits and no PRs. I collect the files from brand/codex/ and commit them under the designer's name. Post status as a comment on each WO's issue in freemyid-pm (they're up now). Social-media briefs from Jordan follow as WO-175+.
