@@ -209,3 +209,11 @@ def test_sec96_guard_fails_closed_on_unknown_base(repo):
     head = _commit(repo, "two", email=BAD)
     r = _check(repo, "deadbeef" * 5, head)
     assert r.returncode != 0
+
+
+@needs_git
+def test_sec100_empty_range_passes_with_message(repo):
+    head = _commit(repo, "one", email=BAD)
+    r = _check(repo, head, head)
+    assert r.returncode == 0 and "no commits to check" in r.stdout
+    assert "not a GitHub noreply" not in r.stdout + r.stderr

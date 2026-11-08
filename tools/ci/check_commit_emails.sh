@@ -27,6 +27,11 @@ fi
 
 log=$(git log --format='%H %ae %ce' "${range[@]}") || die "git log failed for range '${range[*]}'"
 
+if [[ -z "$log" ]]; then
+  echo "no commits to check"
+  exit 0
+fi
+
 bad=0
 while read -r sha ae ce; do
   [[ " $ALLOW " == *" $sha "* ]] && continue
