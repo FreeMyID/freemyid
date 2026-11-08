@@ -1049,5 +1049,65 @@ def config_enable_submissions():
         con.print("[green]Enabled.[/]")
 
 
+@app.command()
+def monitor(registry: Annotated[Path | None, typer.Option(
+                "--registry", help="Registry file (default: the installed registry)")] = None,
+            previous: Annotated[Path | None, typer.Option(
+                "--previous", help="Last week's monitor/1 JSON, to compare with")] = None,
+            broker: Annotated[list[str] | None, typer.Option(
+                "--broker", help="Only this broker id (repeatable)")] = None,
+            browser: Annotated[bool, typer.Option(
+                "--browser", help="Also load forms built by JavaScript in a headless "
+                                  "browser (opens the page only)")] = False,
+            as_json: JsonOpt = False):
+    """For maintainers: check that each broker's opt-out page still loads and its form
+    still matches the registry (BL-IN-06, docs/MONITOR.md).
+
+    Reads only: never fills in, clicks or submits anything, and needs no profile. A
+    "prove you are human" page is reported as blocked, never worked around."""
+    import json as _json
+
+    from . import monitor as mon
+    from .registry import RegistryError, load_registry
+    _set_json(as_json)
+    try:
+        reg = load_registry(registry) if registry else load_registry()
+    except (RegistryError, OSError) as e:
+        _fail(cj.EXIT_ERROR, f"registry could not be read: {str(e)[:160]}")
+    prev = None
+    if previous is not None:
+        try:
+            prev = _json.loads(previous.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            prev = None
+        if not mon.valid_doc(prev):
+            err.print("freemyid: --previous is not a monitor/1 file; not compared",
+                      markup=False)
+            prev = None
+    loader, close = (None, None)
+    if browser:
+        from .netpolicy import NetPolicy
+        loader, close = mon.browser_page_loader(NetPolicy(reg), cfgmod.load())
+    try:
+        doc = mon.run_monitor(reg, previous=prev, broker_ids=broker or None,
+                              page_loader=loader)
+    finally:
+        if close is not None:
+            close()
+    if as_json:
+        cj.emit(doc)
+        return
+    c = doc["counts"]
+    con.print(f"{len(doc['brokers'])} broker page(s) checked: " + ", ".join(
+        f"{n} {k.replace('_', ' ')}" for k, n in c.items() if n), markup=False)
+    for b in doc["brokers"]:
+        if b["health"] == "ok" and not b["changed"]:
+            continue
+        mark = " (changed since last week)" if b["changed"] else ""
+        demote = "; 2+ bad weeks: suggest moving it to Assisted" if b["demote_suggested"] else ""
+        con.print(f"  {b['broker_id']}: {b['health']}{mark}. {b['detail']}{demote}",
+                  markup=False, highlight=False, soft_wrap=True)
+
+
 if __name__ == "__main__":
     app()

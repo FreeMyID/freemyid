@@ -174,3 +174,51 @@ def test_delay_floor_is_one_second():
     pause = mon._pauser((0.0, 0.0), sleeps.append)
     pause(), pause()
     assert sleeps == [1.0]
+
+
+# ------------------------------------------------------------------ CLI
+
+DEV_REG = "src/freemyid/engine/_dev/registry.yaml"
+
+
+def _cli(monkeypatch, routes, *args):
+    from typer.testing import CliRunner
+
+    from freemyid import cli
+    from tests.conftest import ROOT
+    net = FakeNet(routes)
+    monkeypatch.setattr(mon, "httpx_requester", lambda *a, **k: (net, lambda: None))
+    monkeypatch.setattr(mon.time, "sleep", lambda s: None)
+    r = CliRunner().invoke(cli.app, ["monitor", "--registry", str(ROOT / DEV_REG),
+                                     "--broker", "devauto", *args])
+    return r, net
+
+
+def test_cli_monitor_json_and_previous(monkeypatch, tmp_path):
+    r, net = _cli(monkeypatch, {OPT: (200, None, FORM_OK)}, "--json")
+    assert r.exit_code == 0, r.output
+    doc = json.loads(r.stdout)                       # exactly one JSON object
+    assert doc["schema"] == "monitor/1" and _one(doc)["health"] == "ok"
+    assert net.calls == [("GET_BODY", OPT)]
+    prev = tmp_path / "last.json"
+    prev.write_text(r.stdout, encoding="utf-8")
+    renamed = FORM_OK.replace(b'name="url"', b'name="link"')
+    r, _ = _cli(monkeypatch, {OPT: (200, None, renamed)}, "--json", "--previous", str(prev))
+    doc = json.loads(r.stdout)
+    assert doc["changed"] == ["devauto"] and _one(doc)["health"] == "form_changed"
+
+
+def test_cli_monitor_text_and_bad_inputs(monkeypatch, tmp_path):
+    r, _ = _cli(monkeypatch, {OPT: (429, None, b"")})
+    assert r.exit_code == 0 and "devauto: blocked" in r.stdout
+    junk = tmp_path / "junk.json"
+    junk.write_text("[1, 2]", encoding="utf-8")
+    r, _ = _cli(monkeypatch, {OPT: (200, None, FORM_OK)}, "--json", "--previous", str(junk))
+    assert r.exit_code == 0 and json.loads(r.stdout)["previous_generated_at"] is None
+    assert "not a monitor/1 file" in r.stderr
+    from typer.testing import CliRunner
+
+    from freemyid import cli
+    r = CliRunner().invoke(cli.app, ["monitor", "--json", "--registry",
+                                     str(tmp_path / "missing.yaml")])
+    assert r.exit_code == 1 and json.loads(r.stdout)["schema"] == "error/1"

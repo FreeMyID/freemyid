@@ -517,6 +517,65 @@
       ]
     },
     {
+      "path": "monitor",
+      "summary": "For maintainers: check that each broker's opt-out page still loads and its form",
+      "source": "src/freemyid/cli.py:1052",
+      "summary_source": "src/freemyid/cli.py:1063",
+      "arguments": [],
+      "options": [
+        {
+          "flags": [
+            "--registry"
+          ],
+          "help": "Registry file (default: the installed registry)",
+          "required": false,
+          "source": "src/freemyid/cli.py:1053",
+          "value": true,
+          "value_name": "REGISTRY"
+        },
+        {
+          "flags": [
+            "--previous"
+          ],
+          "help": "Last week's monitor/1 JSON, to compare with",
+          "required": false,
+          "source": "src/freemyid/cli.py:1055",
+          "value": true,
+          "value_name": "PREVIOUS"
+        },
+        {
+          "flags": [
+            "--broker"
+          ],
+          "help": "Only this broker id (repeatable)",
+          "required": false,
+          "source": "src/freemyid/cli.py:1057",
+          "value": true,
+          "value_name": "BROKER"
+        },
+        {
+          "flags": [
+            "--browser"
+          ],
+          "help": "Also load forms built by JavaScript in a headless browser (opens the page only)",
+          "required": false,
+          "source": "src/freemyid/cli.py:1059",
+          "value": false,
+          "value_name": "BROWSER"
+        },
+        {
+          "flags": [
+            "--json"
+          ],
+          "help": "Machine-readable output (docs/CLI.md)",
+          "required": false,
+          "source": "src/freemyid/cli.py:1062",
+          "value": false,
+          "value_name": "AS_JSON"
+        }
+      ]
+    },
+    {
       "path": "profile add",
       "summary": "",
       "source": "src/freemyid/cli.py:536",

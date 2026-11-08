@@ -326,6 +326,28 @@ freemyid search-engines." when N > 0 for that person.
    "fix": "Run `playwright install chromium` …"}]}
 ```
 
+### `monitor/1`
+
+`freemyid monitor --json [--registry FILE] [--previous last.json] [--broker ID] [--browser]`
+(for maintainers and the weekly CI job; details in docs/MONITOR.md):
+
+```json
+{"schema": "monitor/1", "generated_at": "2026-11-09T06:17:00+00:00",
+ "previous_generated_at": "2026-11-02T06:17:00+00:00",
+ "counts": {"ok": 40, "moved": 1, "form_changed": 1, "blocked": 3, "unreachable": 0,
+   "unknown": 2},
+ "changed": ["spokeo"], "demote_suggested": [],
+ "brokers": [{"broker_id": "spokeo", "health": "form_changed",
+   "detail": "1 form selector(s) not found", "http_status": 200,
+   "page": "https://www.spokeo.com/optout", "selectors_missing": ["#email"],
+   "selectors_unchecked": 1, "fingerprint": "3f2a9c0d1e4b5a67", "used_browser": false,
+   "previous_health": "ok", "changed": true, "first_seen_bad": "2026-11-09",
+   "weeks_bad": 1, "demote_suggested": false}]}
+```
+
+Exit 0 whenever the run finishes, whatever the health values are (the CI job reads the file),
+and 1 when the registry can't be read.
+
 ## `run --headless`
 
 For cron, systemd timers and containers. It never prompts and never opens a window
