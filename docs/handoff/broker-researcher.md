@@ -1,5 +1,14 @@
 # broker-researcher handoff
 
+## Pass 6 (2026-11-08): WR-61/62 clearance and timeline-claims check. Tools: Read, Write, WebFetch, WebSearch only (no shell, no grep, no git).
+Deliverable: `docs/research/timeline-claims-2026-11.md` (WR answers plus claims table). Commit as Priya Shah [freemyid], paths: `docs/research/timeline-claims-2026-11.md docs/handoff/broker-researcher.md`. `brokers/registry.yaml` untouched.
+- WR-61 S2 (sites list people again): cleared, sources Spokeo Compass blog and CPPA DROP page. Keep "some sites ... can".
+- WR-62 S2 (whole profile removed): NOT cleared; forms are per listing. Suggested wording in the doc. S3 cleared. S4 cleared with FTC DNC FAQ wording and donotcall.gov / reportfraud.ftc.gov. The "phone numbers reach these sites from..." line has no primary source; hedge kept or soften "often" to "can".
+- Timeline table: found and checked the claims in USER_GUIDE.md (145, 151, 223, 248, 250), README.md (174-175) and site_src/data/faq.yaml (66). Not found: the literal phrases "within a day" and "2-6 weeks". I had no grep, and could not scan docs/CLI.md past line 5, web/src (only faq page read), or registry lines 500+. Orchestrator: run the grep in the doc and send me the hits.
+- Worth a decision: escalation fires at `typical_processing_days + 15` (3 + 15 = day 18 for Spokeo) and rung 2 cites state law, which is inside the 45-day legal window. See the table row.
+- Whitepages `typical_processing_days: 2` has no primary source (site blocked to my tools).
+- Spokeo's pages 403 to the fetcher; its "real time" / "1 business day" / "24-48 hours" statements came through search summaries only.
+
 ## Pass 5 (2026-11-08): v0.3 state-law letters, Bing checklist, checklist re-checks. Tools: Read, Write, WebFetch, WebSearch only (no shell, no git, no registry validate run).
 Commit as Priya Shah [freemyid], explicit paths: `brokers/state_laws.yaml brokers/checklists.yaml docs/handoff/broker-researcher.md`. Run a YAML load of both files and `StateLawRegistry` first (I could not).
 
