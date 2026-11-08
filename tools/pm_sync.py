@@ -411,6 +411,9 @@ TRUSTED_AUTHORS = frozenset(
     a.strip() for a in os.environ.get("FREEMYID_PM_TRUSTED", "GrayManSam").split(",") if a.strip())
 
 
+ISSUE_SEARCH_LIMIT = "200"
+
+
 def _json(run, args):
     return json.loads(run(args) or "{}")
 
@@ -431,16 +434,38 @@ def apply_plan(p: list[dict], mapping: dict, repo: str, owner: str, project: int
         if x["action"] == "create":
             # Codex can open issues itself now (GitHub plugin): adopt an existing "KEY: ..." issue
             # instead of making a duplicate.
+            # The phrase search also matches longer keys ("WO-1" hits "WO-10x"), so ask for more
+            # than gh's default 30 or the real issue can fall off the page and get duplicated.
             found = _json(run, ["gh", "issue", "list", "--repo", repo, "--state", "all", "--search",
-                                f'"{x["key"]}" in:title', "--json", "number,title,url,state,author"])
+                                f'"{x["key"]}" in:title', "--limit", ISSUE_SEARCH_LIMIT,
+                                "--json", "number,title,url,state,author"])
+            if not isinstance(found, list):  # empty output parses to {}
+                found = []
             # SEC-120: adopt only issues opened by a trusted account (the owner's, which Codex
             # also uses); anyone else's "WO-NNN: ..." issue is ignored and a fresh one is made.
-            hit = next((i for i in found if i["title"].startswith(x["key"] + ":")
+            hit = next((i for i in found if isinstance(i, dict)
+                        and str(i.get("title", "")).startswith(x["key"] + ":")
                         and (i.get("author") or {}).get("login") in TRUSTED_AUTHORS), None)
             if hit:
                 rec = {"number": hit["number"], "url": hit["url"], "state": hit["state"].lower()}
                 items[x["key"]] = rec
-                x = {**x, "action": "adopted"}
+                num = str(hit["number"])
+                # Bring the adopted issue up to the planned metadata. Labels are added, never
+                # removed; the mirror body goes in a comment so the opener's text is kept.
+                edit = ["gh", "issue", "edit", num, "--repo", repo]
+                for lab in x["labels"]:
+                    edit += ["--add-label", lab]
+                if x["milestone"]:
+                    edit += ["--milestone", x["milestone"]]
+                run(edit)
+                run(["gh", "issue", "comment", num, "--repo", repo, "--body", x["body"]])
+                # Same state rule as plan() uses for mapped issues.
+                if rec["state"] == "closed" and not x["close"]:
+                    x = {**x, "action": "reopen"}
+                elif rec["state"] == "closed":
+                    x = {**x, "action": "none"}
+                else:
+                    x = {**x, "action": "adopted"}
         if x["action"] == "create":
             cmd = ["gh", "issue", "create", "--repo", repo, "--title", x["title"], "--body", x["body"]]
             for lab in x["labels"]:

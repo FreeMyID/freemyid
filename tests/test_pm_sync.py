@@ -115,10 +115,73 @@ def test_existing_issue_is_adopted_not_duplicated():
             return json.dumps([{"number": 9, "title": "WO-2: made by Codex",
                                 "url": "https://github.com/o/r/issues/9", "state": "OPEN",
                                 "author": {"login": "GrayManSam"}}])
+        if args[:3] in (["gh", "issue", "edit"], ["gh", "issue", "comment"]):
+            return ""
         raise AssertionError(f"unexpected call {args}")
 
     m = pm.apply_plan(p, {"items": {}}, "o/r", "o", None, run=run, env={"FREEMYID_PM_APPLY": "1"})
-    assert m["items"]["WO-2"]["number"] == 9 and len(out) == 1
+    assert m["items"]["WO-2"]["number"] == 9 and m["items"]["WO-2"]["state"] == "open"
+    assert [a[:3] for a in out] == [["gh", "issue", "list"], ["gh", "issue", "edit"],
+                                    ["gh", "issue", "comment"]]  # no create: not duplicated
+    assert out[0][out[0].index("--limit") + 1] == pm.ISSUE_SEARCH_LIMIT
+    edit = out[1]
+    assert edit[3] == "9" and [edit[i + 1] for i, a in enumerate(edit) if a == "--add-label"] == \
+        ["team:codex", "kind:work-order", "lane:cx", "priority:p2"]
+    assert "--body" not in edit  # the opener's text is kept
+    assert "Tracked item: WO-2" in out[2][out[2].index("--body") + 1]
+
+
+def test_adopted_closed_issue_is_reopened_when_item_is_open():
+    p = pm.plan([{"key": "WO-4", "title": "t", "team": "Codex", "lane": "CX", "kind": "Work order",
+                  "priority": "P2", "closed": False, "project_status": "Ready", "merge_sha": ""}],
+                {"items": {}})
+    out = []
+
+    def run(args):
+        out.append(args)
+        if args[:3] == ["gh", "issue", "list"]:
+            return json.dumps([{"number": 11, "title": "WO-4: closed by Codex", "state": "CLOSED",
+                                "url": "https://github.com/o/r/issues/11",
+                                "author": {"login": "GrayManSam"}}])
+        return ""
+
+    m = pm.apply_plan(p, {"items": {}}, "o/r", "o", None, run=run, env={"FREEMYID_PM_APPLY": "1"})
+    assert ["gh", "issue", "reopen", "11", "--repo", "o/r"] in out
+    assert m["items"]["WO-4"]["state"] == "open"
+    assert not any(a[:3] == ["gh", "issue", "close"] for a in out)
+
+
+def test_adopted_closed_issue_for_closed_item_is_not_closed_again():
+    p = pm.plan([{"key": "WO-5", "title": "t", "team": "Codex", "lane": "CX", "kind": "Work order",
+                  "priority": "P2", "closed": True, "project_status": "Done", "merge_sha": "abc1234"}],
+                {"items": {}})
+    out = []
+
+    def run(args):
+        out.append(args)
+        if args[:3] == ["gh", "issue", "list"]:
+            return json.dumps([{"number": 12, "title": "WO-5: done", "state": "CLOSED",
+                                "url": "https://github.com/o/r/issues/12",
+                                "author": {"login": "GrayManSam"}}])
+        return ""
+
+    m = pm.apply_plan(p, {"items": {}}, "o/r", "o", None, run=run, env={"FREEMYID_PM_APPLY": "1"})
+    assert m["items"]["WO-5"] == {"number": 12, "url": "https://github.com/o/r/issues/12", "state": "closed"}
+    assert not any(a[:3] in (["gh", "issue", "close"], ["gh", "issue", "reopen"]) for a in out)
+
+
+def test_empty_issue_search_output_creates_instead_of_crashing():
+    p = pm.plan([{"key": "WO-6", "title": "t", "team": "Codex", "lane": "CX", "kind": "Work order",
+                  "priority": "P2", "closed": False, "project_status": "Ready", "merge_sha": ""}],
+                {"items": {}})
+
+    def run(args):
+        if args[:3] == ["gh", "issue", "list"]:
+            return ""  # _json() turns this into {}
+        return "https://github.com/o/r/issues/13\n"
+
+    m = pm.apply_plan(p, {"items": {}}, "o/r", "o", None, run=run, env={"FREEMYID_PM_APPLY": "1"})
+    assert m["items"]["WO-6"]["number"] == 13
 
 
 def test_main_apply_refused(monkeypatch):
