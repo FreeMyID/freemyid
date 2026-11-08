@@ -13,8 +13,6 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 USER_DOCS = ROOT / "docs" / "user"
 ENTRY_POINTS = {"INSTALL.md", "GLOSSARY.md"}
-# Pages with no inbound link yet; WO-160 adds the links.
-KNOWN_GAPS = {"mail-gmail.md", "mail-other.md", "mail-proton.md"}
 
 _LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)")
 
@@ -61,20 +59,6 @@ def test_links_resolve_to_real_pages() -> None:
             assert (USER_DOCS / target).is_file(), f"{name} links to missing {target}"
 
 
-@pytest.mark.parametrize(
-    "page",
-    [
-        pytest.param(
-            name,
-            marks=pytest.mark.xfail(
-                strict=True,
-                reason=f"{name} has no link from INSTALL.md or GLOSSARY.md (one hop); fix tracked in WO-160",
-            ),
-        )
-        if name in KNOWN_GAPS
-        else name
-        for name in _pages()
-    ],
-)
+@pytest.mark.parametrize("page", _pages())
 def test_user_page_is_reachable(page: str) -> None:
     assert page in _reachable(), f"docs/user/{page} is not linked from INSTALL.md or GLOSSARY.md (one hop)"

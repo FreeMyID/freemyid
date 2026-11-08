@@ -56,6 +56,18 @@ then, please do not look for it: it is not there yet.
 
 Free My ID is free and you can uninstall it anytime (`docs/USER_GUIDE.md:29`).
 
+Setting this up for someone else? See [Helping someone set up Free My ID](HELPING.md).
+
+## The email screen
+
+During setup, Free My ID asks for a separate email address to send requests
+and click confirmation links (`src/freemyid/wizard/ui.py:389`). Pick your
+service for the steps:
+
+- [Gmail](mail-gmail.md)
+- [Proton Mail](mail-proton.md)
+- [Yahoo, iCloud, Outlook and others](mail-other.md)
+
 If you want to check your download, the checksum (SHA-256) published for
 version 0.2.0 is in `site_src/data/release.yaml:8`. Not sure whether the
 download page also shows it.
