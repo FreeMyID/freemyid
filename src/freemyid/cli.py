@@ -326,7 +326,7 @@ def _do_run(profile, broker, scan_only, dry_run, scheduled, headless: bool = Fal
         try:
             from . import notify
             notify.maybe_monthly_progress(store)
-        except Exception:  # noqa: BLE001  (a toast must never fail the run)
+        except Exception:  # a toast must never fail the run
             log.debug("monthly summary toast skipped", exc_info=True)
     if code:
         raise typer.Exit(code)
