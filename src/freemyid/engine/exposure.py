@@ -117,11 +117,19 @@ def _on_broker(broker: Broker, url: str, policy: NetPolicy) -> bool:
             and _host_ok(host, set(broker.domains)) and policy.is_allowed(url))
 
 
+MAX_ENCODINGS = 2
+
+
 def _decoders(content_encoding: str) -> list[Any]:
     """zlib decompressors for a Content-Encoding header, in the order to apply them.
-    Unknown codings (br, zstd, compress...) are refused: we never asked for them."""
+    Unknown codings (br, zstd, compress...) are refused: we never asked for them. More than
+    MAX_ENCODINGS stacked values are refused too (SEC-101: each layer costs CPU and memory,
+    and no honest server stacks more)."""
     out: list[Any] = []
-    for c in reversed([c.strip().lower() for c in content_encoding.split(",") if c.strip()]):
+    codings = [c.strip().lower() for c in content_encoding.split(",") if c.strip()]
+    if len(codings) > MAX_ENCODINGS:
+        raise FetchFailed("http_error")
+    for c in reversed(codings):
         if c in ("identity",):
             continue
         if c in ("gzip", "x-gzip"):
