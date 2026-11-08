@@ -19,6 +19,7 @@ from freemyid.models import (
     Registry,
     RequestKind,
     RequestStatus,
+    Todo,
     TodoKind,
 )
 from tests.test_proof_vault import MB, T0, B, _no_mailbox_person, _run_once
@@ -30,23 +31,27 @@ class _ScanRunner(Runner):
     """A Runner whose site is scannable: the scan returns `found` listings (or none)."""
 
     found: bool = False
+    unchecked: bool = False         # SEC-104: the listing sat on an unreadable extra page
 
     async def _scan(self, ctx, st, tier):
         if not self.found:
             return [], True
+        if self.unchecked:
+            ctx.scratch["unchecked_urls"] = {"https://fakeb.example/p/1"}
         li = Listing(profile_id=ctx.profile.id, broker_id=ctx.broker.id,
                      url="https://fakeb.example/p/1", match_score=95,
                      match_level=MatchLevel.CONFIRMED)
         return [li], True
 
 
-def _run(store, p, now, *, found: bool, scan_only=False, dry_run=False):
+def _run(store, p, now, *, found: bool, scan_only=False, dry_run=False, unchecked=False):
     reg = Registry(version="t", updated=T0.date(), brokers=[B])
     cfg = cfgmod.Config(real_submissions_enabled=True, min_delay_s=0, max_delay_s=0)
     r = _ScanRunner(store, reg, scan_only=scan_only, dry_run=dry_run, interactive=False,
                     broker_ids=None, only_due=False, mailer=FakeMailer(), cfg=cfg,
                     state_laws={}, now=now)
     r.found = found
+    r.unchecked = unchecked
     return asyncio.run(r.process(p, B))
 
 
@@ -127,3 +132,47 @@ def test_real_run_retires_letter_and_listing_gone_cancels_the_draft(store):
     assert store.get_request(todo.request_id).status == RequestStatus.CANCELLED
     ev = [e for e in store.events(p.id, B.id) if e.action == "manual_letter_retired"]
     assert ev and ev[0].detail == {"request_id": todo.request_id, "why": "nothing_to_send"}
+
+
+def _retired_events(store, p):
+    return [e.detail for e in store.events(p.id, B.id) if e.action == "manual_letter_retired"]
+
+
+def test_retired_letter_with_deferred_submit_cancels_draft_then_queues_once(store):
+    """SEC-104: the run that retires the letter defers the send (the listing was only seen on
+    an unreadable page). The DRAFT is cancelled; the next clean real run queues one email."""
+    p, todo = _letter_made(store)
+    p = p.model_copy(update={"mailbox": MB})
+    store.save_profile(p)
+    st = _run(store, p, T0 + timedelta(days=8), found=True, unchecked=True)
+    assert any(e.action == "submit_deferred" for e in store.events(p.id, B.id))
+    assert st.state == S.FOUND
+    assert not _manual(store, p)
+    assert store.get_request(todo.request_id).status == RequestStatus.CANCELLED
+    assert not _opt_outs(store, p, RequestStatus.QUEUED_FOR_APPROVAL)
+    assert _retired_events(store, p) == [{"request_id": todo.request_id,
+                                          "why": "nothing_to_send"}]
+
+    _run(store, p, T0 + timedelta(days=16), found=True)
+    (q,) = _opt_outs(store, p, RequestStatus.QUEUED_FOR_APPROVAL)
+    assert q.id != todo.request_id
+    assert not _opt_outs(store, p, RequestStatus.DRAFT)
+    assert len(_retired_events(store, p)) == 1, "the old DRAFT is cancelled only once"
+
+
+def test_open_id_request_keeps_the_letter_so_the_hold_never_follows_a_retire(store):
+    """An open ID-request to-do for the site is another human to-do, so _manual_to_email does
+    not retire the letter (it only retires when the letter is the site's sole to-do). The ID
+    hold therefore can't follow a retire on the same site: the letter, its DRAFT and the
+    status are kept, nothing is queued and nothing is cancelled."""
+    p, todo = _letter_made(store)
+    p = p.model_copy(update={"mailbox": MB})
+    store.save_profile(p)
+    store.save_todo(Todo(profile_id=p.id, broker_id=B.id, kind=TodoKind.ID_UPLOAD,
+                         title="Fake B asked for ID", resume_token=f"id_requested:{B.id}"))
+    st = _run(store, p, T0 + timedelta(days=8), found=True)
+    assert st.state == S.NEEDS_HUMAN
+    assert [t.id for t in _manual(store, p)] == [todo.id]
+    assert store.get_request(todo.request_id).status == RequestStatus.DRAFT
+    assert not _opt_outs(store, p, RequestStatus.QUEUED_FOR_APPROVAL)
+    assert not _retired_events(store, p)
