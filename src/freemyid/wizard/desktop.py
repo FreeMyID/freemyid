@@ -168,6 +168,18 @@ def main(window: bool = True, on_started: Callable[[], None] | None = None) -> i
         maybe_monthly_progress(Store())
     write_instance(running.port, running.token)
     stop = threading.Event()
+    from ..storage import Store
+    from .tray import start_tray
+
+    def quit_all() -> None:
+        with contextlib.suppress(Exception):
+            import webview
+            for w in list(webview.windows):
+                w.destroy()
+        stop.set()
+
+    tray = start_tray(Store(), on_open=lambda: (running.app.state.on_focus or (lambda: None))(),
+                      on_quit=quit_all)
     try:
         shown = False
         if window and os.environ.get("FREEMYID_NO_WINDOW") != "1":
@@ -192,6 +204,9 @@ def main(window: bool = True, on_started: Callable[[], None] | None = None) -> i
             _wait_forever(stop)
     finally:
         done()
+        if tray is not None:
+            with contextlib.suppress(Exception):
+                tray.stop()
         clear_instance(running.port)
         running.stop()
     return 0

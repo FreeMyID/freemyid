@@ -149,3 +149,9 @@ Installer artifact is FreeMyIDSetup-0.1.1 (pyproject still says 0.1.1, so this i
 - Gaps in what gets stored (needs the engine owner, Theo): every outgoing email and every matched reply must be saved as Evidence (`EvidenceKind` may need EMAIL_SENT / EMAIL_REPLY if only SCREENSHOT/others exist) and tied to `request_id`. Please confirm which kinds exist; if new enum values are needed that is a models.py + schema change (you own it; regenerate with tools/gen_schema.py).
 - Tamper evidence: sha256 is of the plaintext (check `save_evidence`); optional later step is a hash chain via Event rows (append-only audit already). Not needed for v1 of the vault.
 - Tests: TestClient on the page, hash-check button with a corrupted file, zip manifest contents, no plaintext file left in the home folder.
+
+## BL-IN-23 tray icon DONE (Nina, 2026-11-08)
+- `wizard/tray.py`: off unless `tray_enabled` and the `tray` extra is installed; pystray/PIL imported lazily, any failure just means no tray. Menu: Open Free My ID / status sentence (dashboard.status_sentence, no names) / Check now / Quit. Menu refreshes every 60 s. "Check now" starts `<same program as the scheduler> run --headless` (`--dry-run` while real submissions are off), one at a time, no window.
+- Started in `desktop.main`, stopped on exit. Quit destroys the pywebview window then sets the stop event.
+- Not built (said "optional" in the design): hide-to-tray on window close; needs-you icon variant (only the normal icon is used); no Settings checkbox yet for tray_enabled (set in config.yaml).
+- Tests: tests/test_wizard_tray.py (menu, status, command, one-at-a-time, off by default / extra missing). NOT TESTED: the real pystray icon (Windows VM: icon appears, menu items work, Check now runs, Quit closes the window; needs `pip install freemyid[tray]` and the spec must bundle pystray/PIL: not added to the spec yet).
