@@ -157,12 +157,81 @@ def test_sec91_no_cookie_replayed_across_redirect_hops():
 # --------------------------------------------------------------------------- SEC-92
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-92: Node.text() recurses per nesting level; a "
-                   "deep page raises RecursionError (scan reports it as 'network')")
 def test_sec92_text_survives_deep_nesting():
     html = ('<div class="result"><span class="name">' + "<b>" * 3000 + "Jane"
             + "</b>" * 3000 + "</span></div>")
     assert htmlsel.parse(html).select_one(".name").text() == "Jane"
+
+
+def _depth(root: htmlsel.Node) -> int:
+    best, stack = 0, [(root, 0)]
+    while stack:
+        n, d = stack.pop()
+        best = max(best, d)
+        stack.extend((c, d + 1) for c in n.children if isinstance(c, htmlsel.Node))
+    return best
+
+
+def test_sec92_tree_depth_is_capped_and_stray_end_tags_stay_cheap():
+    # (b) deeper start tags are dropped (text kept), so each stray </x> walks <= MAX_DEPTH
+    html = ("<div>" * 3000 + "<i>Jane</i>" + "</x>" * 5000 + "</div>" * 3000
+            + '<p class="after">ok</p>')
+    root = htmlsel.parse(html)
+    assert _depth(root) <= htmlsel.MAX_DEPTH
+    assert "Jane" in root.text()
+    # dropped tags' end tags close nothing real, so the page after them still parses
+    assert root.select_one(".after") is not None
+
+
+def test_sec92_descendant_match_is_memoized(monkeypatch):
+    # (c) `.results .card .card` over nested .card with no .results: was exponential
+    n = 200
+    root = htmlsel.parse('<div class="card">' * n + "x" + "</div>" * n)
+    calls = 0
+    real = htmlsel._Compound.matches
+
+    def counting(self, node):
+        nonlocal calls
+        calls += 1
+        return real(self, node)
+    monkeypatch.setattr(htmlsel._Compound, "matches", counting)
+    assert root.select(".results .card .card") == []
+    assert calls <= 3 * n          # at most once per (node, chain index)
+    assert len(root.select(".card .card")) == n - 1
+
+
+def _drip(chunks: int):
+    def h(req: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, content=iter([b"<p>x</p>"] * chunks))
+    return httpx.Client(transport=httpx.MockTransport(h), follow_redirects=False)
+
+
+def test_sec92_fetch_has_a_total_deadline():
+    # (d) a slow-drip body: each chunk "takes" 1 s on a fake clock, the budget is 30 s
+    t = [0.0]
+
+    def clock() -> float:
+        t[0] += 1.0
+        return t[0]
+    fetch = ex.http_fetcher(NetPolicy(fixture_registry()), client=_drip(1000), clock=clock)
+    with pytest.raises(ex.FetchFailed) as e:
+        fetch(DEV, "https://devauto.example/")
+    assert e.value.reason == "http_error" and t[0] < 40
+    # a quick page under the same budget is fine
+    ok = ex.http_fetcher(NetPolicy(fixture_registry()), client=_drip(3), clock=clock)
+    assert ok(DEV, "https://devauto.example/").status == 200
+
+
+def test_sec92_recursion_error_is_not_labelled_network(store):
+    p = make_profile()
+    store.save_profile(p)
+
+    def boom(b, u):
+        raise RecursionError
+    res = ex.scan_exposure(store, p.id, registry=fixture_registry(), broker_ids=["devauto"],
+                           fetch=boom, use_browser=False)
+    [entry] = [e for e in res.entries if e.broker_id == "devauto"]
+    assert entry.status == "check_by_hand" and entry.reason == "page_unrecognized"
 
 
 def test_htmlsel_ignores_scripts_and_never_runs_markup():

@@ -58,6 +58,9 @@ CHECK_ACTION = "exposure_check"
 MAX_BYTES = 2_000_000
 MAX_REDIRECTS = 2
 TIMEOUT_S = 20.0
+# SEC-92: total wall-clock budget for one fetch (all hops and the whole body); httpx's
+# timeout is per read, so a slow-drip server could otherwise hold a broker forever
+DEADLINE_S = 30.0
 CACHE_HOURS = 24
 _HEADERS = {"User-Agent": USER_AGENT, "Accept": "text/html,application/xhtml+xml",
             "Accept-Language": "en-US,en;q=0.8"}
@@ -112,7 +115,8 @@ def _on_broker(broker: Broker, url: str, policy: NetPolicy) -> bool:
 
 
 def http_fetcher(policy: NetPolicy, fixture_base: str | None = None,
-                 client: Any = None) -> Fetcher:
+                 client: Any = None, deadline_s: float = DEADLINE_S,
+                 clock: Callable[[], float] = time.monotonic) -> Fetcher:
     """One plain GET per broker. `fixture_base` (dev only) answers https://host/path from the
     local fixture server, the same mapping BrowserManager uses."""
     import httpx
@@ -121,6 +125,14 @@ def http_fetcher(policy: NetPolicy, fixture_base: str | None = None,
 
     def fetch(broker: Broker, url: str) -> Fetched:
         cl = client or httpx.Client(timeout=TIMEOUT_S, follow_redirects=False)
+        end = clock() + deadline_s
+
+        def left() -> float:
+            rest = end - clock()
+            if rest <= 0:
+                raise FetchFailed("http_error")      # too slow: the site did not answer normally
+            return rest
+
         try:
             cur = url
             for _hop in range(MAX_REDIRECTS + 1):
@@ -130,7 +142,8 @@ def http_fetcher(policy: NetPolicy, fixture_base: str | None = None,
                 # SEC-91: "no cookies" holds per hop too; a 30x Set-Cookie is never replayed
                 cl.cookies.clear()
                 try:
-                    with cl.stream("GET", real, headers=_HEADERS) as r:
+                    with cl.stream("GET", real, headers=_HEADERS,
+                                   timeout=min(TIMEOUT_S, left())) as r:
                         if r.status_code in (301, 302, 303, 307, 308):
                             loc = r.headers.get("location")
                             if not loc:
@@ -142,6 +155,7 @@ def http_fetcher(policy: NetPolicy, fixture_base: str | None = None,
                             body += chunk
                             if len(body) > MAX_BYTES:
                                 raise FetchFailed("too_large")
+                            left()
                         enc = r.encoding or "utf-8"
                         return Fetched(cur, r.status_code, body.decode(enc, errors="replace"))
                 except httpx.HTTPError as e:
@@ -540,6 +554,10 @@ def _scan_broker(store: Store, profile: Profile, broker: Broker, now: datetime, 
         entry = _check_one(store, profile, broker, url, fetcher, now, old_url, gap)
     except FetchFailed as e:
         entry = hand(e.reason)
+    except RecursionError:
+        # SEC-92: a hostile page, not the network
+        log.warning("exposure: %s page too complex", broker.id)
+        entry = hand("page_unrecognized")
     except Exception as e:  # noqa: BLE001 - one broker never stops the scan
         log.warning("exposure: %s failed (%s)", broker.id, type(e).__name__)
         entry = hand("network")

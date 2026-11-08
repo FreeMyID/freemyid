@@ -16,6 +16,9 @@ from dataclasses import dataclass, field
 from html.parser import HTMLParser
 
 MAX_NODES = 50_000
+# SEC-92: start tags nested deeper than this are dropped (their text is kept), so every
+# ancestor walk below is bounded by MAX_DEPTH
+MAX_DEPTH = 256
 
 _VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param",
          "source", "track", "wbr"}
@@ -57,29 +60,29 @@ class Node:
     def text(self) -> str:
         """Visible text, newlines between block elements (like innerText, roughly)."""
         parts: list[str] = []
-
-        def walk(n: Node) -> None:
+        # SEC-92: iterative (no recursion per nesting level); a str on the stack is output
+        stack: list[Node | str] = [self]
+        while stack:
+            n = stack.pop()
+            if isinstance(n, str):
+                parts.append(n)
+                continue
             if n.tag in _SKIP_TEXT:
-                return
+                continue
             block = n.tag in _BLOCK
             if block:
                 parts.append("\n")
-            for c in n.children:
-                if isinstance(c, str):
-                    parts.append(re.sub(r"\s+", " ", c))   # source newlines are spaces
-                else:
-                    walk(c)
-            if block:
-                parts.append("\n")
-
-        walk(self)
+                stack.append("\n")
+            for c in reversed(n.children):
+                # source newlines are spaces
+                stack.append(re.sub(r"\s+", " ", c) if isinstance(c, str) else c)
         lines = [re.sub(r"[ \t\r\f\v]+", " ", ln).strip() for ln in "".join(parts).split("\n")]
         return "\n".join(ln for ln in lines if ln)
 
     def select(self, selector: str) -> list[Node]:
-        groups = compile_selector(selector)
+        groups = [_ChainMatcher(g, self) for g in compile_selector(selector)]
         nodes = self.iter()
-        return [n for n in nodes if any(_match_chain(n, g, self) for g in groups)]
+        return [n for n in nodes if any(g.match(n) for g in groups)]
 
     def select_one(self, selector: str) -> Node | None:
         r = self.select(selector)
@@ -92,28 +95,50 @@ class _Builder(HTMLParser):
         self.root = Node("#document")
         self.cur = self.root
         self.count = 0
+        self.depth = 0       # depth of self.cur (root = 0)
+        self.dropped = 0     # open non-void start tags dropped past MAX_DEPTH
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         self.count += 1
         if self.count > MAX_NODES:
             return
-        n = Node(tag.lower(), {k.lower(): (v or "") for k, v in attrs}, parent=self.cur)
+        t = tag.lower()
+        if self.depth >= MAX_DEPTH:
+            if t not in _VOID:
+                self.dropped += 1
+            return
+        n = Node(t, {k.lower(): (v or "") for k, v in attrs}, parent=self.cur)
         self.cur.children.append(n)
         if n.tag not in _VOID:
             self.cur = n
+            self.depth += 1
 
     def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        t = tag.lower()
+        if self.depth >= MAX_DEPTH:
+            self.count += 1      # self-closed: dropped, and nothing stays open
+            return
+        if t in _VOID or self.count >= MAX_NODES:
+            self.handle_starttag(tag, attrs)     # adds nothing that stays open
+            return
         self.handle_starttag(tag, attrs)
-        if tag.lower() not in _VOID and self.cur.tag == tag.lower() and self.cur.parent:
+        if self.cur.tag == t and self.cur.parent:
             self.cur = self.cur.parent
+            self.depth -= 1
 
     def handle_endtag(self, tag: str) -> None:
+        if self.dropped:
+            self.dropped -= 1     # closes a start tag dropped past MAX_DEPTH
+            return
         t = tag.lower()
         n: Node | None = self.cur
-        while n is not None and n is not self.root and n.tag != t:
+        up = 0
+        while n is not None and n is not self.root and n.tag != t:   # <= MAX_DEPTH steps
             n = n.parent
+            up += 1
         if n is not None and n is not self.root and n.parent is not None:
             self.cur = n.parent
+            self.depth -= up + 1
 
     def handle_data(self, data: str) -> None:
         if self.count <= MAX_NODES:
@@ -200,21 +225,57 @@ def compile_selector(selector: str) -> list[_Chain]:
     return out
 
 
-def _match_chain(n: Node, chain: _Chain, scope: Node) -> bool:
-    """Right-to-left match; ancestors are limited to inside `scope` (like el.query_selector)."""
-    def rec(node: Node, i: int) -> bool:
-        comb, comp = chain[i]
-        if not comp.matches(node):
-            return False
-        if i == 0:
-            return True
-        p = node.parent
-        if comb == ">":
-            return p is not None and p is not scope and rec(p, i - 1)
-        while p is not None and p is not scope:
-            if rec(p, i - 1):
-                return True
-            p = p.parent
-        return False
+class _ChainMatcher:
+    """Right-to-left match of one chain; ancestors are limited to inside `scope` (like
+    el.query_selector). SEC-92: memoized per (node, index) for one select() call, and the
+    descendant combinator's "some ancestor matches" is memoized too, so a select is
+    O(nodes x chain length) instead of exponential backtracking."""
 
-    return rec(n, len(chain) - 1)
+    def __init__(self, chain: _Chain, scope: Node) -> None:
+        self.chain, self.scope = chain, scope
+        self._m: dict[tuple[int, int], bool] = {}
+        self._anc: dict[tuple[int, int], bool] = {}
+
+    def match(self, n: Node) -> bool:
+        return self._at(n, len(self.chain) - 1)
+
+    def _at(self, node: Node, i: int) -> bool:
+        key = (id(node), i)
+        hit = self._m.get(key)
+        if hit is not None:
+            return hit
+        comb, comp = self.chain[i]
+        if not comp.matches(node):
+            r = False
+        elif i == 0:
+            r = True
+        elif comb == ">":
+            p = node.parent
+            r = p is not None and p is not self.scope and self._at(p, i - 1)
+        else:
+            r = self._any_ancestor(node.parent, i - 1)
+        self._m[key] = r
+        return r
+
+    def _any_ancestor(self, p: Node | None, j: int) -> bool:
+        """Does p or one of its ancestors (strictly inside scope) match chain[j]? Iterative."""
+        path: list[Node] = []
+        r = False
+        while p is not None and p is not self.scope:
+            hit = self._anc.get((id(p), j))
+            if hit is not None:
+                r = hit
+                break
+            path.append(p)
+            if self._at(p, j):
+                r = True
+                break
+            p = p.parent
+        for q in path:
+            self._anc[(id(q), j)] = r
+        return r
+
+
+def _match_chain(n: Node, chain: _Chain, scope: Node) -> bool:
+    """One-off match (no memo shared across calls)."""
+    return _ChainMatcher(chain, scope).match(n)
