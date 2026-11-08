@@ -20,6 +20,9 @@ concurrency:
 
 env:
   IMAGE: ghcr.io/freemyid/freemyid
+  DH_IMAGE: docker.io/freemyid/freemyid
+  # Docker Hub mirror is on only when the repo variable DOCKERHUB_PUBLISH is 'true'
+  DH_ON: ${{ vars.DOCKERHUB_PUBLISH == 'true' }}
 
 jobs:
   build-smoke:
@@ -85,6 +88,13 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ github.token }}
+      - name: Log in to Docker Hub (access token, never the password)
+        if: steps.has.outputs.present == 'true' && vars.DOCKERHUB_PUBLISH == 'true'
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Image tags (no "latest" for pre-releases)
         id: tags
         if: steps.has.outputs.present == 'true'
@@ -94,7 +104,11 @@ jobs:
           {
             echo "list<<EOF"
             echo "${IMAGE}:${TAG}"
-            if [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then echo "${IMAGE}:latest"; fi
+            [ "$DH_ON" = "true" ] && echo "${DH_IMAGE}:${TAG}"
+            if [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "${IMAGE}:latest"
+              [ "$DH_ON" = "true" ] && echo "${DH_IMAGE}:latest"
+            fi
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
       - name: Build and push
@@ -113,7 +127,9 @@ jobs:
         if: steps.has.outputs.present == 'true'
         env:
           DIGEST: ${{ steps.push.outputs.digest }}
-        run: cosign sign --yes "${IMAGE}@${DIGEST}"
+        run: |
+          cosign sign --yes "${IMAGE}@${DIGEST}"
+          [ "$DH_ON" = "true" ] && cosign sign --yes "${DH_IMAGE}@${DIGEST}" || true
       - name: SBOM (syft, SPDX)
         if: steps.has.outputs.present == 'true'
         uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
@@ -127,4 +143,6 @@ jobs:
         if: steps.has.outputs.present == 'true'
         env:
           DIGEST: ${{ steps.push.outputs.digest }}
-        run: cosign attest --yes --type spdxjson --predicate sbom.spdx.json "${IMAGE}@${DIGEST}"
+        run: |
+          cosign attest --yes --type spdxjson --predicate sbom.spdx.json "${IMAGE}@${DIGEST}"
+          if [ "$DH_ON" = "true" ]; then cosign attest --yes --type spdxjson --predicate sbom.spdx.json "${DH_IMAGE}@${DIGEST}"; fi
