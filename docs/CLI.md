@@ -196,6 +196,11 @@ When a headless run fails closed before starting, `--json` prints
      "check_by_hand": 1, "uncertain": 0},
    "coverage_note": "This score is based on the 1 site we could check, out of 2. …",
    "drop_first": false, "first_checklist": null,
+   "trend": {"change": -12, "since": "2026-10-01",
+     "note": "Your score went down 12 points since 2026-10-01.",
+     "points": [{"day": "2026-10-01", "score": 40, "sites_total": 2, "sites_checked": 1,
+       "found": 1}, {"day": "2026-10-31", "score": 28, "sites_total": 2,
+       "sites_checked": 1, "found": 1}]},
    "entries": [{"broker_id": "spokeo", "broker_name": "Spokeo", "status": "found",
      "reason": null, "match_level": "confirmed", "signals": ["age", "city"],
      "from_store": false, "old_address_checked": false,
@@ -217,6 +222,13 @@ is in California. `old_address_checked` is true when one previous-address search
 for that site (`--old-addresses` or config `exposure_old_addresses`, off by default); `previous_name_checked` is
 true when one previous-name (maiden name) search was read (config `exposure_previous_names`,
 off by default). These fields were added in v0.3; `counts` is unchanged.
+
+`trend` (additive; the schema stays `exposure/1`) is the score over time. `points` has
+one entry per day (the day's last scan), oldest first, and offline scans are skipped.
+`change` and `since` compare the latest point with the one before it; both are null with
+fewer than 2 points. `note` is one plain line, and it warns when fewer sites could be
+checked than last time. The text output prints `note` under the coverage note once
+there are 2 or more points.
 
 ### `checklists/1`
 

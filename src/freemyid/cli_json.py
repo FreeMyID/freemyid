@@ -199,11 +199,25 @@ def failure_doc(code: int, reason: str) -> dict[str, Any]:
     return {"schema": "error/1", "exit_code": code, "reason": reason}
 
 
+def trend_doc(t: Any) -> dict[str, Any] | None:
+    """exposure/1 `trend` (additive): an engine.exposure.Trend, counts only."""
+    if t is None:
+        return None
+    return {"change": t.change, "since": t.since.isoformat() if t.since else None,
+            "note": t.note,
+            "points": [{"day": pt.day.isoformat(), "score": pt.score,
+                        "sites_total": pt.sites_total, "sites_checked": pt.sites_checked,
+                        "found": pt.found} for pt in t.points]}
+
+
 def exposure_doc(rows: list[tuple[Profile, ExposureResult]], *, offline: bool,
                  headless: bool, exit_code: int,
-                 skipped: list[dict[str, Any]]) -> dict[str, Any]:
+                 skipped: list[dict[str, Any]],
+                 trends: dict[str, Any] | None = None) -> dict[str, Any]:
     """`freemyid exposure --json` (docs/CLI.md, docs/EXPOSURE.md). Listing and check URLs
-    are shown because the human output shows them too (they are what the person opens)."""
+    are shown because the human output shows them too (they are what the person opens).
+    `trends`: profile id -> engine.exposure.Trend (null `trend` when absent)."""
+    trends = trends or {}
     return {
         "schema": "exposure/1",
         "offline": offline,
@@ -223,6 +237,7 @@ def exposure_doc(rows: list[tuple[Profile, ExposureResult]], *, offline: bool,
             "coverage_note": r.coverage_note,
             "drop_first": r.drop_first,
             "first_checklist": r.first_checklist,
+            "trend": trend_doc(trends.get(p.id)),
             "entries": [{
                 "broker_id": e.broker_id,
                 "broker_name": e.broker_name,

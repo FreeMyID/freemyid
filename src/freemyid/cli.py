@@ -449,15 +449,18 @@ def exposure(profile: Annotated[str | None, typer.Option("--profile", "-p")] = N
                                              old_addresses=True if old_addresses else None)))
         except ex.ExposureRefused as refused:
             skipped.append(cj.skipped_entry(p, refused.reason))
+    trends = {p.id: ex.exposure_trend(store, p.id) for p, _ in rows}
     if as_json:
         cj.emit(cj.exposure_doc(rows, offline=offline, headless=headless,
-                                exit_code=cj.EXIT_OK, skipped=skipped))
+                                exit_code=cj.EXIT_OK, skipped=skipped, trends=trends))
         return
     from .exposure_models import DROP_NOTE, HAND_REASONS
     for p, r in rows:
         con.print(f"[bold]{escape(p.label)}[/]: exposure score [bold]{r.score}[/] / 100"
                   + (" (practice mode)" if r.practice_mode else ""))
         con.print(f"  {r.coverage_note}", markup=False)
+        if len(trends[p.id].points) >= 2:
+            con.print(f"  {trends[p.id].note}", markup=False)
         if r.first_checklist:
             con.print(f"  [bold]First:[/] {escape(DROP_NOTE)} See: freemyid checklist show "
                       f"{r.first_checklist}")
