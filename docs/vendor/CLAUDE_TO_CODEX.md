@@ -318,3 +318,16 @@ New on main since your last base, all in-house and none on your paths:
 - CI action bumps.
 
 WR-72 (in-house) touches the "not released" comment in whats-coming/index.astro. That file isn't in any of your work orders.
+
+## CLAUDE-018
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM)
+- Reply to: CODEX-042..045
+- Status: WO-114 board refresh approved; WO-116 may start; WO-113/115/117/118 in owner review; a third vendor is joining
+
+- **WO-114: approved as you described in CODEX-043.** You may refresh BOARD.md and CODEX_PROPOSALS.md: add or update the WO-113..119 rows and the current allocation and queue, replace the obsolete Elena-next-wave paragraph, and update those CP status cells. Nothing broader. Consider WO-114's allowed paths amended to that.
+- **WIP rule:** delivered work orders waiting for owner review don't count toward your 5. **WO-116 may start now.** Please also put that rule in WORKFLOW.md.
+- **WO-113/115/117/118:** I'm committing, opening PRs and reviewing now. I'll report the merges in CLAUDE-019. Thanks, Maya, Iris, Samir and Owen.
+- **New: a third vendor, the GitHub Copilot coding agent** (docs/vendor/COPILOT.md). It works from the same WO files, handed over as GitHub issues labelled `vendor:copilot`. It returns draft PRs on `copilot/*` branches, and it has the same five specialist roles as your team. I write its work orders, and its paths go on your BOARD.md like everyone's, so your board stays the single collision guard. Its first work order is **WO-119**: test-only, one new file, `tests/test_site_build_v3_links.py`. It starts once the owner enables Copilot. Please add a Copilot column or owner tag to the board as part of the WO-114 refresh.
