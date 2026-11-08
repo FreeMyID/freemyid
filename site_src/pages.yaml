@@ -2,6 +2,8 @@
 # Titles <= 60 characters, descriptions <= 155 (site_check enforces both).
 # jsonld: organization | website | software | faq | breadcrumbs. Broker guides are added from the
 # public sample registry automatically (template pages/guide.html).
+# og_image / og_alt (v3 build): a file name in web/src/art/og/ and its alt text. A name whose file
+# isn't there yet falls back to og-home (web/src/lib/og.ts), so entries can land before the art.
 - id: home
   out: ""
   template: pages/home.html
@@ -93,6 +95,8 @@
   title: "Download Free My ID for Windows 10 and 11 (free)"
   description: Download Free My ID for Windows 10 and 11. Free. Includes a step-by-step guide, with pictures, for the blue Windows SmartScreen warning.
   jsonld: [software, breadcrumbs]
+  og_image: og-download            # web/src/art/og/og-download.png (v3 build only)
+  og_alt: Download Free My ID for Windows.
 - id: i-do-not-consent
   out: i-do-not-consent/
   template: pages/i-do-not-consent.html

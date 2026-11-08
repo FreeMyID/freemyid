@@ -1,9 +1,10 @@
 // Build-time data for the v3 site. Reads the SAME files as tools/build_site.py, so there is one
 // source of truth: site_src/site.yaml, pages.yaml, data/*.yaml and the PUBLIC sample registry.
 // Never point this at brokers/registry.yaml (the full registry is private).
-import { existsSync, readFileSync, realpathSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, realpathSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import { parse } from "yaml";
+import { ogNames, resolveOg } from "./og";
 
 // The repo root is the nearest folder above the working dir (web/) that holds site_src/.
 // (import.meta.url points into the build cache once Astro bundles this module.)
@@ -43,6 +44,7 @@ export interface SiteCfg {
 export interface PageCfg {
   id: string; out: string; label: string; title: string; description: string;
   nav?: string; jsonld?: string[]; noindex?: boolean;
+  og_image?: string; og_alt?: string;   // web/src/art/og/<og_image>.png; missing file = og-home (lib/og.ts)
 }
 export interface Release { version: string | null; date?: string | Date; size_mb?: number; sha256?: string; notes?: string[] }
 export interface Faq { id: string; q: string; a: string; home?: boolean }
@@ -50,6 +52,9 @@ export interface Faq { id: string; q: string; a: string; home?: boolean }
 export const site = load<SiteCfg>(resolve(SRC, "site.yaml"));
 export const pagesList = load<PageCfg[]>(resolve(SRC, "pages.yaml"));
 export const pages: Record<string, PageCfg> = Object.fromEntries(pagesList.map((p) => [p.id, p]));
+/** OG images that exist in web/src/art/og (published by pages/assets/[og].png.ts). */
+export const OG_DIR = resolve(REPO, "web/src/art/og");
+export const ogImages = ogNames(existsSync(OG_DIR) ? readdirSync(OG_DIR) : []);
 export const release = (load<Release>(resolve(SRC, "data/release.yaml")) || { version: null }) as Release;
 export const faq = load<Faq[]>(resolve(SRC, "data/faq.yaml"));
 export const icons = load<Record<string, string>>(resolve(SRC, "data/icons.yaml"));
@@ -211,8 +216,10 @@ export function pageProps(id: string) {
   if (!p) throw new Error(`page ${id} not in site_src/pages.yaml`);
   const crumbs: Crumb[] = [["Home", ""]];
   if (id !== "home") crumbs.push([p.label, p.out]);
+  const og = resolveOg(p, ogImages);
+  if (og.fallback) console.warn(`[og] ${id}: ${p.og_image} not in web/src/art/og yet, using og-home`);
   return { title: p.title, description: p.description, out: p.out, nav: p.nav ?? null,
-    noindex: Boolean(p.noindex), jsonldKinds: p.jsonld ?? [], crumbs };
+    noindex: Boolean(p.noindex), jsonldKinds: p.jsonld ?? [], crumbs, ogImage: og.ogImage, ogAlt: og.ogAlt };
 }
 
 /** JSON for a <script type="application/ld+json"> block; "<" is escaped so data can't close the tag. */
