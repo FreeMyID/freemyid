@@ -9,7 +9,20 @@ freemyid setup --from setup.yaml        # set someone up without the wizard
 freemyid run --dry-run                  # practice run: search and report, send nothing
 freemyid run --headless                 # cron / systemd / Docker
 freemyid status --json                  # machine-readable status
+freemyid app                            # open Free My ID in its own window
+freemyid fill spokeo -p "Jane Q Testperson"   # open one site's form, filled in; you press Submit
+freemyid wipe                           # delete everything Free My ID saved here (asks first)
 ```
+
+* `freemyid app` opens the setup wizard the first time and the dashboard after that. Add
+  `--no-window` to use your web browser instead (`cli.py:242-247`).
+* `freemyid fill BROKER` opens that site's form in a visible window and fills it in. You tick
+  the box and press Submit yourself. `-p` picks the person (needed if more than one is set up;
+  otherwise it exits 2), and `--timeout` is the seconds to wait, 30 to 3600 (`cli.py:361-376`).
+* `freemyid wipe` asks "Delete ALL Free My ID data on this computer?" before it deletes
+  anything. `--yes` skips the question. It removes the saved people, evidence, mailbox
+  passwords, the encryption key and the background task, so use it only when you are done
+  (`cli.py:578-626`).
 
 Global option: `-v/--verbose` (more detail in the log).
 

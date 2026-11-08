@@ -3,7 +3,7 @@
 This page walks you through the email screen in Free My ID if you use Gmail.
 It takes about 3 minutes (`src/freemyid/wizard/ui.py:210`).
 
-Example used below: Jane Q Testperson, Springfield IL, `jane.testperson.removals@gmail.com`
+Example used below: Jane Q Testperson, Springfield IL, `jane.testperson.removals@example.com`
 (a made-up address).
 
 ## Before you start

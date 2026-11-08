@@ -118,10 +118,6 @@ def test_table_flag_exists_on_row_command(cmd: str, flag: str) -> None:
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="docs gap: app/fill/wipe lack examples; Claire to add (WO-147 follow-up)",
-)
 def test_every_visible_top_level_command_is_written_as_freemyid_example() -> None:
     """Beyond the table: each top-level command also appears in some docs `freemyid <cmd>` text."""
     seen: set[str] = set()
