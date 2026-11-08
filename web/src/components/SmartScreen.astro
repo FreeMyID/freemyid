@@ -8,6 +8,9 @@ const { step } = Astro.props;
 const label = step === 1
   ? "Drawing of the blue Windows protected your PC box. The small More info link under the message is highlighted."
   : "Drawing of the same blue box after clicking More info. It shows App: FreeMyIDSetup.exe and Publisher: Unknown publisher. The Run anyway button is highlighted.";
+// CA-5: fixed colours on purpose (it imitates the Windows dialog, so it does not follow the site theme). Ratios, guarded by
+// tests/test_web_contrast_inhouse.py: #fff on #0b5394 7.84:1 (text), gold #f2b705 ring on #0b5394 4.31:1 (3:1 needed).
+// In forced colours the drawing falls back to system colours; the ring stays an outline.
 const hint = "outline outline-[3px] outline-offset-2 outline-[#f2b705]";
 ---
 <figure class="my-m w-full min-w-0 max-w-[30rem]">

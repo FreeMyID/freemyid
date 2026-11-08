@@ -35,7 +35,8 @@
   p, li, dd, figcaption { text-wrap: pretty; }
   a { @apply text-link underline underline-offset-[0.18em] decoration-[0.08em]; }
   a:hover { text-decoration-thickness: 0.14em; }
-  /* Focus: gold outer ring with a contrasting inner ring, visible on any band (3px+). */
+  /* Focus: gold outer ring with a contrasting inner ring, visible on any band (3px+).
+     CA-3: do not remove the inner ring. Gold alone is 1.82:1 on the light page; the inner ring carries the 3:1. */
   :focus-visible {
     outline: 3px solid var(--fmi-color-focus) !important;
     transition: none !important; /* no colour fade on the ring */
@@ -48,6 +49,13 @@
   code, kbd { @apply font-mono; font-size: 0.9em; }
   summary { cursor: pointer; }
   ::selection { background: var(--fmi-color-focus); color: #151b26; }
+  /* CA-6: Windows high contrast (forced colours). Backgrounds become the system colour, so filled buttons and
+     number bubbles would lose their shape, and the box-shadow inner ring is dropped. Give them a real border and
+     use the system Highlight colour for the focus outline. */
+  @media (forced-colors: active) {
+    :focus-visible { outline: 3px solid Highlight !important; box-shadow: none !important; }
+    a.no-underline.inline-flex, button, .rounded-full.inline-flex { border: 2px solid currentColor; }
+  }
 }
 
 @layer components {
