@@ -22,3 +22,15 @@ Draft recipe for the command-line tool and the local dashboard. Not published, n
 
 Nothing here was built. Check with `flatpak-builder --user --install build org.freemyid.FreeMyID.yml`,
 then `flatpak run org.freemyid.FreeMyID doctor --offline`. Also confirm the keyring works through the sandbox.
+
+## Try it locally
+
+Status: **coming**. `site_src/data/release.yaml` lists the Windows installer only. The commands are **unverified**
+(not run). They will not work until the dependency sources and the source `sha256` placeholder are filled in:
+
+```
+cd distro/flatpak
+flatpak-builder --user --install --force-clean build org.freemyid.FreeMyID.yml
+flatpak run org.freemyid.FreeMyID doctor --offline
+flatpak uninstall --user org.freemyid.FreeMyID
+```

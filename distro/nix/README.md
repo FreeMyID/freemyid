@@ -33,3 +33,16 @@ If Nix says the flake is not tracked, run `git add distro/nix` first (flakes onl
 Written without network access or Nix installed, so it was never built. Please run
 `nix flake check ./distro/nix` and `nix build ./distro/nix` and report any missing or renamed nixpkgs
 attributes.
+
+## Try it locally
+
+Status: **coming**. `site_src/data/release.yaml` lists the Windows installer only. This recipe has no
+placeholder hashes (it builds from the checkout), but the commands are **unverified** (not run):
+
+```
+nix flake check ./distro/nix
+nix build ./distro/nix
+./result/bin/freemyid --help
+```
+
+If you try the app, use fake data only, for example "Pat Testperson, 12 Example St, Springfield IL".
