@@ -115,8 +115,11 @@ def main() -> int:
         if any(m.get("author", {}).get("id") == me["id"] and m.get("content", "")[:40] == text[:40] for m in msgs):
             print("message =", ch); return
         m = call("POST", f"/channels/{cid}/messages", json={"content": text, "allowed_mentions": {"parse": []}})
-        if pin and m.get("id"):
-            call("PUT", f"/channels/{cid}/pins/{m['id']}")
+        if pin and m.get("id") and not DRY:
+            r = c.put(f"/channels/{cid}/pins/{m['id']}")
+            if r.status_code >= 400:
+                print(f"  could not pin in #{ch} ({r.status_code}); pin it by hand")
+                pin = False
         print("message +", ch, "(pinned)" if pin else "")
 
     post_once("rules", RULES, pin=True)
