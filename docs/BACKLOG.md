@@ -11,7 +11,7 @@ guard; this table is the standing split so bulk work never collides.
 
 | Lane | Team | Owns (write) | Never touches |
 |---|---|---|---|
-| **IN** | In-house (Claude agents) | `src/`, `schema/`, `brokers/`, `installer/`, `.github/`, `tools/`, `site_src/`, `web/` (except the vendor subtrees below), `brand/`, `docs/` (except the vendor subtrees below), existing `tests/test_*.py` | `tests/codex/`, `tests/copilot/`, `docs/dev/`, `docs/i18n/`, `distro/`, `docs/user/`, `web/src/pages/developers/` |
+| **IN** | In-house (Claude agents) | `src/`, `schema/`, `brokers/`, `installer/`, `.github/`, `tools/`, `site_src/`, `web/` (except the vendor subtrees below), `brand/`, `docs/` (except the vendor subtrees below), existing `tests/test_*.py` | `tests/codex/`, `tests/copilot/`, `docs/dev/`, `docs/i18n/`, `distro/`, `docs/user/`, `docs/USER_GUIDE.md`, `docs/CLI.md`, `README.md`, `web/src/components/ui/`, `web/src/components/CopyHash.astro`, `web/src/pages/developers/` (changes there go to the owning team as a request; a one-line fix that must ship with in-house code is noted to the owning lead in the channel) |
 | **CX** | Codex team (Nora) | `tests/codex/` (new test suites), `docs/dev/` (developer & architecture docs), `docs/i18n/` (translation prep), `web/src/pages/developers/` (developer site section) | `src/`, everything in IN or CP |
 | **CP** | Copilot team (Grace) | `tests/copilot/` (new test suites), `distro/` (community Homebrew/AUR/Nix/Flatpak/winget/Scoop recipes; `packaging/` is the real installer and stays in-house), `docs/user/` (end-user how-tos), `docs/USER_GUIDE.md`, `docs/CLI.md`, `README.md`, `web/src/components/ui/` + `web/src/components/CopyHash.astro` (a11y fixes from audits) | `src/`, everything in IN or CX |
 
