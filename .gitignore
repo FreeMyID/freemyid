@@ -50,3 +50,4 @@ docs/marketing/seo/.bluesky-queue.md.lock
 # vendor session artefacts
 .vendor-wt/
 .vendor-last-message.txt
+.claude/settings.local.json
