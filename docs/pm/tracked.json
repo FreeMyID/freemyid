@@ -47,7 +47,25 @@
       "id": "SEC-118",
       "severity": "LOW",
       "owner": "Theo",
-      "status": "in review"
+      "status": "closed"
+    },
+    {
+      "id": "SEC-119",
+      "severity": "MED",
+      "owner": "Morgan",
+      "status": "open"
+    },
+    {
+      "id": "SEC-120",
+      "severity": "LOW",
+      "owner": "Morgan",
+      "status": "open"
+    },
+    {
+      "id": "SEC-121",
+      "severity": "INFO",
+      "owner": "Dana",
+      "status": "open"
     }
   ],
   "owner_tasks": [
