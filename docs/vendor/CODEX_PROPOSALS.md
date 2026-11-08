@@ -2,7 +2,7 @@
 
 Prepared 2026-11-07 at the user's request. Recipient: Morgan Reyes, Claude project engineer.
 
-These are proposals, not work orders or claims that paths are available. Claude chooses priorities, verifies current ownership, and issues WO-1xx assignments with a prepared worktree. No implementation of these proposals has started. Existing work-order status lines may be stale; CLAUDE-001 and subsequent owner messages take precedence.
+These are proposals, not work orders or claims that paths are available. Claude chooses priorities, verifies current ownership, and issues WO-1xx assignments with a prepared worktree. Current implementation and delivery states are recorded in the candidate table below; allocation history is in CLAUDE-003. Existing work-order status lines may be stale; CLAUDE-001 and subsequent owner messages take precedence.
 
 ## Coordination and reservations
 
@@ -18,15 +18,15 @@ These are proposals, not work orders or claims that paths are available. Claude 
 | ID | Candidate | Evidence / reason | Suggested order | Status |
 | --- | --- | --- | --- | --- |
 | CP-01 | Homepage hero wrapping and alignment | Open WR-53; web-qa handoff | After WO-101 accepted | Queued WO-103 by CLAUDE-002; do not start yet |
-| CP-02 | Checksum copy failure feedback | CopyHash.tsx silently clears success on clipboard rejection | Small independent UI task | Assigned WO-104, channel session; after WO-102 |
+| CP-02 | Checksum copy failure feedback | CopyHash.tsx silently clears success on clipboard rejection | Small independent UI task | WO-104 delivered for review, CODEX-011 |
 | CP-03 | Navigation keyboard and narrow-screen regression coverage | WR-50/51 fixes exist; protect them from regressions | Test-only, after owner overlap check | Allocated to Elena and specialists, owner-numbered WO-0xx |
 | CP-04 | Protection-guide print usability | Existing public guides have print affordances; audit rather than assume defect | Audit first | Allocated to Elena and specialists, owner-numbered WO-0xx |
-| CP-05 | Missing-page recovery regression tests | Existing 404 has home/guide links and noindex | Small independent tests | Assigned WO-105, channel session; after WO-104 |
+| CP-05 | Missing-page recovery regression tests | Existing 404 has home/guide links and noindex | Small independent tests | WO-105 delivered for review, CODEX-012 |
 | CP-06 | Exposure-card review follow-ups | Explicit CLAUDE-001 feedback: hide zero manual count, cap explanations | After WO-005 acceptance | Assigned WO-106, channel session; after PR #10 merges |
 | CP-07 | Printable-summary visual verification | WO-006 covers HTML; physical layout checks remain separate | After WO-006 acceptance | Allocated to Elena and specialists, owner-numbered WO-0xx |
 | CP-08 | v0.2 CLI documentation consistency audit | Current release priority in ROADMAP section 6 | Read-only audit first | Allocated to Elena and specialists, owner-numbered WO-0xx |
 | CP-09 | Families/helper page accessibility audit | Existing helper journey serves older readers | Audit first | Allocated to Elena and specialists, owner-numbered WO-0xx |
-| CP-10 | Safety illustration cleanup | Open WR-55 plus WO-101 source-title follow-up | WO-102, Codex channel session | Assigned and active by CLAUDE-002 |
+| CP-10 | Safety illustration cleanup | Open WR-55 plus WO-101 source-title follow-up | WO-102, Codex channel session | WO-102 source/visual QA delivered; awaiting WO-101 integration |
 
 Each candidate below is intended to fit one or two vendor sessions. Existing browser tooling must be available; missing browser/assistive-technology checks are reported unverified, never replaced by a claimed pass.
 
