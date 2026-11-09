@@ -98,11 +98,53 @@ def _post_btn(action: str, csrf: str, label: str, cls: str = "", extra: str = ""
             f'{extra}<button type="submit" class="{cls}">{esc(label)}</button></form>')
 
 
+_REASON_WORDS = {"city": "the city", "age": "the age", "relative": "a relative's name",
+                 "phone": "a phone number", "email": "an email address",
+                 "phone_lookup": "the phone number", "email_lookup": "the email address"}
+
+
+def review_listing_id(t: Todo) -> str | None:
+    """The listing a REVIEW_MATCH to-do is about (the runner stores it in resume_token)."""
+    tok = t.resume_token or ""
+    return tok[len("review:"):] if tok.startswith("review:") and len(tok) > 7 else None
+
+
+def _review_card(t: Todo, head: str, csrf: str, reasons: list[str] | None) -> str:
+    """"Is this you?" card: Yes / No / look first. Says what each answer does."""
+    tid, lid = esc(t.id), review_listing_id(t)
+    url = open_url_of(t)
+    words = [_REASON_WORDS[r] for r in (reasons or []) if r in _REASON_WORDS]
+    why = ("<p><b>Why it is a possible match:</b> the name is the same"
+           + (f", and so is {_join(words)}" if words else "") + ". That is not enough for Free "
+           "My ID to be sure it is you.</p>")
+    hid = f'<input type="hidden" name="listing_id" value="{esc(lid or "")}">'
+    opener = _post_btn(f"/todo/{tid}/open", csrf, "Open the page", "secondary") if url else ""
+    yes = _post_btn(f"/todo/{tid}/review/yes", csrf, "Yes, this is me", "primary", hid)
+    no = _post_btn(f"/todo/{tid}/review/no", csrf, "No, this is not me", "secondary", hid)
+    return (f'<div class="card todo" data-kind="review_match">{head}<p>{esc(t.title)}</p>{why}'
+            '<p>Open the page first if you want to look. Only you can say whether '
+            'it is you.</p>'
+            '<p><b>If you press Yes:</b> Free My ID will ask this site to take the listing down '
+            'on its next check. Some sites get an email that you approve first; some need a '
+            'step from you. If a site wants a photo ID, an account or your phone number, Free '
+            'My ID stops and asks, unless you allowed that in Settings. In practice mode '
+            'nothing is sent.</p>'
+            '<p><b>If you press No:</b> nothing will be sent for this listing, and Free My ID '
+            f'will not ask about it again.</p>'
+            f'<div class="actions">{opener}{yes}{no}</div></div>')
+
+
+def _join(words: list[str]) -> str:
+    return words[0] if len(words) == 1 else ", ".join(words[:-1]) + " and " + words[-1]
+
+
 def todo_card(t: Todo, who: str, bname: str, csrf: str, show_who: bool = False,
-              fill: bool = False) -> str:
+              fill: bool = False, reasons: dict[str, list[str]] | None = None) -> str:
     tid = esc(t.id)
     head = (f'<h2>{esc(bname) or esc(t.title)}</h2>'
             + (f'<p class="hint">For {esc(who)}</p>' if show_who else ""))
+    if t.kind == TodoKind.REVIEW_MATCH and review_listing_id(t):
+        return _review_card(t, head, csrf, (reasons or {}).get(review_listing_id(t) or ""))
     done = f"/todo/{tid}/done"
     couldnt = f"/todo/{tid}/couldnt"
     if t.kind == TodoKind.ASSISTED_OPT_OUT:
@@ -185,7 +227,8 @@ def home_page(*, statuses: list[BrokerStatus], todos: list[tuple[Todo, str, str]
               practice: bool = False, running: bool = False, fill: bool = False,
               filling: bool = False, sent: int = 0, exposure: str = "",
               protect: list[tuple[str, str, int, int]] | None = None,
-              engines: dict[str, int] | None = None) -> str:
+              engines: dict[str, int] | None = None,
+              reasons: dict[str, list[str]] | None = None) -> str:
     """The Today view: one big card with the next thing to do, then one progress line.
     todos = (todo, person label, broker name). `exposure` is ready-made HTML (views.exposure_card)."""
     need = len(todos) + (1 if outbox_count else 0)
@@ -212,7 +255,7 @@ def home_page(*, statuses: list[BrokerStatus], todos: list[tuple[Todo, str, str]
             '<a class="btn primary big" href="/outbox">Look at them</a></div>')
     elif rest:
         t, who, bname = rest.pop(0)
-        card = todo_card(t, who, bname, csrf, multi, fill and not filling)
+        card = todo_card(t, who, bname, csrf, multi, fill and not filling, reasons)
         body += _hero(card.replace("<h2>", '<h1 id="next-h">', 1).replace("</h2>", "</h1>", 1)
                       .replace('class="card todo"', 'class="hero-body"', 1))
     elif running:
@@ -238,7 +281,8 @@ def home_page(*, statuses: list[BrokerStatus], todos: list[tuple[Todo, str, str]
 def more_page(*, todos: list[tuple[Todo, str, str]], people: list[dict], csrf: str,
               flash: str = "", fill: bool = False, filling: bool = False,
               exposure: str = "", protect: list[tuple[str, str, int, int]] | None = None,
-              engines: dict[str, int] | None = None) -> str:
+              engines: dict[str, int] | None = None,
+              reasons: dict[str, list[str]] | None = None) -> str:
     """Everything that is not "the next thing": the full to-do list, safety steps, the
     listing check and the per-person pages. One click from Today."""
     body = _flash(flash) + '<p><a href="/">Back to Today</a></p><h1>Everything</h1>'
@@ -246,7 +290,7 @@ def more_page(*, todos: list[tuple[Todo, str, str]], people: list[dict], csrf: s
     body += f'<h2 id="waiting-h">Waiting for you ({len(todos)})</h2>'
     if todos:
         for t, who, bname in todos:
-            body += todo_card(t, who, bname, csrf, multi, fill and not filling)
+            body += todo_card(t, who, bname, csrf, multi, fill and not filling, reasons)
     else:
         body += '<div class="card"><p>Nothing is waiting for you.</p></div>'
     body += '<div class="cols">'
@@ -316,7 +360,8 @@ def _flash(msg: str) -> str:
 
 def profile_page(p: Profile, statuses: list[BrokerStatus], names: dict[str, str],
                  todos: list[Todo], evidence_by_broker: dict[str, list], csrf: str,
-                 consent_problem: str, flash: str = "", fill: bool = False) -> str:
+                 consent_problem: str, flash: str = "", fill: bool = False,
+                 reasons: dict[str, list[str]] | None = None) -> str:
     body = f'<h1>{esc(p.label)}</h1>{_flash(flash)}'
     if consent_problem:
         body += f'<div class="note">Not running yet: {esc(consent_problem)}</div>'
@@ -335,7 +380,8 @@ def profile_page(p: Profile, statuses: list[BrokerStatus], names: dict[str, str]
     if not todos:
         body += "<p>Nothing right now.</p>"
     for t in todos:
-        body += todo_card(t, p.label, names.get(t.broker_id or "", ""), csrf, fill=fill)
+        body += todo_card(t, p.label, names.get(t.broker_id or "", ""), csrf, fill=fill,
+                          reasons=reasons)
     body += "</div>"
     # per-broker table
     body += ('<div class="card"><h2>Sites</h2><div class="tablewrap" tabindex="0" role="region" aria-label="Sites"><table><tr><th>Site</th><th>State</th>'

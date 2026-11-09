@@ -193,3 +193,54 @@ def test_guard_still_rejects_foreign_and_null_origins(page, running):
     r = pg.request.post(f"{origin}/settings/submissions/off", form={"csrf": "nope"},
                         headers={"Origin": origin}, max_redirects=0)
     assert r.status == 403
+
+
+def _seed_review(label: str = "Pat"):
+    from freemyid.models import (
+        Address,
+        Consent,
+        ConsentBasis,
+        Listing,
+        MatchLevel,
+        PersonName,
+        Profile,
+        Todo,
+        TodoKind,
+    )
+    from freemyid.storage import Store
+    store = Store()
+    p = Profile(label=label, name=PersonName(first="Pat", last="Testperson"),
+                addresses=[Address(city="Raleigh", state="NC", current=True)],
+                consent=Consent(basis=ConsentBasis.SELF, attested_by="Pat Testperson",
+                                text_version="t"))
+    store.save_profile(p)
+    li = Listing(profile_id=p.id, broker_id="examplebroker", url="https://example.com/p/1",
+                 match_score=60, match_level=MatchLevel.POSSIBLE, match_reasons=["city"])
+    store.save_listing(li)
+    store.save_todo(Todo(profile_id=p.id, broker_id="examplebroker", kind=TodoKind.REVIEW_MATCH,
+                         title="Is this Pat? (Example)", body="b", links=[li.url],
+                         resume_token=f"review:{li.id}"))
+    return store, p, li
+
+
+@pytest.mark.parametrize("button,level,flash", [
+    ("Yes, this is me", "confirmed", "ask that site to remove"),
+    ("No, this is not me", "no_match", "Nothing will be sent"),
+])
+def test_is_this_you_buttons_in_real_browser(page, running, freemyid_env, button, level, flash):
+    store, p, li = _seed_review()
+    pg, origin = page, page.freemyid_origin
+    pg.goto(running.url)
+    assert _path(pg.url, origin) == "/"
+    btn = pg.get_by_role("button", name=button)
+    assert btn.bounding_box()["height"] >= 44
+    with pg.expect_navigation():
+        btn.click()
+    pg.wait_for_load_state()
+    _assert_no_rejection(pg)
+    assert flash in pg.inner_text("body")
+    assert pg.freemyid_log["posts"][-1].all_headers().get("origin") == origin
+    got = next(x for x in store.list_listings(p.id) if x.id == li.id)
+    assert got.match_level.value == level
+    assert store.list_todos(p.id) == []
+    assert pg.freemyid_log["blocked"] == []

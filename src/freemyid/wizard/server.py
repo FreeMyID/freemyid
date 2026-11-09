@@ -57,6 +57,10 @@ MSGS = {
     "attached": "Authorization attached.", "sched_on": "Automatic checking is on.",
     "sched_off": "Automatic checking is off.", "sched_fail": "Could not change that setting.",
     "saved": "Saved.", "real_on": "Real requests are on.", "real_off": "Practice mode is on.",
+    "review_yes": ("Thank you. Free My ID will ask that site to remove the listing on its next "
+                   "check, if your settings allow it."),
+    "review_no": "Thank you. Nothing will be sent for that listing.",
+    "review_gone": "That question was already answered. Nothing was changed.",
     "fill_done": "That one is done. Thank you.",
     "fill_busy": "Another form is already being filled in. Please finish that one first.",
     "fill_none": ("The form was not sent, so nothing changed. Your to-do is still on the "
@@ -233,6 +237,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
             outbox_count=len(queued), csrf=csrf_token, flash=flash(request),
             practice=not cfgmod.load().real_submissions_enabled,
             running=bool(app.state.running), fill=True,
+            reasons=_reasons([t for t, _, _ in todos]),
             filling=bool(app.state.fill["running"]),
             sent=sum(1 for r in store.list_requests(status=RequestStatus.SENT) if not r.dry_run)))
 
@@ -248,6 +253,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
                    for t in store.list_todos()],
             people=[{"profile": p} for p in profiles], csrf=csrf_token, flash=flash(request),
             fill=True, filling=bool(app.state.fill["running"]),
+            reasons=_reasons(store.list_todos()),
             exposure="".join(views.exposure_card(store, pr) for pr in profiles),
             protect=[(pr.id, pr.label, *protect.counts(store, pr.id)) for pr in profiles],
             engines={pr.id: se.pending(se.guided_steps(store, pr.id)) for pr in profiles}))
@@ -263,7 +269,8 @@ def create_app(store, token: str, allowed_hosts: set[str],
                 ev.setdefault(e.broker_id, []).append(e)
         return html(dash.profile_page(p, store.list_statuses(pid), names(), store.list_todos(pid),
                                       ev, csrf_token, _consent_problem(p), flash(request),
-                                      fill=not app.state.fill["running"]))
+                                      fill=not app.state.fill["running"],
+                                      reasons=_reasons(store.list_todos(pid))))
 
     @app.get("/profile/{pid}/site/{bid}")
     async def broker_view(pid: str, bid: str):
@@ -348,6 +355,17 @@ def create_app(store, token: str, allowed_hosts: set[str],
 
     def _todo(tid: str):
         return next((t for t in store.list_todos() if t.id == tid), None)
+
+    def _reasons(todos) -> dict[str, list[str]]:
+        """Signal NAMES (city, age, ...) of the listings behind the open "Is this you?" cards."""
+        want = {dash.review_listing_id(t): t.profile_id for t in todos
+                if t.kind == TodoKind.REVIEW_MATCH}
+        out: dict[str, list[str]] = {}
+        for pid in set(want.values()):
+            for li in store.list_listings(pid):
+                if want.get(li.id) == pid:
+                    out[li.id] = list(li.match_reasons)
+        return out
 
     def _back(t) -> str:
         return "/"
@@ -495,6 +513,36 @@ def create_app(store, token: str, allowed_hosts: set[str],
         except Exception as e:  # noqa: BLE001
             log.warning("open browser failed: %s", type(e).__name__)
         return redirect("/", "opened" if ok else "openfail")
+
+    @app.post("/todo/{tid}/review/{answer}")
+    async def todo_review(tid: str, answer: str, request: Request):
+        """"Is this you?": yes -> listing CONFIRMED, no -> NO_MATCH; the to-do is closed.
+        The to-do, its listing and its person must belong together. Safe to press twice."""
+        if answer not in ("yes", "no"):
+            return redirect("/")
+        t = _todo(tid)
+        if not t:
+            return redirect("/", "review_gone")     # double-click / already answered
+        lid = dash.review_listing_id(t)
+        try:
+            form = await request.form()
+        except Exception:  # noqa: BLE001
+            form = {}
+        if t.kind != TodoKind.REVIEW_MATCH or not lid or str(form.get("listing_id", "")) != lid:
+            return html(ui.error_page("That didn't work", [
+                "That answer did not match the question, so nothing was changed."]), 400)
+        li = next((x for x in store.list_listings(t.profile_id) if x.id == lid), None)
+        if li is None or (t.broker_id and li.broker_id != t.broker_id):
+            return html(ui.error_page("That didn't work", [
+                "That answer did not match the question, so nothing was changed."]), 400)
+        from ..engine.handoff import confirm_review
+        from ..models import MatchLevel
+        if li.match_level == MatchLevel.POSSIBLE:   # already answered elsewhere: just close
+            confirm_review(store, lid, t.profile_id, is_me=(answer == "yes"))
+        store.complete_todo(t.id)
+        store.log(Event(profile_id=t.profile_id, broker_id=t.broker_id, actor=Actor.USER,
+                        action="todo_done", detail={"todo_kind": t.kind.value}))
+        return redirect("/", f"review_{answer}")
 
     @app.post("/todo/{tid}/resolve")
     async def todo_resolve(tid: str, request: Request):
