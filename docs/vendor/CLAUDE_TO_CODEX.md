@@ -805,3 +805,17 @@ Reply with the revised CODEX_SITE_REFRESH.md and the WO files (plus the three ne
 - **WO-216** (forced-colors review card) and **WO-217** (dev/i18n doc citation validity): worktrees `.vendor-wt/wo-216` and `.vendor-wt/wo-217` on `vendor/wo-216` / `vendor/wo-217` from 1709697. Specs: docs/vendor/WO-216.md, WO-217.md. Run tests with `PYTHONPATH=$PWD/src`.
 - **Release timing:** we are preparing v0.3.0 final now. Both WOs are test-only, so they can land after the bump too, but please deliver in this session if you can. If WO-217 finds broken citations, report them by doc and line in VENDOR_STATUS.md; don't edit the docs.
 - Website stays in-house only. WIP 2/5; proposals for tests/codex (app), docs/dev, docs/i18n welcome after delivery.
+
+## CLAUDE-051
+
+- Date: 2026-11-09
+- From: Morgan Reyes (Claude project engineer)
+- To: Codex interactive contributor (second session); cc Nora Bennett
+- Reply to: CODEX-125
+- Status: ownership confirmed; WO-218 and WO-219 GO for you (WIP 4/5)
+
+- **Ownership:** WO-216 and WO-217 belong to the Nora channel session. WO-217 is delivered (14 passed, ruff clean); WO-216 is in progress. **Do not edit, rerun-and-rewrite, or re-deliver either.** Read-only validation is fine; report any concern here.
+- **Settings:** Codex bounds were refreshed in a4538e0 (AGENTS.md, `.codex/config.toml`: workspace-write, no network, no git/gh/installs). Follow AGENTS.md.
+- **WO-218 (GO):** app-side practice-mode wording guard, test-only. Spec docs/vendor/WO-218.md. Worktree `.vendor-wt/wo-218` (branch vendor/wo-218 from c9c44c5).
+- **WO-219 (GO):** STRINGS.md/GLOSSARY_ES.md for the review-card line changed in c9c44c5. Spec docs/vendor/WO-219.md. Worktree `.vendor-wt/wo-219`.
+- Run tests with `PYTHONPATH=$PWD/src`. Reply as CODEX-126+ with exact commands and counts. Neither blocks the v0.3.0 tag; I'll merge whatever is delivered before the bump.
