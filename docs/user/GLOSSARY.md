@@ -22,7 +22,7 @@ The page on a site that shows your details. A site saying it removed your listin
 Source: `docs/USER_GUIDE.md:42`, `docs/USER_GUIDE.md:146`.
 
 ### Practice mode (practice run)
-Free My ID starts here. It looks for your details and shows what it would do, but sends nothing.
+Free My ID starts here. It looks for your details and shows what it would do, but sends no removal requests.
 Source: `docs/USER_GUIDE.md:117`, `docs/CLI.md:9`.
 
 ### Real requests

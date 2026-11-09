@@ -62,9 +62,9 @@ BANNED = (
 # site until you turn on real requests"). The approved wording talks about removal requests:
 # "no removal requests go out until you say so" must stay allowed.
 NOTHING_SENT = re.compile(
-    r"\bnothing\s+(?:is|gets|will\s+be|has\s+been|was)?\s*(?:sent|submitted)\b(?!\s+to\s+(?:us|the\s+project)\b)"
+    r"\bnothing\s+(?:is|gets|will\s+be|has\s+been|was)?\s*(?:sent|submitted)\b(?!\s+to\s+(?:us|the\s+project)\b)(?!\s+until\s+you\s+click\b)"
     r"|\bnothing\s+(?:goes|go|is\s+going|gets\s+sent)\s+out\b"
-    r"|\b(?:sends|sent|submits|submitted)\s+nothing\b"
+    r"|\b(?:sends|sent|submits|submitted)\s+nothing\b(?!\s+about\s+you\b)"
     r"|\bdoes(?:n't|\s+not)\s+send\s+anything\b"
 )
 SHOULD_BE_BANNED = (
@@ -79,6 +79,8 @@ SHOULD_BE_BANNED = (
 )
 SHOULD_BE_ALLOWED = (
     "Nothing is sent to us.",
+    "That download sends nothing about you or the people you protect.",
+    "Share this page on Facebook (opens Facebook; nothing is sent until you click)",
     "Practice mode comes first, so no removal requests go out until you say so.",
     'so no removal requests go out until you say "start sending real requests."',
     "Unless they switch on automatic sending, no email goes out until they press OK.",

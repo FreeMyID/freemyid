@@ -120,7 +120,7 @@ The setup has **six screens**. Each asks one thing. Press **Next** to go on, or 
 
 ## 4. Your first run
 
-1. **Practice first (sends nothing).** Free My ID starts in practice mode. It looks for your details on each site and shows what it found and what it *would* do.
+1. **Practice first (no removal requests).** Free My ID starts in practice mode. It looks for your details on each site and shows what it found and what it *would* do.
 2. **Look at the results** on the Home page.
 3. **Turn on real requests (one time only).** Open **Settings** and click **Start sending real requests**. Free My ID explains what will happen and asks you to confirm.
 4. **Let it work.** You can close the window. If a site needs you, a card appears on the Home page with one big button. Do the step, then click **I did it**.
