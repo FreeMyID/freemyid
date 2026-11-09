@@ -2,7 +2,7 @@
 
 Draft recipe for the command-line tool and the local dashboard. Not published, not built, not on Flathub.
 
-- Runtime `org.freedesktop.Platform` 24.08. Version `0.2.0` follows `pyproject.toml`.
+- Runtime `org.freedesktop.Platform` 24.08. Version `0.3.0` follows `pyproject.toml`.
 - Permissions are minimal: network, and the desktop secret service for the keyring. No home folder access.
   Data goes to `$XDG_DATA_HOME/freemyid` through the `freemyid-flatpak` launcher (sets `FREEMYID_HOME`).
 - Running the app with no arguments opens the dashboard.
