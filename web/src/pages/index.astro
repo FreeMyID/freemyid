@@ -34,19 +34,15 @@ const cardIcon = "inline-flex size-12 items-center justify-center rounded-lg bg-
 <Base {...pageProps("home")}>
 
 {/* 1. Hero: what it does, one Download (beam), and a real screenshot as proof */}
-<Spotlight aria-labelledby="hero-title" class="py-2xl">
+<Spotlight aria-labelledby="hero-title" class="pb-xl pt-l min-[40em]:py-2xl">
   <div class="wrap grid items-center gap-xl min-[56.25em]:grid-cols-[1.3fr_1fr]">
     <div>
       {/* source: teardown 4.1; LICENSE (AGPL); Windows-only v1 (docs/PLAN_V1.md) */}
       <p class="mb-s"><AnimatedGradientText pill icon="shield">Free. Open source. For Windows.</AnimatedGradientText></p>
       <h1 id="hero-title" class="text-hero">Take your name off the websites that sell it.</h1>
       {/* source: teardown 4.1; "runs on your own computer, no account, no cloud" = D8 / netpolicy.py */}
-      <p class="mt-m max-w-measure text-lead text-muted">Free My ID asks the people-search and data-broker sites that list your name, address and phone number to remove them, then keeps checking. It runs on your own computer. No account. No cloud.</p>
-      {/* Idea 9: define the term on first mention. source: approved "what it removes" lead and cards (WR-37) */}
-      <Disclosure summary="What is a people-search site?" class="mt-s max-w-measure">
-        <p>People-search sites, also called data brokers, collect public records and sell them to anyone. They commonly list your home address, phone numbers and age or birth year.</p>
-      </Disclosure>
-      <div class="hero-actions mt-l">
+      <p class="mt-s max-w-measure text-lead text-muted min-[40em]:mt-m">Free My ID asks the people-search and data-broker sites that list your name, address and phone number to remove them, then keeps checking. It runs on your own computer. No account. No cloud.</p>
+      <div class="hero-actions mt-m min-[40em]:mt-l">
         <CtaDownload beam class="hero-download" />
         <a class:list={[btnGhost, "hero-secondary min-[56.25em]:!px-0"]} href={url("how-it-works/")}>See how it works</a>
       </div>
@@ -55,10 +51,14 @@ const cardIcon = "inline-flex size-12 items-center justify-center rounded-lg bg-
          Not "nothing is sent": practice mode still looks people up (tests/test_web_absolute_claims.py BANNED). */}
       <ul class="mt-s flex flex-wrap gap-2xs" role="list" aria-label="Before you download">
         <li><Badge variant="ok-soft" dot>Free</Badge></li>
-        <li><Badge variant="ok-soft" dot>No Free My ID account to create</Badge></li>
+        <li><Badge variant="ok-soft" dot>No Free My ID account</Badge></li>
         <li><Badge variant="ok-soft" dot>Starts in practice mode</Badge></li>
       </ul>
       <p class="mt-2xs text-small text-muted">Practice mode comes first, so no removal requests go out until you say so.</p>
+      {/* Idea 9: define the term on first mention (below the buttons, so Download stays in the first screen). source: approved "what it removes" lead and cards (WR-37) */}
+      <Disclosure summary="What is a people-search site?" class="mt-m max-w-measure">
+        <p>People-search sites, also called data brokers, collect public records and sell them to anyone. They commonly list your home address, phone numbers and age or birth year.</p>
+      </Disclosure>
       {/* source: release values from data/release.yaml; PLAN_V1 D5 per-user install */}
       {v ? (
         String(v).startsWith("0.") ? (
