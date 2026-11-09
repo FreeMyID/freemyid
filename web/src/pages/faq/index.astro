@@ -2,10 +2,12 @@
 // Questions. Same copy and source comments as site_src/templates/pages/faq.html; answers from
 // site_src/data/faq.yaml (per-entry source comments there).
 import Base from "@/layouts/Base.astro";
-import PageHead from "@/components/PageHead.astro";
-import Section from "@/components/Section.astro";
+import "@/styles/site-refresh.css";
+import Crumbs from "@/components/Crumbs.astro";
+import Section from "@/components/site-refresh/RefreshSection.astro";
 import Icon from "@/components/Icon.astro";
-import FaqList from "@/components/FaqList.astro";
+import RichText from "@/components/RichText.astro";
+import { rich } from "@/lib/rich";
 import CtaDownload from "@/components/CtaDownload.astro";
 import { faq, pageProps } from "@/lib/site";
 const p = pageProps("faq");
@@ -20,12 +22,20 @@ const myths = [
 ];
 ---
 <Base {...p}>
-<PageHead crumbs={p.crumbs} title="Questions" lead="Plain answers about Free My ID. Tap a question to see the answer." />
+<div class="site-refresh">
+<header class="site-refresh__wrap site-refresh__section refresh-page-head">
+<Crumbs crumbs={p.crumbs} />
+<div class="refresh-page-intro"><div>
+<h1>Questions</h1>
+<p class="site-refresh__lead">Plain answers about Free My ID. Tap a question to see the answer.</p>
 
-<Section id="myths" narrow title="Myth vs. fact" class="pt-l">
+</div></div>
+</header>
+
+<Section id="myths" titleId="myths-title" width="narrow" title="Myth vs. fact">
   <div class="grid gap-m">
     {myths.map(([myth, fact]) => (
-      <div class="reveal grid overflow-hidden rounded-xl border border-line bg-card shadow-1">
+      <div class="site-refresh__card">
         <p class="flex gap-xs bg-surface p-m"><Icon name="x" class="mt-[0.25em] text-muted" /><span><strong class="text-heading">Myth:</strong> {myth}</span></p>
         <p class="flex gap-xs p-m"><Icon name="check" class="mt-[0.25em] text-ok" /><span><strong class="text-heading">Fact:</strong> {fact}</span></p>
       </div>
@@ -33,8 +43,25 @@ const myths = [
   </div>
 </Section>
 
-<Section id="common" tone="alt" narrow title="Common questions">
-  <FaqList items={faq} />
-  <div class="mt-l"><CtaDownload /></div>
+<Section id="common" titleId="common-title" tone="alt" width="narrow" title="Common questions">
+  {faq.map((q) => (
+    <details class="site-refresh__faq faq-item" id={`q-${q.id}`}>
+      <summary id={`question-${q.id}`} class="flex items-center justify-between gap-s"><span class="faq-question">{q.q}</span><Icon name="chevron-down" class="faq-chevron size-6 shrink-0" /></summary>
+      <div class="site-refresh__faq-answer" role="region" aria-labelledby={`question-${q.id}`}><RichText nodes={rich(q.a)} /></div>
+    </details>
+  ))}
+  <div class="mt-l"><CtaDownload  class="site-refresh__button" /></div>
 </Section>
+</div>
 </Base>
+
+<style is:global>
+  .site-refresh .refresh-page-intro { display: grid; gap: var(--fmi-space-l); align-items: center; }
+  .site-refresh .refresh-page-head h1 { max-width: 26ch; margin-block-start: var(--fmi-space-m); }
+  .site-refresh pre { font-size: 1.25rem; max-width: 100%; overflow-x: auto; white-space: pre; }
+  .site-refresh a:not(.no-underline) { min-block-size: 44px; min-inline-size: 44px; display: inline-flex; align-items: center; }
+  .site-refresh small { font-size: 1em; }
+  .site-refresh figure { margin: 0; min-width: 0; }
+  .site-refresh img { max-width: 100%; height: auto; }
+  @media (min-width: 56.25em) { .site-refresh .refresh-page-intro:has(figure) { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } }
+</style>
