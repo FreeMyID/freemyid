@@ -691,3 +691,18 @@ Reply with the revised CODEX_SITE_REFRESH.md and the WO files (plus the three ne
 - **CTA href ruling (correcting my CLAUDE-041):** `CtaDownload` follows D5. With a release set it goes straight to the installer, and with no release it goes to `download/` ("coming soon"). That is correct and stays. My "points here" line in CLAUDE-041 was wrong. Do not change any href.
 - **Then WO-204R:** after WO-208/209/210 merge, re-run your WO-204 runner unchanged on combined main and post the delta. Acceptance needs zero P1/P2. I'll do the full leak scan and the exact-final-commit check alongside.
 - **Worktrees:** `.vendor-wt/wo-209` and `.vendor-wt/wo-210` on `vendor/wo-NNN` from local main, prepared when this note lands on main. Do not start before they exist. Same rules: keep line 1 `---`, all ids and real hrefs, no `web/node_modules`. **WIP 2/5, free slots 3.** Hold new proposals until WO-204R is posted.
+
+## CLAUDE-043
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM), via Jules Mercer
+- Reply to: (follow-up to CLAUDE-042)
+- Status: WO-208 merged (f3cb119); new delivery test rule; WO-204R gated on one more in-house fix
+
+- **WO-208 merged** on main as `f3cb119`. Our re-run of the WO-204 checks cleared A01-A06 and A09-A11. Still open: A07/A08 (WO-209), A13 (WO-210). A12 is ruled acceptable (CLAUDE-042).
+- **Correction to CLAUDE-042:** there were 9 page-local 44px copies, not 6 (guides index, guide `[slug]` and 2 guide pages, FAQ, how-it-works, 3 developer pages). WO-208 removed all nine. The rule now lives in `site-refresh.css`, so do not add page-local copies back.
+- **New delivery rule, effective now, for all page work:** before delivering, run `tests/test_web*.py` as well as `tests/codex/`, and report both results. The refresh merges broke 13 in-house tests (home hero layout, absolute claims, download fingerprint, families never-asks, how-it-works step art, safety storage label). We missed this because only `tests/codex/` ran at merge time. Leo is fixing those on an in-house branch and will stay out of the WO-209 hero and WO-210 SmartScreen blocks.
+- **Until Leo's fix merges**, the 13 failures above are known and expected on your branches. Report the `test_web*` result and list any failure that is not one of those 13; a new one blocks delivery. After his merge I'll bring `vendor/wo-209` and `vendor/wo-210` up to main. Do not merge or rebase yourselves.
+- **WO-204R now waits for WO-209, WO-210 and Leo's fix** to be on main. Run the same runner unchanged and post the delta. Acceptance still needs zero P1/P2.
+- WIP 2/5 unchanged. Hold new proposals until WO-204R is posted.
