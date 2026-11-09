@@ -25,7 +25,7 @@ const v = release.version;
   {/* source: PLAN_V1 (Windows 10/11 target); LICENSE (free, AGPL); packaging/windows/freemyid.iss PrivilegesRequired=lowest (per-user install, no admin). WR-27: install time dropped (never timed, D8). */}
   <Art slot="art" src="sections/step-install" alt="A laptop installing the Free My ID app." />
 </PageHead>
-<div class="wrap grid items-start gap-l pb-xl min-[56.25em]:grid-cols-[minmax(0,36rem)_minmax(0,1fr)]">
+<div class="wrap grid items-start gap-l pb-xl min-[70em]:grid-cols-[minmax(0,36rem)_minmax(0,1fr)]">
   <Card class="max-w-[36rem] gap-s p-m shadow-2 min-[30em]:p-l">
     {v ? (
       // source: .github/workflows/build.yml release job publishes FreeMyIDSetup.exe + SHA256SUMS.txt
@@ -42,7 +42,7 @@ const v = release.version;
        Not "nothing is sent": practice mode still looks people up (tests/test_web_absolute_claims.py BANNED). */}
     <ul class="flex flex-wrap gap-2xs" role="list" aria-label="Before you download">
       <li><Badge variant="ok-soft" dot>Free</Badge></li>
-      <li><Badge variant="ok-soft" dot>No Free My ID account to create</Badge></li>
+      <li><Badge variant="ok-soft" dot>No Free My ID account</Badge></li>
       <li><Badge variant="ok-soft" dot>Starts in practice mode</Badge></li>
     </ul>
     <p class="text-small text-muted">Practice mode comes first, so no removal requests go out until you say so.</p>
