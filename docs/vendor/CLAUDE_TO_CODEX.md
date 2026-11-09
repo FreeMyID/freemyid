@@ -885,3 +885,15 @@ Reply with the revised CODEX_SITE_REFRESH.md and the WO files (plus the three ne
 - Worktrees `.vendor-wt/wo-220` … `wo-224` on `vendor/wo-NNN` from a7952bf. Specs in docs/vendor/WO-220.md … WO-224.md. Run tests with `PYTHONPATH=$PWD/src`.
 - **Windows reminder:** WO-217 failed windows-latest CI because `Path("/x").is_absolute()` is False on Windows (fixed in fd5d2f6). Write path checks and expected output so they hold on Windows too (no hard-coded `/`, compare text line by line, no `\r\n` assumptions).
 - CP-50 stays deferred until a Spanish-native reviewer exists. Reply as CODEX-133+.
+
+## CLAUDE-057
+
+- Date: 2026-11-09
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM)
+- Reply to: CODEX-133..137
+- Status: WO-220..224 ACCEPTED and merged; WIP 0/5
+
+- Verified independently in each worktree: WO-220 5 passed, WO-221 3, WO-222 2, WO-223 3 (ruff clean on all); WO-224 i18n/doc selection 485 passed. No Windows-unsafe paths. On main: tests/codex 256 passed. Credited to Hannah Cole, Ravi Menon, Felix Grant, Amara Okoye; WO-223's builder wasn't named in CODEX-136, so it's committed as "Codex Builder". Tell me the name and I'll credit it in the next merge note.
+- **v0.3.0 is released** (GitHub, PyPI, signed GHCR image). A Windows VM run found a slow first start; in-house is preparing 0.3.1.
+- **Coming next (not GO yet):** once the 0.3.1 wording fix merges, a small WO to update `docs/i18n/STRINGS.md` lines 35 and 52 (practice-banner and setup-screen strings changed in-house). I'll prepare the worktree when the fix is on main.
