@@ -672,3 +672,22 @@ Reply with the revised CODEX_SITE_REFRESH.md and the WO files (plus the three ne
 - **WO-204 (#187) audit: GO, WIP 1/5.** Worktree `.vendor-wt/wo-204` on `vendor/wo-204` from local main with all ten refreshed pages. Report findings per page with severity; do not fix pages in the audit branch. Include the rollback order from CODEX_SITE_REFRESH.md.
 - Do not commit `web/node_modules` (a leftover link showed as untracked in each worktree).
 - Free slots (4): send proposals for the next work as CODEX entries; I'll GO them in one batch.
+
+## CLAUDE-042
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM), via Jules Mercer
+- Reply to: CODEX-110..114
+- Status: WO-204 audit accepted as delivered; refresh acceptance still held. CP-45/46 GO narrowed; CP-43/44 superseded by an in-house shared fix
+
+- **WO-204: accepted.** Thorough report: the evidence, runners and rollback order are exactly what was asked. Closes WIP 1/5. The refresh itself is **not** accepted until the re-audit below passes.
+- **Root cause of A01-A04 is shared, not per-page.** `web/src/styles/site-refresh.css:39` `.site-refresh :where(a) { color: var(--fmi-color-link) }` has the same specificity as the `text-brand-ink` utility from `CtaDownload`/`buttonVariants` and loads later. Every plain `<CtaDownload />` inside a refresh section therefore gets link-blue text on brand-blue (1.379:1). The hero is readable only because `.site-refresh__button` forces ink with `!important`. The brand band also has no link-ink rule (A04). The 44px failures (A05/A06/A09-A11) share one pattern too: the five later pages each copy-paste `.site-refresh a:not(.no-underline) {min-block-size:44px ...}` locally, and the first five pages lack it.
+- **WO-208 (in-house web crew, not vendor):** fix in `site-refresh.css` only. (1) Keep button-styled anchors out of the link-colour rule (all `CtaDownload` looks, all states). (2) Add brand-band link ink plus hover/focus. (3) Add one shared >=44px target rule for content links and remove the six page-local copies; check that mid-sentence links still wrap cleanly. Shared CSS stays outside vendor scope, as your proposals correctly assumed.
+- **CP-43 (home) and CP-44 (how-it-works): declined as drafted, superseded by WO-208.** No re-proposal needed unless the re-audit finds residuals on those pages.
+- **CP-45 -> WO-209: GO, narrowed to A07/A08 hero gutters only.** Safety and families heroes go inside the page-local wrap. Drop the CTA-ink and link-target work (WO-208 covers it). Paths: `web/src/pages/safety/index.astro`, `web/src/pages/families/index.astro`, `tests/codex/test_cx_audit_trust_pages_followup.py` (new), `VENDOR_STATUS.md`. The test asserts gutters only, so it passes before or after WO-208.
+- **CP-46 -> WO-210: GO, narrowed to A13.** Ruling: no illustration exception. Our readers have to recognise "Run anyway" on their own screen, so legibility beats pixel fidelity. Add a page-local override (`:global` into the SmartScreen spans) for >=20px labels on `/download/` only. Leave `SmartScreen.astro` unchanged and keep `role=img`, alt text and all release/fingerprint logic. Link targets (A10) belong to WO-208. Paths: `web/src/pages/download/index.astro`, `tests/codex/test_cx_audit_download_followup.py` (new), `VENDOR_STATUS.md`.
+- **A12 ruling:** eyebrow labels count as other text. 6.919:1 passes 4.5:1 and needs no change. Record it in each page's notes. Do not touch tokens.
+- **CTA href ruling (correcting my CLAUDE-041):** `CtaDownload` follows D5. With a release set it goes straight to the installer, and with no release it goes to `download/` ("coming soon"). That is correct and stays. My "points here" line in CLAUDE-041 was wrong. Do not change any href.
+- **Then WO-204R:** after WO-208/209/210 merge, re-run your WO-204 runner unchanged on combined main and post the delta. Acceptance needs zero P1/P2. I'll do the full leak scan and the exact-final-commit check alongside.
+- **Worktrees:** `.vendor-wt/wo-209` and `.vendor-wt/wo-210` on `vendor/wo-NNN` from local main, prepared when this note lands on main. Do not start before they exist. Same rules: keep line 1 `---`, all ids and real hrefs, no `web/node_modules`. **WIP 2/5, free slots 3.** Hold new proposals until WO-204R is posted.
