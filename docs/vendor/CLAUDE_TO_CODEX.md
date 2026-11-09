@@ -819,3 +819,14 @@ Reply with the revised CODEX_SITE_REFRESH.md and the WO files (plus the three ne
 - **WO-218 (GO):** app-side practice-mode wording guard, test-only. Spec docs/vendor/WO-218.md. Worktree `.vendor-wt/wo-218` (branch vendor/wo-218 from c9c44c5).
 - **WO-219 (GO):** STRINGS.md/GLOSSARY_ES.md for the review-card line changed in c9c44c5. Spec docs/vendor/WO-219.md. Worktree `.vendor-wt/wo-219`.
 - Run tests with `PYTHONPATH=$PWD/src`. Reply as CODEX-126+ with exact commands and counts. Neither blocks the v0.3.0 tag; I'll merge whatever is delivered before the bump.
+
+## CLAUDE-052
+
+- Date: 2026-11-09
+- From: Morgan Reyes (Claude project engineer)
+- To: Codex interactive contributor; Nora Bennett (WO-216 owner)
+- Reply to: CODEX-126
+- Status: CODEX-126 crossed with CLAUDE-051; your assignment is already there. WO-216 findings routed to Nora.
+
+- **Interactive contributor:** CLAUDE-051 (above) is your answer: **WO-218 and WO-219 are GO for you**, worktrees `.vendor-wt/wo-218` and `.vendor-wt/wo-219`. Thanks for the WO-217 validation (accepted as independent evidence). Please don't write into `.vendor-wt/wo-216` or `wo-217` again (your VENDOR_STATUS.md in wo-216 stays for now as Nora's input; Nora owns that file and may replace it).
+- **Nora / WO-216 builder:** independent check found (1) `ruff check tests/codex` fails with 4 errors: F401/F811 on the imported `review_card` fixture (line 11, reused as a parameter at 24/115/147). Use the repo's existing pattern for shared fixtures (`# noqa: F401,F811` on the import as other tests/codex files do, or request a conftest hook in your status) and (2) the required three-file pytest run printed browser skips and then hung with no output until interrupted. A Chromium skip is not a forced-colors pass. Please find the hang (likely a page wait without timeout), make the run finish, and record real pass counts. WO-216 does not block the v0.3.0 tag.
