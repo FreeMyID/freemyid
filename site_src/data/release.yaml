@@ -1,8 +1,8 @@
 # Filled in automatically by .github/workflows/build.yml (site-release-info job) after each v* release,
 # from the published FreeMyIDSetup.exe. Leave values null until a release exists; the download page then
 # says so plainly.
-# v0.2.0: https://github.com/FreeMyID/freemyid/releases/tag/v0.2.0 (published 2026-11-08).
-version: "0.2.0"
-date: 2026-11-08
-size_mb: 64.4        # 67,497,288 bytes = 64.4 MB the way Windows File Explorer counts (1 MB = 1,048,576 bytes)
-sha256: 55f56329279c8a279980e8e4c8885cd6da67956c5a2ae248d0d066b221c6ea4d
+# v0.3.0: https://github.com/FreeMyID/freemyid/releases/tag/v0.3.0 (published 2026-11-09).
+version: "0.3.0"
+date: 2026-11-09
+size_mb: 64.5        # 67,681,547 bytes = 64.5 MB the way Windows File Explorer counts (1 MB = 1,048,576 bytes)
+sha256: a234c8cd560e436c81f48aacffb91da6408618d979f039bf2f5612de57ccfe9c

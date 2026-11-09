@@ -28,6 +28,11 @@
     --color-footer-bg: light-dark(#0f1c38, #080c14);
     --color-footer-text: light-dark(#e8edf6, #dfe5ee);
     --color-flag-white: light-dark(#ffffff, #e8edf6);
+    --color-ok-soft: light-dark(#e7f4ec, #132a1d);
+    --color-warn-soft: light-dark(#fbf1dc, #2e2510);
+    --color-accent-soft: light-dark(#fbecee, #33191f);
+    --color-spot: light-dark(#dfe8f8, #1f3358);
+    --color-glow: light-dark(#3f66b0, #7aa2ec);
     --space-3xs: 0.25rem;
     --space-2xs: 0.5rem;
     --space-xs: 0.75rem;
@@ -87,6 +92,11 @@
     --color-footer-bg: #0f1c38;
     --color-footer-text: #e8edf6;
     --color-flag-white: #ffffff;
+    --color-ok-soft: #e7f4ec;
+    --color-warn-soft: #fbf1dc;
+    --color-accent-soft: #fbecee;
+    --color-spot: #dfe8f8;
+    --color-glow: #3f66b0;
     }
     @media (prefers-color-scheme: dark) {
       :root:not([data-theme="light"]) {
@@ -114,6 +124,11 @@
         --color-footer-bg: #080c14;
         --color-footer-text: #dfe5ee;
         --color-flag-white: #e8edf6;
+        --color-ok-soft: #132a1d;
+        --color-warn-soft: #2e2510;
+        --color-accent-soft: #33191f;
+        --color-spot: #1f3358;
+        --color-glow: #7aa2ec;
       }
     }
     :root[data-theme="dark"] {
@@ -141,6 +156,11 @@
     --color-footer-bg: #080c14;
     --color-footer-text: #dfe5ee;
     --color-flag-white: #e8edf6;
+    --color-ok-soft: #132a1d;
+    --color-warn-soft: #2e2510;
+    --color-accent-soft: #33191f;
+    --color-spot: #1f3358;
+    --color-glow: #7aa2ec;
     }
   }
 }
@@ -170,6 +190,11 @@
   .sw--footer-bg-l { background: #0f1c38; } .sw--footer-bg-d { background: #080c14; }
   .sw--footer-text-l { background: #e8edf6; } .sw--footer-text-d { background: #dfe5ee; }
   .sw--flag-white-l { background: #ffffff; } .sw--flag-white-d { background: #e8edf6; }
+  .sw--ok-soft-l { background: #e7f4ec; } .sw--ok-soft-d { background: #132a1d; }
+  .sw--warn-soft-l { background: #fbf1dc; } .sw--warn-soft-d { background: #2e2510; }
+  .sw--accent-soft-l { background: #fbecee; } .sw--accent-soft-d { background: #33191f; }
+  .sw--spot-l { background: #dfe8f8; } .sw--spot-d { background: #1f3358; }
+  .sw--glow-l { background: #3f66b0; } .sw--glow-d { background: #7aa2ec; }
 }
 
 @layer reset {
