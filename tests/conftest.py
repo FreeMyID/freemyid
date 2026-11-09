@@ -135,7 +135,7 @@ def web_dist_missing() -> bool:
     return not (WEB_DIST / "index.html").is_file()
 
 
-_READS_DIST = re.compile(r"web/dist|[\"']dist[\"']")
+_READS_DIST = re.compile(r"web/dist|[\"']dist[\"']|\btest_web_\w+")  # or reuses a test_web_ helper
 _reads_dist_cache: dict[Path, bool] = {}
 
 
