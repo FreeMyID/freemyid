@@ -23,7 +23,7 @@ const v = release.version;
 const art = (name: string) => ({ light: url(`assets/art/${name}-light.svg`), dark: url(`assets/art/${name}-dark.svg`) });
 ---
 <Base {...p}>
-<PageHead crumbs={p.crumbs} title="What's coming to Free My ID"
+<PageHead narrow crumbs={p.crumbs} title="What's coming to Free My ID"
   lead="What the app does today, and what we're building next, in plain words.">
   {/* source: orchestrator brief 2026-11-07 (exact line); ROADMAP principle 3 (honest by default) */}
   <p class="mt-s max-w-measure">We'll ship these when they're ready and tested. We don't promise dates, and plans can change.</p>
