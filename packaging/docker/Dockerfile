@@ -3,7 +3,7 @@
 # Runs as a non-root user and works with a read-only root filesystem:
 #   docker run --read-only --tmpfs /tmp -v freemyid-data:/data freemyid
 # Only the public sample registry is baked in (see .dockerignore and pyproject.toml).
-FROM python:3.12-slim-bookworm
+FROM python:3.15-slim-bookworm
 
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
