@@ -8,7 +8,7 @@ Three files describe the package: `FreeMyID.FreeMyID.yaml` (version), `FreeMyID.
 
 - The installer is a per-user Inno Setup `.exe` with silent switches (see the installer file).
 - `InstallerSha256` is all zeros: a **placeholder**. Release tooling fills it in from the release's `SHA256SUMS.txt`.
-- The installer filename in the manifest (`FreeMyIDSetup-0.2.0.exe`) was copied from the manifest, not checked
+- The installer filename in the manifest (`FreeMyIDSetup-0.3.0.exe`) was copied from the manifest, not checked
   against the published release assets: not sure it matches.
 
 ## Try it locally
@@ -17,7 +17,7 @@ Run on Windows 10/11 with the `winget` tool, in a folder that holds the three ma
 machine or virtual machine. All commands below are **unverified** (not run when this was written).
 
 1. Replace the zero hash in the installer file with the real SHA-256 of the file you downloaded
-   (`Get-FileHash .\FreeMyIDSetup-0.2.0.exe -Algorithm SHA256`). Do not commit that change by hand.
+   (`Get-FileHash .\FreeMyIDSetup-0.3.0.exe -Algorithm SHA256`). Do not commit that change by hand.
 2. Check the files: `winget validate --manifest .`
 3. Allow local manifests once (needs an administrator window): `winget settings --enable LocalManifestFiles`
 4. Install from the folder: `winget install --manifest .`

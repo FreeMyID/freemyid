@@ -2,7 +2,7 @@
 # Version is taken from pyproject.toml ([project] version).
 pkgname=python-freemyid
 _name=freemyid
-pkgver=0.2.0
+pkgver=0.3.0
 pkgrel=1
 pkgdesc='Local-first personal data broker opt-out tool with scheduled re-checks'
 arch=('any')

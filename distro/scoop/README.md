@@ -7,7 +7,7 @@ only, not Scoop.
 downloaded file. The uninstaller looks for the Inno Setup `unins*.exe` under `%LOCALAPPDATA%\Programs\FreeMyID`.
 
 - `hash` is all zeros: a **placeholder**. Release tooling replaces it.
-- The installer filename (`FreeMyIDSetup-0.2.0.exe`) was copied from the manifest, not checked against the
+- The installer filename (`FreeMyIDSetup-0.3.0.exe`) was copied from the manifest, not checked against the
   published release assets: not sure it matches.
 - The install path used by the uninstaller is not confirmed against the real installer: not sure.
 
@@ -17,7 +17,7 @@ Run on Windows 10/11 with Scoop, on a test machine or virtual machine. All comma
 (not run when this was written).
 
 1. Put the real SHA-256 of the downloaded installer in `hash`
-   (`Get-FileHash .\FreeMyIDSetup-0.2.0.exe -Algorithm SHA256`).
+   (`Get-FileHash .\FreeMyIDSetup-0.3.0.exe -Algorithm SHA256`).
 2. Install from the file: `scoop install .\distro\scoop\freemyid.json`
 3. Check it: `scoop list` should show `freemyid`.
 4. Remove it: `scoop uninstall freemyid`
