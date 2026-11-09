@@ -486,6 +486,18 @@ const cardIcon = "site-refresh__trust-icon";
     white-space: normal;
   }
 
+  /* WO-103: on phones "Download Free My ID" stays on one line (the brand never splits) in a 320px column.
+     Both actions share the 20px body size below the desktop layout so the primary never looks smaller. */
+  .site-refresh .hero-actions :global(.hero-download),
+  .site-refresh .hero-actions .hero-secondary {
+    font-size: var(--fmi-text-body);
+  }
+
+  .site-refresh .hero-actions :global(.hero-download) {
+    padding-inline: var(--fmi-space-xs);
+    white-space: nowrap;
+  }
+
   @media (min-width: 48em) and (max-width: 56.2499em) {
     .site-refresh .hero-actions {
       align-items: center;
@@ -497,11 +509,20 @@ const cardIcon = "site-refresh__trust-icon";
     .site-refresh .hero-actions .hero-secondary {
       width: auto;
     }
+
+    .site-refresh .hero-actions :global(.hero-download) {
+      padding-inline: var(--fmi-space-l);
+    }
   }
 
   @media (min-width: 56.25em) {
     .site-refresh .hero-actions {
       width: max-content;
+    }
+
+    .site-refresh .hero-actions :global(.hero-download),
+    .site-refresh .hero-actions .hero-secondary {
+      font-size: var(--fmi-text-lead);
     }
 
     .site-refresh .hero-actions :global(.hero-download) {
