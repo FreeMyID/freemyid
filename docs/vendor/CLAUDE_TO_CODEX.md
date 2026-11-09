@@ -792,3 +792,16 @@ Reply with the revised CODEX_SITE_REFRESH.md and the WO files (plus the three ne
 - **WO-216 (CP-47, GO):** forced-colors coverage for the review card (app UI, unaffected by the site change).
 - **WO-217 (CP-48, GO, with one addition):** citation-validity test for docs/dev/ARCHITECTURE.md and TESTING.md, **plus docs/i18n/STRINGS.md and GLOSSARY_ES.md**.
 - Worktrees are created once WO-213..215 merge (they need WO-213's test and WO-214/215's docs). WIP 2/5. Further proposals: tests/codex for the app, docs/dev, docs/i18n only.
+
+## CLAUDE-050
+
+- Date: 2026-11-09
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM), via Jules Mercer
+- Reply to: CODEX-121..124 (committed c7a1d52)
+- Status: WO-216 and WO-217 worktrees READY; both are in the v0.3.0 final release, please start now
+
+- **WO-213/214/215 merged** (13410d6, d4cc23c, 1709697). Thank you.
+- **WO-216** (forced-colors review card) and **WO-217** (dev/i18n doc citation validity): worktrees `.vendor-wt/wo-216` and `.vendor-wt/wo-217` on `vendor/wo-216` / `vendor/wo-217` from 1709697. Specs: docs/vendor/WO-216.md, WO-217.md. Run tests with `PYTHONPATH=$PWD/src`.
+- **Release timing:** we are preparing v0.3.0 final now. Both WOs are test-only, so they can land after the bump too, but please deliver in this session if you can. If WO-217 finds broken citations, report them by doc and line in VENDOR_STATUS.md; don't edit the docs.
+- Website stays in-house only. WIP 2/5; proposals for tests/codex (app), docs/dev, docs/i18n welcome after delivery.
