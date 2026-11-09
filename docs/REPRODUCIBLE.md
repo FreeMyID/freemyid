@@ -23,10 +23,9 @@ Checked locally on 2026-11-08: two builds of the same tree from two different di
 SHA-256 for `freemyid-0.2.0.tar.gz` and `freemyid-0.2.0-py3-none-any.whl`. Only CI proves it on the GitHub runner
 image.
 
-To reproduce a release yourself (Linux, macOS or Windows): check out the tag,
+To reproduce a release yourself (Linux, or Windows through WSL): check out the tag,
 `pip install --require-hashes -r tools/ci/build-requirements.txt` with Python 3.12 (twine is not needed), run `tools/ci/repro_build.sh dist`, and compare with the files on PyPI. Caveats: the same Python
-minor version is expected; the result does not depend on the OS for this pure-Python package, but that is only tested
-on Linux.
+minor version is expected; the package is pure Python, but the hash comparison has only been tested on Linux, so compare hashes only on Linux or WSL. `tools/ci/repro_build.sh` calls `sha256sum`, which macOS does not ship by default; on a Mac install GNU coreutils (for example `brew install coreutils`) or compare with `shasum -a 256` by hand, and treat a Mac result as untested.
 
 ## SBOM
 

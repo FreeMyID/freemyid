@@ -6,7 +6,7 @@ into work orders. Started 2026-11-08. Source: docs/ROADMAP.md sections 3-6, docs
 
 ## Lanes (who may touch what) — the collision rule
 
-Every path belongs to exactly one lane. A work order may only list paths in its own lane. BOARD.md stays the per-WO
+Every path belongs to exactly one lane (one temporary exception: see the Copilot-out note under the table). A work order may only list paths in its own lane. BOARD.md stays the per-WO
 guard; this table is the standing split so bulk work never collides.
 
 | Lane | Team | Owns (write) | Never touches |
@@ -15,10 +15,10 @@ guard; this table is the standing split so bulk work never collides.
 | **CX** | Codex team (Nora) | `tests/codex/` (new test suites), `docs/dev/` (developer & architecture docs), `docs/i18n/` (translation prep), `web/src/pages/developers/` (developer site section), `brand/codex/` (Canva design exports + `MANIFEST.md`; in-house graphic-designer promotes approved files into `brand/`, `web/` or the app) | `src/`, everything in IN or CP |
 | **CP** | Copilot team (Grace) | `tests/copilot/` (new test suites), `distro/` (community Homebrew/AUR/Nix/Flatpak/winget/Scoop recipes; `packaging/` is the real installer and stays in-house), `docs/user/` (end-user how-tos), `docs/USER_GUIDE.md`, `docs/CLI.md`, `README.md`, `web/src/components/ui/` + `web/src/components/CopyHash.astro` (a11y fixes from audits) | `src/`, everything in IN or CX |
 
-**Until December 2026 (owner, 2026-11-08): the Copilot team is out.** Every CP lane (`docs/user/`, `docs/USER_GUIDE.md`, `docs/CLI.md`, `README.md`, `web/src/components/ui/` + `CopyHash.astro`, `distro/`) and maintenance of `tests/copilot/` move to **IN**. New test suites that would have been CP go to **CX** (Codex). `tools/copilot.sh` and its watcher stay off until the credit reset; Copilot work orders reopen in December.
+**Until December 2026 (owner, 2026-11-08): the Copilot team is out.** Every CP lane (`docs/user/`, `docs/USER_GUIDE.md`, `docs/CLI.md`, `README.md`, `web/src/components/ui/` + `CopyHash.astro`, `distro/`) and maintenance of `tests/copilot/` move to **IN**. New test suites that would have been CP go to **CX** (Codex). `tools/copilot.sh` and its watcher stay off until the credit reset; Copilot work orders reopen in December. Until then this is the one exception to the "Never touches" column for IN and to the vendor-subtree rule below: IN may write those moved CP paths, and no work is assigned to CP.
 
 Rules: vendors never change product code (`src/`); a vendor test that finds a real bug ends in a strict xfail plus a
-SUM-/SEC- row for in-house. In-house agents stay out of vendor subtrees. Cross-lane needs go through the channels.
+SUM-/SEC- row for in-house. In-house agents stay out of vendor subtrees (except the temporary CP-to-IN move above). Cross-lane needs go through the channels.
 
 ---
 

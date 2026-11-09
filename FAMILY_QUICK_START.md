@@ -17,7 +17,7 @@ account.
 
 ## 1. Install it (about 2 minutes)
 
-1. Go to freemyid.org and click the **Download Free My ID** button. This downloads **FreeMyIDSetup**. Its name may have a number in it. That is fine. Double-click the file you downloaded.
+1. Go to freemyid.org and click the **Download Free My ID** button. This downloads **FreeMyIDSetup**. Its name may have a number in it. That is fine. Find the file you downloaded: it is in your **Downloads** folder, or click the download arrow at the top-right (or bottom) of your web browser to see it. Double-click that file.
 2. Windows may show a blue box: **"Windows protected your PC"**. This is normal for new
    programs. It does not mean anything is wrong.
    - Click the small words **More info**.
