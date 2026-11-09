@@ -43,3 +43,21 @@ def test_expression_mirrors_the_python_lists() -> None:
     assert all(f'"{s}"' in e for s in (*waf.PREFIXES, *waf.SUFFIXES, waf.ALLOW_PREFIX))
     assert e.count("starts_with") == len(waf.PREFIXES) + 1
     assert e.count("ends_with") == len(waf.SUFFIXES)
+
+
+# SEC-126: a failed ruleset read must never turn into "no rules" and PUT over the zone's rules
+@pytest.mark.parametrize("argv", [["--apply"], ["--rollback", "unused.json"]])
+def test_sec126_failed_read_never_writes(monkeypatch, argv) -> None:
+    calls: list[str] = []
+
+    def api(method, path, body=None):
+        calls.append(method)
+        if path.startswith("/zones?"):
+            return {"success": True, "result": [{"id": "z1"}]}
+        if method == "GET":
+            return {"success": False, "errors": [{"message": "HTTP 500"}]}
+        return {"success": True}
+
+    monkeypatch.setattr(waf.cf, "api", api)
+    assert waf.main(argv) == 1
+    assert "PUT" not in calls

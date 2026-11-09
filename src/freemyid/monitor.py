@@ -305,8 +305,8 @@ def _pauser(delay: tuple[float, float], sleep: Callable[[float], None]) -> Calla
 def compare(current: list[BrokerHealth], previous: dict[str, Any] | None,
             today: str) -> None:
     """Fill the week-over-week fields in place from last week's monitor/1 doc."""
-    prev = {b["broker_id"]: b for b in (previous or {}).get("brokers", [])
-            if isinstance(b, dict) and "broker_id" in b}
+    prev = {b["broker_id"]: _clean_prev(b) for b in (previous or {}).get("brokers", [])
+            if isinstance(b, dict) and isinstance(b.get("broker_id"), str)}
     for h in current:
         p = prev.get(h.broker_id)
         if p is not None and h.health == "ok" and p.get("fingerprint") and h.fingerprint \
@@ -319,6 +319,24 @@ def compare(current: list[BrokerHealth], previous: dict[str, Any] | None,
             h.weeks_bad = int(p.get("weeks_bad", 1)) + 1 if same and p else 1
             h.first_seen_bad = (p.get("first_seen_bad") if same and p else None) or today
             h.demote_suggested = h.weeks_bad >= DEMOTE_AFTER_WEEKS
+
+
+_HEALTHS = frozenset({"ok", "moved", "form_changed", "blocked", "unreachable", "unknown"})
+_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def _clean_prev(b: dict[str, Any]) -> dict[str, Any]:
+    """Only the week-over-week fields of one entry from the --previous file, type-checked.
+    The file is outside input: a bad value is dropped, never copied into the new report
+    and never a crash after the whole run (SEC-125)."""
+    health, fp = b.get("health"), b.get("fingerprint")
+    weeks, first = b.get("weeks_bad"), b.get("first_seen_bad")
+    return {
+        "health": health if isinstance(health, str) and health in _HEALTHS else None,
+        "fingerprint": fp if isinstance(fp, str) and 0 < len(fp) <= 128 else None,  # compared only
+        "weeks_bad": weeks if type(weeks) is int and 0 <= weeks <= 10_000 else 1,
+        "first_seen_bad": first if isinstance(first, str) and _DATE.match(first) else None,
+    }
 
 
 def run_monitor(registry: Any, *, requester: Requester | None = None,

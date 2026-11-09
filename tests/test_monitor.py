@@ -463,3 +463,21 @@ def test_load_previous_reads_at_most_the_cap(tmp_path):
     p.write_bytes(b"\xff{")
     assert mon.load_previous(p)[0] is None
     assert mon.load_previous(tmp_path / "missing.json")[0] is None
+
+
+# SEC-125: the --previous file is outside input; bad values never crash or leak through
+@pytest.mark.parametrize("entry", [
+    {"broker_id": "a", "health": "blocked", "weeks_bad": "x"},
+    {"broker_id": ["a"], "health": "blocked"},
+    {"broker_id": "a", "health": "blocked", "weeks_bad": float("inf")},
+    {"broker_id": "a", "health": "blocked", "weeks_bad": True},
+    {"broker_id": "a", "health": "blocked", "first_seen_bad": {"name": "Jane Q Testperson"}},
+    {"broker_id": "a", "health": {"x": 1}, "fingerprint": ["f"]},
+])
+def test_sec125_malformed_previous_entry_is_dropped_not_crash(entry):
+    from freemyid.monitor import BrokerHealth, compare
+    h = [BrokerHealth(broker_id="a", health="blocked")]
+    compare(h, {"schema": "monitor/1", "brokers": [entry]}, "2026-11-09")
+    assert isinstance(h[0].weeks_bad, int) and 1 <= h[0].weeks_bad <= 2
+    assert h[0].first_seen_bad in (None, "2026-11-09")
+    assert h[0].previous_health in (None, "blocked")

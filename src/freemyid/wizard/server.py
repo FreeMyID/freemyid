@@ -525,10 +525,10 @@ def create_app(store, token: str, allowed_hosts: set[str],
             return redirect("/", "review_gone")     # double-click / already answered
         lid = dash.review_listing_id(t)
         try:
-            form = await request.form()
+            sent_lid = str((await request.form()).get("listing_id", ""))
         except Exception:  # noqa: BLE001
-            form = {}
-        if t.kind != TodoKind.REVIEW_MATCH or not lid or str(form.get("listing_id", "")) != lid:
+            sent_lid = ""
+        if t.kind != TodoKind.REVIEW_MATCH or not lid or sent_lid != lid:
             return html(ui.error_page("That didn't work", [
                 "That answer did not match the question, so nothing was changed."]), 400)
         li = next((x for x in store.list_listings(t.profile_id) if x.id == lid), None)
