@@ -245,10 +245,10 @@ The private issue tracker is the proposal source of truth for these newer ideas;
 | CP-35 | [#160](https://github.com/FreeMyID/freemyid-pm/issues/160) | Test developer-home scheduler examples against the renderer | WO-189 delivered; 2 tests and Ruff pass; owner review |
 | CP-36 | [#162](https://github.com/FreeMyID/freemyid-pm/issues/162) | Guard human-readable registry priority ordering | WO-190 independently verified; 1 test and Ruff pass; artifact authorship unconfirmed |
 | CP-37 | [#165](https://github.com/FreeMyID/freemyid-pm/issues/165) | Guard built developer CLI reference rendering | Closed by owner; replaced by WO-198 |
-| CP-38 | [#166](https://github.com/FreeMyID/freemyid-pm/issues/166) | Guard registry source summary text | Backlog proposal; awaiting Morgan's review |
-| CP-39 | [#167](https://github.com/FreeMyID/freemyid-pm/issues/167) | Guard exposure result text output | Backlog proposal; awaiting Morgan's review |
-| CP-40 | [#168](https://github.com/FreeMyID/freemyid-pm/issues/168) | Guard human-readable todo list output | Backlog proposal; awaiting Morgan's review |
-| CP-41 | [#169](https://github.com/FreeMyID/freemyid-pm/issues/169) | Guard doctor diagnostic text output | Backlog proposal; awaiting Morgan's review |
+| CP-38 | [#166](https://github.com/FreeMyID/freemyid-pm/issues/166) | Guard registry source summary text | WO-220 delivered; 5 tests and Ruff pass; owner review |
+| CP-39 | [#167](https://github.com/FreeMyID/freemyid-pm/issues/167) | Guard exposure result text output | WO-221 delivered; 3 tests and Ruff pass; owner review |
+| CP-40 | [#168](https://github.com/FreeMyID/freemyid-pm/issues/168) | Guard human-readable todo list output | WO-222 delivered; 2 tests and Ruff pass; owner review |
+| CP-41 | [#169](https://github.com/FreeMyID/freemyid-pm/issues/169) | Guard doctor diagnostic text output | WO-223 delivered; 3 tests and Ruff pass; owner review |
 | CP-42 | [#170](https://github.com/FreeMyID/freemyid-pm/issues/170) | Guard developer config table semantics | Closed by owner; replaced by WO-199 |
 
 ## WO-204 follow-up batch — CP-43..46 (closed as superseded)
@@ -311,9 +311,9 @@ Requested under CLAUDE-041. CLAUDE-047 closed all four as superseded by in-house
 
 **State:** Closed as superseded by WO-208 and WO-209/210 per CLAUDE-047; not started.
 
-## Next-wave proposals CP-47..48 (unreserved; CLAUDE-048 invitation)
+## Post-release proposals CP-47..49 (unreserved; CLAUDE-048 invitation and follow-up)
 
-These are local proposals only. No tracker issues or worktrees were created. Morgan decides which, if any, to number and authorize.
+CP-47/48 were accepted and completed as WO-216/217. CP-49 was accepted as WO-224 after CLAUDE-056 confirmed the v0.3.0 release; its prepared worktree is delivered for owner review. No new tracker issue was created for CP-49.
 
 ### CP-47 — Check the review card in Windows forced-colors mode
 
@@ -342,3 +342,17 @@ These are local proposals only. No tracker issues or worktrees were created. Mor
 **Collision/dependency:** test-only, disjoint from the existing broker contributor-guide citation test and the delivered WO-212/215 docs. Confirm no in-house docs-tooling test is underway before dispatch.
 
 **State:** Accepted and merged as WO-217 (owner report, 8a9e35a; CLAUDE-054). Owner independently reports 14 tests and Ruff passing on main. Citation semantics remain outside this check.
+
+## CP-49 — Prepare a Spanish translator handoff guide
+
+**Evidence:** `docs/i18n/STRINGS.md` explicitly says it is partial, records runtime placeholders and plural-sensitive counts, and excludes protected credential/mail-security copy and data-sourced checklist text. `docs/i18n/GLOSSARY_ES.md` establishes Latin-American Spanish and usted, and requires product-owner review of legal/consent wording. The roadmap targets Spanish UI for v0.5; the docs also say Spanish UI is not shipped. A short handoff guide can make future translation safer without beginning translation or changing app behavior.
+
+**Proposed allowed paths:** new `docs/i18n/TRANSLATION_GUIDE.md`; the assigned worktree's `VENDOR_STATUS.md`.
+
+**Deliverable:** explain how translators use the string inventory and glossary; preserve placeholders, plural/count meaning, possible-match uncertainty, practice-mode search behavior, per-site scope, and consent qualifiers; mark legal/consent and credential/security copy for in-house review; require a native-language and product-owner review before adoption. State clearly that the Spanish interface is not yet shipped. No UI translations, source/catalog extraction, product claims, or edits to the existing inventory/glossary.
+
+**Validation:** verify all references resolve to the existing roadmap, inventory, and glossary sections; run the existing offline citation/doc selection if the owner supplies its current required command. This is a new explanatory guide, not a new completeness claim or translation test.
+
+**Collision/dependency:** separate new file, feeding the in-house BL-IN-29 catalog extraction without doing extraction. Requires an owner-prepared worktree and explicit GO. No UI/source/catalog extraction or sensitive-copy translation is included.
+
+**State:** Accepted and delivered as WO-224 under CLAUDE-056; owner review requested. New guide added in the prepared worktree; required i18n/doc selection passed (485 passed, 6 skipped, 2,165 deselected, 1 xfailed).
