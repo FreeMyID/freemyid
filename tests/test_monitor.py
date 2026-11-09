@@ -188,8 +188,11 @@ def _cli(monkeypatch, routes, *args):
     from tests.conftest import ROOT
     net = FakeNet(routes)
     monkeypatch.setattr(mon, "httpx_requester", lambda *a, **k: (net, lambda: None))
-    # run_monitor binds time.sleep as a default at import, so patch the pauser itself (CR #63)
-    monkeypatch.setattr(mon, "_pauser", lambda delay, sleep: (lambda: None))
+    net.pauses = 0
+
+    def pause() -> None:                  # counts the gaps; never sleeps (CR #63, #66)
+        net.pauses += 1
+    monkeypatch.setattr(mon, "_pauser", lambda delay, sleep: pause)
     r = CliRunner().invoke(cli.app, ["monitor", "--registry", str(ROOT / DEV_REG),
                                      "--broker", "devauto", *args])
     return r, net
@@ -227,14 +230,11 @@ def test_cli_monitor_text_and_bad_inputs(monkeypatch, tmp_path):
 
 
 def test_cli_pauser_patch_really_stops_sleeping(monkeypatch):
-    """Two requests through the CLI path must not sleep for real."""
-    import time as _time
-    t0 = _time.monotonic()
+    """Two requests through the CLI path use the patched pauser, so nothing sleeps."""
     moved = {OPT: (302, "https://devauto.example/optout2", b""),
              "https://devauto.example/optout2": (200, None, FORM_OK)}
     r, net = _cli(monkeypatch, moved, "--json")
-    assert r.exit_code == 0 and len(net.calls) == 2
-    assert _time.monotonic() - t0 < 1.5
+    assert r.exit_code == 0 and len(net.calls) == 2 and net.pauses == 2
 
 
 # ------------------------------------------------------------------ CR cycle 2
@@ -356,3 +356,58 @@ def test_no_browser_load_after_the_broker_budget_is_spent():
     h = mon.check_broker(b, NetPolicy(fixture_registry()), net, lambda: None,
                          page_loader=loader, clock=lambda: next(t))
     assert h.health == "unknown" and "took longer" in h.detail and calls == []
+
+
+# ------------------------------------------------------------------ CR #64 / #66 cycle 3
+
+def test_unparsable_selector_on_a_static_form_does_not_load_the_browser():
+    """`button.submit` can't be checked statically or on rendered HTML: no second load."""
+    calls = []
+
+    def loader(broker, url):
+        calls.append(url)
+        return 200, url, FORM_OK.decode()
+    doc, net, sleeps = _run({OPT: (200, None, FORM_OK)}, loader=loader)
+    b = _one(doc)
+    assert calls == [] and not b["used_browser"] and len(net.calls) == 1 and sleeps == []
+    assert b["health"] == "ok" and b["selectors_unchecked"] == 1
+
+
+@pytest.mark.parametrize("status", [404, 500])
+def test_browser_http_error_is_unreachable_not_form_changed(status):
+    def loader(broker, url):
+        return status, url, "<html><p>Not here</p></html>"
+    b = _one(_run({OPT: (200, None, b"<div id=app></div>")}, loader=loader)[0])
+    assert b["health"] == "unreachable" and b["http_status"] == status
+    assert b["selectors_missing"] == []
+
+
+def test_failures_are_logged_with_a_traceback_at_debug(monkeypatch, caplog):
+    import logging
+
+    def loader(broker, url):
+        raise RuntimeError("boom")
+    with caplog.at_level(logging.DEBUG, logger="freemyid.monitor"):
+        b = _one(_run({OPT: (200, None, b"<div id=app></div>")}, loader=loader)[0])
+    assert b["detail"] == "browser load failed: RuntimeError"
+    assert any(r.exc_info and r.exc_info[0] is RuntimeError for r in caplog.records)
+    caplog.clear()
+
+    def broken(*a, **k):
+        raise AttributeError("bug")
+    monkeypatch.setattr(mon, "check_broker", broken)
+    with caplog.at_level(logging.DEBUG, logger="freemyid.monitor"):
+        b = _one(_run({OPT: (200, None, FORM_OK)})[0])
+    assert b["detail"] == "check failed: AttributeError"
+    assert any(r.exc_info and r.exc_info[0] is AttributeError for r in caplog.records)
+
+
+def test_run_monitor_looks_up_time_sleep_at_call_time(monkeypatch):
+    """No `sleep=` given: the gap uses time.sleep as it is now, not as bound at import."""
+    slept: list[float] = []
+    monkeypatch.setattr(mon.time, "sleep", slept.append)
+    moved = {OPT: (302, "https://devauto.example/optout2", b""),
+             "https://devauto.example/optout2": (200, None, FORM_OK)}
+    net = FakeNet(moved)
+    mon.run_monitor(fixture_registry(), requester=net, now=NOW, broker_ids=["devauto"])
+    assert len(net.calls) == 2 and len(slept) == 1 and 2.0 <= slept[0] <= 5.0

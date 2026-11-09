@@ -23,6 +23,7 @@ Also used by tools/registry_health.py (qa-security) for its `--online` checks.
 from __future__ import annotations
 
 import hashlib
+import logging
 import random
 import re
 import time
@@ -34,6 +35,7 @@ from urllib.parse import urljoin, urlsplit
 
 from . import __version__
 
+log = logging.getLogger(__name__)
 SCHEMA = "monitor/1"
 USER_AGENT = f"FreeMyID/{__version__} broker-monitor (+https://freemyid.org/safety/)"
 MAX_REDIRECTS = 5
@@ -239,7 +241,9 @@ def check_broker(broker: Any, policy: Any, req: Requester, pause: Callable[[], N
         return h
     results = {s: selector_present(s, html) for s in sels}
     js_only = not form_fields(html)
-    if (js_only or None in results.values()) and page_loader is not None:
+    # only a form with no fields in the HTML goes to the browser (docs/MONITOR.md): a
+    # selector we can't parse (None) stays unresolvable on rendered HTML too (CR #64)
+    if js_only and page_loader is not None:
         if clock() > deadline:
             h.health, h.detail = "unknown", f"took longer than {BROKER_BUDGET_S:.0f} s"
             return h
@@ -249,7 +253,8 @@ def check_broker(broker: Any, policy: Any, req: Requester, pause: Callable[[], N
         except ChallengeSeen:
             h.health, h.detail = "blocked", "challenge page in the browser; check by hand"
             return h
-        except Exception as e:  # noqa: BLE001 - reported, never retried
+        except Exception as e:  # reported, never retried
+            log.debug("browser load failed for %s", broker.id, exc_info=True)
             h.health, h.detail = "unknown", f"browser load failed: {type(e).__name__}"
             return h
         h.used_browser = True
@@ -259,6 +264,10 @@ def check_broker(broker: Any, policy: Any, req: Requester, pause: Callable[[], N
         label = detect_challenge(html, status=status)
         if label:
             h.health, h.detail = "blocked", f"challenge page ({label}); check by hand"
+            return h
+        if status is None or status >= 400:     # an error page is no evidence of a form
+            h.http_status = status
+            h.health, h.detail = "unreachable", f"HTTP {status} in the browser"
             return h
         js_only = not form_fields(html)
         results = {s: selector_present(s, html) for s in sels}
@@ -312,7 +321,7 @@ def compare(current: list[BrokerHealth], previous: dict[str, Any] | None,
 def run_monitor(registry: Any, *, requester: Requester | None = None,
                 page_loader: PageLoader | None = None, policy: Any = None,
                 previous: dict[str, Any] | None = None, delay: tuple[float, float] = (2.0, 5.0),
-                sleep: Callable[[float], None] = time.sleep, now: datetime | None = None,
+                sleep: Callable[[float], None] | None = None, now: datetime | None = None,
                 broker_ids: list[str] | None = None) -> dict[str, Any]:
     """Check every enabled broker with a web page and return the monitor/1 doc.
     One broker's failure never stops the run."""
@@ -322,7 +331,7 @@ def run_monitor(registry: Any, *, requester: Requester | None = None,
     close: Callable[[], None] = lambda: None
     if requester is None:
         requester, close = httpx_requester()
-    pause = _pauser(delay, sleep)
+    pause = _pauser(delay, sleep or time.sleep)   # looked up per call, not at import
     out: list[BrokerHealth] = []
     try:
         for b in registry.brokers:
@@ -332,7 +341,8 @@ def run_monitor(registry: Any, *, requester: Requester | None = None,
                 continue                       # email/postal only: nothing to load
             try:
                 out.append(check_broker(b, policy, requester, pause, page_loader=page_loader))
-            except Exception as e:  # noqa: BLE001 - one broker never stops the run
+            except Exception as e:  # one broker never stops the run
+                log.debug("monitor check failed for %s", b.id, exc_info=True)
                 out.append(BrokerHealth(broker_id=b.id, health="unknown",
                                         detail=f"check failed: {type(e).__name__}"))
     finally:
