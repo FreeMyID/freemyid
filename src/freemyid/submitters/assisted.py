@@ -97,6 +97,13 @@ def assisted_todo(profile: Profile, broker: Broker, listings: list[Listing], *,
                 resume_token=f"assisted:{broker.id}")
 
 
+def manual_email_token(broker_id: str, kind: str | None = None) -> str:
+    """The resume token of a "send it yourself" letter to-do: `manual_email:<broker>`, or
+    `manual_email:<broker>:<kind>` for a follow-up or formal demand. One place, so the
+    runner and the submitters can never build it differently."""
+    return f"manual_email:{broker_id}" + (f":{kind}" if kind else "")
+
+
 def manual_email_todo(profile: Profile, broker: Broker, subject: str, body: str, *,
                       title: str | None = None) -> Todo:
     from ..engine.outbox import compose_links
@@ -108,7 +115,7 @@ def manual_email_todo(profile: Profile, broker: Broker, subject: str, body: str,
                 title=title or f"Send {profile.label}'s removal letter to {broker.name}",
                 body=intro + body, links=list(links.values()),
                 copy_fields={"To": to, "Subject": subject, "Letter": body},
-                resume_token=f"manual_email:{broker.id}")
+                resume_token=manual_email_token(broker.id))
 
 
 def postal_todo(profile: Profile, broker: Broker, listings: list[Listing],

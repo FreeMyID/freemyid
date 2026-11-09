@@ -511,7 +511,7 @@ class Runner:
             # SEC-118: scan-only, dry-run and practice runs (all set self.dry_run) can't
             # queue the real email, so the letter the person can send stays put
             return st
-        tok = f"manual_email:{broker.id}"
+        tok = assisted.manual_email_token(broker.id)
         mine = [t for t in self.store.list_todos(profile.id)
                 if t.broker_id == broker.id and t.kind != TodoKind.REVIEW_MATCH]
         manual = [t for t in mine if t.resume_token == tok]
@@ -611,7 +611,7 @@ class Runner:
                     why="nothing_to_send")
 
     def _open_manual_letter(self, profile: Profile, broker: Broker) -> bool:
-        tok = f"manual_email:{broker.id}"
+        tok = assisted.manual_email_token(broker.id)
         return any(t.broker_id == broker.id and t.resume_token == tok
                    for t in self.store.list_todos(profile.id))
 
@@ -927,7 +927,7 @@ class Runner:
         if any(not r.dry_run for r in self.store.list_requests(
                 profile.id, broker.id, status=RequestStatus.QUEUED_FOR_APPROVAL)):
             return "awaiting_approval"
-        tok = f"manual_email:{broker.id}:"
+        tok = assisted.manual_email_token(broker.id) + ":"
         if any((t.resume_token or "").startswith(tok) for t in self.store.list_todos(profile.id)):
             return "awaiting_manual_letter"
         return None
@@ -943,7 +943,7 @@ class Runner:
             todo = assisted.manual_email_todo(
                 profile, broker, subject, body,
                 title=f"Send a {word} to {broker.name} for {profile.label}").model_copy(
-                    update={"resume_token": f"manual_email:{broker.id}:{kind.value}"})
+                    update={"resume_token": assisted.manual_email_token(broker.id, kind.value)})
             hmod.persist_todo(self.store, record_manual_letter(
                 self.store, todo, listings, kind=kind, original=original, now=self.now))
             return "manual_todo"
