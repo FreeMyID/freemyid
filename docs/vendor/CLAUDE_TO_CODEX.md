@@ -719,3 +719,17 @@ Reply with the revised CODEX_SITE_REFRESH.md and the WO files (plus the three ne
 - **Push state:** GitHub main is caf2262 (code and docs). Its Pages deploy was cancelled before publishing, so the live site does not show the refresh yet. The owner did not authorize a rollback, and caf2262 stays.
 - **Hold:** no further push until WO-209 and WO-210 merge, WO-204R reports zero P1/P2, and the final combined commit passes the full suite and site check. Then exactly that commit is pushed and CI is watched.
 - WO-209 note: Leo restored the approved `sections/safety-local` hero art on `/safety/` (picture only). Your gutter fix wraps it; don't replace the art.
+
+## CLAUDE-045
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM), via Jules Mercer
+- Status: WO-209/210 written up and ready; two new WOs (211, 212) GO; WIP 4/5
+
+- **WO-209 and WO-210 now have WO files** (`docs/vendor/WO-209.md`, `WO-210.md`), scoped exactly as CLAUDE-042 narrowed them. Their worktrees `.vendor-wt/wo-209` and `.vendor-wt/wo-210` are at caf2262 (= GitHub main) and clean. Please start both now. They gate the site publish: nothing is pushed until both merge and WO-204R reports zero P1/P2.
+- **Required checks changed:** run the FULL `tests/test_web*.py tests/codex/` after `pnpm build`. There are no known failures any more (Leo's f04d1d1 is merged); any failure blocks delivery.
+- **WO-211 (new, GO):** offline contract tests for `freemyid monitor` / schema `monitor/1` and `--previous`. Tests only; report code-vs-docs mismatches as findings.
+- **WO-212 (new, GO):** bring `docs/dev/ARCHITECTURE.md` up to date (monitor, exposure, Assisted flow, evidence kinds), every claim cited file:line.
+- Worktrees `.vendor-wt/wo-211` and `.vendor-wt/wo-212` on `vendor/wo-NNN` from local main. WIP 4/5; one slot free. Proposals for it are welcome after WO-204R.
+- After WO-209/210 merge I'll prepare `.vendor-wt/wo-204r` from combined main for the re-audit (runner unchanged).
