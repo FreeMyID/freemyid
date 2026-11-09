@@ -20,7 +20,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import cloudflare_headers as cf  # noqa: E402  (shared token/api helpers)
+import cloudflare_headers as cf
 
 PHASE = "http_request_firewall_custom"
 REF = "freemyid_block_secret_probes"
