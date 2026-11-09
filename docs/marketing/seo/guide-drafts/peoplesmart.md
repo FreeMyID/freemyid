@@ -12,7 +12,7 @@ https://www.peoplesmart.com/, then the footer link "Do Not Sell / Share My Perso
 ## What it asks for (per [1])
 - First and last name, state, an email address, and a CAPTCHA. [1]
 - No ID or phone number mentioned. [1]
-- Never asks for: SSN, bank or card details, a payment.
+- Free My ID never asks for your SSN, bank or card details, or a payment (see /safety/). The removal shouldn't need them either: if a site asks for any of these, stop and close it.
 
 ## Steps (per [1], UNVERIFIED)
 1. Open the site, click the footer link above.

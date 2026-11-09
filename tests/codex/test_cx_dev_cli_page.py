@@ -155,6 +155,14 @@ def test_reference_json_matches_visible_cli_tree_and_source_locations() -> None:
 
 
 
+def test_every_public_summary_is_a_whole_sentence() -> None:
+    """CR #62-#64: the page shows only the docstring's first line, so it must not stop mid-sentence."""
+    saved = json.loads(JSON_PATH.read_text(encoding="utf-8"))
+    cut = [c["path"] for c in saved["commands"]
+           if c["summary"] and not c["summary"].rstrip().endswith((".", "!", "?", ")"))]
+    assert cut == []
+
+
 def test_static_page_renders_reference_data_without_client_javascript() -> None:
     page = PAGE_PATH.read_text(encoding="utf-8")
     assert "_commands.json" in page

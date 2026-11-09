@@ -10,7 +10,7 @@ https://infotracer.com/optout/ (broker's own page, fetched 2026-11-08) [1]
 ## What it asks for
 - Ordinary request: a request form (a TrustArc form) linked as "HERE" on the page. It says it "may need to ask you additional questions to confirm the information associated with you". [1] FLAG: it may ask extra questions to confirm who you are; the page does not say what they are. UNVERIFIED.
 - No ID, phone number or payment is mentioned. [1]
-- Never asks for: SSN, bank or card details, a payment.
+- Free My ID never asks for your SSN, bank or card details, or a payment (see /safety/). The removal shouldn't need them either: if a site asks for any of these, stop and close it.
 
 ## Steps
 1. Open the link above.

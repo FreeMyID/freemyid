@@ -15,7 +15,7 @@ No keyword-volume tool is available to us (see `semrush-lookups.md`). Proxy: Sim
 | # | Broker | Slug | Similarweb global rank (US rank) | Competitor guides seen | Opt-out source quality | Asks for |
 |---|---|---|---|---|---|---|
 | 1 | USPhoneBook | `usphonebook` | 6,118 (1,474) | DeleteMe, Incogni, OneRep, Aura, others | UNVERIFIED (broker page blocked to us) | Email, own phone number (to find listing) |
-| 2 | Social Catfish | `socialcatfish` | 20,548 (6,530) | not checked | Broker page read | Name, email; optional phone/photos; possible ID check later |
+| 2 | Social Catfish | `social-catfish` | 20,548 (6,530) | not checked | Broker page read | Name, email; optional phone/photos; possible ID check later |
 | 3 | CyberBackgroundChecks | `cyberbackgroundchecks` | 25,607 (5,625) | DeleteMe, Optery, Incogni | UNVERIFIED (403) | Name, email; optional phone, DOB, address |
 | 4 | AnyWho | `anywho` | 33,975 (7,197) | DeleteMe, Incogni, others | UNVERIFIED; route disputed (Intelius vs Spokeo) | Possibly DOB and a phone/email code |
 | 5 | CheckPeople | `checkpeople` | 34,604 (7,041) | not checked | Broker page read (first step only) | Email |
@@ -30,7 +30,7 @@ Why these ten and not others (all ranks same method, same date): ClustrMaps 407,
 Sources for ranks: https://www.similarweb.com/website/<domain>/ , each fetched 2026-11-08. For Whitepages, BeenVerified, TruePeopleSearch, FastPeopleSearch being top Public Records sites in the US, Sept 2026: https://www.similarweb.com/top-websites/united-states/reference-materials/public-records-and-directories/ (fetched 2026-11-08). Competitor guide evidence: web search 2026-11-08 plus the DeleteMe guide pages cited in each draft.
 
 ## 4. Status and what the web team needs
-- Ready after a light check (broker's own page read 2026-11-08): `smartbackgroundchecks`, `usa-people-search`, `socialcatfish`.
+- Ready after a light check (broker's own page read 2026-11-08): `smartbackgroundchecks`, `usa-people-search`, `social-catfish`.
 - Partial (broker page read, but gaps): `checkpeople` (only step 1), `infotracer` (no single flow).
 - NOT ready, broker page blocked to us; broker-researcher must open each in a real browser first: `usphonebook`, `cyberbackgroundchecks`, `anywho`, `peoplesmart`, `addresses-com`.
 - Never publish a draft's time-to-removal unless marked as the broker's own words.

@@ -11,7 +11,7 @@ https://app.intelius.com/privacy-center/ [1]. UNVERIFIED that this is the route 
 
 ## What it asks for
 - Your details "as it appears on your listing", plus a CAPTCHA. [1] The guide does not say whether an email, phone or ID is needed. UNVERIFIED. FLAG: may ask for an email; check before publishing.
-- Never asks for: SSN, bank or card details, a payment.
+- Free My ID never asks for your SSN, bank or card details, or a payment (see /safety/). The removal shouldn't need them either: if a site asks for any of these, stop and close it.
 
 ## Steps (per [1], UNVERIFIED)
 1. Open the link.

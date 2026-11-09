@@ -7,9 +7,10 @@ Status as of 2026-11-08 (roadmap 0.3, BL-IN-42). Owner: devops-engineer.
 What makes two builds of one commit byte-identical:
 
 - The build backend and its whole toolchain are pinned with hashes in `tools/ci/build-requirements.txt`
-  (hatchling, build, packaging, pathspec, pluggy, pyproject-hooks, trove-classifiers) plus twine and its dependencies
-  (resolved for Linux x86_64 and CPython 3.12, which is all CI uses). CI installs it with
-  `pip install --require-hashes`. `pyproject.toml` still lists `hatchling>=1.24` for people building by hand; the CI
+  (hatchling, build, packaging, pathspec, pluggy, pyproject-hooks, trove-classifiers; pure-Python wheels, any OS).
+  twine and its dependencies (used only for CI's `twine check`) are pinned separately in
+  `tools/ci/twine-requirements.txt`, with hashes resolved for Linux x86_64 and CPython 3.12 (all CI uses).
+  CI installs both files together with `pip install --require-hashes`. `pyproject.toml` still lists `hatchling>=1.24` for people building by hand; the CI
   build ignores that range because it runs `python -m build --no-isolation` against the pinned install.
 - `SOURCE_DATE_EPOCH` is the commit time of the built commit (`git log -1 --format=%ct`). Hatchling uses it for every
   file timestamp in the sdist and wheel. (The old fixed value `1700000000` in `pypi.yml` is gone.)
@@ -22,8 +23,8 @@ Checked locally on 2026-11-08: two builds of the same tree from two different di
 SHA-256 for `freemyid-0.2.0.tar.gz` and `freemyid-0.2.0-py3-none-any.whl`. Only CI proves it on the GitHub runner
 image.
 
-To reproduce a release yourself: check out the tag, `pip install --require-hashes -r tools/ci/build-requirements.txt`
-with Python 3.12, run `tools/ci/repro_build.sh dist`, and compare with the files on PyPI. Caveats: the same Python
+To reproduce a release yourself (Linux, macOS or Windows): check out the tag,
+`pip install --require-hashes -r tools/ci/build-requirements.txt` with Python 3.12 (twine is not needed), run `tools/ci/repro_build.sh dist`, and compare with the files on PyPI. Caveats: the same Python
 minor version is expected; the result does not depend on the OS for this pure-Python package, but that is only tested
 on Linux.
 
@@ -38,7 +39,10 @@ PyPI workflow keeps its own SPDX SBOM as a workflow artifact. The Docker image h
 Residual risk (SEC-121): the syft version is pinned (`v1.18.1`), but `anchore/sbom-action` downloads the syft binary
 at run time and we have no independent hash pin for it. The action's own download step may compare against the
 checksums file published on the same GitHub release; that catches corruption, not a compromised release. The SBOM job
-has read-only permissions and cannot change the wheel, which limits the damage to a wrong or missing SBOM. Fix later by
+has read-only permissions and cannot change the wheel, which limits the damage to a wrong or missing SBOM, plus one
+more risk: the action holds the job's `GITHUB_TOKEN` (its `github-token` input defaults to it) and runs syft in that
+environment, so a compromised syft binary may be able to read and send out that token. Read-only permissions limit what that token can do (read this repository's contents until the
+job ends); they do not stop it being disclosed. Fix later by
 pinning the syft release archive by sha256 in a step of our own.
 
 What the SBOM does not cover: the Windows installer. It describes the Python wheel and its dependencies, not the

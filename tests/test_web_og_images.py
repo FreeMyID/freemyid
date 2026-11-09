@@ -4,6 +4,7 @@ Unit cases run web/src/lib/og.ts directly with Node's built-in type stripping (N
 web/dist (run the web build first, as for the other tests/test_web_*.py files).
 """
 
+import html
 import json
 import re
 import shutil
@@ -119,6 +120,23 @@ def test_wo17x_art_placed(page: str, name: str) -> None:
     alt = meta(page, "og:image:alt")
     if name.startswith("og-guide-") and page.startswith("guides/") and "help-a-parent" not in page:
         assert alt.startswith("Free guide: how to remove yourself from ") and alt.endswith(", step by step.")
+    if page.startswith("developers/"):   # CR #64: the rendered alt is exactly pages.yaml og_alt
+        assert html.unescape(alt) == PAGES_OG_ALT[page.removesuffix("index.html")], page
+
+
+def _pages_og_alt() -> dict[str, str]:
+    pages = yaml.safe_load((ROOT / "site_src/pages.yaml").read_text(encoding="utf-8"))
+    return {p["out"]: p["og_alt"] for p in pages if p.get("og_alt")}
+
+
+PAGES_OG_ALT = _pages_og_alt()
+
+
+def test_developer_pages_have_their_own_og_alt_in_pages_yaml() -> None:
+    """Offline half of the check above: both developer pages define a describing alt."""
+    for out in ("developers/cli/", "developers/config/"):
+        assert len(PAGES_OG_ALT.get(out, "")) > 40, out
+    assert PAGES_OG_ALT["developers/cli/"] != PAGES_OG_ALT["developers/config/"]
 
 
 @pytest.mark.skipif(not (DIST / "index.html").is_file(), reason="web/dist not built")

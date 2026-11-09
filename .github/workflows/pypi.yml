@@ -36,7 +36,7 @@ jobs:
         run: |
           set -euo pipefail
           # BL-IN-42: pinned hash-checked toolchain, SOURCE_DATE_EPOCH = commit time (see docs/REPRODUCIBLE.md)
-          python -m pip install --disable-pip-version-check --require-hashes -r tools/ci/build-requirements.txt
+          python -m pip install --disable-pip-version-check --require-hashes -r tools/ci/build-requirements.txt -r tools/ci/twine-requirements.txt
           tools/ci/repro_build.sh dist
           python -m twine check --strict dist/*
           ver=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")

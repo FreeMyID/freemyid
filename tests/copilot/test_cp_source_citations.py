@@ -4,6 +4,7 @@ This is deliberately offline: it reads only documentation and ``src/freemyid``.
 """
 from __future__ import annotations
 
+import ast
 import re
 from pathlib import Path
 
@@ -101,6 +102,25 @@ def test_source_citation_resolves_to_one_current_line(
     )
 
 
+def _python_strings(source: str) -> list[str]:
+    """Every str literal as the parser sees it: implicit concatenation ("a " "b") is one
+    constant, two separate statements stay two (CR #62-#64)."""
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return []
+    return [n.value for n in ast.walk(tree) if isinstance(n, ast.Constant) and isinstance(n.value, str)]
+
+
+def test_only_literals_python_concatenates_are_joined() -> None:
+    joined = _python_strings('msg = ("Do not "\n       "send your password.")\n')
+    assert any("Do not send your password." in s for s in joined)
+    split = _python_strings('msg = "Do not "\n"send your password."\n')
+    assert not any("Do not send your password." in s for s in split)
+    returned = _python_strings('def f():\n    return "Please "\n    "try again."\n')
+    assert not any("Please try again." in s for s in returned)
+
+
 @pytest.mark.parametrize("case", _quoted_ui_cases())
 def test_quoted_ui_text_exists_in_cited_source(
     case: tuple[Path, int, str, int, str],
@@ -110,10 +130,10 @@ def test_quoted_ui_text_exists_in_cited_source(
     assert len(matches) == 1, f"{_relative(doc)}:{doc_line}: cannot check {reference}"
     source = matches[0].read_text(encoding="utf-8")
     # UI text in Python is often split across adjacent string literals on several lines
-    # ("...approved "\n    "it. ..."): also search a copy with those joins removed.
-    joined = re.sub(r"""(["'])\s*\n\s*[rbfu]{0,2}\1""", "", source)
+    # ("...approved "\n    "it. ..."): also search the literals as Python itself joins them.
+    joined = _python_strings(source) if matches[0].suffix == ".py" else []
     missing = [phrase for phrase in _quoted_ui_text(text)
-               if phrase not in source and phrase not in joined]
+               if phrase not in source and not any(phrase in lit for lit in joined)]
     assert not missing, (
         f"{_relative(doc)}:{doc_line}: {reference}:{source_line} does not contain "
         f"quoted UI text {missing}"

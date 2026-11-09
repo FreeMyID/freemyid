@@ -60,8 +60,17 @@ You must approve the code before you can continue. If you try to press Next
 first, you see: "Please press "Test that it works" and approve the security code
 first." (`draft.py:392-393`).
 
-I am not sure exactly where Bridge shows its code, because that is Proton's
-screen and not part of this project. Proton's help pages are the place to check.
+Bridge does not show this code on its own screen, so you can't compare it
+there yourself. The simple rule: if you just installed, reinstalled or updated
+Bridge yourself, press **Yes**. If you didn't, press **No** and ask your helper.
+
+For a helper who wants to check the code: in Bridge's settings, use **Export TLS
+certificates** to save Bridge's certificate (Proton's Bridge settings guide,
+https://proton.me/support/comprehensive-guide-to-bridge-settings). The code
+Free My ID shows is the SHA-256 fingerprint of that certificate
+(`src/freemyid/engine/mail_tls.py:49-51`). Compare it with the output of
+`openssl x509 -in <exported cert file> -noout -fingerprint -sha256`; ignore
+the colons and upper/lower case.
 
 ## If something goes wrong
 

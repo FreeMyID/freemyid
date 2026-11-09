@@ -12,8 +12,10 @@ Rules (never relaxed):
 * The fingerprint covers the registry selectors that matched plus the form fields' tag,
   type and name. It never includes page text. The report holds broker ids, health values,
   HTTP status, registry selectors and hashes only, with no page text and no query strings.
-* Polite: one request at a time, a random 2-5 s gap (min 1 s), at most 5 redirects, a 2 MB
-  cap per page and a 30 s budget per broker.
+* Polite: one request at a time (the headless page load counts as one), a random 2-5 s gap
+  (min 1 s), at most 5 redirects, a 2 MB cap per page, and a 30 s budget per broker checked
+  before each request; one page body that takes longer than 30 s to read is cut off and
+  reported `unreachable` (never a truncated page, which could look like a changed form).
 
 No person's data exists here: monitoring needs no profile and touches no store.
 Also used by tools/registry_health.py (qa-security) for its `--online` checks.
@@ -58,11 +60,15 @@ class ChallengeSeen(Exception):
 # --------------------------------------------------------------------------- fetch
 
 
-def httpx_requester(timeout: float = 15.0, user_agent: str = USER_AGENT
+def httpx_requester(timeout: float = 15.0, user_agent: str = USER_AGENT, *,
+                    read_budget: float = BROKER_BUDGET_S,
+                    clock: Callable[[], float] = time.monotonic, transport: Any = None
                     ) -> tuple[Requester, Callable[[], None]]:
-    """A plain requester: no redirects followed (fetch() does that), no cookies kept."""
+    """A plain requester: no redirects followed (fetch() does that), no cookies kept.
+    `timeout` limits each network wait; `read_budget` limits the whole request, so a server
+    that trickles its body can't hold the run (raises TimeoutError)."""
     import httpx
-    client = httpx.Client(timeout=timeout, follow_redirects=False,
+    client = httpx.Client(timeout=timeout, follow_redirects=False, transport=transport,
                           headers={"User-Agent": user_agent, "Accept": "text/html,*/*"})
 
     def req(method: str, url: str) -> tuple[int, str | None, bytes]:
@@ -70,10 +76,13 @@ def httpx_requester(timeout: float = 15.0, user_agent: str = USER_AGENT
         if method == "HEAD":
             r = client.head(url)
             return r.status_code, r.headers.get("location"), b""
+        stop = clock() + read_budget
         with client.stream("GET", url) as r:
             body = bytearray()
             if method == "GET_BODY":
                 for chunk in r.iter_bytes():
+                    if clock() > stop:
+                        raise TimeoutError(f"body not read within {read_budget:.0f} s")
                     body.extend(chunk)
                     if len(body) >= MAX_BODY:
                         break
@@ -127,7 +136,8 @@ def _safe(url: str) -> str:
 _SIMPLE_SEL = re.compile(
     r"""^(?:#(?P<id>[A-Za-z][\w-]*)|(?:[a-z]+)?\[name=["']?(?P<name>[\w\[\]-]+)["']?\])$""")
 _FIELD = re.compile(r"<(input|select|textarea|button)\b([^>]*)>", re.IGNORECASE)
-_ATTR = re.compile(r"""\b(type|name)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>/]+))""", re.IGNORECASE)
+# (?<![\w-]) not \b: "data-name" or "data-id" must not count as name or id.
+_ATTR = re.compile(r"""(?<![\w-])(type|name)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>/]+))""", re.IGNORECASE)
 
 
 def selector_present(sel: str, html: str) -> bool | None:
@@ -137,7 +147,7 @@ def selector_present(sel: str, html: str) -> bool | None:
     if not m:
         return None
     attr, val = ("id", m["id"]) if m["id"] else ("name", m["name"])
-    return re.search(rf"""\b{attr}\s*=\s*["']?{re.escape(val)}["'\s>/]""", html) is not None
+    return re.search(rf"""(?<![\w-]){attr}\s*=\s*["']?{re.escape(val)}["'\s>/]""", html) is not None
 
 
 def form_fields(html: str) -> list[tuple[str, str, str]]:
@@ -230,6 +240,10 @@ def check_broker(broker: Any, policy: Any, req: Requester, pause: Callable[[], N
     results = {s: selector_present(s, html) for s in sels}
     js_only = not form_fields(html)
     if (js_only or None in results.values()) and page_loader is not None:
+        if clock() > deadline:
+            h.health, h.detail = "unknown", f"took longer than {BROKER_BUDGET_S:.0f} s"
+            return h
+        pause()                           # the browser load is a request too: same gap
         try:
             status, final, html = page_loader(broker, res.final_url or target)
         except ChallengeSeen:

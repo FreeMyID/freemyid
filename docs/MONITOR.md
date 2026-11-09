@@ -10,8 +10,12 @@ redirect, allowlist and selector checks.
 
 ## What it never does
 
-- It never fills in, clicks or submits anything. It loads the opt-out page and the page named
-  by the registry's `goto` step. The other form steps only give their selector.
+- It never fills in, clicks or submits anything. It loads one page per broker: the page named
+  by the registry's `goto` step if there is one, otherwise the opt-out page. The other form
+  steps only give their selector.
+- Limitation: when a broker has a `goto` step, only the `goto` page is checked. The registry's
+  `opt_out_url` itself is not loaded, so a broken opt-out page can still report `ok` if the
+  `goto` page is fine. `tools/registry_health.py` checks each `opt_out_url` separately.
 - It never works around bot protection. A challenge or CAPTCHA page, or HTTP 403/429/503, is
   `blocked` (check by hand). Nothing is retried.
 - It never leaves the allowlist. Every hop, redirects included, must be https and pass
@@ -22,7 +26,9 @@ redirect, allowlist and selector checks.
 ## Checks
 
 One GET per page (2 MB cap), at most 5 redirects, a random 2-5 s gap between requests
-(1 s minimum), and a 30 s budget per broker. With `--browser`, a form built by JavaScript
+(1 s minimum; the headless browser load waits its turn too), and a 30 s budget per broker,
+checked before each request. A single page body that takes longer than 30 s to read is cut
+off and reported `unreachable` (`request failed: TimeoutError`), never checked half-read. With `--browser`, a form built by JavaScript
 (no form fields in the HTML) is loaded once in the headless browser (the goto runs through
 BrowserManager, with NetPolicy routing and challenge detection) and the rendered HTML is
 checked the same way.

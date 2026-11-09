@@ -11,16 +11,17 @@ Start at https://www.anywho.com/ and click "Do Not Sell or Share My Personal Inf
 
 ## What it asks for (if the Intelius route, per [1])
 - Email address, date of birth, legal name, and a code sent to an email or phone number on your record. [1]
-- FLAG: it asks for a full date of birth and, for the code, may send a text to a phone number. Free My ID never asks for either; this is the broker's own form. Choosing the email code instead of the phone code avoids using a phone. UNVERIFIED that the email option is always offered.
+- FLAG: it asks for a full date of birth and, for the code, may send a text to a phone number. Free My ID never sends a date of birth, and sends a phone number to a site only if you switch that on (docs/USER_GUIDE.md, setup step 4); this is the broker's own form. Choosing the email code instead of the phone code avoids using a phone. UNVERIFIED that the email option is always offered.
 - No government ID mentioned. [1]
-- Never asks for: SSN, bank or card details, a payment.
+- Free My ID never asks for your SSN, bank or card details, or a payment (see /safety/). The removal shouldn't need them either: if a site asks for any of these, stop and close it.
 
 ## Steps (per [1], UNVERIFIED)
-1. Open the footer link above, choose the public-data option.
-2. Enter your email, agree, continue; open the email and click its link (it "will expire within 15 minutes").
-3. Enter your date of birth and legal name; pick the record that is you.
-4. Get a code by email (or phone) and enter it.
-5. Change your profile from "Displayed" to "Suppressed" and save.
+1. Open the footer link above, choose the public-data option ("View Public Data Tools").
+2. The box opens. Click **Manage My Suppression Rules**. [1]
+3. Enter your email, agree, continue; open the email and click its link (it "will expire within 15 minutes").
+4. Enter your date of birth and legal name; pick the record that is you.
+5. Get a code by email (or phone) and enter it.
+6. Change your profile from "Displayed" to "Suppressed" and save.
 
 ## How long
 Not stated. [1]
