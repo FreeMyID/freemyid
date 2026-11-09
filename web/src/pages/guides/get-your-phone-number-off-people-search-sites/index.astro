@@ -5,7 +5,8 @@
 // research doc's per-listing wording; S1 "often brings up" -> "can bring up" (no primary source); S4 uses the FTC wording
 // from the research doc; "in a few months" -> "now and then" (the interval is advice, not a rule). Copy rules: POSITIONING.md.
 import Base from "@/layouts/Base.astro";
-import PageHead from "@/components/PageHead.astro";
+import "@/styles/site-refresh.css";
+import Crumbs from "@/components/Crumbs.astro";
 import Alert from "@/components/ui/Alert.astro";
 import Card from "@/components/ui/Card.astro";
 import Icon from "@/components/Icon.astro";
@@ -15,17 +16,24 @@ const p = pageProps("phone-number");
 const crumbs: Crumb[] = [["Home", ""], [pages.guides.label, pages.guides.out], [pages["phone-number"].label, p.out]];
 ---
 <Base {...p} crumbs={crumbs}>
-<PageHead crumbs={crumbs} title="Get your phone number off people-search sites"
-  lead="Typing a phone number into a people-search site can bring up a name and address. Here are the free steps to ask each site to take that listing down.">
-  <picture slot="art">
+<div class="site-refresh">
+<header class="site-refresh__wrap site-refresh__section refresh-page-head">
+<Crumbs crumbs={crumbs} />
+<div class="refresh-page-intro"><div>
+<h1>Get your phone number off people-search sites</h1>
+<p class="site-refresh__lead">Typing a phone number into a people-search site can bring up a name and address. Here are the free steps to ask each site to take that listing down.</p>
+
+  
+
+</div><figure class="site-refresh__figure"><picture>
     {/* source: brand/illustrations/phone-number-*.svg (graphic-designer), alt from brand/illustrations/README.md */}
     <source srcset={url("assets/art/phone-number-dark.svg")} media="(prefers-color-scheme: dark)" />
     <img src={url("assets/art/phone-number-light.svg")} width="320" height="250" class="h-auto w-full"
       alt="A phone with its number hidden and a green check." />
-  </picture>
-</PageHead>
+  </picture></figure></div>
+</header>
 {/* source: research doc WR-62 S1 ("often" -> "can", no primary source for frequency); what the sites sell = faq.yaml who-buys (ODNI report) */}
-<div class="wrap-narrow pb-2xl">
+<div class="site-refresh__wrap site-refresh__wrap--narrow site-refresh__prose pb-2xl">
   <h2 id="why">Why is my number there?</h2>
   {/* source: research doc WR-62 S1: no primary source for where numbers come from, so the draft's hedge is kept and the list is softened to "can" */}
   <p class="mt-s">People-search sites build profiles from public records and other data, and link them by details like a phone number. Numbers can reach these sites from public records, marketing lists and other sources. We don't claim to know which source put your number on a given site.</p>
@@ -50,15 +58,28 @@ const crumbs: Crumb[] = [["Home", ""], [pages.guides.label, pages.guides.out], [
   <p class="mt-s">Not on its own. Removing listings doesn't change anything with your phone company or your phone.</p>
   <Alert variant="note" icon="phone" class="mt-s"><p>The FTC's Do Not Call registry stops sales calls from companies that follow the law. It won't stop scammers, and political, charity, survey and debt-collection calls are still allowed. It can take up to 31 days to take effect. Report unwanted calls at <a href="https://www.donotcall.gov/">donotcall.gov</a>. If you lost money to a scam, report it at <a href="https://reportfraud.ftc.gov/">reportfraud.ftc.gov</a>.</p></Alert>
 
-  <Card as="section" class="reveal mt-xl p-l shadow-2" aria-labelledby="auto">
+  <Card as="section" class="mt-xl p-l shadow-2" aria-labelledby="auto">
     <h2 id="auto" class="flex items-center gap-xs"><Icon name="shield" class="size-8 text-brand" />Rather not do it all by hand?</h2>
     {/* source: LICENSE (free, AGPL); PLAN_V1 D1/D4 (sends requests, keeps checking); phone only with permission = tiers.py/base.py;
        no account = ROADMAP principle 6; scope = POSITIONING.md rule 6 */}
     <p class="mt-s">Free My ID is a free, open-source Windows app that sends the removal requests for you and keeps checking. There's no account. It works on people-search and data-broker sites only, and it gives a site your phone number only if you switch that on.</p>
     <div class="mt-s flex flex-wrap items-center gap-s">
-      <CtaDownload size="md" />
+      <CtaDownload size="md" class="site-refresh__button" />
       <a href={url("how-it-works/")}>See how it works</a>
     </div>
   </Card>
 </div>
+</div>
 </Base>
+
+<style is:global>
+  .site-refresh [data-slot="badge"] { color: var(--fmi-color-text); }
+  .site-refresh .refresh-page-intro { display: grid; gap: var(--fmi-space-l); align-items: center; }
+  .site-refresh .refresh-page-head h1 { max-width: 26ch; margin-block-start: var(--fmi-space-m); }
+  .site-refresh pre { font-size: 1.25rem; max-width: 100%; overflow-x: auto; white-space: pre; }
+  .site-refresh a:not(.no-underline) { min-block-size: 44px; min-inline-size: 44px; display: inline-flex; align-items: center; }
+  .site-refresh small { font-size: 1em; }
+  .site-refresh figure { margin: 0; min-width: 0; }
+  .site-refresh img { max-width: 100%; height: auto; }
+  @media (min-width: 56.25em) { .site-refresh .refresh-page-intro:has(figure) { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } }
+</style>
