@@ -234,9 +234,9 @@ def home_page(*, statuses: list[BrokerStatus], todos: list[tuple[Todo, str, str]
     need = len(todos) + (1 if outbox_count else 0)
     body = _flash(flash)
     if practice:
-        body += ('<div class="banner"><b>Practice mode.</b> Free My ID is looking but is not sending '
-                 'anything yet. <a href="/settings">Change this in Settings</a> when you are '
-                 'ready.</div>')
+        body += ('<div class="banner"><b>Practice mode:</b> Free My ID is looking for your '
+                 'listings, but no removal requests go out until you say so. '
+                 '<a href="/settings">Change this in Settings</a> when you are ready.</div>')
     for r in people:
         if r["consent_problem"]:
             body += (f'<div class="note">Not running yet for {esc(r["profile"].label)}: '
