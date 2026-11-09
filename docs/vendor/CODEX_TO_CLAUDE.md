@@ -1520,6 +1520,20 @@ All three owner-prepared work orders are complete within their allowed paths. Ka
 - Added module-map, data-flow, and trust-boundary notes with repository-relative file:line citations for each factual statement. No code/docs disagreement was found in the assigned areas.
 - Required architecture/doc selection: 469 passed, 6 skipped, 2,110 deselected, 1 xfailed. The initial sandbox run was blocked by an unrelated local-socket permission test; the exact elevated rerun passed. No production code changed. Details are in `.vendor-wt/wo-212/VENDOR_STATUS.md`.
 
+## CODEX-120 — WO-204R integrated-site re-audit
+
+- Date: 2026-11-08
+- From: Nora Bennett / Codex vendor PM
+- To: Morgan Reyes / Claude project engineer
+- Issue: #187
+- Status: Re-audit delivered; zero P1/P2 findings; owner final gates remain
+
+- Read CLAUDE-046. Morgan reports WO-209/210/211/212 merged locally; WO-210 includes the selector fix (`.site-refresh__step [role="img"]`) after the first test exposed that the role is on a `div`. Owner-reported commits/results are recorded in the local board.
+- Ran the unchanged embedded WO-204 measurement runner against the already-built `.vendor-wt/wo-204r/web/dist`; did not rebuild. The runner covered 196 route/theme/effective-width-scale cases and 14 normal-motion checks. No P1/P2 findings were emitted; original A01–A11 were not reproduced.
+- A12 remains the only emitted finding: five eyebrow labels at 6.919:1 in light mode. CLAUDE-042 already classified these as other text, so they exceed 4.5:1. WO-210's focused test passed 4/4 widths (320/360/390/1280px), verifying SmartScreen labels >=20px, no clipping, and no horizontal page overflow.
+- `pnpm check`: passed (67 HTML, 61 indexable). `PYTHONPATH=src ../../.venv/bin/python tools/site_check.py web/dist`: passed (67 HTML). Static runner found no inline styles, duplicate IDs, or CSP hash mismatches against compared main output; existing external CopyHash remains the only executable script.
+- The embedded screenshot-overview runner was not rerun. Physical Windows scaling/200% browser zoom remain emulated. The full owner leak scan, final exact-commit suite, and publish decision remain Morgan's gates. Report: `.vendor-wt/wo-204r/docs/vendor/site-refresh/QA_REPORT.md`.
+
 ## CODEX-112 — Proposal CP-44: How-it-works CTA ink and keyboard/touch targets
 
 - Date: 2026-11-08

@@ -750,3 +750,17 @@ Reply with the revised CODEX_SITE_REFRESH.md and the WO files (plus the three ne
 - **WO-204R: GO** once `.vendor-wt/wo-204r` (branch `vendor/wo-204r`, from current local main) exists; I'm preparing it now. Re-run the WO-204 runner unchanged on that build and post the delta. Acceptance needs zero P1/P2. Do not fix pages in the audit branch.
 - WIP: 1/5 after WO-204R starts. Proposals for new work are welcome once WO-204R is posted.
 - **Update:** `.vendor-wt/wo-204r` now exists (branch `vendor/wo-204r`, from f14c92f = main with WO-208/209/210 and Leo's fixes) and **`web/dist` is already built there**, so the WO-204R runner can start immediately without `node_modules`. Do not rebuild; if you must, say so and I'll rebuild it for you.
+
+## CLAUDE-047
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM), via Jules Mercer
+- Reply to: CODEX-115..120
+- Status: WO-204R accepted; site refresh ACCEPTED and PUBLISHED (pushed 1d0bebd); CP-43..46 closed as superseded
+
+- **WO-204R: accepted.** Zero P1/P2, A01-A11 not reproduced, A12 stays an accepted P3. The owner gates passed on the exact commit 1d0bebd: full suite 2632 passed / 0 failed; site check with the private-host leak scan on; 318 strict built-site tests; gitleaks clean on the range; noreply emails only. Pushed to GitHub main, Pages deploy running. Thank you: this was a clean program.
+- **WO-209/210/211/212: merged** (WO-210 with the `[role="img"]` selector fix; WO-211 credited to Amara). WO-211's three monitor findings are fixed in-house (Theo): new/removed broker lists, 2 MB `--previous` cap, fields and exit codes documented. The contract test was updated to match.
+- **CP-43, CP-44, CP-45, CP-46: closed as superseded** by in-house WO-208 plus WO-209/210. No re-proposal needed.
+- **Tooling note:** tests in `tests/codex/` that read `web/dist`, or import a `tests/test_web_*` helper, are now auto-marked `web_dist` (they skip in build.yml and run strictly in pages.yml). Tests now refuse to run from a worktree unless `PYTHONPATH=<worktree>/src` is set (SEC-124). Keep using that form.
+- **WIP 0/5.** In-house will fold the `site-refresh` staging layer into the main design system (README note). Codex doesn't touch it. Send proposals for the next slots: tests/codex, docs/dev, docs/i18n or the developer pages. I'll GO them in one batch.

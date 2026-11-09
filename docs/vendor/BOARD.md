@@ -1,6 +1,6 @@
 # Codex vendor work board
 
-Sole writer: Nora Bennett, interactive vendor PM. Last checkpoint: CLAUDE-041 / CODEX-110..114, 2026-11-08. Release and merge states are owner-reported.
+Sole writer: Nora Bennett, interactive vendor PM. Last checkpoint: CLAUDE-046 / CODEX-120, 2026-11-08. Release and merge states are owner-reported.
 States are owner reports and local document evidence, not independently verified remote PR state. No git or network used. Local merges are distinguished from pushed merges. Work-order status headers may be stale; latest owner channel controls.
 
 Before dispatch or proposals, check this board, exact work-order paths and Claude's stay-off lists. This board grants no additional edit permission. Completed WO-001/002/005/006 path lists are historical scopes, not active reservations. WO-005 scope is exposure_card and its exclusive helpers only, never all views.py functions.
@@ -52,14 +52,15 @@ Before dispatch or proposals, check this board, exact work-order paths and Claud
 | WO-201 | #184 | Kai Nakamura | merged locally; owner reports combined checks pass | WO-200 | web/src/pages/how-it-works/index.astro; tests/codex/test_cx_how_it_works_refresh.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-040 |
 | WO-202 | #185 | Kai Nakamura | merged locally; owner reports combined checks pass | WO-206 (parallel start authorized by CLAUDE-039) | web/src/pages/families/index.astro; tests/codex/test_cx_families_refresh.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-040 |
 | WO-203 | #186 | Kai Nakamura | merged locally; no owner fixups, combined checks pass (owner report) | CLAUDE-040 GO on prepared main | web/src/pages/guides/index.astro; web/src/pages/guides/[slug]/index.astro; web/src/pages/guides/get-your-phone-number-off-people-search-sites/index.astro; web/src/pages/guides/help-a-parent-remove-their-information/index.astro; tests/codex/test_cx_guides_refresh.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-041 |
-| WO-204 | #187 | Hannah Cole | audit delivered; acceptance held for findings; no source fixes | CLAUDE-041 GO, all ten pages integrated | docs/vendor/site-refresh/QA_REPORT.md (new); VENDOR_STATUS.md | 2026-11-08 CODEX-110 |
+| WO-204 | #187 | Hannah Cole | initial audit delivered; repair acceptance held, no source fixes | CLAUDE-041 GO, all ten pages integrated | docs/vendor/site-refresh/QA_REPORT.md (new); VENDOR_STATUS.md | 2026-11-08 CODEX-110 |
 | WO-205 | #188 | Kai Nakamura | merged locally; owner reports combined checks pass | WO-201 | web/src/pages/safety/index.astro; tests/codex/test_cx_safety_refresh.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-040 |
 | WO-206 | #189 | Kai Nakamura | merged locally; owner reports combined checks pass | WO-205 | web/src/pages/download/index.astro; tests/codex/test_cx_download_refresh.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-040 |
 | WO-207 | #190 | Kai Nakamura | merged locally; no owner fixups, combined checks pass (owner report) | CLAUDE-040 GO on prepared main | web/src/pages/faq/index.astro; tests/codex/test_cx_faq_refresh.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-041 |
-| WO-209 | — | Kai Nakamura | implementation complete; delivery blocked by required build/full-site suite (missing web build output) | CLAUDE-042/045 | web/src/pages/safety/index.astro; web/src/pages/families/index.astro; tests/codex/test_cx_audit_trust_pages_followup.py (new); VENDOR_STATUS.md | 2026-11-08 CODEX-116 |
-| WO-210 | — | Kai Nakamura | implementation complete; delivery blocked by required build/full-site suite (missing web build output) | CLAUDE-042/045 | web/src/pages/download/index.astro; tests/codex/test_cx_audit_download_followup.py (new); VENDOR_STATUS.md | 2026-11-08 CODEX-117 |
-| WO-211 | — | Amara Okoye | delivered; 49 focused tests and Ruff pass; owner review requested | CLAUDE-045 | tests/codex/test_cx_monitor_contract.py (new); tests/codex/fixtures/monitor/ (new); VENDOR_STATUS.md | 2026-11-08 CODEX-118 |
-| WO-212 | — | Nora Bennett | delivered; 469 architecture/doc tests pass; owner review requested | CLAUDE-045 | docs/dev/ARCHITECTURE.md; VENDOR_STATUS.md | 2026-11-08 CODEX-119 |
+| WO-209 | — | Kai Nakamura | merged locally (128f60a; owner report); build/site check and 450 tests pass | CLAUDE-042/045/046 | web/src/pages/safety/index.astro; web/src/pages/families/index.astro; tests/codex/test_cx_audit_trust_pages_followup.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-046 |
+| WO-210 | — | Kai Nakamura | merged locally with owner fixup (3ae75d7; owner report); 453 tests pass | CLAUDE-042/045/046 | web/src/pages/download/index.astro; tests/codex/test_cx_audit_download_followup.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-046 |
+| WO-211 | — | Amara Okoye | merged locally (e91f7ec; owner report); three contract findings assigned in-house | CLAUDE-045/046 | tests/codex/test_cx_monitor_contract.py (new); tests/codex/fixtures/monitor/ (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-046 |
+| WO-212 | — | Nora Bennett | merged locally (a3dfa37; owner report); all 61 citations resolve | CLAUDE-045/046 | docs/dev/ARCHITECTURE.md; VENDOR_STATUS.md | 2026-11-08 CLAUDE-046 |
+| WO-204R | #187 | Hannah Cole | re-audit delivered; zero P1/P2; owner final gates remain | CLAUDE-046 GO, prepared combined-main build | docs/vendor/site-refresh/QA_REPORT.md; VENDOR_STATUS.md | 2026-11-08 CODEX-120 |
 
 WO-107 workspace: .vendor-wt/wo-107. Merged PR #19, owner report (103d79a).
 
