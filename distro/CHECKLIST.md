@@ -9,6 +9,22 @@ Run the release-tooling items only after confirming the published asset names
 and checksums. Commands in the source files were **unverified** when this
 checklist was written; this work order did not run them.
 
+## Publish gate (SEC-112)
+
+Release tooling **must** run `python tools/ci/check_distro_hashes.py` and see
+exit 0 before any upstream submission (AUR push, Flathub, Homebrew, Scoop,
+winget, Nix). It lists, and exits 1 on: `SKIP` in any checksum array
+(`md5sums`, `sha1sums`, `sha224sums`, `sha256sums`, `sha384sums`, `sha512sums`,
+`b2sums`, `cksums`, arch-specific variants too, on one line or spread over
+several), any all-zero 64-hex hash, any `REPLACE_WITH_*` token, and any recipe
+in `distro/` that is not valid UTF-8. Normal CI does not run it, because placeholders are
+expected until release day. Tests: `tests/test_distro_hash_gate.py`.
+
+Nix: `distro/nix/flake.nix` follows `nixos-unstable` and there is no
+`flake.lock`. Generating one needs `nix flake lock` with Nix installed and
+network access, which was not possible when this gate was added. Release day:
+run it on a machine with Nix and commit `distro/nix/flake.lock`. Not done.
+
 ## AUR
 
 | File:line | Release-day item and replacement | Responsibility | State |
