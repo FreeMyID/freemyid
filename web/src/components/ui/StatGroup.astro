@@ -1,0 +1,7 @@
+---
+// A row of Stat tiles as one description list (<dl>), wrapping to fit (min tile 12rem).
+// Only real, sourced numbers: no fake counters (docs/WEBSITE_REVAMP.md).
+import { cn } from "@/lib/utils";
+interface Props { class?: string; label?: string }
+---
+<dl class={cn("stat-group", Astro.props.class)} aria-label={Astro.props.label}><slot /></dl>

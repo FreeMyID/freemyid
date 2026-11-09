@@ -1,0 +1,11 @@
+---
+// One figure inside StatGroup: the label is the <dt>, the value the <dd> (shown large, on top).
+// hint: an optional muted line under the label (source or qualifier).
+interface Props { value: string; label: string; hint?: string }
+const { value, label, hint } = Astro.props;
+---
+<div class="stat">
+  <dt class="stat__label">{label}</dt>
+  <dd class="stat__value">{value}</dd>
+  {hint && <dd class="stat__hint">{hint}</dd>}
+</div>

@@ -1,0 +1,34 @@
+---
+// Tabs-like switcher with no JavaScript: a radio group (arrow keys move between options) shows one
+// panel at a time via :has(). Without :has() support, and in print, every panel shows under its own
+// heading. Up to 6 tabs. Panel content goes in named slots that match each tab id:
+//   <Tabs id="os" label="Your Windows version" tabs={[{ id: "w11", label: "Windows 11" }, { id: "w10", label: "Windows 10" }]}>
+//     <Fragment slot="w11">...</Fragment><Fragment slot="w10">...</Fragment>
+//   </Tabs>
+import { cn } from "@/lib/utils";
+interface Tab { id: string; label: string }
+interface Props { id: string; label: string; tabs: Tab[]; selected?: string; headingLevel?: "h2" | "h3" | "h4"; class?: string }
+const { id, label, tabs, selected, headingLevel: H = "h3", class: cls } = Astro.props;
+if (tabs.length > 6) throw new Error("Tabs: at most 6 tabs");
+const chosen = selected ?? tabs[0]?.id;
+const panels = await Promise.all(tabs.map((t) => Astro.slots.render(t.id)));
+---
+<div class={cn("tabs", cls)} id={id}>
+  <fieldset class="tabs__list">
+    <legend class="visually-hidden">{label}</legend>
+    {tabs.map((t) => (
+      <>
+        <input class="tabs__input" type="radio" name={`${id}-tab`} id={`${id}-${t.id}`} checked={t.id === chosen} />
+        <label class="tabs__label" for={`${id}-${t.id}`}>{t.label}</label>
+      </>
+    ))}
+  </fieldset>
+  <div class="tabs__panels">
+    {tabs.map((t, i) => (
+      <div class="tabs__panel prose-fmid" id={`${id}-${t.id}-panel`}>
+        <H class="tabs__fallback-title">{t.label}</H>
+        <Fragment set:html={panels[i]} />
+      </div>
+    ))}
+  </div>
+</div>

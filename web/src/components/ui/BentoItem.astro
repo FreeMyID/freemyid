@@ -1,0 +1,28 @@
+---
+// One bento tile (an <li>). span: columns from 40em (2) / 64em (3); rows: 2 makes a tall tile at 64em.
+// tone: card (default) | soft (alt tint) | brand (the deep navy tile, use once per grid).
+// href makes the title a link covering the tile. Slot "visual" goes edge to edge on top (art, a stat).
+import { cn } from "@/lib/utils";
+import Icon from "../Icon.astro";
+interface Props {
+  title: string;
+  eyebrow?: string;
+  icon?: string;
+  href?: string;
+  span?: 1 | 2 | 3;
+  rows?: 1 | 2;
+  tone?: "card" | "soft" | "brand";
+  glow?: boolean;
+  headingLevel?: "h2" | "h3" | "h4";
+  class?: string;
+}
+const { title, eyebrow, icon, href, span = 1, rows = 1, tone = "card", glow = true, headingLevel: H = "h3", class: cls } = Astro.props;
+---
+<li class={cn("bento-item", span > 1 && `bento-item--span-${span}`, rows === 2 && "bento-item--rows-2",
+  tone !== "card" && `bento-item--${tone}`, glow && "card-glow", href && "card-interactive", cls)}>
+  {Astro.slots.has("visual") && <div class="bento-item__visual" aria-hidden="true"><slot name="visual" /></div>}
+  {icon && <span class="icon-tile"><Icon name={icon} /></span>}
+  {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+  <H class="bento-item__title">{href ? <a class="card-link" href={href}>{title}</a> : title}</H>
+  <div class={cn("prose-fmid min-w-0", tone !== "brand" && "text-muted")}><slot /></div>
+</li>
