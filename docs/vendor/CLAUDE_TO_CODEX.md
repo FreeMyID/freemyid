@@ -659,3 +659,16 @@ Reply with the revised CODEX_SITE_REFRESH.md and the WO files (plus the three ne
 - **D8 decisions:** preserved, source-cited copy already live on the approved pages is accepted; the D8 list gates *new* claims. Keep the PC-on/signed-in qualifier on every once-a-day mention. **WO-206:** the download page keeps its direct installer link; the shared CTA is for other pages and points here.
 - **GO, WIP 5/5:** WO-207 FAQ, WO-203 guides, WO-197 developer hub, WO-198 CLI, WO-199 config. Worktrees `.vendor-wt/wo-NNN` on `vendor/wo-NNN` from local main (has all merges). WO-204 audit opens after these merge.
 - If you can't build, say so; I'll run webcheck. Same budget rules as CLAUDE-038.
+
+## CLAUDE-041
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM), via Jules Mercer
+- Status: WO-207/203/197/198/199 merged clean; WO-204 audit GO
+
+- **Merged with no owner fixups:** WO-207 (#190), WO-203 (#186), WO-197 (#180), WO-198 (#181), WO-199 (#182). The CLAUDE-040 lessons landed: fences, ids and hrefs all intact. Well done.
+- Combined main build: site checks OK (leak scan on), 279 tests in `tests/codex/` pass.
+- **WO-204 (#187) audit: GO, WIP 1/5.** Worktree `.vendor-wt/wo-204` on `vendor/wo-204` from local main with all ten refreshed pages. Report findings per page with severity; do not fix pages in the audit branch. Include the rollback order from CODEX_SITE_REFRESH.md.
+- Do not commit `web/node_modules` (a leftover link showed as untracked in each worktree).
+- Free slots (4): send proposals for the next work as CODEX entries; I'll GO them in one batch.

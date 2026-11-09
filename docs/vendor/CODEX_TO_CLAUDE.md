@@ -1369,3 +1369,63 @@ All three owner-prepared work orders are complete within their allowed paths. Ka
 - Added `tests/codex/test_cx_download_refresh.py` for built-output state, CTA target and label, help sections, and family/developer links.
 - Ruff passed. Build was blocked because `yaml` is unavailable in absent `web/node_modules`; focused pytest could not find `web/dist/index.html`; `pnpm check` could not find `web/dist`. No packages installed.
 - Worktree status flags existing download claims for D8 review and asks whether preserving the route's direct installer link satisfies WO-206's shared-CTA wording; the existing page contract expects the direct release URL and installer filename. Browser, viewport, keyboard, contrast, Windows scaling, and zoom QA remain unverified. Details are in the worktree `VENDOR_STATUS.md`.
+
+## CODEX-105 — WO-207
+
+- Date: 2026-11-08
+- From: Nora Bennett / Codex vendor PM
+- To: Morgan Reyes / Claude project engineer
+- Status: Delivered; owner review requested under CLAUDE-040
+
+- Preserved all 17 approved answers, native disclosures, question IDs, and answer associations.
+- Build/site checks PASS (62 routes / 67 HTML); focused suite 15 passed; existing relevant regressions 10 passed; Ruff PASS. Offline browser checks cover both themes, required effective widths/scales, body size, tap targets, keyboard operation and computed D6 contrast.
+- Frontmatter, existing IDs, hrefs, approved content and script payloads preserved. Applied refresh button styling at page call sites to fix inherited link-color interference; no shared component edits.
+- Manual visual review, real Windows scaling, browser chrome zoom and screen-reader speech remain for owner/WO-204. Dependency link absent at final verification. Exact commands/limits: `.vendor-wt/wo-207/VENDOR_STATUS.md`.
+
+## CODEX-106 — WO-203
+
+- Date: 2026-11-08
+- From: Nora Bennett / Codex vendor PM
+- To: Morgan Reyes / Claude project engineer
+- Status: Delivered; owner review requested under CLAUDE-040
+
+- Refreshed index cards, the article template and both standalone guides; replaced the animated timeline with ordered steps. All 32 guide routes preserve approved content and sources.
+- Build/site checks PASS (62 routes / 67 HTML); focused suite 72 passed; existing relevant regressions 4 passed; Ruff PASS. Offline browser checks cover both themes, required effective widths/scales, body size, tap targets, keyboard operation and computed D6 contrast.
+- Frontmatter, existing IDs, hrefs, approved content and script payloads preserved. Applied refresh button styling at page call sites to fix inherited link-color interference; no shared component edits.
+- Manual visual review, real Windows scaling, browser chrome zoom and screen-reader speech remain for owner/WO-204. Dependency link absent at final verification. Exact commands/limits: `.vendor-wt/wo-203/VENDOR_STATUS.md`.
+
+## CODEX-107 — WO-197
+
+- Date: 2026-11-08
+- From: Nora Bennett / Codex vendor PM
+- To: Morgan Reyes / Claude project engineer
+- Status: Delivered; owner review requested under CLAUDE-040
+
+- Preserved platform readiness, examples, section anchors and meaningful illustration alternatives; qualified once-a-day checks with computer-on and signed-in conditions.
+- Build/site checks PASS (62 routes / 67 HTML); focused suite 15 passed; existing relevant regressions 13 passed; Ruff PASS. Offline browser checks cover both themes, required effective widths/scales, body size, tap targets, keyboard operation and computed D6 contrast.
+- Frontmatter, existing IDs, hrefs, approved content and script payloads preserved. Applied refresh button styling at page call sites to fix inherited link-color interference; no shared component edits.
+- Manual visual review, real Windows scaling, browser chrome zoom and screen-reader speech remain for owner/WO-204. Dependency link absent at final verification. Exact commands/limits: `.vendor-wt/wo-197/VENDOR_STATUS.md`.
+
+## CODEX-108 — WO-198
+
+- Date: 2026-11-08
+- From: Nora Bennett / Codex vendor PM
+- To: Morgan Reyes / Claude project engineer
+- Status: Delivered; owner review requested under CLAUDE-040
+
+- Added readable command cards and data-driven built-output checks for every registered command, argument, option, value placeholder, requirement and source line. Command data is unchanged.
+- Build/site checks PASS (62 routes / 67 HTML); focused suite 15 passed; existing relevant regressions 2 passed; Ruff PASS. Offline browser checks cover both themes, required effective widths/scales, body size, tap targets, keyboard operation and computed D6 contrast.
+- Frontmatter, existing IDs, hrefs, approved content and script payloads preserved. Applied refresh button styling at page call sites to fix inherited link-color interference; no shared component edits.
+- Manual visual review, real Windows scaling, browser chrome zoom and screen-reader speech remain for owner/WO-204. Dependency link absent at final verification. Exact commands/limits: `.vendor-wt/wo-198/VENDOR_STATUS.md`.
+
+## CODEX-109 — WO-199
+
+- Date: 2026-11-08
+- From: Nora Bennett / Codex vendor PM
+- To: Morgan Reyes / Claude project engineer
+- Status: Delivered; owner review requested under CLAUDE-040
+
+- Preserved two column headers and eight row headers, fields, examples and schema links; added a focusable table scroll region.
+- Build/site checks PASS (62 routes / 67 HTML); focused suite 15 passed; existing relevant regressions 4 passed; Ruff PASS. Offline browser checks cover both themes, required effective widths/scales, body size, tap targets, keyboard operation and computed D6 contrast.
+- Frontmatter, existing IDs, hrefs, approved content and script payloads preserved. Applied refresh button styling at page call sites to fix inherited link-color interference; no shared component edits.
+- Manual visual review, real Windows scaling, browser chrome zoom and screen-reader speech remain for owner/WO-204. Dependency link absent at final verification. Exact commands/limits: `.vendor-wt/wo-199/VENDOR_STATUS.md`.
