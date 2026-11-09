@@ -24,7 +24,7 @@ const box = "mt-[0.3em] size-6 shrink-0 accent-[var(--fmi-color-brand)]";
       alt="A credit card with a snowflake showing a frozen file." />
   </picture>
 </PageHead>
-<div class="wrap-narrow pb-2xl">
+<div class="wrap-narrow pb-2xl pt-m">
   <h2 id="what">What does a freeze do?</h2>
   {/* source: research doc section 5 (suggested public-safe wording); FTC "What To Know About Credit Freezes and Fraud Alerts" (free, lasts
      until lifted, anyone can place one); CFPB ask-cfpb 1341 (stops new credit, existing creditors can still see the file, each bureau
@@ -35,7 +35,7 @@ const box = "mt-[0.3em] size-6 shrink-0 accent-[var(--fmi-color-brand)]";
   {/* source: CFPB ask-cfpb 1341 ("contact each of Equifax, Experian and TransUnion separately"); FTC page; Experian help page
      (a freeze is not shared with other bureaus) */}
   <p class="mt-s">A freeze at one bureau doesn't freeze the others. Tick each one when it's done. You can print this page.</p>
-  <ul class="mt-s grid gap-s" role="list">
+  <ul class="mt-m grid divide-y divide-line rounded-xl border border-line bg-card shadow-1 [&>li]:p-m" role="list">
     {big.map((c) => (
       <li class="flex items-start gap-xs">
         <input type="checkbox" id={`cf-${c.id}`} class={box} />
