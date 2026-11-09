@@ -1,7 +1,8 @@
 ---
 import Base from "@/layouts/Base.astro";
-import PageHead from "@/components/PageHead.astro";
-import Section from "@/components/Section.astro";
+import "@/styles/site-refresh.css";
+import Crumbs from "@/components/Crumbs.astro";
+import Section from "@/components/site-refresh/RefreshSection.astro";
 import { pageProps, site, type Crumb } from "@/lib/site";
 
 const p = pageProps("developers-config");
@@ -46,15 +47,23 @@ schedule:
   weekday: 6
   hour: 10
   install_job: false`;
-const pre = "mt-s max-w-full overflow-x-auto rounded-md border border-line bg-surface p-s text-small leading-snug text-text";
+const pre = "mt-s max-w-full overflow-x-auto rounded-md border border-line bg-surface p-s text-body leading-snug text-text";
 ---
 
 <Base {...p} crumbs={crumbs}>
-  <PageHead crumbs={crumbs} title="Setup YAML reference" lead="Prepare a file for the terminal setup command." />
+<div class="site-refresh">
+  <header class="site-refresh__wrap site-refresh__section refresh-page-head">
+<Crumbs crumbs={crumbs} />
+<div class="refresh-page-intro"><div>
+<h1>Setup YAML reference</h1>
+<p class="site-refresh__lead">Prepare a file for the terminal setup command.</p>
 
-  <div class="wrap pb-l">
+</div></div>
+</header>
+
+  <div class="site-refresh__wrap pb-l">
     {/* Source: docs/CLI.md:323-340; schema/setup-config.schema.json:478-538. */}
-    <Section id="overview" narrow title="What this file does" titleId="overview-title">
+    <Section id="overview" width="narrow" title="What this file does" titleId="overview-title">
       <p class="max-w-measure">The version 1 setup file describes one person. It uses YAML, a plain text format made of names and values. The top-level fields are <code>version</code>, <code>consent</code>, and <code>person</code>; all three are required.</p>
       <p class="mt-s max-w-measure">Use <code>freemyid setup --from FILE --check</code> to validate the file and show the plan without saving. To import it, run <code>freemyid setup --from FILE</code> in a terminal, review the plan and permission text, then confirm. <code>--yes</code> confirms without a prompt. Without confirmation in a terminal, nothing is saved.</p>
       <p class="mt-s max-w-measure">The full <a href={schemaUrl}>version 1 schema</a> is the source of truth. Unknown fields are rejected.</p>
@@ -63,9 +72,9 @@ freemyid setup --from setup.yaml</code></pre>
     </Section>
 
     {/* Source: schema/setup-config.schema.json:4-100,270-314,337-443,478-538; docs/CLI.md:323-340. */}
-    <Section id="person" tone="alt" narrow title="Person and permission fields" titleId="person-title">
-      <div class="overflow-x-auto">
-        <table class="w-full border-collapse text-left text-small">
+    <Section id="person" tone="alt" width="narrow" title="Person and permission fields" titleId="person-title">
+      <div class="overflow-x-auto" tabindex="0" role="region" aria-labelledby="person-title">
+        <table class="w-full border-collapse text-left text-body">
           <thead><tr><th scope="col" class="border-b border-line p-xs">Field</th><th scope="col" class="border-b border-line p-xs">What it means</th></tr></thead>
           <tbody>
             <tr><th scope="row" class="border-b border-line p-xs"><code>version</code></th><td class="border-b border-line p-xs">Use the number <code>1</code>.</td></tr>
@@ -82,16 +91,30 @@ freemyid setup --from setup.yaml</code></pre>
     </Section>
 
     {/* Source: schema/setup-config.schema.json:102-268; docs/CLI.md:334-336. */}
-    <Section id="mailbox" narrow title="Optional mailbox fields" titleId="mailbox-title">
+    <Section id="mailbox" width="narrow" title="Optional mailbox fields" titleId="mailbox-title">
       <p class="max-w-measure">A mailbox is optional. If you include one, <code>provider</code> and <code>address</code> are required. Providers are <code>gmail</code>, <code>yahoo</code>, <code>icloud</code>, <code>proton_bridge</code>, or <code>other</code>.</p>
       <p class="mt-s max-w-measure">Passwords never belong in this file. Use <code>password_env</code> for the name of an environment variable, or <code>password_file</code> for a file path. Other optional fields include <code>username</code>, <code>imap_host</code>, <code>imap_port</code>, <code>imap_ssl</code>, <code>imap_starttls</code>, <code>smtp_host</code>, <code>smtp_port</code>, <code>smtp_starttls</code>, and <code>tls_cert_sha256</code> for an approved Proton Mail Bridge certificate fingerprint.</p>
     </Section>
 
     {/* Source: schema/setup-config.schema.json:1-538; docs/examples/setup-config.example.yaml:1-56; docs/CLI.md:323-340. */}
-    <Section id="example" tone="alt" narrow title="Full fake example" titleId="example-title">
+    <Section id="example" tone="alt" width="narrow" title="Full fake example" titleId="example-title">
       <p class="max-w-measure">This example uses made-up details. Replace them with the details you want to use, keep the file private, and do not put a mailbox password in it.</p>
       <pre class={pre} tabindex="0" aria-label="Fake version 1 setup YAML example"><code>{example}</code></pre>
       <p class="mt-s max-w-measure">See the <a href={`${site.repo_url}/blob/main/docs/CLI.md#setup---from`}>setup --from instructions</a> for the confirmation and validation behavior.</p>
     </Section>
   </div>
+</div>
 </Base>
+
+<style is:global>
+  .site-refresh .refresh-page-intro { display: grid; gap: var(--fmi-space-l); align-items: center; }
+  .site-refresh .refresh-page-head h1 { max-width: 26ch; margin-block-start: var(--fmi-space-m); }
+  .site-refresh pre { font-size: 1.25rem; max-width: 100%; overflow-x: auto; white-space: pre; }
+  .site-refresh a:not(.no-underline) { min-block-size: 44px; min-inline-size: 44px; display: inline-flex; align-items: center; }
+  .site-refresh small { font-size: 1em; }
+  .site-refresh figure { margin: 0; min-width: 0; }
+  .site-refresh img { max-width: 100%; height: auto; }
+  .site-refresh table { font-size: 1.25rem; }
+  .site-refresh th, .site-refresh td { min-width: 9rem; vertical-align: top; }
+  @media (min-width: 56.25em) { .site-refresh .refresh-page-intro:has(figure) { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } }
+</style>
