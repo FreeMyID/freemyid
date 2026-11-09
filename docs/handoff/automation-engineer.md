@@ -1090,11 +1090,13 @@ selector_present / form_plan / httpx_requester, keeping its own UA and HEAD-firs
 (**Marcus to review**; its 33 tests pass unchanged). cb641ea `freemyid monitor` (added at the
 END of cli.py, so no existing command's line refs moved; `_commands.json` regenerated from
 `tests/codex/test_cx_dev_cli_page._reference_data()`, indent 2), docs/MONITOR.md, CLI.md
-monitor/1. Tests: tests/test_monitor.py (18, offline fakes).
+monitor/1. Tests: tests/test_monitor.py (offline fakes; 29 test functions after the CR
+cycle 3 fixes, was 18 at first build).
 For Dana: the job command is `freemyid monitor --json --registry brokers/registry.yaml
 --previous <last artifact>/monitor.json > monitor.json`, and it exits 0 whenever the run
 completes. The issue script reads `changed` and `demote_suggested`. Add `--browser` only on
 runners where Playwright Chromium is installed.
-Not done: the 30 s budget is checked between hops, not mid-read (httpx's 15 s timeout covers
-a single read). Search pages aren't monitored, because they need a person's name and CI has
+The 30 s budget is checked before each request and also cuts off a slow page body mid-read
+(`httpx_requester`'s `read_budget`): a trickling body is reported `unreachable`, never checked
+half-read (docs/MONITOR.md, module docstring). Not done: search pages aren't monitored, because they need a person's name and CI has
 no person.
