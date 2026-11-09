@@ -844,3 +844,12 @@ Runs at **c1d4424** (detached worktree, the main checkout's `.venv`, `PYTHONPATH
 | SEC-115 | LOW, **Fixed 2026-11-08** (5f01a9c, verified) | automation-engineer | submitters/base.py, engine/letters.py | (see above) | — |
 | SEC-117 | LOW, **Fixed 2026-11-08** (ce62909, verified) | automation-engineer | engine/outbox.py, engine/runner.py | (see above) | — |
 | SEC-118 | LOW, Open (functional; nothing is sent) | automation-engineer | engine/runner.py:461 `_manual_to_email` | **A scan-only, dry-run or practice-mode run retires the "send it yourself" to-do.** Once a mailbox exists, `_manual_to_email` completes the manual to-do and resets the site to FOUND on any run. Practice mode (`real_submissions_enabled: false`, the default) and scan-only runs are `self.dry_run`, so they can't queue a real email. The person loses the letter they could send themselves, the non-dry-run manual DRAFT stays open, and no approval item replaces it until a real run happens. It fixes itself on the first real run. Reproduced: `tests/test_qa_sec118.py` (strict xfail, 3 modes). | Return early from `_manual_to_email` when `self.dry_run` (which covers scan-only and practice mode). Remove the xfail marker when fixed. |
+
+### Review 2026-11-08: open-item close-out at a216b75, Marcus Webb
+
+**Verdict: PASS.** Nothing meets a BLOCK criterion. Closed: SEC-66 (live headers verified), SEC-100, SEC-108, SEC-113 (old watcher pid 337338 gone) and SEC-121. Still open: SEC-112 (INFO, flake.lock). Evidence is in docs/handoff/qa-security.md under the same date.
+
+| ID | Severity / status | Owner | Where | Note | Next step |
+|---|---|---|---|---|---|
+| SEC-66 | INFO, **Closed 2026-11-08** | devops-engineer | Cloudflare header rule (tools/cloudflare_headers.py) | The header CSP includes frame-ancestors, plus nosniff, Referrer-Policy and XFO, on all checked pages. | Follow-up: Email Obfuscation script is CSP-blocked on / and /developers/ (owner OK to turn it off); then tighten the header to script-src 'none'. |
+| SEC-112 | INFO, Open (hash gate verified) | devops-engineer | distro/nix/flake.nix:4, tools/ci/check_distro_hashes.py | There is no flake.lock and the gate doesn't require one. | Gate check (strict xfail tests/test_sec112_flake_lock.py); `nix flake lock` on release day. |
