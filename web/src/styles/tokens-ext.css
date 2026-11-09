@@ -1,0 +1,49 @@
+/* Hand-written design tokens that site_src/tokens.yaml (-> tokens.css, generated) does not carry:
+   motion, leading/tracking, the hero type step, a fourth elevation, glow rings and the dark-theme
+   elevation. Colours stay in tokens.yaml so the build checks every contrast pair.
+   Plain custom properties: no light-dark() here (the dark values use the data-theme / media pair). */
+:root {
+  --fmi-text-hero: clamp(2.2rem, 1.35rem + 4vw, 3.9rem); /* home h1 only */
+  --fmi-text-eyebrow: 0.8rem;                            /* 16px, the smallest text we ever set */
+  --fmi-leading-tight: 1.08;
+  --fmi-leading-snug: 1.25;
+  --fmi-leading-body: 1.6;
+  --fmi-tracking-tight: -0.025em;
+  --fmi-tracking-wide: 0.08em;
+  --fmi-radius-2xl: 32px;
+  --fmi-shadow-4: 0 4px 12px rgb(10 20 45 / 0.08), 0 32px 72px rgb(10 20 45 / 0.18);
+  --fmi-shadow-inset: inset 0 1px 0 rgb(255 255 255 / 0.7);
+  --fmi-shadow-glow: 0 0 0 1px color-mix(in srgb, var(--fmi-color-glow) 30%, transparent),
+    0 12px 40px -12px color-mix(in srgb, var(--fmi-color-glow) 45%, transparent);
+  --fmi-ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --fmi-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --fmi-dur-fast: 150ms;
+  --fmi-dur: 250ms;
+  --fmi-dur-slow: 600ms;
+}
+
+/* Dark theme elevation: shadows read on a dark page only when deeper, plus a hairline top light. */
+:root[data-theme="dark"] {
+  --fmi-shadow-1: 0 1px 2px rgb(0 0 0 / 0.45), 0 1px 8px rgb(0 0 0 / 0.25);
+  --fmi-shadow-2: 0 2px 4px rgb(0 0 0 / 0.4), 0 12px 32px rgb(0 0 0 / 0.45);
+  --fmi-shadow-3: 0 4px 10px rgb(0 0 0 / 0.45), 0 24px 56px rgb(0 0 0 / 0.55);
+  --fmi-shadow-4: 0 6px 14px rgb(0 0 0 / 0.5), 0 36px 80px rgb(0 0 0 / 0.6);
+  --fmi-shadow-inset: inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fmi-shadow-1: 0 1px 2px rgb(0 0 0 / 0.45), 0 1px 8px rgb(0 0 0 / 0.25);
+    --fmi-shadow-2: 0 2px 4px rgb(0 0 0 / 0.4), 0 12px 32px rgb(0 0 0 / 0.45);
+    --fmi-shadow-3: 0 4px 10px rgb(0 0 0 / 0.45), 0 24px 56px rgb(0 0 0 / 0.55);
+    --fmi-shadow-4: 0 6px 14px rgb(0 0 0 / 0.5), 0 36px 80px rgb(0 0 0 / 0.6);
+    --fmi-shadow-inset: inset 0 1px 0 rgb(255 255 255 / 0.06);
+  }
+}
+
+/* Tailwind utilities for the extras (shadow-4, shadow-glow). Type steps stay as component classes
+   (.text-hero, .eyebrow) because lib/utils tailwind-merge does not know new text-* names. */
+@theme inline {
+  --shadow-4: var(--fmi-shadow-4);
+  --shadow-glow: var(--fmi-shadow-glow);
+  --ease-out-soft: var(--fmi-ease-out);
+}
