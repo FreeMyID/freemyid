@@ -1,5 +1,6 @@
 ---
-// How it works. Same copy and source comments as site_src/templates/pages/how-it-works.html.
+// How it works, v3 revamp (docs/WEBSITE_REVAMP.md): PageHead -> #steps timeline (three ways inside step 2) -> #does ->
+// built to be careful -> closing CTA. Same copy and source comments as site_src/templates/pages/how-it-works.html.
 import Base from "@/layouts/Base.astro";
 import PageHead from "@/components/PageHead.astro";
 import Section from "@/components/Section.astro";
@@ -31,7 +32,7 @@ const steps = [
 </PageHead>
 
 <Section id="steps" title="From setup to proof, in four steps">
-  <Timeline class="max-w-[52rem]">
+  <Timeline class="max-w-[56rem]">
     {steps.map(([art, alt, h, text], i) => (
       <TimelineItem n={i + 1} title={h}>
         <div class="grid items-center gap-m min-[44em]:grid-cols-[1fr_12rem]">
@@ -46,20 +47,54 @@ const steps = [
             </picture>
           ) : art && <Art src={`sections/${art}`} alt={alt} class="max-w-[12rem] rounded-lg bg-bg-alt max-[44em]:hidden" />}
         </div>
+        {i === 1 && (
+          <div class="mt-m">
+            {/* The three ways sit inside step 2 of the timeline (lead order, docs/WEBSITE_REVAMP.md); ids kept. */}
+            <h4 id="three-ways" class="text-lead font-bold text-heading">Three ways to send a request</h4>
+            <p class="mt-2xs">Free My ID picks the right way for each site by itself. You don't have to choose.</p>
+            {/* source: PLAN_V1 D1 tier table (Email / Assisted / Automatic browser), chosen automatically; D9 visible Edge window; shared rule 5 (no CAPTCHA solving).
+               Email fallback = src/freemyid/engine/outbox.py mailto + wizard/draft.py mailbox step text. */}
+            <ul class="mt-s grid gap-s" role="list">
+              <Card as="li" id="email" class="min-w-0 items-start gap-s p-s min-[30em]:flex-row min-[30em]:p-m"><span class={cardIcon}><Icon name="mail" /></span><div class="min-w-0"><h5 class="text-body font-bold text-heading">Email</h5><p class="mt-3xs">It writes a proper removal letter for you to approve, then sends it from the separate email address you set up. If you skip that, it opens the message in your own email program for you to send.</p></div></Card>
+              <Card as="li" id="do-it-with-me" class="min-w-0 items-start gap-s p-s min-[30em]:flex-row min-[30em]:p-m"><span class={cardIcon}><Icon name="pointer" /></span><div class="min-w-0"><h5 class="text-body font-bold text-heading">"Do it with me"</h5><p class="mt-3xs">It opens the site's removal page in your own browser, with numbered steps and a "copy" button for each box. You click; it keeps track.</p></div></Card>
+              <Card as="li" id="fill-it-in" class="min-w-0 items-start gap-s p-s min-[30em]:flex-row min-[30em]:p-m"><span class={cardIcon}><Icon name="form" /></span><div class="min-w-0"><h5 class="text-body font-bold text-heading">"Fill it in for me"</h5><p class="mt-3xs">For sites that allow it, it fills the form in a window you can watch, and stops for you if the site asks "are you a robot?". It never tries to get around those checks.</p></div></Card>
+            </ul>
+          </div>
+        )}
       </TimelineItem>
     ))}
   </Timeline>
 </Section>
 
-<Section tone="alt" title="Three ways to send a request" titleId="three-ways"
-  lead="Free My ID picks the right way for each site by itself. You don't have to choose.">
-  {/* source: PLAN_V1 D1 tier table (Email / Assisted / Automatic browser), chosen automatically; D9 visible Edge window; shared rule 5 (no CAPTCHA solving).
-     Email fallback = src/freemyid/engine/outbox.py mailto + wizard/draft.py mailbox step text. */}
-  <ul class="grid gap-m min-[56.25em]:grid-cols-3" role="list">
-    <Card as="li" id="email" class="reveal"><span class={cardIcon}><Icon name="mail" /></span><h3>Email</h3><p>It writes a proper removal letter for you to approve, then sends it from the separate email address you set up. If you skip that, it opens the message in your own email program for you to send.</p></Card>
-    <Card as="li" id="do-it-with-me" class="reveal"><span class={cardIcon}><Icon name="pointer" /></span><h3>"Do it with me"</h3><p>It opens the site's removal page in your own browser, with numbered steps and a "copy" button for each box. You click; it keeps track.</p></Card>
-    <Card as="li" id="fill-it-in" class="reveal"><span class={cardIcon}><Icon name="form" /></span><h3>"Fill it in for me"</h3><p>For sites that allow it, it fills the form in a window you can watch, and stops for you if the site asks "are you a robot?". It never tries to get around those checks.</p></Card>
-  </ul>
+{/* Does / doesn't box: approved copy from the old home page "What it does, honestly" (moved here from home, lead order) */}
+<Section id="does" tone="alt" title="What it does, and what it does not" titleId="does-title">
+  <div class="grid gap-m min-[56.25em]:grid-cols-2">
+    <Card class="border-t-4 border-t-ok">
+      <h3>Free My ID does</h3>
+      <ul class="grid gap-xs" role="list">
+        {[
+          "Ask people-search and data-broker sites to remove your listing, using each site's own process",
+          // source: POSITIONING.md "Legal accuracy"
+          "Send a formal legal request where your state's privacy law applies, and a polite request everywhere else",
+          'Click the "confirm your request" links that sites send, and follow up when a site goes quiet',
+          "Check again later, because some sites list people again",
+        ].map((t) => <li class="flex gap-2xs"><Icon name="check" class="mt-[0.25em] text-ok" /><span>{t}</span></li>)}
+        <li class="flex gap-2xs"><Icon name="check" class="mt-[0.25em] text-ok" /><span>Show you where each site stands: <em>asked</em>, <em>confirmed</em> or <em>still waiting</em></span></li>
+      </ul>
+    </Card>
+    <Card class="border-t-4 border-t-line-strong">
+      <h3>Free My ID does not</h3>
+      <ul class="grid gap-xs" role="list">
+        {[
+          "Remove you from every website on the internet. Nobody honest can promise that.",
+          "Change what Facebook itself does with your account",
+          "Stop hacking, phone tapping or government surveillance",
+          "Remove news stories, social media posts or government records",
+          "Ask for your Social Security number or bank or card details, or charge you. Ever.",
+        ].map((t) => <li class="flex gap-2xs"><Icon name="x" class="mt-[0.25em] text-muted" /><span>{t}</span></li>)}
+      </ul>
+    </Card>
+  </div>
 </Section>
 
 <Section narrow title="Built to be careful" titleId="safety">
@@ -79,6 +114,13 @@ const steps = [
   </ul>
   {/* source: /guides/ pages built from the broker registry */}
   <p class="mt-m">Want to do it by hand? Our <a href={url("guides/")}>free opt-out guides</a> show the steps for some of the best-known sites.</p>
-  <div class="mt-m"><CtaDownload /></div>
+  <p class="mt-s"><a href={url("safety/")}>Is Free My ID safe? Read the details</a></p>
+</Section>
+
+{/* Closing CTA: the page's one brand band (lead rule) */}
+<Section tone="brand" narrow title="Ready when you are" titleId="hiw-cta-title" class="text-center [&_.reveal]:mx-auto">
+  {/* source: USER_GUIDE section 4 (practice mode first); PLAN_V1 (Windows 10/11); LICENSE (free) */}
+  <p class="text-lead">Free for Windows 10 and 11. It starts in practice mode, so no removal requests go out until you say so.</p>
+  <div class="mt-m flex justify-center"><CtaDownload look="onBrand" /></div>
 </Section>
 </Base>
