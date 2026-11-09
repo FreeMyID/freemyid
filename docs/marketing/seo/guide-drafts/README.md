@@ -3,7 +3,9 @@
 Owner: seo-growth (Sam Okafor). Written 2026-11-08. Drafts only, for the web team; nothing here is live. Page building happens later.
 
 ## 1. Already covered (do not duplicate)
-Public guides come from the public sample registry (`brokers/registry.sample.yaml`, loaded by `web/src/lib/site.ts`): Spokeo, FreePeopleDirectory, Whitepages, Whitepages 411, BeenVerified, PeopleLooker, PeopleConnect Suppression Center (Intelius, Instant Checkmate, TruthFinder, US Search, ZabaSearch), Intelius, TruthFinder, PeopleFinders, TruePeopleSearch, FastPeopleSearch, Radaris, MyLife, Nuwber, ThatsThem, FamilyTreeNow, SearchPeopleFree, PeopleSearchNow; data-broker and official-tool guides (Acxiom, Oracle, LiveRamp, Cotality, Experian, Equifax, TransUnion, OptOutPrescreen, Google results about you, California DROP, Explorium, People Data Labs). Hand-built hub pages: `web/src/pages/guides/` (phone-number, parent guides). Query map: `keywords.md` rows 3-9, 21-23.
+Public guides come from the public sample registry (`brokers/registry.sample.yaml`, loaded by `web/src/lib/site.ts`): Spokeo, FreePeopleDirectory, Whitepages, Whitepages 411, BeenVerified, PeopleLooker, PeopleConnect Suppression Center (Intelius, Instant Checkmate, TruthFinder, US Search, ZabaSearch), Intelius, TruthFinder, PeopleFinders, TruePeopleSearch, FastPeopleSearch, MyLife, Nuwber, ThatsThem, FamilyTreeNow, SearchPeopleFree, PeopleSearchNow; data-broker and official-tool guides (Acxiom, LiveRamp, Cotality, Experian, Equifax, TransUnion, OptOutPrescreen, Google results about you, California DROP, Explorium, People Data Labs). Hand-built hub pages: `web/src/pages/guides/` (phone-number, parent guides). Query map: `keywords.md` rows 3-9, 21-23.
+
+Radaris and Oracle are in the registry but set `enabled: false`, and `web/src/lib/site.ts` skips disabled entries, so they have NO generated guide today. Do not count them as covered.
 
 Not re-drafted because the PeopleConnect guide already names them: Instant Checkmate, US Search, ZabaSearch. Web team: consider short alias pages or redirects, since people search these names.
 
@@ -30,8 +32,8 @@ Why these ten and not others (all ranks same method, same date): ClustrMaps 407,
 Sources for ranks: https://www.similarweb.com/website/<domain>/ , each fetched 2026-11-08. For Whitepages, BeenVerified, TruePeopleSearch, FastPeopleSearch being top Public Records sites in the US, Sept 2026: https://www.similarweb.com/top-websites/united-states/reference-materials/public-records-and-directories/ (fetched 2026-11-08). Competitor guide evidence: web search 2026-11-08 plus the DeleteMe guide pages cited in each draft.
 
 ## 4. Status and what the web team needs
-- Ready after a light check (broker's own page read 2026-11-08): `smartbackgroundchecks`, `usa-people-search`, `social-catfish`.
-- Partial (broker page read, but gaps): `checkpeople` (only step 1), `infotracer` (no single flow).
+- Ready after a light check (broker's own page read 2026-11-08): `smartbackgroundchecks`, `usa-people-search`.
+- Partial (broker page read, but gaps): `social-catfish` (the terms require submitting all profile URLs and verifying an email, but how the current form does either is unconfirmed), `checkpeople` (only step 1), `infotracer` (no single flow).
 - NOT ready, broker page blocked to us; broker-researcher must open each in a real browser first: `usphonebook`, `cyberbackgroundchecks`, `anywho`, `peoplesmart`, `addresses-com`.
 - Never publish a draft's time-to-removal unless marked as the broker's own words.
 - All drafts follow the never-asks list in `/safety/` (no SSN, bank or card, payment; never a full birthday from Free My ID). Where the broker's own form asks for a date of birth or phone, the draft flags it.

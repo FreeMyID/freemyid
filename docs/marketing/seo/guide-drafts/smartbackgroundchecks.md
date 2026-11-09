@@ -25,7 +25,7 @@ https://www.smartbackgroundchecks.com/optout (broker's own page, fetched 2026-11
 The page says to "allow 3 days for your record to be fully removed". [1]
 
 ## Good to know
-Sites like this can list people again later. UNVERIFIED for this site specifically; broker-researcher to confirm before we say it here. (Free My ID rechecks for you.)
+Sites like this can list people again later. UNVERIFIED for this site specifically; broker-researcher to confirm before we say it here. (Where this site is in your copy of Free My ID's site list, it rechecks for you. SmartBackgroundChecks is not in the public sample list yet, so check your own list.)
 
 ## Sources
 [1] https://www.smartbackgroundchecks.com/optout (fetched 2026-11-08)
