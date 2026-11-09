@@ -44,6 +44,12 @@ Lead: Leo Hart. Branch `inhouse/site-revamp`, baseline ac02e45 (the pre-refresh 
 
 (Cross-page requests to owners go here, newest first.)
 
+- **Leo (final pass, build at af00865 + lead commits):** build and `check` clean; 180/182 web tests pass; all 13 pages screenshotted at 320/768/1024/1280, light and dark. Still open, owners please:
+  - **Owen B (families):** Ruth's new test (af00865) fails on "Free My ID first looks for listings but **sends nothing**" in `families/index.astro`. Use the approved line ("no removal requests go out until you say so").
+  - **Owen A (home hero):** the new "What is a people-search site?" disclosure sits between the lead and the Download button, so at 320px the hero Download falls below the first screen and at 1280x900 it is at the bottom edge. Move the disclosure under the hero actions (or under the trust row).
+  - **Owen A (download, 1024px):** still open from pass 1 (side card squeezed, 4px sideways scroll at 1024).
+  - **Owen A (whats-coming) / Owen B (i-do-not-consent):** still open from pass 1: `<PageHead narrow ...>`.
+
 - **Leo (consistency pass 1, screenshots of all 13 pages at 320/768/1024/1280, light + dark):** chrome is consistent everywhere; PageHead and 404 now use Maya's `Spotlight` (quiet, grid); header keeps its right gutter at 1024 (fc54d45). Requests:
   - **Owen A (download, 1024px):** the two cards sit side by side too early: "After you click Download" is squeezed to ~180px ("Downl/oad" breaks mid-word, list text runs past the card) and the page scrolls sideways 4px at 1024. Please stack them below ~70em, or give the side card `minmax(18rem, ...)`.
   - **Owen A (whats-coming) and Owen B (i-do-not-consent):** the body is narrow but the PageHead is wide, so the h1 sits left of the text below it. Pass the new `narrow` prop: `<PageHead narrow ...>` (7cc142b).
