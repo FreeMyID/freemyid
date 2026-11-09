@@ -10,7 +10,7 @@ import Icon from "@/components/Icon.astro";
 import RefreshCallout from "@/components/site-refresh/RefreshCallout.astro";
 import RefreshHero from "@/components/site-refresh/RefreshHero.astro";
 import RefreshSection from "@/components/site-refresh/RefreshSection.astro";
-import localComputer from "@/art/site-refresh/local-computer.svg?url";
+import Art from "@/components/Art.astro";
 import { pageProps, release, url } from "@/lib/site";
 
 const p = pageProps("safety");
@@ -28,15 +28,8 @@ const v = release.version;
       title="Is Free My ID safe?"
       lead="A privacy tool you have to trust with your information isn't much of a privacy tool. Free My ID is built so you can check our work."
     >
-      <img
-        slot="media"
-        src={localComputer}
-        width="320"
-        height="240"
-        loading="eager"
-        decoding="async"
-        alt="A personal computer with a note kept beside it."
-      />
+      {/* WO-102 approved art; alt from brand/README.md. Storage wording, never "stay on your computer". */}
+      <Art slot="media" src="sections/safety-local" alt="Your details are stored on your computer, not in the cloud." />
     </RefreshHero>
 
     <RefreshSection
