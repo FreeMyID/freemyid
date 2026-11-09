@@ -5,12 +5,13 @@
 import Crumbs from "./Crumbs.astro";
 import Spotlight from "./aceternity/Spotlight.astro";
 import type { Crumb } from "@/lib/site";
-interface Props { crumbs: Crumb[]; title: string; lead?: string }
-const { crumbs, title, lead } = Astro.props;
+// narrow: match pages whose body uses wrap-narrow / <Section narrow>, so the h1 lines up with the text below.
+interface Props { crumbs: Crumb[]; title: string; lead?: string; narrow?: boolean }
+const { crumbs, title, lead, narrow = false } = Astro.props;
 const hasArt = Astro.slots.has("art");
 ---
 <Spotlight as="div" tone="quiet" pattern="grid" class="page-head pb-l pt-l">
-  <div class:list={["wrap grid items-center gap-l", hasArt && "min-[56.25em]:grid-cols-[1.4fr_1fr]"]}>
+  <div class:list={[narrow ? "wrap-narrow" : "wrap", "grid items-center gap-l", hasArt && "min-[56.25em]:grid-cols-[1.4fr_1fr]"]}>
     <div>
       <Crumbs crumbs={crumbs} />
       <h1 class="mt-s">{title}</h1>
