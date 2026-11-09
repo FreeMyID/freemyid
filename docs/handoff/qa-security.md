@@ -229,3 +229,6 @@ Input: 101 rows from `tools/coderabbit_findings.py` (32 Major, 67 Minor, 2 Unrat
 | 63 | CLI test for --browser and ChallengeSeen (101) | tests/test_monitor.py:224 | Unrated -> Minor | VALID | C2 fb2fe88 |
 
 Notes for owners: workflow edits (build.yml, pypi.yml, pages.yml) are small path and install-line changes for Dana to review. Product gap found while checking #30: `handoff.confirm_review` has no UI caller, so a REVIEW_MATCH to-do can't be answered "this is me / not me" in the app (Theo/Nina).
+
+## 2026-11-08 "Is this you?" route review (Marcus Webb, branch inhouse/is-this-you at 9c79afe)
+- PASS (no BLOCK). Two MEDs to fix before the merge, both Nina's (src/): SEC-122 (the Yes text promises approval, but Automatic tier and AUTO email mode send by themselves) and SEC-123 (a No is ignored when the matcher has raised the listing to CONFIRMED; strict xfail in tests/test_qa_is_this_you.py). SEC-124 INFO (orchestrator): worktree pytest imports the main checkout's src unless PYTHONPATH=<wt>/src. Details: docs/SECURITY_REVIEW.md, same date.
