@@ -7,7 +7,7 @@ Author: Jordan Ellis (brand-marketing, requester). Date: 2026-11-08. Status: dra
 - **Sources.** Colours and type: `docs/BRAND.md` (there is no `brand/BRAND.md`) and `site_src/tokens.yaml`. Claim rules: `docs/POSITIONING.md`. Existing art: `brand/README.md`, `docs/handoff/graphic-designer.md`.
 - **Colours (light theme, hex from tokens.yaml).** Navy band `#1b2f5b`, heading navy `#14264a`, brand blue `#1b3366`, text `#151b26`, muted text `#414b5c`, page white `#ffffff`, off-white `#f4f6f9`, soft blue tile `#e6edf8`, flag red `#a3202e` (small accent only, never alarm). Dark variants where a brief needs them: bg `#0d131d`, text `#eef1f6`, heading `#dde7fb`, red-on-dark `#f5a3ab`. Pairs allowed: white or `#eef1f6` on `#1b2f5b`; `#14264a` or `#151b26` on white or `#f4f6f9`. Red text only on white at 24 px or larger. No other colours, no gradients, no flag imagery beyond a thin red bar.
 - **Type.** The site uses one sans family (system-ui / Segoe UI), no serif since v2. In Canva use **Open Sans** (nearest to Segoe UI; Bold for headlines, Regular for body). Graphic-designer confirms the font at review. Sizes on a 1080 px canvas: headline 80 px or larger, body 40 px or larger, footer line 32 px or larger. Left aligned, sentence case, no all caps, no italics.
-- **Logo.** Import `brand/logo/final/wordmark-lockup.svg` (light) or `mark-dark.svg` (dark) as is. Never redraw, recolour, stretch or recreate it in Canva, and use no Canva stock in or near it. Clear space equals the height of the star tile.
+- **Logo.** Import `brand/logo/final/wordmark-lockup.svg` as is. On dark backgrounds (CB-02, CB-06) use the dark-palette export of `wordmark-lockup.svg` (its built-in `prefers-color-scheme: dark` colours: tile and text `#c4d5f7`, bar `#f5a3ab`), supplied by the in-house graphic-designer: Canva ignores the SVG's dark-mode rule, so do not recolour it yourself. `mark-dark.svg` is the badge alone, not a wordmark lockup, and does not meet these briefs. Never redraw, recolour, stretch or recreate it in Canva, and use no Canva stock in or near it. Clear space equals the height of the star tile.
 - **Never on any image.** "guaranteed", "erase", "100% removed", "safe", "protection", "American-made", a price, a count of people helped, a version number, a countdown, "act now", red alarm styling, party or politician imagery, Meta/Facebook/Instagram logos, screenshots of real profiles, real faces. Do not mention proof vault, PDF report, monitoring, relist detection or Outlook sign-in (not on main).
 - **People and data.** Jane Q Testperson, Springfield IL only, and only if a brief asks for a persona. Illustration style over photos. A photo only if licensed Canva stock, a brief allows it, and the manifest records it.
 - **Accessibility.** Text contrast at least 4.5:1 (the pairs above are computed in tokens.yaml; check anything else). Each file needs alt text (given per brief, put it in `brand/codex/MANIFEST.md`). Never put the only copy of a fact in an image: the post caption repeats it.
@@ -66,7 +66,7 @@ Author: Jordan Ellis (brand-marketing, requester). Date: 2026-11-08. Status: dra
 - Headline: `I stopped just posting it. I actually sent it.`
 - Body: `I asked the people-search sites that list my details to take them down, with Free My ID. It's free, there's no account, and it runs on my own computer.`
 - Footer: `freemyid.org`
-- Navy `#1b2f5b` background, white text, one thin red bar. Wordmark uses `mark-dark.svg` lockup variant.
+- Navy `#1b2f5b` background, white text, one thin red bar. Wordmark: the dark-palette `wordmark-lockup.svg` export (shared rules, Logo).
 **Do.** Leave the image with no name, number, count, screenshot or result. It must be safe for anyone to post.
 **Don't.** Quote or imitate Meta's notice, write "I do not consent" as a block of fake legal text, or say any site "must" comply.
 **Alt text.** `Free My ID. I stopped just posting it. I actually sent it. I asked the people-search sites that list my details to take them down, with Free My ID. Free, no account, runs on my own computer.`
@@ -102,6 +102,7 @@ Source: the three lines are the fridge card and the BRAND trust panel (`docs/BRA
 **Visuals.** Each list line gets a navy circle with a white cross-out-free marker: use a plain white dash, not a red X (no alarm styling). White background.
 **Don't.** Use a shield, a padlock, "secure", "safe" or "protected".
 **Alt text.** `Free My ID will never ask for your Social Security number, your bank or card details, or your everyday email password. If something says it is us and asks, it isn't. Stop and ask someone you trust.`
+**Superseded by WO-177 (Morgan, 2026-11-08).** The list and the alt text above are replaced by `docs/vendor/WO-177.md` (master list from `/safety/`, no "email password" line). Use the alt text given there so screen readers hear the same list as the card.
 **Used in.** Facebook, Instagram, the family-helper pages and print.
 **Acceptance.** Copy exact, no red alarm styling, readable at 300 px wide, graphic-designer approves.
 
@@ -126,7 +127,7 @@ Source: the three lines are the fridge card and the BRAND trust panel (`docs/BRA
 **Exact copy.**
 - Image 1 (the "I do not consent" explainer page, when it exists): headline `That post didn't stop anyone. This does.`  Sub: `Free My ID asks the people-search sites to take your details down.`
 - Image 2 (the family-helper page): headline `Helping a parent with their privacy online.`  Sub: `Free, no account, built so your grandparents can use it.`
-Both: navy `#1b2f5b` background, white text, wordmark lockup (`mark-dark.svg` variant) bottom left, `freemyid.org` bottom right.
+Both: navy `#1b2f5b` background, white text, wordmark lockup (dark-palette `wordmark-lockup.svg` export, shared rules, Logo) bottom left, `freemyid.org` bottom right.
 Tagline 2 in BRAND is for the Facebook-crowd landing only, never the printable report, so image 1 is for that landing page only.
 **Don't.** Say "does the post work", name Meta, or show a persona.
 **Alt text.** 1: `Free My ID. That post didn't stop anyone. This does. Free My ID asks the people-search sites to take your details down.` 2: `Free My ID. Helping a parent with their privacy online. Free, no account, built so your grandparents can use it.`

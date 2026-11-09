@@ -124,3 +124,36 @@ R8 re-check site-v3 (971b1ec..cd35f9c): PASS, the BLOCK is lifted. SEC-60 (f683e
 - SEC-120 LOW (Morgan): tools/pm_sync.py apply_plan adopts any issue whose title starts with "KEY:" (public repo: anyone can open "WO-200: ..." first and it gets added to the Project, closed and commented on). Filter by author (owner/bot logins) before adopting.
 - SEC-121 INFO (Dana): twine is installed unpinned/unhashed next to the hash-checked toolchain (build.yml dist, pypi.yml build); anchore/sbom-action downloads syft v1.18.1 at runtime without a hash. Pin twine in build-requirements.txt.
 - Re-check beaf662 (Marcus Webb): SEC-119 closed (7c83c81: issues/issue_comment only, both gated on `issue.pull_request == null`, review-comment trigger gone, so no PR-head checkout). SEC-120 closed (beaf662: adopt only when author login is in FREEMYID_PM_TRUSTED; test_pm_sync 13 passed). INFO: claude.yml can drop `pull-requests: write` now that PRs are not handled.
+
+## 2026-11-08 CodeRabbit inline findings, PRs #55/#57/#60/#61 (Marcus Webb, branch inhouse/fix-review-minor)
+37 inline comments, 21 unique once duplicates are merged. Each was checked against the current file at 2f525b7/cfc273d, not the reviewed commit. Result: 17 VALID and fixed, 1 ALREADY FIXED, 0 INVALID, 3 out of scope (handled elsewhere). 21 unique findings in total.
+
+| # | Finding (dupes) | File:line now | Class | Commit |
+|---|---|---|---|---|
+| 1 | Bank/card regex crosses passages (`.*` + DOTALL). HELPER_GUIDE and /families/ only passed this way (#55) | tests/copilot/test_cp_never_asks_parity.py:24-28 | VALID | d2a1365 |
+| 2 | FAMILY_QUICK_START.md missing from the core-concept test (#55) | test_cp_never_asks_parity.py:80-88 (skip while absent) | VALID | d2a1365 |
+| 3 | Bare "passwords" passes if any allowed phrase is in the same sentence (#55) | test_cp_never_asks_parity.py:38-45, 108 | VALID | d2a1365 |
+| 4 | Truncated HTTP error body: IncompleteRead escapes `api()` (#60, #61) | tools/cloudflare_redirects.py:51; main() moved behind `__name__` so it can be tested | VALID | 1ef1981 |
+| 5 | Adopted closed issue stays closed for an open item (#55, #57) | tools/pm_sync.py:462-468 | VALID | a1880e0 |
+| 6 | Adoption skips labels, milestone and mirror body (#57, plus SDLC.md:64 #55) | pm_sync.py:452-461 (add-label, milestone, mirror as a comment, opener's text kept); docs/SDLC.md:64 | VALID | a1880e0, 311ecea |
+| 7 | `gh issue list` default 30 and dict result shape (#60 :431, #61) | pm_sync.py:437-443 (`--limit 200`, list guard) | VALID | a1880e0 |
+| 8 | SDLC "Codex never edits those folders" ignores Codex-owned subtrees (#55, #60) | docs/SDLC.md:70 | VALID | 311ecea |
+| 9 | Approved exports moved, not copied (#60) | brand/codex/MANIFEST.md:3, docs/SDLC.md:70 | VALID | 311ecea |
+| 10 | Design-only WOs never close in the tracker (no Merge WO-NNN) (#55) | channel CLAUDE_TO_CODEX.md:449 kept as record; rule in docs/SDLC.md Canva section; test | VALID | 19ff20c |
+| 11 | No single writer for brand/codex/MANIFEST.md with parallel design WOs (#55) | channel :476 kept as record; rule in docs/SDLC.md Canva section | VALID | 19ff20c |
+| 12 | `mark-dark.svg` is badge-only, not a dark wordmark lockup (#55 :10, #57 :69, #60 :129, #61 :10) | docs/design/CANVA_BRIEFS.md:10, 69, 129 | VALID | 444553b |
+| 13 | CB-04 alt text differs from the WO-177 card (#55 :104) | CANVA_BRIEFS.md CB-04 alt (now points to WO-177) | VALID | 444553b |
+| 14 | WO-177 overrides the list but not the alt text (#55, #57, #60, #61) | docs/vendor/WO-177.md:34 | VALID | ba4a100 |
+| 15 | WO-175 Windows claim: release.yaml has no OS versions; no fallback headline or alt (#55, #57) | docs/vendor/WO-175.md:34 (source is download page; fallback headline + alt) | VALID | ba4a100 |
+| 16 | CBS-01 sample output is not what `freemyid status` prints (#57, #60) | docs/design/CANVA_BRIEFS_SEO.md:32-33 | VALID | 444553b |
+| 17 | CBS-03 "No account needed" is wrong for account_required guides (#55) | CANVA_BRIEFS_SEO.md:57 | VALID | 444553b |
+| 18 | SEC-118 marked "in review" but missing from the handoff (#55) | docs/pm/tracked.json:47-51 is now `closed`; handoff has SEC-118 (this file, 0afced7..18eaa65 section) | ALREADY FIXED | n/a |
+| 19 | runner.py:506/509 manual state through scan (MAJOR, #55 #57 #60 #61) | src/freemyid/engine/runner.py | OUT OF SCOPE (another engineer) | n/a |
+| 20 | FRIDGE_CARD.md:17 test MAJOR (#57) | docs/FRIDGE_CARD.md | OUT OF SCOPE (fixed in 6deb3e8) | n/a |
+| 21 | USER_GUIDE.md:84 test before trust prompt (#60) | docs/USER_GUIDE.md | OUT OF SCOPE (Jordan's branch) | n/a |
+
+- Context for rows 10-12: the owner moved WO-170..179 in-house (CLAUDE-030, brand/README.md:44), so no Codex MANIFEST rows exist yet. The fixes still apply to future Codex design WOs and to the briefs Iris works from.
+- For the orchestrator: WO-170..179 still say `Status: open` although Iris delivered several in-house. Set `Status: done (<delivery commit>)` per the new SDLC rule so pm_sync closes #137/#138/#142/#143/#144.
+- For the Codex lead (BACKLOG line 14 note): brand/codex/MANIFEST.md:3 had a one-line wording fix (copy, not move), made at the orchestrator's request.
+- Tests: tests/test_pm_sync.py (17), tests/test_cloudflare_redirects.py (new, fails without the fix), tests/copilot/test_cp_never_asks_parity.py (2 new self-tests). The FRIDGE_CARD strict xfail is unchanged ("never charges you" is still missing there).
+- Results at 19ff20c: full suite `PYTHONPATH=src pytest -q` 2207 passed, 175 skipped, 1 xfailed (FRIDGE_CARD strict xfail); affected tests 442 passed, 32 skipped, 1 xfailed; `ruff check src tests tools` clean.
