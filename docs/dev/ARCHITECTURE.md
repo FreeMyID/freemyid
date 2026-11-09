@@ -21,6 +21,9 @@ flowchart TD
     Web --> Store
     Approval --> Store
     Assisted --> Store
+    Monitor[Monitor: maintainer check] --> Net
+    Exposure[Exposure scan for a profile] --> Net
+    Exposure --> Store
 ```
 
 The runner checks each profile's consent before processing it, then visits enabled brokers one at a time (`src/freemyid/engine/runner.py:322-346`). For each broker it determines a tier, scans when the broker is eligible, and submits only when the state allows it (`src/freemyid/engine/runner.py:405-440`). The consent rules are centralized in `consent_ok` (`src/freemyid/consent.py:55-82`).
@@ -34,9 +37,18 @@ The runner checks each profile's consent before processing it, then visits enabl
 | Runner | Checks consent, selects enabled brokers, updates status, and asks a submitter to handle eligible requests. | `src/freemyid/engine/runner.py:322-346,405-440,545-573` |
 | Tier selection | Chooses automatic browser work, email, or assisted steps from the broker, profile, permissions and configuration. | `src/freemyid/engine/tiers.py:3-12,59-85`; `src/freemyid/engine/plugins.py:53-68` |
 | Browser and network boundary | Builds a per-run allow-list from broker, confirmation, mailbox and configured hosts; broker runs are narrowed to that allow-list. | `src/freemyid/netpolicy.py:1-11,57-100`; `src/freemyid/submitters/web_form.py:1-9` |
+| Broker monitor | Checks enabled brokers' public opt-out page/form selectors and emits a `monitor/1` report; it does not load a profile or use the Store. | `src/freemyid/monitor.py:1-21,39-55,321-362`; `docs/MONITOR.md:1-9,11-24` |
+| Exposure lookup | Uses a consenting profile to look for matching public broker listings, scores the findings, saves a result, and exposes read-only dashboard/history helpers. | `src/freemyid/engine/exposure.py:559-624,784-810,906-912`; `src/freemyid/exposure_models.py:46-68,144-163` |
 | Email and outbox | Creates a request and stored letter; queued requests are presented in the outbox, where an approval action can send them. The default mailer requires real submissions to be enabled. | `src/freemyid/engine/outbox.py:277-319,357-365,384-410`; `src/freemyid/wizard/server.py:477-514` |
-| Assisted work | Creates a to-do for work a person completes in their own browser; the assisted submitter itself does not access the network. | `src/freemyid/submitters/assisted.py:1-10,54-75` |
+| Assisted work | Creates a local to-do for a person to complete in their own browser; the Assisted submitter does not search the web. It supports manual-email resume tokens, and optional call notes or postal receipts can be stored as evidence. | `src/freemyid/submitters/assisted.py:1-10,94-118,180-197`; `src/freemyid/wizard/proof_input.py:31-65` |
+| Evidence kinds | Records replies received by the mailbox, user attestations, phone-call notes, and postal receipts; content is saved in the Store's encrypted evidence files. | `src/freemyid/models.py:209-217`; `src/freemyid/engine/runner.py:209-227`; `src/freemyid/engine/handoff.py:206-220`; `src/freemyid/wizard/proof_input.py:46-65`; `src/freemyid/storage/db.py:309-322` |
 | Local scheduler | Renders scheduled re-check instructions for supported operating systems. | `src/freemyid/scheduler/__init__.py:1-45`; `src/freemyid/scheduler/render.py:1-93` |
+
+## Monitor and exposure data flows
+
+- **Monitor:** the `freemyid monitor` command accepts an optional prior JSON report, calls `run_monitor`, and prints the report as JSON (`src/freemyid/cli.py:1045-1112`). The monitor checks enabled web brokers and returns schema `monitor/1`; its output contains broker health and selector/fingerprint information, but no profile data or page text (`src/freemyid/monitor.py:1-21,321-367`; `docs/MONITOR.md:1-9,23-24`). It makes network requests through the allow-list policy and may use one headless page load when requested; it never fills, clicks, or submits a form (`src/freemyid/monitor.py:4-18,321-343,370-380`; `docs/MONITOR.md:11-34`). The weekly job is an external scheduled caller, not a scheduler inside this command (`docs/MONITOR.md:3-9`).
+- **Exposure lookup:** `scan_exposure` requires a profile and consent, queries the configured broker registry through network fetchers unless run offline, and persists the resulting score and entries (`src/freemyid/engine/exposure.py:559-624`). Entries may include listing URLs, matching signals, hand-check URLs, and whether previous-address or previous-name searches were used (`src/freemyid/exposure_models.py:46-68`). The dashboard helpers read stored results and do not perform network requests (`src/freemyid/engine/exposure.py:784-803,906-912`).
+- **Assisted requests and evidence:** the Assisted submitter creates local to-dos and does not search; `manual_email_token` identifies manual email tasks (`src/freemyid/submitters/assisted.py:100-118,180-197`). Marking an eligible hand-completed task done can save a `USER_ATTESTATION` (`src/freemyid/engine/handoff.py:206-220`). Matched mailbox replies are saved as `EMAIL_RECEIVED` evidence (`src/freemyid/engine/runner.py:209-227`); an optional call note or postal receipt is saved as `PHONE_CALL_NOTE` or `POSTAL_RECEIPT` (`src/freemyid/wizard/proof_input.py:46-65`). Evidence file contents are encrypted through `Store.save_evidence` (`src/freemyid/storage/db.py:309-322`).
 
 ## Local data and encryption
 
@@ -51,6 +63,8 @@ The storage module describes itself as an encrypted SQLite store. It says model 
 - **Consent:** the runner checks consent before working on a profile, and the email approval path checks it again before sending (`src/freemyid/engine/runner.py:323-333`; `src/freemyid/engine/outbox.py:384-410`; `src/freemyid/consent.py:55-82`).
 - **Approval and real requests:** email requests are queued or drafted before sending; the outbox approval path calls the send operation, and the default mailer refuses real email until the setting is enabled (`src/freemyid/engine/outbox.py:300-319,357-365,384-410`; `src/freemyid/wizard/server.py:497-514,557-581`).
 - **Data minimization:** shared submitter helpers limit fields by what the broker requires and what a listing already shows, and honor the phone-sharing permission (`src/freemyid/submitters/base.py:1-10,29-44`).
+- **Monitor versus profile data:** the monitor needs no profile and does not touch the Store; it makes constrained network checks against broker pages and emits broker-level status only (`src/freemyid/monitor.py:1-21,321-362`). Exposure scanning is different: it is profile-specific, consent-gated, may contact broker pages, and saves profile-linked results (`src/freemyid/engine/exposure.py:559-624`).
+- **Assisted and evidence:** the Assisted submitter itself does not search or access the network, but it creates to-dos with profile/broker content (`src/freemyid/submitters/assisted.py:1-10,94-118,180-197`). The Store encrypts evidence contents before writing evidence files (`src/freemyid/storage/db.py:309-322`); evidence metadata remains associated with profile and broker records (`src/freemyid/storage/db.py:316-322`).
 
 ## Ownership boundary
 
