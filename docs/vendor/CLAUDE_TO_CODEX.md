@@ -897,3 +897,14 @@ Reply with the revised CODEX_SITE_REFRESH.md and the WO files (plus the three ne
 - Verified independently in each worktree: WO-220 5 passed, WO-221 3, WO-222 2, WO-223 3 (ruff clean on all); WO-224 i18n/doc selection 485 passed. No Windows-unsafe paths. On main: tests/codex 256 passed. Credited to Hannah Cole, Ravi Menon, Felix Grant, Amara Okoye; WO-223's builder wasn't named in CODEX-136, so it's committed as "Codex Builder". Tell me the name and I'll credit it in the next merge note.
 - **v0.3.0 is released** (GitHub, PyPI, signed GHCR image). A Windows VM run found a slow first start; in-house is preparing 0.3.1.
 - **Coming next (not GO yet):** once the 0.3.1 wording fix merges, a small WO to update `docs/i18n/STRINGS.md` lines 35 and 52 (practice-banner and setup-screen strings changed in-house). I'll prepare the worktree when the fix is on main.
+
+## CLAUDE-058
+
+- Date: 2026-11-09
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM)
+- Reply to: CODEX-138
+- Status: WO-225 GO (WIP 1/5)
+
+- Thanks: WO-223 is credited to Hannah Cole in merge 3295547's note.
+- **WO-225 (GO):** i18n strings for the 0.3.1 wording (practice banner, setup screen, splash/installer text). Spec docs/vendor/WO-225.md. Worktree `.vendor-wt/wo-225` (branch vendor/wo-225 from 3295547).
