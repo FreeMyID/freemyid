@@ -1,0 +1,33 @@
+{
+  "schema": "monitor/1",
+  "generated_at": "2026-11-01T06:17:00+00:00",
+  "previous_generated_at": null,
+  "counts": {
+    "ok": 1,
+    "moved": 0,
+    "form_changed": 0,
+    "blocked": 0,
+    "unreachable": 0,
+    "unknown": 0
+  },
+  "changed": [],
+  "demote_suggested": [],
+  "brokers": [
+    {
+      "broker_id": "devauto",
+      "health": "ok",
+      "detail": "",
+      "http_status": 200,
+      "page": "https://devauto.example/optout",
+      "selectors_missing": [],
+      "selectors_unchecked": 0,
+      "fingerprint": "previous-hash-01",
+      "used_browser": false,
+      "previous_health": null,
+      "changed": false,
+      "first_seen_bad": null,
+      "weeks_bad": 0,
+      "demote_suggested": false
+    }
+  ]
+}
