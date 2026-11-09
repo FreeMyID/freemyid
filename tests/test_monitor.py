@@ -411,3 +411,55 @@ def test_run_monitor_looks_up_time_sleep_at_call_time(monkeypatch):
     net = FakeNet(moved)
     mon.run_monitor(fixture_registry(), requester=net, now=NOW, broker_ids=["devauto"])
     assert len(net.calls) == 2 and len(slept) == 1 and 2.0 <= slept[0] <= 5.0
+
+
+# ------------------------------------------------------------------ WO-211 findings
+
+def test_previous_reports_new_and_removed_brokers():
+    """A broker in last week's file but not checked now is `removed_brokers`; one checked
+    now but absent last week is `new_brokers` (WO-211 finding 2)."""
+    prev = {"schema": "monitor/1", "generated_at": "2026-11-02T06:17:00+00:00",
+            "brokers": [{"broker_id": "devauto", "health": "ok"},
+                        {"broker_id": "retired", "health": "ok"},
+                        {"broker_id": "devauto", "health": "ok"}, "junk"]}
+    doc, _, _ = _run({OPT: (200, None, FORM_OK)}, ids=(), previous=prev)
+    checked = [b["broker_id"] for b in doc["brokers"]]
+    assert "devauto" in checked and len(checked) > 1
+    assert doc["removed_brokers"] == ["retired"]
+    assert doc["new_brokers"] == sorted(set(checked) - {"devauto"})
+
+
+def test_broker_filter_does_not_report_unchecked_brokers_as_removed():
+    prev = {"schema": "monitor/1", "brokers": [{"broker_id": "devauto", "health": "ok"},
+                                               {"broker_id": "devweb", "health": "ok"}]}
+    doc, _, _ = _run({OPT: (200, None, FORM_OK)}, previous=prev)
+    assert doc["new_brokers"] == [] and doc["removed_brokers"] == []
+
+
+def test_without_previous_new_and_removed_are_empty():
+    doc, _, _ = _run({OPT: (200, None, FORM_OK)})
+    assert doc["new_brokers"] == [] and doc["removed_brokers"] == []
+
+
+def test_cli_oversized_previous_is_not_compared(monkeypatch, tmp_path):
+    """A valid monitor/1 file over 2 MB is refused like a non-monitor/1 file (finding 3)."""
+    prev = tmp_path / "big.json"
+    doc = {"schema": "monitor/1", "generated_at": "2026-11-02T06:17:00+00:00",
+           "brokers": [{"broker_id": "devauto", "health": "ok", "pad": "x" * mon.MAX_PREVIOUS}]}
+    prev.write_text(json.dumps(doc), encoding="utf-8")
+    r, _ = _cli(monkeypatch, {OPT: (200, None, FORM_OK)}, "--json", "--previous", str(prev))
+    assert r.exit_code == 0, r.output
+    out = json.loads(r.stdout)
+    assert out["previous_generated_at"] is None and out["removed_brokers"] == []
+    assert "not a monitor/1 file; not compared" in r.stderr and "2 MB" in r.stderr
+
+
+def test_load_previous_reads_at_most_the_cap(tmp_path):
+    p = tmp_path / "p.json"
+    p.write_text(json.dumps({"schema": "monitor/1", "brokers": []}), encoding="utf-8")
+    assert mon.load_previous(p) == ({"schema": "monitor/1", "brokers": []}, "")
+    p.write_bytes(b" " * (mon.MAX_PREVIOUS + 1))
+    assert mon.load_previous(p) == (None, "larger than 2 MB")
+    p.write_bytes(b"\xff{")
+    assert mon.load_previous(p)[0] is None
+    assert mon.load_previous(tmp_path / "missing.json")[0] is None

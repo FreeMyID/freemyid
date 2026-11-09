@@ -1065,8 +1065,6 @@ def monitor(registry: Annotated[Path | None, typer.Option(
 
     Reads only: never fills in, clicks or submits anything, and needs no profile. A
     "prove you are human" page is reported as blocked, never worked around."""
-    import json as _json
-
     from . import monitor as mon
     from .registry import RegistryError, load_registry
     _set_json(as_json)
@@ -1076,14 +1074,10 @@ def monitor(registry: Annotated[Path | None, typer.Option(
         _fail(cj.EXIT_ERROR, f"registry could not be read: {str(e)[:160]}")
     prev = None
     if previous is not None:
-        try:
-            prev = _json.loads(previous.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            prev = None
-        if not mon.valid_doc(prev):
-            err.print("freemyid: --previous is not a monitor/1 file; not compared",
-                      markup=False)
-            prev = None
+        prev, why = mon.load_previous(previous)
+        if prev is None:
+            err.print(f"freemyid: --previous is not a monitor/1 file; not compared ({why})",
+                      markup=False, highlight=False)
     loader, close = (None, None)
     if browser:
         from .netpolicy import NetPolicy
@@ -1107,6 +1101,11 @@ def monitor(registry: Annotated[Path | None, typer.Option(
         demote = "; 2+ bad weeks: suggest moving it to Assisted" if b["demote_suggested"] else ""
         con.print(f"  {b['broker_id']}: {b['health']}{mark}. {b['detail']}{demote}",
                   markup=False, highlight=False, soft_wrap=True)
+    for key, label in (("new_brokers", "new since last week"),
+                       ("removed_brokers", "in last week's file, not checked now")):
+        if doc[key]:
+            con.print(f"  {label}: " + ", ".join(doc[key]), markup=False, highlight=False,
+                      soft_wrap=True)
 
 
 if __name__ == "__main__":
