@@ -323,7 +323,6 @@ def compare(current: list[BrokerHealth], previous: dict[str, Any] | None,
 
 _HEALTHS = frozenset({"ok", "moved", "form_changed", "blocked", "unreachable", "unknown"})
 _DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-_FP = re.compile(r"^[0-9a-f]{16}$")
 
 
 def _clean_prev(b: dict[str, Any]) -> dict[str, Any]:
@@ -334,7 +333,7 @@ def _clean_prev(b: dict[str, Any]) -> dict[str, Any]:
     weeks, first = b.get("weeks_bad"), b.get("first_seen_bad")
     return {
         "health": health if isinstance(health, str) and health in _HEALTHS else None,
-        "fingerprint": fp if isinstance(fp, str) and _FP.match(fp) else None,
+        "fingerprint": fp if isinstance(fp, str) and 0 < len(fp) <= 128 else None,  # compared only
         "weeks_bad": weeks if type(weeks) is int and 0 <= weeks <= 10_000 else 1,
         "first_seen_bad": first if isinstance(first, str) and _DATE.match(first) else None,
     }
