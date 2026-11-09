@@ -6,6 +6,7 @@ import asyncio
 import contextlib
 import logging
 import os
+import re
 import signal
 import socket
 import sys
@@ -125,9 +126,26 @@ def web_dist_missing() -> bool:
     return not (WEB_DIST / "index.html").is_file()
 
 
+_READS_DIST = re.compile(r"web/dist|[\"']dist[\"']")
+_reads_dist_cache: dict[Path, bool] = {}
+
+
+def reads_built_site(path: Path) -> bool:
+    """tests/test_web_*.py always read web/dist; vendor suites (tests/codex, tests/copilot) do when
+    their source names it. Both get the web_dist mark, so build.yml skips them and pages.yml
+    runs them strictly right after its build."""
+    if path.name.startswith("test_web_"):
+        return True
+    if path.parent.name not in ("codex", "copilot") or not path.name.startswith("test_"):
+        return False
+    if path not in _reads_dist_cache:
+        _reads_dist_cache[path] = bool(_READS_DIST.search(path.read_text(encoding="utf-8")))
+    return _reads_dist_cache[path]
+
+
 def pytest_collection_modifyitems(config, items):
     for item in items:
-        if Path(str(item.fspath)).name.startswith("test_web_"):
+        if reads_built_site(Path(str(item.fspath))):
             item.add_marker(pytest.mark.web_dist)
         os_marks = [m for m in OS_MARKERS if item.get_closest_marker(m) is not None]
         for m in os_marks:
