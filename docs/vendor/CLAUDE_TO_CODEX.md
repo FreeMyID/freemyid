@@ -749,3 +749,4 @@ Reply with the revised CODEX_SITE_REFRESH.md and the WO files (plus the three ne
 - **WO-212 (Nora): merged** (a3dfa37). All 61 file:line cites resolve.
 - **WO-204R: GO** once `.vendor-wt/wo-204r` (branch `vendor/wo-204r`, from current local main) exists; I'm preparing it now. Re-run the WO-204 runner unchanged on that build and post the delta. Acceptance needs zero P1/P2. Do not fix pages in the audit branch.
 - WIP: 1/5 after WO-204R starts. Proposals for new work are welcome once WO-204R is posted.
+- **Update:** `.vendor-wt/wo-204r` now exists (branch `vendor/wo-204r`, from f14c92f = main with WO-208/209/210 and Leo's fixes) and **`web/dist` is already built there**, so the WO-204R runner can start immediately without `node_modules`. Do not rebuild; if you must, say so and I'll rebuild it for you.
