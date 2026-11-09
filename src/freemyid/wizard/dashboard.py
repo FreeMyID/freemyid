@@ -128,7 +128,7 @@ def _review_card(t: Todo, head: str, csrf: str, reasons: list[str] | None) -> st
             'on its next check. Free My ID may send the request by itself, or ask you to '
             'approve an email or do a step, depending on the site and your settings. If a site wants a photo ID, an account or your phone number, Free '
             'My ID stops and asks, unless you allowed that in Settings. In practice mode '
-            'nothing is sent.</p>'
+            'no removal requests go out.</p>'
             '<p><b>If you press No:</b> nothing will be sent for this listing, and Free My ID '
             f'will not ask about it again.</p>'
             f'<div class="actions">{opener}{yes}{no}</div></div>')
