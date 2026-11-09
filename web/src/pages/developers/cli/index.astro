@@ -1,7 +1,8 @@
 ---
 import Base from "@/layouts/Base.astro";
-import PageHead from "@/components/PageHead.astro";
-import Section from "@/components/Section.astro";
+import "@/styles/site-refresh.css";
+import Crumbs from "@/components/Crumbs.astro";
+import Section from "@/components/site-refresh/RefreshSection.astro";
 import { pageProps, type Crumb } from "@/lib/site";
 import commandData from "./_commands.json";
 
@@ -12,11 +13,18 @@ const source = (location: string) => `Source: ${location}`;
 ---
 
 <Base {...p} crumbs={crumbs}>
-  <PageHead crumbs={crumbs} title="Command line reference"
-    lead="Commands and options registered in the Free My ID command line, with source lines for each entry.">
-  </PageHead>
+<div class="site-refresh">
+  <header class="site-refresh__wrap site-refresh__section refresh-page-head">
+<Crumbs crumbs={crumbs} />
+<div class="refresh-page-intro"><div>
+<h1>Command line reference</h1>
+<p class="site-refresh__lead">Commands and options registered in the Free My ID command line, with source lines for each entry.</p>
 
-  <Section id="common-options" narrow title="Common options" titleId="common-options-title">
+  
+</div></div>
+</header>
+
+  <Section id="common-options" width="narrow" title="Common options" titleId="common-options-title">
     <p class="mt-s max-w-measure">Use <code>--help</code> to see the options for a command. The root command also provides these options. <small>(Source: {source(commandData.help_flag.source)}; root options are listed with their declarations.)</small></p>
     <ul class="mt-s grid max-w-measure list-disc gap-2xs ps-l">
       {commandData.help_flag.flags.map((flag) => <li><code>{flag}</code> — {commandData.help_flag.help} <small>({source(commandData.help_flag.source)})</small></li>)}
@@ -24,11 +32,11 @@ const source = (location: string) => `Source: ${location}`;
     </ul>
   </Section>
 
-  <Section id="commands" tone="alt" narrow title="Commands" titleId="commands-title">
+  <Section id="commands" tone="alt" width="narrow" title="Commands" titleId="commands-title">
     <p class="mt-s max-w-measure">The command names, short descriptions, arguments, and options below come from the registered CLI tree. <small>(CLI app: {source("src/freemyid/cli.py:21")}; each entry has its own source line.)</small></p>
     <div class="mt-m grid max-w-measure gap-m">
       {commandData.commands.map((command) => (
-        <article class="rounded-md border border-line bg-surface p-m">
+        <article class="site-refresh__card">
           <h3><code>freemyid {command.path}</code></h3>
           {command.summary && <p class="mt-xs">{command.summary} <small>({source(command.summary_source)})</small></p>}
           <p class="mt-s"><strong>Command source:</strong> <code>{command.source}</code></p>
@@ -58,4 +66,16 @@ const source = (location: string) => `Source: ${location}`;
       ))}
     </div>
   </Section>
+</div>
 </Base>
+
+<style is:global>
+  .site-refresh .refresh-page-intro { display: grid; gap: var(--fmi-space-l); align-items: center; }
+  .site-refresh .refresh-page-head h1 { max-width: 26ch; margin-block-start: var(--fmi-space-m); }
+  .site-refresh pre { font-size: 1.25rem; max-width: 100%; overflow-x: auto; white-space: pre; }
+  .site-refresh a:not(.no-underline) { min-block-size: 44px; min-inline-size: 44px; display: inline-flex; align-items: center; }
+  .site-refresh small { font-size: 1em; }
+  .site-refresh figure { margin: 0; min-width: 0; }
+  .site-refresh img { max-width: 100%; height: auto; }
+  @media (min-width: 56.25em) { .site-refresh .refresh-page-intro:has(figure) { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } }
+</style>
