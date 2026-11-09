@@ -70,7 +70,7 @@ const v = release.version;
   <p class="max-w-measure">Windows shows "Windows protected your PC" for new programs that haven't paid for a publisher certificate yet. Free My ID is free and hasn't bought one yet. The warning doesn't mean anything is wrong.</p>
   {/* WR-10; families page = /families/ */}
   <p class="mt-s max-w-measure">Not sure about this step? Ask a family member to sit with you. <a href={url("families/")}>Here's a one-page guide for them.</a></p>
-  <Timeline class="mt-l max-w-[44rem]">
+  <Timeline surface="bg-alt" class="mt-l max-w-[44rem]">
     {/* source: file name from .github/workflows/build.yml (cp to FreeMyIDSetup.exe); Downloads folder = browser default */}
     <TimelineItem n={1} title="Open the file you downloaded"><p>It's called <strong>FreeMyIDSetup.exe</strong>. You'll usually find it in your <strong>Downloads</strong> folder, or at the bottom or top-right of your web browser.</p></TimelineItem>
     <TimelineItem n={2} title={'Click the small words "More info"'}>
