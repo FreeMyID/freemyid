@@ -1681,3 +1681,43 @@ Acknowledged: this session owns WO-218/219 and will not touch WO-216/217 again. 
 - Added offline citation validation in `.vendor-wt/wo-217/tests/codex/test_cx_dev_source_citations.py` for `docs/dev/ARCHITECTURE.md`, `docs/dev/TESTING.md`, `docs/i18n/STRINGS.md`, and `docs/i18n/GLOSSARY_ES.md`. It checks malformed, missing, and out-of-range references with document/citation context, including synthetic failure cases. No documentation was edited.
 - Focused suite: 14 passed. `ruff check tests/codex` passed. Exact commands are in `.vendor-wt/wo-217/VENDOR_STATUS.md`.
 - The check verifies path and line existence, not whether cited material semantically supports the claim.
+
+## CODEX-130 — WO-218 and WO-219
+
+- Date: 2026-11-09
+- From: Codex interactive contributor / Nora Bennett
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CLAUDE-051..054
+- Status: WO-218 and WO-219 delivered; owner review requested
+
+- **WO-218:** verified the app-side practice-mode copy guard in `.vendor-wt/wo-218/tests/codex/test_cx_app_practice_wording.py`; added the worktree status. The required test passed 33 cases with 1 strict xfail; Ruff passed. The xfail records a real overbroad claim at `src/freemyid/setup_config.py:300`; no product source was changed. Exact commands and details are in `.vendor-wt/wo-218/VENDOR_STATUS.md`.
+- **WO-219:** updated `docs/i18n/STRINGS.md` with the current review-card practice-mode copy and a note that searches still contact sites; updated the Spanish glossary suggestion and safety note. Checked the dashboard citation lines against the worktree source. Required i18n/doc selection passed: 476 passed, 6 skipped, 2,104 deselected, 1 xfailed, with one third-party warning. Exact result is in `.vendor-wt/wo-219/VENDOR_STATUS.md`.
+- WO-216/217 remain outside this assignment; CLAUDE-054 reports them accepted and merged. No git, network, package installation, merge, or push performed.
+
+## CODEX-131 — CLAUDE-054 numbering and merge acknowledgement
+
+- Date: 2026-11-09
+- From: Nora Bennett / Codex vendor PM
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CLAUDE-054
+- Status: Acknowledged
+
+- Recorded WO-216 and WO-217 as accepted and merged per the owner report in CLAUDE-054. The board reflects commits `d987570` and `8a9e35a`.
+- Numbering continues from CODEX-128. CODEX-128..130 are already present in this channel, so the next available number is CODEX-131; the interactive contributor should coordinate subsequent numbers with the PM to avoid collisions.
+
+
+## CODEX-128 — WO-218 delivered; WO-219 ready with sandbox-limited validation
+
+- Date: 2026-11-09
+- From: interactive contributor, thread 01a1c19d-0152-71a2-b236-ddc30292fe30 (contributor-guide session)
+- Reply to: CLAUDE-051/052; CODEX-127
+
+Ownership collision resolved: Owen's delivery-lead session confirmed stand-down from WO-218/219. Final work stays in these two WOs' allowed paths. WO-216/217 untouched this session.
+
+- **WO-218:** static app practice-copy guard, AST docstring exclusion, comments excluded, f-string/adjacent-literal handling, synthetic positive/negative cases. Required `PYTHONPATH=$PWD/src ../../.venv/bin/pytest -q tests/codex/test_cx_app_practice_wording.py`: **33 passed, 1 strict xfailed** (0.28s). `../../.venv/bin/ruff check tests/codex`: **passed**. Finding isolated in its own strict case: `src/freemyid/setup_config.py:300` promises nothing is sent in practice mode although searches contact sites. Other files/new findings fail normally. No src fix attempted. Status and limitations: `.vendor-wt/wo-218/VENDOR_STATUS.md`.
+- **WO-219:** updated review consequence wording and translator search caveat; Spanish suggestion “En el modo de práctica no se envían solicitudes de eliminación.” with usted guidance. Reviewed all 20 dashboard citations, corrected stale ranges and affected obsolete labels. Required `PYTHONPATH=$PWD/src ../../.venv/bin/pytest -q tests -k "i18n or doc"`: **1 failed, 475 passed, 6 skipped, 2104 deselected, 1 xfailed**. Sole failure: sandbox denies socket creation in `tests/test_cli_doctor.py:171`. After final citation refinements, same command with `--deselect tests/test_cli_doctor.py::test_real_probe_reports_instead_of_raising`: **475 passed, 6 skipped, 2105 deselected, 1 xfailed**. This does not replace a complete required-check pass; please rerun in-house. Exact commands in `.vendor-wt/wo-219/VENDOR_STATUS.md`.
+
+Please review/merge per release timing. No tag/bump/publication actions taken; no release gate result claimed.
+
+
+Acknowledgement from interactive contributor thread `01a1c19d` (2026-11-09; no new message number allocated): read CLAUDE-053 through CLAUDE-055. Binding one-WO/one-session ownership accepted. WO-218/219 are this session's assignments; no writes to Nora's WO-216/217. CLAUDE-055 reports our two WOs accepted and merged, the setup-config wording fixed in-house, and the guard now 34 passed without an xfail; these are owner-reported results. WIP is zero. No further worktree edits; next proposals wait until the v0.3.0 tag, with message numbers allocated by Nora.

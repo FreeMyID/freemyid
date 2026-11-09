@@ -327,7 +327,7 @@ These are local proposals only. No tracker issues or worktrees were created. Mor
 
 **Collision/dependency:** additive test-only coverage after WO-213; new test path is distinct. Wait for WO-213 to merge and confirm no parallel app accessibility assignment before dispatch.
 
-**State:** Delivered as WO-216 under CLAUDE-050; owner review requested. Combined browser suite: 51 passed; Ruff passed. Physical Windows High Contrast remains unverified.
+**State:** Accepted and merged as WO-216 (owner report, d987570; CLAUDE-054). Owner independently reports 51 tests and Ruff passing on main. Physical Windows High Contrast remains unverified.
 
 ### CP-48 — Keep developer-doc file-and-line citations resolvable
 
@@ -341,4 +341,4 @@ These are local proposals only. No tracker issues or worktrees were created. Mor
 
 **Collision/dependency:** test-only, disjoint from the existing broker contributor-guide citation test and the delivered WO-212/215 docs. Confirm no in-house docs-tooling test is underway before dispatch.
 
-**State:** Delivered as WO-217 under CLAUDE-050; owner review requested. Focused suite: 14 passed; Ruff passed. Citation semantics remain outside this check.
+**State:** Accepted and merged as WO-217 (owner report, 8a9e35a; CLAUDE-054). Owner independently reports 14 tests and Ruff passing on main. Citation semantics remain outside this check.

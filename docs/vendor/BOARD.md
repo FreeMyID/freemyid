@@ -1,6 +1,6 @@
 # Codex vendor work board
 
-Sole writer: Nora Bennett, interactive vendor PM. Last checkpoint: CLAUDE-050 / CODEX-128..129, 2026-11-09. Release and merge states are owner-reported.
+Sole writer: Nora Bennett, interactive vendor PM. Last checkpoint: CLAUDE-051..054 / CODEX-130, 2026-11-09. Release and merge states are owner-reported.
 States are owner reports and local document evidence, not independently verified remote PR state. No git or network used. Local merges are distinguished from pushed merges. Work-order status headers may be stale; latest owner channel controls.
 
 Before dispatch or proposals, check this board, exact work-order paths and Claude's stay-off lists. This board grants no additional edit permission. Completed WO-001/002/005/006 path lists are historical scopes, not active reservations. WO-005 scope is exposure_card and its exclusive helpers only, never all views.py functions.
@@ -64,8 +64,10 @@ Before dispatch or proposals, check this board, exact work-order paths and Claud
 | WO-213 | — | Kai Nakamura | delivered; 37 tests and Ruff pass; owner review requested | CLAUDE-048 GO | tests/codex/test_cx_review_card_a11y.py (new); VENDOR_STATUS.md | 2026-11-08 CODEX-121 |
 | WO-214 | — | Amara Okoye | delivered; i18n/doc tests pass; owner review requested | CLAUDE-048 GO | docs/i18n/STRINGS.md; docs/i18n/GLOSSARY_ES.md; VENDOR_STATUS.md | 2026-11-08 CODEX-122 |
 | WO-215 | — | Owen Park | delivered; testing/doc tests pass; owner review requested | CLAUDE-048 GO | docs/dev/TESTING.md; VENDOR_STATUS.md | 2026-11-08 CODEX-123 |
-| WO-216 | CP-47 | Kai Nakamura | delivered; combined browser suite 51 passed and Ruff pass; owner review requested | CLAUDE-050; worktree ready | tests/codex/test_cx_review_card_forced_colors.py (new); VENDOR_STATUS.md | 2026-11-09 CODEX-125 |
-| WO-217 | CP-48 | Owen Park | delivered; 14 tests and Ruff pass; owner review requested | CLAUDE-050; worktree ready | tests/codex/test_cx_dev_source_citations.py (new); VENDOR_STATUS.md | 2026-11-09 CODEX-126 |
+| WO-216 | CP-47 | Kai Nakamura | merged (owner report, d987570) | CLAUDE-050 | tests/codex/test_cx_review_card_forced_colors.py; VENDOR_STATUS.md | 2026-11-09 CLAUDE-054 |
+| WO-217 | CP-48 | Owen Park | merged (owner report, 8a9e35a) | CLAUDE-050 | tests/codex/test_cx_dev_source_citations.py; VENDOR_STATUS.md | 2026-11-09 CLAUDE-054 |
+| WO-218 | — | interactive contributor | delivered; 33 passed, 1 strict xfail, Ruff pass; owner review requested | CLAUDE-051/053; prepared worktree | tests/codex/test_cx_app_practice_wording.py (new); VENDOR_STATUS.md | 2026-11-09 CODEX-130 |
+| WO-219 | — | interactive contributor | delivered; i18n/doc selection passed; owner review requested | CLAUDE-051/053; prepared worktree | docs/i18n/STRINGS.md; docs/i18n/GLOSSARY_ES.md; VENDOR_STATUS.md | 2026-11-09 CODEX-130 |
 
 WO-107 workspace: .vendor-wt/wo-107. Merged PR #19, owner report (103d79a).
 
@@ -84,7 +86,7 @@ CP-03 navigation tests; CP-04 guide-print audit; CP-07 printable-summary visual 
 
 ## Next checkpoint
 
-CLAUDE-047 reports the refresh published at 1d0bebd; WO-204R had zero P1/P2, the full suite/site checks/leak scan passed, and CP-43..46 were closed as superseded. CLAUDE-050 prepared WO-216/217 in separate test-only worktrees. Both are delivered for owner review. WO-218/219 are separately reported in progress, so active WIP is 2/5. WO-216 is Chromium emulation, not physical Windows High Contrast verification. WO-217 validates citation syntax and line bounds, not semantic accuracy. The site-refresh design-system fold-back remains in-house.
+CLAUDE-047 reports the refresh published at 1d0bebd. CLAUDE-054 reports WO-216/217 merged as d987570/8a9e35a; Codex tests independently passed on main per owner. CLAUDE-051/053 assigned WO-218/219 to the interactive contributor; both are delivered for owner review. WO-218 records the `setup_config.py:300` overbroad practice-mode claim as a strict xfail; source copy remains in-house. WO-219 updates the i18n inventory/glossary. The site-refresh design-system fold-back remains in-house.
 
 ## Elena proposed path collision reference
 
