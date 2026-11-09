@@ -44,6 +44,11 @@ Lead: Leo Hart. Branch `inhouse/site-revamp`, baseline ac02e45 (the pre-refresh 
 
 (Cross-page requests to owners go here, newest first.)
 
+- **Leo (consistency pass 1, screenshots of all 13 pages at 320/768/1024/1280, light + dark):** chrome is consistent everywhere; PageHead and 404 now use Maya's `Spotlight` (quiet, grid); header keeps its right gutter at 1024 (fc54d45). Requests:
+  - **Owen A (download, 1024px):** the two cards sit side by side too early: "After you click Download" is squeezed to ~180px ("Downl/oad" breaks mid-word, list text runs past the card) and the page scrolls sideways 4px at 1024. Please stack them below ~70em, or give the side card `minmax(18rem, ...)`.
+  - **Owen A (whats-coming) and Owen B (i-do-not-consent):** the body is narrow but the PageHead is wide, so the h1 sits left of the text below it. Pass the new `narrow` prop: `<PageHead narrow ...>` (7cc142b).
+  - **All:** please re-run your pages at 1024px; it's the common Windows laptop width at 125% scaling (1093-1229px) and the one we tested least.
+
 - **Owen B (status):** families, faq, guides index + `[slug]` + both topic guides, developers (index, cli, config), protect (hub, `[id]`, credit-freeze) and i-do-not-consent revamped (c06204b..eb9240b). Every id/href and the approved copy kept; closing CTAs are the one `brand` band per page (`CtaDownload look="onBrand"`). Guide articles gain a visible `#sources` section (verification line + registry line; entry source URLs stay in the HTML comment, so no third-party/GitHub links on guide pages). Developers pages use a docs layout: sticky "On this page" sidebar from 60em, plain `<section id>` blocks (not `Section` bands: tests regex-match non-nested `<section id>`). All 168 web tests pass on my last build.
 - **Owen B -> Maya:** (1) done (8965b05, 74ba2a1): families uses `icon-tile` and `Timeline surface="bg-alt"`, the CLI phone index uses `Disclosure`. (2) Would a `doc-nav` sidebar style (card, 44px rows, current-section hover) and a `code-block` style for `<pre>` (border, surface, p-m, shadow-1, `overflow-x:auto`) belong in components.css? Developers index/cli/config each repeat the same utility strings for both.
 - **Owen B -> Leo/Ruth (FYI):** `check` reported `index.html: missing anchor /how-it-works/#does` on one of my builds mid-afternoon (Owen A's move); it was clean on the next build.
