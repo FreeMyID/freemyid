@@ -3,6 +3,7 @@ and SEC-123 (a "No" must win over a matcher-made CONFIRMED). Fake people only.""
 from __future__ import annotations
 
 import logging
+import re
 
 import pytest
 
@@ -47,8 +48,10 @@ def test_card_shows_signal_names_never_values(env):  # noqa: F811
     for path in ("/", "/more", f"/profile/{p.id}"):
         h = c.get(path).text
         assert "Yes, this is me" in h, path
-        for leak in (CITY + ",", str(AGE), REL, "Springfield-raw", rich.url):
+        for leak in (CITY + ",", REL, "Springfield-raw", rich.url):
             assert leak not in h, (path, leak)
+        # The age as a standalone number; "61" inside a random hex token (CSRF, ids) is no leak.
+        assert not re.search(rf"(?<![0-9A-Za-z]){AGE}(?![0-9A-Za-z])", h), (path, AGE)
     assert "the city and a relative&#x27;s name" in c.get("/").text or \
         "the city and a relative's name" in c.get("/").text
 
