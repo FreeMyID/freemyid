@@ -48,7 +48,7 @@ def _skip_lines(lines: list[str]) -> list[int]:
 def scan(root: Path) -> list[str]:
     found = []
     for f in sorted(p for p in root.rglob("*") if p.is_file() and p.suffix != ".md"):
-        rel = f.relative_to(root.parent)
+        rel = f.relative_to(root.parent).as_posix()  # same output on Windows and POSIX
         try:
             lines = f.read_text(encoding="utf-8").splitlines()
         except UnicodeDecodeError:
