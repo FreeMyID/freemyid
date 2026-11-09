@@ -6,6 +6,7 @@ import PageHead from "@/components/PageHead.astro";
 import Section from "@/components/Section.astro";
 import Icon from "@/components/Icon.astro";
 import FaqList from "@/components/FaqList.astro";
+import Card from "@/components/ui/Card.astro";
 import CtaDownload from "@/components/CtaDownload.astro";
 import { faq, pageProps } from "@/lib/site";
 const p = pageProps("faq");
@@ -22,19 +23,22 @@ const myths = [
 <Base {...p}>
 <PageHead crumbs={p.crumbs} title="Questions" lead="Plain answers about Free My ID. Tap a question to see the answer." />
 
-<Section id="myths" narrow title="Myth vs. fact" class="pt-l">
-  <div class="grid gap-m">
+<Section id="myths" title="Myth vs. fact" class="pt-l">
+  <ul class="grid gap-m min-[56em]:grid-cols-2" role="list">
     {myths.map(([myth, fact]) => (
-      <div class="reveal grid overflow-hidden rounded-xl border border-line bg-card shadow-1">
-        <p class="flex gap-xs bg-surface p-m"><Icon name="x" class="mt-[0.25em] text-muted" /><span><strong class="text-heading">Myth:</strong> {myth}</span></p>
-        <p class="flex gap-xs p-m"><Icon name="check" class="mt-[0.25em] text-ok" /><span><strong class="text-heading">Fact:</strong> {fact}</span></p>
-      </div>
+      <Card as="li" class="reveal gap-0 overflow-hidden p-0">
+        <p class="flex gap-xs bg-surface p-m"><Icon name="x" class="mt-[0.25em] shrink-0 text-muted" /><span><strong class="text-heading">Myth:</strong> {myth}</span></p>
+        <p class="flex gap-xs border-t border-line p-m"><Icon name="check" class="mt-[0.25em] shrink-0 text-ok" /><span><strong class="text-heading">Fact:</strong> {fact}</span></p>
+      </Card>
     ))}
-  </div>
+  </ul>
 </Section>
 
-<Section id="common" tone="alt" narrow title="Common questions">
-  <FaqList items={faq} />
-  <div class="mt-l"><CtaDownload /></div>
+<Section id="common" tone="alt" title="Common questions">
+  <div class="max-w-[48rem]"><FaqList items={faq} /></div>
+</Section>
+
+<Section tone="brand" tight label="Get Free My ID">
+  <CtaDownload look="onBrand" />
 </Section>
 </Base>
