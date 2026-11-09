@@ -133,15 +133,10 @@ KNOWN = "src/freemyid/setup_config.py"
 @pytest.mark.parametrize("path", app_paths(ROOT), ids=lambda p: str(p.relative_to(ROOT)))
 def test_app_practice_copy_has_no_unqualified_no_sending_claims(path: Path) -> None:
     hits = findings(path)
-    if str(path.relative_to(ROOT)) == KNOWN:
-        hits = [(line, text) for line, text in hits if line != 300]
     assert not hits, f"{path.relative_to(ROOT)}: {hits}"
 
 
-@pytest.mark.xfail(strict=True, reason=(
-    "src/freemyid/setup_config.py:300 promises nothing is sent in practice mode; "
-    "searches still contact sites (WO-218 finding)"
-))
+# WO-218 finding fixed in-house: setup_config.py:300 no longer promises nothing is sent.
 def test_setup_practice_copy_does_not_promise_nothing_is_sent() -> None:
     hits = findings(ROOT / KNOWN)
     assert not [(line, text) for line, text in hits if line == 300], hits

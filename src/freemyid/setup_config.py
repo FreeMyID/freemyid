@@ -297,7 +297,7 @@ def plan_lines(cfg: SetupConfig) -> list[str]:
                  ("weekly; the job will be installed now" if cfg.schedule.install_job
                   else "weekly once you run `freemyid schedule install`")
                  if cfg.schedule.weekly_recheck else "off") + ".",
-             ("  Practice mode stays as it is: nothing is sent until real submissions are "
+             ("  Practice mode stays as it is: no removal requests go out until real submissions are "
              "enabled (`freemyid config enable-submissions`)."),
              "",
              f"Permission ({dr.BASIS_LABELS[cfg.consent.basis]}):"]
