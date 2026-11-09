@@ -3,6 +3,8 @@
 // site_src/templates/partials/footer.html (teardown section 3); page links only if the page exists.
 import { pages, site, url } from "@/lib/site";
 import BrandMark from "./BrandMark.astro";
+import CtaDownload from "./CtaDownload.astro";
+import Icon from "./Icon.astro";
 type L = [string, string, boolean?];
 const has = (id: string) => id in pages;
 const cols: [string, L[]][] = [
@@ -36,19 +38,26 @@ const cols: [string, L[]][] = [
     ["https://creativecommons.org/licenses/by-nc/4.0/", "Site list data license: CC BY-NC 4.0"],
   ]],
 ];
-const link = "inline-flex min-h-[2.4rem] items-center text-footer-text decoration-footer-text/60 hover:decoration-footer-text";
+// Revamp: links reach the 44px target; the top row pairs the brand with the one footer Download (onBrand
+// look: light button on the dark footer), and the trust panel sits in a quiet bordered card.
+const link = "inline-flex min-h-tap items-center text-footer-text decoration-footer-text/60 hover:decoration-footer-text";
 ---
-<footer class="site-footer mt-0 bg-footer-bg py-2xl text-footer-text">
+<footer class="site-footer mt-0 bg-footer-bg pb-xl pt-2xl text-footer-text">
   <div class="wrap">
-    <a class="flex w-fit min-h-tap items-center gap-2xs text-lead font-bold text-footer-text no-underline" href={url("")}>
-      <BrandMark /><span>Free My ID<span class="visually-hidden">, home page</span></span>
-    </a>
-    <p class="mt-2xs">Take your name off the websites that sell it.</p>
+    <div class="flex flex-wrap items-center justify-between gap-m border-b border-footer-text/25 pb-l">
+      <div>
+        <a class="flex w-fit min-h-tap items-center gap-2xs text-lead font-bold text-footer-text no-underline" href={url("")}>
+          <BrandMark /><span>Free My ID<span class="visually-hidden">, home page</span></span>
+        </a>
+        <p class="mt-3xs">Take your name off the websites that sell it.</p>
+      </div>
+      <CtaDownload look="onBrand" size="md" class="no-print" />
+    </div>
     <div class="mt-l grid grid-cols-[repeat(auto-fit,minmax(12rem,1fr))] gap-l">
       {cols.map(([title, links]) => (
         <nav aria-label={title}>
-          <h2 class="text-lead text-footer-text">{title}</h2>
-          <ul class="mt-2xs grid gap-3xs" role="list">
+          <h2 class="text-small font-bold uppercase tracking-wide text-footer-text">{title}</h2>
+          <ul class="mt-2xs grid" role="list">
             {links.filter(([, , show]) => show !== false).map(([href, label]) => (
               <li><a class={link} href={href}>{label}</a></li>
             ))}
@@ -56,9 +65,9 @@ const link = "inline-flex min-h-[2.4rem] items-center text-footer-text decoratio
         </nav>
       ))}
     </div>
-    <div class="mt-xl grid gap-s border-t border-footer-text/30 pt-l text-small">
+    <div class="mt-xl grid gap-s text-small">
       {/* Trust panel, word for word from docs/BRAND.md */}
-      <p>No account. No cloud. Never asks for your Social Security number or bank or card details, and never charges you. Free and open source. Uninstall anytime.</p>
+      <p class="flex items-start gap-xs rounded-xl border border-footer-text/25 p-s"><Icon name="shield" class="mt-[0.2em] size-[1.4em]" /><span>No account. No cloud. Never asks for your Social Security number or bank or card details, and never charges you. Free and open source. Uninstall anytime.</span></p>
       <p>Free My ID is free, open-source software that runs on your own computer. It is not a government service and is not affiliated with Facebook/Meta or any data broker.</p>
       {/* source: LICENSE (GNU AGPL v3) */}
       <p>The app is licensed under the GNU AGPL v3.</p>
