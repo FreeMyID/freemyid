@@ -155,11 +155,23 @@ def test_reference_json_matches_visible_cli_tree_and_source_locations() -> None:
 
 
 
+def _whole_sentence(summary: str) -> bool:
+    """Ends in . ! or ?, optionally followed by closing parentheses ("(see X.)")."""
+    return summary.rstrip().rstrip(")").endswith((".", "!", "?"))
+
+
+def test_summary_check_needs_punctuation_before_a_closing_parenthesis() -> None:
+    """CR #66: "Open a report (HTML or PDF)" is the cut-off first line of a longer sentence."""
+    assert not _whole_sentence("Open a report (HTML or PDF)")
+    assert not _whole_sentence("For maintainers: check that each broker's page loads and its form")
+    assert _whole_sentence("Show the status.") and _whole_sentence("Run it (dry run first.)")
+    assert _whole_sentence("Really?") and _whole_sentence("Done!) ")
+
+
 def test_every_public_summary_is_a_whole_sentence() -> None:
     """CR #62-#64: the page shows only the docstring's first line, so it must not stop mid-sentence."""
     saved = json.loads(JSON_PATH.read_text(encoding="utf-8"))
-    cut = [c["path"] for c in saved["commands"]
-           if c["summary"] and not c["summary"].rstrip().endswith((".", "!", "?", ")"))]
+    cut = [c["path"] for c in saved["commands"] if c["summary"] and not _whole_sentence(c["summary"])]
     assert cut == []
 
 
