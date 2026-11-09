@@ -9,12 +9,14 @@ tests/test_cloudflare_waf_probes.py checks every file in web/dist.
 Usage:  tools/cloudflare_waf_probes.py            show the current rule (read only)
         tools/cloudflare_waf_probes.py --apply    back up, then create or update the rule
         tools/cloudflare_waf_probes.py --rollback FILE   restore the saved ruleset rules
+        add --create to --apply only when the zone has no custom-rules entrypoint yet
 Token: ~/.config/freemyid/cf_token (chmod 600), never printed. Only the
 http_request_firewall_custom phase of this one zone is touched, and only the rule with REF.
 """
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -61,6 +63,13 @@ def main(argv: list[str]) -> int:
         sys.exit(f"cannot read zone: {cf.errs(z)}")
     zid = z["result"][0]["id"]
     cur = entrypoint(zid)
+    if not cur.get("success") and "--create" not in argv:
+        # SEC-126: a failed read must never become "no rules", or --apply/--rollback would
+        # PUT over every existing custom rule. Pass --create only when the zone has no
+        # custom-rules entrypoint yet.
+        print(f"cannot read the custom rules: {cf.errs(cur)}; nothing changed "
+              "(use --create only if this zone has no custom rules yet)", file=sys.stderr)
+        return 1
     rules = (cur.get("result") or {}).get("rules", []) if cur.get("success") else []
     if "--rollback" in argv:
         saved = json.loads(Path(argv[argv.index("--rollback") + 1]).read_text())
@@ -73,8 +82,9 @@ def main(argv: list[str]) -> int:
         print("rule present" if mine else "rule absent", f"({len(rules)} custom rules)")
         return 0
     backup = Path(cf.CFG) / f"cf_waf_custom_backup_{time.strftime('%Y%m%d-%H%M%S')}.json"
-    backup.write_text(json.dumps({"rules": rules}, indent=2))
-    backup.chmod(0o600)
+    fd = os.open(backup, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)   # never world-readable
+    with os.fdopen(fd, "w") as f:
+        json.dump({"rules": rules}, f, indent=2)
     keep = [{k: r[k] for k in ("ref", "action", "enabled", "expression", "description") if k in r}
             for r in rules if r.get("ref") != REF]
     res = cf.api("PUT", f"/zones/{zid}/rulesets/phases/{PHASE}/entrypoint",
