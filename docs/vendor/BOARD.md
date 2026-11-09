@@ -1,6 +1,6 @@
 # Codex vendor work board
 
-Sole writer: Nora Bennett, interactive vendor PM. Last checkpoint: CLAUDE-048 / CODEX-124, 2026-11-08. Release and merge states are owner-reported.
+Sole writer: Nora Bennett, interactive vendor PM. Last checkpoint: CLAUDE-050 / CODEX-128..129, 2026-11-09. Release and merge states are owner-reported.
 States are owner reports and local document evidence, not independently verified remote PR state. No git or network used. Local merges are distinguished from pushed merges. Work-order status headers may be stale; latest owner channel controls.
 
 Before dispatch or proposals, check this board, exact work-order paths and Claude's stay-off lists. This board grants no additional edit permission. Completed WO-001/002/005/006 path lists are historical scopes, not active reservations. WO-005 scope is exposure_card and its exclusive helpers only, never all views.py functions.
@@ -64,6 +64,8 @@ Before dispatch or proposals, check this board, exact work-order paths and Claud
 | WO-213 | — | Kai Nakamura | delivered; 37 tests and Ruff pass; owner review requested | CLAUDE-048 GO | tests/codex/test_cx_review_card_a11y.py (new); VENDOR_STATUS.md | 2026-11-08 CODEX-121 |
 | WO-214 | — | Amara Okoye | delivered; i18n/doc tests pass; owner review requested | CLAUDE-048 GO | docs/i18n/STRINGS.md; docs/i18n/GLOSSARY_ES.md; VENDOR_STATUS.md | 2026-11-08 CODEX-122 |
 | WO-215 | — | Owen Park | delivered; testing/doc tests pass; owner review requested | CLAUDE-048 GO | docs/dev/TESTING.md; VENDOR_STATUS.md | 2026-11-08 CODEX-123 |
+| WO-216 | CP-47 | Kai Nakamura | delivered; combined browser suite 51 passed and Ruff pass; owner review requested | CLAUDE-050; worktree ready | tests/codex/test_cx_review_card_forced_colors.py (new); VENDOR_STATUS.md | 2026-11-09 CODEX-125 |
+| WO-217 | CP-48 | Owen Park | delivered; 14 tests and Ruff pass; owner review requested | CLAUDE-050; worktree ready | tests/codex/test_cx_dev_source_citations.py (new); VENDOR_STATUS.md | 2026-11-09 CODEX-126 |
 
 WO-107 workspace: .vendor-wt/wo-107. Merged PR #19, owner report (103d79a).
 
@@ -82,7 +84,7 @@ CP-03 navigation tests; CP-04 guide-print audit; CP-07 printable-summary visual 
 
 ## Next checkpoint
 
-CLAUDE-047 reports the refresh published at 1d0bebd; WO-204R had zero P1/P2, the full suite/site checks/leak scan passed, and CP-43..46 were closed as superseded. CLAUDE-048 GO'd WO-213..215; all three are now delivered for owner review, with no active implementation WIP. CODEX-124 proposes CP-47/48 for the two open slots; these remain unreserved until Morgan's decision and worktrees. The site-refresh design-system fold-back remains in-house.
+CLAUDE-047 reports the refresh published at 1d0bebd; WO-204R had zero P1/P2, the full suite/site checks/leak scan passed, and CP-43..46 were closed as superseded. CLAUDE-050 prepared WO-216/217 in separate test-only worktrees. Both are delivered for owner review. WO-218/219 are separately reported in progress, so active WIP is 2/5. WO-216 is Chromium emulation, not physical Windows High Contrast verification. WO-217 validates citation syntax and line bounds, not semantic accuracy. The site-refresh design-system fold-back remains in-house.
 
 ## Elena proposed path collision reference
 

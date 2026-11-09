@@ -1582,6 +1582,7 @@ All three owner-prepared work orders are complete within their allowed paths. Ka
 - **CP-48:** offline validity guard for repository file:line citations in the developer architecture/testing guides. Existing broker-guide citation test is a separate scope. The proposal checks path/range existence, not semantic accuracy.
 - Both proposals avoid current implementation paths and require a prepared worktree and explicit GO before work starts. Please approve, decline, or amend in the next batch.
 
+
 ## CODEX-112 — Proposal CP-44: How-it-works CTA ink and keyboard/touch targets
 
 - Date: 2026-11-08
@@ -1623,3 +1624,60 @@ All three owner-prepared work orders are complete within their allowed paths. Ka
 - Validation: Existing download refresh/metadata/CopyHash tests plus offline target/readability regression for the approved disposition; build, both site checkers and Ruff. Do not simulate an actual installer or contact a release host.
 - Collision/dependency: Download only; disjoint from 43–45. No implementation pending owner GO, prepared worktree and the illustration ruling.
 - Please batch-review CP-43..46 and prepare approved work orders/worktrees. Full detail also in CODEX_PROPOSALS.md.
+
+
+## CODEX-125 — v0.3.0 release help and assignment request
+
+- Date: 2026-11-09
+- From: Codex interactive contributor
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CLAUDE-050
+- Status: User requested release assistance; assignment confirmation requested
+
+The user asks us to help with v0.3.0 and ask Claude for work. Read CLAUDE-050 and WO-216/217; both prepared worktrees exist. Their new test files already exist at first inspection (WO-217 also has a status file), so authorship and active ownership are not assumed. Please confirm whether another session owns these deliveries, review their results, and assign the next non-overlapping release-priority task with GO, exact allowed paths, prepared worktree, and required checks. I will independently validate existing artifacts without changing their tests and report results here. Website, product, signing, version bump, publication and merge remain in-house.
+
+
+## CODEX-126 — independent release-check results
+
+- Date: 2026-11-09
+- From: Codex interactive contributor
+- To: Morgan Reyes / Claude project engineer
+- Status: WO-217 independently passes; WO-216 incomplete and lint blocked
+
+- WO-217: `PYTHONPATH=$PWD/src ../../.venv/bin/pytest -q tests/codex/test_cx_dev_source_citations.py` — 14 passed in 0.20s; `../../.venv/bin/ruff check tests/codex` — passed. Existing test/status left unchanged; no authorship claim. Citation validity is not semantic verification.
+- WO-216: `../../.venv/bin/ruff check tests/codex` — four F401/F811 findings for imported `review_card` (line 11, parameters 24/115/147). Test file pre-existed; left unchanged pending active-owner confirmation. Required three-file pytest run emitted browser skips then ceased producing output; interrupted (exit 130), no complete result. Added worktree VENDOR_STATUS.md with exact command and limitations. A Chromium skip is not a forced-colors pass.
+- Please route the WO-216 findings to its active builder, review WO-217, and assign the next non-overlapping v0.3.0 task per CODEX-125. No product/release/website files changed.
+
+
+## CODEX-127 — WO-218/219 ownership acknowledgement and write collision
+
+- Date: 2026-11-09
+- From: interactive contributor, thread 01a1c19d-0152-71a2-b236-ddc30292fe30 (Create repository contributor guide)
+- Reply to: CLAUDE-051/052
+
+Acknowledged: this session owns WO-218/219 and will not touch WO-216/217 again. During implementation WO-218's test was replaced concurrently by a different implementation while checks ran. Paused further implementation writes pending coordination; messaged Owen delivery-lead and Nora sessions to stop overlapping writes and confirm ownership. The replacement currently has a temporary-path failure and lint errors, and its docstring exclusion appears incorrect (AST docstrings are Expr nodes). I will resolve within WO-218 after collision clears. WO-219 doc edits are in place; required selection returned 475 passed, 6 skipped, 2104 deselected, 1 xfailed, 1 failed: tests/test_cli_doctor.py:171 socket creation denied by sandbox. No product source changes.
+
+## CODEX-128 — WO-216
+
+- Date: 2026-11-09
+- From: Kai Nakamura / Codex accessibility test builder, summarized by Nora Bennett
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CLAUDE-050
+- Status: Delivered; owner review requested
+
+- Added offline Chromium forced-colors tests for the possible-match review card in `.vendor-wt/wo-216/tests/codex/test_cx_review_card_forced_colors.py`. They cover the three distinct actions, Tab order and visible focus, text and focus contrast, Yes/No feedback, and hidden synthetic listing values. No product source or styles changed.
+- The reused pytest fixture export is listed in `__all__` to satisfy Ruff.
+- Required combined selection: 51 passed with one third-party deprecation warning. `ruff check tests/codex` passed. Exact commands are in `.vendor-wt/wo-216/VENDOR_STATUS.md`.
+- Chromium emulation does not establish behavior on physical Windows High Contrast.
+
+## CODEX-129 — WO-217
+
+- Date: 2026-11-09
+- From: Owen Park / Codex developer-docs test builder, summarized by Nora Bennett
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CLAUDE-050
+- Status: Delivered; owner review requested
+
+- Added offline citation validation in `.vendor-wt/wo-217/tests/codex/test_cx_dev_source_citations.py` for `docs/dev/ARCHITECTURE.md`, `docs/dev/TESTING.md`, `docs/i18n/STRINGS.md`, and `docs/i18n/GLOSSARY_ES.md`. It checks malformed, missing, and out-of-range references with document/citation context, including synthetic failure cases. No documentation was edited.
+- Focused suite: 14 passed. `ruff check tests/codex` passed. Exact commands are in `.vendor-wt/wo-217/VENDOR_STATUS.md`.
+- The check verifies path and line existence, not whether cited material semantically supports the claim.

@@ -327,13 +327,13 @@ These are local proposals only. No tracker issues or worktrees were created. Mor
 
 **Collision/dependency:** additive test-only coverage after WO-213; new test path is distinct. Wait for WO-213 to merge and confirm no parallel app accessibility assignment before dispatch.
 
-**State:** Proposed for one free slot; awaiting Morgan's decision, WO number and prepared worktree.
+**State:** Delivered as WO-216 under CLAUDE-050; owner review requested. Combined browser suite: 51 passed; Ruff passed. Physical Windows High Contrast remains unverified.
 
 ### CP-48 — Keep developer-doc file-and-line citations resolvable
 
 **Evidence:** WO-212's architecture map has 61 file:line citations, and WO-215 adds many source citations to `docs/dev/TESTING.md`. Existing citation coverage found is specific to `docs/dev/CONTRIBUTING_BROKERS.md` (`tests/codex/test_cx_dev_broker_citations.py`); no guard was found for the architecture/testing guides. Line references can silently become stale after source changes. This proposal checks reference validity, not semantic accuracy.
 
-**Proposed allowed paths:** new `tests/codex/test_cx_dev_source_citations.py`; its worktree `VENDOR_STATUS.md`.
+**Proposed allowed paths:** new `tests/codex/test_cx_dev_source_citations.py`; its worktree `VENDOR_STATUS.md`. CLAUDE-049 adds `docs/i18n/STRINGS.md` and `docs/i18n/GLOSSARY_ES.md` to the citation inventory alongside the two developer docs.
 
 **Deliverable:** parse the explicit repository-relative `path:line` and `path:line-range` references in `docs/dev/ARCHITECTURE.md` and `docs/dev/TESTING.md`; assert each source exists and every cited line is within file bounds. Keep the allowlist narrow and report missing, malformed, or stale references by document and citation. Do not rewrite docs or treat a syntactically valid citation as proof that the prose is still accurate.
 
@@ -341,4 +341,4 @@ These are local proposals only. No tracker issues or worktrees were created. Mor
 
 **Collision/dependency:** test-only, disjoint from the existing broker contributor-guide citation test and the delivered WO-212/215 docs. Confirm no in-house docs-tooling test is underway before dispatch.
 
-**State:** Proposed for one free slot; awaiting Morgan's decision, WO number and prepared worktree.
+**State:** Delivered as WO-217 under CLAUDE-050; owner review requested. Focused suite: 14 passed; Ruff passed. Citation semantics remain outside this check.
