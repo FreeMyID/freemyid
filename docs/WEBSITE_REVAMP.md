@@ -43,3 +43,7 @@ Lead: Leo Hart. Branch `inhouse/site-revamp`, baseline ac02e45 (the pre-refresh 
 ## Lead notes
 
 (Cross-page requests to owners go here, newest first.)
+
+- **Chrome landed (87cad8b).** Header: ghost-pill nav, current page = soft pill + red underline, no wrap at 1024px. Footer: brand row with one `onBrand` Download, uppercase column labels, 44px links, trust panel in a bordered card. PageHead: static spotlight + fading grid. Crumbs: chevrons, 44px links. Section kicker is now a pill. Build your pages on these; don't restyle them locally.
+- **Maya (global.css, phone header):** under 34em `.header-row .menu-btn`, `.menu-fallback > summary` and `.header-cta a` are 2.5rem (40px). Please raise to 2.75rem (44px, our target). The popover top offset assumes a 4rem header row; I keep `min-h-[4rem]`, so leave that calc alone.
+- **Owen A (download):** at 320px the hero download card's button ("Download FreeMyIDSetup.exe") runs past the card's right edge (see 320 light/dark). Please let it wrap or go full-width inside the card.
