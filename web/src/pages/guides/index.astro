@@ -8,15 +8,22 @@ import Icon from "@/components/Icon.astro";
 import Card from "@/components/ui/Card.astro";
 import Alert from "@/components/ui/Alert.astro";
 import Badge from "@/components/ui/Badge.astro";
+import Disclosure from "@/components/ui/Disclosure.astro";
 import CtaDownload from "@/components/CtaDownload.astro";
 import { GROUPS, guides, guidesMeta, pageProps, url } from "@/lib/site";
 const p = pageProps("guides");
+// Idea 4 (docs/marketing/COMPETITOR_SITE_REVIEW.md): every guide, A to Z, from the same build data as the cards below.
+const az = [...guides].sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
 ---
 <Base {...p}>
 <PageHead crumbs={p.crumbs} title="Free opt-out guides"
   lead="Step-by-step guides to ask people-search sites to remove your listing. They're free, and you don't need Free My ID to use them." />
 {/* source: guides built from brokers/registry.sample.yaml; no app needed (they are plain web pages) */}
 <Section label="Before you start" tight>
+  {/* Idea 9: define the term once. Wording reused from families (definition) and the guide template (how listings are built). */}
+  <Disclosure summary="What is a people-search site?" id="what-is-people-search" class="mb-m max-w-[48rem]">
+    <p>Websites that publish names, addresses and phone numbers, also called data brokers. Sites like this build listings from public records and purchased data, often with your address, age, phone number and relatives.</p>
+  </Disclosure>
   <div class="grid gap-m min-[56em]:grid-cols-[3fr_2fr]">
     <Alert class="my-0">
       <h2 class="text-h3">Before you start</h2>
@@ -40,6 +47,21 @@ const p = pageProps("guides");
     </ul>
   </div>
 </Section>
+<div class="wrap pb-l">
+  {/* Idea 4: generated from `guides` (brokers/registry.sample.yaml); dates are each entry's last_verified, shown only when verified. */}
+  <Disclosure summary="See every site we cover, A to Z" id="a-to-z" class="max-w-[48rem]">
+    <ul class="grid list-none gap-3xs ps-0 min-[40em]:grid-cols-2" role="list">
+      {az.map((g) => (
+        <li class="mt-0">
+          <a class="inline-flex min-h-tap items-center" href={url(g.out)}>{g.name}</a>
+          {g.covered_by
+            ? <span class="block text-small text-muted">Covered by the {g.covered_by.name} removal</span>
+            : g.verified && <span class="block text-small text-muted">Steps checked {g.last_verified}</span>}
+        </li>
+      ))}
+    </ul>
+  </Disclosure>
+</div>
 {GROUPS.map(([key, label], gi) => {
   const items = guides.filter((g) => g.group === key);
   return items.length > 0 && (
