@@ -1,9 +1,29 @@
 ---
 // shadcn/ui Card, ported to Astro (same markup and classes, no React runtime).
+// variant: default (border + shadow-1) | elevated (shadow-2) | outline (no shadow) | soft (tinted panel)
+//          | glow (aceternity hover glow border)
+// interactive: lift + stronger border on hover/focus-within (decoration; pair with CardTitle href).
+// padding: none | sm | md (default) | lg
 import { cn } from "@/lib/utils";
-interface Props { class?: string; as?: "div" | "li" | "article" | "section"; id?: string }
-const { class: cls, as: Tag = "div", id } = Astro.props;
+interface Props {
+  class?: string;
+  as?: "div" | "li" | "article" | "section" | "aside";
+  id?: string;
+  variant?: "default" | "elevated" | "outline" | "soft" | "glow";
+  interactive?: boolean;
+  padding?: "none" | "sm" | "md" | "lg";
+  [attr: string]: unknown;
+}
+const { class: cls, as: Tag = "div", id, variant = "default", interactive = false, padding = "md", ...rest } = Astro.props;
+const look = {
+  default: "border-line bg-card shadow-1",
+  elevated: "border-line bg-card shadow-2",
+  outline: "border-line-strong/40 bg-transparent",
+  soft: "border-transparent bg-bg-alt",
+  glow: "card-glow border-line bg-card shadow-1",
+}[variant];
+const pad = { none: "p-0", sm: "p-s", md: "p-m", lg: "p-l" }[padding];
 ---
-<Tag data-slot="card" id={id} class={cn("flex flex-col gap-xs rounded-xl border border-line bg-card p-m text-text shadow-1", cls)}>
+<Tag data-slot="card" id={id} class={cn("relative flex flex-col gap-xs rounded-xl border text-text", look, pad, interactive && "card-interactive", cls)} {...rest}>
   <slot />
 </Tag>

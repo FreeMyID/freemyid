@@ -1,0 +1,10 @@
+---
+// shadcn/ui CardTitle. `as` picks the heading level (keep the page outline in order).
+// `href` makes the title a link whose hit area covers the whole card (Card adds `relative`).
+import { cn } from "@/lib/utils";
+interface Props { as?: "h2" | "h3" | "h4" | "p"; href?: string; class?: string; id?: string; rel?: string }
+const { as: Tag = "h3", href, class: cls, id, rel } = Astro.props;
+---
+<Tag data-slot="card-title" id={id} class={cn("text-h3 font-bold leading-snug text-heading", cls)}>
+  {href ? <a class="card-link" href={href} rel={rel}><slot /></a> : <slot />}
+</Tag>

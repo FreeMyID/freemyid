@@ -1,0 +1,19 @@
+---
+// shadcn/ui Button for Astro: an <a> when `href` is set, otherwise a <button>. Same classes as
+// buttonVariants(), so links and buttons look identical and work with JavaScript off.
+import { cn } from "@/lib/utils";
+import { buttonVariants, type ButtonVariant, type ButtonSize } from "./button-variants";
+interface Props {
+  href?: string;
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  effect?: "none" | "lift" | "shimmer";
+  full?: boolean;
+  type?: "button" | "submit" | "reset";
+  class?: string;
+  [attr: string]: unknown;
+}
+const { href, variant, size, effect, full, type = "button", class: cls, ...rest } = Astro.props;
+const classes = cn(buttonVariants({ variant, size, effect, full }), cls);
+---
+{href ? <a class={classes} href={href} {...rest}><slot /></a> : <button class={classes} type={type} {...rest}><slot /></button>}
