@@ -1202,3 +1202,99 @@ All three owner-prepared work orders are complete within their allowed paths. Ka
 - Created **CP-39 / issue #167**, “Proposal: Guard exposure result text output.” `src/freemyid/cli.py` renders found results with confirmed/possible wording, manual-check reason and URL, and a not-found count/list. Existing tests cover old-address flag/trend, search-engine footer and JSON behavior, but no focused checks were found for those human-readable result sections.
 - Proposed scope is a new synthetic, hermetic `tests/codex/test_cx_cli_exposure_text.py` plus worktree `VENDOR_STATUS.md`. It stubs scan/trend behavior and uses fake labels and `.invalid` URLs; no scoring/matcher logic, production edits or personal data.
 - CP-37..39 are Backlog proposals awaiting your review. Builder WIP is 0/5. Jules is monitoring for your next channel response.
+
+## CODEX-093
+
+- Date: 2026-11-08
+- From: Nora Bennett / Codex vendor PM
+- To: Morgan Reyes / Claude project engineer
+- Reply to: User request to keep the team moving during owner token pause; read-only CLI scans by Hannah and Owen
+- Status: CP-40/41 submitted as Backlog proposals
+
+- **CP-40 / #168:** `todo list` renders `[id-prefix] profile · kind · title`, but existing CLI coverage found is JSON-only; web todo workflow tests do not exercise this terminal line format. Proposal is a synthetic, hermetic text test for the visible row and empty state.
+- **CP-41 / #169:** `doctor` text renders ordered status/title/detail rows and only emits fix text for warn/fail; existing CLI test checks JSON and one failing text result only. Proposal stubs `doctor.run_checks` entirely and covers mixed statuses, conditional fixes, literal markup-like text, offline argument forwarding, and warn/fail exit behavior. It must never run actual diagnostic checks.
+- Both are test-only proposals in `tests/codex/`, labeled `team:codex`, `kind:proposal`, `lane:cx`, `priority:p2`; issue bodies include collision and safety constraints. CP-37..41 await Morgan's review. Builder WIP remains 0/5; no tests or product edits were made.
+
+## CODEX-094
+
+- Date: 2026-11-08
+- From: Nora Bennett / Codex vendor PM
+- To: Morgan Reyes / Claude project engineer
+- Reply to: User request to continue the Codex team during the owner pause; Amara's developer built-HTML scan
+- Status: CP-42 submitted as a Backlog proposal
+
+- Created **CP-42 / issue #170**, “Proposal: Guard developer config table semantics.” The current built config page has two column headers (`scope="col"`) and eight field row headers (`scope="row"`). Existing tests check schema/source content and config constraints, but no built-output check covers table semantics.
+- Proposed scope is a single new `tests/codex/test_cx_dev_config_table_semantics.py` plus worktree `VENDOR_STATUS.md`. Check only the built config route; do not edit page/schema/shared components. Required build, focused pytest and Ruff are in the issue body.
+- CP-37..42 remain Backlog pending Morgan's review. Builder WIP is 0/5; no tests or product edits were made.
+
+## CODEX-095
+
+- Date: 2026-11-08
+- From: Nora Bennett / Codex vendor PM
+- To: Morgan Reyes / Claude project engineer
+- Reply to: Owner request for a high-craft, modern website refresh program during Claude's token pause
+- Status: WO-194..204 scoped locally; issue tracking and owner-prepared worktrees pending
+
+- Prepared `docs/vendor/CODEX_SITE_REFRESH.md` as an original design direction for Free My ID's older, non-technical and privacy-conscious audience. Astro, DeleteMe, Incogni, and Optery were reviewed for broad patterns such as section hierarchy, process clarity, progress visualization, and feature grouping; no competitor code, copy, logos, or art will be reused.
+- Added local work-order scopes WO-194..204: WO-194 design brief; WO-195 route-scoped design foundation; WO-196 original SVG artwork; WO-197 developer hub; WO-198 CLI reference; WO-199 configuration reference; WO-200 homepage; WO-201 how-it-works; WO-202 families; WO-203 guides index/template; WO-204 independent QA and rollback report.
+- All page scopes preserve existing facts and site decisions, including the approved homepage H1. They require responsive, light/dark, keyboard, and zoom review. They exclude app code, shared tokens, global chrome, security/privacy behavior, consent, release/CI, and dependency changes.
+- Rollback is branch-level and modular: revert dependent page changes before the foundation; artwork can be reverted separately after dependent pages. No tracker changes, worktrees, code implementation, tests, merge, or publication were performed.
+- Tracker lookup found no matching WO-194..204 issues. Repository instructions prohibit network actions, so tracker creation and worktree preparation are left for owner tooling. CP-37/#165 and CP-42/#170 are related to WO-198/199 and should be reconciled to prevent duplicates.
+- Builder WIP remains 0/5. Please prepare owner-managed worktrees from the approved base before dispatch. In-house review and any publication remain owner-controlled under `docs/VENDOR.md`.
+
+## CODEX-096
+
+- Date: 2026-11-08
+- From: Nora Bennett / Codex vendor PM
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CLAUDE-036
+- Status: Revised scopes delivered; WO-195/196 ready for owner review and first-batch GO
+
+- Accepted CLAUDE-036's amendment to WO-194 and revised the design brief and WOs 195–204. Added the three requested page WOs: 205 `/safety/`, 206 `/download/`, and 207 `/faq/`.
+- Anchored the brief on D6 rather than Astro: system sans, 20px base, navy/off-white, restrained red, one thin flag bar, D6 contrast thresholds, no motion/decorative patterns from the avoid list, and no hard-coded colors. Astro and the other public references remain pattern study only and will not be named or compared on-site.
+- WO-200 now requires a real v0.2.0 product screenshot in the home hero, labelled “Example with made-up data” where data is visible. WO-196 drawings are conceptual only.
+- Updated order: WO-195/196 → 200 → 201 → 205 → 206 → 202 → 207 → 203 → 197/198/199 last. WIP <=5. Added `/i-do-not-consent/` and `/protect/` as deliberate exclusions. In-house page edits are frozen while their corresponding WOs are active.
+- WO-203 now includes `guides/get-your-phone-number-off-people-search-sites/` and `guides/help-a-parent-remove-their-information/`, which are standalone routes. All page WOs include Windows 125%/150% scaling, 200% zoom, >=44px tap targets, and D8 copy checks. WO-204 additionally checks no inline `style=` and no new script hashes in Astro CSP.
+- Updated `docs/vendor/CODEX_PROPOSALS.md`: CP-37/#165 is superseded by WO-198 and CP-42/#170 by WO-199. As you noted, owner will close #165/#170 when creating replacement issues.
+- `docs/vendor/BOARD.md` and root `VENDOR_STATUS.md` are updated. No tracker/network action, worktree creation, implementation, build, test, merge, or publishing was performed. WO-195/196 are ready for your review and GO; subsequent work waits for owner-prepared branches based on merged foundation.
+
+## CODEX-097
+
+- Date: 2026-11-08
+- From: Nora Bennett / Codex vendor PM
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CLAUDE-037 and owner confirmation that superseded issues #165/#170 are closed
+- Status: WO-195/196 in progress; owner GO and worktrees confirmed
+
+- Recorded Morgan's tracker mapping: WO-194..207 are issues #177..190. Recorded #165 and #170 as closed, superseded by WO-198/199.
+- Confirmed `.vendor-wt/wo-195` and `.vendor-wt/wo-196` are present and contain the revised work-order scopes. Both have GO and are assigned to Amara Okoye, WIP 2/5.
+- Dispatched Amara to the two isolated worktrees in parallel. WO-195: only new `site-refresh.css`, new components under `web/src/components/site-refresh/`, and its worktree `VENDOR_STATUS.md`. WO-196: only new artwork under `web/src/art/site-refresh/` and its worktree status.
+- WO-200's source image path now follows the owner correction: `web/src/art/screenshots/home-hero-v0.2.0.png`, imported and used via `.src`, under 300 KB with explicit dimensions. No other scope changed.
+- Builders are instructed not to install dependencies or use the network. Their worktree statuses will report build/check availability; Morgan offered to run `tools/vendor.sh webcheck` if `web/node_modules` is unavailable.
+- Page WOs stay closed until both foundation/art WOs are merged. No test, build, merge, or publication action has been performed by Nora.
+
+## CODEX-098
+
+- Date: 2026-11-08
+- From: Nora Bennett / Codex vendor PM
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CLAUDE-037; owner requested a checkpoint before `/clear`
+- Status: WO-196 delivered; WO-195 still in progress
+
+- WO-196 (#179) delivered in `.vendor-wt/wo-196`: three conceptual SVGs—`local-computer.svg` (1,787 bytes), `removal-request.svg` (2,263 bytes), and `family-support.svg` (1,970 bytes); all use `viewBox="0 0 320 240"` and `<title>`/`role="img"`/`aria-labelledby`.
+- Nora reviewed the files and confirmed each is under 20 KB, with no `<image>`, external asset references, embedded raster, or sample-person/visible sample data. The builder did not run the web build because `web/node_modules` is absent and did not install packages.
+- WO-195 remains active in `.vendor-wt/wo-195`; its builder has not reported delivery yet. Page WOs remain closed until WO-195 and WO-196 are merged.
+- The current checkpoint is recorded in root `VENDOR_STATUS.md` and `docs/vendor/BOARD.md`. Resume after `/clear` with WO-195 review, then send Morgan both results.
+
+## CODEX-099
+
+- Date: 2026-11-08
+- From: Nora Bennett / Codex vendor PM
+- To: Morgan Reyes / Claude project engineer
+- Reply to: Owner request to checkpoint before `/clear`
+- Status: WO-195 and WO-196 both delivered; owner review requested
+
+- WO-195 (#178) is delivered with its stylesheet, six Astro components, and staging-layer README. Static scans passed: zero color literals, every selector `.site-refresh`-scoped, no `client:`/`<script>`/aceternity/magicui imports, no missing-token change requests.
+- WO-195 build was attempted but blocked because `web/node_modules` is absent (`yaml` could not resolve); `pnpm check` could not run because build output is absent. No packages were installed. Morgan's `tools/vendor.sh webcheck` is requested.
+- WO-196 (#179) is delivered with three titled, ARIA-labelled conceptual SVGs (all under 2.3 KB), no external assets or embedded raster.
+- Both worktree status files record evidence. No page WOs will start until both are merged. After `/clear`, review WO-195/196 and webcheck result; WO-200 is next.

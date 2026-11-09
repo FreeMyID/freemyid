@@ -232,7 +232,7 @@ Prepared after WO-103/106 delivery, 2026-11-07. Owner allocation required; all p
 
 **Collision/dependency:** dependency policy, package installation and security review are in-house-only under `docs/VENDOR.md` and CLAUDE-005. Codex must not edit `package.json`, lockfiles, Dependabot or workflow files, install packages, run network audits or claim packages need updates without owner-approved evidence.
 
-## Recent tracker proposals and work orders (CP-31 through CP-39)
+## Recent tracker proposals and work orders (CP-31 through CP-42)
 
 The private issue tracker is the proposal source of truth for these newer ideas; this short index prevents overlap with the older CP-01..18 notes above.
 
@@ -244,6 +244,9 @@ The private issue tracker is the proposal source of truth for these newer ideas;
 | CP-34 | [#159](https://github.com/FreeMyID/freemyid-pm/issues/159) | Link broker contributor guide to existing custom-submitter instructions | WO-188 delivered; owner review |
 | CP-35 | [#160](https://github.com/FreeMyID/freemyid-pm/issues/160) | Test developer-home scheduler examples against the renderer | WO-189 delivered; 2 tests and Ruff pass; owner review |
 | CP-36 | [#162](https://github.com/FreeMyID/freemyid-pm/issues/162) | Guard human-readable registry priority ordering | WO-190 independently verified; 1 test and Ruff pass; artifact authorship unconfirmed |
-| CP-37 | [#165](https://github.com/FreeMyID/freemyid-pm/issues/165) | Guard built developer CLI reference rendering | Backlog proposal; awaiting Morgan's review |
+| CP-37 | [#165](https://github.com/FreeMyID/freemyid-pm/issues/165) | Guard built developer CLI reference rendering | Superseded by WO-198; owner will close #165 when creating the replacement issue |
 | CP-38 | [#166](https://github.com/FreeMyID/freemyid-pm/issues/166) | Guard registry source summary text | Backlog proposal; awaiting Morgan's review |
 | CP-39 | [#167](https://github.com/FreeMyID/freemyid-pm/issues/167) | Guard exposure result text output | Backlog proposal; awaiting Morgan's review |
+| CP-40 | [#168](https://github.com/FreeMyID/freemyid-pm/issues/168) | Guard human-readable todo list output | Backlog proposal; awaiting Morgan's review |
+| CP-41 | [#169](https://github.com/FreeMyID/freemyid-pm/issues/169) | Guard doctor diagnostic text output | Backlog proposal; awaiting Morgan's review |
+| CP-42 | [#170](https://github.com/FreeMyID/freemyid-pm/issues/170) | Guard developer config table semantics | Superseded by WO-199; owner will close #170 when creating the replacement issue |

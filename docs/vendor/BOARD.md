@@ -1,6 +1,6 @@
 # Codex vendor work board
 
-Sole writer: Nora Bennett, interactive vendor PM. Last checkpoint: CLAUDE-035 / CODEX-092, 2026-11-08. Release and merge states are owner-reported.
+Sole writer: Nora Bennett, interactive vendor PM. Last checkpoint: CLAUDE-036 / CODEX-096, 2026-11-08. Release and merge states are owner-reported.
 States are owner reports and local document evidence, not independently verified remote PR state. No git or network used. Local merges are distinguished from pushed merges. Work-order status headers may be stale; latest owner channel controls.
 
 Before dispatch or proposals, check this board, exact work-order paths and Claude's stay-off lists. This board grants no additional edit permission. Completed WO-001/002/005/006 path lists are historical scopes, not active reservations. WO-005 scope is exposure_card and its exclusive helpers only, never all views.py functions.
@@ -42,6 +42,20 @@ Before dispatch or proposals, check this board, exact work-order paths and Claud
 | WO-190 | CP-36 / #162 | channel / Ravi | accepted by owner; in-house merge queue | none | tests/codex/test_cx_cli_registry_table.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-034 |
 | WO-191 | — / #163 | channel / Hannah | delivered; 4 tests and Ruff pass; owner review requested | none | tests/codex/test_cx_cli_checklist_text.py (new); VENDOR_STATUS.md | 2026-11-08 CODEX-089 |
 | WO-192 | — / #164 | channel / Amara | delivered; build, 1 test and Ruff pass; owner review requested | none | tests/codex/test_cx_developer_hero_art.py (new); VENDOR_STATUS.md | 2026-11-08 CODEX-089 |
+| WO-194 | #177 | Elena Vasquez | accepted with CLAUDE-036 amendments | none | docs/vendor/CODEX_SITE_REFRESH.md; VENDOR_STATUS.md | 2026-11-08 CLAUDE-037 |
+| WO-195 | #178 | Amara Okoye | delivered; build/site check blocked on missing dependencies; owner review requested | WO-194 | web/src/styles/site-refresh.css (new); web/src/components/site-refresh/ (new); VENDOR_STATUS.md | 2026-11-08 CODEX-099 |
+| WO-196 | #179 | Amara Okoye | delivered; owner review requested | WO-194 | web/src/art/site-refresh/ (new); VENDOR_STATUS.md | 2026-11-08 CODEX-098 |
+| WO-197 | #180 | Kai Nakamura | revised scope; closed pending WO-203 | WO-203 integrated after WO-195/196 | web/src/pages/developers/index.astro; tests/codex/test_cx_developer_hub_refresh.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-037 |
+| WO-198 | #181 / CP-37 #165 closed | Kai Nakamura | revised scope; closed pending WO-203 | WO-203 integrated after WO-195/196 | web/src/pages/developers/cli/index.astro; tests/codex/test_cx_dev_cli_render.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-037 |
+| WO-199 | #182 / CP-42 #170 closed | Kai Nakamura | revised scope; closed pending WO-203 | WO-203 integrated after WO-195/196 | web/src/pages/developers/config/index.astro; tests/codex/test_cx_dev_config_table_semantics.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-037 |
+| WO-200 | #183 | Kai Nakamura | revised scope; closed pending WO-195/196 merge | WO-195/196 | web/src/pages/index.astro; web/src/art/screenshots/home-hero-v0.2.0.png (new); tests/codex/test_cx_home_refresh.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-037 |
+| WO-201 | #184 | Kai Nakamura | revised scope; closed pending WO-200 | WO-200 | web/src/pages/how-it-works/index.astro; tests/codex/test_cx_how_it_works_refresh.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-037 |
+| WO-202 | #185 | Kai Nakamura | revised scope; closed pending WO-206 | WO-206 | web/src/pages/families/index.astro; tests/codex/test_cx_families_refresh.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-037 |
+| WO-203 | #186 | Kai Nakamura | revised scope; closed pending WO-207 | WO-207 | web/src/pages/guides/index.astro; web/src/pages/guides/[slug]/index.astro; web/src/pages/guides/get-your-phone-number-off-people-search-sites/index.astro; web/src/pages/guides/help-a-parent-remove-their-information/index.astro; tests/codex/test_cx_guides_refresh.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-037 |
+| WO-204 | #187 | Hannah Cole | revised scope; QA after page integration | WO-195–203, WO-205–207 integrated | docs/vendor/site-refresh/QA_REPORT.md (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-037 |
+| WO-205 | #188 | Kai Nakamura | revised; closed pending WO-201 | WO-201 | web/src/pages/safety/index.astro; tests/codex/test_cx_safety_refresh.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-037 |
+| WO-206 | #189 | Kai Nakamura | revised; closed pending WO-205 | WO-205 | web/src/pages/download/index.astro; tests/codex/test_cx_download_refresh.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-037 |
+| WO-207 | #190 | Kai Nakamura | revised; closed pending WO-202 | WO-202 | web/src/pages/faq/index.astro; tests/codex/test_cx_faq_refresh.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-037 |
 
 WO-107 workspace: .vendor-wt/wo-107. Merged PR #19, owner report (103d79a).
 
@@ -60,7 +74,9 @@ CP-03 navigation tests; CP-04 guide-print audit; CP-07 printable-summary visual 
 
 ## Next checkpoint
 
-CLAUDE-035 accepts WO-191 and WO-192; WO-187..192 are in the in-house merge queue. Builder WIP is 0/5. CP-37 / issue #165 proposes a built-output guard for the developer CLI reference; CP-38 / issue #166 proposes coverage for the `registry source` summary text; CP-39 / issue #167 proposes exposure result text coverage. All await Morgan's review. CP-33 remains parked for cleared source paths. Respect CLAUDE-034's process notes: Codex is the sole writer of `brand/codex/MANIFEST.md`, and design WOs close when their status records `done (<commit>)`.
+CLAUDE-035 accepts WO-191 and WO-192; WO-187..192 are in the in-house merge queue. Builder WIP is 0/5. CP-37..42 (#165–170) propose distinct developer-page built-HTML and CLI text-output guards. All await Morgan's review. CP-33 remains parked for cleared source paths. Respect CLAUDE-034's process notes: Codex is the sole writer of `brand/codex/MANIFEST.md`, and design WOs close when their status records `done (<commit>)`.
+
+CLAUDE-037 reports tracker issues WO-194..207 as #177..190 and confirms #165/#170 closed. WO-195 and WO-196 are delivered for owner review. WO-195 static checks passed; build/site checks await Morgan's `webcheck` because dependencies are absent. Page WOs stay closed until both are merged; WO-200 starts the page sequence.
 
 ## Elena proposed path collision reference
 

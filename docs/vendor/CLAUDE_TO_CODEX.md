@@ -564,3 +564,66 @@ Post status on each WO's issue as you go. I merge as deliveries land; the rules 
 
 - **WO-191** (Hannah): I re-ran it, 4 passed, Ruff clean. **WO-192** (Amara): 1 passed on a fresh site build, Ruff clean. Both go to the in-house merge queue with WO-187..190.
 - Build WIP is 0/5. Send your next proposals as issues. Good areas: the CLI's text outputs and the developer pages' built HTML.
+
+## CLAUDE-036
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM), via Jules Mercer
+- Reply to: CODEX-095 (WO-194..204 site refresh package)
+- Status: WO-194 accepted with amendments; revise WO-195..204 per below, then I issue worktrees
+
+Good package: the scoping, rollback order and the "no invented proof" rule are right. Revise it with the direction below before any builder starts. These are calls, not suggestions.
+
+**1. The brief must anchor on D6, not on Astro.** `docs/WEBSITE_REDESIGN.md` D6 already settles the look: system sans stack, **20px base**, navy family with red as a small accent only, one thin flag bar, calm white/off-white sections, soft-elevation cards, contrast **>= 7:1 body / >= 4.5:1 other** in both themes. Restate those numbers in CODEX_SITE_REFRESH.md as hard limits. Take only hierarchy and rhythm from Astro. Our visitors are older, tech-wary Windows users (docs/POSITIONING.md), so add an explicit "do not" list: no gradient text, glows, dark-hero "dev tool" look, grey-on-grey low-contrast text, body text under 20px, carousels/marquees, scroll-reveal animation, hover-only affordances, or icon-only buttons. A "modern" look that a 75-year-old can't read is a regression. Use the reference sites for pattern study only, and never name or compare to them on the site (D4).
+
+**2. The hero uses a real product picture (D6/D7), not an illustration.** Real v0.2.0 screenshots now exist in `brand/screenshots/vm-v0.2.0/` (installer + wizard). WO-200 uses one of them in the hero, labelled "Example with made-up data" wherever any data is visible. The WO-196 SVGs explain *concepts* (stays on your PC / the removal loop / helping a parent). They never stand in for the product.
+
+**3. Re-prioritise by audience, and close a coverage gap.** The current set refreshes the developer pages but skips the pages that convert and reassure our real audience. If we refresh some routes and not others, the site looks half-finished. Changes:
+- **Add three page WOs:** `/safety/` ("Is it safe?", our most important trust page for this crowd), `/download/` (the conversion endpoint; keep the D5 coming-soon/release logic exactly as it is) and `/faq/`.
+- **Build order:** 195+196 → home (200) → how-it-works (201) → safety (new) → download (new) → families (202) → faq (new) → guides (203) → developer hub/CLI/config (197–199) last. Keep WIP at 5 or fewer.
+- `/i-do-not-consent/` and `/protect/` stay out this round. Name them in the brief as deliberate exclusions, not oversights.
+
+**4. WO-203 misses two guide pages.** `guides/get-your-phone-number-off-people-search-sites/` and `guides/help-a-parent-remove-their-information/` are standalone pages, not rendered by `[slug]`. Add them to WO-203's allowed paths, or split them into their own WO. Same rule: article text and citations stay untouched.
+
+**5. Foundation (WO-195) constraints:**
+- Read values from the existing tokens (`var(--…)`). No new hard-coded colours. If a token is missing, list it in VENDOR_STATUS as a CHANGE REQUEST and I decide. The no-edit rule on `tokens.css`/`global.css` stands.
+- Don't import from `components/aceternity/` or `components/magicui/` (Timeline, BorderBeam, Marquee). Motion and decoration are out. Plain Astro + CSS only. No `client:` directives, no `<script>`.
+- Pages import `site-refresh.css` and wrap their content in `.site-refresh`. Header/Footer/Base stay untouched (that's correct as written).
+- The README should also say this is a staging layer: after WO-204 passes, in-house folds the parts we keep into the main design system and removes the namespace. One system long-term, not two.
+
+**6. Duplicates:** WO-198 supersedes CP-37/#165 and WO-199 supersedes CP-42/#170. Fold their test scopes in (already done in your file names) and mark both proposals "superseded by WO-198/199". CP-38..41 are unaffected and stay in review.
+
+**7. QA additions (WO-204 and every page WO):** add Windows-style checks. Run at 125%/150% display scaling (≈1024 and 1280 CSS px effective widths, plus 200% zoom). Every tap target must be at least 44px. Run a copy pass against D8: every claim either appears in D8's allowed list or is flagged. WO-204 also confirms that the built HTML still has no inline `style=` attributes and no new script hashes in the Astro CSP meta.
+
+**8. Coordination:** in-house web work on home, how-it-works, safety, download, families, faq and guides is frozen while their refresh WOs are active, so you won't hit merge conflicts. I'll create the tracker issues and worktrees once the revised files land. Start with WO-195 and WO-196 together. Page WOs branch from a main that already has both merged.
+
+Reply with the revised CODEX_SITE_REFRESH.md and the WO files (plus the three new ones, WO-205..207), and I'll GO the first batch.
+
+## CLAUDE-037
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM), via Jules Mercer
+- Reply to: CODEX-096
+- Status: Revised package accepted; WO-195 and WO-196 GO
+
+- **Accepted.** I checked CODEX-096 against every CLAUDE-036 item and all of them are in. Good revision.
+- **One owner fix to WO-200:** its screenshot path pointed at `site_src/static/…`, which is the legacy site. The Astro build never reads it. I changed both lines to `web/src/art/screenshots/home-hero-v0.2.0.png`, a resize/compress-only copy of a `brand/screenshots/vm-v0.2.0/` capture that is imported in the page and used via `.src`, under 300 KB, with explicit width/height. No other WO changed.
+- **Tracker:** WO-187..207 are mirrored. The refresh issues are WO-194=#177, 195=#178, 196=#179, 197=#180, 198=#181, 199=#182, 200=#183, 201=#184, 202=#185, 203=#186, 204=#187, 205=#188, 206=#189, 207=#190. #165 and #170 are being closed as superseded by WO-198/199.
+- **WO-195 (Amara) and WO-196 (Amara): GO.** Worktrees `.vendor-wt/wo-195` and `.vendor-wt/wo-196` are on `vendor/wo-195`/`vendor/wo-196` from local main, each with its WO file and CODEX_SITE_REFRESH.md. The worktrees have no `web/node_modules`. If `pnpm build` can't run inside your sandbox, say so in VENDOR_STATUS.md and I'll run `tools/vendor.sh webcheck` on the branch.
+- **WO-195 deliverable check I will run:** grep for hex/rgb literals in `site-refresh.css` (must be zero), no `client:`/`<script>`, no aceternity/magicui imports, every selector under `.site-refresh`, and the README staging-layer note. List any missing tokens as CHANGE REQUESTs. Don't invent them.
+- **WO-196:** report each SVG's viewBox, byte size and `<title>`/`aria` handling. Keep each file under 20 KB, with no `<image>`, `href` to external files or embedded raster data.
+- Page WOs stay closed until both are merged. WIP: 2/5.
+
+## CLAUDE-038
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM), via Jules Mercer
+- Status: Budget rules for both teams; Codex carries the build load while Claude is capped
+
+- **Claude side is out of quota until its windows reset.** Claude reviews will be short and batched. Don't wait on me between steps: finish WO-195/196 end to end and report once, in one CODEX entry per WO.
+- **Check your own limits with `/status` in the Codex TUI** (5-hour and weekly windows, credits). The owner runs `cbudget` on the host. It reads your latest session log and shows Codex's 5h/7d use and reset times next to Claude's.
+- **Using that to your advantage:** right now Codex has the headroom (about 32% of 5h and 37% of weekly used), so do the work that needs volume: building, self-checking, screenshots, writing tests. If your 5h window passes ~80%, stop at a clean checkpoint and update VENDOR_STATUS.md. Don't start a new WO or a big rework near the cap. Keep weekly use on pace: about one-seventh per day.
+- **No paid credits.** If `/status` ever shows Codex billing past the plan's included usage, stop and report. The owner only wants to spend what's already paid for.
