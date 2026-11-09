@@ -2,6 +2,8 @@
 Run: .venv/bin/python brand/src/build_wo170_171.py"""
 from __future__ import annotations
 
+import html
+
 from wo17_common import *
 
 OUT = BRAND / "social/og"
@@ -37,7 +39,11 @@ SUB_CFG = 'Prepare one file for <span style="font-family:' + MONO + ';font-weigh
 COLS = "190px 190px 160px 190px 1fr"
 def row(c: tuple[str, ...], bold: bool = False, color: str = "#eef1f6") -> str:
     return (f'<div style="display:grid;grid-template-columns:{COLS};height:34px;line-height:34px;color:{color};{"font-weight:700;" if bold else ""}">'
-            + "".join(f"<span>{x}</span>" for x in c) + "</div>")
+            + "".join(f"<span>{html.escape(x, quote=False)}</span>" for x in c) + "</div>")
+# copied from `freemyid status` (src/freemyid/cli.py); tests/test_brand_wo170_status.py
+# fails if the CLI wording changes and this image goes stale
+STATUS_TODO = "1 item(s) need you: `freemyid todo list`"
+STATUS_NOTE = "'removed' means removed from that broker, not from the whole internet."
 rule = '<div style="height:2px;background:#4a5f8c;margin:2px 0"></div>'
 cli_panel = (
     '<div><span style="color:#9db8ea">$</span> freemyid status</div>'
@@ -46,8 +52,8 @@ cli_panel = (
     + row(("Spokeo", "found", "2026-11-05", "2026-11-12", "0"))
     + row(("Whitepages", "submitted", "2026-11-03", "2026-11-10", "0"))
     + row(("BeenVerified", "removed", "2026-10-29", "2026-11-26", "0")) + rule
-    + '<div style="margin-top:8px;color:#f2c94c">1 item(s) need you: `freemyid todo list`</div>'
-    + f'<div style="color:{M};line-height:1.3;margin-top:6px;font-size:21px">\'removed\' means removed from that broker, not from the whole internet.</div>')
+    + f'<div style="margin-top:8px;color:#f2c94c">{html.escape(STATUS_TODO, quote=False)}</div>'
+    + f'<div style="color:{M};line-height:1.3;margin-top:6px;font-size:21px">{html.escape(STATUS_NOTE, quote=False)}</div>')
 
 def cli_page() -> str:
     return f"""<body style="width:1200px;height:630px;background:#ffffff"><div class=flag></div>
