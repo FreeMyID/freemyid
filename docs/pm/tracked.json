@@ -66,6 +66,24 @@
       "severity": "INFO",
       "owner": "Dana",
       "status": "closed"
+    },
+    {
+      "id": "SEC-122",
+      "severity": "MED",
+      "owner": "Nina",
+      "status": "open"
+    },
+    {
+      "id": "SEC-123",
+      "severity": "MED",
+      "owner": "Nina",
+      "status": "open"
+    },
+    {
+      "id": "SEC-124",
+      "severity": "INFO",
+      "owner": "Morgan",
+      "status": "closed"
     }
   ],
   "owner_tasks": [
