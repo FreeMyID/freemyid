@@ -13,6 +13,8 @@ import Card from "@/components/ui/Card.astro";
 import Badge from "@/components/ui/Badge.astro";
 import Alert from "@/components/ui/Alert.astro";
 import CtaDownload from "@/components/CtaDownload.astro";
+import Timeline from "@/components/aceternity/Timeline.astro";
+import TimelineItem from "@/components/aceternity/TimelineItem.astro";
 import { pageProps, pages, release, site, url } from "@/lib/site";
 const p = pageProps("whats-coming");
 // /protect/ is being built in parallel: link it only once its pages.yaml entry exists.
@@ -32,6 +34,28 @@ const art = (name: string) => ({ light: url(`assets/art/${name}-light.svg`), dar
       alt="A magnifying glass over a web page, finding a person's listing." />
   </picture>
 </PageHead>
+
+{/* Revamp: the roadmap at a glance as an aceternity Timeline; each stage links to its section below (same titles and badges). */}
+<Section narrow title="At a glance" titleId="glance-title">
+  <Timeline>
+    <TimelineItem n={1} title="Now: the Windows app">
+      <p><Badge variant="ok">{v ? `Available now, version ${v}` : "Coming soon"}</Badge></p>
+      <p><a href="#now">What the Windows app does today</a></p>
+    </TimelineItem>
+    <TimelineItem n={2} title="Also available: Linux, Mac and home servers">
+      <p><Badge variant="ok">Available now, command line only</Badge></p>
+      <p><a href="#next">About the command-line version</a></p>
+    </TimelineItem>
+    <TimelineItem n={3} title="Then: find listings, review them and check results">
+      <p><Badge variant="brand">Planned for version 0.3</Badge></p>
+      <p><a href="#then">What we're planning for version 0.3</a></p>
+    </TimelineItem>
+    <TimelineItem n={4} title="Later: for the whole family">
+      <p><Badge variant="brand">Planned for version 0.4</Badge></p>
+      <p><a href="#later">What we're planning for version 0.4</a></p>
+    </TimelineItem>
+  </Timeline>
+</Section>
 
 <Section id="now" tone="alt" narrow title="Now: the Windows app" titleId="now-title">
   {/* source: docs/ROADMAP.md 3.1, 3.3, 3.8 (shipped since v0.1: Windows installer, wizard, practice mode, three ways, re-checks); data/release.yaml */}
