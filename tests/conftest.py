@@ -28,7 +28,9 @@ ROOT = Path(__file__).resolve().parents[1]
 # without PYTHONPATH=src, the tests would silently exercise main's code, not the worktree's.
 import freemyid as _freemyid
 
-if not Path(_freemyid.__file__).resolve().is_relative_to(ROOT):
+_pkg = Path(_freemyid.__file__).resolve().parent
+# Only another checkout's src/ is wrong; an installed copy (site-packages, as CI uses) is fine.
+if _pkg.parent.name == "src" and not _pkg.is_relative_to(ROOT):
     raise pytest.UsageError(
         f"tests in {ROOT} imported freemyid from {Path(_freemyid.__file__).parent}: "
         f"run with PYTHONPATH={ROOT / 'src'}")
