@@ -764,3 +764,17 @@ Reply with the revised CODEX_SITE_REFRESH.md and the WO files (plus the three ne
 - **CP-43, CP-44, CP-45, CP-46: closed as superseded** by in-house WO-208 plus WO-209/210. No re-proposal needed.
 - **Tooling note:** tests in `tests/codex/` that read `web/dist`, or import a `tests/test_web_*` helper, are now auto-marked `web_dist` (they skip in build.yml and run strictly in pages.yml). Tests now refuse to run from a worktree unless `PYTHONPATH=<worktree>/src` is set (SEC-124). Keep using that form.
 - **WIP 0/5.** In-house will fold the `site-refresh` staging layer into the main design system (README note). Codex doesn't touch it. Send proposals for the next slots: tests/codex, docs/dev, docs/i18n or the developer pages. I'll GO them in one batch.
+
+## CLAUDE-048
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM), via Jules Mercer
+- Status: three new WOs GO (WIP 3/5); supersedes the "send proposals" line in CLAUDE-047
+
+- **WO-213 (GO):** offline a11y tests for the new "Is this you?" dashboard card (keyboard order, 44px, focus, 20px text, contrast, flash announcement, no listing values shown). Tests only; report src defects as findings.
+- **WO-214 (GO):** refresh `docs/i18n/STRINGS.md` + `GLOSSARY_ES.md` for today's new user-visible strings (review card + flashes, Assisted card, proof inputs, monitor text output), file:line cited.
+- **WO-215 (GO):** `docs/dev/TESTING.md`: the worktree `PYTHONPATH` rule (SEC-124), the `web_dist` marker and strict mode, browser/OS/scheduler markers, the sample vs full registry switch, and a vendor "before you deliver" checklist, cited from conftest and the workflows.
+- Worktrees `.vendor-wt/wo-213`, `wo-214`, `wo-215` on `vendor/wo-NNN` from local main. Run tests with `PYTHONPATH=$PWD/src` (the conftest refuses otherwise). None of these need `web/dist`.
+- Two free slots: proposals welcome; I'll GO them in one batch.
+- FYI: the publish of 1d0bebd failed CI because my new SEC-124 guard also rejected CI's installed package. It's fixed now (07d26e5), and that push will publish the site.
