@@ -1,80 +1,92 @@
 ---
+// Command line reference, generated from _commands.json (the registered CLI tree, with source lines).
+// Revamp: docs layout. Wide screens get a sticky command index beside the reference; narrow screens get the
+// same index in a native <details> (only one of the two is displayed at a time).
 import Base from "@/layouts/Base.astro";
-import "@/styles/site-refresh.css";
-import Crumbs from "@/components/Crumbs.astro";
-import Section from "@/components/site-refresh/RefreshSection.astro";
-import { pageProps, type Crumb } from "@/lib/site";
+import PageHead from "@/components/PageHead.astro";
+import Disclosure from "@/components/ui/Disclosure.astro";
+import Card from "@/components/ui/Card.astro";
+import { pageProps, url, pages, type Crumb } from "@/lib/site";
 import commandData from "./_commands.json";
 
 const p = pageProps("developers-cli");
 const parent = pageProps("developers");
 const crumbs: Crumb[] = [...parent.crumbs, [p.crumbs[1][0], p.out]];
 const source = (location: string) => `Source: ${location}`;
+const cmdId = (path: string) => `cmd-${path.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`;
+const navLink = "flex min-h-tap items-center rounded-md px-xs no-underline hover:bg-brand-soft hover:underline";
+const index = [["common-options", "Common options"], ["commands", "Commands"]] as const;
 ---
 
 <Base {...p} crumbs={crumbs}>
-<div class="site-refresh">
-  <header class="site-refresh__wrap site-refresh__section refresh-page-head">
-<Crumbs crumbs={crumbs} />
-<div class="refresh-page-intro"><div>
-<h1>Command line reference</h1>
-<p class="site-refresh__lead">Commands and options registered in the Free My ID command line, with source lines for each entry.</p>
+  <PageHead crumbs={crumbs} title="Command line reference"
+    lead="Commands and options registered in the Free My ID command line, with source lines for each entry.">
+  </PageHead>
 
-  
-</div></div>
-</header>
+  <div class="wrap grid gap-l pb-2xl pt-l min-[60em]:grid-cols-[15rem_minmax(0,1fr)]">
+    <nav aria-label="Commands on this page" class="hidden print:hidden min-[60em]:sticky min-[60em]:top-24 min-[60em]:block min-[60em]:self-start">
+      <div class="max-h-[calc(100dvh-8rem)] overflow-y-auto rounded-xl border border-line bg-card p-s shadow-1">
+        <ul class="grid gap-3xs" role="list">
+          {index.map(([id, label]) => <li><a class:list={[navLink, "font-bold"]} href={`#${id}`}>{label}</a></li>)}
+          {commandData.commands.map((command) => <li><a class:list={[navLink, "font-mono text-small"]} href={`#${cmdId(command.path)}`}>{command.path}</a></li>)}
+          <li><a class:list={[navLink, "font-bold"]} href={url(pages["developers-config"].out)}>Setup file reference</a></li>
+        </ul>
+      </div>
+    </nav>
 
-  <Section id="common-options" width="narrow" title="Common options" titleId="common-options-title">
-    <p class="mt-s max-w-measure">Use <code>--help</code> to see the options for a command. The root command also provides these options. <small>(Source: {source(commandData.help_flag.source)}; root options are listed with their declarations.)</small></p>
-    <ul class="mt-s grid max-w-measure list-disc gap-2xs ps-l">
-      {commandData.help_flag.flags.map((flag) => <li><code>{flag}</code> — {commandData.help_flag.help} <small>({source(commandData.help_flag.source)})</small></li>)}
-      {commandData.root_options.map((option) => <li><code>{option.flags.join(", ")}</code>{option.help && <> — {option.help}</>} <small>({source(option.source)})</small></li>)}
-    </ul>
-  </Section>
+    <div class="min-w-0 max-w-[48rem]">
+      <Disclosure summary="Jump to a command" class="mb-l print:hidden min-[60em]:hidden">
+        <nav aria-label="Commands on this page">
+          <ul class="grid list-none gap-3xs ps-0 [grid-template-columns:repeat(auto-fill,minmax(min(100%,11rem),1fr))]" role="list">
+            {commandData.commands.map((command) => <li class="mt-0"><a class:list={[navLink, "font-mono text-small"]} href={`#${cmdId(command.path)}`}>{command.path}</a></li>)}
+          </ul>
+        </nav>
+      </Disclosure>
 
-  <Section id="commands" tone="alt" width="narrow" title="Commands" titleId="commands-title">
-    <p class="mt-s max-w-measure">The command names, short descriptions, arguments, and options below come from the registered CLI tree. <small>(CLI app: {source("src/freemyid/cli.py:21")}; each entry has its own source line.)</small></p>
-    <div class="mt-m grid max-w-measure gap-m">
-      {commandData.commands.map((command) => (
-        <article class="site-refresh__card">
-          <h3><code>freemyid {command.path}</code></h3>
-          {command.summary && <p class="mt-xs">{command.summary} <small>({source(command.summary_source)})</small></p>}
-          <p class="mt-s"><strong>Command source:</strong> <code>{command.source}</code></p>
-          {command.arguments.length > 0 && <>
-            <h4 class="mt-s">Arguments</h4>
-            <ul class="mt-xs grid list-disc gap-2xs ps-l">
-              {command.arguments.map((argument) => (
-                <li><code>{argument.name}</code> ({argument.required ? "required" : "optional"}) <small>({source(argument.source)})</small></li>
-              ))}
-            </ul>
-          </>}
-          {command.options.length > 0 && <>
-            <h4 class="mt-s">Options</h4>
-            <ul class="mt-xs grid list-disc gap-2xs ps-l">
-              {command.options.map((option) => (
-                <li>
-                  <code>{option.flags.join(", ")}{option.value ? ` ${option.value_name}` : ""}</code>
-                  {option.required && " (required)"}
-                  {option.help && <span> — {option.help}</span>}
-                  <small> ({source(option.source)})</small>
-                </li>
-              ))}
-            </ul>
-          </>}
-          {command.arguments.length === 0 && command.options.length === 0 && <p class="mt-s">No arguments or command-specific options are declared. <small>({source(command.source)})</small></p>}
-        </article>
-      ))}
+      <section id="common-options" aria-labelledby="common-options-title" class="scroll-mt-24">
+        <h2 id="common-options-title">Common options</h2>
+        <p class="mt-s max-w-measure">Use <code>--help</code> to see the options for a command. The root command also provides these options. <small>({source(commandData.help_flag.source)}; root options are listed with their declarations.)</small></p>
+        <ul class="mt-s grid max-w-measure list-disc gap-2xs ps-l">
+          {commandData.help_flag.flags.map((flag) => <li><code>{flag}</code> — {commandData.help_flag.help} <small>({source(commandData.help_flag.source)})</small></li>)}
+          {commandData.root_options.map((option) => <li><code>{option.flags.join(", ")}</code>{option.help && <> — {option.help}</>} <small>({source(option.source)})</small></li>)}
+        </ul>
+      </section>
+
+      <section id="commands" aria-labelledby="commands-title" class="mt-xl scroll-mt-24 border-t border-line pt-xl">
+        <h2 id="commands-title">Commands</h2>
+        <p class="mt-s max-w-measure">The command names, short descriptions, arguments, and options below come from the registered CLI tree. <small>(CLI app: {source("src/freemyid/cli.py:21")}; each entry has its own source line.)</small></p>
+        <div class="mt-m grid gap-m">
+          {commandData.commands.map((command) => (
+            <Card as="article" id={cmdId(command.path)} class="scroll-mt-24 gap-0">
+              <h3 class="break-words"><code class="rounded-md bg-surface px-2xs py-3xs">freemyid {command.path}</code></h3>
+              {command.summary && <p class="mt-xs">{command.summary} <small class="text-muted">({source(command.summary_source)})</small></p>}
+              <p class="mt-s text-small"><strong>Command source:</strong> <code class="break-all">{command.source}</code></p>
+              {command.arguments.length > 0 && <>
+                <h4 class="mt-s">Arguments</h4>
+                <ul class="mt-xs grid list-disc gap-2xs ps-l">
+                  {command.arguments.map((argument) => (
+                    <li><code>{argument.name}</code> ({argument.required ? "required" : "optional"}) <small class="text-muted">({source(argument.source)})</small></li>
+                  ))}
+                </ul>
+              </>}
+              {command.options.length > 0 && <>
+                <h4 class="mt-s">Options</h4>
+                <ul class="mt-xs grid list-disc gap-2xs ps-l">
+                  {command.options.map((option) => (
+                    <li>
+                      <code>{option.flags.join(", ")}{option.value ? ` ${option.value_name}` : ""}</code>
+                      {option.required && " (required)"}
+                      {option.help && <span> — {option.help}</span>}
+                      <small class="text-muted"> ({source(option.source)})</small>
+                    </li>
+                  ))}
+                </ul>
+              </>}
+              {command.arguments.length === 0 && command.options.length === 0 && <p class="mt-s">No arguments or command-specific options are declared. <small class="text-muted">({source(command.source)})</small></p>}
+            </Card>
+          ))}
+        </div>
+      </section>
     </div>
-  </Section>
-</div>
+  </div>
 </Base>
-
-<style is:global>
-  .site-refresh .refresh-page-intro { display: grid; gap: var(--fmi-space-l); align-items: center; }
-  .site-refresh .refresh-page-head h1 { max-width: 26ch; margin-block-start: var(--fmi-space-m); }
-  .site-refresh pre { font-size: 1.25rem; max-width: 100%; overflow-x: auto; white-space: pre; }
-  .site-refresh small { font-size: 1em; }
-  .site-refresh figure { margin: 0; min-width: 0; }
-  .site-refresh img { max-width: 100%; height: auto; }
-  @media (min-width: 56.25em) { .site-refresh .refresh-page-intro:has(figure) { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } }
-</style>

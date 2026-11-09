@@ -1,0 +1,8 @@
+---
+// Magic UI "Dot Pattern": a faint dot grid behind content. Put it first inside a `relative isolate`
+// parent. Decorative (aria-hidden); hidden in forced colours and print. fade: radial fade-out edges.
+import { cn } from "@/lib/utils";
+interface Props { fade?: boolean; class?: string }
+const { fade = true, class: cls } = Astro.props;
+---
+<span class={cn("dot-pattern", fade && "dot-pattern--fade", cls)} aria-hidden="true"></span>

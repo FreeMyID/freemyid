@@ -1,0 +1,18 @@
+---
+// Magic UI "Animated Gradient Text": text filled with a navy -> brand -> flag-red gradient that drifts
+// slowly (motion allowed only). Every gradient stop is a token that passes 4.5:1 on bg, bg-alt, card
+// and spot, so use it on those surfaces only (not in a brand band). Solid heading colour where
+// background-clip:text is unsupported, in forced colours and in print.
+// pill: wrap it in the magicui badge (gradient hairline border, optional leading icon).
+//   <h1><AnimatedGradientText>off the websites</AnimatedGradientText></h1>
+//   <AnimatedGradientText pill icon="shield">Free. Open source. For Windows.</AnimatedGradientText>
+import { cn } from "@/lib/utils";
+import Icon from "../Icon.astro";
+interface Props { as?: "span" | "p" | "strong"; pill?: boolean; icon?: string; class?: string }
+const { as: Tag = "span", pill = false, icon, class: cls } = Astro.props;
+---
+{pill ? (
+  <Tag class={cn("gradient-pill", cls)}>{icon && <Icon name={icon} />}<span class="gradient-text"><slot /></span></Tag>
+) : (
+  <Tag class={cn("gradient-text", cls)}><slot /></Tag>
+)}

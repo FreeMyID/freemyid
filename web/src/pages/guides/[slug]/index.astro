@@ -2,14 +2,17 @@
 // One page per broker in brokers/registry.sample.yaml (public sample only). Same logic and copy as
 // site_src/templates/pages/guide.html.
 import Base from "@/layouts/Base.astro";
-import "@/styles/site-refresh.css";
 import Crumbs from "@/components/Crumbs.astro";
+import Section from "@/components/Section.astro";
 import Icon from "@/components/Icon.astro";
 import Card from "@/components/ui/Card.astro";
 import Alert from "@/components/ui/Alert.astro";
 import CtaDownload from "@/components/CtaDownload.astro";
 import CheckList from "@/components/CheckList.astro";
+import Timeline from "@/components/aceternity/Timeline.astro";
+import TimelineItem from "@/components/aceternity/TimelineItem.astro";
 import { buttonVariants } from "@/components/ui/button-variants";
+import { cn } from "@/lib/utils";
 import { guideDescription, guideOg, guides, guidesMeta, guideLd, guideTitle, ldJson, moreGuides, pages, url, type Crumb, type Guide } from "@/lib/site";
 
 export function getStaticPaths() {
@@ -25,14 +28,13 @@ const needs = g.required.length > 0 || g.needs_email_verification || g.has_captc
 ---
 <Base title={guideTitle(g)} description={guideDescription(g)} out={g.out} nav="guides" jsonldKinds={["breadcrumbs"]} crumbs={crumbs}
   ogImage={guideOg(g).ogImage} ogAlt={guideOg(g).ogAlt}>
-<div class="site-refresh">
 <Fragment set:html={`<!-- ${sourceNote} -->`} />
 {/* WR-41: WebPage node beside the BreadcrumbList (in the body; tighten-csp exempts ld+json) */}
 <script type="application/ld+json" is:inline set:html={ldJson(guideLd(g))} />
-<div class="site-refresh__section">
-  <div class="site-refresh__wrap site-refresh__wrap--narrow">
+<div class="bg-[radial-gradient(ellipse_at_top_right,var(--fmi-color-brand-soft),transparent_55%)] pb-l pt-l">
+  <div class="wrap-narrow">
     <Crumbs crumbs={crumbs} />
-    <h1 class="mt-m">How to remove yourself from {g.name}</h1>
+    <h1 class="mt-m" id="guide-title">How to remove yourself from {g.name}</h1>
     <p class="mt-s text-lead text-muted">
       {g.intro ? g.intro
         : g.group === "people" ? `${g.name} is a people-search site. Sites like this build listings from public records and purchased data, often with your address, age, phone number and relatives.`
@@ -44,7 +46,7 @@ const needs = g.required.length > 0 || g.needs_email_verification || g.has_captc
   </div>
 </div>
 
-<div class="site-refresh__wrap site-refresh__wrap--narrow site-refresh__prose pb-2xl">
+<article class="wrap-narrow pb-xl [overflow-wrap:anywhere]" aria-labelledby="guide-title">
   {g.covered_by && (
     <Alert icon="check"><p><strong>Good news:</strong> the {g.covered_by.name} removal is meant to cover {g.name} too. Start with the <a href={url(g.covered_by.out)}>{g.covered_by.name} guide</a>, then check {g.name} again in about a week.</p></Alert>
   )}
@@ -52,47 +54,43 @@ const needs = g.required.length > 0 || g.needs_email_verification || g.has_captc
   {!g.covered_by && (
     <>
       {needs && (
-        <>
-          <h2 class="mt-l" id="need">What you'll need</h2>
+        <Card as="section" class="mt-m">
+          <h2 class="text-h3" id="need">What you'll need</h2>
           {/* source: registry entry fields (required_fields, needs_email_verification, has_captcha, needs_id_upload). WR-27: "A few minutes" dropped (never timed, D8). */}
-          <CheckList class="mt-s">
+          <CheckList class="mt-2xs">
             {g.required.map((r) => <li><Icon name="check" /><span>{cap(r)}</span></li>)}
             {g.needs_email_verification && <li><Icon name="mail" /><span>Opening the email {g.name} sends and clicking its link. If you skip this, the request may not go through.</span></li>}
             {g.has_captcha && <li><Icon name="pointer" /><span>A picture puzzle ("I'm not a robot") you solve yourself</span></li>}
             {g.needs_id_upload && <li><Icon name="info" /><span>This site may ask for a photo of your ID. Only you can decide whether that's worth it.</span></li>}
           </CheckList>
-        </>
+        </Card>
       )}
 
-      <h2 class="mt-xl" id="steps">Step by step</h2>
-      {g.steps.length > 0 ? (
-        <>
-          <ol class="refresh-guide-steps mt-m">
-            {g.steps.map((s, i) => <li class="site-refresh__card"><p>{s}</p></li>)}
-          </ol>
-          {g.steps_mention_app && <p class="mt-s text-body text-muted">These are the same steps Free My ID shows inside the app.</p>}
-        </>
-      ) : g.email ? (
-        <ol class="refresh-guide-steps mt-m">
-          <li class="site-refresh__card"><p>Write an email to <strong>{g.email}</strong>.</p></li>
-          <li class="site-refresh__card"><p>Say: "Please delete my personal information and stop selling or sharing it." Add your full name and the city and state where you live.</p></li>
-          <li class="site-refresh__card"><p>Keep a copy of your email.{g.days && ` Allow about ${g.days} days for a reply.`}</p></li>
-        </ol>
-      ) : null}
-      {g.days && g.steps.length > 0 && <p class="mt-s">Allow about {g.days} day{g.days !== 1 ? "s" : ""}, then check again.</p>}
+      <section aria-labelledby="steps">
+        <h2 class="mt-xl" id="steps">Step by step</h2>
+        {g.steps.length > 0 ? (
+          <>
+            <Timeline class="mt-m">
+              {g.steps.map((s, i) => <TimelineItem n={i + 1}><p>{s}</p></TimelineItem>)}
+            </Timeline>
+            {g.steps_mention_app && <p class="mt-s text-small text-muted">These are the same steps Free My ID shows inside the app.</p>}
+          </>
+        ) : g.email ? (
+          <Timeline class="mt-m">
+            <TimelineItem n={1}><p>Write an email to <strong>{g.email}</strong>.</p></TimelineItem>
+            <TimelineItem n={2}><p>Say: "Please delete my personal information and stop selling or sharing it." Add your full name and the city and state where you live.</p></TimelineItem>
+            <TimelineItem n={3}><p>Keep a copy of your email.{g.days && ` Allow about ${g.days} days for a reply.`}</p></TimelineItem>
+          </Timeline>
+        ) : null}
+        {g.days && g.steps.length > 0 && <p class="mt-s">Allow about {g.days} day{g.days !== 1 ? "s" : ""}, then check again.</p>}
 
-      {g.opt_out_url && (
-        <>
-          <p class="mt-m"><a class:list={[buttonVariants({ size: "lg" }), "site-refresh__button"]} href={g.opt_out_url} rel="noopener noreferrer nofollow"><Icon name="external" />Open {g.name}'s {g.method === "email" ? "privacy page" : "removal page"}</a></p>
-          <p class="mt-2xs text-body text-muted">Opens {g.opt_out_host}, {g.name}'s own website.</p>
-        </>
-      )}
-
-      <Alert variant={g.verified ? "info" : "note"} icon={g.verified ? "check-circle" : "info"}>
-        <p>{g.verified
-          ? `We checked these steps against ${g.name}'s own page on ${g.last_verified}.`
-          : `We haven't been able to check these steps against ${g.name}'s live page yet. Sites change their pages often, so if something looks different, follow what the page says.`}</p>
-      </Alert>
+        {g.opt_out_url && (
+          <div class="mt-l rounded-xl border border-line bg-surface p-m">
+            <p><a class={cn(buttonVariants({ size: "lg", full: true }), "whitespace-normal [overflow-wrap:anywhere] min-[40em]:w-auto")} href={g.opt_out_url} rel="noopener noreferrer nofollow"><Icon name="external" />Open {g.name}'s {g.method === "email" ? "privacy page" : "removal page"}</a></p>
+            <p class="mt-2xs text-small text-muted">Opens {g.opt_out_host}, {g.name}'s own website.</p>
+          </div>
+        )}
+      </section>
     </>
   )}
 
@@ -105,41 +103,41 @@ const needs = g.required.length > 0 || g.needs_email_verification || g.has_captc
     <Alert variant="note" icon="shield"><p>You should never have to pay to be removed. If a people-search site asks for money or your Social Security number, stop.</p></Alert>
   )}
 
-  <Card as="section" class="mt-xl p-l shadow-2">
-    <h2 id="fmid">Or let Free My ID do it</h2>
-    {/* Sources: docs/PLAN_V1.md D1, D2, D9; docs/USER_GUIDE.md sections 6, 8, 9 */}
-    <p>
-      {g.covered_by ? `Free My ID sends the ${g.covered_by.name} request and later checks whether ${g.name} still lists you.`
-        : g.method === "email" ? "Free My ID writes this email for you. With a removal mailbox set up, it sends it and watches for the reply; without one, it opens the message in your own email program."
-        : g.method === "account_required" ? "This one needs you to sign in or make an account, which Free My ID never does for you. It gives you a reminder with the link and these steps, and keeps track."
-        : g.method === "web_form" ? `Free My ID opens ${g.name}'s removal page in your own browser, with these steps beside it and a Copy button for each box. On sites that allow it, it can fill the boxes in while you watch. You tick any "I'm not a robot" box yourself.`
-        : `Free My ID shows you these steps as a to-do and keeps track${g.has_email ? ", and it can send a prepared email letter instead" : ""}.`}
-      {" "}Then it checks again later, because sites can list people again.
-    </p>
-    <div class="mt-xs"><CtaDownload size="md" class="site-refresh__button" /></div>
-  </Card>
+  <section aria-labelledby="sources">
+    {/* Sources: the verification line (registry verification_status/last_verified) and the registry data line, grouped. Entry source URLs stay in the HTML comment at the top (no third-party links added). */}
+    <h2 class="mt-xl text-h3" id="sources">Sources</h2>
+    {!g.covered_by && (
+      <Alert variant={g.verified ? "info" : "note"} icon={g.verified ? "check-circle" : "info"} class="mt-s">
+        <p>{g.verified
+          ? `We checked these steps against ${g.name}'s own page on ${g.last_verified}.`
+          : `We haven't been able to check these steps against ${g.name}'s live page yet. Sites change their pages often, so if something looks different, follow what the page says.`}</p>
+      </Alert>
+    )}
+    <p class="mt-2xs text-small text-muted">Guide data updated {guidesMeta.updated} from the Free My ID sample broker registry (<a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>).</p>
+  </section>
+</article>
 
-  <nav class="mt-xl" aria-labelledby="more-guides">
+<Section tone="brand" narrow title="Or let Free My ID do it" titleId="fmid">
+  {/* Sources: docs/PLAN_V1.md D1, D2, D9; docs/USER_GUIDE.md sections 6, 8, 9 */}
+  <p class="text-lead">
+    {g.covered_by ? `Free My ID sends the ${g.covered_by.name} request and later checks whether ${g.name} still lists you.`
+      : g.method === "email" ? "Free My ID writes this email for you. With a removal mailbox set up, it sends it and watches for the reply; without one, it opens the message in your own email program."
+      : g.method === "account_required" ? "This one needs you to sign in or make an account, which Free My ID never does for you. It gives you a reminder with the link and these steps, and keeps track."
+      : g.method === "web_form" ? `Free My ID opens ${g.name}'s removal page in your own browser, with these steps beside it and a Copy button for each box. On sites that allow it, it can fill the boxes in while you watch. You tick any "I'm not a robot" box yourself.`
+      : `Free My ID shows you these steps as a to-do and keeps track${g.has_email ? ", and it can send a prepared email letter instead" : ""}.`}
+    {" "}Then it checks again later, because sites can list people again.
+  </p>
+  <div class="mt-m"><CtaDownload look="onBrand" /></div>
+</Section>
+
+<div class="wrap-narrow py-xl">
+  <nav aria-labelledby="more-guides">
     {/* WR-40: internal links to guides people often search for (keywords.md rows 3-6). No new claims. */}
-    <h2 id="more-guides">More free guides</h2>
-    <ul class="mt-xs grid gap-2xs">
-      {moreGuides(g).map((o) => <li><a href={url(o.out)}>How to remove yourself from {o.name}</a></li>)}
-      <li><a href={url("guides/")}>See all opt-out guides</a></li>
+    <h2 id="more-guides" class="text-h3">More free guides</h2>
+    <ul class="mt-s grid gap-2xs" role="list">
+      {moreGuides(g).map((o) => <li><a class="inline-flex min-h-tap items-center gap-2xs" href={url(o.out)}><Icon name="arrow-right" class="shrink-0 text-brand" />How to remove yourself from {o.name}</a></li>)}
+      <li><a class="inline-flex min-h-tap items-center gap-2xs" href={url("guides/")}><Icon name="list" class="shrink-0 text-brand" />See all opt-out guides</a></li>
     </ul>
   </nav>
-  <p class="mt-2xs text-body text-muted">Guide data updated {guidesMeta.updated} from the Free My ID sample broker registry (<a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>).</p>
-</div>
 </div>
 </Base>
-
-<style is:global>
-  .site-refresh [data-slot="badge"] { color: var(--fmi-color-text); }
-  .site-refresh .refresh-page-intro { display: grid; gap: var(--fmi-space-l); align-items: center; }
-  .site-refresh .refresh-page-head h1 { max-width: 26ch; margin-block-start: var(--fmi-space-m); }
-  .site-refresh pre { font-size: 1.25rem; max-width: 100%; overflow-x: auto; white-space: pre; }
-  .site-refresh small { font-size: 1em; }
-  .site-refresh figure { margin: 0; min-width: 0; }
-  .site-refresh img { max-width: 100%; height: auto; }
-  .site-refresh .refresh-guide-steps { display: grid; gap: var(--fmi-space-m); padding-inline-start: 1.5em; }
-  @media (min-width: 56.25em) { .site-refresh .refresh-page-intro:has(figure) { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } }
-</style>

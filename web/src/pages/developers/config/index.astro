@@ -1,9 +1,7 @@
 ---
 import Base from "@/layouts/Base.astro";
-import "@/styles/site-refresh.css";
-import Crumbs from "@/components/Crumbs.astro";
-import Section from "@/components/site-refresh/RefreshSection.astro";
-import { pageProps, site, type Crumb } from "@/lib/site";
+import PageHead from "@/components/PageHead.astro";
+import { pageProps, pages, site, url, type Crumb } from "@/lib/site";
 
 const p = pageProps("developers-config");
 const parent = pageProps("developers");
@@ -47,73 +45,75 @@ schedule:
   weekday: 6
   hour: 10
   install_job: false`;
-const pre = "mt-s max-w-full overflow-x-auto rounded-md border border-line bg-surface p-s text-body leading-snug text-text";
+const pre = "mt-s max-w-full overflow-x-auto rounded-lg border border-line bg-surface p-m text-small leading-normal text-text shadow-1";
+// Docs sidebar ("On this page"): section ids and their existing headings.
+const toc: [string, string][] = [
+  ["overview", "What this file does"],
+  ["person", "Person and permission fields"],
+  ["mailbox", "Optional mailbox fields"],
+  ["example", "Full fake example"],
+];
+const navLink = "flex min-h-tap items-center rounded-md px-xs no-underline hover:bg-brand-soft hover:underline";
 ---
 
 <Base {...p} crumbs={crumbs}>
-<div class="site-refresh">
-  <header class="site-refresh__wrap site-refresh__section refresh-page-head">
-<Crumbs crumbs={crumbs} />
-<div class="refresh-page-intro"><div>
-<h1>Setup YAML reference</h1>
-<p class="site-refresh__lead">Prepare a file for the terminal setup command.</p>
+  <PageHead crumbs={crumbs} title="Setup YAML reference" lead="Prepare a file for the terminal setup command." />
 
-</div></div>
-</header>
-
-  <div class="site-refresh__wrap pb-l">
+  <div class="wrap grid gap-l pb-2xl pt-l min-[60em]:grid-cols-[15rem_minmax(0,1fr)]">
+    <nav aria-label="On this page" class="print:hidden min-[60em]:sticky min-[60em]:top-24 min-[60em]:self-start">
+      <div class="rounded-xl border border-line bg-card p-s shadow-1">
+        <p class="px-xs text-small font-bold uppercase tracking-wide text-muted">On this page</p>
+        <ul class="mt-2xs grid gap-3xs max-[59.99em]:grid-cols-[repeat(auto-fill,minmax(min(100%,12rem),1fr))]" role="list">
+          {toc.map(([id, label]) => <li><a class={navLink} href={`#${id}`}>{label}</a></li>)}
+          <li><a class={navLink} href={url(pages["developers-cli"].out)}>Command reference</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div class="min-w-0 max-w-[48rem]">
     {/* Source: docs/CLI.md:323-340; schema/setup-config.schema.json:478-538. */}
-    <Section id="overview" width="narrow" title="What this file does" titleId="overview-title">
-      <p class="max-w-measure">The version 1 setup file describes one person. It uses YAML, a plain text format made of names and values. The top-level fields are <code>version</code>, <code>consent</code>, and <code>person</code>; all three are required.</p>
+    <section id="overview" aria-labelledby="overview-title" class="scroll-mt-24 border-t border-line py-xl first:border-t-0 first:pt-0">
+      <h2 id="overview-title">What this file does</h2>
+      <p class="mt-s max-w-measure">The version 1 setup file describes one person. It uses YAML, a plain text format made of names and values. The top-level fields are <code>version</code>, <code>consent</code>, and <code>person</code>; all three are required.</p>
       <p class="mt-s max-w-measure">Use <code>freemyid setup --from FILE --check</code> to validate the file and show the plan without saving. To import it, run <code>freemyid setup --from FILE</code> in a terminal, review the plan and permission text, then confirm. <code>--yes</code> confirms without a prompt. Without confirmation in a terminal, nothing is saved.</p>
       <p class="mt-s max-w-measure">The full <a href={schemaUrl}>version 1 schema</a> is the source of truth. Unknown fields are rejected.</p>
       <pre class={pre} tabindex="0" aria-label="Setup YAML commands"><code>freemyid setup --from setup.yaml --check
 freemyid setup --from setup.yaml</code></pre>
-    </Section>
+    </section>
 
     {/* Source: schema/setup-config.schema.json:4-100,270-314,337-443,478-538; docs/CLI.md:323-340. */}
-    <Section id="person" tone="alt" width="narrow" title="Person and permission fields" titleId="person-title">
-      <div class="overflow-x-auto" tabindex="0" role="region" aria-labelledby="person-title">
-        <table class="w-full border-collapse text-left text-body">
-          <thead><tr><th scope="col" class="border-b border-line p-xs">Field</th><th scope="col" class="border-b border-line p-xs">What it means</th></tr></thead>
+    <section id="person" aria-labelledby="person-title" class="scroll-mt-24 border-t border-line py-xl first:border-t-0 first:pt-0">
+      <h2 id="person-title">Person and permission fields</h2>
+      <div class="mt-m overflow-x-auto rounded-xl border border-line bg-card shadow-1" tabindex="0" role="region" aria-labelledby="person-title">
+        <table class="w-full border-collapse text-left">
+          <thead><tr><th scope="col" class="border-b border-line bg-surface p-s">Field</th><th scope="col" class="border-b border-line bg-surface p-s">What it means</th></tr></thead>
           <tbody>
-            <tr><th scope="row" class="border-b border-line p-xs"><code>version</code></th><td class="border-b border-line p-xs">Use the number <code>1</code>.</td></tr>
-            <tr><th scope="row" class="border-b border-line p-xs"><code>consent</code></th><td class="border-b border-line p-xs">Required: set <code>agreed: true</code> and include <code>signed_name</code>. <code>basis</code> may be <code>self</code>, <code>guardian_of_minor</code>, or <code>authorized_agent</code>. An authorization file can be named with <code>authorization_file</code>.</td></tr>
-            <tr><th scope="row" class="border-b border-line p-xs"><code>person.name</code></th><td class="border-b border-line p-xs">Required: <code>first</code> and <code>last</code>. <code>middle</code> and <code>suffix</code> may be included.</td></tr>
-            <tr><th scope="row" class="border-b border-line p-xs"><code>person.addresses</code></th><td class="border-b border-line p-xs">Required: one to four addresses. Each needs <code>city</code> and a two-letter <code>state</code>. <code>street</code> and <code>zip</code> are optional; mark the current address with <code>current: true</code>.</td></tr>
-            <tr><th scope="row" class="border-b border-line p-xs"><code>person</code> (optional fields)</th><td class="border-b border-line p-xs"><code>label</code>, <code>nicknames</code>, <code>previous_names</code>, <code>birth_year</code>, <code>age</code>, <code>phones</code>, <code>emails</code>, and <code>relatives</code> are optional. Use <code>age</code> if the birth year is unknown.</td></tr>
-            <tr><th scope="row" class="border-b border-line p-xs"><code>permissions</code></th><td class="border-b border-line p-xs">Optional choices: <code>allow_id_upload</code>, <code>allow_account_creation</code>, and <code>allow_phone_disclosure</code>. Each defaults to <code>false</code>.</td></tr>
-            <tr><th scope="row" class="border-b border-line p-xs"><code>email_mode</code></th><td class="border-b border-line p-xs">Choose <code>approve_each</code> or <code>auto</code>. The default is <code>approve_each</code>.</td></tr>
-            <tr><th scope="row" class="border-b border-line p-xs"><code>schedule</code></th><td class="border-b border-line p-xs">Optional: <code>weekly_recheck</code>, <code>weekday</code> (0 Monday through 6 Sunday), <code>hour</code> (0–23), and <code>install_job</code>. Defaults are weekly recheck on Sunday at 10, without installing a job.</td></tr>
+            <tr><th scope="row" class="border-b border-line p-s align-top"><code>version</code></th><td class="border-b border-line p-s">Use the number <code>1</code>.</td></tr>
+            <tr><th scope="row" class="border-b border-line p-s align-top"><code>consent</code></th><td class="border-b border-line p-s">Required: set <code>agreed: true</code> and include <code>signed_name</code>. <code>basis</code> may be <code>self</code>, <code>guardian_of_minor</code>, or <code>authorized_agent</code>. An authorization file can be named with <code>authorization_file</code>.</td></tr>
+            <tr><th scope="row" class="border-b border-line p-s align-top"><code>person.name</code></th><td class="border-b border-line p-s">Required: <code>first</code> and <code>last</code>. <code>middle</code> and <code>suffix</code> may be included.</td></tr>
+            <tr><th scope="row" class="border-b border-line p-s align-top"><code>person.addresses</code></th><td class="border-b border-line p-s">Required: one to four addresses. Each needs <code>city</code> and a two-letter <code>state</code>. <code>street</code> and <code>zip</code> are optional; mark the current address with <code>current: true</code>.</td></tr>
+            <tr><th scope="row" class="border-b border-line p-s align-top"><code>person</code> (optional fields)</th><td class="border-b border-line p-s"><code>label</code>, <code>nicknames</code>, <code>previous_names</code>, <code>birth_year</code>, <code>age</code>, <code>phones</code>, <code>emails</code>, and <code>relatives</code> are optional. Use <code>age</code> if the birth year is unknown.</td></tr>
+            <tr><th scope="row" class="border-b border-line p-s align-top"><code>permissions</code></th><td class="border-b border-line p-s">Optional choices: <code>allow_id_upload</code>, <code>allow_account_creation</code>, and <code>allow_phone_disclosure</code>. Each defaults to <code>false</code>.</td></tr>
+            <tr><th scope="row" class="border-b border-line p-s align-top"><code>email_mode</code></th><td class="border-b border-line p-s">Choose <code>approve_each</code> or <code>auto</code>. The default is <code>approve_each</code>.</td></tr>
+            <tr><th scope="row" class="border-b border-line p-s align-top"><code>schedule</code></th><td class="border-b border-line p-s">Optional: <code>weekly_recheck</code>, <code>weekday</code> (0 Monday through 6 Sunday), <code>hour</code> (0–23), and <code>install_job</code>. Defaults are weekly recheck on Sunday at 10, without installing a job.</td></tr>
           </tbody>
         </table>
       </div>
-    </Section>
+    </section>
 
     {/* Source: schema/setup-config.schema.json:102-268; docs/CLI.md:334-336. */}
-    <Section id="mailbox" width="narrow" title="Optional mailbox fields" titleId="mailbox-title">
-      <p class="max-w-measure">A mailbox is optional. If you include one, <code>provider</code> and <code>address</code> are required. Providers are <code>gmail</code>, <code>yahoo</code>, <code>icloud</code>, <code>proton_bridge</code>, or <code>other</code>.</p>
+    <section id="mailbox" aria-labelledby="mailbox-title" class="scroll-mt-24 border-t border-line py-xl first:border-t-0 first:pt-0">
+      <h2 id="mailbox-title">Optional mailbox fields</h2>
+      <p class="mt-s max-w-measure">A mailbox is optional. If you include one, <code>provider</code> and <code>address</code> are required. Providers are <code>gmail</code>, <code>yahoo</code>, <code>icloud</code>, <code>proton_bridge</code>, or <code>other</code>.</p>
       <p class="mt-s max-w-measure">Passwords never belong in this file. Use <code>password_env</code> for the name of an environment variable, or <code>password_file</code> for a file path. Other optional fields include <code>username</code>, <code>imap_host</code>, <code>imap_port</code>, <code>imap_ssl</code>, <code>imap_starttls</code>, <code>smtp_host</code>, <code>smtp_port</code>, <code>smtp_starttls</code>, and <code>tls_cert_sha256</code> for an approved Proton Mail Bridge certificate fingerprint.</p>
-    </Section>
+    </section>
 
     {/* Source: schema/setup-config.schema.json:1-538; docs/examples/setup-config.example.yaml:1-56; docs/CLI.md:323-340. */}
-    <Section id="example" tone="alt" width="narrow" title="Full fake example" titleId="example-title">
-      <p class="max-w-measure">This example uses made-up details. Replace them with the details you want to use, keep the file private, and do not put a mailbox password in it.</p>
+    <section id="example" aria-labelledby="example-title" class="scroll-mt-24 border-t border-line py-xl first:border-t-0 first:pt-0">
+      <h2 id="example-title">Full fake example</h2>
+      <p class="mt-s max-w-measure">This example uses made-up details. Replace them with the details you want to use, keep the file private, and do not put a mailbox password in it.</p>
       <pre class={pre} tabindex="0" aria-label="Fake version 1 setup YAML example"><code>{example}</code></pre>
       <p class="mt-s max-w-measure">See the <a href={`${site.repo_url}/blob/main/docs/CLI.md#setup---from`}>setup --from instructions</a> for the confirmation and validation behavior.</p>
-    </Section>
+    </section>
+    </div>
   </div>
-</div>
 </Base>
-
-<style is:global>
-  .site-refresh .refresh-page-intro { display: grid; gap: var(--fmi-space-l); align-items: center; }
-  .site-refresh .refresh-page-head h1 { max-width: 26ch; margin-block-start: var(--fmi-space-m); }
-  .site-refresh pre { font-size: 1.25rem; max-width: 100%; overflow-x: auto; white-space: pre; }
-  .site-refresh small { font-size: 1em; }
-  .site-refresh figure { margin: 0; min-width: 0; }
-  .site-refresh img { max-width: 100%; height: auto; }
-  .site-refresh table { font-size: 1.25rem; }
-  .site-refresh th, .site-refresh td { min-width: 9rem; vertical-align: top; }
-  @media (min-width: 56.25em) { .site-refresh .refresh-page-intro:has(figure) { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } }
-</style>

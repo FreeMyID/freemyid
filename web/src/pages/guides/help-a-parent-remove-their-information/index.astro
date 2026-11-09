@@ -5,35 +5,26 @@
 // (never timed, WR-27); "No genuine opt-out page needs..." narrowed to our guides (research doc, WR-61 other claims);
 // "details stay on their computer" replaced by the approved storage wording (WO-101/WO-107).
 import Base from "@/layouts/Base.astro";
-import "@/styles/site-refresh.css";
-import Crumbs from "@/components/Crumbs.astro";
+import PageHead from "@/components/PageHead.astro";
 import Alert from "@/components/ui/Alert.astro";
-import Card from "@/components/ui/Card.astro";
-import Icon from "@/components/Icon.astro";
+import Section from "@/components/Section.astro";
 import CtaDownload from "@/components/CtaDownload.astro";
 import { pageProps, pages, popularGuides, url, type Crumb } from "@/lib/site";
 const p = pageProps("help-a-parent");
 const crumbs: Crumb[] = [["Home", ""], [pages.guides.label, pages.guides.out], [pages["help-a-parent"].label, p.out]];
 ---
 <Base {...p} crumbs={crumbs}>
-<div class="site-refresh">
-<header class="site-refresh__wrap site-refresh__section refresh-page-head">
-<Crumbs crumbs={crumbs} />
-<div class="refresh-page-intro"><div>
-<h1>Help a parent get their details off people-search sites</h1>
-<p class="site-refresh__lead">If your mom, dad or grandparent's name, address and phone number show up on people-search sites, you can help them ask for it to be taken down. It's free, and you don't need to be technical.</p>
-
-  
-
-</div><figure class="site-refresh__figure"><picture>
+<PageHead crumbs={crumbs} title="Help a parent get their details off people-search sites"
+  lead="If your mom, dad or grandparent's name, address and phone number show up on people-search sites, you can help them ask for it to be taken down. It's free, and you don't need to be technical.">
+  <picture slot="art">
     {/* source: brand/illustrations/help-a-parent-*.svg (graphic-designer), alt from brand/illustrations/README.md */}
     <source srcset={url("assets/art/help-a-parent-dark.svg")} media="(prefers-color-scheme: dark)" />
     <img src={url("assets/art/help-a-parent-light.svg")} width="320" height="250" class="h-auto w-full"
       alt="A grown child and a parent checking a laptop together." />
-  </picture></figure></div>
-</header>
+  </picture>
+</PageHead>
 {/* source: free opt-outs = our guides (brokers/registry.sample.yaml, never pay = shared rule 6) */}
-<div class="site-refresh__wrap site-refresh__wrap--narrow site-refresh__prose pb-2xl">
+<div class="wrap-narrow pb-2xl pt-m">
   <h2 id="permission">Do I need their permission?</h2>
   {/* source: registry entries Spokeo, BeenVerified, PeopleConnect, TruePeopleSearch (confirmation email, browser-checked 2026-11-07);
      not every site (Whitepages uses a phone code) = research doc WR-61 other claims; removal mailbox = PLAN_V1 D2, USER_GUIDE section 2 */}
@@ -59,27 +50,15 @@ const crumbs: Crumb[] = [["Home", ""], [pages.guides.label, pages.guides.out], [
      for new matching data at least every 45 days). The interval is our advice, not a rule. */}
   <p class="mt-s">They can. Some sites can list people again under a new record, so check their name again now and then, and repeat the steps for anything that came back.</p>
 
-  <Card as="section" class="mt-xl p-l shadow-2" aria-labelledby="by-hand">
-    <h2 id="by-hand" class="flex items-center gap-xs"><Icon name="shield" class="size-8 text-brand" />What if they'd rather not do it by hand?</h2>
+</div>
+
+<Section tone="brand" narrow title="What if they'd rather not do it by hand?" titleId="by-hand">
     {/* source: LICENSE (free, AGPL); PLAN_V1 D1/D4 (sends requests, keeps checking); storage = docs/ROADMAP.md section 1, "Nothing is
        sent to us" = netpolicy.py (D8); no account = ROADMAP principle 6; scope = POSITIONING.md rule 6 */}
-    <p class="mt-s">Free My ID is a free, open-source Windows app that sends the removal requests for you and keeps checking. Their details are stored on their computer, and nothing is sent to us. There's no account. It works on people-search and data-broker sites only.</p>
-    <div class="mt-s flex flex-wrap items-center gap-s">
-      <CtaDownload size="md" class="site-refresh__button" />
-      <a href={url("families/")}>Read our guide for families</a>
+    <p class="text-lead">Free My ID is a free, open-source Windows app that sends the removal requests for you and keeps checking. Their details are stored on their computer, and nothing is sent to us. There's no account. It works on people-search and data-broker sites only.</p>
+    <div class="mt-m flex flex-wrap items-center gap-s">
+      <CtaDownload look="onBrand" />
+      <a class="inline-flex min-h-tap items-center" href={url("families/")}>Read our guide for families</a>
     </div>
-  </Card>
-</div>
-</div>
+</Section>
 </Base>
-
-<style is:global>
-  .site-refresh [data-slot="badge"] { color: var(--fmi-color-text); }
-  .site-refresh .refresh-page-intro { display: grid; gap: var(--fmi-space-l); align-items: center; }
-  .site-refresh .refresh-page-head h1 { max-width: 26ch; margin-block-start: var(--fmi-space-m); }
-  .site-refresh pre { font-size: 1.25rem; max-width: 100%; overflow-x: auto; white-space: pre; }
-  .site-refresh small { font-size: 1em; }
-  .site-refresh figure { margin: 0; min-width: 0; }
-  .site-refresh img { max-width: 100%; height: auto; }
-  @media (min-width: 56.25em) { .site-refresh .refresh-page-intro:has(figure) { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } }
-</style>

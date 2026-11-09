@@ -1,19 +1,23 @@
 ---
 // Top of an inner page: breadcrumbs, h1, lead. Optional illustration on the right (wide screens).
+// Revamp: the aceternity Spotlight (quiet tone, fading grid) from Maya's library; decorative only,
+// static under reduced motion, text sits on tints no stronger than the `spot` token.
 import Crumbs from "./Crumbs.astro";
+import Spotlight from "./aceternity/Spotlight.astro";
 import type { Crumb } from "@/lib/site";
-interface Props { crumbs: Crumb[]; title: string; lead?: string }
-const { crumbs, title, lead } = Astro.props;
+// narrow: match pages whose body uses wrap-narrow / <Section narrow>, so the h1 lines up with the text below.
+interface Props { crumbs: Crumb[]; title: string; lead?: string; narrow?: boolean }
+const { crumbs, title, lead, narrow = false } = Astro.props;
 const hasArt = Astro.slots.has("art");
 ---
-<div class="bg-[radial-gradient(ellipse_at_top_right,var(--fmi-color-brand-soft),transparent_55%)] pb-m pt-l">
-  <div class:list={["wrap grid items-center gap-l", hasArt && "min-[56.25em]:grid-cols-[1.4fr_1fr]"]}>
+<Spotlight as="div" tone="quiet" pattern="grid" class="page-head pb-l pt-l">
+  <div class:list={[narrow ? "wrap-narrow" : "wrap", "grid items-center gap-l", hasArt && "min-[56.25em]:grid-cols-[1.4fr_1fr]"]}>
     <div>
       <Crumbs crumbs={crumbs} />
-      <h1 class="mt-m">{title}</h1>
+      <h1 class="mt-s">{title}</h1>
       {lead && <p class="mt-s max-w-measure text-lead text-muted">{lead}</p>}
       <slot />
     </div>
     {hasArt && <div class="mx-auto w-full max-w-[26rem]"><slot name="art" /></div>}
   </div>
-</div>
+</Spotlight>

@@ -1,0 +1,22 @@
+---
+// shadcn/ui Separator. Decorative by default (aria-hidden div); decorative={false} renders a real <hr>.
+// variant: line (hairline) | fade (fades at both ends) | flag (short navy/white/red bar, one per page max).
+// label: text in the middle of the line ("or"); the text is read normally.
+import { cn } from "@/lib/utils";
+interface Props {
+  orientation?: "horizontal" | "vertical";
+  variant?: "line" | "fade" | "flag";
+  decorative?: boolean;
+  label?: string;
+  class?: string;
+}
+const { orientation = "horizontal", variant = "line", decorative = true, label, class: cls } = Astro.props;
+const classes = cn("sep", orientation === "vertical" ? "sep--v" : "sep--h", variant !== "line" && `sep--${variant}`, cls);
+---
+{label ? (
+  <p class={cn("sep-label my-m", cls)}>{label}</p>
+) : decorative ? (
+  <div data-slot="separator" class={classes} aria-hidden="true"></div>
+) : (
+  <hr data-slot="separator" class={classes} aria-orientation={orientation === "vertical" ? "vertical" : undefined} />
+)}

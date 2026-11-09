@@ -1,0 +1,13 @@
+---
+// Native <details> disclosure in the shadcn Accordion look (works with JS off, opens for find-in-page).
+// name: give several Disclosures the same name to make an exclusive group (one open at a time)
+// where the browser supports it; elsewhere they just open independently.
+import { cn } from "@/lib/utils";
+import Icon from "../Icon.astro";
+interface Props { summary: string; open?: boolean; name?: string; id?: string; class?: string }
+const { summary, open = false, name, id, class: cls } = Astro.props;
+---
+<details class={cn("disclosure", cls)} open={open} name={name} id={id}>
+  <summary><span>{summary}</span><Icon name="chevron-down" class="disclosure__chevron size-[1.2em]" /></summary>
+  <div class="disclosure__body prose-fmid"><slot /></div>
+</details>

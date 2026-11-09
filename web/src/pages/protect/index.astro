@@ -3,6 +3,7 @@
 // These are things people do themselves at official sites; Free My ID is not needed and is not involved.
 import Base from "@/layouts/Base.astro";
 import PageHead from "@/components/PageHead.astro";
+import Section from "@/components/Section.astro";
 import Icon from "@/components/Icon.astro";
 import Alert from "@/components/ui/Alert.astro";
 import Badge from "@/components/ui/Badge.astro";
@@ -27,7 +28,7 @@ const paid = protectPages.filter((c) => !c.free);
 <PageHead crumbs={p.crumbs} title="Protect yourself: free steps anyone can take"
   lead="Freeze your credit, cut junk mail and lock down your government accounts, at the official websites. You don't need Free My ID for any of this." />
 {/* source: brokers/checklists.yaml (cost field: every entry free except dmachoice; steps happen on the official sites) */}
-<div class="wrap pb-2xl">
+<div class="wrap pb-xl pt-m">
   <Alert class="mt-0 max-w-[48rem]" icon="check-circle">
     <p class="text-lead">
       {paid.length === 0 ? "Every step here is free." : <>Every step here is free, except {paid.map((c, i) => <>{i > 0 && ", "}<a href={url(c.out)}>{c.title.replace(/^.* with /, "")}</a></>)}, which charges its own small fee.</>}
@@ -37,19 +38,21 @@ const paid = protectPages.filter((c) => !c.free);
 
   <nav aria-label="On this page" class="mt-l max-w-[48rem] print:hidden">
     <ul class="flex flex-wrap gap-xs" role="list">
-      {PROTECT_GROUPS.map((g) => <li><a class="inline-flex min-h-tap items-center rounded-pill border border-line bg-card px-s font-semibold" href={`#${g.key}`}>{g.title}</a></li>)}
+      {PROTECT_GROUPS.map((g) => <li><a class="inline-flex min-h-tap items-center rounded-pill border border-line bg-card px-s font-semibold shadow-1 hover:bg-brand-soft" href={`#${g.key}`}>{g.title}</a></li>)}
     </ul>
   </nav>
+</div>
 
-  {PROTECT_GROUPS.map((g) => (
-    <section class="mt-xl" aria-labelledby={g.key}>
+  {PROTECT_GROUPS.map((g, gi) => (
+    <section class:list={["py-xl", gi % 2 === 0 && "bg-bg-alt"]} aria-labelledby={g.key}>
+      <div class="wrap">
       <h2 id={g.key}>{g.title}</h2>
       <p class="mt-xs max-w-measure text-lead text-muted">{intros[g.key]}</p>
       {g.key === "credit" && <p class="mt-xs max-w-measure"><a href={url("protect/credit-freeze/")}>Use the printable credit freeze checklist</a></p>}
       <ul class="mt-m grid gap-s [grid-template-columns:repeat(auto-fill,minmax(min(100%,20rem),1fr))]" role="list">
         {protectPages.filter((c) => c.group === g.key).map((c) => (
           <li>
-            <a class="group flex h-full min-h-tap flex-col gap-2xs rounded-xl border border-line bg-card p-s no-underline shadow-1 hover:border-line-strong hover:bg-brand-soft" href={url(c.out)}>
+            <a class="group flex h-full min-h-tap flex-col gap-2xs rounded-xl border border-line bg-card p-m no-underline shadow-1 transition-shadow duration-200 hover:border-line-strong hover:shadow-2 motion-reduce:transition-none" href={url(c.out)}>
               <span class="flex items-start justify-between gap-xs text-lead font-bold text-link underline underline-offset-[0.18em]">{c.title}<Icon name="arrow-right" class="mt-[0.2em] text-brand" /></span>
               <span class="text-muted">{c.why}</span>
               <span class="mt-auto flex flex-wrap gap-2xs pt-2xs">
@@ -60,15 +63,16 @@ const paid = protectPages.filter((c) => !c.free);
           </li>
         ))}
       </ul>
+      </div>
     </section>
   ))}
 
-  <section class="mt-xl max-w-[48rem]" aria-labelledby="different-job">
-    <h2 id="different-job">Where Free My ID fits</h2>
-    {/* source: POSITIONING.md rule 6 (scope: people-search and data-broker sites only) */}
-    <p class="mt-xs">Free My ID does a different job: it asks people-search sites to remove your listing. The steps on this page are separate, and you can do every one of them without it. <a href={url("how-it-works/")}>How Free My ID works</a></p>
-  </section>
+<Section tone="brand" title="Where Free My ID fits" titleId="different-job">
+  {/* source: POSITIONING.md rule 6 (scope: people-search and data-broker sites only) */}
+  <p class="max-w-measure text-lead">Free My ID does a different job: it asks people-search sites to remove your listing. The steps on this page are separate, and you can do every one of them without it. <a href={url("how-it-works/")}>How Free My ID works</a></p>
+</Section>
 
-  <p class="mt-l max-w-measure text-small text-muted">Steps last checked {longDate(protectMeta.updated)} (list version {protectMeta.version}), licensed <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>. Companies change their pages often; if something looks different, follow what the official page says.</p>
+<div class="wrap py-l">
+  <p class="max-w-measure text-small text-muted">Steps last checked {longDate(protectMeta.updated)} (list version {protectMeta.version}), licensed <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>. Companies change their pages often; if something looks different, follow what the official page says.</p>
 </div>
 </Base>

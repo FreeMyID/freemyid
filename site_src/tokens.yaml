@@ -26,6 +26,12 @@ color:
   footer-bg:      ["#0f1c38", "#080c14"]
   footer-text:    ["#e8edf6", "#dfe5ee"]
   flag-white:     ["#ffffff", "#e8edf6"]
+  # Revamp (web/): calm status tints for Alert/Badge, a hero spotlight tint and a decorative glow.
+  ok-soft:        ["#e7f4ec", "#132a1d"]   # "done" alerts and badges (ok / text on it)
+  warn-soft:      ["#fbf1dc", "#2e2510"]   # "heads-up" alerts and badges (never an alarm)
+  accent-soft:    ["#fbecee", "#33191f"]   # tiny red-tinted chip only (flag accent, never alarm UI)
+  spot:           ["#dfe8f8", "#1f3358"]   # strongest tint of the hero spotlight; all text must still pass on it
+  glow:           ["#3f66b0", "#7aa2ec"]   # decorative glow / beam / ring colour (non-text, 3:1 on page)
 
 # Contrast pairs checked at build time: [foreground, background, minimum ratio], in both themes.
 pairs:
@@ -68,6 +74,28 @@ pairs:
   - [focus-inner, bg, 3]
   - [focus, band-brand, 3]
   - [focus, footer-bg, 3]
+  # revamp component pairs
+  - [ok, ok-soft, 4.5]
+  - [text, ok-soft, 7]
+  - [muted, ok-soft, 7]
+  - [heading, ok-soft, 7]
+  - [warn, warn-soft, 4.5]
+  - [text, warn-soft, 7]
+  - [muted, warn-soft, 7]
+  - [heading, warn-soft, 7]
+  - [accent, accent-soft, 4.5]
+  - [text, accent-soft, 7]
+  - [text, spot, 7]
+  - [muted, spot, 7]
+  - [heading, spot, 7]
+  - [link, spot, 7]
+  - [brand, spot, 4.5]
+  - [accent, spot, 4.5]
+  - [muted, surface-strong, 4.5]
+  - [heading, surface-strong, 7]
+  - [glow, bg, 3]
+  - [accent, card, 4.5]
+  - [brand, card, 4.5]
 
 space:       # rem so it follows browser zoom; the larger steps are fluid
   3xs: 0.25rem

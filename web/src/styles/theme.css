@@ -28,6 +28,11 @@
   --color-footer-bg: var(--fmi-color-footer-bg);
   --color-footer-text: var(--fmi-color-footer-text);
   --color-flag-white: var(--fmi-color-flag-white);
+  --color-ok-soft: var(--fmi-color-ok-soft);
+  --color-warn-soft: var(--fmi-color-warn-soft);
+  --color-accent-soft: var(--fmi-color-accent-soft);
+  --color-spot: var(--fmi-color-spot);
+  --color-glow: var(--fmi-color-glow);
   --spacing-3xs: var(--fmi-space-3xs);
   --spacing-2xs: var(--fmi-space-2xs);
   --spacing-xs: var(--fmi-space-xs);

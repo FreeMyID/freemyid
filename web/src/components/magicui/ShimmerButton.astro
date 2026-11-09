@@ -1,0 +1,19 @@
+---
+// Magic UI "Shimmer Button" look-alike: a filled button (primary, or onBrand in a brand band) with a
+// soft light that sweeps across every few seconds and a slight lift on hover. Motion only with
+// prefers-reduced-motion: no-preference; the veil keeps the label >= 4.5:1. An <a> with href,
+// else a <button>. Remember: one filled primary per view.
+import { cn } from "@/lib/utils";
+import { buttonVariants } from "../ui/button-variants";
+interface Props {
+  href?: string;
+  variant?: "primary" | "onBrand";
+  size?: "md" | "lg" | "xl";
+  full?: boolean;
+  class?: string;
+  [attr: string]: unknown;
+}
+const { href, variant = "primary", size = "lg", full, class: cls, ...rest } = Astro.props;
+const classes = cn(buttonVariants({ variant, size, full, effect: "shimmer" }), cls);
+---
+{href ? <a class={classes} href={href} {...rest}><slot /></a> : <button class={classes} type="button" {...rest}><slot /></button>}

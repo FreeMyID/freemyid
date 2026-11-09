@@ -1,19 +1,27 @@
 ---
 // shadcn/ui Badge, ported to Astro. Variants map to Free My ID status colors (never alarm red).
+// Original variants default/ok/warn/brand are unchanged; added: outline, solid, ok-soft, warn-soft,
+// accent (a tiny flag-red chip for "New", never for errors). `dot` adds a small status dot.
 import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
-const badge = cva("inline-flex items-center gap-3xs rounded-pill border px-xs py-3xs text-small font-bold", {
+const badge = cva("inline-flex items-center gap-3xs rounded-pill border px-xs py-3xs text-small font-bold leading-snug", {
   variants: {
     variant: {
       default: "border-line bg-surface text-text",
       ok: "border-ok bg-card text-ok",
       warn: "border-warn bg-card text-warn",
       brand: "border-transparent bg-brand-soft text-heading",
+      outline: "border-line-strong bg-transparent text-heading",
+      solid: "border-transparent bg-brand text-brand-ink",
+      "ok-soft": "border-transparent bg-ok-soft text-ok",
+      "warn-soft": "border-transparent bg-warn-soft text-warn",
+      accent: "border-transparent bg-accent-soft text-accent",
     },
   },
   defaultVariants: { variant: "default" },
 });
-interface Props { variant?: "default" | "ok" | "warn" | "brand"; class?: string }
-const { variant, class: cls } = Astro.props;
+type Variant = "default" | "ok" | "warn" | "brand" | "outline" | "solid" | "ok-soft" | "warn-soft" | "accent";
+interface Props { variant?: Variant; dot?: boolean; class?: string }
+const { variant, dot = false, class: cls } = Astro.props;
 ---
-<span data-slot="badge" class={cn(badge({ variant }), cls)}><slot /></span>
+<span data-slot="badge" class={cn(badge({ variant }), cls)}>{dot && <span class="size-[0.5em] shrink-0 rounded-full bg-current" aria-hidden="true"></span>}<slot /></span>

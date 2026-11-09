@@ -1,0 +1,7 @@
+---
+// shadcn/ui CardFooter: actions, pinned to the bottom of equal-height cards. Sits above a CardTitle
+// href overlay (z-index), so its own links stay clickable.
+import { cn } from "@/lib/utils";
+interface Props { class?: string }
+---
+<div data-slot="card-footer" class={cn("relative z-[2] mt-auto flex flex-wrap items-center gap-xs pt-xs", Astro.props.class)}><slot /></div>

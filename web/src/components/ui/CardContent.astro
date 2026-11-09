@@ -1,0 +1,6 @@
+---
+// shadcn/ui CardContent: free content (prose spacing included).
+import { cn } from "@/lib/utils";
+interface Props { class?: string }
+---
+<div data-slot="card-content" class={cn("prose-fmid min-w-0", Astro.props.class)}><slot /></div>

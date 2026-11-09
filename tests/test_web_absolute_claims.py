@@ -57,6 +57,61 @@ BANNED = (
     "erase you from the internet",
 )
 
+# Practice mode still searches people-search sites, so "nothing is sent / sends nothing /
+# nothing goes out" is false in any wording (2026-11-08, families said "nothing is sent to any
+# site until you turn on real requests"). The approved wording talks about removal requests:
+# "no removal requests go out until you say so" must stay allowed.
+NOTHING_SENT = re.compile(
+    r"\bnothing\s+(?:is|gets|will\s+be|has\s+been|was)?\s*(?:sent|submitted)\b(?!\s+to\s+(?:us|the\s+project)\b)(?!\s+until\s+you\s+click\b)"
+    r"|\bnothing\s+(?:goes|go|is\s+going|gets\s+sent)\s+out\b"
+    r"|\b(?:sends|sent|submits|submitted)\s+nothing\b(?!\s+about\s+you\b)"
+    r"|\bdoes(?:n't|\s+not)\s+send\s+anything\b"
+)
+SHOULD_BE_BANNED = (
+    "Nothing is sent until you say so.",
+    "Nothing is sent to any site until you turn on real requests.",
+    "Nothing gets sent while you practice.",
+    "In practice mode Free My ID sends nothing.",
+    "Practice mode sent nothing to any site.",
+    "Nothing goes out until you turn it on.",
+    "Practice mode does not send anything.",
+    "Nothing will be submitted in practice mode.",
+)
+SHOULD_BE_ALLOWED = (
+    "Nothing is sent to us.",
+    "That download sends nothing about you or the people you protect.",
+    "Share this page on Facebook (opens Facebook; nothing is sent until you click)",
+    "Practice mode comes first, so no removal requests go out until you say so.",
+    'so no removal requests go out until you say "start sending real requests."',
+    "Unless they switch on automatic sending, no email goes out until they press OK.",
+)
+
+
+@pytest.mark.parametrize("sentence", SHOULD_BE_BANNED)
+def test_nothing_sent_pattern_catches(sentence: str) -> None:
+    assert NOTHING_SENT.search(sentence.lower()), sentence
+
+
+@pytest.mark.parametrize("sentence", SHOULD_BE_ALLOWED)
+def test_nothing_sent_pattern_allows_approved(sentence: str) -> None:
+    assert not NOTHING_SENT.search(sentence.lower()), sentence
+
+
+def test_no_nothing_sent_claim_in_sources() -> None:
+    for f in sorted(SRC.rglob("*.astro")):
+        text = text_of(COMMENTS.sub("", f.read_text(encoding="utf-8"))).lower()
+        m = NOTHING_SENT.search(text)
+        assert not m, (f.relative_to(ROOT), text[max(0, m.start() - 60):m.end() + 60])
+
+
+def test_no_nothing_sent_claim_in_build() -> None:
+    pages = sorted(DIST.rglob("*.html"))
+    assert pages, "Build web/dist with pnpm build first"
+    for page in pages:
+        text = text_of(page.read_text(encoding="utf-8")).lower()
+        m = NOTHING_SENT.search(text)
+        assert not m, (page.relative_to(DIST), text[max(0, m.start() - 60):m.end() + 60])
+
 
 @pytest.mark.parametrize(("page", "source", "phrase"), FIXED)
 def test_fixed_phrase_in_source(page: str, source: str, phrase: str) -> None:

@@ -52,7 +52,7 @@ const article = {
   </div>
 </div>
 
-<div class="wrap-narrow pb-2xl text-lead">
+<div class="wrap-narrow pb-2xl text-lead [overflow-wrap:anywhere]">
   {c.verification === "partial" && (
     <Alert variant="note" icon="info">
       {/* source: checklists.yaml verification: partial (the official page was blocked or silent on some points on date_checked) */}
@@ -66,13 +66,13 @@ const article = {
     </Alert>
   )}
 
-  <dl class="mt-l grid gap-s rounded-xl border border-line bg-card p-m shadow-1 min-[40em]:grid-cols-[auto_1fr] min-[40em]:gap-x-l">
+  <dl class="mt-l grid grid-cols-[minmax(0,1fr)] gap-s rounded-xl border border-line bg-card p-m shadow-1 min-[40em]:grid-cols-[auto_1fr] min-[40em]:gap-x-l">
     <dt class="flex items-center gap-2xs font-bold text-heading"><Icon name="tag" class="text-brand" />Cost</dt>
     <dd class="m-0">{c.cost}</dd>
     <dt class="flex items-center gap-2xs font-bold text-heading"><Icon name="clock" class="text-brand" />Time</dt>
     <dd class="m-0">{c.time_needed}</dd>
     <dt class="flex items-center gap-2xs font-bold text-heading"><Icon name="external" class="text-brand" />Official site</dt>
-    <dd class="m-0 break-words"><a href={c.url} rel="noopener noreferrer">{c.host}</a></dd>
+    <dd class="m-0 [overflow-wrap:anywhere]"><a href={c.url} rel="noopener noreferrer">{c.host}</a></dd>
   </dl>
 
   {c.need_on_hand.length > 0 && (
@@ -86,7 +86,7 @@ const article = {
 
   <section aria-labelledby="steps">
     <h2 class="mt-xl" id="steps">Step by step</h2>
-    <ol class="mt-s grid list-decimal gap-s ps-[1.6em] marker:font-bold marker:text-brand">
+    <ol class="mt-m grid list-decimal gap-s rounded-xl border border-line bg-card p-m ps-[2.4em] shadow-1 marker:font-bold marker:text-brand print:border-0 print:p-0 print:ps-[1.6em] print:shadow-none">
       {c.shownSteps.map((s) => (
         <li class="ps-2xs">
           {s.text}
@@ -119,7 +119,7 @@ const article = {
     <h2 class="mt-xl" id="sources">Sources</h2>
     <p class="mt-s text-body">We checked these steps on {checked} against:</p>
     <ul class="mt-2xs grid gap-3xs text-body" role="list">
-      {c.source_urls.map((u) => <li class="break-words"><a href={u} rel="noopener noreferrer">{host(u)}</a></li>)}
+      {c.source_urls.map((u) => <li class="[overflow-wrap:anywhere]"><a href={u} rel="noopener noreferrer">{host(u)}</a></li>)}
     </ul>
     <p class="mt-s text-body text-muted">Companies change their pages often. If something looks different, follow what the official page says.</p>
   </section>

@@ -29,7 +29,7 @@ const hasLead = Astro.slots.has("lead");
   <div class={narrow ? "wrap-narrow" : "wrap"}>
     {title && (
       <div class="reveal mb-l max-w-[44rem]">
-        {kicker && <p class="mb-2xs text-small font-bold uppercase tracking-wide text-brand">{kicker}</p>}
+        {kicker && <p class="mb-xs inline-flex rounded-pill border border-line bg-brand-soft px-s py-3xs text-small font-bold uppercase tracking-wide text-brand">{kicker}</p>}
         <h2 id={titleId}>{title}</h2>
         {lead && <p class="mt-s text-lead text-muted">{lead}</p>}
         {hasLead && <div class="mt-s text-lead text-muted"><slot name="lead" /></div>}

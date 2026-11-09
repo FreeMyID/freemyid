@@ -1,0 +1,6 @@
+---
+// shadcn/ui CardDescription: one muted supporting paragraph (muted passes 7:1 on card).
+import { cn } from "@/lib/utils";
+interface Props { class?: string }
+---
+<p data-slot="card-description" class={cn("text-muted", Astro.props.class)}><slot /></p>

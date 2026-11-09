@@ -2,194 +2,197 @@
 // For families. Same copy and source comments as site_src/templates/pages/families.html.
 // Sources: docs/marketing/families-page.md (WR-11), which traces every line to docs/HELPER_GUIDE.md,
 // docs/USER_GUIDE.md and docs/assets/fridge-card.html.
+// Revamp (docs/WEBSITE_REVAMP.md): PageHead -> overview cards -> before you sit down -> #setup -> afterward
+// -> #tell-them -> #fridge-card -> pausing -> questions -> closing CTA (brand band). Copy unchanged.
 import Base from "@/layouts/Base.astro";
-import Crumbs from "@/components/Crumbs.astro";
-import RefreshButton from "@/components/site-refresh/RefreshButton.astro";
-import RefreshCallout from "@/components/site-refresh/RefreshCallout.astro";
-import RefreshHero from "@/components/site-refresh/RefreshHero.astro";
-import RefreshSection from "@/components/site-refresh/RefreshSection.astro";
-import RefreshSteps from "@/components/site-refresh/RefreshSteps.astro";
+import PageHead from "@/components/PageHead.astro";
+import Section from "@/components/Section.astro";
+import Art from "@/components/Art.astro";
+import Icon from "@/components/Icon.astro";
+import Alert from "@/components/ui/Alert.astro";
+import Card from "@/components/ui/Card.astro";
 import CtaDownload from "@/components/CtaDownload.astro";
-import familySupport from "@/art/site-refresh/family-support.svg?url";
-import "@/styles/site-refresh.css";
+import Timeline from "@/components/aceternity/Timeline.astro";
+import TimelineItem from "@/components/aceternity/TimelineItem.astro";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { pageProps, url } from "@/lib/site";
-
 const p = pageProps("families");
 const card = url("assets/free-my-id-fridge-card.pdf");
-const lead = "Free My ID was built so people who aren't comfortable with computers can use it. If you're setting it up for someone you love, this page is for you. Allow about half an hour the first time.";
+const grid = "grid gap-m min-[48em]:grid-cols-2";
+const iconBubble = "icon-tile";
 ---
-
 <Base {...p}>
-  <div class="site-refresh">
-    <div class="site-refresh__wrap site-refresh__wrap--narrow pt-m">
-      <Crumbs crumbs={p.crumbs} />
-    </div>
-
-    <div class="site-refresh__wrap">
-      <RefreshHero
-        title="Helping a parent or grandparent use Free My ID"
-        lead={lead}
-      >
-        <div slot="actions" class="site-refresh__actions">
-          <CtaDownload />
-          <RefreshButton href={card} variant="secondary" download>Print the fridge card (PDF)</RefreshButton>
-        </div>
-        <figure slot="media" class="site-refresh__figure">
-          <img src={familySupport} alt="Two people work together through a simple checklist" width="320" height="240" />
-          <figcaption class="site-refresh__caption">A helper and parent reviewing a simple checklist.</figcaption>
-        </figure>
-      </RefreshHero>
-    </div>
-
-    <RefreshSection title="What you're setting up, in one sentence" titleId="families-summary" width="narrow">
-      <div class="site-refresh__prose">
-        {/* source: docs/POSITIONING.md "Legal accuracy": only some states require an answer; elsewhere a polite request */}
-        <p>Free My ID asks people-search sites (websites that publish names, addresses and phone numbers, also called data brokers) to delete a person's details, using each site's own removal process, and then keeps checking. In states with a privacy law, covered sites must answer. Elsewhere, many honor the request but don't have to.</p>
-      </div>
-    </RefreshSection>
-
-    <RefreshSection title="What it doesn't do" titleId="families-limits" tone="alt" width="narrow">
-      <div class="site-refresh__prose">
-        <ul>
-          {/* source: docs/USER_GUIDE.md section 1 limits (Facebook unchanged; news and government records not affected); POSITIONING.md rule 6 */}
-          <li>It doesn't change what Facebook itself does with their account.</li>
-          <li>It can't remove news stories or government records.</li>
-          {/* source: response time varies per broker; registry typical_processing_days and docs/POSITIONING.md (no promised timeline) */}
-          <li>Some sites take weeks, and some list people again later. That's why it keeps checking.</li>
-        </ul>
-      </div>
-    </RefreshSection>
-
-    <RefreshSection title="Before you sit down" titleId="families-before" width="narrow">
-      <div class="site-refresh__prose">
-        {/* source: docs/HELPER_GUIDE.md section 1 "Have ready"; never sent = submitters/base.py _NEVER (DOB), relatives not a sendable field, phone = allow_phone_disclosure (WO-162); privacy scope corrected per docs/vendor/WO-107.md and docs/ROADMAP.md section 1; permission = USER_GUIDE.md section 3, HELPER_GUIDE.md section 3 screen 1 */}
-        <p>Have ready:</p>
-        <ul>
-          <li>Their full name, and any maiden or earlier names</li>
-          <li>The towns they've lived in over the last 10 years</li>
-          <li>Optional: year of birth, phone number, relatives' names. These help Free My ID recognize the right listing. They are stored on your computer. Year of birth and relatives' names are never sent to a site. If a site's form asks for an age, it gets only the age its own listing shows. A phone number goes to a site only if you allow it.</li>
-        </ul>
-      </div>
-      <RefreshCallout title="Permission comes first." tone="note">
-        <p>Each adult gives their own permission. If you're helping an adult, they sign a short permission form, and Free My ID won't work on them without it. For a child under 18, a parent or guardian sets it up.</p>
-      </RefreshCallout>
-    </RefreshSection>
-
-    <RefreshSection title="A separate email address for replies (optional)" titleId="families-email" tone="alt" width="narrow">
-      <div class="site-refresh__prose">
-        {/* source: docs/HELPER_GUIDE.md section 1 (Gmail + app password; Outlook.com/Hotmail can't be used; "Skip, I'll do these by hand"); app password prompt = src/freemyid/wizard/draft.py */}
-        <p>Sites reply by email, and some send a "click to confirm" link.</p>
-        <ul>
-          <li><strong>If you want Free My ID to send the emails and read the replies:</strong> make a new, free Gmail address just for this. It keeps removal mail out of their everyday inbox. Gmail needs an "app password"; the setup screen shows the steps. Outlook.com and Hotmail can't be used for this.</li>
-          <li><strong>If you'd rather keep it simple:</strong> choose "Skip, I'll do these by hand." Free My ID prepares each message and opens their email program, and they press Send.</li>
-        </ul>
-      </div>
-    </RefreshSection>
-
-    <RefreshSection title="Setting it up" titleId="setup" width="wide">
-      {/* source: docs/HELPER_GUIDE.md section 2 (download, SmartScreen, Install) and section 3 (six screens, practice mode); packaging/windows/freemyid.iss PrivilegesRequired=lowest; six screens = src/freemyid/wizard/draft.py STEPS; unsigned = .github/workflows/build.yml release notes */}
-      <RefreshSteps ariaLabel="Setup steps for helping a family member">
-        <li class="site-refresh__step">
-          <span class="site-refresh__step-number" aria-hidden="true">1</span>
-          <h3 class="site-refresh__step-title">Download</h3>
-          <p>On their Windows 10 or 11 computer, use the Download button on this site. Only download from this site.</p>
-        </li>
-        <li class="site-refresh__step">
-          <span class="site-refresh__step-number" aria-hidden="true">2</span>
-          <h3 class="site-refresh__step-title">Open FreeMyIDSetup.exe</h3>
-          <p>Windows may show a blue box that says "Windows protected your PC." That happens because Free My ID is free and hasn't bought a publisher certificate yet. Click the small words <strong>More info</strong>, check the name says FreeMyIDSetup.exe, then click <strong>Run anyway</strong>. <a href={url("download/#smartscreen")}>See it with pictures.</a></p>
-        </li>
-        <li class="site-refresh__step">
-          <span class="site-refresh__step-number" aria-hidden="true">3</span>
-          <h3 class="site-refresh__step-title">Click Install</h3>
-          <p>No administrator password is needed. Free My ID opens by itself.</p>
-        </li>
-        <li class="site-refresh__step">
-          <span class="site-refresh__step-number" aria-hidden="true">4</span>
-          <h3 class="site-refresh__step-title">Go through the six setup screens</h3>
-          <p>A row of dots at the top shows where you are.</p>
-          <ul>
-            <li>Welcome and permission</li>
-            <li>Their name</li>
-            <li>Where they live (city and state are enough)</li>
-            <li>A few optional details to recognize them</li>
-            <li>The optional reply email</li>
-            <li>Whether to keep checking automatically (leave it ticked: one small daily task, quiet unless they're needed while the PC is on and they're signed in)</li>
-          </ul>
-        </li>
-        <li class="site-refresh__step">
-          <span class="site-refresh__step-number" aria-hidden="true">5</span>
-          <h3 class="site-refresh__step-title">Start in practice mode</h3>
-          <p>Free My ID first looks for listings but sends nothing. Look over what it found together. When you're ready, go to Settings and turn on real requests. Requests already sent can't be taken back.</p>
-        </li>
-      </RefreshSteps>
-    </RefreshSection>
-
-    <RefreshSection title="What they'll see afterward" titleId="families-after" tone="alt" width="narrow">
-      <div class="site-refresh__prose">
-        {/* source: docs/HELPER_GUIDE.md section 4 (status words, "Needs you" cards, never does the robot step, approval before sending, notices without personal details, receipts). Approval = models.py EmailMode.APPROVE_EACH default (AUTO is opt-in). Notice text = engine/runner.py notify() title/body (no name or label) */}
-        <ul>
-          <li><strong>A status page in plain words:</strong> listed, asked, waiting for the site, site confirmed, or not listed now.</li>
-          <li><strong>"Needs you" cards.</strong> A few sites need a real person. A card appears with one big button.
-            <ul>
-              <li>"Fill it in for me" opens the site's removal page and fills in the boxes. If the site asks "I'm not a robot," the person ticks the box and presses Submit themselves. Free My ID never does that step.</li>
-              <li>"Do it with me" opens the site in their own browser with numbered steps and a Copy button for each box.</li>
-            </ul>
-          </li>
-          <li><strong>Emails waiting for approval,</strong> if a reply mailbox is set up. Unless they switch on automatic sending, no email goes out until they press OK.</li>
-          <li><strong>Small desktop notices</strong> like "Free My ID needs 5 minutes of your help." They don't show names, addresses or other personal details.</li>
-          <li><strong>Receipts:</strong> a printable list of every site, when it was asked, what it replied, and when it was checked again.</li>
-        </ul>
-      </div>
-    </RefreshSection>
-
-    <RefreshSection title="Tell them this" titleId="families-reminder" width="narrow">
-      <RefreshCallout title="If it ever asks for your Social Security number, a bank card or a password for Facebook, it isn't Free My ID. Call me." tone="note" />
-      <div class="site-refresh__prose">
-        {/* source: docs/HELPER_GUIDE.md section 4 "Tell them" and section 6; no installer emails or calls = policy (docs/marketing/families-page.md) */}
-        <p>Free My ID never asks for your Social Security number or bank or card details, and never charges you. It never asks for their Facebook, Google or everyday email password. It never creates accounts or solves "are you a robot?" checks, and it gives a site a phone number or a photo of ID only if you've allowed it for that person. <a href={url("safety/#never-asks")}>See the full list</a>. We will never email you an installer, and we will never call you.</p>
-      </div>
-    </RefreshSection>
-
-    <RefreshSection title="Printable card for the fridge" titleId="fridge-card" tone="alt" width="narrow">
-      <div class="site-refresh__prose">
-        {/* source: docs/assets/fridge-card.html (three things to remember, helper name and phone space) */}
-        <p>A one-page card with the three things to remember, and a space to write your name and phone number as their helper.</p>
-        <p><RefreshButton href={card} variant="secondary" download>Print the fridge card (PDF)</RefreshButton></p>
-      </div>
-    </RefreshSection>
-
-    <RefreshSection title="Pausing, stopping, uninstalling" titleId="families-stopping" width="narrow">
-      <div class="site-refresh__prose">
-        {/* source: docs/HELPER_GUIDE.md section 5; freemyid.iss SuppressibleMsgBox delete-data prompt */}
-        <ul>
-          <li><strong>Pause the daily checks:</strong> Settings, Run automatically, Turn off.</li>
-          <li><strong>Stop sending real requests:</strong> switch back to practice mode in Settings any time.</li>
-          <li><strong>Uninstall:</strong> Windows Settings, Apps, Free My ID, Uninstall. It asks whether to delete the saved records too. Answer Yes to remove everything Free My ID stored on that computer.</li>
-        </ul>
-      </div>
-    </RefreshSection>
-
-    <RefreshSection title="Questions helpers ask" titleId="families-questions" tone="alt" width="narrow">
-      <div class="site-refresh__prose">
-        <h3>Is it really free?</h3>
-        <p>Yes. <a href={url("faq/")}>See the answer on our Questions page.</a></p>
-        <h3>Is it safe to put on their computer?</h3>
-        {/* source: docs/HELPER_GUIDE.md section 6 closing line; USER_GUIDE.md section 1 (no account, no cloud); LICENSE (AGPL) */}
-        <p>It runs on their computer only. No account, nothing sent to us. It is free, open-source software. It isn't a government service and isn't connected to Facebook/Meta or any data broker.</p>
-        <h3>Can I set it up for several family members?</h3>
-        {/* source: docs/HELPER_GUIDE.md section 5 ("when several are set up"); USER_GUIDE.md "For helpers" (profiles) */}
-        <p>Yes, from one computer. Each adult gives their own permission.</p>
-      </div>
-    </RefreshSection>
-
-    <RefreshSection spacing="compact" width="narrow">
-      <div class="site-refresh__actions">
-        <CtaDownload />
-        <RefreshButton href={url("guides/")} variant="secondary">Use the free guides instead</RefreshButton>
-      </div>
-      {/* WR-61: by-hand guide for helpers */}
-      <p class="site-refresh__caption">Doing it by hand together? Read <a href={url("guides/help-a-parent-remove-their-information/")}>how to help a parent get their details off people-search sites</a>.</p>
-    </RefreshSection>
+<PageHead crumbs={p.crumbs} title="Helping a parent or grandparent use Free My ID"
+  lead="Free My ID was built so people who aren't comfortable with computers can use it. If you're setting it up for someone you love, this page is for you. Allow about half an hour the first time.">
+  {/* source: docs/HELPER_GUIDE.md intro ("Allow about half an hour the first time") */}
+  <div class="mt-m flex flex-wrap gap-s">
+    <CtaDownload />
+    <a class={buttonVariants({ variant: "secondary", size: "lg" })} href={card}><Icon name="printer" />Print the fridge card (PDF)</a>
   </div>
+  <Art slot="art" src="sections/families-help" alt="A grown child helping a parent at a laptop." />
+</PageHead>
+
+<Section label="What Free My ID does" tight>
+  <div class={grid}>
+    <Card class="reveal">
+      <span class={iconBubble}><Icon name="heart" /></span>
+      <h2 class="text-h3">What you're setting up, in one sentence</h2>
+      {/* source: docs/POSITIONING.md "Legal accuracy": only some states require an answer; elsewhere a polite request */}
+      <p>Free My ID asks people-search sites (websites that publish names, addresses and phone numbers, also called data brokers) to delete a person's details, using each site's own removal process, and then keeps checking. In states with a privacy law, covered sites must answer. Elsewhere, many honor the request but don't have to.</p>
+    </Card>
+    <Card class="reveal">
+      <span class={iconBubble}><Icon name="info" /></span>
+      <h2 class="text-h3">What it doesn't do</h2>
+      <ul class="grid list-disc gap-2xs ps-m">
+        {/* source: docs/USER_GUIDE.md section 1 limits (Facebook unchanged; news and government records not affected); POSITIONING.md rule 6 */}
+        <li>It doesn't change what Facebook itself does with their account.</li>
+        <li>It can't remove news stories or government records.</li>
+        {/* source: response time varies per broker; registry typical_processing_days and docs/POSITIONING.md (no promised timeline) */}
+        <li>Some sites take weeks, and some list people again later. That's why it keeps checking.</li>
+      </ul>
+    </Card>
+  </div>
+</Section>
+
+<Section tone="alt" title="Before you sit down" titleId="before-you-sit-down">
+  {/* source: docs/HELPER_GUIDE.md section 1 "Have ready"; never sent = submitters/base.py _NEVER (DOB), relatives not a sendable field, phone = allow_phone_disclosure (WO-162); privacy scope corrected per docs/vendor/WO-107.md and docs/ROADMAP.md section 1; permission = USER_GUIDE.md section 3, HELPER_GUIDE.md section 3 screen 1 */}
+  <div class={grid}>
+    <Card>
+      <p class="font-bold text-heading">Have ready:</p>
+      <ul class="grid list-disc gap-2xs ps-m">
+        <li>Their full name, and any maiden or earlier names</li>
+        <li>The towns they've lived in over the last 10 years</li>
+        <li>Optional: year of birth, phone number, relatives' names. These help Free My ID recognize the right listing. They are stored on your computer. Year of birth and relatives' names are never sent to a site. If a site's form asks for an age, it gets only the age its own listing shows. A phone number goes to a site only if you allow it.</li>
+      </ul>
+    </Card>
+    <div>
+      <Alert variant="note" icon="shield" class="mt-0"><p><strong>Permission comes first.</strong> Each adult gives their own permission. If you're helping an adult, they sign a short permission form, and Free My ID won't work on them without it. For a child under 18, a parent or guardian sets it up.</p></Alert>
+    </div>
+  </div>
+</Section>
+
+<Section title="A separate email address for replies (optional)" titleId="reply-email">
+  {/* source: docs/HELPER_GUIDE.md section 1 (Gmail + app password; Outlook.com/Hotmail can't be used; "Skip, I'll do these by hand"); app password prompt = src/freemyid/wizard/draft.py */}
+  <p slot="lead">Sites reply by email, and some send a "click to confirm" link.</p>
+  <ul class={grid} role="list">
+    <Card as="li">
+      <span class={iconBubble}><Icon name="mail" /></span>
+      <p><strong>If you want Free My ID to send the emails and read the replies:</strong> make a new, free Gmail address just for this. It keeps removal mail out of their everyday inbox. Gmail needs an "app password"; the setup screen shows the steps. Outlook.com and Hotmail can't be used for this.</p>
+    </Card>
+    <Card as="li">
+      <span class={iconBubble}><Icon name="pointer" /></span>
+      <p><strong>If you'd rather keep it simple:</strong> choose "Skip, I'll do these by hand." Free My ID prepares each message and opens their email program, and they press Send.</p>
+    </Card>
+  </ul>
+</Section>
+
+<Section tone="alt" title="Setting it up" titleId="setup">
+  {/* source: docs/HELPER_GUIDE.md section 2 (download, SmartScreen, Install) and section 3 (six screens, practice mode); packaging/windows/freemyid.iss PrivilegesRequired=lowest; six screens = src/freemyid/wizard/draft.py STEPS; unsigned = .github/workflows/build.yml release notes */}
+  <Timeline class="max-w-[48rem]" surface="bg-alt">
+    <TimelineItem n={1} title="Download"><p>On their Windows 10 or 11 computer, use the Download button on this site. Only download from this site.</p></TimelineItem>
+    <TimelineItem n={2} title="Open FreeMyIDSetup.exe"><p>Windows may show a blue box that says "Windows protected your PC." That happens because Free My ID is free and hasn't bought a publisher certificate yet. Click the small words <strong>More info</strong>, check the name says FreeMyIDSetup.exe, then click <strong>Run anyway</strong>. <a href={url("download/#smartscreen")}>See it with pictures.</a></p></TimelineItem>
+    <TimelineItem n={3} title="Click Install"><p>No administrator password is needed. Free My ID opens by itself.</p></TimelineItem>
+    <TimelineItem n={4} title="Go through the six setup screens">
+      <p>A row of dots at the top shows where you are.</p>
+      <ul>
+        <li>Welcome and permission</li>
+        <li>Their name</li>
+        <li>Where they live (city and state are enough)</li>
+        <li>A few optional details to recognize them</li>
+        <li>The optional reply email</li>
+        <li>Whether to keep checking automatically (leave it ticked: one small daily task, quiet unless they're needed)</li>
+      </ul>
+    </TimelineItem>
+    <TimelineItem n={5} title="Start in practice mode"><p>Free My ID first looks for listings, but no removal requests go out until you say so. Look over what it found together. When you're ready, go to Settings and turn on real requests. Requests already sent can't be taken back.</p></TimelineItem>
+  </Timeline>
+  {/* Idea 7 (docs/marketing/COMPETITOR_SITE_REVIEW.md). source: src/freemyid/config.py:30 real_submissions_enabled defaults to False (verified by the coordinator 2026-11-08) */}
+  <Card variant="soft" class="mt-l max-w-[48rem] min-[40em]:flex-row min-[40em]:items-center min-[40em]:gap-m">
+    <span class="icon-tile"><Icon name="shield" /></span>
+    <p>It starts in practice mode, so no removal requests go out until you say so.</p>
+  </Card>
+</Section>
+
+<Section title="What they'll see afterward" titleId="afterward">
+  {/* source: docs/HELPER_GUIDE.md section 4 (status words, "Needs you" cards, never does the robot step, approval before sending, notices without personal details, receipts). Approval = models.py EmailMode.APPROVE_EACH default (AUTO is opt-in). Notice text = engine/runner.py notify() title/body (no name or label) */}
+  <ul class={grid} role="list">
+    <Card as="li" class="reveal">
+      <span class={iconBubble}><Icon name="list" /></span>
+      <p><strong>A status page in plain words:</strong> listed, asked, waiting for the site, site confirmed, or not listed now.</p>
+    </Card>
+    <Card as="li" class="reveal">
+      <span class={iconBubble}><Icon name="pointer" /></span>
+      <p><strong>"Needs you" cards.</strong> A few sites need a real person. A card appears with one big button.</p>
+      <ul class="grid list-disc gap-2xs ps-m">
+        <li>"Fill it in for me" opens the site's removal page and fills in the boxes. If the site asks "I'm not a robot," the person ticks the box and presses Submit themselves. Free My ID never does that step.</li>
+        <li>"Do it with me" opens the site in their own browser with numbered steps and a Copy button for each box.</li>
+      </ul>
+    </Card>
+    <Card as="li" class="reveal">
+      <span class={iconBubble}><Icon name="mail" /></span>
+      <p><strong>Emails waiting for approval,</strong> if a reply mailbox is set up. Unless they switch on automatic sending, no email goes out until they press OK.</p>
+    </Card>
+    <Card as="li" class="reveal">
+      <span class={iconBubble}><Icon name="computer" /></span>
+      <p><strong>Small desktop notices</strong> like "Free My ID needs 5 minutes of your help." They don't show names, addresses or other personal details.</p>
+    </Card>
+    <Card as="li" class="reveal min-[48em]:col-span-2">
+      <span class={iconBubble}><Icon name="report" /></span>
+      <p><strong>Receipts:</strong> a printable list of every site, when it was asked, what it replied, and when it was checked again.</p>
+    </Card>
+  </ul>
+</Section>
+
+<Section tone="alt" title="Tell them this" titleId="tell-them">
+  {/* source: docs/HELPER_GUIDE.md section 4 "Tell them" and section 6; no installer emails or calls = policy (docs/marketing/families-page.md) */}
+  <blockquote class="m-0 max-w-[48rem]"><Alert variant="note" icon="shield" class="mt-0 text-lead"><p><strong>If it ever asks for your Social Security number, a bank card or a password for Facebook, it isn't Free My ID. Call me.</strong></p></Alert></blockquote>
+  <div class="prose-fmid mt-m">
+    <p>Free My ID never asks for your Social Security number or bank or card details, and never charges you. It never asks for their Facebook, Google or everyday email password. It never creates accounts or solves "are you a robot?" checks, and it gives a site a phone number or a photo of ID only if you've allowed it for that person. <a href={url("safety/#never-asks")}>See the full list</a>. We will never email you an installer, and we will never call you.</p>
+  </div>
+</Section>
+
+<Section title="Printable card for the fridge" titleId="fridge-card">
+  {/* source: docs/assets/fridge-card.html (three things to remember, helper name and phone space) */}
+  <Card class="reveal max-w-[48rem] min-[40em]:flex-row min-[40em]:items-center min-[40em]:gap-m">
+    <span class={iconBubble}><Icon name="printer" /></span>
+    <p class="flex-1">A one-page card with the three things to remember, and a space to write your name and phone number as their helper.</p>
+    <p><a class={buttonVariants({ variant: "secondary" })} href={card}>Print the fridge card (PDF)</a></p>
+  </Card>
+</Section>
+
+<Section tone="alt" title="Pausing, stopping, uninstalling" titleId="pausing">
+  {/* source: docs/HELPER_GUIDE.md section 5; freemyid.iss SuppressibleMsgBox delete-data prompt */}
+  <ul class="grid gap-m min-[56em]:grid-cols-3" role="list">
+    <Card as="li"><p><strong>Pause the daily checks:</strong> Settings, Run automatically, Turn off.</p></Card>
+    <Card as="li"><p><strong>Stop sending real requests:</strong> switch back to practice mode in Settings any time.</p></Card>
+    <Card as="li"><p><strong>Uninstall:</strong> Windows Settings, Apps, Free My ID, Uninstall. It asks whether to delete the saved records too. Answer Yes to remove everything Free My ID stored on that computer.</p></Card>
+  </ul>
+</Section>
+
+<Section title="Questions helpers ask" titleId="helper-questions">
+  <div class="max-w-[48rem] divide-y divide-line rounded-xl border border-line bg-card shadow-1">
+    <div class="p-m">
+      <h3>Is it really free?</h3>
+      <p class="mt-xs">Yes. <a href={url("faq/")}>See the answer on our Questions page.</a></p>
+    </div>
+    <div class="p-m">
+      <h3>Is it safe to put on their computer?</h3>
+      {/* source: docs/HELPER_GUIDE.md section 6 closing line; USER_GUIDE.md section 1 (no account, no cloud); LICENSE (AGPL) */}
+      <p class="mt-xs">It runs on their computer only. No account, nothing sent to us. It is free, open-source software. It isn't a government service and isn't connected to Facebook/Meta or any data broker.</p>
+    </div>
+    <div class="p-m">
+      <h3>Can I set it up for several family members?</h3>
+      {/* source: docs/HELPER_GUIDE.md section 5 ("when several are set up"); USER_GUIDE.md "For helpers" (profiles) */}
+      <p class="mt-xs">Yes, from one computer. Each adult gives their own permission.</p>
+    </div>
+  </div>
+</Section>
+
+<Section tone="brand" label="Get started">
+  <div class="flex flex-wrap gap-s">
+    <CtaDownload look="onBrand" />
+    <a class={buttonVariants({ variant: "secondary", size: "lg" })} href={url("guides/")}>Use the free guides instead</a>
+  </div>
+  {/* WR-61: by-hand guide for helpers */}
+  <p class="mt-m max-w-measure">Doing it by hand together? Read <a href={url("guides/help-a-parent-remove-their-information/")}>how to help a parent get their details off people-search sites</a>.</p>
+</Section>
 </Base>

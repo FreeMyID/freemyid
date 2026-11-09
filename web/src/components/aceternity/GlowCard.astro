@@ -1,0 +1,15 @@
+---
+// Aceternity-style card-hover glow: a Card whose border lights up in the glow colour (with a hint of
+// flag red) and gains a soft halo on hover or keyboard focus inside it. The border slowly turns only
+// with motion allowed. Same props as Card (it is Card variant="glow", interactive by default).
+import Card from "../ui/Card.astro";
+interface Props {
+  as?: "div" | "li" | "article" | "section" | "aside";
+  id?: string;
+  interactive?: boolean;
+  padding?: "none" | "sm" | "md" | "lg";
+  class?: string;
+}
+const { interactive = true, ...rest } = Astro.props;
+---
+<Card variant="glow" interactive={interactive} {...rest}><slot /></Card>

@@ -2,9 +2,11 @@
 // Magic UI "Border Beam", ported to CSS only (no motion runtime): one slow gold-to-red light that
 // travels around the button's border every 9 seconds. Decorative (aria-hidden); the button itself
 // is a normal link. Fully off under prefers-reduced-motion and in print (global.css .beam rules).
-interface Props { class?: string }
+// tone: gold (default, gold to flag red) | brand (glow blue, calmer).
+interface Props { class?: string; tone?: "gold" | "brand" }
+const { tone = "gold" } = Astro.props;
 ---
-<span class:list={["beam inline-flex rounded-lg", Astro.props.class]}>
+<span class:list={["beam inline-flex rounded-lg", tone === "brand" && "beam--brand", Astro.props.class]}>
   <slot />
   <span class="beam__ring" aria-hidden="true"></span>
 </span>

@@ -1,0 +1,21 @@
+---
+// Feature grid (aceternity "Card Hover Effect"): icon tile, title, one short paragraph per item;
+// a soft tint fades in behind the hovered/focused tile. `href` makes the whole tile a link.
+// items: { icon?: string; title: string; body: string; href?: string }[]   cols: 2 | 3 | 4 (from 64em)
+import { cn } from "@/lib/utils";
+import Icon from "../Icon.astro";
+interface Item { icon?: string; title: string; body: string; href?: string }
+interface Props { items: Item[]; cols?: 2 | 3 | 4; headingLevel?: "h2" | "h3" | "h4"; class?: string; label?: string }
+const { items, cols = 3, headingLevel: H = "h3", class: cls, label } = Astro.props;
+---
+<ul class={cn("feature-grid", cols > 2 && `feature-grid--${cols}`, cls)} role="list" aria-label={label}>
+  {items.map((it) => (
+    <li>
+      <div class="feature">
+        {it.icon && <span class="icon-tile"><Icon name={it.icon} /></span>}
+        <H class="feature__title">{it.href ? <a class="card-link" href={it.href}>{it.title}</a> : it.title}</H>
+        <p class="feature__body">{it.body}</p>
+      </div>
+    </li>
+  ))}
+</ul>

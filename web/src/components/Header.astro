@@ -15,18 +15,19 @@ const items = [
   ["families/", "For families", "families"],
   ["faq/", "FAQ", "faq"],
 ].filter(([, , key]) => key in pages);
-const toggle = "flex min-h-tap min-w-tap items-center justify-center gap-2xs rounded-md border-2 border-line-strong bg-transparent px-s font-bold text-heading max-[34em]:px-xs";
-const panel = "menu-panel w-[min(20rem,calc(100vw-2*var(--fmi-gutter)))] gap-3xs rounded-xl border border-line bg-card p-2xs text-text shadow-3";
-const link = "flex min-h-tap items-center rounded-md px-xs font-semibold text-text no-underline hover:bg-brand-soft hover:text-heading aria-[current=page]:text-heading aria-[current=page]:underline aria-[current=page]:decoration-accent aria-[current=page]:decoration-[0.12em] aria-[current=page]:underline-offset-[0.4em]";
+// Revamp: shadcn-style ghost pills for nav links, outlined toggle, the Download button stays the one filled control.
+const toggle = "flex min-h-tap min-w-tap items-center justify-center gap-2xs rounded-lg border-2 border-line-strong bg-card px-s font-bold text-heading hover:bg-brand-soft max-[34em]:px-xs";
+const panel = "menu-panel w-[min(20rem,calc(100vw-2*var(--fmi-gutter)))] gap-3xs rounded-xl border border-line bg-card p-xs text-text shadow-3";
+const link = "flex min-h-tap items-center whitespace-nowrap rounded-lg px-s lg:px-2xs xl:px-s font-semibold text-text no-underline transition-colors hover:bg-brand-soft hover:text-heading aria-[current=page]:bg-brand-soft aria-[current=page]:text-heading aria-[current=page]:underline aria-[current=page]:decoration-accent aria-[current=page]:decoration-[0.12em] aria-[current=page]:underline-offset-[0.4em]";
 ---
 <div class="flagbar" aria-hidden="true"><span></span><span></span><span></span></div>
-<header class="site-header sticky top-0 z-40 border-b border-line bg-bg/95 supports-[backdrop-filter]:bg-bg/85 supports-[backdrop-filter]:backdrop-blur">
+<header class="site-header sticky top-0 z-40 border-b border-line bg-bg/95 shadow-[0_1px_0_0_var(--fmi-color-line),0_8px_24px_-18px_rgb(15_28_56/0.35)] supports-[backdrop-filter]:bg-bg/85 supports-[backdrop-filter]:backdrop-blur-md">
   <div class="header-row wrap flex min-h-[4rem] items-center gap-xs">
     <a class="brand flex min-h-tap items-center gap-2xs whitespace-nowrap text-lead font-bold text-heading no-underline" href={url("")}>
       <BrandMark /><span><span class="brand-text">Free My ID</span><span class="visually-hidden">, home page</span></span>
     </a>
     <nav class="ms-auto" aria-label="Main">
-      <ul class="hidden items-center gap-3xs lg:flex" role="list">
+      <ul class="hidden items-center gap-0 lg:flex xl:gap-3xs" role="list">
         {items.map(([href, label, key]) => (
           <li><a class={link} href={url(href)} aria-current={nav === key ? "page" : undefined}>{label}</a></li>
         ))}
@@ -56,7 +57,7 @@ const link = "flex min-h-tap items-center rounded-md px-xs font-semibold text-te
         </details>
       </div>
     </nav>
-    <div class="header-cta shrink-0">
+    <div class="header-cta shrink-0 xl:ms-xs">
       <CtaDownload variant="header" />
     </div>
   </div>
