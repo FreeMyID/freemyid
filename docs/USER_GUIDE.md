@@ -174,7 +174,7 @@ Free My ID **never** tries to get around these. It opens the page for you. Tick 
 Free My ID found a listing that *might* be you: the name matches, but only one other detail does (the card says which, such as the city). That is not enough for Free My ID to be sure, so it asks you. The card has three buttons:
 
 - **Open the page** lets you look at the listing first.
-- **Yes, this is me** tells Free My ID the listing is yours. On its next check it will ask that site to remove it, the same as any other listing it is sure about. Depending on the site, that is an email you approve first, or a step Free My ID asks you to do. If the site wants a photo ID, an account or your phone number, Free My ID stops and asks unless you turned that permission on in **Settings**. While practice mode is on, nothing is actually sent.
+- **Yes, this is me** tells Free My ID the listing is yours. On its next check it will ask that site to remove it, the same as any other listing it is sure about. Free My ID may send the request by itself, or it may ask you to approve an email or do a step, depending on the site and your settings. If the site wants a photo ID, an account or your phone number, Free My ID stops and asks unless you turned that permission on in **Settings**. While practice mode is on, nothing is actually sent.
 - **No, this is not me** tells Free My ID to leave the listing alone. Nothing will be sent for it, and Free My ID will not ask about that listing again.
 
 Either answer closes the to-do. If you pressed the wrong one by accident, nothing is sent until the next check, so you can ask a family member to help; once a request has gone out it cannot be called back.

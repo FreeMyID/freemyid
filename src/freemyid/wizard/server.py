@@ -536,12 +536,15 @@ def create_app(store, token: str, allowed_hosts: set[str],
             return html(ui.error_page("That didn't work", [
                 "That answer did not match the question, so nothing was changed."]), 400)
         from ..engine.handoff import confirm_review
-        from ..models import MatchLevel
-        if li.match_level == MatchLevel.POSSIBLE:   # already answered elsewhere: just close
+        # SEC-123: only an earlier personal answer is kept; a matcher-set level never beats a No
+        personal = {"user_confirmed", "user_rejected"}.intersection(li.match_reasons)
+        if not personal:
             confirm_review(store, lid, t.profile_id, is_me=(answer == "yes"))
         store.complete_todo(t.id)
         store.log(Event(profile_id=t.profile_id, broker_id=t.broker_id, actor=Actor.USER,
                         action="todo_done", detail={"todo_kind": t.kind.value}))
+        if personal:
+            return redirect("/", "review_gone")
         return redirect("/", f"review_{answer}")
 
     @app.post("/todo/{tid}/resolve")

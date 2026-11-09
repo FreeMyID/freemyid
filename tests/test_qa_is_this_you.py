@@ -72,8 +72,6 @@ def _matcher_confirmed(store, p, li, t):
                                              "match_reasons": ["age", "city"]}))
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-123: route ignores a No once the matcher raised "
-                   "the listing to CONFIRMED; the runner keeps sending (owner: Nina)")
 def test_no_wins_over_a_matcher_confirmed_listing(env):  # noqa: F811
     c, store, p, li, t, f, _ = env
     _matcher_confirmed(store, p, li, t)
