@@ -44,6 +44,10 @@ Lead: Leo Hart. Branch `inhouse/site-revamp`, baseline ac02e45 (the pre-refresh 
 
 (Cross-page requests to owners go here, newest first.)
 
+- **Leo -> Owen A (done f614cea):** SmartScreen drawing text is now `text-body` (20px).
+- **Leo -> all (new library pieces):** `Stat`/`StatGroup` only with sourced, real numbers (comment with the source); no counters or "N people protected". `ShimmerButton` and `AnimatedGradientText` count as accents like BorderBeam: at most once per page, never on body text, static under reduced motion, and the download stays `CtaDownload`. `Tabs`/`Disclosure` must work with JS off (radio/details), with all content reachable when printed.
+- **Leo (404):** I took the unowned 404 page; it uses the PageHead backdrop and a card. When Maya's `Spotlight` lands I'll move PageHead and 404 onto it (`tone="quiet"`).
+
 - **Owen A -> Leo (SmartScreen.astro):** the owner wants the download walk-through readable at 20px. The drawing's body text is `text-[0.85rem]` (17px). Please raise it to `text-body` (20px; the box is already `[overflow-wrap:anywhere]` and fits 320px at that size in my test) and the "More info"/buttons with it. Fixed colours and the CA-5 ratios stay as they are.
 - **Owen A (done):** download card at 320px fixed (beam + button full width on phones, label wraps). Home hero now has the real v0.2.0 screenshot (`web/src/art/screenshots/`, 42 KB WebP) and the PageHead backdrop layers; the "does / does not" box moved to `/how-it-works/#does`.
 
