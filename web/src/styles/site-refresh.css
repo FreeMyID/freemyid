@@ -36,15 +36,26 @@
   text-wrap: pretty;
 }
 
-.site-refresh :where(a) {
+/* WO-208: content links only. Button-styled anchors keep their own ink in every state:
+   buttonVariants (every CtaDownload look) always carries .no-underline, and .site-refresh__button
+   styles itself. This layer is unlayered, so a bare `a` rule here would beat Tailwind utilities. */
+.site-refresh :where(a:not(.no-underline, .site-refresh__button)) {
   color: var(--fmi-color-link);
   text-decoration: underline;
   text-decoration-thickness: 0.08em;
   text-underline-offset: 0.18em;
 }
 
-.site-refresh :where(a:hover) {
+.site-refresh :where(a:not(.no-underline, .site-refresh__button):hover) {
   text-decoration-thickness: 0.14em;
+}
+
+/* WO-208: one shared >=44px target for content links. On an inline link, block padding grows the
+   hit box without moving the line box, so mid-sentence links still wrap word by word. A link that
+   a page lays out as flex or block gets the same floor through min-block-size. */
+.site-refresh :where(a:not(.no-underline, .site-refresh__button)) {
+  min-block-size: 44px;
+  padding-block: max(0px, calc((44px - 1em) / 2));
 }
 
 .site-refresh__wrap {
@@ -78,6 +89,20 @@
 
 .site-refresh__section--brand :where(h1, h2, h3, h4) {
   color: var(--fmi-color-band-brand-ink);
+}
+
+/* WO-208: readable links on the brand band (band ink on band, the same pair as the band's text). */
+.site-refresh__section--brand :where(a:not(.no-underline, .site-refresh__button)) {
+  color: var(--fmi-color-band-brand-ink);
+}
+
+.site-refresh__section--brand :where(a:not(.no-underline, .site-refresh__button):hover) {
+  text-decoration-thickness: 0.14em;
+}
+
+.site-refresh__section--brand :where(a:not(.no-underline, .site-refresh__button):focus-visible) {
+  background: var(--fmi-color-band-brand-ink);
+  color: var(--fmi-color-band-brand);
 }
 
 .site-refresh__section-head {
