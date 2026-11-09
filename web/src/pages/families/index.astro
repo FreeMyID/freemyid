@@ -25,19 +25,21 @@ const lead = "Free My ID was built so people who aren't comfortable with compute
       <Crumbs crumbs={p.crumbs} />
     </div>
 
-    <RefreshHero
-      title="Helping a parent or grandparent use Free My ID"
-      lead={lead}
-    >
-      <div slot="actions" class="site-refresh__actions">
-        <CtaDownload />
-        <RefreshButton href={card} variant="secondary" download>Print the fridge card (PDF)</RefreshButton>
-      </div>
-      <figure slot="media" class="site-refresh__figure">
-        <img src={familySupport} alt="Two people work together through a simple checklist" width="320" height="240" />
-        <figcaption class="site-refresh__caption">A helper and parent reviewing a simple checklist.</figcaption>
-      </figure>
-    </RefreshHero>
+    <div class="site-refresh__wrap">
+      <RefreshHero
+        title="Helping a parent or grandparent use Free My ID"
+        lead={lead}
+      >
+        <div slot="actions" class="site-refresh__actions">
+          <CtaDownload />
+          <RefreshButton href={card} variant="secondary" download>Print the fridge card (PDF)</RefreshButton>
+        </div>
+        <figure slot="media" class="site-refresh__figure">
+          <img src={familySupport} alt="Two people work together through a simple checklist" width="320" height="240" />
+          <figcaption class="site-refresh__caption">A helper and parent reviewing a simple checklist.</figcaption>
+        </figure>
+      </RefreshHero>
+    </div>
 
     <RefreshSection title="What you're setting up, in one sentence" titleId="families-summary" width="narrow">
       <div class="site-refresh__prose">
