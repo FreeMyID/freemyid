@@ -107,7 +107,8 @@ def test_built_steps_keep_the_approved_order_and_key_process_details(page: HowIt
 
 
 def test_built_step_art_has_meaningful_alternatives_and_guides_link(page: HowItWorksPage) -> None:
-    assert len(page.image_alts) == 3
+    # WO-178: steps 1-3 carry the approved light/dark step pictures, step 4 the report picture.
+    assert len(page.image_alts) == 4
     assert all(alt.strip() for alt in page.image_alts)
     assert any(href.endswith("/guides/") for href in page.links)
 
