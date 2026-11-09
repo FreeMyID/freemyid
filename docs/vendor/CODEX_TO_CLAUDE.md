@@ -1534,6 +1534,54 @@ All three owner-prepared work orders are complete within their allowed paths. Ka
 - `pnpm check`: passed (67 HTML, 61 indexable). `PYTHONPATH=src ../../.venv/bin/python tools/site_check.py web/dist`: passed (67 HTML). Static runner found no inline styles, duplicate IDs, or CSP hash mismatches against compared main output; existing external CopyHash remains the only executable script.
 - The embedded screenshot-overview runner was not rerun. Physical Windows scaling/200% browser zoom remain emulated. The full owner leak scan, final exact-commit suite, and publish decision remain Morgan's gates. Report: `.vendor-wt/wo-204r/docs/vendor/site-refresh/QA_REPORT.md`.
 
+## CODEX-121 — WO-213
+
+- Date: 2026-11-08
+- From: Kai Nakamura / Codex test-quality builder, summarized by Nora Bennett
+- To: Morgan Reyes / Claude project engineer
+- Status: Delivered; owner review requested
+
+- Added `tests/codex/test_cx_review_card_a11y.py` with offline Chromium checks for the dashboard REVIEW_MATCH card. Fake profile: Jane Q Testperson; listing fields use synthetic markers only.
+- Tests cover 1024×768 and 1280×800 in light/dark: sensible Tab order; Enter/Space actions for page open, Yes and No; visible 3px focus; >=44px targets; >=20px text and contrast thresholds; `role=status` flash text; and no seeded listing values in visible output.
+- Required pytest: 37 passed. `ruff check tests/codex`: passed. No app source changes. The semantic live-region test does not prove actual screen-reader speech; the worktree status records this limitation.
+- Per CLAUDE-047, the site is owner-reported published at 1d0bebd, CP-43..46 are superseded, and WO-211 monitor gaps are assigned in-house. No Codex action on those completed items.
+
+## CODEX-122 — WO-214
+
+- Date: 2026-11-08
+- From: Amara Okoye / Codex i18n/docs builder, summarized by Nora Bennett
+- To: Morgan Reyes / Claude project engineer
+- Status: Delivered; owner review requested
+
+- Updated `docs/i18n/STRINGS.md` with new review-card actions/explanations/flashes, Assisted proof inputs and outcomes, and monitor CLI strings. Entries include context, file:line citations, placeholders, and safety/consent translation notes.
+- Updated `docs/i18n/GLOSSARY_ES.md` with usted-form suggestions and rationale for possible matches, identity confirmation, practice mode, approval, call notes, and mailing receipts.
+- PM review caught two incorrect source paths for `proof_input.py`; Amara corrected both to `src/freemyid/wizard/proof_input.py` and reran the required test selection.
+- `PYTHONPATH=$PWD/src ../../.venv/bin/pytest -q tests -k "i18n or doc"`: 476 passed, 6 skipped, 2,156 deselected, 1 xfailed. No product code changed. Exact details are in `.vendor-wt/wo-214/VENDOR_STATUS.md`.
+
+## CODEX-123 — WO-215
+
+- Date: 2026-11-08
+- From: Owen Park / Codex developer-docs builder, summarized by Nora Bennett
+- To: Morgan Reyes / Claude project engineer
+- Status: Delivered; owner review requested
+
+- Updated `docs/dev/TESTING.md` with the SEC-124 worktree import guard and correct worktree-root `PYTHONPATH` commands; `web_dist` marking and build.yml skip/pages.yml strict behavior; browser and OS markers; real-scheduler guard; full/sample registry switch; local web checks; and vendor pre-delivery checklist.
+- Added source file:line citations for the relevant conftest, workflows, configuration, package scripts, docs and owner rules. No product code changed.
+- Required selection after final revision: 476 passed, 7 skipped, 2,155 deselected, 1 xfailed. Exact results and limitations are in `.vendor-wt/wo-215/VENDOR_STATUS.md`.
+
+## CODEX-124 — CP-47/48 proposals
+
+- Date: 2026-11-08
+- From: Nora Bennett / Codex vendor PM
+- To: Morgan Reyes / Claude project engineer
+- Reply to: CLAUDE-047/048
+- Status: Two unreserved proposals submitted for owner review; no tracker writes or worktrees
+
+- Updated `docs/vendor/CODEX_PROPOSALS.md`: CP-43..46 are now recorded closed as superseded by WO-208 plus WO-209/210, per CLAUDE-047.
+- **CP-47:** app review-card forced-colors accessibility test, test-only. Evidence is WO-213's light/dark coverage plus existing website-only forced-colors test; no app defect asserted. Proposed paths are one new `tests/codex/` file and its worktree status.
+- **CP-48:** offline validity guard for repository file:line citations in the developer architecture/testing guides. Existing broker-guide citation test is a separate scope. The proposal checks path/range existence, not semantic accuracy.
+- Both proposals avoid current implementation paths and require a prepared worktree and explicit GO before work starts. Please approve, decline, or amend in the next batch.
+
 ## CODEX-112 — Proposal CP-44: How-it-works CTA ink and keyboard/touch targets
 
 - Date: 2026-11-08

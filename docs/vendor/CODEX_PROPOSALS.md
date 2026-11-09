@@ -244,16 +244,16 @@ The private issue tracker is the proposal source of truth for these newer ideas;
 | CP-34 | [#159](https://github.com/FreeMyID/freemyid-pm/issues/159) | Link broker contributor guide to existing custom-submitter instructions | WO-188 delivered; owner review |
 | CP-35 | [#160](https://github.com/FreeMyID/freemyid-pm/issues/160) | Test developer-home scheduler examples against the renderer | WO-189 delivered; 2 tests and Ruff pass; owner review |
 | CP-36 | [#162](https://github.com/FreeMyID/freemyid-pm/issues/162) | Guard human-readable registry priority ordering | WO-190 independently verified; 1 test and Ruff pass; artifact authorship unconfirmed |
-| CP-37 | [#165](https://github.com/FreeMyID/freemyid-pm/issues/165) | Guard built developer CLI reference rendering | Superseded by WO-198; owner will close #165 when creating the replacement issue |
+| CP-37 | [#165](https://github.com/FreeMyID/freemyid-pm/issues/165) | Guard built developer CLI reference rendering | Closed by owner; replaced by WO-198 |
 | CP-38 | [#166](https://github.com/FreeMyID/freemyid-pm/issues/166) | Guard registry source summary text | Backlog proposal; awaiting Morgan's review |
 | CP-39 | [#167](https://github.com/FreeMyID/freemyid-pm/issues/167) | Guard exposure result text output | Backlog proposal; awaiting Morgan's review |
 | CP-40 | [#168](https://github.com/FreeMyID/freemyid-pm/issues/168) | Guard human-readable todo list output | Backlog proposal; awaiting Morgan's review |
 | CP-41 | [#169](https://github.com/FreeMyID/freemyid-pm/issues/169) | Guard doctor diagnostic text output | Backlog proposal; awaiting Morgan's review |
-| CP-42 | [#170](https://github.com/FreeMyID/freemyid-pm/issues/170) | Guard developer config table semantics | Superseded by WO-199; owner will close #170 when creating the replacement issue |
+| CP-42 | [#170](https://github.com/FreeMyID/freemyid-pm/issues/170) | Guard developer config table semantics | Closed by owner; replaced by WO-199 |
 
-## WO-204 follow-up batch — CP-43..46 (proposed only)
+## WO-204 follow-up batch — CP-43..46 (closed as superseded)
 
-Requested under CLAUDE-041. These scopes reserve nothing until owner GO. No tracker writes. Existing CP-38..41 remain separate pending proposals; these are audit repairs, not duplicate CLI test proposals.
+Requested under CLAUDE-041. CLAUDE-047 closed all four as superseded by in-house WO-208 plus vendor WO-209/210. These proposals reserve no paths and must not be reopened absent new residual findings. Existing CP-38..41 remain separate backlog proposals.
 
 ## CP-43 — Home CTA contrast and content-link targets
 
@@ -267,7 +267,7 @@ Requested under CLAUDE-041. These scopes reserve nothing until owner GO. No trac
 
 **Collision/dependency:** Home only; no collision with proposals 44–46. WO-204 is report-only. Owner-prepared repair worktree required.
 
-**State:** Awaiting Morgan's batch approval, WO number and prepared worktree; not started.
+**State:** Closed as superseded by WO-208 and WO-209/210 per CLAUDE-047; not started.
 
 ## CP-44 — How-it-works CTA ink and keyboard/touch targets
 
@@ -281,7 +281,7 @@ Requested under CLAUDE-041. These scopes reserve nothing until owner GO. No trac
 
 **Collision/dependency:** How-it-works only; disjoint from 43/45/46. No implementation until owner GO/worktree.
 
-**State:** Awaiting Morgan's batch approval, WO number and prepared worktree; not started.
+**State:** Closed as superseded by WO-208 and WO-209/210 per CLAUDE-047; not started.
 
 ## CP-45 — Safety and families hero gutters, CTA ink and link targets
 
@@ -295,7 +295,7 @@ Requested under CLAUDE-041. These scopes reserve nothing until owner GO. No trac
 
 **Collision/dependency:** Two related trust pages in one bounded work order; disjoint from 43/44/46. No shared fixes in scope; owner prepares worktree.
 
-**State:** Awaiting Morgan's batch approval, WO number and prepared worktree; not started.
+**State:** Closed as superseded by WO-208 and WO-209/210 per CLAUDE-047; not started.
 
 ## CP-46 — Download helper-link targets and illustration readability disposition
 
@@ -309,4 +309,36 @@ Requested under CLAUDE-041. These scopes reserve nothing until owner GO. No trac
 
 **Collision/dependency:** Download only; disjoint from 43–45. No implementation pending owner GO, prepared worktree and the illustration ruling.
 
-**State:** Awaiting Morgan's batch approval, WO number and prepared worktree; not started.
+**State:** Closed as superseded by WO-208 and WO-209/210 per CLAUDE-047; not started.
+
+## Next-wave proposals CP-47..48 (unreserved; CLAUDE-048 invitation)
+
+These are local proposals only. No tracker issues or worktrees were created. Morgan decides which, if any, to number and authorize.
+
+### CP-47 — Check the review card in Windows forced-colors mode
+
+**Evidence:** WO-213 now covers the review card in light/dark themes, but not forced-colors mode (`tests/codex/test_cx_review_card_a11y.py`). The existing forced-colors browser coverage located is for the website CTA (`tests/test_web_contrast_inhouse.py:147-164`), not the local wizard. This is a coverage gap, not a reported app defect.
+
+**Proposed allowed paths:** new `tests/codex/test_cx_review_card_forced_colors.py`; its worktree `VENDOR_STATUS.md`.
+
+**Deliverable:** use the existing offline Chromium/app fixtures and obviously fake profile/listing values to emulate `forced_colors="active"`. Check that all three review-card actions remain distinguishable and keyboard usable, focused controls have a visible system-color indicator, action text stays legible, and Yes/No feedback remains available. Assert no seeded listing values are shown. Report any source issue with file:line; do not change app source or CSS.
+
+**Validation:** targeted pytest with `PYTHONPATH="$PWD/src"` plus `tests/test_wizard_review_match.py`, Ruff for `tests/codex`; no network, real identities, or product edits. State clearly that Chromium emulation does not replace a Windows High Contrast check.
+
+**Collision/dependency:** additive test-only coverage after WO-213; new test path is distinct. Wait for WO-213 to merge and confirm no parallel app accessibility assignment before dispatch.
+
+**State:** Proposed for one free slot; awaiting Morgan's decision, WO number and prepared worktree.
+
+### CP-48 — Keep developer-doc file-and-line citations resolvable
+
+**Evidence:** WO-212's architecture map has 61 file:line citations, and WO-215 adds many source citations to `docs/dev/TESTING.md`. Existing citation coverage found is specific to `docs/dev/CONTRIBUTING_BROKERS.md` (`tests/codex/test_cx_dev_broker_citations.py`); no guard was found for the architecture/testing guides. Line references can silently become stale after source changes. This proposal checks reference validity, not semantic accuracy.
+
+**Proposed allowed paths:** new `tests/codex/test_cx_dev_source_citations.py`; its worktree `VENDOR_STATUS.md`.
+
+**Deliverable:** parse the explicit repository-relative `path:line` and `path:line-range` references in `docs/dev/ARCHITECTURE.md` and `docs/dev/TESTING.md`; assert each source exists and every cited line is within file bounds. Keep the allowlist narrow and report missing, malformed, or stale references by document and citation. Do not rewrite docs or treat a syntactically valid citation as proof that the prose is still accurate.
+
+**Validation:** offline targeted pytest and Ruff with the worktree `PYTHONPATH`; fake/temporary citation cases for malformed references and out-of-range lines. No source/doc edits, new dependencies, or network access.
+
+**Collision/dependency:** test-only, disjoint from the existing broker contributor-guide citation test and the delivered WO-212/215 docs. Confirm no in-house docs-tooling test is underway before dispatch.
+
+**State:** Proposed for one free slot; awaiting Morgan's decision, WO number and prepared worktree.

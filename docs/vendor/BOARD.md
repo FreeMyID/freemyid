@@ -1,6 +1,6 @@
 # Codex vendor work board
 
-Sole writer: Nora Bennett, interactive vendor PM. Last checkpoint: CLAUDE-046 / CODEX-120, 2026-11-08. Release and merge states are owner-reported.
+Sole writer: Nora Bennett, interactive vendor PM. Last checkpoint: CLAUDE-048 / CODEX-124, 2026-11-08. Release and merge states are owner-reported.
 States are owner reports and local document evidence, not independently verified remote PR state. No git or network used. Local merges are distinguished from pushed merges. Work-order status headers may be stale; latest owner channel controls.
 
 Before dispatch or proposals, check this board, exact work-order paths and Claude's stay-off lists. This board grants no additional edit permission. Completed WO-001/002/005/006 path lists are historical scopes, not active reservations. WO-005 scope is exposure_card and its exclusive helpers only, never all views.py functions.
@@ -60,7 +60,10 @@ Before dispatch or proposals, check this board, exact work-order paths and Claud
 | WO-210 | — | Kai Nakamura | merged locally with owner fixup (3ae75d7; owner report); 453 tests pass | CLAUDE-042/045/046 | web/src/pages/download/index.astro; tests/codex/test_cx_audit_download_followup.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-046 |
 | WO-211 | — | Amara Okoye | merged locally (e91f7ec; owner report); three contract findings assigned in-house | CLAUDE-045/046 | tests/codex/test_cx_monitor_contract.py (new); tests/codex/fixtures/monitor/ (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-046 |
 | WO-212 | — | Nora Bennett | merged locally (a3dfa37; owner report); all 61 citations resolve | CLAUDE-045/046 | docs/dev/ARCHITECTURE.md; VENDOR_STATUS.md | 2026-11-08 CLAUDE-046 |
-| WO-204R | #187 | Hannah Cole | re-audit delivered; zero P1/P2; owner final gates remain | CLAUDE-046 GO, prepared combined-main build | docs/vendor/site-refresh/QA_REPORT.md; VENDOR_STATUS.md | 2026-11-08 CODEX-120 |
+| WO-204R | #187 | Hannah Cole | accepted; site published as 1d0bebd (owner report) | CLAUDE-046 GO, prepared combined-main build | docs/vendor/site-refresh/QA_REPORT.md; VENDOR_STATUS.md | 2026-11-08 CLAUDE-047 |
+| WO-213 | — | Kai Nakamura | delivered; 37 tests and Ruff pass; owner review requested | CLAUDE-048 GO | tests/codex/test_cx_review_card_a11y.py (new); VENDOR_STATUS.md | 2026-11-08 CODEX-121 |
+| WO-214 | — | Amara Okoye | delivered; i18n/doc tests pass; owner review requested | CLAUDE-048 GO | docs/i18n/STRINGS.md; docs/i18n/GLOSSARY_ES.md; VENDOR_STATUS.md | 2026-11-08 CODEX-122 |
+| WO-215 | — | Owen Park | delivered; testing/doc tests pass; owner review requested | CLAUDE-048 GO | docs/dev/TESTING.md; VENDOR_STATUS.md | 2026-11-08 CODEX-123 |
 
 WO-107 workspace: .vendor-wt/wo-107. Merged PR #19, owner report (103d79a).
 
@@ -79,9 +82,7 @@ CP-03 navigation tests; CP-04 guide-print audit; CP-07 printable-summary visual 
 
 ## Next checkpoint
 
-CLAUDE-035 accepts WO-191 and WO-192; WO-187..192 are in the in-house merge queue. Builder WIP is 0/5. CP-37..42 (#165–170) propose distinct developer-page built-HTML and CLI text-output guards. All await Morgan's review. CP-33 remains parked for cleared source paths. Respect CLAUDE-034's process notes: Codex is the sole writer of `brand/codex/MANIFEST.md`, and design WOs close when their status records `done (<commit>)`.
-
-CLAUDE-041 reports all ten page WOs merged locally, combined build/site/full leak checks pass and all 279 Codex tests pass. WO-204 audit is delivered (CODEX-110): page-ranked defects require follow-up; no fixes in the audit branch. Builds/site checker pass; 196 offline browser states and screenshot overviews completed. CP-43..46 proposed in CODEX-111..114 for the four free slots; none are authorized or path-reserving. Active builder WIP is 0/5. Owner controls repair worktrees, CodeRabbit fixes, full-suite/exact-commit validation, merge and publication.
+CLAUDE-047 reports the refresh published at 1d0bebd; WO-204R had zero P1/P2, the full suite/site checks/leak scan passed, and CP-43..46 were closed as superseded. CLAUDE-048 GO'd WO-213..215; all three are now delivered for owner review, with no active implementation WIP. CODEX-124 proposes CP-47/48 for the two open slots; these remain unreserved until Morgan's decision and worktrees. The site-refresh design-system fold-back remains in-house.
 
 ## Elena proposed path collision reference
 
