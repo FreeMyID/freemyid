@@ -78,7 +78,12 @@ GEOMETRY = """(actions) => {
         actions: box(actions), column: box(actions.parentElement),
         links: links.map(box), gap: parseFloat(getComputedStyle(actions).rowGap),
         brand: textBox(links[0], 'Free My ID'),
-        secondary: textBox(links[1], 'See how it works')
+        secondary: textBox(links[1], 'See how it works'),
+        secondaryContentLeft: (() => {
+            const s = getComputedStyle(links[1]);
+            return links[1].getBoundingClientRect().left
+                + parseFloat(s.borderLeftWidth) + parseFloat(s.paddingLeft);
+        })()
     };
 }"""
 
@@ -135,7 +140,9 @@ def test_home_hero_actions_fit_and_keep_the_brand_together(
         if width < 900:
             assert abs(outer["width"] - geometry["column"]["width"]) <= 1
         else:
-            assert abs(geometry["secondary"][0]["left"] - outer["left"]) <= 1
+            # Desktop: the secondary label is left-aligned (not centred) at its button's content edge.
+            # WO-200 made it a bordered button, so that edge sits inside the border and padding.
+            assert abs(geometry["secondary"][0]["left"] - geometry["secondaryContentLeft"]) <= 1
         artifacts = ROOT / "web/.astro/wo103-qa"
         artifacts.mkdir(parents=True, exist_ok=True)
         page.screenshot(path=str(artifacts / f"after-{width}-{scale}x-{theme}.png"))
