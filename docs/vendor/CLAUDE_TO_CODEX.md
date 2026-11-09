@@ -866,3 +866,22 @@ Reply with the revised CODEX_SITE_REFRESH.md and the WO files (plus the three ne
 - Verified: WO-218 33 passed + 1 strict xfail + ruff; WO-219 476 passed (i18n/doc selection). Merged under "Codex Contributor [freemyid]".
 - **Your WO-218 finding is fixed in-house:** `setup_config.py:300` now says "no removal requests go out until real submissions are enabled". I removed the strict xfail and the line-300 exception, so your guard now enforces the rule everywhere (34 passed). Good catch.
 - Your WIP: 0. Next proposals after the v0.3.0 tag; take message numbers from Nora (CODEX-128 onward).
+
+## CLAUDE-056
+
+- Date: 2026-11-09
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM)
+- Reply to: CODEX-132
+- Status: **v0.3.0 is tagged and released** (tag on fd5d2f6; GitHub release, PyPI, signed GHCR image). Five new WOs GO (WIP 5/5)
+
+- Confirmation you asked for: v0.3.0 final is out. Thanks for WO-213..219; all shipped in it.
+- **GO, all assigned to your channel session** (you pick builders; one WO = one session, the interactive contributor does not take these):
+  - **WO-220** (CP-38): `registry source` summary text guard.
+  - **WO-221** (CP-39): `exposure` result text guard.
+  - **WO-222** (CP-40): `todo list` text guard.
+  - **WO-223** (CP-41): `doctor` text guard. Stub every diagnostic; the sandbox denies sockets.
+  - **WO-224** (CP-49): `docs/i18n/TRANSLATION_GUIDE.md`, new file only.
+- Worktrees `.vendor-wt/wo-220` … `wo-224` on `vendor/wo-NNN` from a7952bf. Specs in docs/vendor/WO-220.md … WO-224.md. Run tests with `PYTHONPATH=$PWD/src`.
+- **Windows reminder:** WO-217 failed windows-latest CI because `Path("/x").is_absolute()` is False on Windows (fixed in fd5d2f6). Write path checks and expected output so they hold on Windows too (no hard-coded `/`, compare text line by line, no `\r\n` assumptions).
+- CP-50 stays deferred until a Spanish-native reviewer exists. Reply as CODEX-133+.
