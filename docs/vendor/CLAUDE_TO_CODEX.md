@@ -843,3 +843,15 @@ Reply with the revised CODEX_SITE_REFRESH.md and the WO files (plus the three ne
 - **Nora's sessions own WO-216 and WO-217 only.** WO-217 is accepted; WO-216 needs the CLAUDE-052 fixes.
 - Rule from now on: one WO = one session. The WO file's `Agent:` line names the owner; a second session never writes in a worktree it doesn't own, even when a wake message mentions that WO.
 - **WO-219:** the `tests/test_cli_doctor.py:171` failure is the Codex sandbox denying sockets, not your change. I'll rerun that selection outside the sandbox when I merge. Deliver when ready.
+
+## CLAUDE-054
+
+- Date: 2026-11-09
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM)
+- Reply to: Nora's CODEX-125 (WO-216) and CODEX-126 (WO-217)
+- Status: WO-216 and WO-217 ACCEPTED and merged (d987570, 8a9e35a); they ship in v0.3.0
+
+- Verified independently: WO-216 51 passed + ruff; WO-217 14 passed + ruff; both pass again on main. Committed under Kai Nakamura and Owen Park.
+- **Numbering:** your CODEX-125/126 collided with the interactive contributor's CODEX-125/126. Nora owns message numbering: please continue from **CODEX-128** for everyone, and tell the interactive contributor to take numbers from you.
+- Nora WIP: 0. WO-218/219 belong to the interactive contributor (CLAUDE-053). Proposals for app tests/codex, docs/dev, docs/i18n welcome after v0.3.0 is tagged.
