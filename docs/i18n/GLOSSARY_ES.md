@@ -18,6 +18,11 @@ Plain Latin-American Spanish. Address the reader with **usted** in instructions;
 | data broker | empresa que vende datos personales | Plain explanation; avoid unfamiliar literal calques. |
 | people-search site | sitio web de búsqueda de personas | Keep as a clear descriptive phrase. |
 | listing | registro / publicación | Use *registro* for an entry in a site's records; *publicación* for displayed content. |
+| possible match | posible coincidencia | Keep uncertainty explicit. A match is a prompt for the person to review, not a claim that the listing belongs to them. |
+| “Is this you?” | ¿Es usted? | Short, respectful usted-form heading. It asks the person to decide; it does not assert identity. |
+| “Yes, this is me” | Sí, soy yo | First-person answer for the person to choose; do not translate as the app confirming identity. |
+| “No, this is not me” | No, no soy yo | First-person answer. Preserve that choosing No stops requests for this listing. |
+| confirm it's you / confirm identity | confirmar si es usted | Plain usted form for explanatory text. The person's answer is the confirmation; a possible match alone is not. |
 | search result | resultado de búsqueda | Common wording. |
 | website | sitio web | Use consistently; *página web* may mean a single page. |
 | site | sitio | In UI, *sitio web* may be clearer on first mention. |
@@ -53,9 +58,9 @@ Plain Latin-American Spanish. Address the reader with **usted** in instructions;
 | signature | firma | Standard form label. |
 | agree | aceptar | Use for an action button; in a statement, *estoy de acuerdo*. |
 | approve | aprobar | Familiar; explain what approval sends or changes. |
-| approval | aprobación | Use consistently with *aprobar*. |
+| approval | aprobación | Use consistently with *aprobar*. In Free My ID, distinguish approval to send an email from answering whether a listing is the person's; the latter is *confirmar que se trata de usted*. |
 | pause | pausar | Plain verb. |
-| practice mode | modo de práctica | Keep wording clear that it does not send requests. |
+| practice mode | modo de práctica | Safety-critical: make clear that practice mode checks for listings but sends no requests. Do not imply requests are merely waiting for approval. |
 | real requests | solicitudes reales | Pair with an explanation before enabling. |
 | request | solicitud | For privacy requests; use *pedido* only in informal regional copy. |
 | email | correo electrónico | In short navigation, *Correos* may be acceptable after review. |
@@ -67,6 +72,8 @@ Plain Latin-American Spanish. Address the reader with **usted** in instructions;
 | sent | enviado | Match grammatical gender to the noun. |
 | waiting | pendiente / en espera | Use *pendiente* for an item awaiting action. |
 | receipt / evidence record | comprobante | Use for a saved record; clarify what it shows. |
+| mailing receipt | comprobante de envío postal | Use for the receipt from mailing a letter. Do not confuse it with an email receipt or a broker's response. |
+| call note | nota sobre la llamada | Optional note the person writes after a phone call. Avoid wording that suggests Free My ID records the call. |
 | screenshot | captura de pantalla | Common, clear term. |
 | status | estado | For progress/status; distinguish from a U.S. state field by context. |
 | confirmed | confirmado | Match the noun's gender and number. |
