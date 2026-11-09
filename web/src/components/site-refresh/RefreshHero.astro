@@ -1,0 +1,22 @@
+---
+interface Props {
+  title: string;
+  lead: string;
+  eyebrow?: string;
+  note?: string;
+  id?: string;
+}
+
+const { title, lead, eyebrow, note, id = "site-refresh-hero-title" } = Astro.props;
+---
+
+<section class="site-refresh__hero" aria-labelledby={id}>
+  <div class="site-refresh__hero-copy">
+    {eyebrow && <p class="site-refresh__eyebrow">{eyebrow}</p>}
+    <h1 class="site-refresh__hero-title" id={id}>{title}</h1>
+    <p class="site-refresh__hero-lead">{lead}</p>
+    <div class="site-refresh__hero-actions"><slot name="actions" /></div>
+    {note && <p class="site-refresh__hero-note">{note}</p>}
+  </div>
+  <figure class="site-refresh__hero-media"><slot name="media" /></figure>
+</section>
