@@ -82,8 +82,8 @@ def test_pages_yaml_og_entries_are_well_formed() -> None:
 
 
 def meta(page: str, prop: str) -> str:
-    html = (DIST / page).read_text(encoding="utf-8")
-    m = re.search(rf'<meta property="{re.escape(prop)}" content="([^"]*)"', html)
+    doc = (DIST / page).read_text(encoding="utf-8")
+    m = re.search(rf'<meta property="{re.escape(prop)}" content="([^"]*)"', doc)
     assert m, (page, prop)
     return m.group(1)
 
@@ -96,6 +96,14 @@ def test_build_uses_pages_yaml_og_and_publishes_every_image() -> None:
     assert meta("faq/index.html", "og:image") == BASE + "assets/og-home.png"
     for png in OG_DIR.glob("og-*.png"):
         assert (DIST / "assets" / png.name).read_bytes() == png.read_bytes(), png.name
+
+
+def _pages_og_alt() -> dict[str, str]:
+    pages = yaml.safe_load((ROOT / "site_src/pages.yaml").read_text(encoding="utf-8"))
+    return {p["out"]: p["og_alt"] for p in pages if p.get("og_alt")}
+
+
+PAGES_OG_ALT = _pages_og_alt()
 
 
 # WO-170..179 placement (Iris's art, 389138e); developer images redone to match the CLI and the setup-file page (7e80138).
@@ -124,14 +132,6 @@ def test_wo17x_art_placed(page: str, name: str) -> None:
         assert html.unescape(alt) == PAGES_OG_ALT[page.removesuffix("index.html")], page
 
 
-def _pages_og_alt() -> dict[str, str]:
-    pages = yaml.safe_load((ROOT / "site_src/pages.yaml").read_text(encoding="utf-8"))
-    return {p["out"]: p["og_alt"] for p in pages if p.get("og_alt")}
-
-
-PAGES_OG_ALT = _pages_og_alt()
-
-
 def test_developer_pages_have_their_own_og_alt_in_pages_yaml() -> None:
     """Offline half of the check above: both developer pages define a describing alt."""
     for out in ("developers/cli/", "developers/config/"):
@@ -141,9 +141,9 @@ def test_developer_pages_have_their_own_og_alt_in_pages_yaml() -> None:
 
 @pytest.mark.skipif(not (DIST / "index.html").is_file(), reason="web/dist not built")
 def test_wo178_step_art_on_how_it_works() -> None:
-    html = (DIST / "how-it-works/index.html").read_text(encoding="utf-8")
-    assert "<script src" not in html
+    doc = (DIST / "how-it-works/index.html").read_text(encoding="utf-8")
+    assert "<script src" not in doc
     for n in ("step-1-who", "step-2-sent", "step-3-checked"):
-        assert f'assets/art/{n}-dark.svg" media="(prefers-color-scheme: dark)"' in html, n
-        assert re.search(rf'<img src="[^"]*assets/art/{n}-light\.svg"[^>]*width="320" height="250"[^>]*alt="[^"]+"', html), n
+        assert f'assets/art/{n}-dark.svg" media="(prefers-color-scheme: dark)"' in doc, n
+        assert re.search(rf'<img src="[^"]*assets/art/{n}-light\.svg"[^>]*width="320" height="250"[^>]*alt="[^"]+"', doc), n
         assert (DIST / f"assets/art/{n}-light.svg").is_file() and (DIST / f"assets/art/{n}-dark.svg").is_file()
