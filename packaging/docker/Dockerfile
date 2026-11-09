@@ -20,7 +20,10 @@ COPY brokers/registry.sample.yaml brokers/state_laws.yaml brokers/LICENSE-DATA.m
 COPY schema ./schema
 
 # Install the package, then Chromium with its system libraries (needs root, build time only).
-RUN pip install . \
+# libatomic1: Playwright's bundled Node needs it from Playwright 1.65 on, and slim images lack it.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libatomic1 \
+    && pip install . \
     && playwright install --with-deps chromium \
     && rm -rf /var/lib/apt/lists/* /src
 
