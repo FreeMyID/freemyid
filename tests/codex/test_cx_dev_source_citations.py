@@ -47,7 +47,8 @@ def parse_citation(token: str) -> Citation | None:
 
     raw_path = match.group("path")
     path = Path(raw_path)
-    if path.is_absolute() or ".." in path.parts or "\\" in raw_path:
+    if (path.is_absolute() or raw_path.startswith("/") or ".." in path.parts
+            or "\\" in raw_path or ":" in raw_path):
         raise ValueError("path must stay repository-relative")
 
     raw_lines = match.group("lines")
