@@ -34,3 +34,39 @@ You may only ever be given paths in: `tests/codex/` (new test suites), `docs/dev
 - Before you report "delivered": the WO's required checks pass with exact counts recorded; no file changed outside the allowed paths; no real personal data; limitations stated honestly (e.g. emulation is not a real Windows High Contrast or screen-reader check).
 
 Context: docs/ROADMAP.md, docs/POSITIONING.md, docs/VENDOR.md, docs/BACKLOG.md, docs/dev/TESTING.md, README.md.
+
+## Review guidelines (Codex code review on GitHub)
+
+If you are reviewing a pull request, you are a reviewer. The vendor/builder rules above
+(work orders, worktrees, VENDOR_STATUS.md) are not your job. Review every PR, in-house or vendor,
+and report only real problems with file:line. Your comments are advice: the in-house review
+and the local `--no-ff` merge (docs/SDLC.md) remain the gate.
+
+Flag as P0/P1:
+- Real personal data anywhere: names, addresses, phones, emails, listing URLs that look real in
+  fixtures, tests, docs, screenshots or logs. Only obvious fakes are allowed ("Jane Q Testperson,
+  Springfield IL").
+- Committed secrets, session files, cookies, `.env`, account exports, keychain material.
+- New network access outside the allowlist in `src/freemyid/netpolicy.py`, or code that sends
+  personal data to a host that isn't a listed broker or the user's own mailbox.
+- Personal data written unencrypted to disk, logs, notifications or crash output.
+- Broker page text, emails or registry content treated as instructions, run as code or used in
+  unsafe regex/selectors.
+- Wizard/dashboard server changes that weaken CSRF, origin or host checks, or let other local
+  users reach it.
+- `.github/workflows/` changes that check out PR heads with secrets or write tokens, add
+  `pull-requests: write` or `contents: write` without need, or use unpinned third-party actions
+  (see SEC-119).
+- Vendor PRs (branch `vendor/wo-NNN`) that touch paths outside their work order, `src/`, `web/`,
+  or anything in `DENY_PREFIXES` in `tools/vendor.sh`.
+- AI attribution lines in commits or files (Co-Authored-By: Claude/Codex, "Generated with...").
+
+Also flag:
+- User-facing text that breaks `docs/POSITIONING.md`: "guarantee", "erase", "100%",
+  "nothing is sent", fear selling, jargon for older non-technical readers. Prefer
+  "requested"/"confirmed".
+- Tests that hide failures: a skip reported as a pass, a product bug "fixed" in a test instead of
+  a strict `xfail` with a reason, waits with no timeout.
+- Python that isn't 3.11+, typed and ruff-clean (100-char lines).
+
+Don't flag: formatting nits, style ruff already enforces, or `zzz_legacy/` (reference only).

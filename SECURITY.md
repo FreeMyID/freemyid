@@ -35,3 +35,16 @@ We aim to acknowledge reports within 7 days and to agree on a disclosure date wi
 ## Supported versions
 
 Only the latest release gets security fixes.
+
+## Review guidelines (for automated security review)
+
+Treat the "In scope" list above as the checklist. For every PR, check:
+- personal data reaching disk unencrypted, logs, notifications or any host outside the network
+  allowlist;
+- changes to crypto, secrets/keychain, storage, mail, consent or netpolicy code (in-house only;
+  any vendor change there is a P0);
+- the local wizard server: CSRF tokens, Origin/Host checks, binding to localhost only;
+- untrusted input (broker pages, emails, registry updates) never treated as instructions, and
+  regex/selectors from the registry staying bounded;
+- installer/uninstaller deleting only inside the app's own folder;
+- CI workflows: no PR-head checkout with secrets, least-privilege `permissions:`, pinned actions.

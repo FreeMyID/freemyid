@@ -45,3 +45,6 @@ Hard limits that hold in every mode, enforced by the script:
 
 ## Third vendor: GitHub Copilot (added 2026-11-08)
 The GitHub Copilot coding agent works from the same work orders, handed over as GitHub issues labelled `vendor:copilot`, and returns draft PRs on `copilot/*` branches. Process, differences and owner prerequisites: docs/vendor/COPILOT.md. Tooling: `tools/copilot.sh` (issue, scope, merge). The in-house-only list above and `DENY_PREFIXES` apply unchanged.
+
+## Codex cloud code review (owner, 2026-11-09)
+Codex automatic review is on for FreeMyID/freemyid and is the only PR reviewer (`claude.yml` stays issues-only, SEC-119). It reads the "Review guidelines" sections of `AGENTS.md` and `SECURITY.md`. Its comments are advisory: the in-house review (qa-security) and the local `--no-ff` merge stay the gate. P0/P1 comments on any PR, vendor or in-house, are triaged by the orchestrator before merge.
