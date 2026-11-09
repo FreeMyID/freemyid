@@ -4,7 +4,7 @@ class Freemyid < Formula
   desc "Local-first personal data broker opt-out tool with scheduled re-checks"
   homepage "https://freemyid.org"
   # Version matches pyproject.toml ([project] version). Release tooling updates url and sha256.
-  url "https://files.pythonhosted.org/packages/source/f/freemyid/freemyid-0.3.0.tar.gz"
+  url "https://files.pythonhosted.org/packages/source/f/freemyid/freemyid-0.3.1.tar.gz"
   sha256 "REPLACE_WITH_SDIST_SHA256_FROM_RELEASE_TOOLING"
   license "AGPL-3.0-or-later"
 
