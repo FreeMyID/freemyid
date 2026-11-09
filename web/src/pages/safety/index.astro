@@ -1,159 +1,103 @@
 ---
-// /safety/ ("Is it safe?"), D2: replaces /privacy/. Keep the approved, sourced copy below.
-// Anchors used by the home trust bar: #local, #never-asks, #open-source, #uninstall.
-// Copy rule: never say "nothing leaves your computer"; removal requests carry details to the sites.
-import "@/styles/site-refresh.css";
+// /safety/ ("Is it safe?"), D2: replaces /privacy/. Same copy and source comments as
+// site_src/templates/pages/safety.html. Anchors used by the home trust bar: #local, #never-asks,
+// #open-source, #uninstall. Copy rule (graphic-designer/orchestrator): never "nothing leaves your
+// computer"; requests do carry the person's details to the sites. "Nothing is sent to us" is the line.
 import Base from "@/layouts/Base.astro";
-import Crumbs from "@/components/Crumbs.astro";
-import CheckList from "@/components/CheckList.astro";
+import PageHead from "@/components/PageHead.astro";
+import Section from "@/components/Section.astro";
 import Icon from "@/components/Icon.astro";
-import RefreshCallout from "@/components/site-refresh/RefreshCallout.astro";
-import RefreshHero from "@/components/site-refresh/RefreshHero.astro";
-import RefreshSection from "@/components/site-refresh/RefreshSection.astro";
 import Art from "@/components/Art.astro";
+import Alert from "@/components/ui/Alert.astro";
+import CheckList from "@/components/CheckList.astro";
 import { pageProps, release, url } from "@/lib/site";
-
 const p = pageProps("safety");
 const v = release.version;
 ---
-
 <Base {...p}>
-  <div class="site-refresh">
-    <div class="site-refresh__wrap site-refresh__wrap--narrow">
-      <Crumbs crumbs={p.crumbs} />
-    </div>
+<PageHead crumbs={p.crumbs} title="Is Free My ID safe?"
+  lead="A privacy tool you have to trust with your information isn't much of a privacy tool. Free My ID is built so you can check our work.">
+  {/* source: old privacy page lead (approved copy); teardown section 8 H2; second sentence per WR-28 (not absolute) */}
+  <Art slot="art" src="sections/safety-local" alt="Your details are stored on your computer, not in the cloud." />
+</PageHead>
 
-    <div class="site-refresh__wrap">
-      <RefreshHero
-        eyebrow="Privacy and safety"
-        title="Is Free My ID safe?"
-        lead="A privacy tool you have to trust with your information isn't much of a privacy tool. Free My ID is built so you can check our work."
-      >
-        {/* WO-102 approved art; alt from brand/README.md. Storage wording, never "stay on your computer". */}
-        <Art slot="media" src="sections/safety-local" alt="Your details are stored on your computer, not in the cloud." />
-      </RefreshHero>
-    </div>
+{/* source: docs/ROADMAP.md section 1 privacy promise; docs/POSITIONING.md privacy scope (WR-70) */}
+<Section id="local" narrow title="Your details are stored on your computer. Nothing is sent to us." titleId="local-title"
+  lead="Your details are stored only on your computer. They go out only to the people-search sites themselves: your name and town to look you up, and removal requests you approve. The app talks only to the sites you are asking to remove you, your own email account, and our public list of those sites. Nothing is sent to us.">
+  {/* source: teardown section 8 column 1; D8 "Nothing is sent to us" (src/freemyid/netpolicy.py, shared rule 4) */}
+  <CheckList>
+    {/* source: old privacy page "Where your information lives" (approved copy) */}
+    <li><Icon name="computer" /><span><strong>Stored only on your computer.</strong> There's no account and no cloud. We have no servers holding your data.</span></li>
+    {/* source: D8, src/freemyid/crypto.py (AES-256-GCM), storage/db.py; key in the Windows credential store. Report sentence: SEC-43 ruling; wizard/report.py docstring */}
+    <li><Icon name="lock" /><span><strong>Locked.</strong> Your details are stored encrypted on your computer, and the key is kept in Windows' own secure password store. The printable progress report you can make is a normal file, so it holds only site names, statuses and dates, never your address or phone number.</span></li>
+    {/* source: src/freemyid/netpolicy.py; old privacy page "Fenced in" (approved copy) */}
+    <li><Icon name="shield" /><span><strong>Fenced in.</strong> The app may only contact the removal sites themselves, your removal mailbox and our public list of sites (see below). Everything else is blocked. The only exception is a one-time, optional download of a small extra browser, and only if your computer has no Chrome or Edge, and it asks you first.</span></li>
+    {/* source: shared rule 6 (Listing.shown_fields); old privacy page (approved copy) */}
+    <li><Icon name="check" /><span><strong>Sites get as little as possible:</strong> only what they already show about you, plus a removal email address.</span></li>
+  </CheckList>
+  <h3 id="updates" class="mt-l">Keeping the list of sites up to date</h3>
+  {/* source: old privacy page "Keeping the list of sites up to date" (approved copy); configured registry URL, shared rule 4 */}
+  <p class="mt-xs max-w-measure">People-search sites change their removal pages often. So Free My ID can download an updated list of sites and removal steps from the Free My ID project. That download sends nothing about you or the people you protect: it only fetches the list.</p>
+</Section>
 
-    <RefreshSection
-      id="local"
-      width="narrow"
-      eyebrow="Your information"
-      title="Your details are stored on your computer. Nothing is sent to us."
-      titleId="local-title"
-      lead="Your details are stored only on your computer. They go out only to the people-search sites themselves: your name and town to look you up, and removal requests you approve. The app talks only to the sites you are asking to remove you, your own email account, and our public list of those sites. Nothing is sent to us."
-    >
-      {/* source: docs/ROADMAP.md section 1 privacy promise; docs/POSITIONING.md privacy scope (WR-70) */}
-      <CheckList>
-        {/* source: old privacy page "Where your information lives" (approved copy) */}
-        <li><Icon name="computer" /><span><strong>Stored only on your computer.</strong> There's no account and no cloud. We have no servers holding your data.</span></li>
-        {/* source: D8, src/freemyid/crypto.py (AES-256-GCM), storage/db.py; key in the Windows credential store. Report sentence: SEC-43 ruling; wizard/report.py docstring */}
-        <li><Icon name="lock" /><span><strong>Locked.</strong> Your details are stored encrypted on your computer, and the key is kept in Windows' own secure password store. The printable progress report you can make is a normal file, so it holds only site names, statuses and dates, never your address or phone number.</span></li>
-        {/* source: src/freemyid/netpolicy.py; old privacy page "Fenced in" (approved copy) */}
-        <li><Icon name="shield" /><span><strong>Fenced in.</strong> The app may only contact the removal sites themselves, your removal mailbox and our public list of sites (see below). Everything else is blocked. The only exception is a one-time, optional download of a small extra browser, and only if your computer has no Chrome or Edge, and it asks you first.</span></li>
-        {/* source: shared rule 6 (Listing.shown_fields); old privacy page (approved copy) */}
-        <li><Icon name="check" /><span><strong>Sites get as little as possible:</strong> only what they already show about you, plus a removal email address.</span></li>
-      </CheckList>
-      <h3 id="updates" class="mt-l">Keeping the list of sites up to date</h3>
-      {/* source: old privacy page "Keeping the list of sites up to date" (approved copy); configured registry URL, shared rule 4 */}
-      <p class="mt-xs max-w-measure">People-search sites change their removal pages often. So Free My ID can download an updated list of sites and removal steps from the Free My ID project. That download sends nothing about you or the people you protect: it only fetches the list.</p>
-    </RefreshSection>
+<Section id="never-asks" tone="alt" narrow title="What it never asks for" titleId="never-asks-title">
+  <CheckList class="[&>li>svg]:text-muted">
+    {/* source: old privacy page "We will never ask for" (approved copy); POSITIONING.md rule 4 */}
+    <li><Icon name="x" /><span>Your Social Security number</span></li>
+    <li><Icon name="x" /><span>Bank account, credit or debit card details</span></li>
+    {/* source: teardown section 8 column 2; shared rule 6 ("Never pay") */}
+    <li><Icon name="x" /><span>A payment of any kind</span></li>
+    <li><Icon name="x" /><span>Your full birthday. The setup asks only for a year of birth, and you can leave that blank</span></li>
+    {/* WR-30: only the everyday email password in the list; app password explained below */}
+    <li><Icon name="x" /><span>The password to your everyday email</span></li>
+  </CheckList>
+  {/* WO-162 (master list, Morgan 2026-11-08): what it never does, kept apart from what it never asks for.
+     source: phone = submitters/base.py allowed_fields + engine/tiers.py (allow_phone_disclosure); year of birth and relatives =
+     base.py _NEVER / not a sendable field; age = base.shown_age (SEC-115, 5f01a9c: only the listing's own age_shown, none if it shows none), web_form.search_url (name, town, phone only with permission); ID = tiers.py + no upload
+     code in engine/; accounts = no account-creation code, tiers.py sends ACCOUNT_REQUIRED to you; robot checks = PLAN_V1 D9, rule 5 */}
+  <h3 id="never-does" class="mt-l">What it never does</h3>
+  <CheckList class="mt-s [&>li>svg]:text-muted">
+    <li><Icon name="x" /><span>Send your year of birth or your relatives' names to a site. They only help it recognize the right listing. If a site's form asks for an age, it gets only the age that site's own listing already shows, never one worked out from your year of birth</span></li>
+    <li><Icon name="x" /><span>Give a site your phone number, unless you switch that on</span></li>
+    <li><Icon name="x" /><span>Send a photo of your ID, unless you switch that on for a site that insists on it</span></li>
+    <li><Icon name="x" /><span>Create an account on a site for you</span></li>
+    <li><Icon name="x" /><span>Solve "are you a robot?" checks. It hands those to you</span></li>
+  </CheckList>
+  {/* source: families.html Gmail step (separate free mailbox + app password); PLAN_V1 D2 (mailbox optional) */}
+  <p class="mt-m max-w-measure">If you want Free My ID to send requests for you, you give it an app password for a separate removal mailbox. That's optional.</p>
+  <Alert variant="note" icon="shield"><p><strong>If anything claiming to be Free My ID asks you for these, it isn't us.</strong></p></Alert>
+</Section>
 
-    <RefreshSection
-      id="never-asks"
-      width="narrow"
-      tone="alt"
-      eyebrow="Your choices"
-      title="What it never asks for"
-      titleId="never-asks-title"
-    >
-      <CheckList class="[&>li>svg]:text-muted">
-        {/* source: old privacy page "We will never ask for" (approved copy); POSITIONING.md rule 4 */}
-        <li><Icon name="x" /><span>Your Social Security number</span></li>
-        <li><Icon name="x" /><span>Bank account, credit or debit card details</span></li>
-        {/* source: teardown section 8 column 2; shared rule 6 ("Never pay") */}
-        <li><Icon name="x" /><span>A payment of any kind</span></li>
-        <li><Icon name="x" /><span>Your full birthday. The setup asks only for a year of birth, and you can leave that blank</span></li>
-        {/* WR-30: only the everyday email password in the list; app password explained below */}
-        <li><Icon name="x" /><span>The password to your everyday email</span></li>
-      </CheckList>
-      {/* WO-162 (master list, Morgan 2026-11-08): what it never does, kept apart from what it never asks.
-          source: phone = submitters/base.py allowed_fields + engine/tiers.py (allow_phone_disclosure); year of birth and relatives =
-          base.py _NEVER / not a sendable field; age = base.shown_age (SEC-115, 5f01a9c: only the listing's own age_shown, none if it shows none),
-          web_form.search_url (name, town, phone only with permission); ID = tiers.py + no upload code in engine/; accounts = no account-creation code,
-          tiers.py sends ACCOUNT_REQUIRED to you; robot checks = PLAN_V1 D9, rule 5 */}
-      <h3 id="never-does" class="mt-l">What it never does</h3>
-      <CheckList class="mt-s [&>li>svg]:text-muted">
-        <li><Icon name="x" /><span>Send your year of birth or your relatives' names to a site. They only help it recognize the right listing. If a site's form asks for an age, it gets only the age that site's own listing already shows, never one worked out from your year of birth</span></li>
-        <li><Icon name="x" /><span>Give a site your phone number, unless you switch that on</span></li>
-        <li><Icon name="x" /><span>Send a photo of your ID, unless you switch that on for a site that insists on it</span></li>
-        <li><Icon name="x" /><span>Create an account on a site for you</span></li>
-        <li><Icon name="x" /><span>Solve "are you a robot?" checks. It hands those to you</span></li>
-      </CheckList>
-      {/* source: families.html Gmail step (separate free mailbox + app password); PLAN_V1 D2 (mailbox optional) */}
-      <p class="mt-m max-w-measure">If you want Free My ID to send requests for you, you give it an app password for a separate removal mailbox. That's optional.</p>
-      <RefreshCallout tone="note">
-        <p><strong>If anything claiming to be Free My ID asks you for these, it isn't us.</strong></p>
-      </RefreshCallout>
-    </RefreshSection>
+<Section id="open-source" narrow title="You can check the work" titleId="open-source-title"
+  lead="Free My ID is open source, so anyone can read exactly what it does. The code is public under the GNU AGPL license.">
+  {/* source: teardown section 8 column 3; LICENSE (GNU AGPL v3). Owner rule (ROADMAP principle 6): users never land on
+      github.com from a page like this; the code link lives on /developers/ and in the footer ("Source code"). */}
+  <p class="max-w-measure">You don't need to read code yourself. It's published so that people who do can check it for everyone. <a href={url("developers/")}>Where developers find the code</a></p>
+  <h3 id="verify" class="mt-l">Check that your download is genuine</h3>
+  {/* source: download page "How to know it's really us" (approved copy) */}
+  <p class="mt-xs max-w-measure">Only download Free My ID from <a href={url("download/")}>our download page</a>{v ? "" : " (no version is published yet)"}. We will never email you an installer, and we will never call you.</p>
+  {/* WR-29: conditional wording until the first release (build.yml publishes SHA256SUMS.txt) */}
+  <p class="mt-s max-w-measure">{v ? "Every release comes" : "Each release will come"} with a fingerprint (a long code) you can compare with the file you downloaded. <a href={url("download/#checksum")}>How to check the download's fingerprint</a></p>
+  {/* source: teardown section 8 callout; faq.yaml "Why does Windows warn me" (published copy); installer ships unsigned */}
+  <Alert><p>Windows may warn "unknown publisher" the first time, because the installer is not yet signed. <a href={url("download/#smartscreen")}>See exactly what the warning looks like and what to click</a>.</p></Alert>
+</Section>
 
-    <RefreshSection
-      id="open-source"
-      width="narrow"
-      eyebrow="Check the work"
-      title="You can check the work"
-      titleId="open-source-title"
-      lead="Free My ID is open source, so anyone can read exactly what it does. The code is public under the GNU AGPL license."
-    >
-      {/* source: teardown section 8 column 3; LICENSE (GNU AGPL v3). Owner rule: code link lives on /developers/ and footer. */}
-      <p class="max-w-measure">You don't need to read code yourself. It's published so that people who do can check it for everyone. <a href={url("developers/")}>Where developers find the code</a></p>
-      <h3 id="verify" class="mt-l">Check that your download is genuine</h3>
-      {/* source: download page "How to know it's really us" (approved copy) */}
-      <p class="mt-xs max-w-measure">Only download Free My ID from <a href={url("download/")}>our download page</a>{v ? "" : " (no version is published yet)"}. We will never email you an installer, and we will never call you.</p>
-      {/* WR-29: conditional wording until the first release (build.yml publishes SHA256SUMS.txt) */}
-      <p class="mt-s max-w-measure">{v ? "Every release comes" : "Each release will come"} with a fingerprint (a long code) you can compare with the file you downloaded. <a href={url("download/#checksum")}>How to check the download's fingerprint</a></p>
-      {/* source: teardown section 8 callout; faq.yaml "Why does Windows warn me"; installer ships unsigned */}
-      <RefreshCallout>
-        <p>Windows may warn "unknown publisher" the first time, because the installer is not yet signed. <a href={url("download/#smartscreen")}>See exactly what the warning looks like and what to click</a>.</p>
-      </RefreshCallout>
-    </RefreshSection>
+<Section id="uninstall" tone="alt" narrow title="Stop or uninstall any time" titleId="uninstall-title">
+  {/* source: download page "Removing it" (approved copy); packaging/windows/freemyid.iss [UninstallRun] "schedule remove" removes the daily task */}
+  <p class="max-w-measure">Open Windows <strong>Settings → Apps</strong>, find <strong>Free My ID</strong>, and click <strong>Uninstall</strong>. That also removes the daily check. It asks whether to delete your saved records too.</p>
+</Section>
 
-    <RefreshSection
-      id="uninstall"
-      width="narrow"
-      tone="alt"
-      eyebrow="Your choice"
-      title="Stop or uninstall any time"
-      titleId="uninstall-title"
-    >
-      {/* source: download page "Removing it"; packaging/windows/freemyid.iss [UninstallRun] removes the daily task */}
-      <p class="max-w-measure">Open Windows <strong>Settings → Apps</strong>, find <strong>Free My ID</strong>, and click <strong>Uninstall</strong>. That also removes the daily check. It asks whether to delete your saved records too.</p>
-    </RefreshSection>
+<Section id="limits" narrow title="What it will not do" titleId="limits-title">
+  {/* source: teardown section 8 closing line; POSITIONING.md "Lines we do NOT cross" */}
+  <p class="max-w-measure">Free My ID does not stop phone listening, wiretaps or government surveillance. It removes listings from people-search sites.</p>
+</Section>
 
-    <RefreshSection
-      id="limits"
-      width="narrow"
-      eyebrow="What this covers"
-      title="What it will not do"
-      titleId="limits-title"
-    >
-      {/* source: teardown section 8 closing line; POSITIONING.md "Lines we do NOT cross" */}
-      <p class="max-w-measure">Free My ID does not stop phone listening, wiretaps or government surveillance. It removes listings from people-search sites.</p>
-    </RefreshSection>
-
-    <RefreshSection
-      id="this-website"
-      width="narrow"
-      tone="alt"
-      eyebrow="About this site"
-      title="This website"
-      titleId="this-website-title"
-    >
-      {/* source: old privacy page "This website"; true of v3: strict CSP, no third-party requests */}
-      <div class="site-refresh__prose">
-        <p>No cookies, no trackers, no analytics, no outside fonts or scripts. Every picture, icon and style on this site comes from this site itself, so visiting it doesn't tell any other company that you were here.</p>
-        <p>That's also why you didn't see a cookie banner: there are no cookies to ask about. The site has no forms, so it can't collect anything you type.</p>
-        <p>Links to other websites (such as a people-search site's removal page, or our code on GitHub) are ordinary links. Once you click one, that website's own privacy rules apply.</p>
-      </div>
-    </RefreshSection>
+<Section id="this-website" tone="alt" narrow title="This website" titleId="this-website-title">
+  {/* source: old privacy page "This website" (approved copy); true of v3: strict CSP, no third-party requests (scripts/check-site.mjs) */}
+  <div class="prose-fmid">
+    <p>No cookies, no trackers, no analytics, no outside fonts or scripts. Every picture, icon and style on this site comes from this site itself, so visiting it doesn't tell any other company that you were here.</p>
+    <p>That's also why you didn't see a cookie banner: there are no cookies to ask about. The site has no forms, so it can't collect anything you type.</p>
+    <p>Links to other websites (such as a people-search site's removal page, or our code on GitHub) are ordinary links. Once you click one, that website's own privacy rules apply.</p>
   </div>
+</Section>
 </Base>

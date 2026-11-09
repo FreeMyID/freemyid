@@ -6,9 +6,9 @@
 // Copy: headline WR-67, homelab pitch WR-68 (brand). WR-69 (Pro edition line) is on HOLD: no paid tier or prices here.
 // Owner rule (ROADMAP principle 6): this is the only page that links GitHub issues/releases.
 import Base from "@/layouts/Base.astro";
-import "@/styles/site-refresh.css";
-import Crumbs from "@/components/Crumbs.astro";
-import Section from "@/components/site-refresh/RefreshSection.astro";
+import PageHead from "@/components/PageHead.astro";
+import Section from "@/components/Section.astro";
+import Icon from "@/components/Icon.astro";
 import Alert from "@/components/ui/Alert.astro";
 import Badge from "@/components/ui/Badge.astro";
 import CtaDownload from "@/components/CtaDownload.astro";
@@ -16,7 +16,7 @@ import { pageProps, pages, site, url } from "@/lib/site";
 const p = pageProps("developers");
 const soon = "Planned";
 const cliRef = `${site.repo_url}/blob/main/docs/CLI.md`;
-const pre = "mt-s max-w-full overflow-x-auto rounded-md border border-line bg-surface p-s text-body leading-snug text-text";
+const pre = "mt-s max-w-full overflow-x-auto rounded-md border border-line bg-surface p-s text-small leading-snug text-text";
 
 // Snippets. Unit name, label and commands from src/freemyid/scheduler/render.py and scheduler/__init__.py
 // (Linux/macOS jobs run `freemyid run --headless --scheduled`); pipx, GHCR image, doctor, setup --from,
@@ -84,33 +84,27 @@ export FREEMYID_PASSPHRASE_FILE=~/.config/freemyid/passphrase`;
 const json = `freemyid status --json`;
 ---
 <Base {...p}>
-<div class="site-refresh">
-<header class="site-refresh__wrap site-refresh__section refresh-page-head">
-<Crumbs crumbs={p.crumbs} />
-<div class="refresh-page-intro"><div>
-<h1>Your data-removal tool, on your own machine. Open source.</h1>
-<p class="site-refresh__lead">Free My ID is AGPL-licensed, runs locally and keeps your details on your own computer. Read the code, run it, change it.</p>
-
+<PageHead crumbs={p.crumbs} title="Your data-removal tool, on your own machine. Open source."
+  lead="Free My ID is AGPL-licensed, runs locally and keeps your details on your own computer. Read the code, run it, change it.">
   {/* source: WR-67 (brand headline); LICENSE (GNU AGPL v3); local-first = src/freemyid/netpolicy.py, POSITIONING.md trust panel */}
   <p class="mt-s max-w-measure">Free My ID takes your name off the websites that sell it. This page is for people who want to run it on Linux, macOS or a home server.</p>
-  {/* source: WR-64 art (graphic-designer), alt from brand/README.md. Picture swaps light/dark with the system theme. */}
-</div><figure class="site-refresh__figure">
-  <picture>
+  {/* source: WR-64 art (graphic-designer), alt from brand/README.md. <picture> swaps light/dark with the system theme. */}
+  <picture slot="art">
     <source srcset={url("assets/art/developers-dark.svg")} media="(prefers-color-scheme: dark)" />
     <img src={url("assets/art/developers-light.svg")} width="640" height="480" class="h-auto w-full"
       alt="A terminal on your own computer connected to a small home server, inside a house outline, with a clock for the schedule." />
-  </picture></figure></div>
-</header>
+  </picture>
+</PageHead>
 
-<div class="site-refresh__wrap pb-l">
+<div class="wrap pb-l">
   {/* source: docs/marketing/release-notes-v0.2.0.md, Windows section; data/release.yaml (published v0.2.0) */}
   <Alert variant="note" icon="computer" class="mt-0 max-w-[44rem]">
     <p><strong>Not a developer? You don't need anything on this page.</strong> On Windows 10 or 11, the app does everything with a few clicks, no terminal needed.</p>
   </Alert>
-  <p class="mt-s"><CtaDownload  class="site-refresh__button" /></p>
+  <p class="mt-s"><CtaDownload /></p>
 </div>
 
-<Section id="status" tone="alt" width="narrow" title="What's ready today, and what's coming" titleId="status-title">
+<Section id="status" tone="alt" narrow title="What's ready today, and what's coming" titleId="status-title">
   {/* source: docs/marketing/release-notes-v0.2.0.md, technical users and honest limits; docs/vendor/WO-111.md (GHCR not public) */}
   <ul class="mt-xs grid gap-xs">
     <li class="flex flex-wrap items-center gap-xs"><Badge variant="ok">Available now</Badge><span>The Windows app, with the same engine and command line (<code>freemyid</code>) inside.</span></li>
@@ -122,7 +116,7 @@ const json = `freemyid status --json`;
   <p class="mt-s max-w-measure">Run it headless on a home server. Same engine as the Windows app, driven from the command line and a schedule, with no account and no cloud. Your profile and records are stored on the box you control. Nothing is sent to us: your details go only to the people-search sites (a name-and-town lookup, then the removal requests you approve) and through your own mail server.</p>
 </Section>
 
-<Section id="install" width="narrow" title="Install" titleId="install-title">
+<Section id="install" narrow title="Install" titleId="install-title">
   <h3 id="pipx" class="mt-m flex flex-wrap items-center gap-xs">With pipx</h3>
   {/* source: docs/marketing/release-notes-v0.2.0.md, technical users (published PyPI package); docs/vendor/WO-111.md */}
   <p class="mt-xs max-w-measure">For the command line on Linux and macOS. pipx keeps Free My ID in its own environment.</p>
@@ -141,7 +135,7 @@ const json = `freemyid status --json`;
   <pre class={pre} tabindex="0" aria-label="Install from source"><code>{source}</code></pre>
 </Section>
 
-<Section id="first-run" tone="alt" width="narrow" title="First run" titleId="first-run-title">
+<Section id="first-run" tone="alt" narrow title="First run" titleId="first-run-title">
   {/* source: docs/CLI.md, doctor and setup --from; schema/setup-config.schema.json (version 1); docs/examples/setup-config.example.yaml. Release status: docs/marketing/release-notes-v0.2.0.md, technical users. */}
   <p class="mt-s max-w-measure"><code>freemyid doctor</code> checks that everything Free My ID needs is in place and tells you what to fix. You can open the web wizard with <code>freemyid setup</code>, or prepare a YAML file and validate it before importing it.</p>
   <pre class={pre} tabindex="0" aria-label="First run commands"><code>{firstRun}</code></pre>
@@ -151,9 +145,9 @@ const json = `freemyid status --json`;
   <p class="mt-s max-w-measure">Every field, with a full made-up example: <a href={url(pages["developers-config"].out)}>Setup file reference</a></p>
 </Section>
 
-<Section id="scheduling" width="narrow" title="Headless scheduling" titleId="scheduling-title">
+<Section id="scheduling" narrow title="Headless scheduling" titleId="scheduling-title">
   {/* source: docs/marketing/release-notes-v0.2.0.md, technical users (shipped schedulers) and honest limits (macOS CI-only testing) */}
-  <p class="mt-s max-w-measure">Free My ID checks once a day while your computer is on and you are signed in. One command writes the job for your system: a systemd user timer on Linux, a launchd agent on macOS. The macOS scheduler has been tested in automated checks, but not yet on real Mac hardware.</p>
+  <p class="mt-s max-w-measure">Free My ID checks once a day. One command writes the job for your system: a systemd user timer on Linux, a launchd agent on macOS. The macOS scheduler has been tested in automated checks, but not yet on real Mac hardware.</p>
   <pre class={pre} tabindex="0" aria-label="Scheduling commands"><code>{sched}</code></pre>
   {/* source: src/freemyid/scheduler/render.py systemd_timer (UNIT freemyid-recheck, Persistent, RandomizedDelaySec), launchd LABEL org.freemyid.recheck */}
   <p class="mt-s max-w-measure">The timer it writes looks like this. A run missed while the machine was off happens at the next start. On macOS the agent is called <code>org.freemyid.recheck</code>.</p>
@@ -165,7 +159,7 @@ const json = `freemyid status --json`;
   <p class="mt-s max-w-measure"><code>run --headless</code> never asks a question. If something needs a person, such as a site's "I'm not a robot" check, it stops and adds it to your to-do list (<code>freemyid todo</code>) instead of guessing.</p>
 </Section>
 
-<Section id="secrets" tone="alt" width="narrow" title="Secrets on a headless box" titleId="secrets-title">
+<Section id="secrets" tone="alt" narrow title="Secrets on a headless box" titleId="secrets-title">
   {/* source: docs/marketing/release-notes-v0.2.0.md, technical users (shipped secrets backends); src/freemyid/secret_backends.py (passphrase file must be owner-only; $CREDENTIALS_DIRECTORY/freemyid-passphrase); ROADMAP 3.8 (passphrase-derived key (scrypt), FREEMYID_PASSPHRASE_FILE, or systemd-creds, same encrypted store); src/freemyid/crypto.py (AES-256-GCM) */}
   <p class="mt-s max-w-measure">On Windows the key sits in Windows' own password store. A server often has no desktop key store, so v0.2 adds two other ways to unlock the same encrypted store:</p>
   <ul class="mt-s grid max-w-measure list-disc gap-2xs ps-l">
@@ -175,7 +169,7 @@ const json = `freemyid status --json`;
   <pre class={pre} tabindex="0" aria-label="Passphrase file commands"><code>{pass}</code></pre>
 </Section>
 
-<Section id="json" width="narrow" title="JSON output and exit codes" titleId="json-title">
+<Section id="json" narrow title="JSON output and exit codes" titleId="json-title">
   {/* source: docs/CLI.md, command table, --json rules, status/1 and Exit codes. Release status: docs/marketing/release-notes-v0.2.0.md, technical users. */}
   <p class="mt-s max-w-measure">In v0.2.0, <code>freemyid status --json</code> reads the saved status without changing it. JSON output contains exactly one JSON object on stdout; human messages, such as warnings, go to stderr. Each object identifies its versioned schema, such as <code>"schema": "status/1"</code>. Within a version, fields may be added, but will not be renamed or removed.</p>
   <pre class={pre} tabindex="0" aria-label="JSON output example"><code>{json}</code></pre>
@@ -183,7 +177,7 @@ const json = `freemyid status --json`;
   <p class="mt-s max-w-measure"><a href={cliRef}>The full command and exit code reference (CLI.md on GitHub)</a></p>
 </Section>
 
-<Section id="contribute" tone="alt" width="narrow" title="Contribute" titleId="contribute-title">
+<Section id="contribute" tone="alt" narrow title="Contribute" titleId="contribute-title">
   {/* source: repo public (site.yaml repo_url); brokers/LICENSE-DATA.md (public sample CC BY-NC 4.0); ROADMAP 3.9 (registry) and 3.8 (submitters/plugins) */}
   <p class="max-w-measure">The most useful help is keeping the list of people-search sites and their removal steps correct. Sites change their forms often. You can also add or fix a submitter, the code that sends one site's removal request.</p>
   <ul class="mt-s grid gap-2xs">
@@ -191,10 +185,10 @@ const json = `freemyid status --json`;
     <li><a href={site.issues_url}>Report a bug or a changed removal page (GitHub issues)</a></li>
     <li><a href={site.releases_url}>Release history on GitHub</a></li>
   </ul>
-  <p class="mt-s max-w-measure text-body text-muted">Regular users never need a GitHub account: they can <a href={site.support_mailto}>email us</a> instead.</p>
+  <p class="mt-s max-w-measure text-small text-muted">Regular users never need a GitHub account: they can <a href={site.support_mailto}>email us</a> instead.</p>
 </Section>
 
-<Section id="security" width="narrow" title="Security" titleId="security-title">
+<Section id="security" narrow title="Security" titleId="security-title">
   {/* source: site_src/static/.well-known/security.txt (Contact security@freemyid.org, Policy = GitHub security policy); SECURITY.md */}
   <p class="max-w-measure">Found a security problem? Please report it privately, not in a public issue.</p>
   <ul class="mt-s grid gap-2xs">
@@ -202,16 +196,4 @@ const json = `freemyid status --json`;
     <li><a href={`${site.repo_url}/blob/main/SECURITY.md`}>Our security policy (SECURITY.md)</a></li>
   </ul>
 </Section>
-</div>
 </Base>
-
-<style is:global>
-  .site-refresh [data-slot="badge"] { color: var(--fmi-color-text); }
-  .site-refresh .refresh-page-intro { display: grid; gap: var(--fmi-space-l); align-items: center; }
-  .site-refresh .refresh-page-head h1 { max-width: 26ch; margin-block-start: var(--fmi-space-m); }
-  .site-refresh pre { font-size: 1.25rem; max-width: 100%; overflow-x: auto; white-space: pre; }
-  .site-refresh small { font-size: 1em; }
-  .site-refresh figure { margin: 0; min-width: 0; }
-  .site-refresh img { max-width: 100%; height: auto; }
-  @media (min-width: 56.25em) { .site-refresh .refresh-page-intro:has(figure) { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } }
-</style>

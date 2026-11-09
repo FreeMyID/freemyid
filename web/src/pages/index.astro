@@ -1,581 +1,378 @@
 ---
-// Home, v3. Keep D10's order and approved copy. All refreshed styles are page-scoped
-// through the temporary site-refresh layer; Base, Header and Footer remain unchanged.
-import "@/styles/site-refresh.css";
+// Home, v3. Same order (D10) and copy as site_src/templates/pages/home.html (teardown section 4 minus
+// D8 exclusions, WR-25..38). Every Download button goes through CtaDownload (D5). Source comments
+// are carried over from the v2 template. Zero client JS on this page.
 import Base from "@/layouts/Base.astro";
+import Section from "@/components/Section.astro";
 import CtaDownload from "@/components/CtaDownload.astro";
 import Icon from "@/components/Icon.astro";
 import Art from "@/components/Art.astro";
+import Card from "@/components/ui/Card.astro";
+import Alert from "@/components/ui/Alert.astro";
 import FaqList from "@/components/FaqList.astro";
-import RefreshSection from "@/components/site-refresh/RefreshSection.astro";
-import RefreshCard from "@/components/site-refresh/RefreshCard.astro";
-import RefreshSteps from "@/components/site-refresh/RefreshSteps.astro";
-import RefreshCallout from "@/components/site-refresh/RefreshCallout.astro";
-import homeScreenshot from "@/art/screenshots/home-hero-v0.2.0.png";
+import Marquee from "@/components/magicui/Marquee.astro";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { faq, guides, pageProps, release, site, url } from "@/lib/site";
 
-const version = release.version;
-const homeFaq = faq.filter((question) => question.home);
-const examples = [
-  {
-    art: "sections/step-who",
-    title: "Tell it who to protect.",
-    copy: "Six short screens: your name and the towns you have lived in. It never asks for your Social Security number or bank or card details, and never charges you.",
-  },
-  {
-    art: "sections/step-send",
-    title: "It sends the requests.",
-    copy: "By email, by walking you through a site's form, or by filling the form in while you watch. Each site gets only what it already shows about you.",
-  },
-  {
-    art: "sections/step-report",
-    title: "It keeps checking.",
-    copy: "Once a day, quietly in the background, while your computer is on and you are signed in. You see who confirmed, who is still waiting, and it asks again if a site lists you again.",
-  },
-];
-const comparisonRows: [string, string[], string[], string[]][] = [
-  ["Price", ["Free", "yes"], ["Yearly or monthly fee"], ["Free, your time"]],
-  ["Where your details go", ["Only to the sites you ask to remove you", "yes"], ["Sent to the company"], ["Only to the sites you contact"]],
-  ["Account", ["None", "yes"], ["Account required"], ["None"]],
-  ["Who sends the requests", ["Your own computer, as you"], ["The company, on your behalf"], ["You"]],
-  ["Keeps checking", ["Yes, daily on your PC (your computer must be on and you must be signed in to Windows at the time)"], ["Yes, on a schedule"], ["Only if you remember", "no"]],
-  ["Company staff handle hard cases", ["No. Some sites need you to do a step, and it shows you how", "partial"], ["Often, on higher plans"], ["You"]],
-];
-const comparisonColumns = ["Free My ID", "Paid removal services (typical)", "By hand"];
-const cardIcon = "site-refresh__trust-icon";
+const v = release.version;
+const homeFaq = faq.filter((q) => q.home);
+const btnGhost = buttonVariants({ variant: "ghost", size: "lg" });
+const cardIcon = "inline-flex size-12 items-center justify-center rounded-lg bg-brand-soft text-brand [&_svg]:size-7";
 ---
-
 <Base {...pageProps("home")}>
-  <div class="site-refresh">
-    {/* 1. Hero. The real v0.2.0 screenshot is product proof, not an illustration. */}
-    <section class="site-refresh__hero site-refresh__wrap" aria-labelledby="hero-title">
-      <div class="site-refresh__hero-copy">
-        <p class="site-refresh__eyebrow">Free My ID for Windows</p>
-        <h1 class="site-refresh__hero-title" id="hero-title">Take your name off the websites that sell it.</h1>
-        {/* source: teardown 4.1; "runs on your own computer, no account, no cloud" = D8 / netpolicy.py */}
-        <p class="site-refresh__hero-lead">Free My ID asks the people-search and data-broker sites that list your name, address and phone number to remove them, then keeps checking. It runs on your own computer. No account. No cloud.</p>
-        <div class="site-refresh__hero-actions hero-actions">
-          <CtaDownload class="site-refresh__button hero-download" />
-          <a class="site-refresh__button site-refresh__button--secondary hero-secondary" href={url("how-it-works/")}>See how it works</a>
-        </div>
-        {/* source: release values from data/release.yaml; PLAN_V1 D5 per-user install */}
-        {version ? (
-          String(version).startsWith("0.") ? (
-            <p class="site-refresh__hero-note">Free for Windows 10 and 11. Version {version} is an early release, so <a href={site.support_mailto}>tell us what confuses you</a>. No account needed: just send an email.</p>
-          ) : (
-            <p class="site-refresh__hero-note">Free for Windows 10 and 11. Version {version}{release.size_mb ? `, ${release.size_mb} MB` : ""}.</p>
-          )
+
+{/* 1. Hero */}
+<section class="overflow-hidden bg-[radial-gradient(ellipse_at_top_right,var(--fmi-color-brand-soft),transparent_60%)] py-2xl" aria-labelledby="hero-title">
+  <div class="wrap grid items-center gap-xl min-[56.25em]:grid-cols-[1.1fr_1fr]">
+    <div>
+      {/* source: teardown 4.1; LICENSE (AGPL); Windows-only v1 (docs/PLAN_V1.md) */}
+      <p class="mb-s inline-flex items-center gap-2xs rounded-pill border border-line bg-card px-s py-3xs text-small font-bold text-brand">
+        <Icon name="shield" />Free. Open source. For Windows.
+      </p>
+      <h1 id="hero-title" class="text-display">Take your name off the websites that sell it.</h1>
+      {/* source: teardown 4.1; "runs on your own computer, no account, no cloud" = D8 / netpolicy.py */}
+      <p class="mt-m max-w-measure text-lead text-muted">Free My ID asks the people-search and data-broker sites that list your name, address and phone number to remove them, then keeps checking. It runs on your own computer. No account. No cloud.</p>
+      <div class="hero-actions mt-l">
+        <CtaDownload beam class="hero-download" />
+        <a class:list={[btnGhost, "hero-secondary min-[56.25em]:!px-0"]} href={url("how-it-works/")}>See how it works</a>
+      </div>
+      {/* source: release values from data/release.yaml; PLAN_V1 D5 per-user install */}
+      {v ? (
+        String(v).startsWith("0.") ? (
+          // WR-38: brand-marketing copy for an early (0.x) release. Owner rule (ROADMAP principle 6): users never need an
+          // account and never land on github.com, so feedback goes by email (site.yaml support_mailto, subject only, no body)
+          <p class="mt-m text-small text-muted">Free for Windows 10 and 11. Version {v} is an early release, so <a href={site.support_mailto}>tell us what confuses you</a>. No account needed: just send an email.</p>
         ) : (
-          <p class="site-refresh__hero-note">Free for Windows 10 and 11. The first version is not published yet.</p>
-        )}
-        {/* source: site_src/data/faq.yaml "Why does Windows warn me" (published copy) */}
-        <p class="site-refresh__hero-note">Windows may show a blue "protected your PC" box the first time. <a href={url("download/#smartscreen")}>That's expected. Here's what to click.</a></p>
-      </div>
-      <figure class="site-refresh__hero-media site-refresh__product-shot">
-        <img
-          src={homeScreenshot.src}
-          width={homeScreenshot.width}
-          height={homeScreenshot.height}
-          alt="The Free My ID desktop app showing its Welcome screen at step one of six, with an explanation and a Next button."
-          fetchpriority="high"
-          decoding="async"
-        />
-        <figcaption class="site-refresh__caption">Example with made-up data</figcaption>
-      </figure>
-    </section>
-
-    {/* 2. Trust bar: teardown 4.2 items, each linked to its /safety/ section. */}
-    <RefreshSection tone="alt" spacing="compact" eyebrow="Our promises">
-      <ul class="site-refresh__trustbar" aria-label="Free My ID promises">
-        <li><a href={url("safety/#local")}><Icon name="computer" /><span>No account. Runs on your PC. Nothing sent to us.</span></a></li>
-        <li><a href={url("safety/#never-asks")}><Icon name="shield" /><span>Never asks for your Social Security number or bank or card details, and never charges you</span></a></li>
-        <li><a href={url("safety/#open-source")}><Icon name="code" /><span>Free and open source</span></a></li>
-        <li><a href={url("safety/#uninstall")}><Icon name="trash" /><span>Uninstall any time</span></a></li>
-      </ul>
-    </RefreshSection>
-
-    {/* 3. Proof picture. */}
-    <RefreshSection title="See what was asked, and what came back." titleId="proof-title" lead="Free My ID keeps a plain list: which site, when it asked, where things stand, and when it last checked. You can print it.">
-      <div class="site-refresh__proof-grid">
-        <figure class="site-refresh__figure">
-          <img src={url("assets/screenshots/dashboard-1200.webp")} srcset={`${url("assets/screenshots/dashboard-700.webp")} 700w, ${url("assets/screenshots/dashboard-1200.webp")} 1200w`} sizes="(min-width: 62rem) 34rem, 100vw" width="1000" height="1045" loading="lazy" decoding="async" alt="The Free My ID home screen. A plain sentence says 7 sites have confirmed or no longer list you, 3 are waiting and 2 need you, followed by a card with copy-and-paste details and large buttons for the one step left." />
-          <figcaption class="site-refresh__caption">Example with made-up data</figcaption>
-        </figure>
-        <figure class="site-refresh__figure">
-          <img src={url("assets/screenshots/report-900.webp")} srcset={`${url("assets/screenshots/report-600.webp")} 600w, ${url("assets/screenshots/report-900.webp")} 900w`} sizes="(min-width: 62rem) 34rem, 100vw" width="900" height="1220" loading="lazy" decoding="async" alt="The printable progress report: a table of each people-search site, its status (site confirmed, asked, not listed now, needs you), when it was last checked and when the request was made." />
-          <figcaption class="site-refresh__caption">Example with made-up data. <a href={url("assets/screenshots/report-900.webp")}>See the sample report full size</a></figcaption>
-        </figure>
-      </div>
-      {/* source: teardown 4.3 caveat; brokers/SOURCES.md "Website claims" (no guaranteed timeline) */}
-      <p class="site-refresh__prose">Some sites remove you in days. Some take weeks. Some ignore the request, and the report shows those too.</p>
-    </RefreshSection>
-
-    {/* 4. How it works. D8: no time estimate in this heading. */}
-    <RefreshSection tone="alt" title="How it works, in three steps" titleId="steps-title">
-      <RefreshSteps ariaLabel="Three steps to use Free My ID">
-        {examples.map(({ art, title, copy }, index) => (
-          <li class="site-refresh__step">
-            <Art src={art} alt="" class="site-refresh__concept-art" />
-            <span class="site-refresh__step-number" aria-hidden="true">{index + 1}</span>
-            <h3 class="site-refresh__step-title">{title}</h3>
-            <p>{copy}</p>
-          </li>
-        ))}
-      </RefreshSteps>
-      <p class="site-refresh__after-steps"><a href={url("how-it-works/")}>Read the details of the three ways</a></p>
-    </RefreshSection>
-
-    {/* 5. What it removes. */}
-    <RefreshSection id="what-it-removes" title="What people-search sites list about you" titleId="removes-title" lead="People-search sites, also called data brokers, collect public records and sell them to anyone. Here is what they commonly list:">
-      {/* source: WR-37; approved home-page categories, sample registry fields */}
-      <div class="site-refresh__fact-grid">
-        <RefreshCard title="Home address"><Icon name="home" /></RefreshCard>
-        <RefreshCard title="Phone numbers"><Icon name="phone" /></RefreshCard>
-        <RefreshCard title="Age or birth year"><Icon name="calendar" /></RefreshCard>
-      </div>
-      {/* source: build data, the number of guides generated from brokers/registry.sample.yaml */}
-      <p class="site-refresh__prose">We have {guides.length} step-by-step opt-out guides, and you can use every guide without the app. <a href={url("guides/")}>Browse the guides</a></p>
-      {/* source: brokers/checklists.yaml and /protect/ pages */}
-      <RefreshCallout title="More free ways to protect yourself" tone="note">
-        <p>Freeze your credit, stop pre-approved offers in the mail, and lock down your IRS and Social Security accounts. Plain steps you can print, and you don't need Free My ID for any of them. <a href={url("protect/")}>See the free steps</a>.</p>
-      </RefreshCallout>
-    </RefreshSection>
-
-    {/* 6. The post. */}
-    <RefreshSection tone="alt" width="narrow" title={'You said "I do not consent." Here is how to make it count.'} titleId="post-title">
-      <div class="site-refresh__prose">
-        {/* source: teardown 4.6; POSITIONING.md legal accuracy and scope */}
-        <p>If you shared that post on Facebook, you were right to object. The post just went to the wrong place, and in a form nobody is required to honor. The people who sell your address are the people-search sites, and each has its own removal process. Free My ID sends your request there, in the form each site actually processes, and in states with a broker privacy law, as a formal legal request.</p>
-        <p>It does not change what Facebook itself does with your account.</p>
-        <p><a href={url("i-do-not-consent/")}>Read: does the "I do not consent" post work?</a></p>
-      </div>
-    </RefreshSection>
-
-    {/* 7. Comparison (D4). No competitor names. */}
-    <RefreshSection id="compare" title="Free My ID, paid removal services, or doing it by hand" titleId="compare-title">
-      <div class="site-refresh__compare-scroll" tabindex="0" role="region" aria-labelledby="compare-title">
-        <table class="site-refresh__compare">
-          <caption>Free My ID compared with paid removal services (typical) and doing it by hand.</caption>
-          <thead>
-            <tr><th scope="col"><span class="visually-hidden">Question</span></th>{comparisonColumns.map((column) => <th scope="col">{column}</th>)}</tr>
-          </thead>
-          <tbody>
-            {comparisonRows.map(([question, ...cells]) => (
-              <tr>
-                <th scope="row">{question}</th>
-                {cells.map(([copy, mark], index) => (
-                  <td data-label={comparisonColumns[index]}>
-                    <span class="site-refresh__compare-label">{comparisonColumns[index]}</span>
-                    <span class="site-refresh__compare-cell">
-                      {mark === "yes" && <Icon name="check" />}
-                      {mark === "no" && <Icon name="dash" />}
-                      {mark === "partial" && <Icon name="info" />}
-                      {copy}
-                    </span>
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {/* source: teardown 4.7 footnote; review date = brokers/SOURCES.md R5 check date */}
-      <p class="site-refresh__note">"Typical" describes the category, not any one company. Features and prices vary by service. Reviewed 2026-11-07.</p>
-      {/* source: LICENSE; PLAN_V1 (Windows only in v1). WR-26 / WR-38 copy by release state */}
-      {version
-        ? <p class="site-refresh__prose">Free My ID is open source, so you can read it. Made for Windows 10 and 11. Version {version} is out now.</p>
-        : <p class="site-refresh__prose">Free My ID is open source, so you can read it. Made for Windows 10 and 11. The first version is coming soon.</p>}
-      <p class="site-refresh__prose">If you'd rather have a company handle it for you, a paid service may suit you better. We'll say so plainly.</p>
-    </RefreshSection>
-
-    {/* 8. Safety and privacy. */}
-    <RefreshSection tone="alt" title="Built so you can check our work." titleId="safety-title">
-      <div class="site-refresh__safety-grid">
-        {/* source: D8 encrypted local storage and "Nothing is sent to us"; docs/ROADMAP.md, crypto.py, storage/db.py, netpolicy.py */}
-        <RefreshCard title="Your details are stored on your computer. Nothing is sent to us.">
-          <p>Your details are stored only on your computer. They go out only to the people-search sites themselves: your name and town to look you up, and removal requests you approve. Your stored details are encrypted. The app talks only to the sites you are asking to remove you, your own email account, and our public list of those sites.</p>
-        </RefreshCard>
-        {/* source: POSITIONING.md rule 4; shared rule 6; phone only with Permissions.allow_phone_disclosure */}
-        <RefreshCard title="It never asks for the wrong things.">
-          <p>It never asks for your Social Security number or bank or card details, and never charges you. It gives a site your phone number only if you switch that on. <a href={url("safety/#never-asks")}>See the full list</a>.</p>
-        </RefreshCard>
-        {/* source: LICENSE; download page SHA256SUMS; freemyid.iss [UninstallRun] removes the daily task */}
-        <RefreshCard title="You can check the work.">
-          <p>The code is public. {version ? "Every download has" : "Each download will come with"} a fingerprint you can compare. Uninstalling removes the program and its daily check.</p>
-        </RefreshCard>
-      </div>
-      <RefreshCallout title="About the Windows warning">
-        <p>Windows may warn "unknown publisher" the first time, because the installer is not yet signed. <a href={url("download/#smartscreen")}>See what the warning looks like and how to check the file</a>.</p>
-      </RefreshCallout>
-      <div class="site-refresh__honesty-grid">
-        <RefreshCard title="Free My ID does">
-          <ul>
-            <li>Ask people-search and data-broker sites to remove your listing, using each site's own process</li>
-            <li>Send a formal legal request where your state's privacy law applies, and a polite request everywhere else</li>
-            <li>Click the "confirm your request" links that sites send, and follow up when a site goes quiet</li>
-            <li>Check again later, because some sites list people again</li>
-            <li>Show you where each site stands: <em>asked</em>, <em>confirmed</em> or <em>still waiting</em></li>
-          </ul>
-        </RefreshCard>
-        <RefreshCard title="Free My ID does not">
-          <ul>
-            <li>Remove you from every website on the internet. Nobody honest can promise that.</li>
-            <li>Change what Facebook itself does with your account</li>
-            <li>Stop hacking, phone tapping or government surveillance</li>
-            <li>Remove news stories, social media posts or government records</li>
-            <li>Ask for your Social Security number or bank or card details, or charge you. Ever.</li>
-          </ul>
-        </RefreshCard>
-      </div>
-      <p class="site-refresh__after-steps"><a href={url("safety/")}>Is Free My ID safe? Read the details</a></p>
-    </RefreshSection>
-
-    {/* 9. $0 card (D9): one plan only, no second column. */}
-    <RefreshSection title="It's free" titleId="price-title" width="narrow">
-      <div class="site-refresh__price-card">
-        <p class="site-refresh__eyebrow">Free My ID</p>
-        <p class="site-refresh__price">$0</p>
-        <p>Free. No trial. No card.</p>
-        {/* source: D8 verified features: three ways, daily checks, printable report, guides, uninstall */}
-        <ul class="site-refresh__price-list">
-          <li>Everything the app does, all three ways of sending requests</li>
-          <li>Daily re-checks on your PC, while it is on and you are signed in to Windows</li>
-          <li>Printable progress report</li>
-          <li>Every guide</li>
-          <li>Uninstall any time</li>
-        </ul>
-        <CtaDownload />
-      </div>
-      <div class="site-refresh__prose site-refresh__why-free">
-        <h3>Why is it free?</h3>
-        {/* source: teardown section 4.9 "Why is it free?" (the two approved sentences, D9) */}
-        <p>Free My ID is open-source software, so anyone can read it and anyone can use it. It exists to help ordinary people, starting with the author's own family.</p>
-      </div>
-    </RefreshSection>
-
-    {/* 10. Helpers. */}
-    <RefreshSection tone="alt" title="Helping a parent or grandparent?" titleId="helpers-title" lead="Set it up once on their computer, and it keeps working. They stay in control, and can stop or uninstall at any time.">
-      <div class="site-refresh__helper-grid">
-        <div class="site-refresh__prose">
-          {/* source: teardown 4.10 minus unverified time and printable-sheet claims; USER_GUIDE.md sections 3 and 4 */}
-          <ul>
-            <li>Set it up on their computer in one visit, or protect several family members from one computer.</li>
-            <li>Each adult gives their own permission. Free My ID won't work on anyone without it.</li>
-            <li>Practice mode comes first, so no removal requests go out until you say so.</li>
-          </ul>
-          <p>Windows only for now. The person whose information is listed should agree to this.</p>
-          <div class="site-refresh__actions">
-            <CtaDownload look="secondary" size="md" />
-            <a class="site-refresh__button site-refresh__button--secondary" href={url("families/")}>Read the helper's guide</a>
-          </div>
-        </div>
-        <Art src="sections/families-help" alt="A grown child helping a parent at a laptop." class="site-refresh__family-art" />
-      </div>
-    </RefreshSection>
-
-    {/* 11. FAQ: home:true entries in data/faq.yaml; first two open. */}
-    <RefreshSection title="Common questions" titleId="faq-title" width="narrow">
-      <FaqList items={homeFaq} openFirst={2} />
-      <p class="site-refresh__after-steps"><a href={url("faq/")}>See all questions</a></p>
-    </RefreshSection>
-
-    {/* 12. Final CTA. */}
-    <RefreshSection tone="brand" width="narrow" title="Your information. Off the market." titleId="cta-title">
-      <div class="site-refresh__final-cta">
-        {/* source: approved home copy; once a day = D8; WR-8 source link */}
-        <p class="site-refresh__lead">Free, open source, and it runs on your own computer, checking once a day while your PC is on and you are signed in to Windows. <a href={url("safety/#open-source")}>How you can check our work</a>.</p>
-        <CtaDownload look="onBrand" />
-        {/* source: teardown 4.12; BRAND.md trust panel */}
-        <p>No account. No cloud. Never asks for your Social Security number or bank or card details, and never charges you. Uninstall any time.</p>
-      </div>
-    </RefreshSection>
+          <p class="mt-m text-small text-muted">Free for Windows 10 and 11. Version {v}{release.size_mb ? `, ${release.size_mb} MB` : ""}.</p>
+        )
+      ) : (
+        <p class="mt-m text-small text-muted">Free for Windows 10 and 11. The first version is not published yet.</p>
+      )}
+      {/* source: site_src/data/faq.yaml "Why does Windows warn me" (published copy) */}
+      <p class="mt-2xs text-small text-muted">Windows may show a blue "protected your PC" box the first time. <a href={url("download/#smartscreen")}>That's expected. Here's what to click.</a></p>
+    </div>
+    <figure class="hero-art mx-auto w-full max-w-[32rem]">
+      {/* brand/v3/hero.svg, alt text from brand/v3/README.md */}
+      <Art src="hero" alt="A person at home, with their name card coming back from three web pages." />
+    </figure>
   </div>
+</section>
+
+{/* 2. Trust bar: teardown 4.2 items, each linked to its /safety/ section */}
+<Section tight tone="alt" label="Our promises" class="border-y border-line">
+  <ul class="grid gap-s min-[40em]:grid-cols-2 min-[64em]:grid-cols-4" role="list">
+    {[
+      // source: D8 "Nothing is sent to us" (netpolicy.py); no account (PLAN_V1)
+      ["safety/#local", "computer", "No account. Runs on your PC. Nothing sent to us."],
+      // source: POSITIONING.md rule 4; safety page never-asks list
+      ["safety/#never-asks", "shield", "Never asks for your Social Security number or bank or card details, and never charges you"],
+      // source: LICENSE (GNU AGPL v3)
+      ["safety/#open-source", "code", "Free and open source"],
+      // source: packaging/windows/freemyid.iss (Windows Settings uninstall, removes the daily task)
+      ["safety/#uninstall", "trash", "Uninstall any time"],
+    ].map(([href, icon, text]) => (
+      <li>
+        <a class="flex h-full min-h-tap items-center gap-s rounded-xl border border-line bg-card p-s font-semibold text-heading no-underline shadow-1 hover:border-line-strong" href={url(href)}>
+          <span class={cardIcon}><Icon name={icon} /></span><span>{text}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</Section>
+
+{/* 3. Proof picture */}
+<Section title="See exactly what was asked, and what came back." titleId="proof-title">
+  {/* source: teardown 4.3, narrowed to what the shipped report shows: D8 "Printable progress report" with site names, states and dates only (src/freemyid/wizard/report.py) */}
+  <p slot="lead">Free My ID keeps a plain list: which site, when it asked, where things stand, and when it last checked. You can print it.</p>
+  <div class="grid items-start gap-l min-[56.25em]:grid-cols-2">
+    <figure class="reveal mx-auto w-full max-w-[34rem] overflow-hidden rounded-xl border border-line bg-card shadow-2">
+      {/* D7: real screenshot, fake persona. Alt text: brand/README.md. WR-35 srcset */}
+      <img src={url("assets/screenshots/dashboard-1200.webp")} srcset={`${url("assets/screenshots/dashboard-700.webp")} 700w, ${url("assets/screenshots/dashboard-1200.webp")} 1200w`} sizes="(min-width: 62rem) 30rem, (min-width: 56.25em) 48vw, 100vw" width="1000" height="1045" loading="lazy" decoding="async" alt="The Free My ID home screen. A plain sentence says 7 sites have confirmed or no longer list you, 3 are waiting and 2 need you, followed by a card with copy-and-paste details and large buttons for the one step left.">
+      <figcaption class="border-t border-line px-m py-xs text-small text-muted">Example with made-up data</figcaption>
+    </figure>
+    <figure class="reveal mx-auto w-full max-w-[34rem] overflow-hidden rounded-xl border border-line bg-card shadow-2">
+      {/* WR-35: 600w/900w srcset. The link below opens the 900px image. */}
+      <img src={url("assets/screenshots/report-900.webp")} srcset={`${url("assets/screenshots/report-600.webp")} 600w, ${url("assets/screenshots/report-900.webp")} 900w`} sizes="(min-width: 62rem) 30rem, (min-width: 56.25em) 48vw, 100vw" width="900" height="1220" loading="lazy" decoding="async" alt="The printable progress report: a table of each people-search site, its status (site confirmed, asked, not listed now, needs you), when it was last checked and when the request was made.">
+      <figcaption class="border-t border-line px-m py-xs text-small text-muted">Sample report with made-up data. <a href={url("assets/screenshots/report-900.webp")}>See the sample report full size</a></figcaption>
+    </figure>
+  </div>
+  {/* source: teardown 4.3 caveat; brokers/SOURCES.md "Website claims" (no guaranteed timeline) */}
+  <p class="mt-l max-w-measure">Some sites remove you in days. Some take weeks. Some ignore the request, and the report shows those too.</p>
+</Section>
+
+{/* 4. How it works. D8: no time estimate in this heading. */}
+<Section tone="alt" title="How it works, in three steps" titleId="steps-title">
+  <ol class="grid gap-m min-[56.25em]:grid-cols-3" role="list">
+    {[
+      // source: D8 "Six short screens" (wizard/draft.py STEPS); POSITIONING.md rule 4
+      ["step-who", "Tell it who to protect.", "Six short screens: your name and the towns you have lived in. It never asks for your Social Security number or bank or card details, and never charges you."],
+      // source: PLAN_V1 D1 three tiers; shared rule 6 (Listing.shown_fields)
+      ["step-send", "It sends the requests.", "By email, by walking you through a site's form, or by filling the form in while you watch. Each site gets only what it already shows about you."],
+      // source: D8 "Checks once a day" (PLAN_V1 D4, Task Scheduler)
+      ["step-report", "It keeps checking.", "Once a day, quietly in the background, while your computer is on and you are signed in. You see who confirmed, who is still waiting, and it asks again if a site lists you again."],
+    ].map(([art, h, p], i) => (
+      <Card as="li" class="reveal">
+        <Art src={`sections/${art}`} class="mx-auto mb-xs max-w-[18rem] rounded-lg bg-bg-alt" />
+        <span class="inline-flex size-10 items-center justify-center rounded-full bg-brand text-lead font-bold text-brand-ink" aria-hidden="true">{i + 1}</span>
+        <h3>{h}</h3>
+        <p>{p}</p>
+      </Card>
+    ))}
+  </ol>
+  <p class="mt-l"><a href={url("how-it-works/")}>Read the details of the three ways</a></p>
+</Section>
+
+{/* 5. What it removes */}
+<Section id="what-it-removes" title="What people-search sites are selling about you." titleId="removes-title"
+  lead="People-search sites, also called data brokers, collect public records and sell them to anyone. Here is what they commonly list:">
+  {/* source (WR-37): the card list is what the people-search sites themselves list (address, phone, age, relatives, as on the
+     old approved home page); sample registry search/opt-out fields cover address, phone and age. Not the CFPB 2024 proposed rule
+     (withdrawn 15 May 2025, 90 FR 20568). Teardown's "past addresses" and "email addresses" cards left out until sourced. */}
+  <ul class="grid grid-cols-2 gap-s min-[56.25em]:grid-cols-3" role="list">
+    {[["home", "Home address"], ["phone", "Phone numbers"], ["calendar", "Age or birth year"]].map(([icon, h]) => (
+      <Card as="li" class="reveal items-start">
+        <span class={cardIcon}><Icon name={icon} /></span>
+        <h3 class="text-lead">{h}</h3>
+      </Card>
+    ))}
+  </ul>
+  {/* source: build data, the number of guides generated from brokers/registry.sample.yaml */}
+  <p class="mt-l">We have {guides.length} step-by-step opt-out guides, and you can use every guide without the app. <a href={url("guides/")}>Browse the guides</a></p>
+  {/* source: brokers/checklists.yaml (credit freezes, prescreen opt-out, IRS IP PIN, SSA, USPS; free except DMAchoice); /protect/ pages */}
+  <Card class="reveal mt-l max-w-[48rem] items-start p-l shadow-2">
+    <span class={cardIcon}><Icon name="shield" /></span>
+    <h3>More free ways to protect yourself</h3>
+    <p>Freeze your credit, stop pre-approved offers in the mail, and lock down your IRS and Social Security accounts. Plain steps you can print, and you don't need Free My ID for any of them.</p>
+    <p><a href={url("protect/")}>See the free steps</a></p>
+  </Card>
+  {/* names = the same build data (public sample registry); decorative repeat of the guides list */}
+  <Marquee id="guide-marquee" label={`Sites and services with a free guide (${guides.length})`} items={guides.map((g) => g.name)} />
+</Section>
+
+{/* 6. The post */}
+<Section tone="alt" narrow title={'You said "I do not consent." Here is how to make it count.'} titleId="post-title">
+  <div class="prose-fmid">
+    {/* source: teardown 4.6; POSITIONING.md core message and "Legal accuracy" (formal request only where a state law applies) */}
+    <p>If you shared that post on Facebook, you were right to object. The post just went to the wrong place, and in a form nobody is required to honor. The people who sell your address are the people-search sites, and each has its own removal process. Free My ID sends your request there, in the form each site actually processes, and in states with a broker privacy law, as a formal legal request.</p>
+    {/* source: POSITIONING.md rule 6 (scope) */}
+    <p>It does not change what Facebook itself does with your account.</p>
+    <p><a href={url("i-do-not-consent/")}>Read: does the "I do not consent" post work?</a></p>
+  </div>
+</Section>
+
+{/* 7. Comparison (D4). No competitor names. */}
+<Section id="compare" title="Free My ID, paid removal services, or doing it by hand" titleId="compare-title">
+  {/* source (Free My ID + By hand columns): PLAN_V1 D1/D4, D8 verified claims, netpolicy.py, shared rule 5 (some sites need a human step) */}
+  {/* source: brokers/SOURCES.md "Website claims: comparison (R5)" (paid column: approved cell text only; rows without an approved cell are left out) */}
+  <div class="overflow-x-auto rounded-xl border border-line bg-card shadow-1" tabindex="0" role="region" aria-labelledby="compare-title">
+    <table class="w-full border-collapse text-start max-[34em]:block">
+      <caption class="visually-hidden">Free My ID compared with paid removal services (typical) and doing it by hand</caption>
+      <thead class="bg-surface max-[34em]:hidden">
+        <tr>
+          <th scope="col" class="p-s text-start"><span class="visually-hidden">Question</span></th>
+          <th scope="col" class="p-s text-start text-heading">Free My ID</th>
+          <th scope="col" class="p-s text-start text-heading">Paid removal services (typical)</th>
+          <th scope="col" class="p-s text-start text-heading">By hand</th>
+        </tr>
+      </thead>
+      <tbody class="max-[34em]:block">
+        {([
+          ["Price", ["Free", "yes"], ["Yearly or monthly fee"], ["Free, your time"]],
+          ["Where your details go", ["Only to the sites you ask to remove you", "yes"], ["Sent to the company"], ["Only to the sites you contact"]],
+          ["Account", ["None", "yes"], ["Account required"], ["None"]],
+          ["Who sends the requests", ["Your own computer, as you"], ["The company, on your behalf"], ["You"]],
+          ["Keeps checking", ["Yes, daily on your PC (your computer must be on and you must be signed in to Windows at the time)", "yes"], ["Yes, on a schedule"], ["Only if you remember", "no"]],
+          ["Company staff handle hard cases", ["No. Some sites need you to do a step, and it shows you how", "partial"], ["Often, on higher plans"], ["You"]],
+        ] as [string, string[], string[], string[]][]).map(([row, ...cells]) => (
+          <tr class="border-t border-line max-[34em]:block max-[34em]:p-s">
+            <th scope="row" class="p-s text-start align-top text-heading max-[34em]:block max-[34em]:p-0 max-[34em]:text-lead">{row}</th>
+            {cells.map(([text, mark], i) => {
+              const col = ["Free My ID", "Paid removal services (typical)", "By hand"][i];
+              return (
+                <td data-label={col} class:list={["p-s align-top max-[34em]:block max-[34em]:px-0 max-[34em]:py-3xs", i === 0 && "bg-brand-soft/60 max-[34em]:bg-transparent"]}>
+                  <span class="hidden text-small font-bold text-muted max-[34em]:block">{col}</span>
+                  <span class="inline-flex items-start gap-2xs">
+                    {mark === "yes" && <Icon name="check" class="mt-[0.2em] text-ok" />}
+                    {mark === "no" && <Icon name="dash" class="mt-[0.2em] text-muted" />}
+                    {mark === "partial" && <Icon name="info" class="mt-[0.2em] text-warn" />}
+                    <span>{text}</span>
+                  </span>
+                </td>
+              );
+            })}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  {/* source: teardown 4.7 footnote; review date = brokers/SOURCES.md R5 check date */}
+  <p class="mt-s text-small text-muted">"Typical" describes the category, not any one company. Features and prices vary by service. Reviewed 2026-11-07.</p>
+  {/* source: LICENSE (AGPL); PLAN_V1 (Windows only in v1). WR-26 / WR-38 copy by release state */}
+  {v
+    ? <p class="mt-m">Free My ID is open source, so you can read it. Made for Windows 10 and 11. Version {v} is out now.</p>
+    : <p class="mt-m">Free My ID is open source, so you can read it. Made for Windows 10 and 11. The first version is coming soon.</p>}
+  {/* source: D4 "where paid services are better" line; wording per orchestrator ruling, docs/WEBSITE_REDESIGN.md */}
+  <p class="mt-s">If you'd rather have a company handle it for you, a paid service may suit you better. We'll say so plainly.</p>
+</Section>
+
+{/* 8. Safety and privacy. WR-28: heading not absolute. */}
+<Section tone="alt" title="Built so you can check our work." titleId="safety-title">
+  <ul class="grid gap-m min-[56.25em]:grid-cols-3" role="list">
+    {/* source: teardown 4.8; D8 encrypted (crypto.py, storage/db.py) and "Nothing is sent to us" (netpolicy.py); headline per WR-25 */}
+{/* source: docs/ROADMAP.md section 1 privacy promise; docs/POSITIONING.md privacy scope (WR-70) */}
+    <Card as="li" class="reveal"><span class={cardIcon}><Icon name="lock" /></span><h3>Your details are stored on your computer. Nothing is sent to us.</h3><p>Your details are stored only on your computer. They go out only to the people-search sites themselves: your name and town to look you up, and removal requests you approve. Your stored details are encrypted. The app talks only to the sites you are asking to remove you, your own email account, and our public list of those sites.</p></Card>
+    {/* source: teardown 4.8; POSITIONING.md rule 4; shared rule 6 (never pay); phone only with Permissions.allow_phone_disclosure (engine/tiers.py, submitters/base.py, letters.py). The wizard does ask for a phone number (optional, for matching), so no "never a phone number". */}
+    <Card as="li" class="reveal"><span class={cardIcon}><Icon name="shield" /></span><h3>It never asks for the wrong things.</h3><p>It never asks for your Social Security number or bank or card details, and never charges you. It gives a site your phone number only if you switch that on. <a href={url("safety/#never-asks")}>See the full list</a>.</p></Card>
+    {/* source: teardown 4.8; LICENSE; download page SHA256SUMS; freemyid.iss [UninstallRun] removes the daily task */}
+    <Card as="li" class="reveal"><span class={cardIcon}><Icon name="code" /></span><h3>You can check the work.</h3><p>The code is public. {v ? "Every download has" : "Each download will come with"} a fingerprint you can compare. Uninstalling removes the program and its daily check.</p></Card>
+  </ul>
+  {/* source: teardown 4.8 callout; installer ships unsigned */}
+  <Alert class="mt-l"><p>Windows may warn "unknown publisher" the first time, because the installer is not yet signed. <a href={url("download/#smartscreen")}>See what the warning looks like and how to check the file</a>.</p></Alert>
+  {/* Does / doesn't box: approved copy from the old home page "What it does, honestly" */}
+  <div class="grid gap-m min-[56.25em]:grid-cols-2">
+    <Card class="border-t-4 border-t-ok">
+      <h3>Free My ID does</h3>
+      <ul class="grid gap-xs" role="list">
+        {[
+          "Ask people-search and data-broker sites to remove your listing, using each site's own process",
+          // source: POSITIONING.md "Legal accuracy"
+          "Send a formal legal request where your state's privacy law applies, and a polite request everywhere else",
+          'Click the "confirm your request" links that sites send, and follow up when a site goes quiet',
+          "Check again later, because some sites list people again",
+        ].map((t) => <li class="flex gap-2xs"><Icon name="check" class="mt-[0.25em] text-ok" /><span>{t}</span></li>)}
+        <li class="flex gap-2xs"><Icon name="check" class="mt-[0.25em] text-ok" /><span>Show you where each site stands: <em>asked</em>, <em>confirmed</em> or <em>still waiting</em></span></li>
+      </ul>
+    </Card>
+    <Card class="border-t-4 border-t-line-strong">
+      <h3>Free My ID does not</h3>
+      <ul class="grid gap-xs" role="list">
+        {[
+          "Remove you from every website on the internet. Nobody honest can promise that.",
+          "Change what Facebook itself does with your account",
+          "Stop hacking, phone tapping or government surveillance",
+          "Remove news stories, social media posts or government records",
+          "Ask for your Social Security number or bank or card details, or charge you. Ever.",
+        ].map((t) => <li class="flex gap-2xs"><Icon name="x" class="mt-[0.25em] text-muted" /><span>{t}</span></li>)}
+      </ul>
+    </Card>
+  </div>
+  <p class="mt-l"><a href={url("safety/")}>Is Free My ID safe? Read the details</a></p>
+</Section>
+
+{/* 9. $0 card (D9): one plan only, no second column */}
+<Section title="It's free" titleId="price-title">
+  <Card class="reveal mx-auto max-w-[28rem] items-center gap-s p-l text-center shadow-2">
+    <p class="font-bold text-brand">Free My ID</p>
+    <p class="text-display font-bold leading-none text-heading">$0</p>
+    <p class="text-muted">Free. No trial. No card.</p>
+    {/* source: D8 verified features: three ways (PLAN_V1 D1), daily checks (PLAN_V1 D4), printable report (wizard/report.py), guides (build data), uninstall (freemyid.iss). */}
+    <ul class="my-xs grid gap-xs text-start" role="list">
+      {["Everything the app does, all three ways of sending requests", "Daily re-checks on your PC", "Printable progress report", "Every guide", "Uninstall any time"]
+        .map((t) => <li class="flex gap-2xs"><Icon name="check" class="mt-[0.25em] text-ok" /><span>{t}</span></li>)}
+    </ul>
+    <CtaDownload />
+  </Card>
+  <div class="mx-auto mt-l max-w-measure">
+    <h3>Why is it free?</h3>
+    {/* source: teardown section 4.9 "Why is it free?" (the two approved sentences, D9) */}
+    <p class="mt-xs">Free My ID is open-source software, so anyone can read it and anyone can use it. It exists to help ordinary people, starting with the author's own family.</p>
+  </div>
+</Section>
+
+{/* 10. Helpers */}
+<Section tone="alt" title="Helping a parent or grandparent?" titleId="helpers-title"
+  lead="Set it up once on their computer, and it keeps working. They stay in control, and can stop or uninstall at any time.">
+  {/* source: teardown 4.10 minus the unverified time and printable-sheet claims */}
+  <div class="grid items-center gap-xl min-[56.25em]:grid-cols-[1.2fr_1fr]">
+    <div class="prose-fmid">
+      {/* source: old home page helper list: docs/USER_GUIDE.md sections 3 and 4; faq "Can I set it up for my parents?" */}
+      <ul>
+        <li>Set it up on their computer in one visit, or protect several family members from one computer.</li>
+        <li>Each adult gives their own permission. Free My ID won't work on anyone without it.</li>
+        <li>Practice mode comes first, so no removal requests go out until you say so.</li>
+      </ul>
+      <p>Windows only for now. The person whose information is listed should agree to this.</p>
+      <div class="flex flex-wrap gap-s pt-xs">
+        <CtaDownload look="secondary" size="md" />
+        <a class={buttonVariants({ variant: "ghost" })} href={url("families/")}>Read the helper's guide</a>
+      </div>
+    </div>
+    <Art src="sections/families-help" alt="A grown child helping a parent at a laptop." class="reveal mx-auto max-w-[26rem]" />
+  </div>
+</Section>
+
+{/* 11. FAQ: the home: true entries in data/faq.yaml, first two open */}
+<Section narrow title="Common questions" titleId="faq-title">
+  <FaqList items={homeFaq} openFirst={2} />
+  <p class="mt-l"><a href={url("faq/")}>See all questions</a></p>
+</Section>
+
+{/* 12. Final CTA */}
+<section class="bg-band-brand py-2xl text-center text-band-brand-ink" aria-labelledby="cta-title">
+  <div class="wrap-narrow grid justify-items-center gap-m">
+    <h2 id="cta-title" class="text-band-brand-ink">Your information. Off the market.</h2>
+    {/* source: old home final CTA (approved copy); once a day = D8; WR-8 source link (repo public) */}
+    <p class="text-lead">Free, open source, and it runs on your own computer, checking once a day. <a class="text-band-brand-ink" href={url("safety/#open-source")}>How you can check our work</a>.</p>
+    <CtaDownload look="onBrand" />
+    {/* source: teardown 4.12; BRAND.md trust panel */}
+    <p class="text-small">No account. No cloud. Never asks for your Social Security number or bank or card details, and never charges you. Uninstall any time.</p>
+  </div>
+</section>
 </Base>
 
 <style>
-  .site-refresh .site-refresh__trustbar,
-  .site-refresh .site-refresh__fact-grid,
-  .site-refresh .site-refresh__safety-grid,
-  .site-refresh .site-refresh__honesty-grid {
+  /* WR-53: this page alone owns the hero action layout. Keep the shared CTA and labels. */
+  .hero-actions {
     display: grid;
-    gap: var(--fmi-space-m);
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .site-refresh .site-refresh__trustbar a {
-    align-items: center;
-    background: var(--fmi-color-card);
-    border: 1px solid var(--fmi-color-line);
-    border-radius: var(--fmi-radius-lg);
-    box-shadow: var(--fmi-shadow-1);
-    display: flex;
-    gap: var(--fmi-space-s);
-    height: 100%;
-    min-block-size: 4rem;
-    padding: var(--fmi-space-m);
-    text-decoration: none;
-  }
-
-  .site-refresh .site-refresh__trustbar svg {
-    color: var(--fmi-color-brand);
-    flex: 0 0 1.75rem;
-    height: 1.75rem;
-    width: 1.75rem;
-  }
-
-  .site-refresh .site-refresh__proof-grid {
-    display: grid;
-    gap: var(--fmi-space-xl);
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 25rem), 1fr));
-  }
-
-  .site-refresh .site-refresh__product-shot img {
-    width: 100%;
-  }
-
-  .site-refresh .site-refresh__concept-art {
-    height: auto;
-    margin-block-end: var(--fmi-space-s);
-    max-width: 11rem;
-    width: 100%;
-  }
-
-  .site-refresh .site-refresh__after-steps,
-  .site-refresh .site-refresh__note {
-    margin-block: var(--fmi-space-l) 0;
-  }
-
-  .site-refresh .site-refresh__fact-grid {
-    margin-block-end: var(--fmi-space-l);
-  }
-
-  .site-refresh .site-refresh__fact-grid article {
-    align-items: center;
-    display: flex;
-    gap: var(--fmi-space-s);
-  }
-
-  .site-refresh .site-refresh__fact-grid article :global(svg) {
-    color: var(--fmi-color-brand);
-    flex: 0 0 1.5rem;
-    height: 1.5rem;
-    width: 1.5rem;
-  }
-
-  .site-refresh .site-refresh__compare-scroll {
-    border: 1px solid var(--fmi-color-line);
-    border-radius: var(--fmi-radius-lg);
-    box-shadow: var(--fmi-shadow-1);
-    max-width: 100%;
-    overflow-x: auto;
-  }
-
-  .site-refresh .site-refresh__compare-scroll:focus-visible {
-    outline: 3px solid var(--fmi-color-focus);
-    outline-offset: 3px;
-  }
-
-  .site-refresh .site-refresh__compare {
-    background: var(--fmi-color-card);
-    border-collapse: collapse;
-    min-width: 48rem;
-    width: 100%;
-  }
-
-  .site-refresh .site-refresh__compare th,
-  .site-refresh .site-refresh__compare td {
-    border-block-end: 1px solid var(--fmi-color-line);
-    padding: var(--fmi-space-m);
-    text-align: start;
-    vertical-align: top;
-  }
-
-  .site-refresh .site-refresh__compare thead {
-    background: var(--fmi-color-bg-alt);
-  }
-
-  .site-refresh .site-refresh__compare th {
-    color: var(--fmi-color-heading);
-  }
-
-  .site-refresh .site-refresh__compare-label {
-    display: none;
-    font-weight: 700;
-  }
-
-  .site-refresh .site-refresh__compare-cell {
-    align-items: start;
-    display: flex;
-    gap: var(--fmi-space-2xs);
-  }
-
-  .site-refresh .site-refresh__compare-cell svg {
-    color: var(--fmi-color-ok);
-    flex: 0 0 1.25rem;
-    height: 1.25rem;
-    width: 1.25rem;
-  }
-
-  .site-refresh .site-refresh__price-card {
-    align-items: center;
-    background: var(--fmi-color-card);
-    border: 1px solid var(--fmi-color-line);
-    border-radius: var(--fmi-radius-xl);
-    box-shadow: var(--fmi-shadow-2);
-    display: grid;
-    justify-items: center;
-    padding: var(--fmi-space-xl);
-    text-align: center;
-  }
-
-  .site-refresh .site-refresh__price {
-    color: var(--fmi-color-heading);
-    font-size: clamp(3rem, 10vw, 5rem);
-    font-weight: 800;
-    line-height: 1;
-    margin-block: var(--fmi-space-s);
-  }
-
-  .site-refresh .site-refresh__price-list {
-    justify-self: stretch;
-    margin-block: var(--fmi-space-m);
-    text-align: start;
-  }
-
-  .site-refresh .site-refresh__why-free {
-    margin-block-start: var(--fmi-space-xl);
-  }
-
-  .site-refresh .site-refresh__helper-grid {
-    align-items: center;
-    display: grid;
-    gap: var(--fmi-space-xl);
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
-  }
-
-  .site-refresh .site-refresh__family-art {
-    height: auto;
-    justify-self: center;
-    max-width: 24rem;
-    width: 100%;
-  }
-
-  .site-refresh .site-refresh__final-cta {
-    display: grid;
-    gap: var(--fmi-space-m);
-    justify-items: start;
-  }
-
-  .site-refresh .hero-actions {
-    display: grid;
-    gap: var(--fmi-space-s);
     grid-template-columns: minmax(0, 1fr);
+    gap: var(--fmi-space-s);
+    width: 100%;
     max-width: 100%;
-    width: 100%;
   }
-
-  .site-refresh .hero-actions :global(.hero-download),
-  .site-refresh .hero-actions .hero-secondary {
-    justify-content: center;
-    min-block-size: 3.25rem;
+  /* The decorative beam wraps the CTA anchor; both must fill the narrow action column. */
+  .hero-actions :global(.beam) {
+    width: 100%;
     min-width: 0;
+  }
+  .hero-actions :global(.hero-download) {
     width: 100%;
-    white-space: normal;
-  }
-
-  /* WO-103: on phones "Download Free My ID" stays on one line (the brand never splits) in a 320px column.
-     Both actions share the 20px body size below the desktop layout so the primary never looks smaller. */
-  .site-refresh .hero-actions :global(.hero-download),
-  .site-refresh .hero-actions .hero-secondary {
-    font-size: var(--fmi-text-body);
-  }
-
-  .site-refresh .hero-actions :global(.hero-download) {
+    min-width: 0;
     padding-inline: var(--fmi-space-xs);
+    font-size: var(--fmi-text-body);
     white-space: nowrap;
   }
-
+  .hero-secondary {
+    width: 100%;
+  }
+  /* Tablet (one-column hero, 768-899px): full-width stacked buttons stretched to ~700px. Put the two
+     actions side by side at their natural width instead; wrap is only a safety net for large text. */
   @media (min-width: 48em) and (max-width: 56.2499em) {
-    .site-refresh .hero-actions {
-      align-items: center;
+    .hero-actions {
       display: flex;
       flex-wrap: wrap;
+      align-items: center;
+      gap: var(--fmi-space-s) var(--fmi-space-m);
     }
-
-    .site-refresh .hero-actions :global(.hero-download),
-    .site-refresh .hero-actions .hero-secondary {
+    .hero-actions :global(.beam),
+    .hero-actions :global(.hero-download),
+    .hero-secondary {
       width: auto;
     }
-
-    .site-refresh .hero-actions :global(.hero-download) {
+    .hero-actions :global(.hero-download) {
       padding-inline: var(--fmi-space-l);
     }
   }
-
   @media (min-width: 56.25em) {
-    .site-refresh .hero-actions {
+    .hero-actions {
       width: max-content;
     }
-
-    .site-refresh .hero-actions :global(.hero-download),
-    .site-refresh .hero-actions .hero-secondary {
+    .hero-actions :global(.hero-download) {
+      padding-inline: var(--fmi-space-l);
       font-size: var(--fmi-text-lead);
     }
-
-    .site-refresh .hero-actions :global(.hero-download) {
-      padding-inline: var(--fmi-space-l);
-    }
-
-    .site-refresh .hero-actions .hero-secondary {
+    /* Align the secondary label to the content edge without shrinking its focus target. */
+    .hero-secondary {
       justify-content: flex-start;
-    }
-  }
-
-  @media (max-width: 34em) {
-    .site-refresh .site-refresh__compare-scroll {
-      border: 0;
-      box-shadow: none;
-      overflow: visible;
-    }
-
-    .site-refresh .site-refresh__compare {
-      background: transparent;
-      display: block;
-      min-width: 0;
-    }
-
-    .site-refresh .site-refresh__compare thead {
-      display: none;
-    }
-
-    .site-refresh .site-refresh__compare tbody {
-      display: grid;
-      gap: var(--fmi-space-s);
-    }
-
-    .site-refresh .site-refresh__compare tr {
-      background: var(--fmi-color-card);
-      border: 1px solid var(--fmi-color-line);
-      border-radius: var(--fmi-radius-lg);
-      box-shadow: var(--fmi-shadow-1);
-      display: grid;
-      gap: var(--fmi-space-2xs);
-      padding: var(--fmi-space-s);
-    }
-
-    .site-refresh .site-refresh__compare th,
-    .site-refresh .site-refresh__compare td {
-      border: 0;
-      display: block;
-      padding: var(--fmi-space-2xs);
-    }
-
-    .site-refresh .site-refresh__compare-label {
-      display: block;
-      margin-block-end: var(--fmi-space-3xs);
     }
   }
 </style>

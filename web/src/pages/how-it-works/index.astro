@@ -1,204 +1,84 @@
 ---
-// How it works. Copy remains aligned with the approved v3 page and its source comments.
-import "@/styles/site-refresh.css";
+// How it works. Same copy and source comments as site_src/templates/pages/how-it-works.html.
 import Base from "@/layouts/Base.astro";
+import PageHead from "@/components/PageHead.astro";
+import Section from "@/components/Section.astro";
 import Icon from "@/components/Icon.astro";
-import CtaDownload from "@/components/CtaDownload.astro";
 import Art from "@/components/Art.astro";
-import RefreshSection from "@/components/site-refresh/RefreshSection.astro";
-import RefreshSteps from "@/components/site-refresh/RefreshSteps.astro";
-import RefreshCard from "@/components/site-refresh/RefreshCard.astro";
-import RefreshCallout from "@/components/site-refresh/RefreshCallout.astro";
+import Card from "@/components/ui/Card.astro";
+import Alert from "@/components/ui/Alert.astro";
+import CtaDownload from "@/components/CtaDownload.astro";
+import Timeline from "@/components/aceternity/Timeline.astro";
+import TimelineItem from "@/components/aceternity/TimelineItem.astro";
 import { pageProps, url } from "@/lib/site";
-
 const p = pageProps("how-it-works");
-const safeguards = [
-  "Emails wait for your approval before they're sent, unless you choose otherwise.",
-  "It never pays a site. It never creates accounts or sends a photo of your ID unless you switch that on yourself.",
-  'If a site shows an "I\'m not a robot" check, it hands that step to you.',
-  "When a site says it deleted you, that's for that one site only, and Free My ID says so.",
-];
+const cardIcon = "inline-flex size-12 items-center justify-center rounded-lg bg-brand-soft text-brand [&_svg]:size-7";
 // Sources: docs/PLAN_V1.md D1, D2, D4, D6, D9; docs/USER_GUIDE.md sections 3-5.
-// Step 1 fields: src/freemyid/wizard/draft.py; never SSN/bank = docs/POSITIONING.md rule 4.
-// Step 2: shared rule 6 (Listing.shown_fields + removal mailbox).
-// Step 3: PLAN_V1 D4 daily task; it runs only while the PC is on and the user is signed in.
-// Step 4: src/freemyid/wizard/report.py.
+// Step 1 fields: src/freemyid/wizard/draft.py (name, address, birth_year, phones, emails, relatives); never SSN/bank = POSITIONING rule 4.
+// Step 2: shared rule 6 (Listing.shown_fields + removal mailbox). Step 3: PLAN_V1 D4 (daily task, one notification only when there are to-dos).
+// Step 4: src/freemyid/wizard/report.py (site, status, request date, last checked; printable).
+const steps = [
+  ["wo178:step-1-who", "A name card in front of a small house.", "Tell it who to protect", "Your name and the towns you've lived in, plus (if you like) your year of birth, phone number, email address and relatives' names, which help it tell you apart from other people with your name. It never asks for your Social Security number or bank or card details, and never charges you."],
+  ["wo178:step-2-sent", "A page with an arrow going out to a web page.", "It sends the requests", "Depending on the site, Free My ID uses one of three ways, shown below. Each site gets only what it already shows about you, plus a removal email address."],
+  ["wo178:step-3-checked", "A magnifying glass over a list with check marks.", "It keeps checking", "Once a day, in the background, it checks for replies and looks again later in case a site lists you again. You'll get a small notice only when something needs you."],
+  ["step-report", "A printable progress report with checked-off rows.", "You see the proof", "A plain report shows every site, where it stands (asked, confirmed, still waiting), the date it was asked and when it was checked again. You can print it."],
+];
 ---
-
 <Base {...p}>
-  <div class="site-refresh">
-    <section class="site-refresh__hero site-refresh__section site-refresh__section--alt" aria-labelledby="how-title">
-      <div class="site-refresh__wrap site-refresh__wrap--narrow">
-        <nav class="how-breadcrumbs" aria-label="Breadcrumb">
-          <ol role="list">
-            {p.crumbs.map(([label, out], index) => (
-              <li>
-                {index > 0 && <span aria-hidden="true">/</span>}
-                {index === p.crumbs.length - 1
-                  ? <span aria-current="page">{label}</span>
-                  : <a href={url(out)}>{label}</a>}
-              </li>
-            ))}
-          </ol>
-        </nav>
-        <p class="site-refresh__eyebrow">A clear process</p>
-        <h1 class="site-refresh__hero-title" id="how-title">How Free My ID works</h1>
-        <p class="site-refresh__hero-lead">Every people-search site has its own way of taking requests. Free My ID knows which way each one uses and handles it for you, or with you.</p>
-      </div>
-    </section>
+<PageHead crumbs={p.crumbs} title="How Free My ID works"
+  lead="Every people-search site has its own way of taking requests. Free My ID knows which way each one uses and handles it for you, or with you.">
+  {/* source: PLAN_V1 D1 (three tiers per broker, chosen automatically from the registry) */}
+</PageHead>
 
-    <RefreshSection title="From setup to proof, in four steps" titleId="steps-title" width="narrow">
-      <RefreshSteps ariaLabel="The four steps in the Free My ID process" class="how-steps">
-        <li class="site-refresh__step how-step">
-          <span class="site-refresh__step-number" aria-hidden="true">1</span>
-          <h3 class="site-refresh__step-title">Tell it who to protect</h3>
-          <p>Your name and the towns you've lived in, plus (if you like) your year of birth, phone number, email address and relatives' names, which help it tell you apart from other people with your name. It never asks for your Social Security number or bank or card details, and never charges you.</p>
+<Section id="steps" title="From setup to proof, in four steps">
+  <Timeline class="max-w-[52rem]">
+    {steps.map(([art, alt, h, text], i) => (
+      <TimelineItem n={i + 1} title={h}>
+        <div class="grid items-center gap-m min-[44em]:grid-cols-[1fr_12rem]">
+          <p>{text}</p>
           {/* steps 1-3: WO-178 spot art (brand/web/steps, Iris; alt from brand/README.md "WO-170..179 art"), static SVG
              files in a light/dark <picture>, no script. Step 4 keeps the brand/v3 report picture. */}
-          <figure class="site-refresh__figure how-step__figure">
-            <picture>
-              <source srcset={url("assets/art/step-1-who-dark.svg")} media="(prefers-color-scheme: dark)" />
-              <img src={url("assets/art/step-1-who-light.svg")} width="320" height="250" loading="lazy" decoding="async" alt="A name card in front of a small house." />
+          {art.startsWith("wo178:") ? (
+            <picture class="max-[44em]:hidden">
+              <source srcset={url(`assets/art/${art.slice(6)}-dark.svg`)} media="(prefers-color-scheme: dark)" />
+              <img src={url(`assets/art/${art.slice(6)}-light.svg`)} width="320" height="250" loading="lazy" decoding="async"
+                class="h-auto w-full max-w-[12rem]" alt={alt} />
             </picture>
-          </figure>
-        </li>
-        <li class="site-refresh__step how-step">
-          <span class="site-refresh__step-number" aria-hidden="true">2</span>
-          <h3 class="site-refresh__step-title">It sends the requests</h3>
-          <p>Depending on the site, Free My ID uses one of three ways, shown below. Each site gets only what it already shows about you, plus a removal email address.</p>
-          <figure class="site-refresh__figure how-step__figure">
-            <picture>
-              <source srcset={url("assets/art/step-2-sent-dark.svg")} media="(prefers-color-scheme: dark)" />
-              <img src={url("assets/art/step-2-sent-light.svg")} width="320" height="250" loading="lazy" decoding="async" alt="A page with an arrow going out to a web page." />
-            </picture>
-          </figure>
-        </li>
-        <li class="site-refresh__step how-step">
-          <span class="site-refresh__step-number" aria-hidden="true">3</span>
-          <h3 class="site-refresh__step-title">It keeps checking</h3>
-          <p>Once a day, when your PC is on and you're signed in, it checks for replies and looks again later in case a site lists you again. You'll get a small notice only when something needs you.</p>
-          <figure class="site-refresh__figure how-step__figure">
-            <picture>
-              <source srcset={url("assets/art/step-3-checked-dark.svg")} media="(prefers-color-scheme: dark)" />
-              <img src={url("assets/art/step-3-checked-light.svg")} width="320" height="250" loading="lazy" decoding="async" alt="A magnifying glass over a list with check marks." />
-            </picture>
-          </figure>
-        </li>
-        <li class="site-refresh__step how-step">
-          <span class="site-refresh__step-number" aria-hidden="true">4</span>
-          <h3 class="site-refresh__step-title">You see the proof</h3>
-          <p>A plain report shows every site, where it stands (asked, confirmed, still waiting), the date it was asked and when it was checked again. You can print it.</p>
-          <figure class="site-refresh__figure how-step__figure">
-            <Art src="sections/step-report" alt="A printable progress report with checked-off rows." />
-          </figure>
-        </li>
-      </RefreshSteps>
-    </RefreshSection>
+          ) : art && <Art src={`sections/${art}`} alt={alt} class="max-w-[12rem] rounded-lg bg-bg-alt max-[44em]:hidden" />}
+        </div>
+      </TimelineItem>
+    ))}
+  </Timeline>
+</Section>
 
-    <RefreshSection tone="alt" title="Three ways to send a request" titleId="three-ways-title"
-      lead="Free My ID picks the right way for each site by itself. You don't have to choose.">
-      <ul class="site-refresh__grid how-options" role="list">
-        <li><RefreshCard title="Email"><p>It writes a proper removal letter for you to approve, then sends it from the separate email address you set up. If you skip that, it opens the message in your own email program for you to send.</p></RefreshCard></li>
-        <li><RefreshCard title={'"Do it with me"'}><p>It opens the site's removal page in your own browser, with numbered steps and a "copy" button for each box. You click; it keeps track.</p></RefreshCard></li>
-        <li><RefreshCard title={'"Fill it in for me"'}><p>For sites that allow it, it fills the form in a window you can watch, and stops for you if the site asks "are you a robot?". It never tries to get around those checks.</p></RefreshCard></li>
-      </ul>
-    </RefreshSection>
+<Section tone="alt" title="Three ways to send a request" titleId="three-ways"
+  lead="Free My ID picks the right way for each site by itself. You don't have to choose.">
+  {/* source: PLAN_V1 D1 tier table (Email / Assisted / Automatic browser), chosen automatically; D9 visible Edge window; shared rule 5 (no CAPTCHA solving).
+     Email fallback = src/freemyid/engine/outbox.py mailto + wizard/draft.py mailbox step text. */}
+  <ul class="grid gap-m min-[56.25em]:grid-cols-3" role="list">
+    <Card as="li" id="email" class="reveal"><span class={cardIcon}><Icon name="mail" /></span><h3>Email</h3><p>It writes a proper removal letter for you to approve, then sends it from the separate email address you set up. If you skip that, it opens the message in your own email program for you to send.</p></Card>
+    <Card as="li" id="do-it-with-me" class="reveal"><span class={cardIcon}><Icon name="pointer" /></span><h3>"Do it with me"</h3><p>It opens the site's removal page in your own browser, with numbered steps and a "copy" button for each box. You click; it keeps track.</p></Card>
+    <Card as="li" id="fill-it-in" class="reveal"><span class={cardIcon}><Icon name="form" /></span><h3>"Fill it in for me"</h3><p>For sites that allow it, it fills the form in a window you can watch, and stops for you if the site asks "are you a robot?". It never tries to get around those checks.</p></Card>
+  </ul>
+</Section>
 
-    <RefreshSection title="Built to be careful" titleId="careful-title" width="narrow">
-      <RefreshCallout title="Practice mode first" tone="note">
-        <p>Free My ID starts in practice mode, so no removal requests go out until you say "start sending real requests."</p>
-      </RefreshCallout>
-      <ul class="how-safeguards" role="list">
-        {safeguards.map((text) => <li><Icon name="check" /><span>{text}</span></li>)}
-      </ul>
-      <p class="how-guides">Want to do it by hand? Our <a href={url("guides/")}>free opt-out guides</a> show the steps for some of the best-known sites.</p>
-      <div class="how-download"><CtaDownload /></div>
-    </RefreshSection>
-  </div>
+<Section narrow title="Built to be careful" titleId="safety">
+  {/* source: docs/USER_GUIDE.md section 4 "Practice first (sends nothing)"; Settings "Start sending real requests" */}
+  <Alert variant="note" icon="v3:practice-mode" class="mt-0">
+    <h3 class="text-lead">Practice mode first</h3>
+    <p>Free My ID starts in practice mode, so no removal requests go out until you say "start sending real requests."</p>
+  </Alert>
+  {/* Sources: docs/PLAN_V1.md D1/D9 (no CAPTCHA solving, never pay, no ID or accounts unless the permission is switched on); docs/USER_GUIDE.md section 7 and models.py EmailMode.APPROVE_EACH default (approve each email);
+     "that one site only" = docs/USER_GUIDE.md section 1, wizard/dashboard.py hint */}
+  <ul class="mt-m grid gap-xs" role="list">
+    {["Emails wait for your approval before they're sent, unless you choose otherwise.",
+      "It never pays a site. It never creates accounts or sends a photo of your ID unless you switch that on yourself.",
+      "If a site shows an \"I'm not a robot\" check, it hands that step to you.",
+      "When a site says it deleted you, that's for that one site only, and Free My ID says so."]
+      .map((t) => <li class="flex gap-2xs"><Icon name="check" class="mt-[0.25em] text-ok" /><span>{t}</span></li>)}
+  </ul>
+  {/* source: /guides/ pages built from the broker registry */}
+  <p class="mt-m">Want to do it by hand? Our <a href={url("guides/")}>free opt-out guides</a> show the steps for some of the best-known sites.</p>
+  <div class="mt-m"><CtaDownload /></div>
+</Section>
 </Base>
-
-<style>
-  .site-refresh .how-breadcrumbs ol {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--fmi-space-2xs);
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .site-refresh .how-breadcrumbs li {
-    align-items: center;
-    display: inline-flex;
-    gap: var(--fmi-space-2xs);
-  }
-
-  .site-refresh .how-breadcrumbs [aria-current="page"],
-  .site-refresh .how-breadcrumbs li > span[aria-hidden="true"] {
-    color: var(--fmi-color-muted);
-  }
-
-  .site-refresh .how-steps {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .site-refresh .how-step {
-    display: flex;
-    flex-direction: column;
-    min-height: 100%;
-  }
-
-  .site-refresh .how-step__figure {
-    margin-block: auto 0;
-    padding-block-start: var(--fmi-space-m);
-  }
-
-  .site-refresh .how-step__figure img,
-  .site-refresh .how-step__figure svg {
-    margin-inline: auto;
-    max-height: 12rem;
-    object-fit: contain;
-    width: min(100%, 16rem);
-  }
-
-  .site-refresh .how-options {
-    list-style: none;
-    padding: 0;
-  }
-
-  .site-refresh .how-safeguards {
-    display: grid;
-    gap: var(--fmi-space-s);
-    list-style: none;
-    margin-block: var(--fmi-space-l) 0;
-    padding: 0;
-  }
-
-  .site-refresh .how-safeguards li {
-    align-items: start;
-    display: grid;
-    gap: var(--fmi-space-xs);
-    grid-template-columns: 1.5rem minmax(0, 1fr);
-  }
-
-  .site-refresh .how-safeguards svg {
-    block-size: 1.5rem;
-    color: var(--fmi-color-ok);
-    inline-size: 1.5rem;
-    margin-block-start: 0.2em;
-  }
-
-  .site-refresh .how-guides {
-    margin-block: var(--fmi-space-l) 0;
-  }
-
-  .site-refresh .how-download {
-    margin-block-start: var(--fmi-space-m);
-  }
-
-  @media (min-width: 56.25em) {
-    .site-refresh .how-steps {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-</style>

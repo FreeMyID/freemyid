@@ -2,8 +2,7 @@
 // Guides index. Same copy and source comments as site_src/templates/pages/guides.html.
 // Guides are built from brokers/registry.sample.yaml (public sample only).
 import Base from "@/layouts/Base.astro";
-import "@/styles/site-refresh.css";
-import Crumbs from "@/components/Crumbs.astro";
+import PageHead from "@/components/PageHead.astro";
 import Icon from "@/components/Icon.astro";
 import Card from "@/components/ui/Card.astro";
 import Alert from "@/components/ui/Alert.astro";
@@ -13,17 +12,10 @@ import { GROUPS, guides, guidesMeta, pageProps, url } from "@/lib/site";
 const p = pageProps("guides");
 ---
 <Base {...p}>
-<div class="site-refresh">
-<header class="site-refresh__wrap site-refresh__section refresh-page-head">
-<Crumbs crumbs={p.crumbs} />
-<div class="refresh-page-intro"><div>
-<h1>Free opt-out guides</h1>
-<p class="site-refresh__lead">Step-by-step guides to ask people-search sites to remove your listing. They're free, and you don't need Free My ID to use them.</p>
-
-</div></div>
-</header>
+<PageHead crumbs={p.crumbs} title="Free opt-out guides"
+  lead="Step-by-step guides to ask people-search sites to remove your listing. They're free, and you don't need Free My ID to use them." />
 {/* source: guides built from brokers/registry.sample.yaml; no app needed (they are plain web pages) */}
-<div class="site-refresh__wrap pb-2xl">
+<div class="wrap pb-2xl">
   <Alert class="mt-0 max-w-[48rem]">
     <h2 class="text-h3">Before you start</h2>
     {/* source: PLAN_V1 D2 / USER_GUIDE section 2 (separate removal mailbox); shared rule 6 + POSITIONING rule 4 (never pay, never SSN); registry recheck_interval_days (relisting) */}
@@ -41,16 +33,16 @@ const p = pageProps("guides");
     return items.length > 0 && (
       <section class="mt-xl" aria-labelledby={`g-${key}`}>
         <h2 id={`g-${key}`}>{label}</h2>
-        <ul class="site-refresh__grid mt-m" role="list">
+        <ul class="mt-m grid gap-s [grid-template-columns:repeat(auto-fill,minmax(min(100%,17rem),1fr))]" role="list">
           {items.map((g) => (
             <li>
-              <a class="site-refresh__card refresh-guide-link" href={url(g.out)}>
+              <a class="group flex h-full min-h-tap flex-col gap-3xs rounded-xl border border-line bg-card p-s no-underline shadow-1 hover:border-line-strong hover:bg-brand-soft" href={url(g.out)}>
                 <span class="flex items-center justify-between gap-xs text-lead font-bold text-link underline underline-offset-[0.18em]">{g.name}<Icon name="arrow-right" class="text-brand" /></span>
                 {g.covered_by
-                  ? <span class="text-body text-muted">Covered by the {g.covered_by.name} removal</span>
+                  ? <span class="text-small text-muted">Covered by the {g.covered_by.name} removal</span>
                   : g.verified
                     ? <Badge variant="ok" class="w-fit"><Icon name="check" />Steps checked {g.last_verified}</Badge>
-                    : <span class="text-body text-muted">Steps from our research</span>}
+                    : <span class="text-small text-muted">Steps from our research</span>}
               </a>
             </li>
           ))}
@@ -62,21 +54,8 @@ const p = pageProps("guides");
     <h2 id="let-us">Rather not do it all by hand?</h2>
     {/* source: PLAN_V1 D1 (three tiers) and D4 (daily checks, re-scan); runs locally (netpolicy.py) */}
     <p>Free My ID does the repetitive part for you on your own computer, keeps track of every site, and checks again later.</p>
-    <div class="mt-xs"><CtaDownload size="md" class="site-refresh__button" /></div>
+    <div class="mt-xs"><CtaDownload size="md" /></div>
   </Card>
-  <p class="mt-l max-w-measure text-body text-muted">Guide data: the Free My ID sample broker registry, version {guidesMeta.version}, licensed <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>. Sites change their pages often; if a guide is out of date, follow what the site's own page says.</p>
-</div>
+  <p class="mt-l max-w-measure text-small text-muted">Guide data: the Free My ID sample broker registry, version {guidesMeta.version}, licensed <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>. Sites change their pages often; if a guide is out of date, follow what the site's own page says.</p>
 </div>
 </Base>
-
-<style is:global>
-  .site-refresh [data-slot="badge"] { color: var(--fmi-color-text); }
-  .site-refresh .refresh-page-intro { display: grid; gap: var(--fmi-space-l); align-items: center; }
-  .site-refresh .refresh-page-head h1 { max-width: 26ch; margin-block-start: var(--fmi-space-m); }
-  .site-refresh pre { font-size: 1.25rem; max-width: 100%; overflow-x: auto; white-space: pre; }
-  .site-refresh small { font-size: 1em; }
-  .site-refresh figure { margin: 0; min-width: 0; }
-  .site-refresh img { max-width: 100%; height: auto; }
-  .site-refresh .refresh-guide-link { display: flex; flex-direction: column; gap: var(--fmi-space-xs); height: 100%; min-block-size: 44px; }
-  @media (min-width: 56.25em) { .site-refresh .refresh-page-intro:has(figure) { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } }
-</style>
