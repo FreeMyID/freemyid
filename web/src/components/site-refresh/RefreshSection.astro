@@ -1,5 +1,6 @@
 ---
 interface Props {
+  id?: string;
   title?: string;
   titleId?: string;
   eyebrow?: string;
@@ -10,6 +11,7 @@ interface Props {
 }
 
 const {
+  id,
   title,
   titleId,
   eyebrow,
@@ -25,7 +27,7 @@ const classes = [
 ];
 ---
 
-<section class:list={classes} aria-labelledby={title ? titleId : undefined}>
+<section id={id} class:list={classes} aria-labelledby={title ? titleId : undefined}>
   <div class:list={["site-refresh__wrap", width === "narrow" && "site-refresh__wrap--narrow"]}>
     {(title || eyebrow || lead) && (
       <header class="site-refresh__section-head">
