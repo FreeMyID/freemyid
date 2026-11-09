@@ -1,6 +1,6 @@
 # Codex vendor work board
 
-Sole writer: Nora Bennett, interactive vendor PM. Last checkpoint: CLAUDE-036 / CODEX-096, 2026-11-08. Release and merge states are owner-reported.
+Sole writer: Nora Bennett, interactive vendor PM. Last checkpoint: CLAUDE-041 / CODEX-110..114, 2026-11-08. Release and merge states are owner-reported.
 States are owner reports and local document evidence, not independently verified remote PR state. No git or network used. Local merges are distinguished from pushed merges. Work-order status headers may be stale; latest owner channel controls.
 
 Before dispatch or proposals, check this board, exact work-order paths and Claude's stay-off lists. This board grants no additional edit permission. Completed WO-001/002/005/006 path lists are historical scopes, not active reservations. WO-005 scope is exposure_card and its exclusive helpers only, never all views.py functions.
@@ -45,17 +45,21 @@ Before dispatch or proposals, check this board, exact work-order paths and Claud
 | WO-194 | #177 | Elena Vasquez | accepted with CLAUDE-036 amendments | none | docs/vendor/CODEX_SITE_REFRESH.md; VENDOR_STATUS.md | 2026-11-08 CLAUDE-037 |
 | WO-195 | #178 | Amara Okoye | delivered; build/site check blocked on missing dependencies; owner review requested | WO-194 | web/src/styles/site-refresh.css (new); web/src/components/site-refresh/ (new); VENDOR_STATUS.md | 2026-11-08 CODEX-099 |
 | WO-196 | #179 | Amara Okoye | delivered; owner review requested | WO-194 | web/src/art/site-refresh/ (new); VENDOR_STATUS.md | 2026-11-08 CODEX-098 |
-| WO-197 | #180 | Kai Nakamura | delivered; build/site/focused/browser/Ruff pass; owner review | CLAUDE-040 GO on prepared main | web/src/pages/developers/index.astro; tests/codex/test_cx_developer_hub_refresh.py (new); VENDOR_STATUS.md | 2026-11-08 CODEX-107 |
-| WO-198 | #181 / CP-37 #165 closed | Kai Nakamura | delivered; build/site/focused/browser/Ruff pass; owner review | CLAUDE-040 GO on prepared main | web/src/pages/developers/cli/index.astro; tests/codex/test_cx_dev_cli_render.py (new); VENDOR_STATUS.md | 2026-11-08 CODEX-108 |
-| WO-199 | #182 / CP-42 #170 closed | Kai Nakamura | delivered; build/site/focused/browser/Ruff pass; owner review | CLAUDE-040 GO on prepared main | web/src/pages/developers/config/index.astro; tests/codex/test_cx_dev_config_table_semantics.py (new); VENDOR_STATUS.md | 2026-11-08 CODEX-109 |
+| WO-197 | #180 | Kai Nakamura | merged locally; no owner fixups, combined checks pass (owner report) | CLAUDE-040 GO on prepared main | web/src/pages/developers/index.astro; tests/codex/test_cx_developer_hub_refresh.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-041 |
+| WO-198 | #181 / CP-37 #165 closed | Kai Nakamura | merged locally; no owner fixups, combined checks pass (owner report) | CLAUDE-040 GO on prepared main | web/src/pages/developers/cli/index.astro; tests/codex/test_cx_dev_cli_render.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-041 |
+| WO-199 | #182 / CP-42 #170 closed | Kai Nakamura | merged locally; no owner fixups, combined checks pass (owner report) | CLAUDE-040 GO on prepared main | web/src/pages/developers/config/index.astro; tests/codex/test_cx_dev_config_table_semantics.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-041 |
 | WO-200 | #183 | Kai Nakamura | merged locally; owner reports combined checks pass | WO-195/196 merged | web/src/pages/index.astro; web/src/art/screenshots/home-hero-v0.2.0.png (new); tests/codex/test_cx_home_refresh.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-040 |
 | WO-201 | #184 | Kai Nakamura | merged locally; owner reports combined checks pass | WO-200 | web/src/pages/how-it-works/index.astro; tests/codex/test_cx_how_it_works_refresh.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-040 |
 | WO-202 | #185 | Kai Nakamura | merged locally; owner reports combined checks pass | WO-206 (parallel start authorized by CLAUDE-039) | web/src/pages/families/index.astro; tests/codex/test_cx_families_refresh.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-040 |
-| WO-203 | #186 | Kai Nakamura | delivered; build/site/focused/browser/Ruff pass; owner review | CLAUDE-040 GO on prepared main | web/src/pages/guides/index.astro; web/src/pages/guides/[slug]/index.astro; web/src/pages/guides/get-your-phone-number-off-people-search-sites/index.astro; web/src/pages/guides/help-a-parent-remove-their-information/index.astro; tests/codex/test_cx_guides_refresh.py (new); VENDOR_STATUS.md | 2026-11-08 CODEX-106 |
-| WO-204 | #187 | Hannah Cole | revised scope; QA after page integration | WO-195–203, WO-205–207 integrated | docs/vendor/site-refresh/QA_REPORT.md (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-037 |
+| WO-203 | #186 | Kai Nakamura | merged locally; no owner fixups, combined checks pass (owner report) | CLAUDE-040 GO on prepared main | web/src/pages/guides/index.astro; web/src/pages/guides/[slug]/index.astro; web/src/pages/guides/get-your-phone-number-off-people-search-sites/index.astro; web/src/pages/guides/help-a-parent-remove-their-information/index.astro; tests/codex/test_cx_guides_refresh.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-041 |
+| WO-204 | #187 | Hannah Cole | audit delivered; acceptance held for findings; no source fixes | CLAUDE-041 GO, all ten pages integrated | docs/vendor/site-refresh/QA_REPORT.md (new); VENDOR_STATUS.md | 2026-11-08 CODEX-110 |
 | WO-205 | #188 | Kai Nakamura | merged locally; owner reports combined checks pass | WO-201 | web/src/pages/safety/index.astro; tests/codex/test_cx_safety_refresh.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-040 |
 | WO-206 | #189 | Kai Nakamura | merged locally; owner reports combined checks pass | WO-205 | web/src/pages/download/index.astro; tests/codex/test_cx_download_refresh.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-040 |
-| WO-207 | #190 | Kai Nakamura | delivered; build/site/focused/browser/Ruff pass; owner review | CLAUDE-040 GO on prepared main | web/src/pages/faq/index.astro; tests/codex/test_cx_faq_refresh.py (new); VENDOR_STATUS.md | 2026-11-08 CODEX-105 |
+| WO-207 | #190 | Kai Nakamura | merged locally; no owner fixups, combined checks pass (owner report) | CLAUDE-040 GO on prepared main | web/src/pages/faq/index.astro; tests/codex/test_cx_faq_refresh.py (new); VENDOR_STATUS.md | 2026-11-08 CLAUDE-041 |
+| WO-209 | — | Kai Nakamura | implementation complete; delivery blocked by required build/full-site suite (missing web build output) | CLAUDE-042/045 | web/src/pages/safety/index.astro; web/src/pages/families/index.astro; tests/codex/test_cx_audit_trust_pages_followup.py (new); VENDOR_STATUS.md | 2026-11-08 CODEX-116 |
+| WO-210 | — | Kai Nakamura | implementation complete; delivery blocked by required build/full-site suite (missing web build output) | CLAUDE-042/045 | web/src/pages/download/index.astro; tests/codex/test_cx_audit_download_followup.py (new); VENDOR_STATUS.md | 2026-11-08 CODEX-117 |
+| WO-211 | — | Amara Okoye | delivered; 49 focused tests and Ruff pass; owner review requested | CLAUDE-045 | tests/codex/test_cx_monitor_contract.py (new); tests/codex/fixtures/monitor/ (new); VENDOR_STATUS.md | 2026-11-08 CODEX-118 |
+| WO-212 | — | Nora Bennett | delivered; 469 architecture/doc tests pass; owner review requested | CLAUDE-045 | docs/dev/ARCHITECTURE.md; VENDOR_STATUS.md | 2026-11-08 CODEX-119 |
 
 WO-107 workspace: .vendor-wt/wo-107. Merged PR #19, owner report (103d79a).
 
@@ -76,7 +80,7 @@ CP-03 navigation tests; CP-04 guide-print audit; CP-07 printable-summary visual 
 
 CLAUDE-035 accepts WO-191 and WO-192; WO-187..192 are in the in-house merge queue. Builder WIP is 0/5. CP-37..42 (#165–170) propose distinct developer-page built-HTML and CLI text-output guards. All await Morgan's review. CP-33 remains parked for cleared source paths. Respect CLAUDE-034's process notes: Codex is the sole writer of `brand/codex/MANIFEST.md`, and design WOs close when their status records `done (<commit>)`.
 
-CLAUDE-040 reports WO-200/201/202/205/206 merged locally with owner fixups and passing combined checks. Final page WOs 207/203/197/198/199 are delivered: all builds/site checks pass, 132 focused tests and 33 existing regressions pass, Ruff passes. CODEX-105..109 record handoffs. Active builder WIP is 0/5. WO-204 stays closed until these merge. This is local board state; owner controls integration and publication.
+CLAUDE-041 reports all ten page WOs merged locally, combined build/site/full leak checks pass and all 279 Codex tests pass. WO-204 audit is delivered (CODEX-110): page-ranked defects require follow-up; no fixes in the audit branch. Builds/site checker pass; 196 offline browser states and screenshot overviews completed. CP-43..46 proposed in CODEX-111..114 for the four free slots; none are authorized or path-reserving. Active builder WIP is 0/5. Owner controls repair worktrees, CodeRabbit fixes, full-suite/exact-commit validation, merge and publication.
 
 ## Elena proposed path collision reference
 

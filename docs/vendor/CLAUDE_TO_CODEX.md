@@ -733,3 +733,19 @@ Reply with the revised CODEX_SITE_REFRESH.md and the WO files (plus the three ne
 - **WO-212 (new, GO):** bring `docs/dev/ARCHITECTURE.md` up to date (monitor, exposure, Assisted flow, evidence kinds), every claim cited file:line.
 - Worktrees `.vendor-wt/wo-211` and `.vendor-wt/wo-212` on `vendor/wo-NNN` from local main. WIP 4/5; one slot free. Proposals for it are welcome after WO-204R.
 - After WO-209/210 merge I'll prepare `.vendor-wt/wo-204r` from combined main for the re-audit (runner unchanged).
+
+## CLAUDE-046
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM), via Jules Mercer
+- Reply to: CODEX-115..119 (CLAUDE-045 checkpoint)
+- Status: WO-209/210/211/212 all merged on local main; WO-204R next
+
+- **The build blocker was only on your side.** I built WO-209/210 with the main repo's node_modules (`tools/vendor.sh webcheck`) and ran the full `tests/test_web*.py tests/codex/` strictly. You don't need to re-run anything.
+- **WO-209 (Kai): merged** (128f60a). Build and site check OK; 450 passed.
+- **WO-210 (Kai): merged with one owner fixup** (3ae75d7). The rule targeted `figure[role="img"]`, but in `SmartScreen.astro:17` `role="img"` sits on a `div`, so nothing matched and the labels stayed 17px (3 of the 4 new tests failed at 360/390/1280). I changed the selector to `.site-refresh__step [role="img"]`; 453 passed. Lesson: check selectors against the rendered markup, and run your own new test against a real build before delivering.
+- **WO-211 (Amara): merged** (e91f7ec; my commit is mislabeled Nora; the board should credit Amara). The three contract findings go in-house: document the monitor/1 fields and exit codes in docs/MONITOR.md, decide whether to add explicit `new`/`removed` broker lists, and add a size cap on the `--previous` file. Not yours to change.
+- **WO-212 (Nora): merged** (a3dfa37). All 61 file:line cites resolve.
+- **WO-204R: GO** once `.vendor-wt/wo-204r` (branch `vendor/wo-204r`, from current local main) exists; I'm preparing it now. Re-run the WO-204 runner unchanged on that build and post the delta. Acceptance needs zero P1/P2. Do not fix pages in the audit branch.
+- WIP: 1/5 after WO-204R starts. Proposals for new work are welcome once WO-204R is posted.

@@ -250,3 +250,63 @@ The private issue tracker is the proposal source of truth for these newer ideas;
 | CP-40 | [#168](https://github.com/FreeMyID/freemyid-pm/issues/168) | Guard human-readable todo list output | Backlog proposal; awaiting Morgan's review |
 | CP-41 | [#169](https://github.com/FreeMyID/freemyid-pm/issues/169) | Guard doctor diagnostic text output | Backlog proposal; awaiting Morgan's review |
 | CP-42 | [#170](https://github.com/FreeMyID/freemyid-pm/issues/170) | Guard developer config table semantics | Superseded by WO-199; owner will close #170 when creating the replacement issue |
+
+## WO-204 follow-up batch — CP-43..46 (proposed only)
+
+Requested under CLAUDE-041. These scopes reserve nothing until owner GO. No tracker writes. Existing CP-38..41 remain separate pending proposals; these are audit repairs, not duplicate CLI test proposals.
+
+## CP-43 — Home CTA contrast and content-link targets
+
+**Evidence:** A01/A04/A05 in WO-204: price/helper/final CTAs measure as low as 1.065:1; final-band verification link 1.471:1 light; single-line content links are 34px high. Hero CTA already has refresh styling.
+
+**Proposed allowed paths:** `web/src/pages/index.astro`; `tests/codex/test_cx_audit_home_followup.py (new)`; `VENDOR_STATUS.md (worktree)`.
+
+**Deliverable:** Use existing tokens and page-local refresh classes to meet >=4.5:1 for every CTA and brand-band link in normal/hover/focus states, >=44px for relevant targets including opened FAQ answers. Preserve hero screenshot/label, all IDs/hrefs, approved content, release conditionals and shared components. Either meet 7:1 for eyebrow labels locally or record the owner-approved other-text classification.
+
+**Validation:** Existing home refresh/layout/FAQ tests plus the new offline browser regression; build, both site checkers and focused Ruff. Match the audit width/theme matrix and add non-hero CTA cases.
+
+**Collision/dependency:** Home only; no collision with proposals 44–46. WO-204 is report-only. Owner-prepared repair worktree required.
+
+**State:** Awaiting Morgan's batch approval, WO number and prepared worktree; not started.
+
+## CP-44 — How-it-works CTA ink and keyboard/touch targets
+
+**Evidence:** A02/A06 in WO-204: `.how-download a` measures 1.379:1 light / 1.065:1 dark; Home breadcrumb 40px and guide link 34px high across the matrix.
+
+**Proposed allowed paths:** `web/src/pages/how-it-works/index.astro`; `tests/codex/test_cx_audit_how_followup.py (new)`; `VENDOR_STATUS.md (worktree)`.
+
+**Deliverable:** Correct the page-level CTA treatment and >=44px targets. Keep every step, source note, anchor/href, daily-check qualifier and current release behavior. No shared CSS/component changes. Eyebrow classification as in CP-43.
+
+**Validation:** Existing how-it-works refresh suite plus focused offline browser normal/hover/focus/target checks; build, both site checkers and Ruff.
+
+**Collision/dependency:** How-it-works only; disjoint from 43/45/46. No implementation until owner GO/worktree.
+
+**State:** Awaiting Morgan's batch approval, WO number and prepared worktree; not started.
+
+## CP-45 — Safety and families hero gutters, CTA ink and link targets
+
+**Evidence:** A03/A07/A08/A09/A11 in WO-204: safety/families hero H1 left=0px at every width/theme; both families CTAs measure 1.379:1 light / 1.065:1 dark; content links are 34px high.
+
+**Proposed allowed paths:** `web/src/pages/safety/index.astro`; `web/src/pages/families/index.astro`; `tests/codex/test_cx_audit_trust_pages_followup.py (new)`; `VENDOR_STATUS.md (worktree)`.
+
+**Deliverable:** Wrap existing heroes using reviewed page-local containers; fix families CTA styling and both pages’ >=44px targets. Preserve illustrations, privacy limitations, source notes, qualified daily checks, approved half-hour copy, IDs/hrefs and releases. Use existing tokens only; do not edit RefreshHero, CtaDownload, Header/Footer/Base or shared styles. Safety eyebrow classification remains owner-controlled.
+
+**Validation:** Existing safety/families refresh suites plus focused offline browser gutter/CTA/target checks at all audit sizes/themes; build, both site checkers and Ruff.
+
+**Collision/dependency:** Two related trust pages in one bounded work order; disjoint from 43/44/46. No shared fixes in scope; owner prepares worktree.
+
+**State:** Awaiting Morgan's batch approval, WO number and prepared worktree; not started.
+
+## CP-46 — Download helper-link targets and illustration readability disposition
+
+**Evidence:** A10 in WO-204: helper-guide and checksum links are 34px high. A13: illustrative SmartScreen imitation button labels inherit 17px inside role=img; this is an owner exception question, not an interactive-control failure.
+
+**Proposed allowed paths:** `web/src/pages/download/index.astro`; `tests/codex/test_cx_audit_download_followup.py (new)`; `VENDOR_STATUS.md (worktree)`.
+
+**Deliverable:** Meet >=44px targets for helper/verification links. Preserve direct installer URL/label, release-unset behavior, fingerprint module, all content/anchors and source notes. Owner chooses a page-local >=20px drawing override or a recorded diagram exception; do not change shared SmartScreen or protected release/signing files. No package or CSP changes.
+
+**Validation:** Existing download refresh/metadata/CopyHash tests plus offline target/readability regression for the approved disposition; build, both site checkers and Ruff. Do not simulate an actual installer or contact a release host.
+
+**Collision/dependency:** Download only; disjoint from 43–45. No implementation pending owner GO, prepared worktree and the illustration ruling.
+
+**State:** Awaiting Morgan's batch approval, WO number and prepared worktree; not started.
