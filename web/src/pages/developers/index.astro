@@ -1,7 +1,7 @@
 ---
 // /developers/ (v0.2 "Every platform", docs/ROADMAP.md 3.8): Linux, macOS, Docker and headless use for tech users.
 // The Windows app stays the main path for everyone else (callout at the top).
-// Release status: v0.2.0 is published; docs/marketing/release-notes-v0.2.0.md is the checked
+// Release status: the version shown comes from data/release.yaml (published release); docs/marketing/release-notes-v0.2.0.md is the checked
 // feature list. WO-111 confirms the GHCR image is not public: Docker stays planned.
 // Copy: headline WR-67, homelab pitch WR-68 (brand). WR-69 (Pro edition line) is on HOLD: no paid tier or prices here.
 // Owner rule (ROADMAP principle 6): this is the only page that links GitHub issues/releases.
@@ -11,7 +11,7 @@ import Icon from "@/components/Icon.astro";
 import Alert from "@/components/ui/Alert.astro";
 import Badge from "@/components/ui/Badge.astro";
 import CtaDownload from "@/components/CtaDownload.astro";
-import { pageProps, pages, site, url } from "@/lib/site";
+import { pageProps, pages, release, site, url } from "@/lib/site";
 const p = pageProps("developers");
 const soon = "Planned";
 const cliRef = `${site.repo_url}/blob/main/docs/CLI.md`;
@@ -135,7 +135,7 @@ const toc: [string, string][] = [
     <li class="flex flex-wrap items-center gap-xs p-s"><Badge variant="ok">Available now</Badge><span>Linux and macOS command line, installation from PyPI with pipx, headless runs, JSON output and background scheduling.</span></li>
     <li class="flex flex-wrap items-center gap-xs p-s"><Badge variant="brand">{soon}</Badge><span>A public Docker image, and desktop apps and packages for Linux and macOS.</span></li>
   </ul>
-  <p class="mt-s max-w-measure">Version 0.2.0 is out. Linux and macOS are command line only. Items marked "{soon}" are not available yet.</p>
+  <p class="mt-s max-w-measure">Version {release.version} is out. Linux and macOS are command line only. Items marked "{soon}" are not available yet.</p>
   {/* source: WR-68 (brand homelab pitch; platform release checked against docs/marketing/release-notes-v0.2.0.md, technical users); storage and approved-request scope = docs/ROADMAP.md section 1, lookup = engine/exposure.py + submitters/web_form.search_url (name, city/state/zip to broker search pages), docs/vendor/WO-107.md */}
   <p class="mt-s max-w-measure">Run it headless on a home server. Same engine as the Windows app, driven from the command line and a schedule, with no account and no cloud. Your profile and records are stored on the box you control. Nothing is sent to us: your details go only to the people-search sites (a name-and-town lookup, then the removal requests you approve) and through your own mail server.</p>
 </section>
@@ -156,7 +156,7 @@ const toc: [string, string][] = [
 
   <h3 id="source" class="mt-l flex flex-wrap items-center gap-xs">From source</h3>
   {/* source: site.yaml repo_url (public code); docs/marketing/release-notes-v0.2.0.md, technical users (Linux/macOS command line) */}
-  <p class="mt-xs max-w-measure">The code is public. Version 0.2.0 supports the command line on Linux and macOS.</p>
+  <p class="mt-xs max-w-measure">The code is public. Version {release.version} supports the command line on Linux and macOS.</p>
   <pre class={pre} tabindex="0" aria-label="Install from source"><code>{source}</code></pre>
 </section>
 
@@ -200,7 +200,7 @@ const toc: [string, string][] = [
 <section id="json" aria-labelledby="json-title" class="scroll-mt-24 border-t border-line py-xl first:border-t-0 first:pt-0">
   <h2 id="json-title">JSON output and exit codes</h2>
   {/* source: docs/CLI.md, command table, --json rules, status/1 and Exit codes. Release status: docs/marketing/release-notes-v0.2.0.md, technical users. */}
-  <p class="mt-s max-w-measure">In v0.2.0, <code>freemyid status --json</code> reads the saved status without changing it. JSON output contains exactly one JSON object on stdout; human messages, such as warnings, go to stderr. Each object identifies its versioned schema, such as <code>"schema": "status/1"</code>. Within a version, fields may be added, but will not be renamed or removed.</p>
+  <p class="mt-s max-w-measure"><code>freemyid status --json</code> reads the saved status without changing it. JSON output contains exactly one JSON object on stdout; human messages, such as warnings, go to stderr. Each object identifies its versioned schema, such as <code>"schema": "status/1"</code>. Within a version, fields may be added, but will not be renamed or removed.</p>
   <pre class={pre} tabindex="0" aria-label="JSON output example"><code>{json}</code></pre>
   <p class="mt-s max-w-measure">Each command and its options, with source lines: <a href={url(pages["developers-cli"].out)}>Command reference</a></p>
   <p class="mt-s max-w-measure"><a href={cliRef}>The full command and exit code reference (CLI.md on GitHub)</a></p>

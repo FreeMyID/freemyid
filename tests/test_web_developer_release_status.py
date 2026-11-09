@@ -6,6 +6,9 @@ from pathlib import Path
 
 import pytest
 
+_RELEASE_VERSION = str((Path(__file__).resolve().parents[1] / "site_src/data/release.yaml").read_text(
+    encoding="utf-8").split("version:", 1)[1].split()[0]).strip("'\"")
+
 ROOT = Path(__file__).resolve().parents[1]
 PAGE = ROOT / "web/dist/developers/index.html"
 
@@ -49,7 +52,7 @@ def test_status_separates_shipped_cli_from_planned_desktop_and_docker(
         )) for row in rows
     )
     status = text(sections["status"])
-    assert "Version 0.2.0 is out" in status
+    assert f"Version {_RELEASE_VERSION} is out" in status
     assert "Linux and macOS are command line only" in status
     assert "Coming in v0.2" not in status
     assert "Version 0.2 isn't out yet" not in status
@@ -75,7 +78,7 @@ def test_shipped_install_methods_are_current(sections: dict[str, str], name: str
     if name == "pipx":
         assert "pipx install freemyid" in copy
     else:
-        assert "Version 0.2.0 supports the command line" in copy
+        assert f"Version {_RELEASE_VERSION} supports the command line" in copy
 
 
 def test_public_docker_commands_are_explicitly_not_ready(sections: dict[str, str]) -> None:

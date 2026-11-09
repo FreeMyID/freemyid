@@ -7,6 +7,9 @@ from pathlib import Path
 
 import pytest
 
+_RELEASE_VERSION = str((Path(__file__).resolve().parents[1] / "site_src/data/release.yaml").read_text(
+    encoding="utf-8").split("version:", 1)[1].split()[0]).strip("'\"")
+
 ROOT = Path(__file__).resolve().parents[1]
 PAGE = ROOT / "web/dist/developers/index.html"
 
@@ -76,6 +79,6 @@ def test_examples_match_shipped_v020(sections: dict[str, str]) -> None:
         copy = text(sections[name])
         assert "Coming in v0.2" not in copy
         assert "Version 0.2 isn't out yet" not in copy
-    assert "Version 0.2.0 is out" in text(sections["status"])
+    assert f"Version {_RELEASE_VERSION} is out" in text(sections["status"])
     assert "You can open the web wizard" in text(sections["first-run"])
     assert "reads the saved status without changing it" in text(sections["json"])
