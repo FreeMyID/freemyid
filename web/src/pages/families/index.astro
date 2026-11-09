@@ -19,7 +19,7 @@ import { pageProps, url } from "@/lib/site";
 const p = pageProps("families");
 const card = url("assets/free-my-id-fridge-card.pdf");
 const grid = "grid gap-m min-[48em]:grid-cols-2";
-const iconBubble = "inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand [&_svg]:size-6";
+const iconBubble = "icon-tile";
 ---
 <Base {...p}>
 <PageHead crumbs={p.crumbs} title="Helping a parent or grandparent use Free My ID"
@@ -43,7 +43,7 @@ const iconBubble = "inline-flex size-11 shrink-0 items-center justify-center rou
     <Card class="reveal">
       <span class={iconBubble}><Icon name="info" /></span>
       <h2 class="text-h3">What it doesn't do</h2>
-      <ul class="prose-fmid">
+      <ul class="grid list-disc gap-2xs ps-m">
         {/* source: docs/USER_GUIDE.md section 1 limits (Facebook unchanged; news and government records not affected); POSITIONING.md rule 6 */}
         <li>It doesn't change what Facebook itself does with their account.</li>
         <li>It can't remove news stories or government records.</li>
@@ -59,7 +59,7 @@ const iconBubble = "inline-flex size-11 shrink-0 items-center justify-center rou
   <div class={grid}>
     <Card>
       <p class="font-bold text-heading">Have ready:</p>
-      <ul class="prose-fmid">
+      <ul class="grid list-disc gap-2xs ps-m">
         <li>Their full name, and any maiden or earlier names</li>
         <li>The towns they've lived in over the last 10 years</li>
         <li>Optional: year of birth, phone number, relatives' names. These help Free My ID recognize the right listing. They are stored on your computer. Year of birth and relatives' names are never sent to a site. If a site's form asks for an age, it gets only the age its own listing shows. A phone number goes to a site only if you allow it.</li>
@@ -88,7 +88,7 @@ const iconBubble = "inline-flex size-11 shrink-0 items-center justify-center rou
 
 <Section tone="alt" title="Setting it up" titleId="setup">
   {/* source: docs/HELPER_GUIDE.md section 2 (download, SmartScreen, Install) and section 3 (six screens, practice mode); packaging/windows/freemyid.iss PrivilegesRequired=lowest; six screens = src/freemyid/wizard/draft.py STEPS; unsigned = .github/workflows/build.yml release notes */}
-  <Timeline class="max-w-[48rem]">
+  <Timeline class="max-w-[48rem]" surface="bg-alt">
     <TimelineItem n={1} title="Download"><p>On their Windows 10 or 11 computer, use the Download button on this site. Only download from this site.</p></TimelineItem>
     <TimelineItem n={2} title="Open FreeMyIDSetup.exe"><p>Windows may show a blue box that says "Windows protected your PC." That happens because Free My ID is free and hasn't bought a publisher certificate yet. Click the small words <strong>More info</strong>, check the name says FreeMyIDSetup.exe, then click <strong>Run anyway</strong>. <a href={url("download/#smartscreen")}>See it with pictures.</a></p></TimelineItem>
     <TimelineItem n={3} title="Click Install"><p>No administrator password is needed. Free My ID opens by itself.</p></TimelineItem>
@@ -117,7 +117,7 @@ const iconBubble = "inline-flex size-11 shrink-0 items-center justify-center rou
     <Card as="li" class="reveal">
       <span class={iconBubble}><Icon name="pointer" /></span>
       <p><strong>"Needs you" cards.</strong> A few sites need a real person. A card appears with one big button.</p>
-      <ul class="prose-fmid">
+      <ul class="grid list-disc gap-2xs ps-m">
         <li>"Fill it in for me" opens the site's removal page and fills in the boxes. If the site asks "I'm not a robot," the person ticks the box and presses Submit themselves. Free My ID never does that step.</li>
         <li>"Do it with me" opens the site in their own browser with numbered steps and a Copy button for each box.</li>
       </ul>
