@@ -46,7 +46,7 @@ class _ScanRunner(Runner):
 
 
 def _run(store, p, now, *, found: bool, scan_only=False, dry_run=False, unchecked=False,
-         level=MatchLevel.CONFIRMED):
+         level: MatchLevel = MatchLevel.CONFIRMED):
     reg = Registry(version="t", updated=T0.date(), brokers=[B])
     cfg = cfgmod.Config(real_submissions_enabled=True, min_delay_s=0, max_delay_s=0)
     r = _ScanRunner(store, reg, scan_only=scan_only, dry_run=dry_run, interactive=False,
