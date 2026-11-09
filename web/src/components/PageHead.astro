@@ -1,16 +1,15 @@
 ---
 // Top of an inner page: breadcrumbs, h1, lead. Optional illustration on the right (wide screens).
-// Revamp: a quiet aceternity-style backdrop (soft spotlight + faint grid that fades out), static and
-// decorative only, so text contrast is measured against the plain page background.
+// Revamp: the aceternity Spotlight (quiet tone, fading grid) from Maya's library; decorative only,
+// static under reduced motion, text sits on tints no stronger than the `spot` token.
 import Crumbs from "./Crumbs.astro";
+import Spotlight from "./aceternity/Spotlight.astro";
 import type { Crumb } from "@/lib/site";
 interface Props { crumbs: Crumb[]; title: string; lead?: string }
 const { crumbs, title, lead } = Astro.props;
 const hasArt = Astro.slots.has("art");
 ---
-<div class="page-head relative isolate overflow-hidden border-b border-line pb-l pt-l">
-  <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_70%_90%_at_85%_0%,var(--fmi-color-brand-soft),transparent_70%)]"></div>
-  <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10 opacity-60 bg-[linear-gradient(to_right,var(--fmi-color-line)_1px,transparent_1px),linear-gradient(to_bottom,var(--fmi-color-line)_1px,transparent_1px)] bg-[size:3rem_3rem] [mask-image:radial-gradient(ellipse_60%_80%_at_80%_0%,#000_20%,transparent_75%)]"></div>
+<Spotlight as="div" tone="quiet" pattern="grid" class="page-head pb-l pt-l">
   <div class:list={["wrap grid items-center gap-l", hasArt && "min-[56.25em]:grid-cols-[1.4fr_1fr]"]}>
     <div>
       <Crumbs crumbs={crumbs} />
@@ -20,4 +19,4 @@ const hasArt = Astro.slots.has("art");
     </div>
     {hasArt && <div class="mx-auto w-full max-w-[26rem]"><slot name="art" /></div>}
   </div>
-</div>
+</Spotlight>

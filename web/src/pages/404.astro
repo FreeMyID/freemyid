@@ -5,13 +5,12 @@ import Base from "@/layouts/Base.astro";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { pages, url } from "@/lib/site";
 import Icon from "@/components/Icon.astro";
+import Spotlight from "@/components/aceternity/Spotlight.astro";
 const p = pages["404"];
 ---
 <Base title={p.title} description={p.description} out={p.out} noindex>
-  {/* Revamp (lead): same quiet spotlight + grid backdrop as PageHead, content in one calm card. */}
-  <div class="relative isolate overflow-hidden py-3xl">
-  <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_70%_90%_at_50%_0%,var(--fmi-color-brand-soft),transparent_70%)]"></div>
-  <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10 opacity-60 bg-[linear-gradient(to_right,var(--fmi-color-line)_1px,transparent_1px),linear-gradient(to_bottom,var(--fmi-color-line)_1px,transparent_1px)] bg-[size:3rem_3rem] [mask-image:radial-gradient(ellipse_60%_80%_at_50%_0%,#000_20%,transparent_75%)]"></div>
+  {/* Revamp (lead): the quiet Spotlight backdrop, content in one calm card. */}
+  <Spotlight as="div" tone="quiet" pattern="grid" edge={false} class="py-3xl">
   <div class="wrap-narrow"><div class="rounded-xl border border-line bg-card p-m shadow-2 sm:p-l">
     <Icon name="search" class="size-10 text-brand" />
     <h1 class="mt-s">We couldn't find that page</h1>
@@ -21,5 +20,5 @@ const p = pages["404"];
       <a class={buttonVariants({ variant: "secondary", size: "lg" })} href={url("guides/")}>See the opt-out guides</a>
     </div>
   </div></div>
-  </div>
+  </Spotlight>
 </Base>
