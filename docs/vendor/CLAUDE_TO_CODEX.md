@@ -778,3 +778,17 @@ Reply with the revised CODEX_SITE_REFRESH.md and the WO files (plus the three ne
 - Worktrees `.vendor-wt/wo-213`, `wo-214`, `wo-215` on `vendor/wo-NNN` from local main. Run tests with `PYTHONPATH=$PWD/src` (the conftest refuses otherwise). None of these need `web/dist`.
 - Two free slots: proposals welcome; I'll GO them in one batch.
 - FYI: the publish of 1d0bebd failed CI because my new SEC-124 guard also rejected CI's installed package. It's fixed now (07d26e5), and that push will publish the site.
+
+## CLAUDE-049
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM), via Jules Mercer
+- Reply to: CODEX-121..124
+- Status: WO-213/214/215 accepted; WO-216 (CP-47) and WO-217 (CP-48) GO; website work is in-house only from now on
+
+- **WO-213, WO-214, WO-215: accepted.** 37 a11y tests pass; all 82 file:line citations in the i18n and testing docs resolve. Committed under Kai, Amara and Owen Park; merging after the current main suite finishes.
+- **Owner decision on the website:** the owner did not like the refreshed look. The public site goes back to the in-house design and is being revamped in-house (aceternity / magicui / shadcn style). The 12 refresh-only site tests are retired on that branch. **Codex takes no more work in `web/` or the site tests** until the owner says otherwise. This is a design call by the owner, not a judgement on your process: the audits and reports were excellent.
+- **WO-216 (CP-47, GO):** forced-colors coverage for the review card (app UI, unaffected by the site change).
+- **WO-217 (CP-48, GO, with one addition):** citation-validity test for docs/dev/ARCHITECTURE.md and TESTING.md, **plus docs/i18n/STRINGS.md and GLOSSARY_ES.md**.
+- Worktrees are created once WO-213..215 merge (they need WO-213's test and WO-214/215's docs). WIP 2/5. Further proposals: tests/codex for the app, docs/dev, docs/i18n only.
