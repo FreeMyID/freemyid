@@ -5,19 +5,19 @@
       "id": "SEC-66",
       "severity": "see handoff",
       "owner": "Dana",
-      "status": "open"
+      "status": "closed"
     },
     {
       "id": "SEC-100",
       "severity": "INFO",
       "owner": "Marcus",
-      "status": "open"
+      "status": "closed"
     },
     {
       "id": "SEC-108",
       "severity": "LOW",
       "owner": "Owner",
-      "status": "open"
+      "status": "closed"
     },
     {
       "id": "SEC-112",
@@ -29,7 +29,7 @@
       "id": "SEC-113",
       "severity": "LOW",
       "owner": "Owner",
-      "status": "open"
+      "status": "closed"
     },
     {
       "id": "SEC-115",
@@ -65,7 +65,25 @@
       "id": "SEC-121",
       "severity": "INFO",
       "owner": "Dana",
-      "status": "in review"
+      "status": "closed"
+    },
+    {
+      "id": "SEC-122",
+      "severity": "MED",
+      "owner": "Nina",
+      "status": "open"
+    },
+    {
+      "id": "SEC-123",
+      "severity": "MED",
+      "owner": "Nina",
+      "status": "open"
+    },
+    {
+      "id": "SEC-124",
+      "severity": "INFO",
+      "owner": "Morgan",
+      "status": "closed"
     }
   ],
   "owner_tasks": [
@@ -107,7 +125,8 @@
     },
     {
       "key": "OWN-old-watcher",
-      "title": "Restart the old Copilot watcher (pid 337338) so SEC-108/113 close on the desk"
+      "title": "Restart the old Copilot watcher (pid 337338) so SEC-108/113 close on the desk",
+      "done": true
     },
     {
       "key": "OWN-fridge-pdf",

@@ -856,3 +856,12 @@ Runs at **c1d4424** (detached worktree, the main checkout's `.venv`, `PYTHONPATH
 | SEC-124 | INFO, Open | orchestrator | dev setup | **A worktree test run silently tests the main checkout.** The shared `.venv` has an editable install of the main checkout, so `.venv/bin/pytest` run in `.vendor-wt/<x>` imports the main checkout's `src/`, not the worktree's. I hit this: the new route returned 404 until I set `PYTHONPATH=<worktree>/src`. Green worktree suites (including the "2588 passed" claimed for this branch) may not cover the branch's src changes. | Run worktree suites with `PYTHONPATH=$PWD/src`, or add a conftest guard that fails when `freemyid.__file__` is outside the rootdir. |
 
 Checked and OK: the Yes text says that in practice mode nothing is sent, and that is accurate. Dry runs draft emails and Automatic only logs `dry_run_would_submit`. The permission line ("stops and asks unless you allowed that in Settings") matches `_permissions_block`; account creation is never automatic, so on that point the text is more cautious than the code.
+
+### Review 2026-11-08: open-item close-out at a216b75, Marcus Webb
+
+**Verdict: PASS.** Nothing meets a BLOCK criterion. Closed: SEC-66 (live headers verified), SEC-100, SEC-108, SEC-113 (old watcher pid 337338 gone) and SEC-121. Still open: SEC-112 (INFO, flake.lock). Evidence is in docs/handoff/qa-security.md under the same date.
+
+| ID | Severity / status | Owner | Where | Note | Next step |
+|---|---|---|---|---|---|
+| SEC-66 | INFO, **Closed 2026-11-08** | devops-engineer | Cloudflare header rule (tools/cloudflare_headers.py) | The header CSP includes frame-ancestors, plus nosniff, Referrer-Policy and XFO, on all checked pages. | Follow-up: Email Obfuscation script is CSP-blocked on / and /developers/ (owner OK to turn it off); then tighten the header to script-src 'none'. |
+| SEC-112 | INFO, Open (hash gate verified) | devops-engineer | distro/nix/flake.nix:4, tools/ci/check_distro_hashes.py | There is no flake.lock and the gate doesn't require one. | Gate check (strict xfail tests/test_sec112_flake_lock.py); `nix flake lock` on release day. |

@@ -24,6 +24,15 @@ from freemyid.consent import CURRENT_TEXT_VERSION
 FIXTURES = Path(__file__).parent / "fixtures"
 ROOT = Path(__file__).resolve().parents[1]
 
+# SEC-124: the shared .venv has an editable install of the MAIN checkout. Run from a git worktree
+# without PYTHONPATH=src, the tests would silently exercise main's code, not the worktree's.
+import freemyid as _freemyid
+
+if not Path(_freemyid.__file__).resolve().is_relative_to(ROOT):
+    raise pytest.UsageError(
+        f"tests in {ROOT} imported freemyid from {Path(_freemyid.__file__).parent}: "
+        f"run with PYTHONPATH={ROOT / 'src'}")
+
 # The full broker registry (brokers/registry.yaml) is private: public checkouts and builds
 # only have brokers/registry.sample.yaml. FREEMYID_TEST_NO_FULL_REGISTRY=1 runs the suite as
 # a public checkout would (the file on disk is never moved or renamed).
