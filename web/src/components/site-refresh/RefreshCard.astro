@@ -1,0 +1,13 @@
+---
+interface Props {
+  title: string;
+  titleId?: string;
+}
+
+const { title, titleId } = Astro.props;
+---
+
+<article class="site-refresh__card">
+  <h3 class="site-refresh__card-title" id={titleId}>{title}</h3>
+  <slot />
+</article>
