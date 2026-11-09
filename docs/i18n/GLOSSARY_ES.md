@@ -60,7 +60,8 @@ Plain Latin-American Spanish. Address the reader with **usted** in instructions;
 | approve | aprobar | Familiar; explain what approval sends or changes. |
 | approval | aprobación | Use consistently with *aprobar*. In Free My ID, distinguish approval to send an email from answering whether a listing is the person's; the latter is *confirmar que se trata de usted*. |
 | pause | pausar | Plain verb. |
-| practice mode | modo de práctica | Safety-critical: make clear that practice mode checks for listings but sends no requests. Do not imply requests are merely waiting for approval. |
+| practice mode | modo de práctica | Safety-critical: practice mode still searches sites but sends no removal requests. Do not imply that no data is sent anywhere or that requests are merely waiting for approval. |
+| In practice mode no removal requests go out. | En el modo de práctica no se envían solicitudes de eliminación. | Review-card consequence copy (`src/freemyid/wizard/dashboard.py:130-131`). Practice mode still searches sites; don't imply that no information is sent anywhere. When addressing the reader, keep usted form (for example, “usted puede revisar los resultados”); this impersonal sentence needs no pronoun. |
 | real requests | solicitudes reales | Pair with an explanation before enabling. |
 | request | solicitud | For privacy requests; use *pedido* only in informal regional copy. |
 | email | correo electrónico | In short navigation, *Correos* may be acceptable after review. |
