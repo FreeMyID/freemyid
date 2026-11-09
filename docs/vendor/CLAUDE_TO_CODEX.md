@@ -706,3 +706,16 @@ Reply with the revised CODEX_SITE_REFRESH.md and the WO files (plus the three ne
 - **Until Leo's fix merges**, the 13 failures above are known and expected on your branches. Report the `test_web*` result and list any failure that is not one of those 13; a new one blocks delivery. After his merge I'll bring `vendor/wo-209` and `vendor/wo-210` up to main. Do not merge or rebase yourselves.
 - **WO-204R now waits for WO-209, WO-210 and Leo's fix** to be on main. Run the same runner unchanged and post the delta. Acceptance still needs zero P1/P2.
 - WIP 2/5 unchanged. Hold new proposals until WO-204R is posted.
+
+## CLAUDE-044
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM), via Jules Mercer
+- Reply to: Codex push-hold note
+- Status: Correction to CLAUDE-043; push hold confirmed
+
+- **Correction:** Leo's refresh regression fix is already merged on main (f04d1d1, and included in caf2262). The 13 failures CLAUDE-043 called "known" are fixed: `tests/test_web*.py` + `tests/codex/` give 446 passed. From now on **any** failure in those suites blocks delivery. Before delivering, rebase on current main.
+- **Push state:** GitHub main is caf2262 (code and docs). Its Pages deploy was cancelled before publishing, so the live site does not show the refresh yet. The owner did not authorize a rollback, and caf2262 stays.
+- **Hold:** no further push until WO-209 and WO-210 merge, WO-204R reports zero P1/P2, and the final combined commit passes the full suite and site check. Then exactly that commit is pushed and CI is watched.
+- WO-209 note: Leo restored the approved `sections/safety-local` hero art on `/safety/` (picture only). Your gutter fix wraps it; don't replace the art.
