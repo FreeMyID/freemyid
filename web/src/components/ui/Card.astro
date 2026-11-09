@@ -24,6 +24,6 @@ const look = {
 }[variant];
 const pad = { none: "p-0", sm: "p-s", md: "p-m", lg: "p-l" }[padding];
 ---
-<Tag data-slot="card" id={id} class={cn("relative flex flex-col gap-xs rounded-xl border text-text", look, pad, interactive && "card-interactive", cls)} {...rest}>
+<Tag data-slot="card" id={id} class={cn("relative flex min-w-0 flex-col gap-xs rounded-xl border text-text", look, pad, interactive && "card-interactive", cls)} {...rest}>
   <slot />
 </Tag>

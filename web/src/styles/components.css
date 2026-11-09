@@ -201,8 +201,9 @@
   .stat__hint { margin: 0; font-size: var(--fmi-text-small); color: var(--fmi-color-muted); }
 
   /* ------------------------------------------------------------------ aceternity Spotlight */
-  .spotlight { position: relative; isolation: isolate; overflow: hidden; }
-  .spotlight__bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+  .spotlight { position: relative; isolation: isolate; overflow: hidden; overflow: clip; max-inline-size: 100%; }
+  /* the beam overhangs by 10%: clip it here too, so no page can scroll sideways even if the root overflow is changed */
+  .spotlight__bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; contain: paint; }
   .spotlight__beam {
     position: absolute; inset: -10% -10% 0;
     background:

@@ -48,7 +48,7 @@
   }
   main:focus { outline: none; }
   img, svg { max-width: 100%; height: auto; }
-  code, kbd { @apply font-mono; font-size: 0.9em; }
+  code, kbd { @apply font-mono; font-size: 0.9em; overflow-wrap: anywhere; } /* long flags/paths wrap at 320px (QA-3) */
   summary { cursor: pointer; }
   ::selection { background: var(--fmi-color-focus); color: #151b26; }
   /* CA-6: Windows high contrast (forced colours). Backgrounds become the system colour, so filled buttons and
