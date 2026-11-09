@@ -1,11 +1,11 @@
 {
-    "version": "0.3.0",
+    "version": "0.3.1",
     "description": "Free desktop app that asks data brokers to remove your listings.",
     "homepage": "https://freemyid.org",
     "license": "AGPL-3.0-or-later",
     "architecture": {
         "64bit": {
-            "url": "https://github.com/FreeMyID/freemyid/releases/download/v0.3.0/FreeMyIDSetup-0.3.0.exe#/dl.exe",
+            "url": "https://github.com/FreeMyID/freemyid/releases/download/v0.3.1/FreeMyIDSetup-0.3.1.exe#/dl.exe",
             "hash": "0000000000000000000000000000000000000000000000000000000000000000"
         }
     },

@@ -13,7 +13,7 @@ finish-args:
   # No --filesystem=home. Data lives in the app's own xdg-data folder (see the launcher below).
 
 modules:
-  # Version 0.3.0 matches `version` in pyproject.toml. Update both together.
+  # Version 0.3.1 matches `version` in pyproject.toml. Update both together.
   # Dependencies are installed from PyPI sdists/wheels listed in python3-freemyid-deps.json
   # (generate with flatpak-pip-generator; Flatpak builds have no network, so every
   # dependency needs a pinned url and sha256). That file does not exist yet.
@@ -44,5 +44,5 @@ modules:
       - chmod +x ${FLATPAK_DEST}/bin/freemyid-flatpak
     sources:
       - type: file
-        url: https://files.pythonhosted.org/packages/source/f/freemyid/freemyid-0.3.0.tar.gz
+        url: https://files.pythonhosted.org/packages/source/f/freemyid/freemyid-0.3.1.tar.gz
         sha256: "0000000000000000000000000000000000000000000000000000000000000000"  # placeholder: release tooling must set the real checksum

@@ -24,7 +24,7 @@ Each push and tag needs the owner's OK. Do the steps in order; stop on any red.
 1. **Owner: Windows VM check of the rc1 installer** (Windows 10 and/or 11, normal non-admin user):
    - Download `FreeMyIDSetup-0.3.0rc1.exe` + `SHA256SUMS.txt` from the pre-release page; `Get-FileHash -Algorithm SHA256 .\FreeMyIDSetup-0.3.0rc1.exe` equals the SHA256SUMS line.
    - **Upgrade over 0.2.0:** on a snapshot with v0.2.0 installed and set up (fake data: Jane Q Testperson, Springfield IL), run the rc1 installer. Expect no second "Free My ID" entry in Settings > Apps, the profile and reports still there, and the scheduled task still present (`schtasks /Query /TN "Free My ID" /V /FO LIST`).
-   - **Fresh install:** on a clean snapshot. SmartScreen "unknown publisher" is expected (unsigned). The finish page shows the "up to 15 seconds the first time" text.
+   - **Fresh install:** on a clean snapshot. SmartScreen "unknown publisher" is expected (unsigned). The finish page shows the "up to a minute" text (0.3.1; 0.3.0 said "up to 15 seconds", and its first start took ~40 s on the VM).
    - **Splash:** on first start a splash window appears while the app unpacks and closes by itself when the wizard opens on 127.0.0.1. No double start if you wait.
    - Walk all 6 wizard screens with fake data only; no real email sent. Run the task once: `schtasks /Run /TN "Free My ID"`.
    - **Uninstall while running:** leave the app window open (and/or start the task), then uninstall from Settings > Apps. Expect the app closed by the uninstaller, `%LOCALAPPDATA%\Programs\FreeMyID` gone including `FreeMyID.exe` and `_internal`, the scheduled task removed, and the "delete saved information?" question honoured (No keeps `%APPDATA%\FreeMyID`, Yes removes it).

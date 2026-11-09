@@ -35,7 +35,7 @@ account.
    ```
 3. Click **Next** when you see it, then click **Install**. You do not need a password.
 4. Leave the box ticked and click **Finish**. In version 0.2.0 the box says **"Start Free My ID now"**; from version 0.3 it says **"Open Free My ID now"**.
-5. *(From version 0.3.)* The first time, Free My ID can take up to 15 seconds to open. Wait for the small **Free My ID is starting** window. Do not click it again.
+5. *(From version 0.3.)* The first time, Free My ID can take up to a minute to open. Wait for the small **Free My ID is starting** window. Do not click it again.
 
 ## 2. Answer six easy questions (about 5 minutes)
 
@@ -76,6 +76,6 @@ At first Free My ID only **looks** and does not send anything. Open **Settings**
 ## Need help?
 
 - Open Free My ID again from the **Start Menu** or the **Free My ID** icon on your Desktop.
-- If nothing opens *(from version 0.3)*: wait 15 seconds. Then try the Start Menu shortcut once. If it still does not open, ask your helper. Please do not keep double-clicking.
+- If nothing opens *(from version 0.3)*: wait a minute. Then try the Start Menu shortcut once. If it still does not open, ask your helper. Please do not keep double-clicking.
 - To remove Free My ID: Windows **Settings > Apps > Free My ID > Uninstall**. It asks before it
   deletes anything you saved. Choose **Yes** to remove saved people, reports and screenshots. Choose **No** to keep them for later.

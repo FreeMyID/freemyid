@@ -1,6 +1,6 @@
 pkgbase = python-freemyid
 	pkgdesc = Local-first personal data broker opt-out tool with scheduled re-checks
-	pkgver = 0.3.0
+	pkgver = 0.3.1
 	pkgrel = 1
 	url = https://freemyid.org
 	arch = any
@@ -25,7 +25,7 @@ pkgbase = python-freemyid
 	depends = python-platformdirs
 	depends = python-desktop-notifier
 	depends = python-jsonschema
-	source = https://files.pythonhosted.org/packages/source/f/freemyid/freemyid-0.3.0.tar.gz
+	source = https://files.pythonhosted.org/packages/source/f/freemyid/freemyid-0.3.1.tar.gz
 	sha256sums = SKIP
 
 pkgname = python-freemyid

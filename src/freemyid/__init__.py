@@ -1,2 +1,2 @@
 """Free My ID: local-first data broker opt-out tool."""
-__version__ = "0.3.0"
+__version__ = "0.3.1"
