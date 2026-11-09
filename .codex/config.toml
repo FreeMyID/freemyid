@@ -1,0 +1,16 @@
+# Free My ID: project settings for Codex (vendor team). Owned in-house (Morgan Reyes); vendors never edit this.
+# Bounds match AGENTS.md and docs/VENDOR.md: work inside the worktree only, no network, ask before anything else.
+model = "gpt-6.1-sol"
+model_reasoning_effort = "high"
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+
+[sandbox_workspace_write]
+network_access = false
+writable_roots = []
+exclude_tmpdir_env_var = false
+exclude_slash_tmp = false
+
+[shell_environment_policy]
+inherit = "core"
+exclude = ["*TOKEN*", "*SECRET*", "*KEY*", "*PASSWORD*", "GH_*", "GITHUB_*", "AWS_*", "CF_*", "CLOUDFLARE_*"]

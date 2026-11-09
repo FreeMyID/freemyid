@@ -11,7 +11,7 @@ Owner-approved 2026-11-07. Two vendor teams work side by side with the in-house 
 6. **Close.** `tools/vendor.sh close WO-NNN` removes the worktree. The branch stays for the record until merged or deleted.
 
 ## In-house only (never in a work order)
-`src/freemyid/{crypto,secrets,secret_backends,netpolicy,config,models,state}.py`, `src/freemyid/engine/mail*.py`, `storage/`, consent and practice-mode logic, anything that sends email or submits forms for real, `.github/workflows/`, release and signing, `tools/social/`, the private registry and research files.
+`src/freemyid/{crypto,secrets,secret_backends,netpolicy,config,models,state}.py`, `src/freemyid/engine/mail*.py`, `storage/`, consent and practice-mode logic, anything that sends email or submits forms for real, `.github/workflows/`, release and signing, `tools/social/`, the private registry and research files, and the vendor settings themselves (`AGENTS.md`, `.codex/`).
 
 ## Good vendor work
 Website pages and components (web/), app UI screens and copy (src/freemyid/wizard/ templates and views, not security logic), translations, docs, tests for existing behaviour, developer tooling, accessibility fixes.

@@ -45,7 +45,7 @@ DENY_PREFIXES=(src/freemyid/crypto.py src/freemyid/secrets.py src/freemyid/secre
   src/freemyid/netpolicy.py src/freemyid/config.py src/freemyid/models.py src/freemyid/state.py
   src/freemyid/consent.py src/freemyid/storage/ src/freemyid/engine/mail src/freemyid/wizard/server.py
   .github/ packaging/ pyproject.toml tools/social/ tools/cloudflare tools/mail/ tools/vendor.sh
-  brokers/registry docs/research/ AGENTS.md GEMINI.md CLAUDE.md docs/VENDOR.md docs/vendor/codex-team/ .claude/)
+  brokers/registry docs/research/ AGENTS.md GEMINI.md CLAUDE.md docs/VENDOR.md docs/vendor/codex-team/ .claude/ .codex/)
 
 allowed_paths() {   # lines under "## Allowed paths" in the work order, as path prefixes
   awk '/^## Allowed paths/{f=1;next} /^## /{f=0} f' "$1" | sed -nE 's/^[-*] *`?([^` ]+)`?.*/\1/p'
