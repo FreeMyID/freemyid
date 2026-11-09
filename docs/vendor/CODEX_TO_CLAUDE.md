@@ -1297,4 +1297,75 @@ All three owner-prepared work orders are complete within their allowed paths. Ka
 - WO-195 (#178) is delivered with its stylesheet, six Astro components, and staging-layer README. Static scans passed: zero color literals, every selector `.site-refresh`-scoped, no `client:`/`<script>`/aceternity/magicui imports, no missing-token change requests.
 - WO-195 build was attempted but blocked because `web/node_modules` is absent (`yaml` could not resolve); `pnpm check` could not run because build output is absent. No packages were installed. Morgan's `tools/vendor.sh webcheck` is requested.
 - WO-196 (#179) is delivered with three titled, ARIA-labelled conceptual SVGs (all under 2.3 KB), no external assets or embedded raster.
-- Both worktree status files record evidence. No page WOs will start until both are merged. After `/clear`, review WO-195/196 and webcheck result; WO-200 is next.
+- Both foundation worktree statuses record evidence. Page work is now active per CLAUDE-039; Morgan reviews the first five page WOs together.
+
+## CODEX-100 — WO-205
+
+- Date: 2026-11-08
+- From: Kai Nakamura / Codex web builder, summarized by Nora Bennett
+- To: Morgan Reyes / Claude project engineer
+- Issue: #188
+- Status: Delivered; owner review requested
+
+- Rebuilt `/safety/` with `site-refresh.css` inside `.site-refresh`, preserving Base/header/footer, existing safety copy, source notes, anchors, and link destinations. Used the merged conceptual `local-computer.svg` as an idea illustration; no security/privacy implementation changed and no new product claims were added.
+- Added `tests/codex/test_cx_safety_refresh.py` covering the built route wrapper, heading/anchor order, approved explanations, and developer/download links.
+- `ruff check tests/codex/test_cx_safety_refresh.py`: passed.
+- `cd web && pnpm build`: blocked (`ERR_MODULE_NOT_FOUND` for `yaml`, because `web/node_modules` is absent). No packages installed.
+- Focused pytest: 2 failures because blocked build left `web/dist/safety/index.html` absent. `pnpm check` also blocked because `web/dist` is absent.
+- Browser-level contrast, target size, keyboard, Windows scaling, and 200% zoom remain unverified until Morgan runs `tools/vendor.sh webcheck` and opens the built page. Worktree `VENDOR_STATUS.md` records exact commands and outcomes.
+
+## CODEX-101 — WO-201
+
+- Date: 2026-11-08
+- From: Kai Nakamura / Codex web builder, summarized by Nora Bennett
+- To: Morgan Reyes / Claude project engineer
+- Issue: #184
+- Status: Delivered; owner review requested
+
+- Refreshed `/how-it-works/` using `site-refresh.css` inside `.site-refresh`; preserved page lead, four-step order, request methods, safeguards, guides link, and download CTA. Replaced the prior timeline import with a semantic ordered list, accessible 44px breadcrumb rows, concept art, cards, and practice-mode callout.
+- Added D8's daily-check qualifier: “Once a day, when your PC is on and you're signed in.” The worktree status flags other preserved, source-cited process/safeguard claims outside D8's explicit allowed list for Morgan's copy review; no new claim beyond the qualifier was added.
+- Added `tests/codex/test_cx_how_it_works_refresh.py` for refresh wrapper, H1, step order, detail copy, image alternatives, and guides link.
+- Ruff passed. Build blocked: `yaml` unavailable because `web/node_modules` is absent. Focused pytest: 4 setup errors because `web/dist/how-it-works/index.html` is absent; `pnpm check` ENOENT on missing `web/dist`. No dependencies installed.
+- Browser-level contrast, keyboard, Windows scaling, and zoom remain unverified until site build output exists. Exact commands, outcomes, and D8 copy flags are in the worktree `VENDOR_STATUS.md`.
+
+## CODEX-102 — WO-200
+
+- Date: 2026-11-08
+- From: Kai Nakamura / Codex web builder, summarized by Nora Bennett
+- To: Morgan Reyes / Claude project engineer
+- Issue: #183
+- Status: Delivered; owner review requested
+
+- Refreshed the home page in `.site-refresh`, preserving the approved H1, `.hero-actions` contract, D10 section order, existing `CtaDownload`, and release/CSP behavior.
+- The hero uses the real v0.2.0 Welcome screen capture. Source `03-wizard-step1-welcome.png` is 1024×768 / 350,587 bytes and remains unchanged. Added a resize/strip-only 768×576 PNG at 280,373 bytes (<300 KB), imported using Astro image metadata with explicit `.src`, width and height. Visible sample screenshot caption is “Example with made-up data”.
+- Added `tests/codex/test_cx_home_refresh.py` covering the approved H1/order, CTA actions, screenshot asset/metadata, and caption.
+- PM review caught an unqualified once-a-day claim; Kai qualified both the final CTA and “Daily re-checks” feature row with the PC-on and signed-in-to-Windows condition. The other daily-check copy already carries that qualifier.
+- Ruff passed. Build was blocked because `yaml` is missing from absent `web/node_modules`; focused pytest has 3 failures because `web/dist/index.html` is absent; `pnpm check` fails ENOENT on missing `web/dist`. No packages installed.
+- Browser/viewport QA remains unverified until Morgan's `webcheck` can build the site. Exact results and limits are in the worktree `VENDOR_STATUS.md`.
+
+## CODEX-103 — WO-202
+
+- Date: 2026-11-08
+- From: Kai Nakamura / Codex web builder, summarized by Nora Bennett
+- To: Morgan Reyes / Claude project engineer
+- Issue: #185
+- Status: Delivered; owner review requested
+
+- Refreshed `/families/` with the shared route styling, readable sections, and semantic ordered setup steps while preserving its audience, core guidance, and existing routes.
+- Added the daily-check qualifier that the PC must be on and the user signed in. Worktree status flags retained source-cited process, safety, and privacy claims for D8 owner review.
+- Added `tests/codex/test_cx_families_refresh.py` for built-route structure, headings and step order, core copy, links, and illustration accessibility metadata.
+- Ruff passed. Build was blocked because `yaml` is unavailable in absent `web/node_modules`; focused pytest failed because `web/dist/families/index.html` is absent; `pnpm check` failed because `web/dist` is absent. No packages installed.
+- Browser viewport, zoom, keyboard, contrast, and tap-target QA remain unverified until a built preview is available. Exact commands and owner review notes are in the worktree `VENDOR_STATUS.md`.
+
+## CODEX-104 — WO-206
+
+- Date: 2026-11-08
+- From: Kai Nakamura / Codex web builder, summarized by Nora Bennett
+- To: Morgan Reyes / Claude project engineer
+- Issue: #189
+- Status: Delivered; owner review requested
+
+- Refreshed `/download/` with the shared route styling while preserving release metadata, the current direct installer URL and label, the unset-release “Download opens soon” state, checksum/help content, and internal destinations.
+- Added `tests/codex/test_cx_download_refresh.py` for built-output state, CTA target and label, help sections, and family/developer links.
+- Ruff passed. Build was blocked because `yaml` is unavailable in absent `web/node_modules`; focused pytest could not find `web/dist/index.html`; `pnpm check` could not find `web/dist`. No packages installed.
+- Worktree status flags existing download claims for D8 review and asks whether preserving the route's direct installer link satisfies WO-206's shared-CTA wording; the existing page contract expects the direct release URL and installer filename. Browser, viewport, keyboard, contrast, Windows scaling, and zoom QA remain unverified. Details are in the worktree `VENDOR_STATUS.md`.

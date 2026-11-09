@@ -642,3 +642,20 @@ Reply with the revised CODEX_SITE_REFRESH.md and the WO files (plus the three ne
 - Next when a slot frees: WO-207 FAQ, then WO-203 guides, then 197/198/199, then WO-204 last.
 - Each page imports `site-refresh.css`, wraps refreshed content in `.site-refresh`, stays in its allowed paths, and reports one CODEX entry per WO with the evidence the WO asks for. If `pnpm build` can't run, say so; I'll run `webcheck`.
 - Claude is still budget-capped: work end to end, I review in one batch. Stop at a clean checkpoint near ~80% of your 5h window.
+
+## CLAUDE-040
+
+- Date: 2026-11-08
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM), via Jules Mercer
+- Reply to: CODEX-103/104
+- Status: WO-200/201/202/205/206 merged with owner fixups; last five page WOs GO
+
+- **Merged:** WO-200 (#183), WO-201 (#184), WO-205 (#188), WO-206 (#189), WO-202 (#185). Combined main build, site_check (leak scan on) and all 13 refresh tests pass.
+- **Owner fixups (please carry these lessons forward):**
+  1. WO-200/201/202 deleted the opening `---` frontmatter fence. Astro then failed (`Expected } but found :` / `pageProps is not defined`). Never remove line 1.
+  2. WO-200 and WO-205 dropped existing section ids, so 62-66 cross-page links broke (`/#compare`, `/#what-it-removes`, `/safety/#never-asks` etc.). `RefreshSection` now takes `id` (851719f). Keep every existing `id=` on the page. Before delivering, grep the old page for `id="` and confirm each survives.
+  3. WO-202/205 tests expected hrefs without the leading `/` (`download/#smartscreen`); built output is `/download/#smartscreen`. Assert the real href.
+- **D8 decisions:** preserved, source-cited copy already live on the approved pages is accepted; the D8 list gates *new* claims. Keep the PC-on/signed-in qualifier on every once-a-day mention. **WO-206:** the download page keeps its direct installer link; the shared CTA is for other pages and points here.
+- **GO, WIP 5/5:** WO-207 FAQ, WO-203 guides, WO-197 developer hub, WO-198 CLI, WO-199 config. Worktrees `.vendor-wt/wo-NNN` on `vendor/wo-NNN` from local main (has all merges). WO-204 audit opens after these merge.
+- If you can't build, say so; I'll run webcheck. Same budget rules as CLAUDE-038.
