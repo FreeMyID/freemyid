@@ -46,11 +46,13 @@ Before going on, make sure Bridge says it is running
 3. The box says: "Free My ID found your mail app on this computer. Please check
    that the code below matches the one in Proton Mail Bridge." It shows a code
    and asks "Do you trust this code?" (`src/freemyid/wizard/server.py:721-725`).
-4. Open Proton Mail Bridge and look for its security code or certificate details.
-   If the two match, press **Yes** (`ui.py:384`).
+4. Do not press **Yes** just because you installed or started Bridge
+   yourself. Press **Yes** only after you or a helper have checked that the
+   code matches Bridge's own certificate (steps below). This is true even if
+   Bridge was installed a long time ago. If the codes match, press **Yes**.
    Free My ID answers "Saved. Testing again..." and tests again
    (`server.py:738`).
-5. If they do not match, or you are not sure, press **No** (`ui.py:385`).
+5. If they do not match, or you cannot check, press **No** (`ui.py:385`).
    You will see "Not trusted. Nothing was saved and no password was sent."
    (`server.py:733-734`).
 6. When the test works you see "Connection works. Free My ID can read and send
@@ -60,17 +62,21 @@ You must approve the code before you can continue. If you try to press Next
 first, you see: "Please press "Test that it works" and approve the security code
 first." (`draft.py:392-393`).
 
-Bridge does not show this code on its own screen, so you can't compare it
-there yourself. The simple rule: if you just installed, reinstalled or updated
-Bridge yourself, press **Yes**. If you didn't, press **No** and ask your helper.
+Bridge does not show this code on its own screen, so the check needs a
+helper (or you, if you are comfortable) using the exported certificate:
 
-For a helper who wants to check the code: in Bridge's settings, use **Export TLS
-certificates** to save Bridge's certificate (Proton's Bridge settings guide,
-https://proton.me/support/comprehensive-guide-to-bridge-settings). The code
-Free My ID shows is the SHA-256 fingerprint of that certificate
-(`src/freemyid/engine/mail_tls.py:49-51`). Compare it with the output of
-`openssl x509 -in <exported cert file> -noout -fingerprint -sha256`; ignore
-the colons and upper/lower case.
+1. In Bridge's settings, use **Export TLS certificates** (Proton's Bridge
+   settings guide: https://proton.me/support/comprehensive-guide-to-bridge-settings).
+2. Careful: the export includes Bridge's private key. Save it only in a
+   private folder on this computer (not a shared, synced or cloud folder),
+   never send it to anyone, and delete the exported copy when you are done.
+3. The code Free My ID shows is the SHA-256 fingerprint of that certificate
+   (`src/freemyid/engine/mail_tls.py:49-51`). Compare it with the output of
+   `openssl x509 -in "<exported cert file>" -noout -fingerprint -sha256`
+   (keep the quotes; the path may contain spaces). Ignore the colons and
+   upper/lower case.
+4. If the two match, press **Yes**. If they differ or you cannot check, press
+   **No** and ask your helper.
 
 ## If something goes wrong
 
