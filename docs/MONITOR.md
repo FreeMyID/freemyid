@@ -51,8 +51,61 @@ included.
 ## Week over week
 
 `--previous last.json` (last week's monitor/1 output) fills `previous_health`, `changed`
-(health differs), `first_seen_bad` and `weeks_bad`. A fingerprint change on an otherwise
+(health differs), `first_seen_bad` and `weeks_bad`, and lists `new_brokers` and
+`removed_brokers` (`monitor.py:371-383`). A fingerprint change on an otherwise
 `ok` page becomes `form_changed`. When the same bad health shows two weeks in a row, the
 monitor sets `demote_suggested`. Priya then moves the broker off `verified` (Automatic) to
 Assisted with a normal registry edit. The monitor and CI never write the registry. A
-`--previous` file that isn't monitor/1 is ignored, with a warning on stderr.
+`--previous` file that isn't monitor/1, can't be read, isn't valid JSON or is larger than
+2 MB (`MAX_PREVIOUS`, `monitor.py:45`; only the first 2 MB + 1 byte is ever read) is not
+compared. The run goes on and stderr says
+`freemyid: --previous is not a monitor/1 file; not compared (<reason>)`
+(`monitor.py:386-403`, `cli.py:1076-1080`).
+
+## Output: `monitor/1`
+
+`freemyid monitor --json` writes one JSON object (`cli.py:1091-1093`), built in
+`run_monitor` (`monitor.py:358-368`). Top-level fields, all always present:
+
+| field | type | meaning |
+|---|---|---|
+| `schema` | string | always `"monitor/1"` |
+| `generated_at` | string | UTC time of the run, ISO 8601 to the second |
+| `previous_generated_at` | string or null | `generated_at` of the `--previous` file; null when nothing was compared |
+| `counts` | object | number of brokers per health value; all six keys, always in table order above |
+| `changed` | list of ids | brokers whose health differs from last week |
+| `demote_suggested` | list of ids | brokers bad for 2+ weeks in a row |
+| `new_brokers` | list of ids | checked now, not in last week's file (sorted). Empty without a usable `--previous` |
+| `removed_brokers` | list of ids | in last week's file, not checked now: removed, disabled or lost their web page (sorted). With `--broker`, only those ids count. Empty without a usable `--previous` |
+| `brokers` | list | one object per broker checked, in registry order |
+
+Each `brokers[]` object is `BrokerHealth` (`monitor.py:197-212`), all fields always present:
+
+| field | type | meaning |
+|---|---|---|
+| `broker_id` | string | registry id |
+| `health` | string | one of the six values above |
+| `detail` | string | plain-text reason, no page content; empty when `ok` |
+| `http_status` | int or null | status of the last hop; null when nothing was fetched |
+| `page` | string | `scheme://host/path` of the page checked, no query |
+| `selectors_missing` | list of strings | registry selectors not found |
+| `selectors_unchecked` | int | selectors too complex to check without a browser |
+| `fingerprint` | string or null | 16 hex characters; null when the form wasn't read |
+| `used_browser` | bool | the headless browser loaded the page (`--browser`) |
+| `previous_health` | string or null | last week's health; null when the broker is new or nothing was compared |
+| `changed` | bool | `health` differs from `previous_health` (false for a new broker) |
+| `first_seen_bad` | string or null | date (YYYY-MM-DD) the current bad health started; null when not bad |
+| `weeks_bad` | int | weeks in a row with the same bad health; 0 when not bad |
+| `demote_suggested` | bool | `weeks_bad` is 2 or more |
+
+`new_brokers` and `removed_brokers` were added after the first release of `monitor/1`. The
+change is additive only (no field removed, renamed or retyped), so the schema name stays
+`monitor/1`. Readers should ignore fields they don't know.
+
+## Exit codes
+
+| code | when |
+|---|---|
+| 0 | the run finished, whatever the health values are (the CI job reads the file). A bad `--previous` file is a warning, not an error |
+| 1 | the registry could not be read (`cli.py:1072-1074`); with `--json`, stdout holds an `error/1` object instead |
+| 2 | bad command-line option (Typer's usage error) |

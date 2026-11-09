@@ -103,7 +103,7 @@ def test_monitor_one_top_level_and_broker_fields_are_locked_to_emitted_contract(
 
     assert set(doc) == {
         "schema", "generated_at", "previous_generated_at", "counts", "changed",
-        "demote_suggested", "brokers",
+        "demote_suggested", "new_brokers", "removed_brokers", "brokers",
     }
     assert doc["schema"] == "monitor/1"
     assert isinstance(doc["generated_at"], str)
@@ -135,10 +135,13 @@ def test_previous_comparison_cases(case):
     elif case == "new":
         assert current["previous_health"] is None and current["changed"] is False
         assert result["changed"] == []
+        assert result["new_brokers"] == ["devauto"] and result["removed_brokers"] == []
     else:
-        # monitor/1 currently exposes no removed-broker field; this captures that gap.
+        # removed_brokers is limited to the --broker ids asked about, so ask for both.
+        result, _, _ = _run({OPT: (200, None, FORM)}, previous=prior,
+                            ids=("devauto", "retired"))
         assert "retired" not in {item["broker_id"] for item in result["brokers"]}
-        assert "removed" not in result
+        assert result["removed_brokers"] == ["retired"] and result["new_brokers"] == []
 
 
 def test_two_bad_weeks_sets_first_seen_and_demotion_suggestion():
@@ -191,9 +194,9 @@ def test_cli_ignores_invalid_or_oversized_previous_with_warning(
     if bad_previous == "malformed":
         previous.write_text("{not json", encoding="utf-8")
     else:
-        # More than the monitor's 2 MB page-body cap; previous files have no documented cap.
-        previous.write_text('{"schema":"wrong/1","padding":"' + "x" * 2_000_001 + '"}',
-                            encoding="utf-8")
+        # A valid monitor/1 doc over the documented 2 MB --previous cap is still refused.
+        previous.write_text('{"schema":"monitor/1","brokers":[],"padding":"'
+                            + "x" * mon.MAX_PREVIOUS + '"}', encoding="utf-8")
 
     result, _ = _invoke_cli(
         monkeypatch, {OPT: (200, None, FORM)}, "--json", "--previous", str(previous)

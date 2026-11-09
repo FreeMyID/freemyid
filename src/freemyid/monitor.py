@@ -23,6 +23,7 @@ Also used by tools/registry_health.py (qa-security) for its `--online` checks.
 from __future__ import annotations
 
 import hashlib
+import json
 import logging
 import random
 import re
@@ -30,6 +31,7 @@ import time
 from collections.abc import Callable, Iterable
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any, Literal
 from urllib.parse import urljoin, urlsplit
 
@@ -40,6 +42,7 @@ SCHEMA = "monitor/1"
 USER_AGENT = f"FreeMyID/{__version__} broker-monitor (+https://freemyid.org/safety/)"
 MAX_REDIRECTS = 5
 MAX_BODY = 2_000_000
+MAX_PREVIOUS = 2_000_000      # --previous file cap; a bigger file is not compared
 BLOCKED = {403, 429, 503}
 BROKER_BUDGET_S = 30.0
 DEMOTE_AFTER_WEEKS = 2
@@ -347,19 +350,56 @@ def run_monitor(registry: Any, *, requester: Requester | None = None,
                                         detail=f"check failed: {type(e).__name__}"))
     finally:
         close()
-    compare(out, previous if valid_doc(previous) else None, now.date().isoformat())
+    prev_ok = valid_doc(previous)
+    compare(out, previous if prev_ok else None, now.date().isoformat())
+    new_ids, removed_ids = _new_and_removed(out, previous if prev_ok else None, broker_ids)
     counts = {k: sum(1 for h in out if h.health == k)
               for k in ("ok", "moved", "form_changed", "blocked", "unreachable", "unknown")}
     return {
         "schema": SCHEMA,
         "generated_at": now.isoformat(timespec="seconds"),
-        "previous_generated_at": (previous or {}).get("generated_at")
-        if valid_doc(previous) else None,
+        "previous_generated_at": (previous or {}).get("generated_at") if prev_ok else None,
         "counts": counts,
         "changed": [h.broker_id for h in out if h.changed],
         "demote_suggested": [h.broker_id for h in out if h.demote_suggested],
+        "new_brokers": new_ids,
+        "removed_brokers": removed_ids,
         "brokers": [asdict(h) for h in out],
     }
+
+
+def _new_and_removed(current: list[BrokerHealth], previous: dict[str, Any] | None,
+                     broker_ids: list[str] | None) -> tuple[list[str], list[str]]:
+    """Sorted ids checked now but not in last week's file, and ids in last week's file but
+    not checked now. With --broker, only those ids count (the rest weren't asked about).
+    Both empty when there is no usable previous file."""
+    if previous is None:
+        return [], []
+    before = {b["broker_id"] for b in previous.get("brokers", [])
+              if isinstance(b, dict) and isinstance(b.get("broker_id"), str)}
+    now_ids = {h.broker_id for h in current}
+    if broker_ids:
+        before &= set(broker_ids)
+    return sorted(now_ids - before), sorted(before - now_ids)
+
+
+def load_previous(path: Path) -> tuple[dict[str, Any] | None, str]:
+    """Last week's monitor/1 doc, or (None, reason). Reads at most MAX_PREVIOUS + 1
+    bytes, so a huge file can't eat memory. Never raises."""
+    try:
+        with open(path, "rb") as f:
+            raw = f.read(MAX_PREVIOUS + 1)
+    except OSError as e:
+        return None, f"could not be read: {type(e).__name__}"
+    if len(raw) > MAX_PREVIOUS:
+        return None, f"larger than {MAX_PREVIOUS // 1_000_000} MB"
+    try:
+        doc = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, ValueError, RecursionError):
+        return None, "not valid JSON"
+    if not valid_doc(doc):
+        return None, "wrong schema"
+    return doc, ""
 
 
 def valid_doc(doc: Any) -> bool:
