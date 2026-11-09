@@ -83,7 +83,7 @@ Proton encrypts your mail, so other programs can only reach it through the free 
 3. In Bridge, open the mailbox settings and copy the **Bridge password** it shows you. This is different from your Proton password.
 4. In the Free My ID setup wizard, choose **Proton Bridge**. The settings are filled in for you (server `127.0.0.1`, ports 1143 and 1025). Paste the Bridge password.
 5. Click **Test that it works**.
-6. The first time, Free My ID then shows you the mail app's **security code** (a long row of letters and numbers) and asks once whether to trust it. If you just installed and started Bridge yourself, click **Yes**. Free My ID then finishes the test by itself.
+6. The first time, Free My ID then shows you the mail app's **security code** (a long row of letters and numbers) and asks whether you trust it. Your Bridge password is not sent until you answer. Only click **Yes** if the code matches the certificate in Bridge: the steps to check it are in [Proton Mail with Bridge](user/mail-proton.md) (a helper can do this with you). Installing Bridge yourself is not enough on its own. If you can't check it, or it doesn't match, click **No** and ask someone you trust. After **Yes**, Free My ID finishes the test by itself.
 
 Free My ID remembers that security code. If it ever changes, Free My ID won't sign in and tells you instead. That usually just means Bridge was reinstalled or reset: run the setup's mailbox step again to trust the new code. If you didn't change anything, don't trust it, and ask someone you trust to check your computer.
 
@@ -163,22 +163,22 @@ The dashboard shows a colored label for each site.
 
 ## 6. "Needs you" items
 
-See these in the dashboard's to-do list, or with `freemyid todo list`. When you've handled one, click **Done** (or run `freemyid todo done <id>`). If you run Free My ID in the background, you'll get a desktop notification such as "Mom: 2 sites need you". Notifications never include personal details.
+See these in the dashboard's to-do list, or with `freemyid todo list`. When you've handled one, click the button on the card, such as **I finished it** or **I did it** (or run `freemyid todo done <id>`). If you run Free My ID in the background, you'll get a desktop notification such as "Mom: 2 sites need you". Notifications never include personal details.
 
 ### "Prove you're human" checks (CAPTCHA)
 
-Free My ID **never** tries to get around these. It opens the page for you. Tick the box or pick the pictures, then let Free My ID continue (click **Done**). If it was a background run, open the dashboard and click **Resolve** on the to-do to pick up where it stopped.
+Free My ID **never** tries to get around these. It opens the page for you. Tick the box or pick the pictures, then let Free My ID continue (click **I finished it**). If it was a background run, open the dashboard and click **I finished it** on the to-do to pick up where it stopped.
 
 ### Possible match: "Is this you?"
 
-Free My ID found a listing that *might* be you: the name matches, but only one other detail does. Open the link on the to-do and look at the listing. **(still being checked)** The app does not have a "this is me / not me" button yet. Until it does, Free My ID does not send a request for this listing; if it is you, use **Do it yourself** with the site's steps, then click **Done**. <!-- TODO verify: confirm/reject controls for REVIEW_MATCH --> Free My ID only sends requests on its own for listings it's sure about.
+Free My ID found a listing that *might* be you: the name matches, but only one other detail does. On the to-do, click **Open the page** and look at the listing. The app does not have a "this is me / not me" button yet, and it does not send a request for this listing on its own. If it is you, go to the site's own removal or opt-out page (look for a link such as "Opt out" or "Remove my info" on the site) and follow its steps yourself. Then click **I finished it** to close the to-do. Free My ID only sends requests on its own for listings it's sure about.
 
 ### ID requests and permission needed
 
 Some sites ask for a photo ID, an account, or a phone number. If you left that permission off (the default), Free My ID stops and asks. You can:
 
 - **Skip that site.** Often the best choice. Many people decide a site isn't worth an ID.
-- **Do it yourself** using the site's steps shown in the to-do. Cover your ID number and photo if the site allows it.
+- **Do it yourself** on the site (click **Open the page**, then follow the site's own steps). Click **I finished it** when you're done. Cover your ID number and photo if the site allows it.
 - **Turn the permission on** for that person, if you're comfortable with it: open **Settings**, find the person's name, and under **What Free My ID may do** tick the permission, then click **Save**.
 
 ### Letters to mail
