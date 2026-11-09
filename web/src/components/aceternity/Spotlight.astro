@@ -1,0 +1,27 @@
+---
+// Aceternity "Spotlight", CSS only: a soft radial light from the top right, a faint gold glow top left
+// and an optional fading grid or dot pattern behind the content. Static; with
+// prefers-reduced-motion: no-preference it fades in and drifts very slowly. Decorative layers are
+// aria-hidden and dropped in forced colours and print. Text only ever sits on tints no stronger than the
+// `spot` token, which passes every text pair (tokens.yaml).
+//   <Spotlight as="section" aria-labelledby="hero-title" class="py-2xl"> ... </Spotlight>
+// tone: full (home hero) | quiet (PageHead / inner pages). pattern: grid | dots | none.
+import { cn } from "@/lib/utils";
+interface Props {
+  as?: "section" | "div" | "header";
+  tone?: "full" | "quiet";
+  pattern?: "grid" | "dots" | "none";
+  edge?: boolean;
+  class?: string;
+  [attr: string]: unknown;
+}
+const { as: Tag = "section", tone = "full", pattern = "grid", edge = true, class: cls, ...rest } = Astro.props;
+---
+<Tag class={cn("spotlight", tone === "quiet" && "spotlight--quiet", pattern !== "none" && `spotlight--${pattern}`, cls)} {...rest}>
+  <div class="spotlight__bg" aria-hidden="true">
+    <span class="spotlight__beam"></span>
+    {pattern !== "none" && <span class="spotlight__pattern"></span>}
+    {edge && <span class="spotlight__edge"></span>}
+  </div>
+  <slot />
+</Tag>

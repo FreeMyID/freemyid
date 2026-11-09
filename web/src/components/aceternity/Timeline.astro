@@ -3,16 +3,20 @@
 // (static HTML, works with JS off) and a coloured beam that fills as you scroll.
 //   beam="css"  (default) scroll-driven CSS animation, zero JS; static full beam where unsupported
 //   beam="none" grey rail only
+//   variant="cards" puts each step's content in a card
+//   surface: the band colour behind the list ("bg" default, "bg-alt" on alt bands, "card" inside a card),
+//            so the ring around each number bubble matches it
 // The beam is off under prefers-reduced-motion (shown full and still). The motion/React island
 // version was removed (WR-52, SEC-63): it cost ~95 KB gzip and no page used it.
-interface Props { class?: string; beam?: "css" | "none" }
-const { beam = "css" } = Astro.props;
+interface Props { class?: string; beam?: "css" | "none"; variant?: "default" | "cards"; surface?: "bg" | "bg-alt" | "card" }
+const { beam = "css", variant = "default", surface = "bg" } = Astro.props;
 ---
-<div class:list={["timeline relative", Astro.props.class]}>
-  <div class="absolute inset-y-0 start-[calc(1.25rem-2px)] w-1 rounded-full bg-line" aria-hidden="true"></div>
+<div class:list={["timeline relative", variant === "cards" && "timeline--cards",
+  surface === "bg-alt" && "timeline--on-alt", surface === "card" && "timeline--on-card", Astro.props.class]}>
+  <div class="timeline__rail absolute inset-y-0 start-[calc(1.25rem-2px)] w-1 rounded-full" aria-hidden="true"></div>
   {beam === "css" && (
     <div class="absolute inset-y-0 start-[calc(1.25rem-2px)] w-1 overflow-hidden rounded-full" aria-hidden="true">
-      <div class="timeline__beam h-full w-full origin-top rounded-full bg-gradient-to-b from-brand via-brand to-accent"></div>
+      <div class="timeline__beam h-full w-full origin-top rounded-full bg-gradient-to-b from-glow via-brand to-accent"></div>
     </div>
   )}
   <ol class="relative grid gap-l" role="list">

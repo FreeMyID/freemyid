@@ -1,12 +1,29 @@
 ---
 // One step in a Timeline: number bubble on the rail, optional heading, free content.
-interface Props { n: number; title?: string; id?: string }
-const { n, title, id } = Astro.props;
+// meta: a small line above the title ("Day 1", "Now"). icon: an Icon name shown in the bubble
+// instead of the number (the <ol> still numbers the steps for screen readers).
+// status: done (green tick bubble) | current (glowing ring) | next (quiet grey bubble); default plain brand.
+// headingLevel: h3 by default.
+import { cn } from "@/lib/utils";
+import Icon from "../Icon.astro";
+interface Props {
+  n: number;
+  title?: string;
+  id?: string;
+  meta?: string;
+  icon?: string;
+  status?: "done" | "current" | "next";
+  headingLevel?: "h2" | "h3" | "h4";
+}
+const { n, title, id, meta, status, headingLevel: H = "h3" } = Astro.props;
+const icon = Astro.props.icon ?? (status === "done" ? "check" : undefined);
 ---
-<li class="reveal relative grid grid-cols-[2.5rem_1fr] gap-s" id={id}>
-  <span class="relative z-10 inline-flex size-10 items-center justify-center rounded-full border-4 border-bg bg-brand text-lead font-bold text-brand-ink" aria-hidden="true">{n}</span>
-  <div class="prose-fmid min-w-0 pt-3xs">
-    {title && <h3>{title}</h3>}
+<li class="reveal relative grid grid-cols-[2.5rem_minmax(0,1fr)] gap-s" id={id}>
+  <span class={cn("timeline__dot relative z-10 inline-flex size-10 items-center justify-center rounded-full text-lead font-bold [&_svg]:size-5",
+    status && `timeline__dot--${status}`)} aria-hidden="true">{icon ? <Icon name={icon} /> : n}</span>
+  <div class="timeline__body prose-fmid min-w-0 pt-3xs">
+    {meta && <span class="timeline__meta">{meta}</span>}
+    {title && <H>{title}</H>}
     <slot />
   </div>
 </li>
