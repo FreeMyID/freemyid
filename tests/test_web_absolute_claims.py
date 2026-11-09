@@ -17,7 +17,11 @@ ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "web/dist"
 SRC = ROOT / "web/src/pages"
 # Source comments ({/* source: ... */} and // lines) may quote banned words to explain a rule.
-COMMENTS = re.compile(r"\{/\*.*?\*/\}|^\s*//.*$", re.DOTALL | re.MULTILINE)
+# <style> blocks are CSS, not copy ("max-width: 100%" is not a claim). A // comment is stripped
+# to the end of its own line only, so it can't hide the rest of the page.
+COMMENTS = re.compile(
+    r"\{/\*.*?\*/\}|^\s*//[^\n]*$|<style\b.*?</style>", re.DOTALL | re.MULTILINE
+)
 
 # (built page, astro source, phrase that must be there)
 FIXED = [
