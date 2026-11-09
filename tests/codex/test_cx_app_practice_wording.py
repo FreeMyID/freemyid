@@ -12,7 +12,11 @@ ROOT = Path(__file__).resolve().parents[2]
 PRACTICE = re.compile(r"\bpractice[\s-]+mode\b", re.IGNORECASE)
 BAD = re.compile(
     r"\bnothing\s+(?:is\s+sent|goes\s+out)\b(?!\s+to\s+us\b)"
-    r"|\bsends\s+nothing\b(?!\s+to\s+us\b)", re.IGNORECASE,
+    r"|\bsends\s+nothing\b(?!\s+to\s+us\b)"
+    # 0.3.1: dashboard banner said "is looking but is not sending anything yet".
+    r"|\b(?:is\s+not|isn't|not)\s+sending\s+anything\b(?!\s+to\s+us\b)"
+    r"|\b(?:does\s+not|doesn't|will\s+not|won't)\s+send\s+anything\b(?!\s+to\s+us\b)",
+    re.IGNORECASE,
 )
 # Preserve quoted JS strings while discarding comments.
 COMMENTS = re.compile(
@@ -52,6 +56,25 @@ def copy_units(source: str, suffix: str) -> list[tuple[int, str]]:
         and isinstance(node.body[0].value.value, str)
     }
     units: list[tuple[int, str]] = []
+    # Adjacent literals ("a" "b") are already one Constant in the ast. Join explicit
+    # "a" + "b" chains too, so a sentence split that way is still one copy unit.
+    concat_parts: set[int] = set()
+    for node in ast.walk(tree):
+        if (isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add)
+                and id(node) not in concat_parts):
+            parts: list[ast.expr] = []
+            stack: list[ast.expr] = [node]
+            while stack:
+                cur = stack.pop()
+                if isinstance(cur, ast.BinOp) and isinstance(cur.op, ast.Add):
+                    concat_parts.add(id(cur))
+                    stack += [cur.right, cur.left]
+                else:
+                    parts.append(cur)
+            strs = [p.value for p in parts
+                    if isinstance(p, ast.Constant) and isinstance(p.value, str)]
+            if len(strs) > 1:
+                units.append((node.lineno, " ".join(strs)))
     joined_constants = {id(value) for node in ast.walk(tree)
                         if isinstance(node, ast.JoinedStr) for value in node.values}
     for node in ast.walk(tree):
@@ -125,6 +148,18 @@ def test_python_adjacent_literals_and_fstrings_are_checked(tmp_path: Path) -> No
     path.write_text('print("Practice mode " "sends nothing.")\n'
                     'print(f"Practice mode {label}: nothing goes out.")\n')
     assert {line for line, _ in findings(path)} == {1, 2}
+
+
+def test_split_sentence_with_not_sending_anything_is_flagged(tmp_path: Path) -> None:
+    """0.3.1 gap: the dashboard banner split this sentence over adjacent literals."""
+    path = tmp_path / "synthetic.py"
+    path.write_text("body = ('<div class=banner><b>Practice mode.</b> Free My ID is looking'\n"
+                    "        ' but is not sending '\n"
+                    "        'anything yet.</div>')\n"
+                    'msg = "Practice mode: Free My ID " + "does not send anything."\n'
+                    'ok = ("Practice mode: Free My ID is looking for your listings, but no "\n'
+                    '      "removal requests go out until you say so.")\n')
+    assert {line for line, _ in findings(path)} == {1, 4}
 
 
 KNOWN = "src/freemyid/setup_config.py"
