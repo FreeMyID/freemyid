@@ -8,6 +8,7 @@ import Icon from "@/components/Icon.astro";
 import Art from "@/components/Art.astro";
 import Card from "@/components/ui/Card.astro";
 import Alert from "@/components/ui/Alert.astro";
+import Badge from "@/components/ui/Badge.astro";
 import SmartScreen from "@/components/SmartScreen.astro";
 import Timeline from "@/components/aceternity/Timeline.astro";
 import TimelineItem from "@/components/aceternity/TimelineItem.astro";
@@ -36,6 +37,15 @@ const v = release.version;
       // WR-9: no release yet, so no link (releases/latest would 404)
       <Alert icon="calendar" class="my-0"><p><strong>Download opens soon</strong></p><p>Not published yet. We'll show the download button here the day the first version is ready.</p></Alert>
     )}
+    {/* Trust row (competitor review ideas 3/7). source: LICENSE (free); no Free My ID account (PLAN_V1, ROADMAP principle 6);
+       practice mode = src/freemyid/config.py real_submissions_enabled=False until the person approves (USER_GUIDE section 4).
+       Not "nothing is sent": practice mode still looks people up (tests/test_web_absolute_claims.py BANNED). */}
+    <ul class="flex flex-wrap gap-2xs" role="list" aria-label="Before you download">
+      <li><Badge variant="ok-soft" dot>Free</Badge></li>
+      <li><Badge variant="ok-soft" dot>No Free My ID account to create</Badge></li>
+      <li><Badge variant="ok-soft" dot>Starts in practice mode</Badge></li>
+    </ul>
+    <p class="text-small text-muted">Practice mode comes first, so no removal requests go out until you say so.</p>
     <dl class="grid grid-cols-[auto_1fr] gap-x-m gap-y-2xs">
       {/* WR-26: "works on" only once a release exists; source: PLAN_V1 (Windows 10/11 target) */}
       <dt class="font-bold text-heading">{v ? "Works on" : "Made for"}</dt><dd>Windows 10 and 11</dd>
@@ -70,6 +80,17 @@ const v = release.version;
   <p class="max-w-measure">Windows shows "Windows protected your PC" for new programs that haven't paid for a publisher certificate yet. Free My ID is free and hasn't bought one yet. The warning doesn't mean anything is wrong.</p>
   {/* WR-10; families page = /families/ */}
   <p class="mt-s max-w-measure">Not sure about this step? Ask a family member to sit with you. <a href={url("families/")}>Here's a one-page guide for them.</a></p>
+  {/* Idea 10: what's in the download, before the steps. source: LICENSE (free); no account (PLAN_V1, ROADMAP principle 6);
+     unsigned = build.yml release notes "not code-signed yet"; code public = LICENSE + /developers/ (owner rule: no github.com link here);
+     fingerprint = build.yml SHA256SUMS.txt (WR-29 wording by release state) */}
+  <Alert variant="info" title="What's in the download" class="mt-l max-w-[44rem]">
+    <ul class="grid gap-2xs">
+      <li>Free My ID for Windows 10 and 11. It's free, and there's nothing to sign up for.</li>
+      <li>The installer is not yet signed, so Windows may warn "unknown publisher" the first time. The steps below show what to click.</li>
+      <li>The code is public, so anyone can read it. <a href={url("developers/")}>Where developers find the code</a></li>
+      <li>{v ? "Every release comes" : "Each release will come"} with a fingerprint you can compare. <a href="#checksum">How to check the download's fingerprint</a></li>
+    </ul>
+  </Alert>
   <Timeline surface="bg-alt" class="mt-l max-w-[44rem]">
     {/* source: file name from .github/workflows/build.yml (cp to FreeMyIDSetup.exe); Downloads folder = browser default */}
     <TimelineItem n={1} title="Open the file you downloaded"><p>It's called <strong>FreeMyIDSetup.exe</strong>. You'll usually find it in your <strong>Downloads</strong> folder, or at the bottom or top-right of your web browser.</p></TimelineItem>
