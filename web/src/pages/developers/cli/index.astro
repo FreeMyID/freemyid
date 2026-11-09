@@ -4,7 +4,7 @@
 // same index in a native <details> (only one of the two is displayed at a time).
 import Base from "@/layouts/Base.astro";
 import PageHead from "@/components/PageHead.astro";
-import Icon from "@/components/Icon.astro";
+import Disclosure from "@/components/ui/Disclosure.astro";
 import Card from "@/components/ui/Card.astro";
 import { pageProps, url, pages, type Crumb } from "@/lib/site";
 import commandData from "./_commands.json";
@@ -35,17 +35,13 @@ const index = [["common-options", "Common options"], ["commands", "Commands"]] a
     </nav>
 
     <div class="min-w-0 max-w-[48rem]">
-      <details class="faq-item mb-l rounded-xl border border-line bg-card shadow-1 print:hidden min-[60em]:hidden">
-        <summary class="flex min-h-tap items-center justify-between gap-s px-m py-s font-bold text-heading hover:bg-brand-soft">
-          <span>Jump to a command</span>
-          <Icon name="chevron-down" class="faq-chevron size-6 text-brand" />
-        </summary>
-        <nav aria-label="Commands on this page" class="px-s pb-s">
-          <ul class="grid gap-3xs [grid-template-columns:repeat(auto-fill,minmax(min(100%,11rem),1fr))]" role="list">
-            {commandData.commands.map((command) => <li><a class:list={[navLink, "font-mono text-small"]} href={`#${cmdId(command.path)}`}>{command.path}</a></li>)}
+      <Disclosure summary="Jump to a command" class="mb-l print:hidden min-[60em]:hidden">
+        <nav aria-label="Commands on this page">
+          <ul class="grid list-none gap-3xs ps-0 [grid-template-columns:repeat(auto-fill,minmax(min(100%,11rem),1fr))]" role="list">
+            {commandData.commands.map((command) => <li class="mt-0"><a class:list={[navLink, "font-mono text-small"]} href={`#${cmdId(command.path)}`}>{command.path}</a></li>)}
           </ul>
         </nav>
-      </details>
+      </Disclosure>
 
       <section id="common-options" aria-labelledby="common-options-title" class="scroll-mt-24">
         <h2 id="common-options-title">Common options</h2>
