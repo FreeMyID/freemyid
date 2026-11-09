@@ -338,6 +338,7 @@ freemyid search-engines." when N > 0 for that person.
  "counts": {"ok": 40, "moved": 1, "form_changed": 1, "blocked": 3, "unreachable": 0,
    "unknown": 2},
  "changed": ["spokeo"], "demote_suggested": [],
+ "new_brokers": ["newbroker"], "removed_brokers": [],
  "brokers": [{"broker_id": "spokeo", "health": "form_changed",
    "detail": "1 form selector(s) not found", "http_status": 200,
    "page": "https://www.spokeo.com/optout", "selectors_missing": ["#email"],
@@ -346,8 +347,13 @@ freemyid search-engines." when N > 0 for that person.
    "weeks_bad": 1, "demote_suggested": false}]}
 ```
 
+Every field is listed with its type in [MONITOR.md, Output](MONITOR.md#output-monitor1)
+(`monitor.py:197-212`, `monitor.py:358-368`). `new_brokers` and `removed_brokers` are
+additive, so the schema stays `monitor/1`. A `--previous` file that isn't monitor/1, isn't
+valid JSON or is over 2 MB is not compared (warning on stderr; the run goes on).
+
 Exit 0 whenever the run finishes, whatever the health values are (the CI job reads the file),
-and 1 when the registry can't be read.
+1 when the registry can't be read (`error/1` on stdout with `--json`), 2 for a bad option.
 
 ## `run --headless`
 
