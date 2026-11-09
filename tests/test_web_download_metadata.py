@@ -10,6 +10,10 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def straight_quotes(text: str) -> str:
+    return text.translate(str.maketrans({"\u201c": '"', "\u201d": '"'}))
+
+
 class DownloadMetadata(HTMLParser):
     """Read visible main metadata, primary links and the checksum disclosure."""
 
@@ -154,8 +158,11 @@ def test_fingerprint_display_copy_value_and_fragment_agree(
     assert page.copy_values == [fingerprint]
     assert f"For version {release.get('version')}, the code is:" in " ".join(page.checksum_parts)
     if release.get("version"):
-        assert ("#checksum", 'SHA256 code, under "For helpers" above') in page.links
-        assert page.metadata[1]["Fingerprint"] == 'SHA256 code, under "For helpers" above'
+        # The refresh set the page in typographic quotes; the label still names "For helpers".
+        label = 'SHA256 code, under "For helpers" above'
+        links = [(href, straight_quotes(text)) for href, text in page.links]
+        assert ("#checksum", label) in links
+        assert straight_quotes(page.metadata[1]["Fingerprint"]) == label
 
 
 def test_primary_download_link_is_gated_by_release_metadata(
