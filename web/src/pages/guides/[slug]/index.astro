@@ -12,6 +12,7 @@ import CheckList from "@/components/CheckList.astro";
 import Timeline from "@/components/aceternity/Timeline.astro";
 import TimelineItem from "@/components/aceternity/TimelineItem.astro";
 import { buttonVariants } from "@/components/ui/button-variants";
+import { cn } from "@/lib/utils";
 import { guideDescription, guideOg, guides, guidesMeta, guideLd, guideTitle, ldJson, moreGuides, pages, url, type Crumb, type Guide } from "@/lib/site";
 
 export function getStaticPaths() {
@@ -45,7 +46,7 @@ const needs = g.required.length > 0 || g.needs_email_verification || g.has_captc
   </div>
 </div>
 
-<article class="wrap-narrow pb-xl" aria-labelledby="guide-title">
+<article class="wrap-narrow pb-xl [overflow-wrap:anywhere]" aria-labelledby="guide-title">
   {g.covered_by && (
     <Alert icon="check"><p><strong>Good news:</strong> the {g.covered_by.name} removal is meant to cover {g.name} too. Start with the <a href={url(g.covered_by.out)}>{g.covered_by.name} guide</a>, then check {g.name} again in about a week.</p></Alert>
   )}
@@ -85,7 +86,7 @@ const needs = g.required.length > 0 || g.needs_email_verification || g.has_captc
 
         {g.opt_out_url && (
           <div class="mt-l rounded-xl border border-line bg-surface p-m">
-            <p><a class={buttonVariants({ size: "lg" })} href={g.opt_out_url} rel="noopener noreferrer nofollow"><Icon name="external" />Open {g.name}'s {g.method === "email" ? "privacy page" : "removal page"}</a></p>
+            <p><a class={cn(buttonVariants({ size: "lg", full: true }), "whitespace-normal [overflow-wrap:anywhere] min-[40em]:w-auto")} href={g.opt_out_url} rel="noopener noreferrer nofollow"><Icon name="external" />Open {g.name}'s {g.method === "email" ? "privacy page" : "removal page"}</a></p>
             <p class="mt-2xs text-small text-muted">Opens {g.opt_out_host}, {g.name}'s own website.</p>
           </div>
         )}
