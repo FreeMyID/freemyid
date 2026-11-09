@@ -146,11 +146,26 @@ def _show_window(url: str, on_ready: Callable[[Any], None]) -> bool:
         return False
 
 
+def when_page_loaded(win: Any, callback: Callable[[], None]) -> bool:
+    """Run `callback` when the pywebview window reports its page loaded (`events.loaded`).
+
+    False if the window has no such event (old pywebview), so the caller can fall back.
+    """
+    def _loaded(*_args: Any) -> None:
+        callback()
+    try:
+        win.events.loaded += _loaded
+        return True
+    except Exception as e:  # noqa: BLE001
+        log.debug("webview loaded event unavailable (%s)", type(e).__name__)
+        return False
+
+
 def main(window: bool = True, on_started: Callable[[], None] | None = None) -> int:
     """Run the app. Returns a process exit code.
 
-    `on_started` is called once the window (or browser) is up, or the app exits; the Windows
-    launcher uses it to close its "starting" splash.
+    `on_started` is called once the window has loaded its page (or the browser is opened),
+    or the app exits; the Windows launcher uses it to close its "starting" splash.
     """
     from .server import start_background
     done = on_started or (lambda: None)
@@ -184,7 +199,10 @@ def main(window: bool = True, on_started: Callable[[], None] | None = None) -> i
         shown = False
         if window and os.environ.get("FREEMYID_NO_WINDOW") != "1":
             def on_ready(win: Any) -> None:
-                done()
+                # Keep the splash up until the page has actually loaded: on a fresh install
+                # the window can sit blank for 20+ s before the wizard draws.
+                if not when_page_loaded(win, done):
+                    done()
 
                 def focus() -> None:
                     for fn in ("restore", "show"):

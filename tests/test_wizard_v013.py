@@ -53,7 +53,8 @@ def test_installer_explains_first_start_wait():
     on Windows; read from the .iss only)."""
     iss = (ROOT / "packaging" / "windows" / "freemyid.iss").read_text()
     assert "[Messages]" in iss and "FinishedLabel=" in iss
-    assert "15 seconds" in iss and "That is normal" in iss
+    assert "up to a minute" in iss and "That is normal" in iss
+    assert "15 seconds" not in iss    # v0.3.0 VM: first start took ~40 s
     assert iss.index("[Messages]") < iss.index("[Files]")
 
 
