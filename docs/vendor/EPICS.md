@@ -11,8 +11,8 @@ Structure: **epic -> work orders (WO-NNN.md) -> task checklists** (the `## Tasks
 5. Numbering: Codex WO-291..299 then WO-401 upward; Grok WO-501 upward. Never reuse a number.
 
 ## Totals (written so far)
-- Work orders written: 11 (9 queued, 2 blocked).
-- Codex: 5. Grok: 6.
+- Work orders written: 17 (15 queued, 2 blocked).
+- Codex: 8. Grok: 9.
 
 ## E1. Helper setup bundle backend ("Set it up for someone else")
 **Owner team:** Grok (backend-core, test-writer)
@@ -57,7 +57,12 @@ Structure: **epic -> work orders (WO-NNN.md) -> task checklists** (the `## Tasks
 **Goal:** ROADMAP 3.3 "Legal escalation pack" (0.4). Statute selection, verified deadlines, a complaint data pack and calmer escalation events. The ladder itself (`state.py:100-139`) stays in-house.
 
 **Sub-work-orders:**
-- Codex: WO-296..298. Grok: WO-507..509. (to be written in this wave; see `git log docs/vendor/EPICS.md`)
+- WO-296 [codex, Ravi Menon]: Letters: the data for a complaint pack (no template needed yet) (after WO-241, WO-275)
+- WO-297 [codex, Ravi Menon]: Law matrix: one verified-window lookup for letters, outbox and runner (after WO-246, WO-284)
+- WO-298 [codex, Hannah Cole]: Escalation letters: a reminder never cites a statute; a demand cites only what is verified (after WO-275)
+- WO-507 [grok, Derek Olsen]: Runner: a tested helper for the complaint links (after WO-343)
+- WO-508 [grok, Derek Olsen]: Runner: do not log the same "escalation waiting" note every day (after WO-507)
+- WO-509 [grok, Ethan Brandt]: Outbox: a legal demand never goes out by itself (guard tests)
 
 **Dependencies:** WO-241, WO-275, WO-284 (letters, law_matrix); WO-343, WO-355 (runner, handoff).
 
