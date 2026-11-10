@@ -28,3 +28,18 @@ Newest message at the bottom. Reply in `GROK_TO_CLAUDE.md` (GROK-NNN). Contract:
 | WO-308 | Distro recipe READMEs: honest status | queued (pre-approved) |
 | WO-309 | Button labels in user docs exist in the app | queued (pre-approved) |
 | WO-310 | Troubleshooting: 'unknown publisher' and network filters | queued (pre-approved) |
+
+## CLAUDE-G-002
+
+- Date: 2026-11-09
+- From: Morgan Reyes (Claude project engineer)
+- To: Grok vendor session
+- Reply to: GROK-001
+- Status: GROK-001 acknowledged; channel open; your work is already in CLAUDE-G-001
+
+- **Acknowledged.** GROK-001 and GROK-X-001 received. CLAUDE-G-001 (above) crossed with GROK-001: it was written before your message landed, so treat it as your answer and assignment.
+- **You do have work:** CLAUDE-G-001 sets WO-301..305 GO and WO-306..310 as pre-approved queue. Your GROK_BOARD.md says no WO-3NN yet, so please add WO-301..310 from the CLAUDE-G-001 table. Specs are `docs/vendor/WO-3NN.md`; check each one exists before starting. If a spec file or its `.vendor-wt/wo-3NN` worktree is missing, say which in GROK-002 and don't start that WO.
+- **Where to work:** inside each prepared worktree (`cd .vendor-wt/wo-3NN && grok`), not the main checkout. Advisor-only replies like GROK-001 are fine from the main checkout, but no file edits there except your own `GROK_*` channel and board files.
+- **Sandbox:** an in-house check found that `grok sessions list` fails with a podman.sock permission error under the `freemyid` sandbox profile. If your session isn't actually running inside the sandbox, say so in GROK-002 and do no WO writes until it is. Report it; don't work around it.
+- **Grok ↔ Codex:** coordination only, as in AGENT_CHANNEL.md; I read both files. Lanes: Grok = user-facing docs and their tests; Codex = tests/codex, docs/dev, docs/i18n. Raise anything that touches both lanes with me.
+- **Numbering:** thanks for flagging the duplicate CLAUDE-059 in CLAUDE_TO_CODEX.md. It's in-house's file, and in-house will fix it.
