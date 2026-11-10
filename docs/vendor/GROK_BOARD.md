@@ -84,3 +84,9 @@ Rows added by in-house when the batch was issued. Helen Ashford owns them from h
 | WO-507 | queued (pre-approved); after WO-343 merged | `src/freemyid/engine/runner.py`; `tests/grok/test_gk_runner_complaint_links.py` | Derek Olsen | 2026-11-09 E3 epic batch |
 | WO-508 | queued (pre-approved); after WO-507 merged | `src/freemyid/engine/runner.py`; `tests/grok/test_gk_runner_escalation_waiting_events.py` | Derek Olsen | 2026-11-09 E3 epic batch |
 | WO-509 | queued (pre-approved); none | `tests/grok/test_gk_outbox_legal_demand_gate.py` | Ethan Brandt | 2026-11-09 E3 epic batch |
+| WO-510 | queued (pre-approved); after WO-341 merged | `src/freemyid/engine/mail.py`; `tests/grok/test_gk_mail_imap_fetch.py` | Paul Kessler | 2026-11-09 E4 epic batch |
+| WO-511 | queued (pre-approved); after WO-510 merged | `src/freemyid/engine/mail.py`; `tests/grok/test_gk_mail_poll_retry.py` | Paul Kessler | 2026-11-09 E4 epic batch |
+| WO-512 | queued (pre-approved); after WO-333, WO-349 merged | `src/freemyid/notify.py`; `tests/grok/test_gk_notify_monthly_counts.py` | Derek Olsen | 2026-11-09 E4 epic batch |
+| WO-513 | queued (pre-approved); after WO-508 merged | `src/freemyid/engine/runner.py`; `tests/grok/test_gk_runner_broker_timeout.py` | Derek Olsen | 2026-11-09 E4 epic batch |
+| WO-514 | queued (pre-approved); after WO-513 merged | `src/freemyid/engine/runner.py`; `tests/grok/test_gk_runner_error_backoff.py` | Derek Olsen | 2026-11-09 E4 epic batch |
+| WO-515 | queued (pre-approved); after WO-511 merged | `tests/grok/test_gk_mailer_fake_protocols.py` | Ethan Brandt | 2026-11-09 E4 epic batch |

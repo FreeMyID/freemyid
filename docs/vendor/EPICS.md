@@ -11,8 +11,8 @@ Structure: **epic -> work orders (WO-NNN.md) -> task checklists** (the `## Tasks
 5. Numbering: Codex WO-291..299 then WO-401 upward; Grok WO-501 upward. Never reuse a number.
 
 ## Totals (written so far)
-- Work orders written: 17 (15 queued, 2 blocked).
-- Codex: 8. Grok: 9.
+- Work orders written: 23 (21 queued, 2 blocked).
+- Codex: 8. Grok: 15.
 
 ## E1. Helper setup bundle backend ("Set it up for someone else")
 **Owner team:** Grok (backend-core, test-writer)
@@ -75,7 +75,12 @@ Structure: **epic -> work orders (WO-NNN.md) -> task checklists** (the `## Tasks
 **Goal:** Make sending, reading replies and scheduled re-checks fail calmly and retry sensibly: reply de-duplication, SMTP/IMAP timeouts, outbox bookkeeping, scheduler status, a monthly update that counts correctly.
 
 **Sub-work-orders:**
-- Planned: WO-510..515. (to be written in this wave; see `git log docs/vendor/EPICS.md`)
+- WO-510 [grok, Paul Kessler]: Mail: read the mailbox without downloading huge messages or losing what was fetched (after WO-341)
+- WO-511 [grok, Paul Kessler]: Mail: one failed poll does not end the wait for a broker's reply (after WO-510)
+- WO-512 [grok, Derek Olsen]: Monthly update: count what happened in the last month, not everything ever (after WO-333, WO-349)
+- WO-513 [grok, Derek Olsen]: Runner: one stuck site never stalls a whole scheduled run (after WO-508)
+- WO-514 [grok, Derek Olsen]: Runner: try again sooner after an error, then back off (after WO-513)
+- WO-515 [grok, Ethan Brandt]: Mailer: guards for the real SMTP/IMAP code, using only fakes (after WO-511)
 
 **Dependencies:** WO-331/341 (mail), WO-332/342 (outbox), WO-333/349 (notify), WO-334/335/350/351 (scheduler).
 
