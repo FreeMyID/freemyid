@@ -1,27 +1,38 @@
 # AUR package: python-freemyid
 
-Recipe for building Free My ID from the PyPI sdist. Not published to the AUR yet.
+This is a community recipe. It is not submitted upstream. It is not on the Arch User Repository.
 
-- `PKGBUILD` takes `pkgver` from `pyproject.toml`. The `sha256sums` entry is `SKIP`,
-  a placeholder that release tooling must replace with the real sdist checksum.
-- `.SRCINFO` mirrors the PKGBUILD. After any edit, regenerate it on Arch with
-  `makepkg --printsrcinfo > .SRCINFO`.
-- Dependency names were mapped by hand, offline. `python-desktop-notifier` is probably only
-  in the AUR, not the official repos, so check it before publishing.
-- Check on Arch with `namcap PKGBUILD` and `makepkg -s` once the sdist is on PyPI.
+The app version in this tree is 0.3.1 (`src/freemyid/__init__.py`). `PKGBUILD` and `.SRCINFO` both say `pkgver` 0.3.1. The published Windows installer record is version 0.3.0, about 64.5 MB, dated 2026-11-09 (`site_src/data/release.yaml`). That record is the Windows installer only. It does not list this package. 0.2.0 is not the current version.
 
-## Try it locally
+Hashes in the recipe are placeholders until the release hashes are filled in. `sha256sums` is `SKIP` in `PKGBUILD` and in `.SRCINFO`. Do not invent hashes. Do not replace a placeholder with a real hash. In-house release tooling fills the real source checksum later. This note did not.
 
-Status: **coming**. `site_src/data/release.yaml` lists the Windows installer only. All commands below are
-**unverified** (not run on Arch when this was written). They need an Arch system and the sdist on PyPI.
+## What else is in the recipe
+
+- The source URL names the PyPI file `freemyid-0.3.1.tar.gz`. That is the tree version, not the published Windows installer (0.3.0). Not sure that file is on PyPI yet. This note did not look it up.
+- The package name is `python-freemyid`.
+- Dependency names were mapped by hand, offline. `python-desktop-notifier` may be only in the AUR, not the official repos. Not sure. Check that before anyone publishes.
+- `.SRCINFO` is already in this folder. It still has `sha256sums = SKIP`.
+
+## How a maintainer would verify it
+
+Read the files. Do not edit the hash.
+
+1. Open `src/freemyid/__init__.py` and confirm `__version__` is `0.3.1`.
+2. Open `PKGBUILD` and `.SRCINFO` and confirm `pkgver` is `0.3.1`.
+3. Open `site_src/data/release.yaml` and confirm the Windows installer record is version 0.3.0, about 64.5 MB, dated 2026-11-09.
+4. Confirm `sha256sums` is still `SKIP`. Leave it.
+
+After release tooling has replaced `SKIP` with the checksum published for that same source file, and not before, check on Arch. These commands were not run here:
 
 ```
 cd distro/aur
-makepkg --printsrcinfo > .SRCINFO   # only to check it matches
+makepkg --printsrcinfo
 namcap PKGBUILD
-makepkg -si                         # builds, then installs
+makepkg -si
 freemyid --help
-sudo pacman -R python-freemyid      # remove it again
+sudo pacman -R python-freemyid
 ```
 
-`sha256sums` is still the `SKIP` placeholder; a real checksum comes from release tooling.
+Compare the printed source info with `.SRCINFO`. Regenerate `.SRCINFO` only after the real checksum is already in `PKGBUILD`. Do not type a hash in by hand.
+
+Status: **coming**.
