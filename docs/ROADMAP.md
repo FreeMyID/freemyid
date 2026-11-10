@@ -245,3 +245,11 @@ Codex challenge CODEX-149 #6 accepted: 0.4 is built around Pat's journey (72, Wi
 2. **Large text and read-aloud across the wizard** (3.1, F). Large text exists; read-aloud and a full-wizard pass are new.
 3. **One-page printable "what we did for you" report** (3.5, F; the HTML summary from 0.3 becomes a print-ready page, PDF if it stays local and simple).
 Then, if time allows: proof vault (3.5), smart re-check (3.3), tray icon "check now" (3.6). Each item ships only with a Windows VM pass, and with the non-technical path working first (principle 2).
+
+### App look (decided 2026-11-09): same family as the website, calmer
+The app takes the website's look (tokens.css colours, type, spacing, radius, icons, illustrations, voice) but not its motion effects (spotlight, border beam, animated timelines): the app is a tool for Pat, not a sales page, and stays server-rendered with no React. No animation by default, AA contrast, 44px targets, layouts that hold in large-text mode and at 200% zoom.
+- First WO: **app style guide** (Maya + Iris; design values minus motion, a drawn layout for every screen).
+- Each 0.4 screen (helper bundle, large text/read-aloud, printable report) gets the new look as it is built, never as a second pass.
+- Then one WO per remaining screen (~8-10: Today, more, person page, protect checklists, settings, setup steps, review card, splash/installer pages), each VM-checked in light/dark at 200% zoom.
+- Every screen WO has this acceptance line: "a first-time user over 70 finishes it without help (VM, large text on)".
+- Vendors: Codex adds accessibility/visual-consistency tests (contrast, targets, tokens only, no stray colours); Grok refreshes user-guide screenshots and wording after each screen; both send design challenges before building.
