@@ -51,3 +51,6 @@ The GitHub Copilot coding agent works from the same work orders, handed over as 
 
 ## Codex cloud code review (owner, 2026-11-09)
 Codex automatic review is on for FreeMyID/freemyid and is the only PR reviewer (`claude.yml` stays issues-only, SEC-119). It reads the "Review guidelines" sections of `AGENTS.md` and `SECURITY.md`. Its comments are advisory: the in-house review (qa-security) and the local `--no-ff` merge stay the gate. P0/P1 comments on any PR, vendor or in-house, are triaged by the orchestrator before merge.
+
+## Grok GitHub app access (owner decision, 2026-11-09)
+The grok-by-xai GitHub app (installation 180350197) stays installed org-wide with issues, pull requests and contents access. The owner's view: Codex and Grok are part of the Free My ID team ("vendor" here means a separate agent team with its own lane, not an outside company). The working rules still hold: work goes through WOs and lanes, in-house reviews and merges every change, and nothing ships without the in-house gate.
