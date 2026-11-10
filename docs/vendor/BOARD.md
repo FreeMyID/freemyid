@@ -1,6 +1,6 @@
 # Codex vendor work board
 
-Sole writer: Nora Bennett, interactive vendor PM. Last checkpoint: CLAUDE-057 / CODEX-138, 2026-11-09. Release and merge states are owner-reported.
+Sole writer: Nora Bennett, interactive vendor PM. Last checkpoint: CLAUDE-059b / CODEX-139..148, 2026-11-09. Release and merge states are owner-reported.
 States are owner reports and local document evidence, not independently verified remote PR state. No git or network used. Local merges are distinguished from pushed merges. Work-order status headers may be stale; latest owner channel controls.
 
 Before dispatch or proposals, check this board, exact work-order paths and Claude's stay-off lists. This board grants no additional edit permission. Completed WO-001/002/005/006 path lists are historical scopes, not active reservations. WO-005 scope is exposure_card and its exclusive helpers only, never all views.py functions.
@@ -73,6 +73,43 @@ Before dispatch or proposals, check this board, exact work-order paths and Claud
 | WO-222 | CP-40 / #168 | Felix Grant | accepted and merged (owner report, CLAUDE-057) | CLAUDE-056 GO | tests/codex/test_cx_cli_todo_list_text.py; VENDOR_STATUS.md | 2026-11-09 CLAUDE-057 |
 | WO-223 | CP-41 / #169 | Hannah Cole | accepted and merged (owner report, CLAUDE-057) | CLAUDE-056 GO | tests/codex/test_cx_cli_doctor_text.py; VENDOR_STATUS.md | 2026-11-09 CLAUDE-057 |
 | WO-224 | CP-49 | Amara Okoye | accepted and merged (owner report, CLAUDE-057) | CLAUDE-056 GO | docs/i18n/TRANSLATION_GUIDE.md; VENDOR_STATUS.md | 2026-11-09 CLAUDE-057 |
+| WO-225 | — | Nora Bennett | delivered; docs/i18n citation selection 521 passed on filtered rerun; initial run had one sandbox-blocked socket test | CLAUDE-058 GO | docs/i18n/STRINGS.md; docs/i18n/GLOSSARY_ES.md; worktree VENDOR_STATUS.md | 2026-11-09 CODEX-139 |
+| WO-226 | — | Amara Okoye | delivered; 44 passed, 1 strict xfailed; Ruff passed; xfail finding monitor.py:379 | CLAUDE-059b GO | tests/codex/test_cx_monitor_previous_hardening.py (new); VENDOR_STATUS.md | 2026-11-09 CODEX-140 |
+| WO-227 | — | Owen Park | delivered; 2 passed; Ruff passed | CLAUDE-059b GO | tests/codex/test_cx_cli_search_engines.py (new); VENDOR_STATUS.md | 2026-11-09 CODEX-141 |
+| WO-228 | — | Hannah Cole | delivered for review; 5 browser cases skipped (Chromium unavailable); Ruff passed; strict xfail documents 18px hint at style.css:98 | CLAUDE-059b GO | tests/codex/test_cx_proof_note_a11y.py (new); VENDOR_STATUS.md | 2026-11-09 CODEX-142 |
+| WO-229 | — | Nora Bennett | delivered for owner review; 3 browser cases skipped because Playwright Chromium failed to launch; Ruff passed | CLAUDE-059b GO | tests/codex/test_cx_large_text_pages.py (new); VENDOR_STATUS.md | 2026-11-09 CODEX-142 |
+| WO-230 | — | Amara Okoye | delivered; citation test 14 passed | CLAUDE-059b queue | docs/dev/ARCHITECTURE.md; VENDOR_STATUS.md | 2026-11-09 CODEX-143 |
+| WO-231 | — | Owen Park | delivered; citation test 14 passed | CLAUDE-059b queue | docs/dev/DEPENDENCIES.md (new); VENDOR_STATUS.md | 2026-11-09 CODEX-144 |
+| WO-232 | — | Nora Bennett | delivered; filtered i18n/doc/citation selection 521 passed, 6 skipped, 1 xfailed; required run had one sandbox-blocked socket failure | CLAUDE-059b queue | docs/i18n/STRINGS_CLI.md (new); VENDOR_STATUS.md | 2026-11-09 CODEX-145 |
+| WO-233 | — | Hannah Cole | delivered; 3 passed; Ruff passed | CLAUDE-059b queue | tests/codex/test_cx_matcher_suffix_nickname.py (new); VENDOR_STATUS.md | 2026-11-09 CODEX-146 |
+| WO-234 | — | Amara Okoye | delivered; 3 passed; Ruff passed; out-of-scope scan hits reported only | CLAUDE-059b queue | tests/codex/test_cx_windows_path_safety.py (new); VENDOR_STATUS.md | 2026-11-09 CODEX-148 |
+| WO-235 | — | Owen Park | delivered; 6 passed; Ruff passed | CLAUDE-059b queue | tests/codex/test_cx_today_states.py (new); VENDOR_STATUS.md | 2026-11-09 CODEX-147 |
+| WO-270 | issue pending | Hannah Cole | delivered for review; 44 passed; Ruff passed; app scan clean | CLAUDE-063 GO | tests/codex/test_cx_app_practice_wording.py; VENDOR_STATUS.md | 2026-11-09 CODEX-152 |
+| WO-236 | issue pending | Imani Reid | queued (pre-approved) | none | `tests/codex/test_cx_sec_netpolicy_invariants.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
+| WO-237 | issue pending | Imani Reid | queued (pre-approved) | none | `tests/codex/test_cx_sec_redaction_fields.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
+| WO-238 | issue pending | Imani Reid | queued (pre-approved) | none | `tests/codex/test_cx_sec_wizard_post_guard.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
+| WO-239 | issue pending | Imani Reid | queued (pre-approved) | none | `tests/codex/test_cx_sec_wizard_headers.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
+| WO-240 | issue pending | Imani Reid | queued (pre-approved) | none | `tests/codex/test_cx_sec_consent_gates.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
+| WO-241 | issue pending | Ravi Menon | queued (pre-approved) | none | `src/freemyid/engine/letters.py`; `tests/codex/test_cx_letters_hostile_values.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
+| WO-242 | issue pending | Ravi Menon | queued (pre-approved) | none | `src/freemyid/engine/exposure.py`; `src/freemyid/exposure_models.py`; `tests/codex/test_cx_exposure_rate_limit.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
+| WO-243 | issue pending | Hannah Cole | queued (pre-approved) | none | `src/freemyid/engine/htmlsel.py`; `tests/codex/test_cx_htmlsel_grammar.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
+| WO-244 | issue pending | Hannah Cole | queued (pre-approved) | none | `tests/codex/test_cx_state_machine_properties.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
+| WO-245 | issue pending | Hannah Cole | queued (pre-approved) | after WO-233 merged | `src/freemyid/engine/nicknames.py`; `tests/codex/test_cx_nickname_table.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
+| WO-246 | issue pending | Owen Park | queued (pre-approved) | none | `src/freemyid/checklists.py`; `src/freemyid/engine/law_matrix.py`; `tests/codex/test_cx_data_file_hardening.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
+| WO-247 | issue pending | Owen Park | queued (pre-approved) | none | `tests/codex/test_cx_paths_cross_platform.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
+| WO-248 | issue pending | Owen Park | queued (pre-approved) | none | `tests/codex/test_cx_firstrun_browser.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
+| WO-249 | issue pending | Felix Grant | queued (pre-approved) | none | `tests/codex/test_cx_draft_edit_roundtrip.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
+| WO-250 | issue pending | Amara Okoye | queued (pre-approved) | none | `docs/i18n/STRINGS_APP.md` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
+| WO-251 | issue pending | Amara Okoye | queued (pre-approved) | after WO-225 merged | `tests/codex/test_cx_glossary_es_consistency.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
+| WO-252 | issue pending | Kai Nakamura | queued (pre-approved) | none | `docs/dev/STATE_MACHINE.md` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
+| WO-253 | issue pending | Kai Nakamura | queued (pre-approved) | none | `docs/dev/PROOF_VAULT.md` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
+| WO-254 | issue pending | Felix Grant | queued (pre-approved) | after WO-225, WO-232, WO-250 merged | `tests/codex/test_cx_i18n_inventory_coverage.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
+| WO-255 | issue pending | Hannah Cole | queued (pre-approved) | after WO-230, WO-231, WO-232, WO-250, WO-252, WO-253 merged | `tests/codex/test_cx_dev_source_citations.py`; `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
+| WO-256 | issue pending | Imani Reid | queued (pre-approved) | after WO-226 merged | `src/freemyid/monitor.py`; `tests/codex/test_cx_monitor_previous_hardening.py`; `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
+| WO-257 | issue pending | Ravi Menon | queued (pre-approved) | after WO-233, WO-242 merged | `src/freemyid/engine/matcher.py`; `src/freemyid/engine/exposure.py`; `tests/codex/test_cx_matcher_age_ranges.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
+| WO-258 | issue pending | Felix Grant | queued (pre-approved) | after WO-242 merged | `src/freemyid/exposure_models.py`; `tests/codex/test_cx_coverage_by_category.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
+| WO-259 | issue pending | Hannah Cole | queued (pre-approved) | after WO-242, WO-257 merged | `src/freemyid/engine/exposure.py`; `tests/codex/test_cx_exposure_variant_rotation.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
+| WO-260 | issue pending | Owen Park | blocked: needs in-house contract change (doctor/1) | contract change first; after WO-246 merged | `src/freemyid/doctor.py`; `tests/codex/test_cx_doctor_extra_checks.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
 
 WO-107 workspace: .vendor-wt/wo-107. Merged PR #19, owner report (103d79a).
 
@@ -91,7 +128,7 @@ CP-03 navigation tests; CP-04 guide-print audit; CP-07 printable-summary visual 
 
 ## Next checkpoint
 
-CLAUDE-057 reports WO-220..224 accepted and merged. Morgan independently verified 256 `tests/codex` tests on main; WO-223 is credited to Hannah Cole, its test-quality builder. The next `STRINGS.md` update is sequenced after the v0.3.1 wording fix merges; it is not GO yet. Site work remains in-house.
+CLAUDE-059b reports v0.3.1 released and authorizes WO-226..229; WO-230..235 are pre-approved and start in order as WIP slots free. WO-225..235 are delivered for in-house review. WO-228/229 browser limitations and WO-225/232 sandbox socket-test failures are documented. The authorized queue is complete; no merge or push by Codex.
 
 ## Elena proposed path collision reference
 

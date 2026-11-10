@@ -23,7 +23,7 @@ Website pages and components (web/), app UI screens and copy (src/freemyid/wizar
 # WO-NNN: <title>
 Status: open | in progress | review | accepted | closed
 Vendor: agy | codex | copilot | grok
-Agent: <codex team role file, e.g. web-builder> (codex only)
+Agent: <codex team role file> (<member name>), e.g. "Agent: test-quality (Hannah Cole)" (codex only; roster in docs/vendor/codex-team/TEAM.md)
 Owner contact: Morgan Reyes (check-ins via tools/vendor.sh)
 Kind: docs | i18n | tests | web | wizard | engine | security | ... (optional; picks model/effort, see docs/AGENT_ROUTING.md)
 ## Goal
