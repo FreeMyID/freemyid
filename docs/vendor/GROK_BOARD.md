@@ -100,3 +100,9 @@ Rows added by in-house when the batch was issued. Helen Ashford owns them from h
 | WO-523 | queued (pre-approved); after WO-503 merged | `src/freemyid/setup_config.py`; `tests/grok/test_gk_setup_windows_files.py` | Derek Olsen | 2026-11-09 E8 epic batch |
 | WO-524 | queued (pre-approved); after WO-335, WO-350 merged | `src/freemyid/scheduler/__init__.py`; `tests/grok/test_gk_scheduler_run_helper.py` | Derek Olsen | 2026-11-09 E8 epic batch |
 | WO-525 | queued (pre-approved); none | `tests/grok/test_gk_windows_import_safety.py` | Ethan Brandt | 2026-11-09 E8 epic batch |
+| WO-526 | blocked: needs in-house to build the helper-bundle screens first (no label may be invented); after WO-506 merged | `docs/user/helper-prepares-setup.md` | Simon Fairley | 2026-11-09 E9 epic batch |
+| WO-527 | blocked: needs in-house to build the open-a-setup-file screens first (no label may be invented); after WO-526 merged | `docs/user/open-a-setup-file.md` | Margaret Lund | 2026-11-09 E9 epic batch |
+| WO-528 | blocked: needs in-house to build read-aloud and the full-wizard large-text pass first; none | `docs/user/read-aloud.md` | Simon Fairley | 2026-11-09 E9 epic batch |
+| WO-529 | blocked: needs in-house to build the print-ready report page first; after WO-299 merged | `docs/user/printable-report.md` | Margaret Lund | 2026-11-09 E9 epic batch |
+| WO-530 | queued (pre-approved); after WO-358 merged | `docs/user/listing-came-back.md` | Linda Moreau | 2026-11-09 E9 epic batch |
+| WO-531 | queued (pre-approved); after WO-517 merged | `docs/user/monthly-update.md` | Linda Moreau | 2026-11-09 E9 epic batch |

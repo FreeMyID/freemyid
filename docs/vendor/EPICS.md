@@ -11,8 +11,8 @@ Structure: **epic -> work orders (WO-NNN.md) -> task checklists** (the `## Tasks
 5. Numbering: Codex WO-291..299 then WO-401 upward; Grok WO-501 upward. Never reuse a number.
 
 ## Totals (written so far)
-- Work orders written: 46 (43 queued, 3 blocked).
-- Codex: 21. Grok: 25.
+- Work orders written: 52 (45 queued, 7 blocked).
+- Codex: 21. Grok: 31.
 
 ## E1. Helper setup bundle backend ("Set it up for someone else")
 **Owner team:** Grok (backend-core, test-writer)
@@ -162,13 +162,22 @@ Structure: **epic -> work orders (WO-NNN.md) -> task checklists** (the `## Tasks
 **Goal:** Plain-language pages for what 0.4 adds. Pages whose screen does not exist yet are blocked until in-house builds the screen, so no label is invented.
 
 **Sub-work-orders:**
-- Planned: WO-526..531. (to be written in this wave; see `git log docs/vendor/EPICS.md`)
+- WO-526 [grok, Simon Fairley]: User page: set it up for someone else (the helper's side) **(blocked)** (after WO-506)
+- WO-527 [grok, Margaret Lund]: User page: you were sent a setup file (the relative's side) **(blocked)** (after WO-526)
+- WO-528 [grok, Simon Fairley]: User page: large text and read-aloud **(blocked)**
+- WO-529 [grok, Margaret Lund]: User page: your "what we did for you" printout **(blocked)** (after WO-299)
+- WO-530 [grok, Linda Moreau]: Help page: a site put my details back (after WO-358)
+- WO-531 [grok, Linda Moreau]: Help page: the monthly update message, line by line (after WO-517)
 
 **Dependencies:** WO-330 (help topics hub), WO-311..320 (the 0.3 pages).
 
 **What in-house must do:**
 - Build the screens (helper bundle, read-aloud, printable report, tray) so the blocked docs WOs can quote real labels.
 - Link the new pages from `docs/user/help-topics.md` after merge.
+- Unblock WO-526: In-house must ship the "Set it up for someone else" screens in the app (ROADMAP 0.4 order item 1; helper side: pick the person, enter their details, choose a passphrase, save the file) and say so in a GO message with the exact button and heading labels and their file:line in `src/freemyid/wizard/`.
+- Unblock WO-527: In-house must ship the relative's side of the helper flow (double-click the file, type the passphrase, see the summary, give consent, set up the mailbox) and provide the exact labels with file:line, including the wrong-passphrase and damaged-file messages (from WO-506's typed errors).
+- Unblock WO-528: In-house must ship read-aloud (ROADMAP 0.4 order item 2) and the full-wizard large-text pass, and provide the control labels with file:line, which keys or buttons start and stop reading, which voices are used on Windows 10 and Windows 11, whether it works offline, and the known limits.
+- Unblock WO-529: In-house must ship the print-ready report page (ROADMAP 0.4 order item 3; `wizard/report.py` and its template) and provide the exact headings, button labels and sentences with file:line, the print steps for Windows 10 (browser print dialog, "Save as PDF" if offered), and what the page says in practice mode.
 
 ## E10. Spanish readiness (i18n)
 **Owner team:** Codex (i18n, test-quality, dev-docs)
