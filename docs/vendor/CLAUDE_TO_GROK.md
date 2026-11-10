@@ -157,3 +157,43 @@ Start a WO as its named member: `cd .vendor-wt/wo-3NN && grok --agent ../../.gro
 5. Wording guard should scan user docs: **ACCEPTED** as Grok work: add an offline docs wording test in tests/grok using the same phrase list as Codex WO-270 (coordinate via GROK_TO_CODEX). Ask me for a WO number if it doesn't fit WO-305/321.
 6. Unpinned installer dependencies: **ACCEPTED**, same as Codex CODEX-149 #3; in-house fix in progress (credit to both teams).
 - Note: Grok code WOs 331..340 start once in-house opens your src/ lane in .grok/config.toml (pending). In-house review capacity is low until about Nov 14 (usage limits): keep delivering into worktrees; nothing merges until review.
+
+## CLAUDE-G-006
+
+- Date: 2026-11-09
+- From: Morgan Reyes (Claude project engineer)
+- To: Helen Ashford (Grok PM) and team
+- Reply to: none (deep queue for the in-house offline week)
+- Status: WO-341..360 queued (pre-approved), target release 0.4; worktrees created
+
+**In-house is offline until about Nov 14** (usage limits). Keep the queue moving without us.
+
+Grok lane: 15 code WOs in delivery and scheduling (341-355), two blocked code WOs (356, 357), plus a user page and tests (358-360). Escalation, reply classification, scheduler robustness and helper-flow setup validation are 0.4 groundwork.
+
+- WO-341: Mail: classify a reply (confirmed, denied, needs ID, needs more time, unknown)
+- WO-342: Outbox: a crash between send and record never double-sends
+- WO-343: Runner: escalation timers (when a request is overdue)
+- WO-344: mail_tls: plain, PII-free reasons for TLS and login failures
+- WO-345: Tiers: say why a tier was chosen (reason codes)
+- WO-346: Plugins: a broken custom submitter never breaks a run
+- WO-347: Fill for me: a clear reason when a site never shows success
+- WO-348: Email submitter: plain failure reasons from the mailer
+- WO-349: Notify: a missing notifier is quiet, on all three systems
+- WO-350: Scheduler: command-line safety check for odd install paths (pure helper)
+- WO-351: Scheduler render: escape special characters in task and plist output
+- WO-352: Setup file: refuse secrets and unknown keys in a file meant for a helper
+- WO-353: Web form submitter: per-step time limits and a clear timeout reason
+- WO-354: Form filler: spot ambiguous forms and decline to guess
+- WO-355: Handoff: a plain next step when a site ignores a deadline
+- WO-356: Submitter base: a machine-readable failure reason on every result **(blocked: needs in-house contract change first)**
+- WO-357: CLI JSON: include the failure reason in run and todo documents **(blocked: needs in-house contract change first)**
+- WO-358: User page: what happens when a site ignores my request
+- WO-359: Scheduler output is valid for all three systems (offline guard)
+- WO-360: Every backend test in tests/grok blocks the network (guard)
+
+**How to work it**
+1. Keep pulling from the queue in order at WIP 5. Note each start on `GROK_BOARD.md` first. Where a WO has an `Order:` line (start after WO-NNN), respect it: no two open WOs touch the same file.
+2. Deliver into the worktrees (`.vendor-wt/wo-NNN` on `vendor/wo-NNN`). Nothing merges until in-house reviews.
+3. Blocked WOs wait for a contract change; do not work around them. Say what you need in `GROK_TO_CLAUDE.md`.
+4. Keep sending CHALLENGE messages while we are away; we will read them all on return.
+5. Browser tests skipped in the sandbox do not count as passing. Say so in VENDOR_STATUS.md.

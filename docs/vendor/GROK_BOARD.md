@@ -1,19 +1,23 @@
-# Grok board (Grok-owned per-WO status and path guard)
+# Grok vendor board
 
-Update when you start or deliver a WO. One WO = one session.
+Sole writer: the Grok vendor session. Path guard for WO-3NN only. Codex's `BOARD.md` is Nora's. This board grants no extra edit permission.
 
-| WO | Allowed paths | State | Session/notes |
-|---|---|---|---|
-| WO-301 | `docs/user/INSTALL.md` `docs/user/troubleshooting.md` | GO | |
-| WO-302 | `USER_GUIDE.md` | GO | |
-| WO-303 | `docs/CLI.md` | GO | |
-| WO-304 | `docs/user/GLOSSARY.md` | GO | |
-| WO-305 | `tests/grok/test_gk_user_doc_claims.py` `tests/grok/__init__.py` | GO | |
-| WO-306 | `FAMILY_QUICK_START.md` | queued | |
-| WO-307 | `docs/user/HELPING.md` | queued | |
-| WO-308 | `distro/aur/README.md` `distro/flatpak/README.md` `distro/homebrew/README.md` `distro/scoop/README.md` `distro/winget/README.md` | queued | |
-| WO-309 | `tests/grok/test_gk_doc_labels_exist.py` | queued | |
-| WO-310 | `docs/user/troubleshooting.md` | queued | |
+Last checkpoint: 2026-11-09. WO-301..305 delivered in their worktrees (GROK-007). Checks confirmed in this session. Nothing merged. WO-306..310 started. Code WOs WO-331..340 stay closed. First-start sentence: "The first time can take up to a minute. Please wait; there is no need to click it again."
+
+| Work order | Status | Reserved paths | Last update |
+| --- | --- | --- | --- |
+| WO-301 | delivered (issue pending) | `docs/user/INSTALL.md`; `docs/user/troubleshooting.md` | 2026-11-09 checks 570 passed, 27 skipped, 1 xfailed |
+| WO-302 | delivered (issue pending) | `docs/USER_GUIDE.md` | 2026-11-09 checks 562 passed, 66 skipped, 1 xfailed |
+| WO-303 | delivered (issue pending) | `docs/CLI.md` | 2026-11-09 checks 219 passed, 1 skipped |
+| WO-304 | delivered (issue pending) | `docs/user/GLOSSARY.md` | 2026-11-09 checks 656 passed, 17 skipped, 1 xfailed |
+| WO-305 | delivered (issue pending) | `tests/grok/test_gk_user_doc_claims.py`; `tests/grok/__init__.py` | 2026-11-09 checks 7 passed, 12 xfailed; ruff clean |
+| WO-306 | in progress | `FAMILY_QUICK_START.md` | 2026-11-09 start |
+| WO-307 | in progress | `docs/user/HELPING.md` | 2026-11-09 start |
+| WO-308 | in progress | `distro/*/README.md` (five files) | 2026-11-09 start |
+| WO-309 | in progress | `tests/grok/test_gk_doc_labels_exist.py` | 2026-11-09 start |
+| WO-310 | in progress, on a copy of WO-301's troubleshooting page | `docs/user/troubleshooting.md` | 2026-11-09 start |
+
+WIP 5/5 on WO-306..310. WO-329 waits until WO-304's glossary is copied onto that worktree. WO-330 waits for Morgan's rebase note. WO-331..340 wait for the code lane.
 
 ## In-house additions, CLAUDE-G-004 (Morgan Reyes, 2026-11-09)
 
@@ -51,3 +55,23 @@ Rows added by in-house when the batch was issued. Helen Ashford owns them from h
 | WO-338 | queued (pre-approved); waits for the code lane to open | `src/freemyid/engine/filler.py`; `tests/grok/test_gk_filler_classify.py` | Derek Olsen | 2026-11-09 CLAUDE-G-004 |
 | WO-339 | queued (pre-approved); waits for the code lane to open | `src/freemyid/submitters/base.py`; `tests/grok/test_gk_data_minimization.py` | Paul Kessler | 2026-11-09 CLAUDE-G-004 |
 | WO-340 | queued (pre-approved); waits for the code lane to open | `src/freemyid/cli_json.py`; `tests/grok/test_gk_cli_json_no_pii.py` | Derek Olsen | 2026-11-09 CLAUDE-G-004 |
+| WO-341 | queued (pre-approved); after WO-331 merged | `src/freemyid/engine/mail.py`; `tests/grok/test_gk_mail_classify_reply.py` | Paul Kessler | 2026-11-09 CLAUDE-G-006 |
+| WO-342 | queued (pre-approved); after WO-332 merged | `src/freemyid/engine/outbox.py`; `tests/grok/test_gk_outbox_idempotent.py` | Paul Kessler | 2026-11-09 CLAUDE-G-006 |
+| WO-343 | queued (pre-approved); none | `src/freemyid/engine/runner.py`; `tests/grok/test_gk_runner_escalation_due.py` | Derek Olsen | 2026-11-09 CLAUDE-G-006 |
+| WO-344 | queued (pre-approved); none | `src/freemyid/engine/mail_tls.py`; `tests/grok/test_gk_mail_tls_reasons.py` | Paul Kessler | 2026-11-09 CLAUDE-G-006 |
+| WO-345 | queued (pre-approved); none | `src/freemyid/engine/tiers.py`; `tests/grok/test_gk_tier_reason.py` | Derek Olsen | 2026-11-09 CLAUDE-G-006 |
+| WO-346 | queued (pre-approved); none | `src/freemyid/engine/plugins.py`; `tests/grok/test_gk_plugins_robust.py` | Derek Olsen | 2026-11-09 CLAUDE-G-006 |
+| WO-347 | queued (pre-approved); none | `src/freemyid/engine/fill_for_me.py`; `tests/grok/test_gk_fill_for_me_reasons.py` | Derek Olsen | 2026-11-09 CLAUDE-G-006 |
+| WO-348 | queued (pre-approved); none | `src/freemyid/submitters/email.py`; `tests/grok/test_gk_email_submitter_reasons.py` | Paul Kessler | 2026-11-09 CLAUDE-G-006 |
+| WO-349 | queued (pre-approved); after WO-333 merged | `src/freemyid/notify.py`; `tests/grok/test_gk_notify_missing_backend.py` | Paul Kessler | 2026-11-09 CLAUDE-G-006 |
+| WO-350 | queued (pre-approved); none | `src/freemyid/scheduler/pathcheck.py`; `tests/grok/test_gk_scheduler_pathcheck.py` | Derek Olsen | 2026-11-09 CLAUDE-G-006 |
+| WO-351 | queued (pre-approved); after WO-334 merged | `src/freemyid/scheduler/render.py`; `tests/grok/test_gk_scheduler_render_escape.py` | Derek Olsen | 2026-11-09 CLAUDE-G-006 |
+| WO-352 | queued (pre-approved); after WO-336 merged | `src/freemyid/setup_config.py`; `tests/grok/test_gk_setup_config_helper_safety.py` | Derek Olsen | 2026-11-09 CLAUDE-G-006 |
+| WO-353 | queued (pre-approved); after WO-337 merged | `src/freemyid/submitters/web_form.py`; `tests/grok/test_gk_web_form_timeouts.py` | Paul Kessler | 2026-11-09 CLAUDE-G-006 |
+| WO-354 | queued (pre-approved); after WO-338 merged | `src/freemyid/engine/filler.py`; `tests/grok/test_gk_filler_ambiguity.py` | Derek Olsen | 2026-11-09 CLAUDE-G-006 |
+| WO-355 | queued (pre-approved); after WO-333, WO-343 merged | `src/freemyid/engine/handoff.py`; `tests/grok/test_gk_handoff_overdue.py` | Paul Kessler | 2026-11-09 CLAUDE-G-006 |
+| WO-356 | blocked: needs in-house contract change first (interfaces.py (result type) and schema/ (new reason field)) | `src/freemyid/submitters/base.py`; `tests/grok/test_gk_submit_reason_codes.py` | Paul Kessler | 2026-11-09 CLAUDE-G-006 |
+| WO-357 | blocked: needs in-house contract change first (schema/ and the --json contract (new field, version bump)) | `src/freemyid/cli_json.py`; `tests/grok/test_gk_cli_json_reason.py` | Derek Olsen | 2026-11-09 CLAUDE-G-006 |
+| WO-358 | queued (pre-approved); none | `docs/user/site-ignores-request.md` | Linda Moreau | 2026-11-09 CLAUDE-G-006 |
+| WO-359 | queued (pre-approved); after WO-334, WO-351 merged | `tests/grok/test_gk_scheduler_cross_os.py` | Ethan Brandt | 2026-11-09 CLAUDE-G-006 |
+| WO-360 | queued (pre-approved); none | `tests/grok/test_gk_backend_offline_guard.py` | Ethan Brandt | 2026-11-09 CLAUDE-G-006 |
