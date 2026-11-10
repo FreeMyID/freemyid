@@ -238,3 +238,10 @@ Each line: feature, tier, phase. Status: **shipped** items are in v0.1.x.
 - Apple Developer account ($99/yr) for a signed Mac app: when?
 - Final prices after a sourced competitor check (brand-marketing).
 - Business entity, payment processor account, and terms of service: needed before 1.0 payments.
+
+## 0.4 order (decided 2026-11-09, project lead; owner delegated full control)
+Codex challenge CODEX-149 #6 accepted: 0.4 is built around Pat's journey (72, Windows 10, a grandchild sent the link), in this order:
+1. **"Set it up for someone else":** a helper prepares an encrypted setup bundle, and the relative double-clicks it (3.1, Fam). Biggest drop-off risk today is the 6-screen wizard for someone alone.
+2. **Large text and read-aloud across the wizard** (3.1, F). Large text exists; read-aloud and a full-wizard pass are new.
+3. **One-page printable "what we did for you" report** (3.5, F; the HTML summary from 0.3 becomes a print-ready page, PDF if it stays local and simple).
+Then, if time allows: proof vault (3.5), smart re-check (3.3), tray icon "check now" (3.6). Each item ships only with a Windows VM pass, and with the non-technical path working first (principle 2).
