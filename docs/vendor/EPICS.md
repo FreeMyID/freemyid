@@ -11,8 +11,8 @@ Structure: **epic -> work orders (WO-NNN.md) -> task checklists** (the `## Tasks
 5. Numbering: Codex WO-291..299 then WO-401 upward; Grok WO-501 upward. Never reuse a number.
 
 ## Totals (written so far)
-- Work orders written: 33 (30 queued, 3 blocked).
-- Codex: 15. Grok: 18.
+- Work orders written: 39 (36 queued, 3 blocked).
+- Codex: 18. Grok: 21.
 
 ## E1. Helper setup bundle backend ("Set it up for someone else")
 **Owner team:** Grok (backend-core, test-writer)
@@ -127,7 +127,12 @@ Structure: **epic -> work orders (WO-NNN.md) -> task checklists** (the `## Tasks
 **Goal:** Offline tests and small fixes proving a request carries only what the site already shows: search URLs, letters, form variables, evidence logs, JSON documents.
 
 **Sub-work-orders:**
-- Codex: WO-407..409. Grok: WO-519..521. (to be written in this wave; see `git log docs/vendor/EPICS.md`)
+- WO-407 [codex, Imani Reid]: Privacy proof: search links carry only name, town and (with permission) phone
+- WO-408 [codex, Imani Reid]: Privacy proof: a letter never mentions a field the listing does not show (after WO-275)
+- WO-409 [codex, Imani Reid]: Privacy proof: scan, monitor and match leave no personal values in logs or events (after WO-402)
+- WO-519 [grok, Ethan Brandt]: Privacy proof: "Fill it in for me" values come only from what the listing shows
+- WO-520 [grok, Ethan Brandt]: Privacy proof: every notification is free of names and sites (after WO-349)
+- WO-521 [grok, Ethan Brandt]: Privacy proof: a setup file error never repeats what the person typed
 
 **Dependencies:** WO-339 (submitters/base.py), WO-340 (cli_json), WO-237 (redaction).
 
