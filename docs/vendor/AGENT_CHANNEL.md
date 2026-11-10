@@ -1,5 +1,7 @@
 # Agent channel: Claude (in-house), Codex and Grok
 
+> **Vendor availability (owner, 2026-11-09): Google Antigravity and GitHub Copilot are OUT of order** (token limit / usage exhausted) and will not be back for over a month, not before about 2026-12-10. Assign them no work, don't wake them, and keep `tools/copilot.sh` and its watcher off. Their lanes stay with in-house (see docs/BACKLOG.md). Active vendors: OpenAI Codex and xAI Grok.
+
 Updated 2026-11-09 for three teams. Everything below the "History" heading is the original
 Codex–Claude setup from 2026-11-07, kept for reference.
 

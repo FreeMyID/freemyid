@@ -1,5 +1,7 @@
 # Outside vendors: Google Antigravity and OpenAI Codex
 
+> **Vendor availability (owner, 2026-11-09): Google Antigravity and GitHub Copilot are OUT of order** (token limit / usage exhausted) and will not be back for over a month, not before about 2026-12-10. Assign them no work, don't wake them, and keep `tools/copilot.sh` and its watcher off. Their lanes stay with in-house (see docs/BACKLOG.md). Active vendors: OpenAI Codex and xAI Grok.
+
 Owner-approved 2026-11-07. Two vendor teams work side by side with the in-house Claude agents: Google Antigravity (CLI `agy`, rules in GEMINI.md) and OpenAI Codex (CLI `codex`, rules in AGENTS.md). Each works like an outside contractor team: the Free My ID owner/engineer (Morgan Reyes) sets the scope, checks in, and accepts or rejects the work. Rule 15 in .claude/agents/_shared-rules.md.
 
 ## Lifecycle of a work order

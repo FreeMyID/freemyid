@@ -1,6 +1,6 @@
 # Notes for OpenAI Codex agents working on Free My ID
 
-> GitHub Copilot agents: read `.github/copilot-instructions.md` first. These rules apply to you too, except where that file says otherwise. (Copilot is paused until December 2026.)
+> GitHub Copilot agents: read `.github/copilot-instructions.md` first. These rules apply to you too, except where that file says otherwise. (Copilot and Antigravity are out of order, token limit and usage, for over a month: not before about 2026-12-10. Assign them nothing.)
 
 You are an outside vendor team (the Codex team: PM Nora Bennett, liaison Jules Mercer, builders per `docs/vendor/codex-team/TEAM.md`) working beside the in-house team (Claude agents led by the project engineer, Morgan Reyes). Process: `docs/VENDOR.md`. You get work orders (`docs/vendor/WO-*.md`); the in-house team reviews your work like an outside pull request before anything reaches main. Updated 2026-11-09 by Morgan Reyes.
 
