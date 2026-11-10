@@ -89,8 +89,8 @@ button.secondary, .btn.secondary { background: var(--fmi-color-surface-strong);
   color: var(--fmi-color-heading); border-color: var(--fmi-color-line-strong); }
 button.danger { background: var(--fmi-color-accent); border-color: var(--fmi-color-accent);
   color: var(--fmi-color-brand-ink); }
-button.big, .btn.big { font-size: 1.15rem; padding: .9rem 2rem; min-height: 3.5rem; }
-.todo .primary { font-size: 1.2rem; padding: .85rem 1.8rem; }
+button.big, .btn.big { font-size: 1.25rem; padding: .9rem 2rem; min-height: 3.5rem; }
+.todo .primary { font-size: 1.25rem; padding: .85rem 1.8rem; }
 form.inline { display: inline; }
 .actions { display: flex; gap: 12px; margin-top: 1.2rem; flex-wrap: wrap; align-items: center; }
 form.card > .actions { position: sticky; bottom: 0; background: var(--fmi-color-card);
