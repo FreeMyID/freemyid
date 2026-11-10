@@ -1,0 +1,174 @@
+# Vendor epics for the in-house offline week (0.4, Pat's journey and backend quality)
+
+Written by Morgan Reyes, 2026-11-09. In-house is offline until about 2026-11-14; the owner wants the deepest useful vendor queue.
+Structure: **epic -> work orders (WO-NNN.md) -> task checklists** (the `## Tasks` list inside each WO, numbered 1., 1.1, 1.2). Process: `docs/VENDOR.md`. Lanes: `AGENTS.md` "Your lane".
+
+## How to work this queue
+1. Work in epic order (E1 first) at WIP 5, after the earlier queue (Codex WO-230..290, Grok WO-306..360) is done. Note each start on `BOARD.md` (Codex) or `GROK_BOARD.md` (Grok) first.
+2. A WO with an `Order:` line waits for the named WOs to be merged; no two open WOs touch the same file. Rebase on main before starting.
+3. **Blocked WOs are not startable.** They say what in-house must provide first. Do not work around them; say what you need in your channel file.
+4. Tick the boxes in the WO's `## Tasks` list as you go and mirror the list in `VENDOR_STATUS.md`.
+5. Numbering: Codex WO-291..299 then WO-401 upward; Grok WO-501 upward. Never reuse a number.
+
+## Totals (written so far)
+- Work orders written: 6 (4 queued, 2 blocked).
+- Codex: 0. Grok: 6.
+
+## E1. Helper setup bundle backend ("Set it up for someone else")
+**Owner team:** Grok (backend-core, test-writer)
+**Goal:** ROADMAP 0.4 order item 1 and 3.1/3.7. A helper prepares a bundle, the relative opens it. This epic makes every check around the bundle (shape, forbidden keys, plain-words dry-run summary, conversion to a setup file) pure, tested and PII-free, so the in-house screens only wire it up.
+
+**Sub-work-orders:**
+- WO-501 [grok, Derek Olsen]: Helper bundle: check a bundle file's shape before anyone tries to open it (after WO-336, WO-352)
+- WO-502 [grok, Derek Olsen]: Helper bundle: a plain "here is what will be imported" summary (dry run) (after WO-501)
+- WO-503 [grok, Derek Olsen]: Helper bundle: turn a bundle's profile into a setup file a helper can edit (after WO-502)
+- WO-504 [grok, Ethan Brandt]: Helper bundle: end-to-end round-trip tests with the real export and import (after WO-503)
+- WO-505 [grok, Derek Olsen]: CLI JSON: a PII-free "bundle check" document **(blocked)** (after WO-340, WO-357, WO-502)
+- WO-506 [grok, Derek Olsen]: Helper bundle: open a bundle file with typed, plain errors **(blocked)** (after WO-503)
+
+**Dependencies:** WO-336 and WO-352 (both edit `setup_config.py`; every E1 setup_config WO starts after them). WO-340/357 for the cli_json item.
+
+**What in-house must do:**
+- Add the `bundle_check/1` schema, `freemyid bundle check` in `cli.py` and the `docs/CLI.md` section (unblocks WO-505).
+- Change `crypto.py` to raise typed errors and add a format version byte to the bundle header; decide the passphrase rules (unblocks WO-506).
+- Build the helper and relative screens (wizard) on top of `bundle_plan_lines` and `open_bundle_file`; run the Windows VM pass.
+- Unblock WO-505: In-house must (1) add the `bundle_check/1` JSON schema under `schema/` and register it in the `--json` contract, (2) add the `freemyid bundle check FILE [--json]` command in `cli.py` that calls the WO-501/502 helpers and `cli_json.emit`, and (3) add the `docs/CLI.md` section so Grok can write `bundle_check_doc(header, doc_check, plan_lines) -> dict` in `cli_json.py` against a fixed shape.
+- Unblock WO-506: In-house must change `crypto.py` (`export_with_passphrase` / `import_with_passphrase`, `crypto.py:182-205`) so that (1) a wrong passphrase, a damaged file and "not a bundle" raise three distinct exception classes instead of one `ValueError` with a message (today `import_with_passphrase` collapses wrong-passphrase, truncation and tampering on purpose, `crypto.py:203-205`; in-house decides whether telling them apart is acceptable, and that is a security decision), (2) the header carries a one-byte format version (a `VP2` magic or a version byte) so scrypt cost can be raised later, and (3) a documented helper exists to estimate time cost so the UI can show "this takes a few seconds".
+
+## E2. Relist detection and smart re-check
+**Owner team:** Codex (engine-tests, test-quality)
+**Goal:** ROADMAP 3.3 "Smart re-check" (0.4). Detect a listing that came back after removal, learn how often each broker relists, and turn that into a suggested re-check interval. Pure helpers in `monitor.py` and `engine/exposure.py` with tests; no schema change.
+
+**Sub-work-orders:**
+- Planned: WO-291..295. (to be written in this wave; see `git log docs/vendor/EPICS.md`)
+
+**Dependencies:** WO-271 (relist helper in monitor.py), WO-256, WO-242, WO-257, WO-259, WO-278 (all touch the same files).
+
+**What in-house must do:**
+- Wire the learned interval into `state.next_check_at` (state.py is in-house) behind a config flag.
+- Surface "relisted" in the dashboard and the monthly summary (wizard).
+
+## E3. Escalation and legal follow-ups
+**Owner team:** Codex (engine-tests) for letters/law_matrix; Grok (backend-core, backend-mail) for runner/outbox
+**Goal:** ROADMAP 3.3 "Legal escalation pack" (0.4). Statute selection, verified deadlines, a complaint data pack and calmer escalation events. The ladder itself (`state.py:100-139`) stays in-house.
+
+**Sub-work-orders:**
+- Codex: WO-296..298. Grok: WO-507..509. (to be written in this wave; see `git log docs/vendor/EPICS.md`)
+
+**Dependencies:** WO-241, WO-275, WO-284 (letters, law_matrix); WO-343, WO-355 (runner, handoff).
+
+**What in-house must do:**
+- Add `complaint.txt.j2` under `templates/` and a TEMPLATES entry decision (blocked WO).
+- Decide whether the ladder windows in `state.py` should take the matrix's verified response days.
+
+## E4. Delivery reliability (mail, retries, scheduler on three systems)
+**Owner team:** Grok (backend-mail, backend-core, test-writer)
+**Goal:** Make sending, reading replies and scheduled re-checks fail calmly and retry sensibly: reply de-duplication, SMTP/IMAP timeouts, outbox bookkeeping, scheduler status, a monthly update that counts correctly.
+
+**Sub-work-orders:**
+- Planned: WO-510..515. (to be written in this wave; see `git log docs/vendor/EPICS.md`)
+
+**Dependencies:** WO-331/341 (mail), WO-332/342 (outbox), WO-333/349 (notify), WO-334/335/350/351 (scheduler).
+
+**What in-house must do:**
+- Decide the outbox retry policy fields in `models.Request` if the retry count must be stored (contract).
+- tools/vendor.sh still refuses `engine/mail*` paths: lift that for E4 mail WOs or in-house merges them by hand.
+
+## E5. Printable "what we did for you" report: data layer
+**Owner team:** Codex (engine-tests) and Grok (backend-core)
+**Goal:** ROADMAP 0.4 order item 3 and 3.5. This epic builds only the data: a pure summary of requests, confirmations and relists per person, and the JSON document. Layout, print CSS and PDF are in-house.
+
+**Sub-work-orders:**
+- Planned: WO-299, WO-401 (Codex); WO-516, WO-517 (Grok). (to be written in this wave; see `git log docs/vendor/EPICS.md`)
+
+**Dependencies:** WO-258, WO-280 (exposure_models), WO-340/357 (cli_json).
+
+**What in-house must do:**
+- Build the print-ready report page (wizard/report.py, templates) on the data layer.
+- Add `report_summary/1` schema and the CLI command (blocks WO-517).
+
+## E6. Registry scale (400+ brokers)
+**Owner team:** Codex (engine-tests, test-quality, windows-tests); Grok (backend-core)
+**Goal:** The registry is moving toward 400+ brokers. Bound every per-broker loop: scan-event reads, per-broker event scans in the runner, selector compilation, registry load time, doctor checks.
+
+**Sub-work-orders:**
+- Codex: WO-402..406. Grok: WO-518. (to be written in this wave; see `git log docs/vendor/EPICS.md`)
+
+**Dependencies:** WO-278, WO-287 (offline benchmark guard), WO-285, WO-286 (perf), WO-343 (runner).
+
+**What in-house must do:**
+- If `Store.events` needs an action filter or index (storage/ is in-house), add it so scan-event reads stop scanning thousands of rows.
+
+## E7. Data minimization and privacy proofs
+**Owner team:** Codex (security-tests, engine-tests) and Grok (test-writer, backend-core)
+**Goal:** Offline tests and small fixes proving a request carries only what the site already shows: search URLs, letters, form variables, evidence logs, JSON documents.
+
+**Sub-work-orders:**
+- Codex: WO-407..409. Grok: WO-519..521. (to be written in this wave; see `git log docs/vendor/EPICS.md`)
+
+**Dependencies:** WO-339 (submitters/base.py), WO-340 (cli_json), WO-237 (redaction).
+
+**What in-house must do:**
+- Review any finding marked as an in-house defect and fix it in the in-house module (strict xfail tells you where).
+
+## E8. Windows robustness
+**Owner team:** Codex (windows-tests) and Grok (backend-core, test-writer)
+**Goal:** Pat is on Windows 10. Doctor checks, data-file reading, task XML, toast fallback and path handling must behave there. Offline tests render for all three systems; nothing touches the real OS.
+
+**Sub-work-orders:**
+- Codex: WO-410..412. Grok: WO-522..525. (to be written in this wave; see `git log docs/vendor/EPICS.md`)
+
+**Dependencies:** WO-260, WO-283 (doctor), WO-334, WO-351, WO-359 (scheduler), WO-349 (notify).
+
+**What in-house must do:**
+- Run the Windows 10 VM pass for each shipped item (vendors cannot).
+
+## E9. User docs for the 0.4 features
+**Owner team:** Grok (user-guide-writer, support-writer, plain-language-editor, reference-writer, accessibility-reviewer)
+**Goal:** Plain-language pages for what 0.4 adds. Pages whose screen does not exist yet are blocked until in-house builds the screen, so no label is invented.
+
+**Sub-work-orders:**
+- Planned: WO-526..531. (to be written in this wave; see `git log docs/vendor/EPICS.md`)
+
+**Dependencies:** WO-330 (help topics hub), WO-311..320 (the 0.3 pages).
+
+**What in-house must do:**
+- Build the screens (helper bundle, read-aloud, printable report, tray) so the blocked docs WOs can quote real labels.
+- Link the new pages from `docs/user/help-topics.md` after merge.
+
+## E10. Spanish readiness (i18n)
+**Owner team:** Codex (i18n, test-quality, dev-docs)
+**Goal:** ROADMAP 3.1 Spanish UI (0.5). Get ready: inventories of every backend string, a Spanish glossary for the new 0.4 terms, guards that keep user text out of logic, and drafts that a native speaker reviews.
+
+**Sub-work-orders:**
+- Planned: WO-413..417. (to be written in this wave; see `git log docs/vendor/EPICS.md`)
+
+**Dependencies:** WO-232, WO-250, WO-254, WO-290 (inventories), WO-251 (glossary check).
+
+**What in-house must do:**
+- Pick the message-catalog mechanism and add it (new module, wizard and CLI wiring) to unblock WO-416.
+- Wire Spanish letter templates and get a legal read (unblocks WO-417).
+
+## E11. Identity-safety checklists and the yearly check-up
+**Owner team:** Codex (engine-tests, test-quality)
+**Goal:** ROADMAP 3.4 (IRS IP PIN, SSA, USPS, lock-down checklist, annual privacy check-up). Backend only: loader validation, tick state, "due again" logic. New checklist data and screens are in-house.
+
+**Sub-work-orders:**
+- Planned: WO-418..421. (to be written in this wave; see `git log docs/vendor/EPICS.md`)
+
+**Dependencies:** WO-246, WO-282 (checklists.py), WO-281 (checklist_state.py).
+
+**What in-house must do:**
+- Write the new checklist entries in `brokers/checklists.yaml` and the check-up screen/reminder wiring.
+
+## E12. Phone/email-only removals and the address-confidentiality helper
+**Owner team:** Codex (engine-tests) and Grok (backend-core)
+**Goal:** ROADMAP 3.3 (phone number and email-only removals; ACP guidance). Make the value-only path (BL-IN-08) solid and add backend data for state ACP guidance.
+
+**Sub-work-orders:**
+- Codex: WO-422..424. Grok: WO-532. (to be written in this wave; see `git log docs/vendor/EPICS.md`)
+
+**Dependencies:** WO-275 (letters), WO-345 (tiers), WO-338/354 (filler).
+
+**What in-house must do:**
+- Add the ACP guidance entries and screen; decide whether ACP is a checklist or its own flow.

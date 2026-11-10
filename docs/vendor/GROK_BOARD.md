@@ -75,3 +75,9 @@ Rows added by in-house when the batch was issued. Helen Ashford owns them from h
 | WO-358 | queued (pre-approved); none | `docs/user/site-ignores-request.md` | Linda Moreau | 2026-11-09 CLAUDE-G-006 |
 | WO-359 | queued (pre-approved); after WO-334, WO-351 merged | `tests/grok/test_gk_scheduler_cross_os.py` | Ethan Brandt | 2026-11-09 CLAUDE-G-006 |
 | WO-360 | queued (pre-approved); none | `tests/grok/test_gk_backend_offline_guard.py` | Ethan Brandt | 2026-11-09 CLAUDE-G-006 |
+| WO-501 | queued (pre-approved); after WO-336, WO-352 merged | `src/freemyid/setup_config.py`; `tests/grok/test_gk_bundle_validate.py` | Derek Olsen | 2026-11-09 E1 epic batch |
+| WO-502 | queued (pre-approved); after WO-501 merged | `src/freemyid/setup_config.py`; `tests/grok/test_gk_bundle_plan.py` | Derek Olsen | 2026-11-09 E1 epic batch |
+| WO-503 | queued (pre-approved); after WO-502 merged | `src/freemyid/setup_config.py`; `tests/grok/test_gk_bundle_to_setup.py` | Derek Olsen | 2026-11-09 E1 epic batch |
+| WO-504 | queued (pre-approved); after WO-503 merged | `tests/grok/test_gk_bundle_roundtrip.py` | Ethan Brandt | 2026-11-09 E1 epic batch |
+| WO-505 | blocked: needs in-house schema, cli.py command and docs/CLI.md section first; after WO-340, WO-357, WO-502 merged | `src/freemyid/cli_json.py`; `tests/grok/test_gk_cli_json_bundle.py` | Derek Olsen | 2026-11-09 E1 epic batch |
+| WO-506 | blocked: needs in-house crypto change first (typed errors and a format version in the bundle header); after WO-503 merged | `src/freemyid/setup_config.py`; `tests/grok/test_gk_bundle_open.py` | Derek Olsen | 2026-11-09 E1 epic batch |
