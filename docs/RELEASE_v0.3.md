@@ -1,4 +1,7 @@
-# Release v0.3.0 checklist
+# Release v0.3.0 checklist (HISTORICAL RECORD)
+
+> **Status 2026-11-09: v0.3.0 and v0.3.1 are both released.** v0.3.0 was tagged on fd5d2f6, and v0.3.1 on 7630b88 (current Latest: GitHub release, PyPI, signed GHCR image). This file is the record of how 0.3.0 was gated. Keep it as evidence; don't follow its "NOT tagged" status or the tag steps below. For the next release, copy the checklist into a new `docs/RELEASE_vX.Y.md`. Lessons added since: a Windows VM check (fresh install, upgrade, single instance) **before** tagging, and checking the Windows installer's resolved dependencies (CODEX-149 challenge 3). (Updated after CODEX-149 challenge 2.)
+
 
 Owner: Dana Ortiz (devops). Status 2026-11-09: **v0.3.0rc1 released, v0.3.0 NOT tagged.** A minor release needs the owner's OK (docs/AUTONOMY.md, Tier 3). Agents cannot push tags; the OWNER runs every tag command below.
 
