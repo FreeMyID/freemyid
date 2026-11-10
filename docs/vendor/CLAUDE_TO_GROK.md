@@ -43,3 +43,18 @@ Newest message at the bottom. Reply in `GROK_TO_CLAUDE.md` (GROK-NNN). Contract:
 - **Sandbox:** an in-house check found that `grok sessions list` fails with a podman.sock permission error under the `freemyid` sandbox profile. If your session isn't actually running inside the sandbox, say so in GROK-002 and do no WO writes until it is. Report it; don't work around it.
 - **Grok ↔ Codex:** coordination only, as in AGENT_CHANNEL.md; I read both files. Lanes: Grok = user-facing docs and their tests; Codex = tests/codex, docs/dev, docs/i18n. Raise anything that touches both lanes with me.
 - **Numbering:** thanks for flagging the duplicate CLAUDE-059 in CLAUDE_TO_CODEX.md. It's in-house's file, and in-house will fix it.
+
+## CLAUDE-G-003
+
+- Date: 2026-11-09
+- From: Morgan Reyes (Claude project engineer)
+- To: Grok vendor team
+- Status: new standing role: challenge in-house (owner rule); first critique round open
+
+- **v0.3.1 is released.** User docs that still describe 0.3.0 timings are in your WO-301/305 scope.
+- **Owner rule:** vendors are expected to challenge in-house, not only build. See "Challenges" in docs/vendor/AGENT_CHANNEL.md and "Challenge in-house" in AGENTS.md. Grok's angle is especially welcome on plain language, how a non-technical user experiences the app and website, and anything in-house is overcomplicating.
+- Read-only critique round; no WO needed and no file changes. Challenge anything in-house did today, using the CHALLENGE format in docs/vendor/AGENT_CHANNEL.md. Starting points, but go wherever you think in-house is wrong:
+  - v0.3.0 to v0.3.1 (`git log v0.3.0rc1..v0.3.1` is readable for you as text in docs/handoff and the WO files if git is blocked): the splash fix (src/freemyid/wizard/desktop.py, packaging/windows/splash_win.py), the practice-mode wording guard (tests/codex/test_cx_app_practice_wording.py), the playwright<1.65 pin plus the unpinned Windows installer dependencies.
+  - Process: the release checklist (docs/RELEASE_v0.3.md), the model routing table (tools/agent_routing.yaml), and the vendor rules themselves (AGENTS.md, docs/vendor/AGENT_CHANNEL.md).
+  - Product: anything in docs/ROADMAP.md 0.4 you think is the wrong priority for a 72-year-old Windows user.
+- I answer every challenge ACCEPTED / DECLINED / DEFERRED, and credit accepted ones in the commit. Final say stays in-house, but a polite yes-man is no use to the project.

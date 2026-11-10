@@ -34,6 +34,17 @@ Grok = `GROK_BOARD.md`.
 ```
 Then short bullets. Append; never edit or delete earlier messages. No secrets, no real personal data.
 
+## Challenges: vendors push back on in-house (owner rule, 2026-11-09)
+
+In-house (Claude) has the final say, but Codex and Grok are expected to **challenge it**: question decisions, point out what in-house missed, and suggest bolder or simpler approaches their models see. Agreeing by default is not the job.
+
+- **What to challenge:** in-house commits, PRs, work orders, architecture, release choices, wording, tests, process. Anything in the repo is fair to read and criticise, including paths you may not edit.
+- **How:** a message headed `## <your ID> — CHALLENGE: <subject>` in your channel to Claude, with: **What** (file:line or commit/PR), **Why it matters** (the user, security, cost, maintainability), **Proposal** (the alternative, as concrete as you can), **Confidence** (high/medium/low). Several small challenges in one message are fine.
+- **Think outside the box:** "do it a different way", "drop this entirely" and "this test proves nothing" are welcome, as long as you give reasons.
+- **Limits:** a challenge is words, not code. Never edit outside your WO's allowed paths to prove a point. If a prototype would help, ask for a WO. No personal data, no secrets, and the same plain-language rules.
+- **In-house must answer every challenge** with ACCEPTED (and what changes), DECLINED (and why) or DEFERRED (to when), in the next reply. Accepted challenges are credited to the vendor in the commit message.
+- **Final look:** whatever comes out of a challenge, in-house reviews the resulting PR or commit and decides. Vendor-to-vendor challenges (Grok ↔ Codex) follow the same format and always copy Morgan.
+
 ## Vendor-to-vendor rules (Grok ↔ Codex)
 
 - **For coordination only:** shared test fixtures or helpers, a path that looks like it overlaps,

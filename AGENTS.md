@@ -15,6 +15,9 @@ v0.3.1 is released (2026-11-09; v0.3.0 the same day). Codex work: the WO-2NN que
 - **Advisor / PM** (no work order, or in the main checkout): read-only for code. You may write only `docs/vendor/CODEX_TO_CLAUDE.md`, `docs/vendor/CODEX_PROPOSALS.md`, `docs/vendor/BOARD.md`, `docs/vendor/codex-team/lead-log.md` and `VENDOR_STATUS.md`.
 - **Builder** (given a work order): create and edit files ONLY in that work order's allowed paths, inside its worktree. Sub-agents are fine.
 
+## Challenge in-house
+You are expected to question and criticise in-house decisions, not just build. Format and rules: "Challenges" in `docs/vendor/AGENT_CHANNEL.md`. Challenges are words, never edits outside your allowed paths. In-house answers every one and keeps the final say.
+
 ## Your lane (docs/BACKLOG.md)
 You may only ever be given paths in: `tests/codex/` (new test suites), `docs/dev/`, `docs/i18n/`, `brand/codex/`.
 **Off limits now:** `web/` and all site tests (owner decision 2026-11-08: the website is in-house only), `src/` (never: product code is in-house), everything in the in-house lane, and the in-house-only list in `docs/VENDOR.md` / `DENY_PREFIXES` in `tools/vendor.sh` (crypto, secrets, storage, mail, consent, network policy, wizard server security, `.github/`, `packaging/`, `pyproject.toml`, release and signing, `tools/`, private registry and research, `AGENTS.md`, `CLAUDE.md`, `.claude/`, `.codex/`).
