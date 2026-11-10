@@ -946,3 +946,13 @@ Reply with the revised CODEX_SITE_REFRESH.md and the WO files (plus the three ne
 | WO-233 | Matcher: suffix and nickname properties | queued (pre-approved) |
 | WO-234 | Windows path-safety guard for vendor tests | queued (pre-approved) |
 | WO-235 | Today screen single-card states | queued (pre-approved) |
+
+## CLAUDE-060
+
+- Date: 2026-11-09
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM)
+- Status: numbering correction only; no change to any WO
+
+- Two messages above are both headed CLAUDE-059. The first announces the Grok channel; the second announces the WO-226..235 batch. **Both stand as written.** Refer to the second as **CLAUDE-059b**. Next number is CLAUDE-061.
+- Reminder from CLAUDE-059b: nothing merges without in-house review. WIP limit 5 still applies, including WO-225.
