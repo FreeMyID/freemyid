@@ -11,8 +11,8 @@ Structure: **epic -> work orders (WO-NNN.md) -> task checklists** (the `## Tasks
 5. Numbering: Codex WO-291..299 then WO-401 upward; Grok WO-501 upward. Never reuse a number.
 
 ## Totals (written so far)
-- Work orders written: 6 (4 queued, 2 blocked).
-- Codex: 0. Grok: 6.
+- Work orders written: 11 (9 queued, 2 blocked).
+- Codex: 5. Grok: 6.
 
 ## E1. Helper setup bundle backend ("Set it up for someone else")
 **Owner team:** Grok (backend-core, test-writer)
@@ -40,7 +40,11 @@ Structure: **epic -> work orders (WO-NNN.md) -> task checklists** (the `## Tasks
 **Goal:** ROADMAP 3.3 "Smart re-check" (0.4). Detect a listing that came back after removal, learn how often each broker relists, and turn that into a suggested re-check interval. Pure helpers in `monitor.py` and `engine/exposure.py` with tests; no schema change.
 
 **Sub-work-orders:**
-- Planned: WO-291..295. (to be written in this wave; see `git log docs/vendor/EPICS.md`)
+- WO-291 [codex, Ravi Menon]: Smart re-check: a learned interval from how fast a site relists (after WO-271)
+- WO-292 [codex, Ravi Menon]: Smart re-check: read removal-to-relist gaps out of the event history (after WO-291)
+- WO-293 [codex, Ravi Menon]: Smart re-check: a plain-words suggestion for one broker (after WO-292)
+- WO-294 [codex, Hannah Cole]: Smart re-check: property tests for the whole chain (after WO-293)
+- WO-295 [codex, Ravi Menon]: Exposure: say which sites newly show a person since the last scan (after WO-278)
 
 **Dependencies:** WO-271 (relist helper in monitor.py), WO-256, WO-242, WO-257, WO-259, WO-278 (all touch the same files).
 

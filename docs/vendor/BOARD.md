@@ -165,3 +165,8 @@ Use exact proposed paths in CODEX_PROPOSALS.md when checking a new assignment. S
 ## Proposed next wave (unreserved)
 
 CP-11..13 are delivered as WO-108..110; CP-14/15 queued as WO-111/112; CP-16 declined (existing QA test covers it); CP-17 queued as WO-113; CP-18 moved in-house to SEC-67. Details and boundaries are in CODEX_PROPOSALS.md. No new allocation is pending beyond these queued WOs.
+| WO-291 | issue pending | Ravi Menon | queued (pre-approved) | after WO-271 merged | `src/freemyid/monitor.py`; `tests/codex/test_cx_recheck_interval.py`; `VENDOR_STATUS.md` | 2026-11-09 E2 epic batch (appended by Morgan Reyes) |
+| WO-292 | issue pending | Ravi Menon | queued (pre-approved) | after WO-291 merged | `src/freemyid/monitor.py`; `tests/codex/test_cx_relist_gaps.py`; `VENDOR_STATUS.md` | 2026-11-09 E2 epic batch (appended by Morgan Reyes) |
+| WO-293 | issue pending | Ravi Menon | queued (pre-approved) | after WO-292 merged | `src/freemyid/monitor.py`; `tests/codex/test_cx_recheck_suggestion.py`; `VENDOR_STATUS.md` | 2026-11-09 E2 epic batch (appended by Morgan Reyes) |
+| WO-294 | issue pending | Hannah Cole | queued (pre-approved) | after WO-293 merged | `tests/codex/test_cx_recheck_properties.py`; `VENDOR_STATUS.md` | 2026-11-09 E2 epic batch (appended by Morgan Reyes) |
+| WO-295 | issue pending | Ravi Menon | queued (pre-approved) | after WO-278 merged | `src/freemyid/engine/exposure.py`; `tests/codex/test_cx_exposure_newly_found.py`; `VENDOR_STATUS.md` | 2026-11-09 E2 epic batch (appended by Morgan Reyes) |
