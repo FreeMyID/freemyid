@@ -9,13 +9,13 @@ Example person used below: Jane Q Testperson, Springfield IL.
 ## What "available" means here
 
 A way to install is **available** only if it is in a published release. The
-release record is `site_src/data/release.yaml`. It lists version 0.2.0,
-published 2026-11-08, with the size and checksum of the Windows installer
-(`site_src/data/release.yaml:5-8`, and the comment at `:1-2` says the values
-come from the published `FreeMyIDSetup.exe`). The package on PyPI is also
-published: version 0.2.0 is on PyPI and `pipx install freemyid` works
-(`docs/marketing/release-notes-v0.2.0.md:7,63`; `docs/RELEASE_v0.2.md:84`).
-Anything not published is **coming**.
+release record is `site_src/data/release.yaml`. It lists version 0.3.0,
+published 2026-11-09, about 64.5 MB, with the checksum of the Windows installer
+(`site_src/data/release.yaml:5-8`). The comment at the top of that file says the
+values come from the published `FreeMyIDSetup.exe`. The app in this tree reports
+0.3.1. The command-line package is installed with `pipx install freemyid`. This
+page did not recheck the version on PyPI. Anything not in that release record
+is **coming**.
 
 ## Which way is for me?
 
@@ -45,7 +45,7 @@ then, please do not look for it: it is not there yet.
 ## Windows 10 or 11 (available)
 
 1. Open the [download page](https://freemyid.org/download/) (`README.md:48`).
-2. Download the installer. Version 0.2.0 is about 64.4 MB (`site_src/data/release.yaml:5,7`).
+2. Download the installer. The release record lists version 0.3.0, about 64.5 MB (`site_src/data/release.yaml:5,7`). The app reports 0.3.1.
 3. Open the file. The installer is **unsigned for now**, so Windows shows a
    blue SmartScreen box the first time. The download page shows what to click
    (`README.md:48`). If the box worries you, stop and ask someone you trust to
@@ -53,6 +53,44 @@ then, please do not look for it: it is not there yet.
 4. When it finishes, double-click the **Free My ID** icon on your Desktop, or
    find it in the Start Menu. It opens in its own window and you do not need a
    terminal (`docs/USER_GUIDE.md:95`).
+
+### First start (version 0.3.1)
+
+The first time can take up to a minute. Please wait; there is no need to click it again.
+<!-- packaging/windows/freemyid.iss:34 -->
+<!-- packaging/windows/freemyid.iss:56 -->
+<!-- packaging/windows/splash_win.py (at :3 and :20) -->
+
+A small window stays until Free My ID is ready. It says "Free My ID is
+starting." The main window shows up by itself.
+<!-- packaging/windows/splash_win.py (small window at :1; it stays up at :5) -->
+<!-- packaging/windows/launcher_gui.py (the window opens at :27 and closes when Free My ID is ready at :29) -->
+<!-- src/freemyid/wizard/desktop.py:168 -->
+<!-- src/freemyid/wizard/desktop.py:202 -->
+<!-- packaging/windows/freemyid.iss:34 -->
+
+After two minutes, that window says Free My ID is still starting. Keep waiting.
+<!-- packaging/windows/splash_win.py (still starting at :22; "no need to click it again" at :23; two minutes is 120 seconds at :24) -->
+
+### Updating (version 0.3.1)
+
+Updating with the new installer keeps your details and the scheduled check.
+Jane Q Testperson in Springfield IL would not type her details again, and her
+scheduled check would still be there.
+<!-- packaging/windows/freemyid.iss:5 -->
+<!-- packaging/windows/freemyid.iss:9 (same installer id, so this is the same Free My ID) -->
+<!-- packaging/windows/freemyid.iss:39 (the installer replaces the program files) -->
+<!-- packaging/windows/freemyid.iss:83 (saved details are in a different folder) -->
+<!-- packaging/windows/freemyid.iss:97 (that folder is removed only while uninstalling) -->
+<!-- packaging/windows/freemyid.iss:64 (the scheduled check is removed only while uninstalling) -->
+
+The app may need reopening after an update. If you do not see the window,
+open Free My ID from the Desktop icon or the Start Menu.
+<!-- packaging/windows/freemyid.iss:28 -->
+<!-- packaging/windows/freemyid.iss:56 -->
+<!-- packaging/windows/freemyid.iss:53 -->
+
+More on the starting window is in [Starting and updating](troubleshooting.md#starting-and-updating).
 
 Free My ID is free and you can uninstall it anytime (`docs/USER_GUIDE.md:29`).
 
@@ -69,13 +107,13 @@ service for the steps:
 - [Yahoo, iCloud, Outlook and others](mail-other.md)
 
 If you want to check your download, the checksum (SHA-256) published for
-version 0.2.0 is in `site_src/data/release.yaml:8`. Not sure whether the
+version 0.3.0 is in `site_src/data/release.yaml:8`. Not sure whether the
 download page also shows it.
 
 ## Mac and Linux (terminal only for now)
 
 There is no Mac or Linux app download yet (`README.md:48`). Today it is a
-command-line tool, version 0.2.0, from PyPI. It needs Python 3.12 or newer
+command-line tool from PyPI. It needs Python 3.12 or newer
 (`docs/CLI.md:80`):
 
 ```

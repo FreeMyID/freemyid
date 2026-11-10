@@ -5,6 +5,9 @@ one thing to try. The words in quotes are copied from the program. If your
 message is not here, or the one thing does not help, stop and ask someone you
 trust to look with you.
 
+[Starting and updating](#starting-and-updating) is not an error. That part is
+normal.
+
 Example person used below: Jane Q Testperson, Springfield IL.
 
 ## Sending email
@@ -76,3 +79,44 @@ The form did not go through, and your to-do item is still on the list. **Do this
 <!-- src/freemyid/engine/listing_finder.py:86-87 -->
 While finding your listing, the page you were on was still the list of search results. **Do this:** open the one result that is you, then click "This is me" again. If you cannot find yourself, click "I can't find me" or close the window to stop.
 <!-- hint text: src/freemyid/engine/listing_finder.py:82 -->
+
+## Starting and updating
+
+This is for version 0.3.1 on Windows. These windows are normal.
+<!-- packaging/windows/freemyid.iss:5 -->
+
+### "Free My ID is starting."
+<!-- packaging/windows/splash_win.py (at :20) -->
+<!-- packaging/windows/freemyid.iss:34 -->
+
+The first time can take up to a minute. Please wait; there is no need to click it again. A small window stays until Free My ID is ready. It says "Free My ID is starting."
+<!-- packaging/windows/splash_win.py (small window at :1; it stays up at :5; up to a minute at :3 and :20) -->
+<!-- packaging/windows/launcher_gui.py (opens at :27; closes when Free My ID is ready at :29) -->
+<!-- src/freemyid/wizard/desktop.py:168 -->
+<!-- src/freemyid/wizard/desktop.py:202 -->
+
+**Do this:** wait. There is no need to click again.
+
+### "Free My ID is still starting."
+<!-- packaging/windows/splash_win.py (at :22) -->
+
+After two minutes, the window says "Free My ID is still starting." It also says "This is taking longer than usual." and "Please wait; there is no need to click it again."
+<!-- packaging/windows/splash_win.py (two minutes is 120 seconds at :24; the click sentence at :23) -->
+
+**Do this:** keep waiting. There is no need to click again.
+
+### After an update
+
+Updating with the new installer keeps your details and the scheduled check. Jane Q Testperson in Springfield IL would still have her saved details, and the scheduled check would still be there.
+<!-- packaging/windows/freemyid.iss:9 (same installer id, so this is the same Free My ID) -->
+<!-- packaging/windows/freemyid.iss:39 (the installer replaces the program files) -->
+<!-- packaging/windows/freemyid.iss:83 (saved details are in a different folder) -->
+<!-- packaging/windows/freemyid.iss:97 (that folder is removed only while uninstalling) -->
+<!-- packaging/windows/freemyid.iss:64 (the scheduled check is removed only while uninstalling) -->
+
+The app may need reopening after an update.
+<!-- packaging/windows/freemyid.iss:28 -->
+<!-- packaging/windows/freemyid.iss:56 -->
+
+**Do this:** if you do not see the window, open Free My ID from the Desktop icon or the Start Menu.
+<!-- packaging/windows/freemyid.iss:53 -->
