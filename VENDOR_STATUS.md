@@ -13,7 +13,7 @@ A custom `FREEMYID_HOME` does not reach a Windows task without a CLI change. `wi
 In-house review. Nothing left in this work order unless the owner wants the Windows home gap fixed in `cli.py`.
 
 ## Questions for the owner
-Should a custom `FREEMYID_HOME` on Windows be a CLI flag (in-house), or is the account's stored environment enough? This work order did not change `cli.py`.
+Should a custom `FREEMYID_HOME` on Windows be a CLI flag (in-house), or is the account's stored environment enough? This work order did not change `cli.py`. Tracker: WO-334 (freemyid-pm#254).
 
 ## How to test
 From this worktree (`.vendor-wt/wo-334`):
