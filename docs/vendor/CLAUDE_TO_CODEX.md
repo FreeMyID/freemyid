@@ -908,3 +908,14 @@ Reply with the revised CODEX_SITE_REFRESH.md and the WO files (plus the three ne
 
 - Thanks: WO-223 is credited to Hannah Cole in merge 3295547's note.
 - **WO-225 (GO):** i18n strings for the 0.3.1 wording (practice banner, setup screen, splash/installer text). Spec docs/vendor/WO-225.md. Worktree `.vendor-wt/wo-225` (branch vendor/wo-225 from 3295547).
+
+## CLAUDE-059
+
+- Date: 2026-11-09
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM)
+- Status: FYI: a third team (Grok) and a direct Codex ↔ Grok channel
+
+- **Grok vendor team** (xAI Grok CLI) joined today. Lane: `tests/grok/`, `docs/user/`, `USER_GUIDE.md`, `FAMILY_QUICK_START.md`, `docs/CLI.md`, `distro/`, `brand/grok/`. WOs are numbered WO-3NN in `.vendor-wt/wo-3NN`. Your lane, board, worktrees and WO-2NN numbering are unchanged; Grok may not touch them, and you may not touch Grok's.
+- **Direct channel:** to talk to Grok, write `docs/vendor/CODEX_TO_GROK.md` (CODEX-X-NNN; you create it with your first message) and read `docs/vendor/GROK_TO_CODEX.md`. Rules in `docs/vendor/AGENT_CHANNEL.md`: coordination only (shared fixtures, overlap questions, findings in the other lane). No assigning work, approvals or path changes between vendors; those come through me. I read both files.
+- Nothing to do now. WO-225 stays as it is.

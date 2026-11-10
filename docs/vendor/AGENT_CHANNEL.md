@@ -1,4 +1,62 @@
-# Codex–Claude project channel
+# Agent channel: Claude (in-house), Codex and Grok
+
+Updated 2026-11-09 for three teams. Everything below the "History" heading is the original
+Codex–Claude setup from 2026-11-07, kept for reference.
+
+## Who writes which file
+
+Each team writes only files that start with its own name. Read everything addressed to you.
+
+| From → To | File | Message IDs | Written by |
+|---|---|---|---|
+| Claude → Codex | `CLAUDE_TO_CODEX.md` | CLAUDE-NNN | in-house (Morgan Reyes) |
+| Codex → Claude | `CODEX_TO_CLAUDE.md` | CODEX-NNN (Nora numbers) | Codex |
+| Claude → Grok | `CLAUDE_TO_GROK.md` | CLAUDE-G-NNN | in-house |
+| Grok → Claude | `GROK_TO_CLAUDE.md` | GROK-NNN | Grok |
+| Grok → Codex | `GROK_TO_CODEX.md` | GROK-X-NNN | Grok |
+| Codex → Grok | `CODEX_TO_GROK.md` | CODEX-X-NNN | Codex |
+
+All files live in `docs/vendor/`. The first message in a file creates it; nobody creates another
+team's file, so a file's existence never implies a reply. Boards: Codex = `BOARD.md` (Nora),
+Grok = `GROK_BOARD.md`.
+
+## Message format
+
+```
+## <ID> — <short subject>
+- Date: YYYY-MM-DD
+- From: <name / team>
+- To: <name / team>   (vendor-to-vendor: always "cc Morgan Reyes")
+- Reply to: <ID or none>
+- Status: <one line>
+```
+Then short bullets. Append; never edit or delete earlier messages. No secrets, no real personal data.
+
+## Vendor-to-vendor rules (Grok ↔ Codex)
+
+- **For coordination only:** shared test fixtures or helpers, a path that looks like it overlaps,
+  a finding in the other team's lane, "does your WO touch X?", handing over context.
+- **Not for work:** a vendor message never assigns work, approves anything, widens a work order's
+  allowed paths, or asks the other team to edit files in its own lane. Those go to in-house.
+- **In-house reads both files.** Anything that changes scope, lanes or a deadline: write it to
+  Claude too (`CODEX_TO_CLAUDE.md` / `GROK_TO_CLAUDE.md`) and wait for a CLAUDE message.
+- **Disagreement:** state both positions in your own file; Morgan decides in a CLAUDE message.
+- A request is delivered only when the recipient acknowledges its ID.
+
+## Waking a team
+
+Writing a file does not wake anyone. In-house watches every `*_TO_*.md` file and relays:
+- Codex: `tools/codex_wake.sh send "<message>"` (queues to Nora's thread; set `CODEX_CHANNEL_THREAD`
+  for another thread).
+- Grok: `tools/grok_wake.sh status | send "<message>"`. If a Grok session is open in a terminal, a
+  message can't be pushed into it: the owner is asked to type
+  "read docs/vendor/CLAUDE_TO_GROK.md" there.
+- Vendors can't run these scripts (sandbox, no `~/.codex`/`~/.grok` access). Ask in-house to relay.
+
+---
+
+# History: original Codex–Claude setup (2026-11-07)
+
 
 Created at the user's request on 2026-11-07 for agents sharing this repository.
 This is a file-based handoff, not a connection to either terminal. A dedicated
