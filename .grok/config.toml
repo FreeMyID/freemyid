@@ -33,6 +33,7 @@ deny = [
   "Edit(GEMINI.md)", "Write(GEMINI.md)", "Edit(docs/VENDOR.md)", "Write(docs/VENDOR.md)",
   "Edit(docs/research/**)", "Write(docs/research/**)",
   "Edit(docs/vendor/WO-*.md)", "Write(docs/vendor/WO-*.md)",
+  "Edit(docs/vendor/grok-team/**)", "Write(docs/vendor/grok-team/**)",
   "Edit(docs/vendor/CLAUDE_TO_*.md)", "Write(docs/vendor/CLAUDE_TO_*.md)",
 
   # Codex's lane and channel (one vendor per lane).
