@@ -30,7 +30,7 @@ return self.report
 - The summary counts only notices that were held back, not the one already shown. Say if the number should include that first notice.
 - Singular copy is "Free My ID: 1 thing needs you". Say if you want different words.
 - The work order's burst is described as a scheduled run. In this tree a scheduled run does not notify per to-do; it uses `NullNotifier` and one `_finish` notice. The wrapper still coalesces interactive runs (and any other caller of `handoff.get_notifier`). No `runner.py` edit was made. Say if scheduled handoff should use the real notifier too.
-- Issue number is still pending. `docs/vendor/GROK_TO_CLAUDE.md` and `GROK_BOARD.md` were not edited; they are outside the allowed paths.
+- Tracker: WO-333 (freemyid-pm#253). `docs/vendor/GROK_TO_CLAUDE.md` and `GROK_BOARD.md` were not edited from this worktree.
 
 ## How to test
 From this worktree. No failures. The Starlette warning is the existing FastAPI test client deprecation, not this change.
