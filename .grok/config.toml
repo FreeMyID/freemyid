@@ -19,6 +19,8 @@ deny = [
   # Secrets and the owner's real data.
   "Read(~/.ssh/**)", "Read(~/.config/**)", "Read(~/.codex/**)", "Read(~/.claude/**)",
   "Read(~/.freemyid/**)", "Read(~/.local/share/keyrings/**)", "Read(**/.env)", "Read(**/.env.*)",
+  "Bash(*.freemyid*)", "Bash(*keyrings*)", "Bash(*/.ssh*)", "Bash(*/.config/*)", "Bash(*freemyid-private*)",
+  "Bash(*secret-tool*)", "Bash(*printenv*)", "Bash(env)", "Bash(env *)",
 
   # In-house only (Edit and Write both, so new files are blocked too).
   "Edit(src/**)", "Write(src/**)", "Edit(web/**)", "Write(web/**)",
