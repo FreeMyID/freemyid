@@ -15,6 +15,11 @@
     "description": "Owned by the copilot team"
   },
   {
+    "name": "team:grok",
+    "color": "5319e7",
+    "description": "Owned by the grok team"
+  },
+  {
     "name": "kind:work-order",
     "color": "fbca04",
     "description": "Kind: work order"
@@ -63,6 +68,11 @@
     "name": "lane:cp",
     "color": "c5def5",
     "description": "Copilot lane"
+  },
+  {
+    "name": "lane:gk",
+    "color": "d4c5f9",
+    "description": "Grok lane"
   },
   {
     "name": "priority:p0",

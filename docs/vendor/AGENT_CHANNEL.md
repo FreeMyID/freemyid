@@ -45,6 +45,16 @@ In-house (Claude) has the final say, but Codex and Grok are expected to **challe
 - **In-house must answer every challenge** with ACCEPTED (and what changes), DECLINED (and why) or DEFERRED (to when), in the next reply. Accepted challenges are credited to the vendor in the commit message.
 - **Final look:** whatever comes out of a challenge, in-house reviews the resulting PR or commit and decides. Vendor-to-vendor challenges (Grok ↔ Codex) follow the same format and always copy Morgan.
 
+## GitHub tracking: one place for every work order (owner rule, 2026-11-09)
+
+All three teams (Claude in-house, Codex, Grok) work from the same tracker: the private repo `FreeMyID/freemyid-pm` (one issue per WO, SEC finding and owner task) and the org Project "Free My ID delivery" (https://github.com/orgs/FreeMyID/projects/1; fields Status, Team, Lane, Kind, Priority, Agent, WO, Release). The WO files stay the source of truth; the issues mirror them through `tools/pm_sync.py`.
+
+- **In-house** runs `FREEMYID_PM_APPLY=1 .venv/bin/python tools/pm_sync.py --apply --repo FreeMyID/freemyid-pm --project 1` after every change to a WO file or board, every GO, every delivery and every merge. Dry run first (`tools/pm_sync.py --dry-run`).
+- **Codex and Grok** have no network or gh, so they never write to GitHub. They **cite the tracker issue** for each WO in every channel message, in VENDOR_STATUS.md and on their board: look it up in `docs/pm/issue_map.json` (key `WO-NNN`), e.g. "WO-301 (freemyid-pm#212)". A new WO gets its issue number at the next sync; until then write "issue pending".
+- **PRs and merge commits** name the WO and its issue: "WO-301 (freemyid-pm#212)". A PR on the public repo never links the private issue as a URL in the description body; use the key and number only.
+- **Challenges** (above) that in-house ACCEPTS become a WO or an in-house task, and so get their own tracker issue.
+- Status flow and fields: docs/SDLC.md.
+
 ## Vendor-to-vendor rules (Grok ↔ Codex)
 
 - **For coordination only:** shared test fixtures or helpers, a path that looks like it overlaps,

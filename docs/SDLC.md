@@ -73,3 +73,6 @@ Codex now has a GitHub plugin (signed in as the owner's account, GrayManSam) and
 
 ## Codex cloud code review (owner, 2026-11-09)
 Codex automatic review is on for FreeMyID/freemyid and is the only PR reviewer (`claude.yml` stays issues-only, SEC-119). It reads the "Review guidelines" sections of `AGENTS.md` and `SECURITY.md`. Its comments are advisory: the in-house review (qa-security) and the local `--no-ff` merge stay the gate. P0/P1 comments on any PR, vendor or in-house, are triaged by the orchestrator before merge.
+
+## All three teams on one tracker (owner, 2026-11-09)
+Claude (in-house), Codex and Grok all track work in `FreeMyID/freemyid-pm` + the "Free My ID delivery" Project. `tools/pm_sync.py` maps `Vendor: grok` WOs to Team "Grok", lane `GK` (labels `team:grok`, `lane:gk`). Vendors cite issue numbers from `docs/pm/issue_map.json`; in-house syncs after every WO change, GO, delivery and merge. Details: "GitHub tracking" in docs/vendor/AGENT_CHANNEL.md.

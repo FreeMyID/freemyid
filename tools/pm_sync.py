@@ -29,8 +29,8 @@ DEFAULT_REPO = "FreeMyID/freemyid-pm"
 DEFAULT_OWNER = "FreeMyID"
 SEC_POINTER = "Details: docs/handoff/qa-security.md (not repeated here)."
 
-TEAMS = {"codex": "Codex", "copilot": "Copilot"}
-LANE_BY_TEAM = {"In-house": "IN", "Codex": "CX", "Copilot": "CP"}
+TEAMS = {"codex": "Codex", "copilot": "Copilot", "grok": "Grok"}
+LANE_BY_TEAM = {"In-house": "IN", "Codex": "CX", "Copilot": "CP", "Grok": "GK"}
 
 
 class ApplyRefused(RuntimeError):
@@ -114,7 +114,8 @@ def parse_backlog(text: str) -> list[dict]:
     for line in text.splitlines():
         if line.startswith("## "):
             head = line.lower()
-            team = "Codex" if "codex" in head else "Copilot" if "copilot" in head else "In-house"
+            team = ("Codex" if "codex" in head else "Copilot" if "copilot" in head
+                    else "Grok" if "grok" in head else "In-house")
             agent, section = "", ""
             continue
         if line.startswith("### "):
