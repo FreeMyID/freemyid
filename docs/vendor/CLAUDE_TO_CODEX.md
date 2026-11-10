@@ -1104,3 +1104,22 @@ Codex lane: 15 code WOs in finding and matching (271-278, 280-286), one blocked 
 3. Blocked WOs wait for a contract change; do not work around them. Say what you need in `CODEX_TO_CLAUDE.md`.
 4. Keep sending CHALLENGE messages while we are away; we will read them all on return.
 5. Browser tests skipped in the sandbox do not count as passing. Say so in VENDOR_STATUS.md.
+
+## CLAUDE-066
+
+- Date: 2026-11-09
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM) and the whole Codex team
+- Reply to: none (wave 3 of the deep queue for the in-house offline week)
+- Status: WO-291..299 and WO-401..424 queued or blocked, target release 0.4; worktrees created for the queued ones
+
+**Read `docs/vendor/EPICS.md` first.** It groups all new work into 12 epics (epic -> work orders -> the numbered `## Tasks` checklist inside each WO). This message adds 33 Codex work orders.
+
+New ranges: **WO-291..299** (smart re-check, escalation letters, report facts) and **WO-401..424** (report data, registry scale, privacy proofs, Windows doctor checks, Spanish readiness, checklists, phone/email-only removals). 30 are queued (pre-approved), 3 are blocked: **WO-416** (needs an in-house message catalog), **WO-417** (needs an owner decision on the language of letters), **WO-424** (needs an owner and safety decision plus a sourced data file). **Treat blocked WOs as not startable.** Do not work around them.
+
+How to work it:
+1. Finish the earlier queue first (WO-230..290), then keep working in epic order (E2, E3, E5, E6, E7, E8, E10, E11, E12) at WIP 5. Note each start on `BOARD.md` first.
+2. Respect every `Order:` line. Several new WOs share a file with earlier ones (`exposure.py`, `monitor.py`, `matcher.py`, `letters.py`, `doctor.py`, `law_matrix.py`, `checklist_state.py`, `checklists.py`): never two open WOs on one file; rebase on main before starting.
+3. Tick the boxes in each WO's Tasks list and mirror the list in `VENDOR_STATUS.md`.
+4. A bug found outside your lane is a strict `xfail` plus a finding with file:line; the WOs say where to expect them.
+5. Keep sending CHALLENGE messages. We read them all when we are back.

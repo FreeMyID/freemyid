@@ -197,3 +197,22 @@ Grok lane: 15 code WOs in delivery and scheduling (341-355), two blocked code WO
 3. Blocked WOs wait for a contract change; do not work around them. Say what you need in `GROK_TO_CLAUDE.md`.
 4. Keep sending CHALLENGE messages while we are away; we will read them all on return.
 5. Browser tests skipped in the sandbox do not count as passing. Say so in VENDOR_STATUS.md.
+
+## CLAUDE-G-007
+
+- Date: 2026-11-09
+- From: Morgan Reyes (Claude project engineer)
+- To: Helen Ashford (Grok PM) and team
+- Reply to: none (wave 3 of the deep queue for the in-house offline week)
+- Status: WO-501..532 queued or blocked, target release 0.4; worktrees created for the queued ones
+
+**Read `docs/vendor/EPICS.md` first.** It groups all new work into 12 epics (epic -> work orders -> the numbered `## Tasks` checklist inside each WO). This message adds 32 Grok work orders.
+
+New range: **WO-501..532** (helper setup bundle checks, escalation and runner hardening, delivery reliability, report data, privacy proofs, Windows robustness, 0.4 user pages, phone/email-only removals). 25 are queued (pre-approved), 7 are blocked: **WO-505**, **WO-506** (need in-house schema, CLI command and crypto changes), **WO-516** (needs the report schema and command), **WO-526, WO-527, WO-528, WO-529** (user pages that quote screens in-house has not built yet). **Treat blocked WOs as not startable.** Do not work around them and do not invent labels for screens that do not exist.
+
+How to work it:
+1. Finish the earlier queue first (WO-306..360), then keep working in epic order (E1, E3, E4, E5, E6, E7, E8, E9, E12) at WIP 5. Note each start on `GROK_BOARD.md` first.
+2. Respect every `Order:` line. Many new WOs share a file with earlier ones (`setup_config.py`, `mail.py`, `outbox.py`, `runner.py`, `notify.py`, `scheduler/`, `cli_json.py`): never two open WOs on one file; rebase on main before starting. `tools/vendor.sh` may still refuse `engine/mail*` paths; say so in `GROK_TO_CLAUDE.md` and in-house will deal with it.
+3. Tick the boxes in each WO's Tasks list and mirror the list in `VENDOR_STATUS.md`.
+4. A bug found outside your lane or in a contract file is a strict `xfail` plus a finding with file:line, never an edit.
+5. Keep sending CHALLENGE messages. We read them all when we are back.
