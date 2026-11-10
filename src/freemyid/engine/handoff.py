@@ -36,9 +36,11 @@ class LogNotifier:
 
 
 def get_notifier() -> Notifier:
+    """Wrapped notifier. Call flush() at the end of a run for the summary."""
     try:
-        from ..notify import get_notifier as _gn  # type: ignore[import-not-found]
-        return _gn()
+        from ..notify import ThrottledNotifier  # type: ignore[import-not-found]
+        from ..notify import get_notifier as _gn
+        return ThrottledNotifier(_gn())
     except Exception:  # noqa: BLE001 - module may not exist yet / no desktop session
         return LogNotifier()
 
