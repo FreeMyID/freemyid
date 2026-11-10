@@ -11,8 +11,8 @@ Structure: **epic -> work orders (WO-NNN.md) -> task checklists** (the `## Tasks
 5. Numbering: Codex WO-291..299 then WO-401 upward; Grok WO-501 upward. Never reuse a number.
 
 ## Totals (written so far)
-- Work orders written: 23 (21 queued, 2 blocked).
-- Codex: 8. Grok: 15.
+- Work orders written: 27 (24 queued, 3 blocked).
+- Codex: 10. Grok: 17.
 
 ## E1. Helper setup bundle backend ("Set it up for someone else")
 **Owner team:** Grok (backend-core, test-writer)
@@ -93,13 +93,17 @@ Structure: **epic -> work orders (WO-NNN.md) -> task checklists** (the `## Tasks
 **Goal:** ROADMAP 0.4 order item 3 and 3.5. This epic builds only the data: a pure summary of requests, confirmations and relists per person, and the JSON document. Layout, print CSS and PDF are in-house.
 
 **Sub-work-orders:**
-- Planned: WO-299, WO-401 (Codex); WO-516, WO-517 (Grok). (to be written in this wave; see `git log docs/vendor/EPICS.md`)
+- WO-299 [codex, Ravi Menon]: Report data: plain facts for "what we did for you" (counts only) (after WO-258, WO-280)
+- WO-401 [codex, Ravi Menon]: Exposure: the first and the newest scan for one person, honest about a truncated history (after WO-295)
+- WO-516 [grok, Derek Olsen]: CLI JSON: the report facts as a document **(blocked)** (after WO-340, WO-357, WO-505, WO-299, WO-401)
+- WO-517 [grok, Derek Olsen]: Monthly update: say how many came back, not only how many were sent (after WO-512)
 
 **Dependencies:** WO-258, WO-280 (exposure_models), WO-340/357 (cli_json).
 
 **What in-house must do:**
 - Build the print-ready report page (wizard/report.py, templates) on the data layer.
 - Add `report_summary/1` schema and the CLI command (blocks WO-517).
+- Unblock WO-516: In-house must (1) add the `report_facts/1` schema under `schema/` and register it in the `--json` contract, (2) add `freemyid report --facts --json` (or the name in-house prefers) to `cli.py`, which gathers the activity counts from the store and calls `exposure.first_and_latest_scan` (WO-401) and `exposure_models.report_facts` (WO-299), and (3) document the shape in `docs/CLI.md`.
 
 ## E6. Registry scale (400+ brokers)
 **Owner team:** Codex (engine-tests, test-quality, windows-tests); Grok (backend-core)
