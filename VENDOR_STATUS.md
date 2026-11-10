@@ -19,7 +19,7 @@ In-house review of `vendor/wo-336`. This task did not edit `docs/vendor/GROK_BOA
 
 ## Questions for the owner
 
-None.
+None. Tracker: WO-336 (freemyid-pm#256).
 
 ## How to test
 
