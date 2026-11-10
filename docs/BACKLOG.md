@@ -6,6 +6,9 @@ into work orders. Started 2026-11-08. Source: docs/ROADMAP.md sections 3-6, docs
 
 ## Lanes (who may touch what) — the collision rule
 
+**Lane change (owner, 2026-11-09):** Codex (CX) and Grok (GK) now also own backend code. CX: finding and matching (`engine/` matcher, nicknames, exposure, exposure_score, listing_finder, search_engines, law_matrix, letters, htmlsel; `monitor`, `exposure_models`, `checklists`, `checklist_state`, `doctor`). GK: delivery and scheduling (`engine/` mail, mail_tls, outbox, runner, tiers, handoff, plugins, filler, fill_for_me; `submitters/`, `scheduler/`, `notify`, `setup_config`, `cli_json`), plus the user-docs paths it took over. **IN keeps the front end and design** (`web/`, `src/freemyid/wizard/`, `src/freemyid/templates/`, `brand/`), the security core, the contracts, packaging, CI and tools. The full list is in AGENTS.md "Your lane", and it is enforced from `tools/agent_routing.yaml`. Where the table below disagrees, this note wins.
+
+
 Every path belongs to exactly one lane (one temporary exception: see the Copilot-out note under the table). A work order may only list paths in its own lane. BOARD.md stays the per-WO
 guard; this table is the standing split so bulk work never collides.
 

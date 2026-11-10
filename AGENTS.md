@@ -21,16 +21,21 @@ You are expected to question and criticise in-house decisions, not just build. F
 ## Tracking (GitHub Project)
 Every WO has an issue in the private tracker `FreeMyID/freemyid-pm` and the org Project "Free My ID delivery". You never write to GitHub; in-house syncs it. Cite the issue number from `docs/pm/issue_map.json` next to the WO number in every message, VENDOR_STATUS.md and your board ("WO-301 (freemyid-pm#212)"). Details: "GitHub tracking" in `docs/vendor/AGENT_CHANNEL.md`.
 
-## Your lane (docs/BACKLOG.md)
-You may only ever be given paths in: `tests/codex/` (new test suites), `docs/dev/`, `docs/i18n/`, `brand/codex/`.
-**Off limits now:** `web/` and all site tests (owner decision 2026-11-08: the website is in-house only), `src/` (never: product code is in-house), everything in the in-house lane, and the in-house-only list in `docs/VENDOR.md` / `DENY_PREFIXES` in `tools/vendor.sh` (crypto, secrets, storage, mail, consent, network policy, wizard server security, `.github/`, `packaging/`, `pyproject.toml`, release and signing, `tools/`, private registry and research, `AGENTS.md`, `CLAUDE.md`, `.claude/`, `.codex/`).
+## Your lane (owner decision 2026-11-09: vendors build backend code; front end and design stay in-house)
+Codex and Grok get real backend and full-stack code, not only tests and docs. **Front end and visual design are in-house only**: `web/`, `src/freemyid/wizard/` (app screens, templates, static), `src/freemyid/templates/`, `brand/` (except `brand/codex/`). You may still propose designs in a CHALLENGE; in-house builds them.
+
+- **Codex:** `tests/codex/`, `docs/dev/`, `docs/i18n/`, `brand/codex/`, and backend code for **finding and matching**: `src/freemyid/engine/{matcher,nicknames,exposure,exposure_score,listing_finder,search_engines,law_matrix,letters,htmlsel}.py`, `src/freemyid/{monitor,exposure_models,checklists,checklist_state,doctor}.py`.
+- **Grok:** `tests/grok/`, `docs/user/`, `USER_GUIDE.md`, `FAMILY_QUICK_START.md`, `docs/CLI.md`, `distro/`, and backend code for **delivery and scheduling**: `src/freemyid/engine/{mail,mail_tls,outbox,runner,tiers,handoff,plugins,filler,fill_for_me}.py`, `src/freemyid/submitters/`, `src/freemyid/scheduler/`, `src/freemyid/{notify,setup_config,cli_json}.py`.
+- **In-house only (both):** the front end above; the security core (`crypto`, `secrets`, `secret_backends`, `netpolicy`, `consent`, `logging_setup`, `storage/`, `engine/browser.py`); the contracts (`models`, `interfaces`, `state`, `registry`, `config`, `paths`, `cli.py`, `schema/`); `packaging/`, `.github/`, `tools/`, `pyproject.toml`, `AGENTS.md`, `CLAUDE.md`, `.claude/`, `.codex/`, `.grok/`. Code against the contracts; if one must change, say so in your status and the WO is blocked until in-house changes it.
+- A WO lists exact paths; you change only those. A test file outside your test folder is allowed only if the WO names it. The lanes live in one config (`tools/agent_routing.yaml`), which `tools/route.py` and `tools/vendor.sh` enforce.
+- In your code lane, fix bugs directly with a regression test. Outside it, a bug you find is still a strict `xfail` plus a finding with file:line.
 
 ## Always
 1. Keep `VENDOR_STATUS.md` at the worktree root current at the end of every session: Done, Next, Questions for the owner, How to test (exact commands and counts).
 2. Stay inside your folder. Never read, list or print anything outside it (home directory, keyrings, `~/.config`, `~/.codex`, environment dumps, `.env`).
 3. **Never run git or gh, never push, never install packages (pip, pnpm, npm), never use the network.** Owner tooling commits your session under your staff name and opens the PR. No AI attribution lines anywhere.
 4. Never use, ask for or invent real people's personal data. Fake people only ("Jane Q Testperson, Springfield IL"), synthetic markers for listing values.
-5. A test that finds a real product bug: mark it a strict `xfail` with the reason and report the defect as a finding with file:line. Never "fix" `src/`.
+5. A real product bug in your code lane: fix it with a regression test, inside your WO paths. Outside your lane: mark the test a strict `xfail` with the reason and report the defect as a finding with file:line. Never edit in-house paths.
 6. Text for users follows `docs/POSITIONING.md`: plain words for older, non-technical readers; no fear selling; no "guarantee", "erase", "100%", "nothing is sent"; say "requested"/"confirmed".
 7. Code: Python 3.11+, typed, ruff-clean, fake data only. Facts need a source URL or a plain "not sure".
 
