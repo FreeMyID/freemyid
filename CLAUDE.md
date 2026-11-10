@@ -9,4 +9,5 @@ Target user: non-technical older relatives on Windows 10/11. Weigh every UX/pack
 Dev: `.venv/bin/python`, `.venv/bin/pytest -q`, `.venv/bin/ruff check src tests`, `.venv/bin/freemyid`. Regenerate schemas after model changes: `.venv/bin/python tools/gen_schema.py`.
 Windows exe is built only on GitHub Actions `windows-latest` (can't cross-build from Linux).
 No AI attribution ever (no Co-Authored-By/Claude lines). Agents commit under their staff names: `.claude/agents/_shared-rules.md` rule 14. Author format `Name [freemyid]`; orchestrator = Morgan Reyes [freemyid].
+Model/effort/skills per work order or agent dispatch: `tools/route.py` + `tools/agent_routing.yaml` (`docs/AGENT_ROUTING.md`); check it before every Agent/Codex/Grok dispatch.
 Autonomy, escalation, rollback and backups: `docs/AUTONOMY.md` (Tier 1 do / Tier 2 do-then-report / Tier 3 ask first). Dangerous shell commands are denied in `.claude/settings.json`. Never route around a blocked action; report it.

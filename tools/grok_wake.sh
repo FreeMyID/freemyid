@@ -66,7 +66,10 @@ case "${1:-status}" in
       echo "Ask the owner to type there: read docs/vendor/CLAUDE_TO_GROK.md"; exit 4
     fi
     s=$(newest) || { echo "no Grok session found (set GROK_CHANNEL_SESSION)" >&2; exit 3; }
-    "$GROK" --resume "$s" --sandbox freemyid --no-subagents --disable-web-search \
+    # GROK_WO=WO-NNN picks model/effort from tools/agent_routing.yaml (tools/route.py); plain words only.
+    r=""; [ -n "${GROK_WO:-}" ] && r=$("$ROOT/.venv/bin/python" "$ROOT/tools/route.py" "$GROK_WO" --vendor grok --format args 2>/dev/null || true)
+    # shellcheck disable=SC2086
+    "$GROK" --resume "$s" --sandbox freemyid --no-subagents --disable-web-search $r \
       --output-format plain -p "$2" && echo "delivered to $s" ;;
   *) echo 'usage: tools/grok_wake.sh status | send "message"' >&2; exit 2 ;;
 esac

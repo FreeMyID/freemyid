@@ -22,9 +22,10 @@ Website pages and components (web/), app UI screens and copy (src/freemyid/wizar
 ```
 # WO-NNN: <title>
 Status: open | in progress | review | accepted | closed
-Vendor: agy | codex | copilot
+Vendor: agy | codex | copilot | grok
 Agent: <codex team role file, e.g. web-builder> (codex only)
 Owner contact: Morgan Reyes (check-ins via tools/vendor.sh)
+Kind: docs | i18n | tests | web | wizard | engine | security | ... (optional; picks model/effort, see docs/AGENT_ROUTING.md)
 ## Goal
 ## Acceptance criteria (testable)
 ## Allowed paths (the vendor may change ONLY these)

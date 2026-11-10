@@ -44,7 +44,7 @@ branch_of() { echo "vendor/$(echo "$1" | tr 'A-Z' 'a-z')"; }
 DENY_PREFIXES=(src/freemyid/crypto.py src/freemyid/secrets.py src/freemyid/secret_backends.py
   src/freemyid/netpolicy.py src/freemyid/config.py src/freemyid/models.py src/freemyid/state.py
   src/freemyid/consent.py src/freemyid/storage/ src/freemyid/engine/mail src/freemyid/wizard/server.py
-  .github/ packaging/ pyproject.toml tools/social/ tools/cloudflare tools/mail/ tools/vendor.sh .grok/
+  .github/ packaging/ pyproject.toml tools/social/ tools/cloudflare tools/mail/ tools/vendor.sh tools/route.py tools/agent_routing.yaml .grok/
   brokers/registry docs/research/ AGENTS.md GEMINI.md CLAUDE.md docs/VENDOR.md docs/vendor/codex-team/ .claude/ .codex/)
 
 allowed_paths() {   # lines under "## Allowed paths" in the work order, as path prefixes
@@ -61,10 +61,17 @@ PYTHONPATH=src $ROOT/.venv/bin/pytest -q <tests>   and   $ROOT/.venv/bin/ruff ch
 Never read, list or print anything outside this folder (no ~, no /home, no /etc, no keyrings, no env dumps).
 Never run git, never install packages, never try to reach the network."
 
+route_for() {   # $1 vendor, $2 format: model/effort/skills for the current $wo from tools/agent_routing.yaml
+  [ -n "${wo:-}" ] || return 0
+  "$ROOT/.venv/bin/python" "$ROOT/tools/route.py" "$wo" --vendor "$1" --format "$2" 2>/dev/null || true
+}
+
 run_vendor() {   # $1 worktree, $2 prompt
   if [ "${VENDOR:-agy}" = codex ]; then
-    codex exec -s workspace-write -C "$1" -o "$1/.vendor-last-message.txt" "$(role_prompt)
+    # shellcheck disable=SC2046  # route.py --format args prints plain words only (validated)
+    codex exec $(route_for codex args) -s workspace-write -C "$1" -o "$1/.vendor-last-message.txt" "$(role_prompt)
 $CODEX_RULES
+$(route_for codex prompt)
 
 $2"
   else

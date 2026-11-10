@@ -1,0 +1,120 @@
+# Agent routing: which model, reasoning effort, skills and read-first files each kind of work gets.
+# Owned in-house (Morgan Reyes). Vendors never edit this file. Resolver: tools/route.py. Guide: docs/AGENT_ROUTING.md.
+#
+# Rule of thumb: pay for thinking where a mistake is expensive (personal data, crypto, security, architecture),
+# save it where the work is mechanical (docs, strings, version bumps). A work order can override any of this with
+# header lines: Kind:, Tier:, Model:, Effort:, Skills: (see docs/AGENT_ROUTING.md).
+version: 1
+
+# Tier -> model and effort per vendor. Change a model here once and every work order follows.
+# Claude models are the Agent tool's aliases (haiku, sonnet, opus, fable). Fable was offered free for a limited time
+# (owner, 2026-11-09): "max" uses it; move "max" back to opus when the free window ends.
+tiers:
+  light:
+    claude: {model: haiku, effort: low}
+    codex: {model: gpt-6.1-sol, effort: low}
+    grok: {model: grok-4.7-build-fast, effort: low}
+  standard:
+    claude: {model: sonnet, effort: medium}
+    codex: {model: gpt-6.1-sol, effort: medium}
+    grok: {model: grok-4.7, effort: medium}
+  deep:
+    claude: {model: opus, effort: high}
+    codex: {model: gpt-6.1-sol, effort: high}
+    grok: {model: grok-4.7, effort: high}
+  max:
+    claude: {model: fable, effort: high}
+    codex: {model: gpt-6.1-sol, effort: high}
+    grok: {model: grok-4.7, effort: high}
+
+# Kind of work -> default tier, Claude skills/plugins to load, the in-house agent that owns it, and the few files to
+# read first (reading only these instead of exploring the repo is the biggest token saving).
+kinds:
+  docs:
+    tier: light
+    agent: brand-marketing
+    read_first: [docs/POSITIONING.md]
+  i18n:
+    tier: light
+    agent: brand-marketing
+    read_first: [docs/i18n/STRINGS.md, docs/i18n/GLOSSARY_ES.md, docs/i18n/TRANSLATION_GUIDE.md]
+  marketing:
+    tier: light
+    agent: brand-marketing
+    read_first: [docs/BRAND.md, docs/POSITIONING.md]
+  release:
+    tier: standard
+    agent: devops-engineer
+    read_first: [docs/RELEASE_v0.3.md, docs/AUTONOMY.md]
+  tests:
+    tier: standard
+    agent: qa-security
+    read_first: [docs/dev/TESTING.md]
+  web:
+    tier: standard
+    agent: web-developer
+    skills: [cloudflare:web-perf]
+    read_first: [docs/WEBSITE.md, docs/POSITIONING.md]
+  wizard:
+    tier: standard
+    agent: wizard-packager
+    read_first: [docs/PLAN_V1.md, src/freemyid/interfaces.py]
+  research:
+    tier: standard
+    agent: broker-researcher
+    read_first: [docs/dev/CONTRIBUTING_BROKERS.md]
+  infra:
+    tier: standard
+    agent: devops-engineer
+    skills: [cloudflare:cf-cli]
+    read_first: [docs/AUTONOMY.md]
+  dataviz:
+    tier: standard
+    agent: web-developer
+    skills: [dataviz]
+  engine:
+    tier: deep
+    agent: automation-engineer
+    read_first: [docs/PLAN_V1.md, src/freemyid/interfaces.py, src/freemyid/models.py]
+  security:
+    tier: deep
+    agent: qa-security
+    skills: [security-review, code-review]
+    read_first: [docs/SECURITY_REVIEW.md, SECURITY.md]
+  review:
+    tier: deep
+    agent: qa-security
+    skills: [code-review]
+    read_first: [docs/REVIEW_LOOP.md]
+  architecture:
+    tier: max
+    agent: orchestrator
+    read_first: [docs/PLAN_V1.md, docs/ROADMAP.md, src/freemyid/interfaces.py]
+
+# When a work order names no Kind:, guess it from its first allowed path (first match wins).
+infer_kind:
+  - {prefix: tests/codex/, kind: tests}
+  - {prefix: tests/, kind: tests}
+  - {prefix: docs/i18n/, kind: i18n}
+  - {prefix: docs/dev/, kind: docs}
+  - {prefix: docs/marketing/, kind: marketing}
+  - {prefix: docs/, kind: docs}
+  - {prefix: web/, kind: web}
+  - {prefix: site_src/, kind: web}
+  - {prefix: src/freemyid/wizard/, kind: wizard}
+  - {prefix: packaging/, kind: wizard}
+  - {prefix: brokers/, kind: research}
+  - {prefix: .github/workflows/, kind: release}
+  - {prefix: src/, kind: engine}
+
+# Touching these paths raises the work to at least this tier and adds these skills, whatever the Kind says.
+escalate:
+  - {prefix: src/freemyid/crypto, tier: deep, skills: [security-review]}
+  - {prefix: src/freemyid/secrets, tier: deep, skills: [security-review]}
+  - {prefix: src/freemyid/storage, tier: deep, skills: [security-review]}
+  - {prefix: src/freemyid/netpolicy, tier: deep, skills: [security-review]}
+  - {prefix: src/freemyid/consent, tier: deep, skills: [security-review]}
+  - {prefix: src/freemyid/models.py, tier: deep}
+  - {prefix: src/freemyid/wizard/server.py, tier: deep, skills: [security-review]}
+  - {prefix: .github/workflows/, tier: deep, skills: [security-review]}
+  - {prefix: schema/, tier: deep}
