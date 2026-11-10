@@ -245,10 +245,10 @@ The private issue tracker is the proposal source of truth for these newer ideas;
 | CP-35 | [#160](https://github.com/FreeMyID/freemyid-pm/issues/160) | Test developer-home scheduler examples against the renderer | WO-189 delivered; 2 tests and Ruff pass; owner review |
 | CP-36 | [#162](https://github.com/FreeMyID/freemyid-pm/issues/162) | Guard human-readable registry priority ordering | WO-190 independently verified; 1 test and Ruff pass; artifact authorship unconfirmed |
 | CP-37 | [#165](https://github.com/FreeMyID/freemyid-pm/issues/165) | Guard built developer CLI reference rendering | Closed by owner; replaced by WO-198 |
-| CP-38 | [#166](https://github.com/FreeMyID/freemyid-pm/issues/166) | Guard registry source summary text | WO-220 delivered; 5 tests and Ruff pass; owner review |
-| CP-39 | [#167](https://github.com/FreeMyID/freemyid-pm/issues/167) | Guard exposure result text output | WO-221 delivered; 3 tests and Ruff pass; owner review |
-| CP-40 | [#168](https://github.com/FreeMyID/freemyid-pm/issues/168) | Guard human-readable todo list output | WO-222 delivered; 2 tests and Ruff pass; owner review |
-| CP-41 | [#169](https://github.com/FreeMyID/freemyid-pm/issues/169) | Guard doctor diagnostic text output | WO-223 delivered; 3 tests and Ruff pass; owner review |
+| CP-38 | [#166](https://github.com/FreeMyID/freemyid-pm/issues/166) | Guard registry source summary text | WO-220 accepted and merged (owner report, CLAUDE-057) |
+| CP-39 | [#167](https://github.com/FreeMyID/freemyid-pm/issues/167) | Guard exposure result text output | WO-221 accepted and merged (owner report, CLAUDE-057) |
+| CP-40 | [#168](https://github.com/FreeMyID/freemyid-pm/issues/168) | Guard human-readable todo list output | WO-222 accepted and merged (owner report, CLAUDE-057) |
+| CP-41 | [#169](https://github.com/FreeMyID/freemyid-pm/issues/169) | Guard doctor diagnostic text output | WO-223 accepted and merged (owner report, CLAUDE-057) |
 | CP-42 | [#170](https://github.com/FreeMyID/freemyid-pm/issues/170) | Guard developer config table semantics | Closed by owner; replaced by WO-199 |
 
 ## WO-204 follow-up batch — CP-43..46 (closed as superseded)
@@ -355,4 +355,4 @@ CP-47/48 were accepted and completed as WO-216/217. CP-49 was accepted as WO-224
 
 **Collision/dependency:** separate new file, feeding the in-house BL-IN-29 catalog extraction without doing extraction. Requires an owner-prepared worktree and explicit GO. No UI/source/catalog extraction or sensitive-copy translation is included.
 
-**State:** Accepted and delivered as WO-224 under CLAUDE-056; owner review requested. New guide added in the prepared worktree; required i18n/doc selection passed (485 passed, 6 skipped, 2,165 deselected, 1 xfailed).
+**State:** Accepted and merged as WO-224 per owner report in CLAUDE-057. Required i18n/doc selection passed (485 passed, 6 skipped, 2,165 deselected, 1 xfailed).

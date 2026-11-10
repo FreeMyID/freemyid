@@ -1,6 +1,6 @@
 # Codex vendor work board
 
-Sole writer: Nora Bennett, interactive vendor PM. Last checkpoint: CLAUDE-056 / CODEX-133..137, 2026-11-09. Release and merge states are owner-reported.
+Sole writer: Nora Bennett, interactive vendor PM. Last checkpoint: CLAUDE-057 / CODEX-138, 2026-11-09. Release and merge states are owner-reported.
 States are owner reports and local document evidence, not independently verified remote PR state. No git or network used. Local merges are distinguished from pushed merges. Work-order status headers may be stale; latest owner channel controls.
 
 Before dispatch or proposals, check this board, exact work-order paths and Claude's stay-off lists. This board grants no additional edit permission. Completed WO-001/002/005/006 path lists are historical scopes, not active reservations. WO-005 scope is exposure_card and its exclusive helpers only, never all views.py functions.
@@ -68,11 +68,11 @@ Before dispatch or proposals, check this board, exact work-order paths and Claud
 | WO-217 | CP-48 | Owen Park | merged (owner report, 8a9e35a) | CLAUDE-050 | tests/codex/test_cx_dev_source_citations.py; VENDOR_STATUS.md | 2026-11-09 CLAUDE-054 |
 | WO-218 | — | interactive contributor | accepted and merged (owner report, CLAUDE-055); in-house wording fix; 34 tests pass per owner | CLAUDE-051/053 | tests/codex/test_cx_app_practice_wording.py; VENDOR_STATUS.md | 2026-11-09 CLAUDE-055 |
 | WO-219 | — | interactive contributor | accepted and merged (owner report, CLAUDE-055); i18n/doc selection passed | CLAUDE-051/053 | docs/i18n/STRINGS.md; docs/i18n/GLOSSARY_ES.md; VENDOR_STATUS.md | 2026-11-09 CLAUDE-055 |
-| WO-220 | CP-38 / #166 | Hannah Cole | delivered; 5 tests and Ruff pass; owner review requested | CLAUDE-056 GO; isolated worktree | tests/codex/test_cx_cli_registry_source_text.py (new); VENDOR_STATUS.md | 2026-11-09 CODEX-133 |
-| WO-221 | CP-39 / #167 | Ravi Menon | delivered; 3 tests and Ruff pass; owner review requested | CLAUDE-056 GO; isolated worktree | tests/codex/test_cx_cli_exposure_text.py (new); VENDOR_STATUS.md | 2026-11-09 CODEX-134 |
-| WO-222 | CP-40 / #168 | Felix Grant | delivered; 2 tests and Ruff pass; owner review requested | CLAUDE-056 GO; isolated worktree | tests/codex/test_cx_cli_todo_list_text.py (new); VENDOR_STATUS.md | 2026-11-09 CODEX-135 |
-| WO-223 | CP-41 / #169 | Codex test-quality builder (Nora assignment) | delivered; 3 tests and Ruff pass; owner review requested | CLAUDE-056 GO; isolated worktree | tests/codex/test_cx_cli_doctor_text.py (new); VENDOR_STATUS.md | 2026-11-09 CODEX-136 |
-| WO-224 | CP-49 | Amara Okoye | delivered; i18n/doc selection 485 passed; owner review requested | CLAUDE-056 GO; isolated worktree | docs/i18n/TRANSLATION_GUIDE.md (new); VENDOR_STATUS.md | 2026-11-09 CODEX-137 |
+| WO-220 | CP-38 / #166 | Hannah Cole | accepted and merged (owner report, CLAUDE-057) | CLAUDE-056 GO | tests/codex/test_cx_cli_registry_source_text.py; VENDOR_STATUS.md | 2026-11-09 CLAUDE-057 |
+| WO-221 | CP-39 / #167 | Ravi Menon | accepted and merged (owner report, CLAUDE-057) | CLAUDE-056 GO | tests/codex/test_cx_cli_exposure_text.py; VENDOR_STATUS.md | 2026-11-09 CLAUDE-057 |
+| WO-222 | CP-40 / #168 | Felix Grant | accepted and merged (owner report, CLAUDE-057) | CLAUDE-056 GO | tests/codex/test_cx_cli_todo_list_text.py; VENDOR_STATUS.md | 2026-11-09 CLAUDE-057 |
+| WO-223 | CP-41 / #169 | Hannah Cole | accepted and merged (owner report, CLAUDE-057) | CLAUDE-056 GO | tests/codex/test_cx_cli_doctor_text.py; VENDOR_STATUS.md | 2026-11-09 CLAUDE-057 |
+| WO-224 | CP-49 | Amara Okoye | accepted and merged (owner report, CLAUDE-057) | CLAUDE-056 GO | docs/i18n/TRANSLATION_GUIDE.md; VENDOR_STATUS.md | 2026-11-09 CLAUDE-057 |
 
 WO-107 workspace: .vendor-wt/wo-107. Merged PR #19, owner report (103d79a).
 
@@ -91,7 +91,7 @@ CP-03 navigation tests; CP-04 guide-print audit; CP-07 printable-summary visual 
 
 ## Next checkpoint
 
-CLAUDE-056 confirms v0.3.0 released and GO'd WO-220..224. All five are now delivered for owner review: 220 (5 tests), 221 (3), 222 (2), 223 (3), and 224 (i18n/doc selection 485 passed). The four CLI tests stub home-hardening, logging, diagnostic, store and other relevant effects; no product source changed. CP-49 is delivered as WO-224. Active builder WIP is 0/5. Site work remains in-house.
+CLAUDE-057 reports WO-220..224 accepted and merged. Morgan independently verified 256 `tests/codex` tests on main; WO-223 is credited to Hannah Cole, its test-quality builder. The next `STRINGS.md` update is sequenced after the v0.3.1 wording fix merges; it is not GO yet. Site work remains in-house.
 
 ## Elena proposed path collision reference
 
