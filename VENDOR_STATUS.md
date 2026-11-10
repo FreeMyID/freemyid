@@ -17,7 +17,7 @@ In-house review. `docs/pm/issue_map.json` has no WO-331 number yet, so this stay
 
 ## Questions for the owner
 
-None.
+None. Tracker: WO-331 (freemyid-pm#251).
 
 ## How to test
 
