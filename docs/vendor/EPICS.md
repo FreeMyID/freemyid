@@ -10,7 +10,7 @@ Structure: **epic -> work orders (WO-NNN.md) -> task checklists** (the `## Tasks
 4. Tick the boxes in the WO's `## Tasks` list as you go and mirror the list in `VENDOR_STATUS.md`.
 5. Numbering: Codex WO-291..299 then WO-401 upward; Grok WO-501 upward. Never reuse a number.
 
-## Totals (written so far)
+## Totals
 - Work orders written: 65 (55 queued, 10 blocked).
 - Codex: 33. Grok: 32.
 
@@ -24,7 +24,7 @@ Structure: **epic -> work orders (WO-NNN.md) -> task checklists** (the `## Tasks
 - WO-503 [grok, Derek Olsen]: Helper bundle: turn a bundle's profile into a setup file a helper can edit (after WO-502)
 - WO-504 [grok, Ethan Brandt]: Helper bundle: end-to-end round-trip tests with the real export and import (after WO-503)
 - WO-505 [grok, Derek Olsen]: CLI JSON: a PII-free "bundle check" document **(blocked)** (after WO-340, WO-357, WO-502)
-- WO-506 [grok, Derek Olsen]: Helper bundle: open a bundle file with typed, plain errors **(blocked)** (after WO-503)
+- WO-506 [grok, Derek Olsen]: Helper bundle: open a bundle file with typed, plain errors **(blocked)** (after WO-503, WO-523)
 
 **Dependencies:** WO-336 and WO-352 (both edit `setup_config.py`; every E1 setup_config WO starts after them). WO-340/357 for the cli_json item.
 
@@ -187,7 +187,7 @@ Structure: **epic -> work orders (WO-NNN.md) -> task checklists** (the `## Tasks
 - WO-413 [codex, Amara Okoye]: String inventory: the sentences the engine, runner and notifications produce
 - WO-414 [codex, Amara Okoye]: Spanish glossary: the words the 0.4 features add (after WO-214, WO-219, WO-225)
 - WO-415 [codex, Hannah Cole]: Guard: every user-facing constant in the finding and matching code is in an inventory (after WO-290)
-- WO-416 [codex, Ravi Menon]: Message catalog: move the finding code's sentences out of the logic **(blocked)** (after WO-403, WO-299, WO-415)
+- WO-416 [codex, Ravi Menon]: Message catalog: move the finding code's sentences out of the logic **(blocked)** (after WO-403, WO-299, WO-415, WO-272, WO-274)
 - WO-417 [codex, Amara Okoye]: Spanish explainers for each letter (what this letter says) **(blocked)**
 
 **Dependencies:** WO-232, WO-250, WO-254, WO-290 (inventories), WO-251 (glossary check).
