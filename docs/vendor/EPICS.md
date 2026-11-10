@@ -11,8 +11,8 @@ Structure: **epic -> work orders (WO-NNN.md) -> task checklists** (the `## Tasks
 5. Numbering: Codex WO-291..299 then WO-401 upward; Grok WO-501 upward. Never reuse a number.
 
 ## Totals (written so far)
-- Work orders written: 57 (48 queued, 9 blocked).
-- Codex: 26. Grok: 31.
+- Work orders written: 61 (52 queued, 9 blocked).
+- Codex: 30. Grok: 31.
 
 ## E1. Helper setup bundle backend ("Set it up for someone else")
 **Owner team:** Grok (backend-core, test-writer)
@@ -200,10 +200,13 @@ Structure: **epic -> work orders (WO-NNN.md) -> task checklists** (the `## Tasks
 
 ## E11. Identity-safety checklists and the yearly check-up
 **Owner team:** Codex (engine-tests, test-quality)
-**Goal:** ROADMAP 3.4 (IRS IP PIN, SSA, USPS, lock-down checklist, annual privacy check-up). Backend only: loader validation, tick state, "due again" logic. New checklist data and screens are in-house.
+**Goal:** ROADMAP 3.4 (annual privacy check-up, lock-down checklist). The IRS IP PIN, SSA and USPS entries already exist in `brokers/checklists.yaml:253-317`. Backend only: tick-age logic, check-up summary data, source-freshness checks and a content guard. New checklist entries and screens are in-house.
 
 **Sub-work-orders:**
-- Planned: WO-418..421. (to be written in this wave; see `git log docs/vendor/EPICS.md`)
+- WO-418 [codex, Hannah Cole]: Yearly check-up: which "done" steps are old enough to do again (after WO-404)
+- WO-419 [codex, Hannah Cole]: Yearly check-up: the summary as plain lines and a JSON document (after WO-418)
+- WO-420 [codex, Ravi Menon]: Checklists: tell maintainers which steps were last checked too long ago (after WO-246, WO-282)
+- WO-421 [codex, Felix Grant]: Guard: the public text of every checklist follows the house rules
 
 **Dependencies:** WO-246, WO-282 (checklists.py), WO-281 (checklist_state.py).
 
