@@ -96,3 +96,7 @@ Rows added by in-house when the batch was issued. Helen Ashford owns them from h
 | WO-519 | queued (pre-approved); none | `tests/grok/test_gk_filler_plan_minimization.py` | Ethan Brandt | 2026-11-09 E7 epic batch |
 | WO-520 | queued (pre-approved); after WO-349 merged | `tests/grok/test_gk_notifications_pii_free.py` | Ethan Brandt | 2026-11-09 E7 epic batch |
 | WO-521 | queued (pre-approved); none | `tests/grok/test_gk_setup_errors_no_values.py` | Ethan Brandt | 2026-11-09 E7 epic batch |
+| WO-522 | queued (pre-approved); after WO-342 merged | `src/freemyid/engine/outbox.py`; `tests/grok/test_gk_outbox_compose_links.py` | Paul Kessler | 2026-11-09 E8 epic batch |
+| WO-523 | queued (pre-approved); after WO-503 merged | `src/freemyid/setup_config.py`; `tests/grok/test_gk_setup_windows_files.py` | Derek Olsen | 2026-11-09 E8 epic batch |
+| WO-524 | queued (pre-approved); after WO-335, WO-350 merged | `src/freemyid/scheduler/__init__.py`; `tests/grok/test_gk_scheduler_run_helper.py` | Derek Olsen | 2026-11-09 E8 epic batch |
+| WO-525 | queued (pre-approved); none | `tests/grok/test_gk_windows_import_safety.py` | Ethan Brandt | 2026-11-09 E8 epic batch |

@@ -11,8 +11,8 @@ Structure: **epic -> work orders (WO-NNN.md) -> task checklists** (the `## Tasks
 5. Numbering: Codex WO-291..299 then WO-401 upward; Grok WO-501 upward. Never reuse a number.
 
 ## Totals (written so far)
-- Work orders written: 39 (36 queued, 3 blocked).
-- Codex: 18. Grok: 21.
+- Work orders written: 46 (43 queued, 3 blocked).
+- Codex: 21. Grok: 25.
 
 ## E1. Helper setup bundle backend ("Set it up for someone else")
 **Owner team:** Grok (backend-core, test-writer)
@@ -144,7 +144,13 @@ Structure: **epic -> work orders (WO-NNN.md) -> task checklists** (the `## Tasks
 **Goal:** Pat is on Windows 10. Doctor checks, data-file reading, task XML, toast fallback and path handling must behave there. Offline tests render for all three systems; nothing touches the real OS.
 
 **Sub-work-orders:**
-- Codex: WO-410..412. Grok: WO-522..525. (to be written in this wave; see `git log docs/vendor/EPICS.md`)
+- WO-410 [codex, Owen Park]: Doctor: "background checks" is only OK when the timer is really running (after WO-405)
+- WO-411 [codex, Owen Park]: Doctor: advice that works on Windows, and a warning when the data folder syncs to the cloud (after WO-410)
+- WO-412 [codex, Owen Park]: Doctor: find Edge and Chrome where Windows really puts them (after WO-411)
+- WO-522 [grok, Paul Kessler]: Mail links: line breaks and length that Windows mail apps accept (after WO-342)
+- WO-523 [grok, Derek Olsen]: Setup file: a password file saved by Notepad still works (after WO-503)
+- WO-524 [grok, Derek Olsen]: Scheduler: a hung or missing system tool gives a plain message, not a traceback (after WO-335, WO-350)
+- WO-525 [grok, Ethan Brandt]: Windows import-safety guard for the delivery and scheduling modules
 
 **Dependencies:** WO-260, WO-283 (doctor), WO-334, WO-351, WO-359 (scheduler), WO-349 (notify).
 
