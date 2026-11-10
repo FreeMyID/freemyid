@@ -11,8 +11,8 @@ Structure: **epic -> work orders (WO-NNN.md) -> task checklists** (the `## Tasks
 5. Numbering: Codex WO-291..299 then WO-401 upward; Grok WO-501 upward. Never reuse a number.
 
 ## Totals (written so far)
-- Work orders written: 52 (45 queued, 7 blocked).
-- Codex: 21. Grok: 31.
+- Work orders written: 57 (48 queued, 9 blocked).
+- Codex: 26. Grok: 31.
 
 ## E1. Helper setup bundle backend ("Set it up for someone else")
 **Owner team:** Grok (backend-core, test-writer)
@@ -184,13 +184,19 @@ Structure: **epic -> work orders (WO-NNN.md) -> task checklists** (the `## Tasks
 **Goal:** ROADMAP 3.1 Spanish UI (0.5). Get ready: inventories of every backend string, a Spanish glossary for the new 0.4 terms, guards that keep user text out of logic, and drafts that a native speaker reviews.
 
 **Sub-work-orders:**
-- Planned: WO-413..417. (to be written in this wave; see `git log docs/vendor/EPICS.md`)
+- WO-413 [codex, Amara Okoye]: String inventory: the sentences the engine, runner and notifications produce
+- WO-414 [codex, Amara Okoye]: Spanish glossary: the words the 0.4 features add (after WO-214, WO-219, WO-225)
+- WO-415 [codex, Hannah Cole]: Guard: every user-facing constant in the finding and matching code is in an inventory (after WO-290)
+- WO-416 [codex, Ravi Menon]: Message catalog: move the finding code's sentences out of the logic **(blocked)** (after WO-403, WO-299, WO-415)
+- WO-417 [codex, Amara Okoye]: Spanish explainers for each letter (what this letter says) **(blocked)**
 
 **Dependencies:** WO-232, WO-250, WO-254, WO-290 (inventories), WO-251 (glossary check).
 
 **What in-house must do:**
 - Pick the message-catalog mechanism and add it (new module, wizard and CLI wiring) to unblock WO-416.
 - Wire Spanish letter templates and get a legal read (unblocks WO-417).
+- Unblock WO-416: In-house must (1) choose the mechanism and add the module (for example `src/freemyid/messages.py` with `t(key, **params)` and an English catalog file under `src/freemyid/` or `locales/`), including plural handling that does not rely on English "one/many" pairs (Spanish and later Vietnamese, Tagalog and Chinese differ), (2) add a language setting to `config.py` (default English, so nothing changes today) and the wizard and CLI wiring, (3) tell Codex the key naming scheme and that `HAND_REASONS` and `STATUS_TEXT` keep their dict shapes for existing readers (`--json` output must not change when the language is English).
+- Unblock WO-417: The owner must decide whether letters to US brokers stay in English with a Spanish explanation shown next to them (this WO's assumption), or are sent in Spanish too.
 
 ## E11. Identity-safety checklists and the yearly check-up
 **Owner team:** Codex (engine-tests, test-quality)
