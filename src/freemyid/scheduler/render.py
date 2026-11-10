@@ -1,6 +1,7 @@
 """Pure renderers for scheduler files. Nothing here touches the system."""
 from __future__ import annotations
 
+import re
 import shlex
 import subprocess
 from xml.sax.saxutils import escape as xesc
@@ -34,12 +35,66 @@ def systemd_timer() -> str:
 
 
 CRON_MARK = "# freemyid-recheck"
+# Cronie keeps a backslash, unless the next character is %. \% becomes %
+# before the shell runs, and a bare % ends the command. An odd run of
+# backslashes immediately before % cannot be written with that escape.
+_CRON_NAME = re.compile(r"\A[A-Za-z_][A-Za-z0-9_]*\Z")
 
 
-def cron_lines(cmd: list[str]) -> str:
-    c = " ".join(shlex.quote(x) for x in cmd)
-    return (f"0 {DAILY_HOUR} * * * {c} {CRON_MARK}\n"
-            f"@reboot sleep 120 && {c} {CRON_MARK}\n")
+def cron_lines(cmd: list[str], env: dict[str, str] | None = None) -> str:
+    """Daily line and @reboot line. env is the same dict systemd and launchd get.
+
+    Quoted NAME=value assignments go on both lines, in front of the command
+    (and after ``sleep`` on @reboot, so the shell applies them to the command
+    rather than only to sleep).
+    """
+    command = " ".join(shlex.quote(part) for part in cmd).replace("%", "\\%")
+    prefix = _cron_env_prefix(env)
+    return (f"0 {DAILY_HOUR} * * * {prefix}{command} {CRON_MARK}\n"
+            f"@reboot sleep 120 && {prefix}{command} {CRON_MARK}\n")
+
+
+def _cron_env_prefix(env: dict[str, str] | None) -> str:
+    if not env:
+        return ""
+    parts = [f"{_cron_name(key)}={_cron_quote(value)}" for key, value in env.items()]
+    return " ".join(parts) + " "
+
+
+def _cron_name(name: str) -> str:
+    if _CRON_NAME.fullmatch(name) is None:
+        raise ValueError("cron environment name must be a shell identifier")
+    return name
+
+
+def _cron_quote(value: str) -> str:
+    """One POSIX shell word, still one crontab field after cronie handles %."""
+    if "\n" in value or "\r" in value or "\0" in value:
+        raise ValueError("cron environment values must be a single line")
+    if _cron_percent_needs_printf(value):
+        return _cron_printf(value)
+    quoted = "'" + value.replace("'", "'\"'\"'") + "'"
+    return quoted.replace("%", "\\%")
+
+
+def _cron_percent_needs_printf(value: str) -> bool:
+    for index, char in enumerate(value):
+        if char != "%":
+            continue
+        count = 0
+        before = index
+        while before > 0 and value[before - 1] == "\\":
+            count += 1
+            before -= 1
+        if count % 2 == 1:
+            return True
+    return False
+
+
+def _cron_printf(value: str) -> str:
+    # Octal of the UTF-8 bytes: no bare % for cron, and no quote/space/$ for the shell.
+    octets = "".join(f"\\{byte:03o}" for byte in value.encode())
+    return f"\"$(printf '{octets}')\""
 
 
 def launchd_plist(cmd: list[str], log_path: str, env: dict[str, str] | None = None) -> str:
@@ -49,7 +104,8 @@ def launchd_plist(cmd: list[str], log_path: str, env: dict[str, str] | None = No
                         for k, v in env.items())
         envx = f"  <key>EnvironmentVariables</key>\n  <dict>\n{items}  </dict>\n"
     args = "".join(f"    <string>{xesc(c)}</string>\n" for c in cmd)
-    # launchd runs a job missed during sleep when the Mac wakes.
+    # RunAtLoad: a check missed while the Mac was switched off runs at next login.
+    # The job uses --scheduled, so that login run only checks sites that are due.
     return ('<?xml version="1.0" encoding="UTF-8"?>\n'
             '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" '
             '"http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n'
@@ -58,7 +114,8 @@ def launchd_plist(cmd: list[str], log_path: str, env: dict[str, str] | None = No
             "  <key>StartCalendarInterval</key>\n  <dict>\n"
             f"    <key>Hour</key>\n    <integer>{DAILY_HOUR}</integer>\n"
             "    <key>Minute</key>\n    <integer>0</integer>\n  </dict>\n"
-            "  <key>RunAtLoad</key>\n  <false/>\n  <key>ProcessType</key>\n  <string>Background</string>\n"
+            "  <key>RunAtLoad</key>\n  <true/>\n"
+            "  <key>ProcessType</key>\n  <string>Background</string>\n"
             f"  <key>StandardErrorPath</key>\n  <string>{xesc(log_path)}</string>\n"
             f"  <key>StandardOutPath</key>\n  <string>{xesc(log_path)}</string>\n"
             "</dict>\n</plist>\n")
