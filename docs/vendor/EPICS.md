@@ -11,8 +11,8 @@ Structure: **epic -> work orders (WO-NNN.md) -> task checklists** (the `## Tasks
 5. Numbering: Codex WO-291..299 then WO-401 upward; Grok WO-501 upward. Never reuse a number.
 
 ## Totals (written so far)
-- Work orders written: 27 (24 queued, 3 blocked).
-- Codex: 10. Grok: 17.
+- Work orders written: 33 (30 queued, 3 blocked).
+- Codex: 15. Grok: 18.
 
 ## E1. Helper setup bundle backend ("Set it up for someone else")
 **Owner team:** Grok (backend-core, test-writer)
@@ -110,7 +110,12 @@ Structure: **epic -> work orders (WO-NNN.md) -> task checklists** (the `## Tasks
 **Goal:** The registry is moving toward 400+ brokers. Bound every per-broker loop: scan-event reads, per-broker event scans in the runner, selector compilation, registry load time, doctor checks.
 
 **Sub-work-orders:**
-- Codex: WO-402..406. Grok: WO-518. (to be written in this wave; see `git log docs/vendor/EPICS.md`)
+- WO-402 [codex, Ravi Menon]: Exposure: read only as many past events as the question needs (after WO-401)
+- WO-403 [codex, Ravi Menon]: Exposure: a time budget per scan, and the rest resume next time (after WO-402, WO-299)
+- WO-404 [codex, Hannah Cole]: Checklist ticks: first-version ticks must not fall out of the history window (after WO-281)
+- WO-405 [codex, Owen Park]: Doctor: tell the person how long a full scan will take (after WO-283)
+- WO-406 [codex, Hannah Cole]: Scan event size budget (guard) (after WO-403)
+- WO-518 [grok, Derek Olsen]: Runner: a run-time budget that never starves low-priority sites (after WO-514)
 
 **Dependencies:** WO-278, WO-287 (offline benchmark guard), WO-285, WO-286 (perf), WO-343 (runner).
 

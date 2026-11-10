@@ -92,3 +92,4 @@ Rows added by in-house when the batch was issued. Helen Ashford owns them from h
 | WO-515 | queued (pre-approved); after WO-511 merged | `tests/grok/test_gk_mailer_fake_protocols.py` | Ethan Brandt | 2026-11-09 E4 epic batch |
 | WO-516 | blocked: needs in-house schema, cli.py command and docs/CLI.md section first; after WO-340, WO-357, WO-505, WO-299, WO-401 merged | `src/freemyid/cli_json.py`; `tests/grok/test_gk_cli_json_report_facts.py` | Derek Olsen | 2026-11-09 E5 epic batch |
 | WO-517 | queued (pre-approved); after WO-512 merged | `src/freemyid/notify.py`; `tests/grok/test_gk_notify_relisted.py` | Derek Olsen | 2026-11-09 E5 epic batch |
+| WO-518 | queued (pre-approved); after WO-514 merged | `src/freemyid/engine/runner.py`; `tests/grok/test_gk_runner_time_budget.py` | Derek Olsen | 2026-11-09 E6 epic batch |
