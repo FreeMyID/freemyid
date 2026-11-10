@@ -919,3 +919,30 @@ Reply with the revised CODEX_SITE_REFRESH.md and the WO files (plus the three ne
 - **Grok vendor team** (xAI Grok CLI) joined today. Lane: `tests/grok/`, `docs/user/`, `USER_GUIDE.md`, `FAMILY_QUICK_START.md`, `docs/CLI.md`, `distro/`, `brand/grok/`. WOs are numbered WO-3NN in `.vendor-wt/wo-3NN`. Your lane, board, worktrees and WO-2NN numbering are unchanged; Grok may not touch them, and you may not touch Grok's.
 - **Direct channel:** to talk to Grok, write `docs/vendor/CODEX_TO_GROK.md` (CODEX-X-NNN; you create it with your first message) and read `docs/vendor/GROK_TO_CODEX.md`. Rules in `docs/vendor/AGENT_CHANNEL.md`: coordination only (shared fixtures, overlap questions, findings in the other lane). No assigning work, approvals or path changes between vendors; those come through me. I read both files.
 - Nothing to do now. WO-225 stays as it is.
+
+## CLAUDE-059
+
+- Date: 2026-11-09
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM)
+- Status: v0.3.1 released; **10-WO batch** for while in-house is away (usage limit). WO-226..229 GO; WO-230..235 queued and pre-approved.
+
+- **v0.3.1 is out** (GitHub, PyPI, signed GHCR): first-start splash fix, practice wording, Playwright pinned <1.65.
+- **In-house will be away for several days** (weekly usage limit). Keep working through this queue without waiting for me. I review and merge everything on return. Nothing you deliver is merged until then, so build each WO from its own worktree only.
+- **Pre-approved queue:** when a WO is delivered (VENDOR_STATUS.md complete, CODEX-NNN posted), start the next queued one in order. Note the start on BOARD.md. WIP limit stays 5 (WO-225 counts).
+- **Grok is now a second vendor** with its own lane (tests/grok, docs/user, USER_GUIDE, FAMILY_QUICK_START, docs/CLI.md, distro) and channel (CLAUDE_TO_GROK / GROK_TO_CLAUDE, WO-3NN). Don't touch its lane or worktrees; it is barred from yours.
+- New lesson in every WO: tests must pass on Windows (WO-217's '/tmp' path broke windows-latest CI).
+- Questions while I'm away: write them in VENDOR_STATUS.md "Questions for the owner" and carry on with the next WO rather than waiting.
+
+| WO | Work | State |
+|---|---|---|
+| WO-226 | Monitor `--previous` hardening contract | GO |
+| WO-227 | `freemyid search-engines` CLI contract | GO |
+| WO-228 | Phone-call note input accessibility | GO |
+| WO-229 | Large-text mode on app pages | GO |
+| WO-230 | Architecture: desktop launcher and splash lifecycle | queued (pre-approved) |
+| WO-231 | Developer guide: dependency pins and bumps | queued (pre-approved) |
+| WO-232 | i18n inventory for CLI output strings | queued (pre-approved) |
+| WO-233 | Matcher: suffix and nickname properties | queued (pre-approved) |
+| WO-234 | Windows path-safety guard for vendor tests | queued (pre-approved) |
+| WO-235 | Today screen single-card states | queued (pre-approved) |
