@@ -20,6 +20,7 @@ Nothing on this work order. In-house review.
 - `queue_email` (the path the runner reuses) still calls `send_request` immediately and does not apply the 15-minute / 1-hour backoff. Only `release_held` does. Should the next scheduled run wait too?
 - `SMTPRecipientsRefused` is not an `SMTPResponseException`, so a 4xx recipient refusal stays permanent. Say if that should be transient.
 - `deferred` is left out of the release event when it is zero, so `tests/test_first_email_approval.py` (the `{sent, failed}` check) stays unchanged. Say if you want `deferred: 0` on every release; that needs an in-house test update.
+- Tracker: WO-332 (freemyid-pm#252).
 
 ## How to test
 
