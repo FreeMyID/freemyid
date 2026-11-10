@@ -6,11 +6,18 @@ same verbs: `scan`, `run`, `status`, `report`, `todo`.
 ```
 freemyid doctor                         # is this computer ready?
 freemyid setup --from setup.yaml        # set someone up without the wizard
-freemyid run --dry-run                  # practice run: search and report, send nothing
+freemyid run --dry-run                  # search and report; submit nothing
 freemyid run --headless                 # cron / systemd / Docker
 freemyid status --json                  # machine-readable status
 freemyid app                            # open Free My ID in its own window
 freemyid fill spokeo -p "Jane Q Testperson"   # open one site's form, filled in; you press Submit
+freemyid exposure -p "Jane Q Testperson" --old-addresses
+                                        # one extra previous-address page per site, this run only
+freemyid search-engines                 # list Google and Bing steps; there is no list word
+freemyid search-engines open google     # open that engine's official page in your browser
+freemyid search-engines done google     # record that you finished those steps
+freemyid search-engines undo bing       # take that record back
+freemyid monitor --json --broker spokeo # maintainer page check; needs no person
 freemyid wipe                           # delete everything Free My ID saved here (asks first)
 ```
 
@@ -18,13 +25,23 @@ freemyid wipe                           # delete everything Free My ID saved her
   `--no-window` to use your web browser instead (`cli.py:242-247`).
 * `freemyid fill BROKER` opens that site's form in a visible window and fills it in. You tick
   the box and press Submit yourself. `-p` picks the person (needed if more than one is set up;
-  otherwise it exits 2), and `--timeout` is the seconds to wait, 30 to 3600 (`cli.py:361-376`).
-* `freemyid wipe` asks "Delete ALL Free My ID data on this computer?" before it deletes
-  anything. `--yes` skips the question. It removes the saved people, evidence, mailbox
-  passwords, the encryption key and the background task, so use it only when you are done
-  (`cli.py:578-626`).
+  otherwise it exits 2). `--timeout` is how many seconds to wait: 30 to 3600, default 600
+  (`cli.py:361-376`).
+* `freemyid exposure` only reads. `--old-addresses` searches each site once more at a previous
+  address (at most one extra page per site). Leave the flag off and config
+  `exposure_old_addresses` decides; that setting is off unless someone turned it on
+  (`cli.py:415-418`, `cli.py:447-449`).
+* `freemyid search-engines` with no action lists the steps. The word `list` is not a command:
+  `freemyid search-engines list` exits 2 (`unknown action`). The only actions are `open`,
+  `done` and `undo` (`cli.py:895`, `cli.py:916-921`).
+* `freemyid wipe` asks "Delete ALL Free My ID data on this computer? If you keep other Free
+  My ID data folders on this computer that use the system keychain, they will stop working
+  too." `--yes` skips the question. If the folder does not look like a Free My ID data folder
+  it refuses and exits 2. It removes the saved people, evidence, mailbox passwords, the
+  encryption key and the background task (`cli.py:581-628`).
 
-Global option: `-v/--verbose` (more detail in the log).
+Global option: `-v/--verbose` (more detail in the log). The top-level `--help` also shows
+Typer's `--install-completion` and `--show-completion`; those are not Free My ID actions.
 
 ## Exit codes
 
@@ -48,15 +65,15 @@ Codes are stable: a number never changes meaning.
 | `doctor` | Readiness checks (`--offline` skips the mail server check) | `doctor/1` |
 | `scan` | Searches brokers; never submits. `-p/--profile`, `-b/--broker` (repeatable), `--headless` | `run/1` |
 | `run` | Scan, submit, verify, escalate. `--dry-run`, `--headless`, `-p`, `-b` | `run/1` |
-| `exposure` | Which sites show you, with a 0-100 exposure score; reads only (works in practice mode). `-p`, `--offline`, `--refresh`, `--old-addresses` (also search each site once at your previous address; off by default), `--headless` ([EXPOSURE.md](EXPOSURE.md)) | `exposure/1` |
-| `monitor` | For maintainers and the weekly CI job: does each broker's opt-out page still load and its form still match? Reads only, needs no profile, never fills in or submits. `--registry`, `--previous last.json`, `--broker ID`, `--browser` ([MONITOR.md](MONITOR.md)) | `monitor/1` |
-| `search-engines` | Google and Bing guided steps: on its own it lists them (there is no `list` word; `-p` picks the person). `open ID` opens the official page in your browser and records when; `done ID` / `undo ID` record that you did it. ID may be a prefix or `google` / `bing`. Never searches Google or Bing ([EXPOSURE.md](EXPOSURE.md)) | `search_engines/1` |
-| `fill BROKER` | Opens the broker's form in a window and fills it; you submit | |
+| `exposure` | Which sites show you, with a 0-100 exposure score; reads only (works in practice mode). `-p`, `--offline`, `--refresh`, `--old-addresses` (one extra previous-address page per site; off unless you pass the flag or set config `exposure_old_addresses`), `--headless`. Text prints a score-change line after the drivers when there are 2 or more scans ([EXPOSURE.md](EXPOSURE.md)) | `exposure/1` |
+| `monitor` | For maintainers and the weekly CI job: does each broker's opt-out page still load and its form still match? Reads only, needs no profile, never fills in or submits. `--registry`, `--previous last.json`, `--broker ID` (repeatable), `--browser` (headless load of a JavaScript form; opens the page only) ([MONITOR.md](MONITOR.md)) | `monitor/1` |
+| `search-engines` | Google and Bing guided steps. No action lists them; there is no `list` word (`list` exits 2). `open ID` opens the official page and records when; `done ID` / `undo ID` record that you did it. ID may be a prefix or `google` / `bing`. `-p` when more than one person is set up. Never searches Google or Bing ([EXPOSURE.md](EXPOSURE.md)) | `search_engines/1` |
+| `fill BROKER` | Opens the broker's form in a window and fills it; you submit. `--timeout` is seconds to wait, 30 to 3600, default 600 | |
 | `status` | Per-broker state for each person. `-p` | `status/1` |
 | `report` | Writes an HTML or PDF report. `-p`, `--format html\|pdf` | `reports/1` |
 | `profile list` | Everyone set up | `profiles/1` |
 | `profile add [--prefill BUNDLE]` | Add a person. Without `--prefill`: the web wizard. With `--prefill BUNDLE`: imports the bundle with terminal prompts (same as `setup --prefill BUNDLE`) | |
-| `profile edit / remove / export` | Manage people | |
+| `profile edit / remove / export` | Manage people. `remove` asks first; `--yes` skips the question. `export PROFILE DEST` writes a passphrase-protected family bundle | |
 | `checklist list` | Identity-safety checklists and which are done. `-p/--profile` (needed only when more than one person is set up) | [`checklists/1`](#checklists1) |
 | `checklist show ID` | Steps for one checklist. `-p/--profile`. ID may be a prefix | [`checklist/1`](#checklist1) |
 | `checklist done ID` / `checklist undo ID` | Mark a checklist done, or not done again. `-p/--profile` | [`checklist/1`](#checklist1) |
@@ -68,10 +85,10 @@ Codes are stable: a number never changes meaning.
 | `schedule status` | Is the job installed | `schedule/1` |
 | `registry show` | Every broker in the list in use | `registry/1` |
 | `registry source` | Which list is in use (`--plain` prints just the name) | `registry-source/1` |
-| `registry update / validate` | Update or check the broker list | |
+| `registry update / validate` | Update the broker list, or check it. `validate` takes an optional file path | |
 | `secrets status` | Which backend holds the encryption key | `secrets/1` |
-| `secrets migrate --to B` | Move the key and saved passwords to `keyring`, `passphrase` or `systemd-creds` (exit 2 on failure; nothing is lost) | |
-| `config set KEY VALUE` | Change a setting | |
+| `secrets migrate --to B` | Move the key and saved passwords to `keyring`, `passphrase` or `systemd-creds` (exit 2 on failure). `--remove-keychain-key` also deletes the system-keychain copy; only when this is the only Free My ID folder here, because other folders that share that key would no longer open | |
+| `config set KEY VALUE` | Change a setting. An unknown key, or `real_submissions_enabled`, is refused; use `enable-submissions` for that opt-in | |
 | `config enable-submissions` | One-time opt-in to real submissions (leaves practice mode) | |
 | `wipe` | Delete everything Free My ID saved on this computer (`--yes` skips the question) | |
 
@@ -79,19 +96,28 @@ Codes are stable: a number never changes meaning.
 
 Each statement above was checked against `src/freemyid/cli.py` (unless another file is named):
 
-* `setup` options and the `--prefill` rules: `cli.py:148-176`. With `--prefill` alone the terminal
+* `setup` options and the `--prefill` rules: `cli.py:147-176`. With `--prefill` alone the terminal
   prompts are used (`cli.py:168-169`). `--web --prefill` prints a pointer to `/wizard/import`
   and exits 2 (`cli.py:164-167`). `--from` is handled first (`cli.py:161-163`).
-* `profile add [--prefill]`: `cli.py:520-522`.
-* `search-engines`: `cli.py:879` (the three words `open`, `done`, `undo`), `cli.py:887-953`
-  (a missing, unknown or misplaced word or id exits 2: `cli.py:901-905`; the page could not be
-  opened or recorded exits 1: `cli.py:917`, `cli.py:922`). With no word it lists the steps
-  (`cli.py:932-950`).
+* `profile add [--prefill]`: `cli.py:536-538` (calls `setup` with the terminal path when a bundle
+  is given).
+* `search-engines`: the three words `open`, `done`, `undo` are `cli.py:895`. The command is
+  `cli.py:903-966`. A missing, unknown or misplaced word or id exits 2 (`cli.py:916-921`; an
+  unknown id also exits 2 from `cli.py:88-94`). The page could not be opened or recorded exits 1
+  (`cli.py:932-933`, `cli.py:937-938`). With no word it lists the steps (`cli.py:946-966`).
 * Exit code numbers: `src/freemyid/cli_json.py:25-29`.
-* `scan`, `run`, `exposure`, `status`, `report`, `wipe` options: `cli.py:328-344`, `cli.py:402-408`,
-  `cli.py:372`, `cli.py:497-498`, `cli.py:566`.
-* `checklist` commands and `-p/--profile`: `cli.py:761-762`, `cli.py:799-872`.
-* `doctor --offline`; Python 3.12 or newer: `cli.py:181`, `src/freemyid/doctor.py:56-62`.
+* Option lists checked against `--help`: `scan` `cli.py:335-343`, `run` `cli.py:346-358`
+  (`--scheduled` is hidden and is not in `--help`), `exposure` `cli.py:409-422`, `status`
+  `cli.py:379-381`, `report` `cli.py:512-515`, `wipe` `cli.py:581-584`, `fill --timeout`
+  `cli.py:364`, `monitor` `cli.py:1052-1062`, `secrets migrate` `cli.py:988-995`.
+* `checklist` group and `-p/--profile`: `cli.py:775-779`. `list` / `show` / `done` / `undo`:
+  `cli.py:815-890`.
+* `doctor --offline`; Python 3.12 or newer: `cli.py:179-181`, `src/freemyid/doctor.py:55-64`.
+* Exposure text order, coverage wording and the score-change line: `cli.py:458-463`,
+  `src/freemyid/engine/exposure.py:847-865` and `src/freemyid/engine/exposure.py:896-903`,
+  `src/freemyid/engine/exposure_score.py:185-215`, `src/freemyid/exposure_models.py:81-114`.
+* `monitor/1` fields: `src/freemyid/monitor.py:197-212` (one broker) and
+  `src/freemyid/monitor.py:376-386` (the document).
 
 ## `--json` rules
 
@@ -204,13 +230,13 @@ When a headless run fails closed before starting, `--json` prints
 ```json
 {"schema": "exposure/1", "offline": false, "headless": false, "exit_code": 0,
  "profiles": [{"profile_id": "…", "label": "Mom", "created_at": "…", "practice_mode": true,
-   "score": 17, "explanation": [{"points": 15, "text": "1 site shows a listing that is you …"}],
+   "score": 28, "explanation": [{"points": 15, "text": "1 site shows a listing that is you …"}],
    "counts": {"confirmed_sites": 1, "possible_sites": 0, "check_by_hand": 1, "not_found": 0},
    "coverage": {"sites_total": 2, "sites_checked": 1, "found": 1, "not_found": 0,
      "check_by_hand": 1, "uncertain": 0},
-   "coverage_note": "This score is based on the 1 site we could check, out of 2. …",
-   "score_version": 2, "band": "low",
-   "headline": "Your exposure is low on the 1 site we could check. 1 site was not checked, …",
+   "coverage_note": "This score is based on the 1 site we could check, out of 2. A low score does not mean you are safe. 1 site needs checking by hand.",
+   "score_version": 2, "band": "medium",
+   "headline": "Your exposure is medium on the 1 site we could check. 1 site was not checked, so there may be more.",
    "drivers": [{"points": 15, "text": "Spokeo shows a listing of you", "broker_id": "spokeo"}],
    "drop_first": false, "first_checklist": null,
    "trend": {"change": -12, "since": "2026-10-01",
@@ -233,27 +259,81 @@ docs/EXPOSURE.md. Listing and check URLs are included because the person needs t
 them; the text output shows them too.
 
 `coverage` says what the score is based on (`found + uncertain + not_found + check_by_hand ==
-sites_total`; `sites_checked` = read automatically); show `coverage_note` next to the score.
+sites_total`). `sites_checked` counts sites whose status is `found` or `not_found` and whose
+`from_store` is false (`exposure_models.py:84-85`): a same-day cache of a real read still
+counts, and a page this run could not read but filled from an earlier run (`from_store: true`)
+counts in `found` but not in `sites_checked`. Show `coverage_note` next to the score.
 `drop_first` is true and `first_checklist` is `"ca_drop"` when the person's current address
 is in California. `old_address_checked` is true when one previous-address search was read
-for that site (`--old-addresses` or config `exposure_old_addresses`, off by default); `previous_name_checked` is
-true when one previous-name (maiden name) search was read (config `exposure_previous_names`,
-off by default). These fields were added in v0.3; `counts` is unchanged.
+for that site. The `--old-addresses` flag forces that extra page on for this run (at most one
+per site). Leaving the flag off passes the choice to config `exposure_old_addresses`, which
+is off unless it was set (`cli.py:447-449`, `engine/exposure.py:580-581`). There is no
+previous-name flag. `previous_name_checked` is true when one previous-name search was read
+(config `exposure_previous_names`, off by default). These fields were added in v0.3; `counts`
+is unchanged.
+
+`coverage_note` (`exposure_models.py:98-114`) is one plain line. It never says you are safe;
+when at least one site is in the list it says this score does not mean you are safe:
+
+* no sites (`sites_total` 0): "No sites could be searched for you yet."
+* none read automatically: "We could not check any of the N site(s) automatically, so this
+  score does not mean you are safe."
+* otherwise: "This score is based on the N site(s) we could check, out of TOTAL. A low score
+  does not mean you are safe." That second sentence is fixed. It still says "a low score"
+  when the band is medium or high.
+* then, if `check_by_hand` is not 0: "N site needs checking by hand." (or "sites need").
+* then, if `uncertain` is not 0: "N site may show you; please tell us if it is you." (or
+  "sites" / "they are").
+
+`headline` (`engine/exposure_score.py:197-215`) is one line shown with the number. It never
+says "safe", "clean" or "protected". It does not always contain a site count:
+
+* no sites: "No sites could be searched for you yet, so there is no score yet."
+* band `not_checked`: "We could not check any sites automatically, so this score tells you
+  nothing yet. Please check the sites listed below by hand."
+* band `none_found`: "We found no listings of you on the N site(s) we could check."
+* `low`, `medium` or `high`: "Your exposure is {band} on the N site(s) we could check."
+* when `sites_checked` is 0 but the band is not `not_checked`, the place is "on the sites we
+  could check" with no count.
+* when `check_by_hand` is not 0, it adds "N site was not checked, so there may be more."
+  (or "sites were").
+
+`band` is `not_checked` (score 0 and nothing checked, found or uncertain), `none_found`
+(score 0 otherwise), `low` (1-24), `medium` (25-59) or `high` (60-100)
+(`engine/exposure_score.py:185-194`).
+
+Text output for one person (`cli.py:458-491`), in this order:
+
+1. `{label}: exposure score N / 100`, plus ` (practice mode)` when that is on.
+2. `headline`, then `coverage_note`.
+3. When there are drivers: "What adds most to your score:" and one `+points text` line each
+   (top 3, biggest first; `broker_id` is null for the relatives line). Weights: docs/EXPOSURE.md.
+4. The score-change line, which is `trend.note`, only when there are 2 or more points. It is
+   printed after the driver lines, not between the coverage note and the drivers
+   (`cli.py:462-463`).
+5. The point-by-point explanation, then Found, "Please check these yourself", and Not found.
+6. If Google or Bing steps are still to do: "Google and Bing: N step(s) to do. Run freemyid
+   search-engines." (`cli.py:494-509`).
 
 `trend` (additive; the schema stays `exposure/1`) is the score over time. `points` has
 one entry per day (the day's last scan), oldest first, and offline scans are skipped.
-`change` and `since` compare the latest point with the one before it; both are null with
-fewer than 2 points. `note` is one plain line, and it warns when fewer sites could be
-checked than last time. The text output prints `note` under the coverage note once
-there are 2 or more points.
+`change` is the latest score minus the previous day's score (negative when it went down).
+`since` is that previous day. Both are null with fewer than 2 points. `note` is always set
+in JSON. Text prints it only for 2 or more points. The line is one of:
 
-`score_version`, `band`, `headline` and `drivers` (additive, v0.3; schema still
-`exposure/1`): `band` is `not_checked`, `none_found`, `low` (1-24), `medium` (25-59) or `high`
-(60-100). `headline` is one line that always says "on the N sites we could check" (or that
-nothing could be checked) and never says "safe". `drivers` are the top 3 things adding to
-the score, biggest first; `broker_id` is null for the relatives line. Show the score with
-`headline` and `coverage_note` every time. Text output prints the headline under the score,
-then "What adds most to your score:" with the drivers. Weights: docs/EXPOSURE.md.
+* no points (JSON only): "No scans yet."
+* one point (JSON only): "This is the first scan. Later scans will show whether your score
+  goes down."
+* down: "Your score went down N point(s) since DATE."
+* up: "Your score went up N point(s) since DATE."
+* same: "Your score is the same as on DATE."
+
+DATE is the previous point's day. "point" is singular only when N is 1. If fewer sites could
+be checked than last time, it adds "Fewer sites could be checked this time, so the change may
+not be real." If `score_version` differs between those two scans, it adds "The way the score
+is worked out changed between these scans, so part of the change comes from that."
+(`engine/exposure.py:847-865`). `points` do not carry `score_version`; that difference shows
+up only in `note`.
 
 ### `checklists/1`
 
@@ -294,6 +374,21 @@ Includes the list item's fields plus the full instructions. `need_on_hand`, `ste
 
 ### `search_engines/1`
 
+There is no `list` subcommand. `freemyid search-engines` with no action prints the steps.
+`freemyid search-engines list` is an unknown action and exits 2. Usage from `--help`:
+`freemyid search-engines [action] [step_id]`, and the action help is "open ID | done ID |
+undo ID (leave out to list the steps)".
+
+With no action and no `--json`, the text is the intro, then one block per step: `[x]` or
+`[ ]`, the step id, the engine and the title, why it matters now, a status line, the https
+address, and the numbered steps. A done step adds `(done DATE)`; an opened step adds
+`(opened DATE)`. It ends with "{label}: N of M to do. Open one with: freemyid search-engines
+open ID, then: freemyid search-engines done ID". If no step is available it prints "No Google
+or Bing steps are available right now." (`cli.py:946-966`). `open` prints "Opened {engine}'s
+page in your browser. If nothing opened, copy this address: {url}". `done` prints "Done:
+{title}". `undo` prints "Not done: {title}". Those three do not print the list again. With
+`--json` the same line goes to stderr and stdout is the document below (`cli.py:931-945`).
+
 `freemyid search-engines --json` (also returned by `open`, `done` and `undo` with `--json`,
 after the action):
 
@@ -315,8 +410,10 @@ https on that engine's own hosts. `done` / `undo` use the normal checklist tick,
 id, unknown or ambiguous profile: 2; checklist file missing or the step could not be opened
 or recorded: 1; nobody set up: 4.
 
-`freemyid exposure` (text output only) ends with "Google and Bing: N steps to do. Run
-freemyid search-engines." when N > 0 for that person.
+`freemyid exposure` (text output only) adds "Google and Bing: N step(s) to do. Run freemyid
+search-engines." when N > 0. "step" is singular when N is 1. With more than one person the
+line starts with that person's label and the command includes `-p` plus the first 12
+characters of the profile id (`cli.py:505-509`).
 
 ### `doctor/1`
 
@@ -330,7 +427,12 @@ freemyid search-engines." when N > 0 for that person.
 ### `monitor/1`
 
 `freemyid monitor --json [--registry FILE] [--previous last.json] [--broker ID] [--browser]`
-(for maintainers and the weekly CI job; details in docs/MONITOR.md):
+(for maintainers and the weekly CI job; details in docs/MONITOR.md). `--broker` may be
+repeated. `--browser` loads a JavaScript-built form once in a headless browser and only
+opens the page. Without `--json` the text is one summary line ("N broker page(s) checked:"
+plus the counts that are not zero), then one line per broker that is not `ok` or that
+changed, and lines for new and removed ids when a previous file was compared. An unchanged
+`ok` broker is left off that list (`cli.py:1094-1108`).
 
 ```json
 {"schema": "monitor/1", "generated_at": "2026-11-09T06:17:00+00:00",
@@ -348,9 +450,12 @@ freemyid search-engines." when N > 0 for that person.
 ```
 
 Every field is listed with its type in [MONITOR.md, Output](MONITOR.md#output-monitor1)
-(`monitor.py:197-212`, `monitor.py:358-368`). `new_brokers` and `removed_brokers` are
-additive, so the schema stays `monitor/1`. A `--previous` file that isn't monitor/1, isn't
-valid JSON or is over 2 MB is not compared (warning on stderr; the run goes on).
+(`monitor.py:197-212` for one broker, `monitor.py:376-386` for the document). `new_brokers`
+and `removed_brokers` are additive, so the schema stays `monitor/1`. With `--broker`, only
+those ids count as new or removed (`monitor.py:399-400`). A `--previous` file that cannot be
+read, is not monitor/1, is not valid JSON, or is over 2 MB is not compared. Stderr says
+`freemyid: --previous is not a monitor/1 file; not compared (<reason>)` and the run goes on
+(`monitor.py:404-420`, `cli.py:1076-1080`).
 
 Exit 0 whenever the run finishes, whatever the health values are (the CI job reads the file),
 1 when the registry can't be read (`error/1` on stdout with `--json`), 2 for a bad option.
