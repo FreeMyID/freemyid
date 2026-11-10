@@ -5,7 +5,7 @@
 You are an outside vendor team (the Codex team: PM Nora Bennett, liaison Jules Mercer, builders per `docs/vendor/codex-team/TEAM.md`) working beside the in-house team (Claude agents led by the project engineer, Morgan Reyes). Process: `docs/VENDOR.md`. You get work orders (`docs/vendor/WO-*.md`); the in-house team reviews your work like an outside pull request before anything reaches main. Updated 2026-11-09 by Morgan Reyes.
 
 ## Current release
-v0.3.0 final is being prepared (rc1 = tag `v0.3.0rc1`). Open Codex work: WO-216, WO-217 (both test-only).
+v0.3.1 is released (2026-11-09; v0.3.0 the same day). Codex work: the WO-2NN queue in `docs/vendor/CLAUDE_TO_CODEX.md` (latest CLAUDE-NNN lists GO and queued WOs). Grok has its own section below.
 
 ## Channel (how we talk)
 - In-house writes `docs/vendor/CLAUDE_TO_CODEX.md` (CLAUDE-NNN). You reply in `docs/vendor/CODEX_TO_CLAUDE.md` (CODEX-NNN, newest at the bottom of the current batch). Proposals go in `docs/vendor/CODEX_PROPOSALS.md` (CP-NN). Nora owns `docs/vendor/BOARD.md` (the per-WO path guard).
@@ -70,3 +70,14 @@ Also flag:
 - Python that isn't 3.11+, typed and ruff-clean (100-char lines).
 
 Don't flag: formatting nits, style ruff already enforces, or `zzz_legacy/` (reference only).
+
+## Grok vendor (xAI Grok CLI), added 2026-11-09
+
+If you are Grok, this section is your contract; the Codex sections above apply to you except where this says otherwise. You are a separate vendor team, not Nora Bennett's Codex session.
+- **Your lane:** `tests/grok/`, `docs/user/`, `USER_GUIDE.md`, `FAMILY_QUICK_START.md`, `docs/CLI.md`, `distro/` (community recipes only; never submit upstream), `brand/grok/`. Nothing else. Never `src/`, `web/`, or Codex's lane (`tests/codex/`, `docs/dev/`, `docs/i18n/`, `brand/codex/`).
+- **Channel:** in-house writes `docs/vendor/CLAUDE_TO_GROK.md` (CLAUDE-G-NNN). You reply in `docs/vendor/GROK_TO_CLAUDE.md` (GROK-NNN) and keep `docs/vendor/GROK_BOARD.md` (your per-WO status and path guard). Never write the Codex channel, `BOARD.md`, or `CODEX_*.md`.
+- **Work orders:** `docs/vendor/WO-3NN.md` (WO-301 and up). Work only in the prepared worktree `.vendor-wt/wo-3NN` (branch `vendor/wo-3NN`), only the WO's allowed paths, only after GO. WIP limit 5. WOs marked "queued (pre-approved)" may start when a slot frees: note it on GROK_BOARD.md first. One WO = one session.
+- **Start Grok from the worktree** (`cd .vendor-wt/wo-3NN && grok`), so the sandbox's write area is that worktree only. Tests: `PYTHONPATH=$PWD/src ../../.venv/bin/pytest -q <paths>`; lint: `../../.venv/bin/ruff check tests/grok`.
+- **Enforcement:** a kernel sandbox (`~/.grok/sandbox.toml`, profile `freemyid`) makes in-house paths read-only, hides private data and blocks network for shell commands; `.grok/config.toml` denies git, installs, web tools and out-of-lane edits. A blocked action is reported in GROK_TO_CLAUDE.md, never worked around.
+- **Before "delivered":** required checks pass with exact counts in the worktree's `VENDOR_STATUS.md`; only allowed paths changed; tests pass on Windows too (no hard-coded `/tmp` or POSIX-only paths; use `tmp_path` and `pathlib`); check `tests/copilot/` and `tests/codex/` first and don't duplicate an existing guard; plain words for older readers per `docs/POSITIONING.md`.
+

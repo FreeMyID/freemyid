@@ -44,7 +44,7 @@ branch_of() { echo "vendor/$(echo "$1" | tr 'A-Z' 'a-z')"; }
 DENY_PREFIXES=(src/freemyid/crypto.py src/freemyid/secrets.py src/freemyid/secret_backends.py
   src/freemyid/netpolicy.py src/freemyid/config.py src/freemyid/models.py src/freemyid/state.py
   src/freemyid/consent.py src/freemyid/storage/ src/freemyid/engine/mail src/freemyid/wizard/server.py
-  .github/ packaging/ pyproject.toml tools/social/ tools/cloudflare tools/mail/ tools/vendor.sh
+  .github/ packaging/ pyproject.toml tools/social/ tools/cloudflare tools/mail/ tools/vendor.sh .grok/
   brokers/registry docs/research/ AGENTS.md GEMINI.md CLAUDE.md docs/VENDOR.md docs/vendor/codex-team/ .claude/ .codex/)
 
 allowed_paths() {   # lines under "## Allowed paths" in the work order, as path prefixes

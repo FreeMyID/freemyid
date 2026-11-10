@@ -1,0 +1,42 @@
+# Grok vendor bounds for Free My ID (in-house owned: Morgan Reyes, 2026-11-09). Vendors never edit this file.
+# Layer 1 is the kernel sandbox in ~/.grok/sandbox.toml (profile "freemyid", the default in ~/.grok/config.toml):
+#   in-house paths read-only, private data unreadable, no network for shell commands.
+# Layer 2 (this file) is permission rules. Deny always wins, including over always-approve.
+# The contract is AGENTS.md ("Grok vendor" section). Process: docs/VENDOR.md.
+
+[permission]
+deny = [
+  # No git/GitHub, installs, network tools, privilege or containers.
+  "Bash(git)", "Bash(git *)", "Bash(gh)", "Bash(gh *)",
+  "Bash(pip)", "Bash(pip *)", "Bash(pip3)", "Bash(pip3 *)", "Bash(*-m pip*)", "Bash(*pip install*)",
+  "Bash(uv)", "Bash(uv *)", "Bash(pipx *)", "Bash(pnpm)", "Bash(pnpm *)", "Bash(npm)", "Bash(npm *)",
+  "Bash(npx)", "Bash(npx *)", "Bash(yarn *)", "Bash(playwright install*)",
+  "Bash(curl)", "Bash(curl *)", "Bash(wget)", "Bash(wget *)", "Bash(ssh *)", "Bash(scp *)", "Bash(rsync *)",
+  "Bash(sudo *)", "Bash(su *)", "Bash(docker *)", "Bash(podman *)", "Bash(rm -rf *)", "Bash(chmod -R *)",
+  "Bash(*freemyid run*)", "Bash(*freemyid send*)", "Bash(*schedule install*)",
+  "WebSearch", "WebFetch",
+
+  # Secrets and the owner's real data.
+  "Read(~/.ssh/**)", "Read(~/.config/**)", "Read(~/.codex/**)", "Read(~/.claude/**)",
+  "Read(~/.freemyid/**)", "Read(~/.local/share/keyrings/**)", "Read(**/.env)", "Read(**/.env.*)",
+
+  # In-house only (Edit and Write both, so new files are blocked too).
+  "Edit(src/**)", "Write(src/**)", "Edit(web/**)", "Write(web/**)",
+  "Edit(.github/**)", "Write(.github/**)", "Edit(packaging/**)", "Write(packaging/**)",
+  "Edit(.claude/**)", "Write(.claude/**)", "Edit(.codex/**)", "Write(.codex/**)",
+  "Edit(.grok/**)", "Write(.grok/**)", "Edit(tools/**)", "Write(tools/**)",
+  "Edit(brokers/**)", "Write(brokers/**)", "Edit(schema/**)", "Write(schema/**)",
+  "Edit(pyproject.toml)", "Write(pyproject.toml)",
+  "Edit(AGENTS.md)", "Write(AGENTS.md)", "Edit(CLAUDE.md)", "Write(CLAUDE.md)",
+  "Edit(GEMINI.md)", "Write(GEMINI.md)", "Edit(docs/VENDOR.md)", "Write(docs/VENDOR.md)",
+  "Edit(docs/research/**)", "Write(docs/research/**)",
+  "Edit(docs/vendor/WO-*.md)", "Write(docs/vendor/WO-*.md)",
+  "Edit(docs/vendor/CLAUDE_TO_*.md)", "Write(docs/vendor/CLAUDE_TO_*.md)",
+
+  # Codex's lane and channel (one vendor per lane).
+  "Edit(tests/codex/**)", "Write(tests/codex/**)", "Edit(docs/dev/**)", "Write(docs/dev/**)",
+  "Edit(docs/i18n/**)", "Write(docs/i18n/**)", "Edit(brand/codex/**)", "Write(brand/codex/**)",
+  "Edit(docs/vendor/CODEX_*.md)", "Write(docs/vendor/CODEX_*.md)",
+  "Edit(docs/vendor/BOARD.md)", "Write(docs/vendor/BOARD.md)",
+  "Edit(docs/vendor/codex-team/**)", "Write(docs/vendor/codex-team/**)",
+]
