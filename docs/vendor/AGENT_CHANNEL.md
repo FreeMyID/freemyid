@@ -34,6 +34,28 @@ Grok = `GROK_BOARD.md`.
 ```
 Then short bullets. Append; never edit or delete earlier messages. No secrets, no real personal data.
 
+## Away-week operating rules (in-house offline until about 2026-11-14)
+
+Goal: nobody waits on in-house. These rules override anything earlier that would make you stop.
+
+**Scope (exact; enforced by `.grok/config.toml` for Grok and by `tools/vendor.sh` scope checks before any merge):**
+- You change only the paths listed under "Allowed paths" in your WO, inside your own worktree `.vendor-wt/wo-NNN`. Nothing else, ever.
+- Codex lane and Grok lane are in AGENTS.md "Your lane". A file in the other team's lane is off limits even if a WO lists it by mistake: stop that WO and report it.
+- In-house only, never editable: `src/freemyid/wizard/`, templates, `web/`, `site*/`, `brand/` (except `brand/codex/`), security core (crypto, secrets, secret_backends, netpolicy, consent, logging_setup, storage/, engine/browser.py), contracts (models, interfaces, state, registry, config, paths, cli.py, `__init__.py`, schema/), `.github/`, `packaging/`, `tools/`, `pyproject.toml`, `.claude/ .codex/ .grok/`, AGENTS.md, CLAUDE.md, docs/VENDOR.md, WO files, team rosters, CLAUDE_TO_* files, EPICS.md.
+- Never: git, gh, push, installs, network access, reading outside the repo (no `~/.config`, keyrings, `.env`, home directory), real personal data, secrets. Grok's sandbox can't technically block network or home reads on this machine: the rule still applies, and breaking it ends the engagement.
+
+**No blockers:**
+1. **WIP 5 counts only WOs you are actively building.** Delivered-and-waiting-for-review WOs don't count. Deliver, then pull the next queued WO.
+2. **Blocked WO** (Status `blocked: ...`): skip it and take the next queued one. Don't try to unblock it yourself.
+3. **"Start after WO-NNN"** means after WO-NNN is *delivered*, not merged. Start your worktree from main, then copy in WO-NNN's delivered changes for the shared file (read-only from `.vendor-wt/wo-NNN/`; reading your own team's sibling worktree is allowed for this) and say so in VENDOR_STATUS.md. In-house merges them in order.
+4. **Needs a contract change mid-WO:** don't change the contract. Do everything possible behind the existing interfaces, write exactly what's missing under "Questions for the owner", deliver what you have as partial, and move on.
+5. **Unclear spec:** choose the most conservative reading (least data sent, least behaviour change, most user-friendly), write the choice in VENDOR_STATUS.md, and keep going. Don't wait for an answer.
+6. **Tests that can't run in your sandbox** (browser/Chromium, sockets): record them as "skipped in sandbox, needs in-house rerun", never as passing. That doesn't block delivery.
+7. **A failing existing test unrelated to your change:** note it with the exact output and continue. Don't edit tests outside your WO to make them pass.
+8. **Queue empty or all blocked:** send CHALLENGE messages (critique in-house code, docs, roadmap), propose new WOs in your proposals file, or improve tests/docs inside your own lane. No new code outside a WO.
+
+**Delivery checklist (each WO):** required checks pass with exact counts; `git diff`-equivalent reviewed by your delivery lead; only allowed paths touched; VENDOR_STATUS.md has Done / Next / Questions / How to test; one channel message with the WO and its tracker issue number; board updated.
+
 ## Challenges: vendors push back on in-house (owner rule, 2026-11-09)
 
 In-house (Claude) has the final say, but Codex and Grok are expected to **challenge it**: question decisions, point out what in-house missed, and suggest bolder or simpler approaches their models see. Agreeing by default is not the job.

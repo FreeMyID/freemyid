@@ -41,11 +41,25 @@ wt_of() { echo "$SCRATCH/$(echo "$1" | tr 'A-Z' 'a-z')"; }
 branch_of() { echo "vendor/$(echo "$1" | tr 'A-Z' 'a-z')"; }
 
 # In-house only: no vendor change may touch these, whatever its work order says (docs/VENDOR.md).
-DENY_PREFIXES=(src/freemyid/crypto.py src/freemyid/secrets.py src/freemyid/secret_backends.py
-  src/freemyid/netpolicy.py src/freemyid/config.py src/freemyid/models.py src/freemyid/state.py
-  src/freemyid/consent.py src/freemyid/storage/ src/freemyid/engine/mail src/freemyid/wizard/server.py
-  .github/ packaging/ pyproject.toml tools/social/ tools/cloudflare tools/mail/ tools/vendor.sh tools/route.py tools/agent_routing.yaml .grok/
-  brokers/registry docs/research/ AGENTS.md GEMINI.md CLAUDE.md docs/VENDOR.md docs/vendor/codex-team/ .claude/ .codex/)
+DENY_PREFIXES=(  # in-house only for every vendor (AGENTS.md "Your lane", owner 2026-11-09)
+  src/freemyid/wizard/ src/freemyid/templates/ src/freemyid/storage/ src/freemyid/crypto.py src/freemyid/secrets.py
+  src/freemyid/secret_backends.py src/freemyid/netpolicy.py src/freemyid/consent.py src/freemyid/logging_setup.py
+  src/freemyid/models.py src/freemyid/interfaces.py src/freemyid/state.py src/freemyid/registry.py src/freemyid/cli.py
+  src/freemyid/config.py src/freemyid/paths.py src/freemyid/__init__.py src/freemyid/engine/browser.py schema/
+  web/ site/ site_src/ brand/social/ brand/screenshots/ .github/ packaging/ pyproject.toml tools/ .grok/
+  brokers/registry docs/research/ AGENTS.md GEMINI.md CLAUDE.md docs/VENDOR.md docs/vendor/codex-team/ docs/vendor/grok-team/
+  docs/vendor/WO- docs/vendor/CLAUDE_TO_ docs/vendor/EPICS.md .claude/ .codex/)
+# Cross-lane: Codex never edits Grok's lane and vice versa.
+GROK_LANE=(src/freemyid/engine/mail src/freemyid/engine/outbox.py src/freemyid/engine/runner.py
+  src/freemyid/engine/tiers.py src/freemyid/engine/handoff.py src/freemyid/engine/plugins.py src/freemyid/engine/filler.py
+  src/freemyid/engine/fill_for_me.py src/freemyid/submitters/ src/freemyid/scheduler/ src/freemyid/notify.py
+  src/freemyid/setup_config.py src/freemyid/cli_json.py tests/grok/ docs/user/ docs/USER_GUIDE.md USER_GUIDE.md
+  FAMILY_QUICK_START.md docs/CLI.md distro/ docs/vendor/GROK_)
+CODEX_LANE=(src/freemyid/engine/matcher.py src/freemyid/engine/nicknames.py src/freemyid/engine/exposure
+  src/freemyid/engine/listing_finder.py src/freemyid/engine/search_engines.py src/freemyid/engine/law_matrix.py
+  src/freemyid/engine/letters.py src/freemyid/engine/htmlsel.py src/freemyid/monitor.py src/freemyid/exposure_models.py
+  src/freemyid/checklists.py src/freemyid/checklist_state.py src/freemyid/doctor.py tests/codex/ docs/dev/ docs/i18n/
+  brand/codex/ docs/vendor/CODEX_ docs/vendor/BOARD.md docs/vendor/CODEX_PROPOSALS.md)
 
 allowed_paths() {   # lines under "## Allowed paths" in the work order, as path prefixes
   awk '/^## Allowed paths/{f=1;next} /^## /{f=0} f' "$1" | sed -nE 's/^[-*] *`?([^` ]+)`?.*/\1/p'
@@ -95,6 +109,10 @@ scope_report() {   # $1 WO id
     # SEC-110: an allowed file matches exactly; only an allowed entry ending in '/' covers what is under it
     ok=0; for a in "${allow[@]}"; do if [[ "$a" == */ ]]; then [[ "$f" == "$a"* ]] && ok=1; else [[ "$f" == "$a" ]] && ok=1; fi; done
     for d in "${DENY_PREFIXES[@]}"; do [[ "$f" == "$d"* ]] && { echo "IN-HOUSE ONLY: $f"; bad=1; ok=1; }; done
+    case "$(grep -m1 -i '^Vendor:' "$file" | tr 'A-Z' 'a-z')" in
+      *codex*) for d in "${GROK_LANE[@]}"; do [[ "$f" == "$d"* ]] && { echo "GROK LANE: $f"; bad=1; ok=1; }; done ;;
+      *grok*)  for d in "${CODEX_LANE[@]}"; do [[ "$f" == "$d"* ]] && { echo "CODEX LANE: $f"; bad=1; ok=1; }; done ;;
+    esac
     [ $ok = 1 ] || { echo "OUT OF SCOPE: $f"; bad=1; }
   done < <(git -C "$ROOT" log --format= --no-renames --name-only --author='\[freemyid-\(codex\|vendor\)\]' "main..$branch" | sort -u | grep -v '^$')
   # only VENDOR-authored commits are policed; in-house review edits on the branch are allowed

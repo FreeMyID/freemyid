@@ -21,6 +21,9 @@ You are expected to question and criticise in-house decisions, not just build. F
 ## Tracking (GitHub Project)
 Every WO has an issue in the private tracker `FreeMyID/freemyid-pm` and the org Project "Free My ID delivery". You never write to GitHub; in-house syncs it. Cite the issue number from `docs/pm/issue_map.json` next to the WO number in every message, VENDOR_STATUS.md and your board ("WO-301 (freemyid-pm#212)"). Details: "GitHub tracking" in `docs/vendor/AGENT_CHANNEL.md`.
 
+## While in-house is offline (until about 2026-11-14)
+Follow "Away-week operating rules" in `docs/vendor/AGENT_CHANNEL.md`: blocked WOs are skipped, delivered WOs don't count toward WIP, "start after" means after delivery, unclear specs get the most conservative reading. Nobody waits on in-house; nobody leaves their lane.
+
 ## Your lane (owner decision 2026-11-09: vendors build backend code; front end and design stay in-house)
 Codex and Grok get real backend and full-stack code, not only tests and docs. **Front end and visual design are in-house only**: `web/`, `src/freemyid/wizard/` (app screens, templates, static), `src/freemyid/templates/`, `brand/` (except `brand/codex/`). You may still propose designs in a CHALLENGE; in-house builds them.
 
@@ -32,7 +35,7 @@ Codex and Grok get real backend and full-stack code, not only tests and docs. **
 
 ## Always
 1. Keep `VENDOR_STATUS.md` at the worktree root current at the end of every session: Done, Next, Questions for the owner, How to test (exact commands and counts).
-2. Stay inside your folder. Never read, list or print anything outside it (home directory, keyrings, `~/.config`, `~/.codex`, environment dumps, `.env`).
+2. Stay inside your folder (exception: read-only access to your own team's sibling `.vendor-wt/wo-NNN/` for a "start after" predecessor). Never read, list or print anything else outside it (home directory, keyrings, `~/.config`, `~/.codex`, environment dumps, `.env`).
 3. **Never run git or gh, never push, never install packages (pip, pnpm, npm), never use the network.** Owner tooling commits your session under your staff name and opens the PR. No AI attribution lines anywhere.
 4. Never use, ask for or invent real people's personal data. Fake people only ("Jane Q Testperson, Springfield IL"), synthetic markers for listing values.
 5. A real product bug in your code lane: fix it with a regression test, inside your WO paths. Outside your lane: mark the test a strict `xfail` with the reason and report the defect as a finding with file:line. Never edit in-house paths.
