@@ -428,6 +428,19 @@ GROK-027 said the branches were pushed. These are the draft pull requests. The b
 
 WO-330 was not started. The code lane was not started. CODEX-X-010 was read and needs no reply. Her next files are in `tests/codex/` and `docs/dev/`. We do not edit those.
 
+## GROK-029 — pull the vendor branches; keep pushing them
+
+- Date: 2026-11-09
+- From: Helen Ashford (Grok PM)
+- To: Morgan Reyes
+- Reply to: none
+- Status: vendor branches pulled; `main` was not pulled
+
+- The owner said to pull from the open pull requests or their remote branches, and to keep pushing and pulling those branches while the work is open.
+- `vendor/wo-301` through `vendor/wo-329` and `vendor/grok-channel` were pulled with fast-forward only. Each one was already up to date with origin.
+- `main` was not pulled, pushed, or merged. It is still `f6e75d5`.
+- The rule is in `docs/vendor/VERSION_CONTROL.md` on this branch. A pull that is not a fast-forward will be reported. It will not be forced.
+
 
 ## GROK-009 — CHALLENGE: "merged" order lines stall the queue while review is away
 

@@ -2,7 +2,7 @@
 
 Sole writer: the Grok vendor session. Path guard for WO-3NN only. Codex's `BOARD.md` is Nora's. This board grants no extra edit permission.
 
-Last checkpoint: 2026-11-09. Owner said push vendor branches and open pull requests, never main. Draft pull requests #78 through #106 are open for WO-301 through WO-329 (WO-301 is #78, WO-328 is #105, WO-329 is #106). WO-330 was not started. Code lane still not started. `main` was not pushed. CODEX-X-010 was read and needs no reply: it acknowledges GROK-X-007, and Codex's next files are under `tests/codex/` and `docs/dev/`.
+Last checkpoint: 2026-11-09. Owner said push vendor branches and open pull requests, never main, and then said to pull those remote branches and keep using push and pull while the work is open. Draft pull requests #78 through #106 are open for WO-301 through WO-329 (WO-301 is #78, WO-328 is #105, WO-329 is #106). Those branches and `vendor/grok-channel` were pulled with fast-forward only. They were already up to date. `main` was not pulled and was not pushed. WO-330 was not started. Code lane still not started. CODEX-X-010 was read and needs no reply.
 
 | Work order | Status | Reserved paths | Last update |
 | --- | --- | --- | --- |
@@ -17,7 +17,7 @@ Last checkpoint: 2026-11-09. Owner said push vendor branches and open pull reque
 | WO-309 | delivered (issue pending) | `tests/grok/test_gk_doc_labels_exist.py`; `tests/grok/__init__.py` | 2026-11-09 checks 14 passed, 3 xfailed; ruff clean |
 | WO-310 | delivered (issue pending) | `docs/user/troubleshooting.md` | 2026-11-09 checks 560 passed, 17 skipped, 1 xfailed |
 
-WIP 0/5. WO-301 through WO-329 are delivered. Draft pull requests #78 through #106 are open. WO-330 waits for Morgan's rebase note. Code work orders are not started. WO-331..340 wait for the code lane.
+WIP 0/5. WO-301 through WO-329 are delivered. Draft pull requests #78 through #106 are open and their branches are up to date with origin. WO-330 waits for Morgan's rebase note. Code work orders are not started. WO-331..340 wait for the code lane.
 
 ## In-house additions, CLAUDE-G-004 (Morgan Reyes, 2026-11-09)
 

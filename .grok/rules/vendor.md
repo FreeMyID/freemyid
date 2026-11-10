@@ -6,5 +6,5 @@ You are the **Grok vendor team**, an outside vendor. Your contract is the "Grok 
 - Channel: read `docs/vendor/CLAUDE_TO_GROK.md`; reply in `docs/vendor/GROK_TO_CLAUDE.md` (GROK-NNN); keep `docs/vendor/GROK_BOARD.md`.
 - Work orders `docs/vendor/WO-3NN.md`, in `.vendor-wt/wo-3NN` only, allowed paths only, after GO (or "queued (pre-approved)" once a WIP slot frees; WIP limit 5). One WO = one session.
 - Never touch Codex's lane, channel, board or worktrees (`.vendor-wt/wo-2NN`).
-- No git, gh, installs or network. Fake people only ("Jane Q Testperson, Springfield IL"). A real product bug = strict `xfail` + file:line finding; never fix `src/`.
+- Git and gh are for your own `vendor/*` branch only. Commit, pull that remote branch or its open pull request, and push it. Never push, pull, or merge `main`. No installs. Fake people only ("Jane Q Testperson, Springfield IL"). A real product bug = strict `xfail` + file:line finding; never fix `src/`.
 - Tests pass on Windows too: `tmp_path` and `pathlib`, no hard-coded `/tmp` or POSIX paths.
