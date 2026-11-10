@@ -8,6 +8,9 @@ to the request, so what the user approves is exactly what gets sent.
 * LEGAL_DEMAND               -> always QUEUED_FOR_APPROVAL
 * email_mode AUTO + mailer   -> sent now
 * after a send               -> EMAIL_SENT evidence (the raw message), Request SENT.
+* transient mail error       -> status stays; FAILED on the 3rd, or on a permanent error.
+* crash after the mailer accepts -> email_handed is stored first; the next drain
+  records SENT once and does not send that message again.
 
 `approve_and_send(store, request_id)` is the user-approved send (CLI `outbox approve`,
 dashboard). It refuses unless `config.real_submissions_enabled` (or a mailer is injected,
@@ -21,8 +24,11 @@ from __future__ import annotations
 
 import logging
 import os
+import smtplib
+import socket
 import sys
-from datetime import date, datetime
+from datetime import UTC, date, datetime, timedelta
+from typing import Any
 from urllib.parse import quote, urlencode
 
 from .. import config as cfgmod
@@ -273,6 +279,7 @@ def _open_manual(store, profile_id: str, broker_id: str, kind: RequestKind,
 
 HOLD_ACTION = "email_held_first_approval"   # SEC-27 Event marker (detail: request_id)
 RELEASE_ACTION = "held_emails_released"      # SEC-27 Event marker (detail: counts)
+HANDOFF_ACTION = "email_handed"              # mailer accepted; SENT row may not exist yet
 
 
 def email_sent_before(store, profile_id: str) -> bool:
@@ -343,6 +350,9 @@ def queue_email(store, profile: Profile, broker: Broker, listings: list[Listing]
     now = now or utcnow()
     existing = _open_request(store, profile.id, broker.id, kind, dry_run)
     if existing:
+        # The mailer already took this letter. Finish the SENT row; do not send it again.
+        if not existing.dry_run and _handed_off(store, existing):
+            return send_request(store, existing, profile, mailer, now=now)
         # SEC-27: an AUTO email that was held for the first approval goes out once the
         # profile has an approved send (approve_and_send also releases them right away).
         if (mailer is not None and _auto_releasable(profile, existing)
@@ -380,36 +390,180 @@ def queue_email(store, profile: Profile, broker: Broker, listings: list[Listing]
     return send_request(store, req, profile, mailer, now=now)
 
 
+# Attempts are email_failed rows in the event log, not a Request field.
+# Backoff after a transient failure: 15 minutes, then 1 hour. The third is FAILED.
+_TRANSIENT_ATTEMPTS = 3
+_BACKOFF_FIRST = timedelta(minutes=15)
+_BACKOFF_LATER = timedelta(hours=1)
+_FAILURE_EVENT_LIMIT = 2000
+
+
+def is_transient_mail_error(exc: BaseException) -> bool:
+    """True for a timeout, a dropped connection, or an SMTP 4xx.
+
+    Permanent: everything else, including SMTPAuthenticationError (even a 4xx auth code)
+    and any 5xx. ``socket.timeout`` aliases ``TimeoutError`` on Python 3.10+; both names
+    are listed so the check matches the spec on a runtime that still separates them.
+    """
+    if isinstance(exc, smtplib.SMTPAuthenticationError):
+        return False
+    transient = (TimeoutError, socket.timeout, ConnectionError, smtplib.SMTPServerDisconnected)
+    if isinstance(exc, transient):
+        return True
+    if isinstance(exc, smtplib.SMTPResponseException):
+        code = exc.smtp_code
+        return isinstance(code, int) and 400 <= code < 500
+    return False
+
+
+def _mail_failure(exc: BaseException) -> BaseException:
+    """Exception to classify. The real mailer wraps SMTP errors in MailError."""
+    from .mail import MailError
+    if not isinstance(exc, MailError):
+        return exc
+    inner = exc.__cause__ if exc.__cause__ is not None else exc.__context__
+    return inner if isinstance(inner, BaseException) else exc
+
+
+def _as_utc(ts: datetime) -> datetime:
+    return ts if ts.tzinfo is not None else ts.replace(tzinfo=UTC)
+
+
+def _transient_failures(store, req: Request) -> list[Event]:
+    """Newest-first transient email_failed rows for this request."""
+    found: list[Event] = []
+    rows = store.events(req.profile_id, req.broker_id, limit=_FAILURE_EVENT_LIMIT)
+    for ev in rows:
+        if ev.action != "email_failed" or ev.detail.get("request_id") != req.id:
+            continue
+        if ev.detail.get("transient") is True:
+            found.append(ev)
+    return found
+
+
+def _retry_waiting(store, req: Request, now: datetime) -> bool:
+    """True when the last transient failure is newer than this request's backoff."""
+    failures = _transient_failures(store, req)
+    if not failures:
+        return False
+    wait = _BACKOFF_FIRST if len(failures) == 1 else _BACKOFF_LATER
+    # events() is newest-first, so the first row is the last failure.
+    return _as_utc(now) - _as_utc(failures[0].ts) < wait
+
+
+def _note_send_failure(store, req: Request, profile: Profile,
+                       failure: BaseException) -> None:
+    transient = is_transient_mail_error(failure)
+    detail: dict[str, Any] = {
+        "request_id": req.id,
+        "error": type(failure).__name__,
+        "transient": transient,
+    }
+    give_up = not transient
+    if transient:
+        attempt = len(_transient_failures(store, req)) + 1
+        detail["attempt"] = attempt
+        give_up = attempt >= _TRANSIENT_ATTEMPTS
+    if give_up:
+        store.save_request(req.model_copy(update={"status": RequestStatus.FAILED}))
+    store.log(Event(profile_id=profile.id, broker_id=req.broker_id, actor=Actor.ENGINE,
+                    action="email_failed", detail=detail))
+
+
+def _matching_events(store, req: Request, action: str) -> list[Event]:
+    """Events for this request, newest first, within the same cap as retry rows."""
+    found: list[Event] = []
+    rows = store.events(req.profile_id, req.broker_id, limit=_FAILURE_EVENT_LIMIT)
+    for ev in rows:
+        if ev.action == action and ev.detail.get("request_id") == req.id:
+            found.append(ev)
+    return found
+
+
+def _has_sent_evidence(store, req: Request) -> bool:
+    for ev in store.list_evidence(req.profile_id, req.broker_id):
+        if ev.request_id == req.id and ev.kind == EvidenceKind.EMAIL_SENT:
+            return True
+    return False
+
+
+def _handed_off(store, req: Request) -> bool:
+    """True once the mailer has accepted this request.
+
+    Stored with the calls the store already has: an ``email_handed`` event written
+    before the SENT row, or EMAIL_SENT evidence if the crash was after that blob.
+    """
+    if _has_sent_evidence(store, req):
+        return True
+    return bool(_matching_events(store, req, HANDOFF_ACTION))
+
+
+def _accepted_at(store, req: Request) -> datetime | None:
+    rows = _matching_events(store, req, HANDOFF_ACTION)
+    if not rows:
+        return None
+    return min(rows, key=lambda ev: _as_utc(ev.ts)).ts
+
+
+def _record_sent(store, req: Request, profile: Profile, sent_at: datetime, *,
+                 raw: bytes | None, has_mid: bool) -> Request:
+    """Write one EMAIL_SENT blob and the SENT row. A second call does not duplicate them."""
+    if not _has_sent_evidence(store, req):
+        if raw is None:
+            to, subject, body = letter_for(store, req)
+            raw = _letter_blob(to, subject, body)
+        _save_blob(store, profile.id, req.broker_id, EvidenceKind.EMAIL_SENT, raw, req.id,
+                   f"{req.kind.value} email sent", "eml")
+    current = store.get_request(req.id) or req
+    if current.status != RequestStatus.SENT:
+        current = current.model_copy(update={"status": RequestStatus.SENT, "sent_at": sent_at,
+                                             "reference": current.reference})
+        store.save_request(current)
+    if not _matching_events(store, req, "email_sent"):
+        store.log(Event(profile_id=profile.id, broker_id=req.broker_id, actor=Actor.ENGINE,
+                        action="email_sent",
+                        detail={"request_id": req.id, "kind": req.kind.value,
+                                "has_message_id": has_mid}))
+    log.info("outbox code=%s count=%s", "email_sent", 1)
+    return current
+
+
 def send_request(store, req: Request, profile: Profile, mailer, *,
                  now: datetime | None = None) -> Request:
-    """Send a stored request letter. Never for dry-run requests."""
+    """Send a stored request letter. Never for dry-run requests.
+
+    A transient mail error leaves the status as it is, logs email_failed with
+    transient and the attempt number, and still raises OutboxError. The third
+    transient failure for this request, and any permanent error, marks it FAILED.
+
+    Once the mailer returns, ``email_handed`` is stored before the SENT row. If
+    that row is still missing on a later call, the message is recorded and not sent.
+    """
     if req.dry_run:
         raise OutboxError("dry-run requests are never sent")
     if req.status not in (RequestStatus.QUEUED_FOR_APPROVAL, RequestStatus.DRAFT):
         raise OutboxError(f"request is {req.status.value}, not sendable")
+    now = now or utcnow()
+    if _handed_off(store, req):
+        log.info("outbox code=%s count=%s", "already_handed", 1)
+        handed = _matching_events(store, req, HANDOFF_ACTION)
+        has_mid = any(ev.detail.get("has_message_id") is True for ev in handed)
+        return _record_sent(store, req, profile, _accepted_at(store, req) or now,
+                            raw=None, has_mid=has_mid)
     if profile.mailbox is None:
         raise OutboxError("profile has no removal mailbox")
-    now = now or utcnow()
     to, subject, body = letter_for(store, req)
     try:
         mid = mailer.send(profile, to, subject, body, req.id)
-    except Exception as e:  # noqa: BLE001 - any mailer failure marks the request FAILED
-        store.save_request(req.model_copy(update={"status": RequestStatus.FAILED}))
-        store.log(Event(profile_id=profile.id, broker_id=req.broker_id, actor=Actor.ENGINE,
-                        action="email_failed",
-                        detail={"request_id": req.id, "error": type(e).__name__}))
-        raise OutboxError(f"send failed: {type(e).__name__}") from None
-    raw = getattr(mailer, "last_raw", None) or _letter_blob(to, subject, body)
-    _save_blob(store, profile.id, req.broker_id, EvidenceKind.EMAIL_SENT, raw, req.id,
-               f"{req.kind.value} email sent", "eml")
-    sent = req.model_copy(update={"status": RequestStatus.SENT, "sent_at": now,
-                                  "reference": req.reference})
-    store.save_request(sent)
+    except Exception as e:  # noqa: BLE001 - classified, then re-raised as OutboxError
+        failure = _mail_failure(e)
+        _note_send_failure(store, req, profile, failure)
+        raise OutboxError(f"send failed: {type(failure).__name__}") from None
     store.log(Event(profile_id=profile.id, broker_id=req.broker_id, actor=Actor.ENGINE,
-                    action="email_sent", detail={"request_id": req.id,
-                                                 "kind": req.kind.value,
-                                                 "has_message_id": bool(mid)}))
-    return sent
+                    ts=now, action=HANDOFF_ACTION,
+                    detail={"request_id": req.id, "has_message_id": bool(mid)}))
+    raw = getattr(mailer, "last_raw", None) or _letter_blob(to, subject, body)
+    return _record_sent(store, req, profile, now, raw=raw, has_mid=bool(mid))
 
 
 # --------------------------------------------------------------------------- approval
@@ -474,12 +628,41 @@ def approve_and_send(store, request_id: str, *, mailer=None, registry: Registry 
         release_held(store, profile, mailer=mailer, registry=registry, now=now)
 
 
+def _broker_from(registry: Registry | None, broker_id: str) -> Broker | None:
+    if registry is None:
+        return None
+    try:
+        return registry.get(broker_id)
+    except KeyError:
+        return None
+
+
+def _finish_send(store, profile: Profile, req: Request, mailer, registry: Registry | None,
+                 now: datetime) -> str:
+    """Send or, if the mailer already accepted it, only record. ``sent`` or ``failed``."""
+    try:
+        sent = send_request(store, req, profile, mailer, now=now)
+    except OutboxError:
+        return "failed"
+    apply_sent(store, sent, _broker_from(registry, req.broker_id), now)
+    return "sent"
+
+
 def release_held(store, profile: Profile, *, mailer, registry: Registry | None = None,
                  now: datetime | None = None) -> dict[str, int]:
     """SEC-27: after the profile's first approved send, send the AUTO emails that were held
     for it. Legal demands, dry-run and non-AUTO requests are never touched. One failure
-    never stops the rest (the failed request is marked FAILED by send_request)."""
-    counts = {"sent": 0, "failed": 0}
+    never stops the rest.
+
+    A request still inside its backoff (15 minutes after the first transient failure, one
+    hour after the second) is skipped and counted as deferred on the release event.
+    deferred is omitted when nothing was skipped. A permanent error, or the third
+    transient failure, is marked FAILED by send_request and counted as failed.
+
+    Once this pass runs (a real email is already on record), a request the mailer
+    already accepted is recorded and not sent again, including during its backoff.
+    """
+    counts: dict[str, int] = {"sent": 0, "failed": 0}
     if profile.email_mode != EmailMode.AUTO or not email_sent_before(store, profile.id):
         return counts
     from ..consent import consent_ok
@@ -489,20 +672,49 @@ def release_held(store, profile: Profile, *, mailer, registry: Registry | None =
     for r in store.list_requests(profile.id, status=RequestStatus.QUEUED_FOR_APPROVAL):
         if not _auto_releasable(profile, r):
             continue
-        try:
-            sent = send_request(store, r, profile, mailer, now=now)
-        except OutboxError:
-            counts["failed"] += 1
+        # Already accepted: do not wait out backoff, and do not hand it to the mailer.
+        if _handed_off(store, r):
+            counts[_finish_send(store, profile, r, mailer, registry, now)] += 1
             continue
-        broker: Broker | None = None
-        if registry is not None:
-            try:
-                broker = registry.get(r.broker_id)
-            except KeyError:
-                broker = None
-        apply_sent(store, sent, broker, now)
-        counts["sent"] += 1
-    if counts["sent"] or counts["failed"]:
+        # Omitted when zero: existing release events are exactly {sent, failed}.
+        if _retry_waiting(store, r, now):
+            counts["deferred"] = counts.get("deferred", 0) + 1
+            continue
+        counts[_finish_send(store, profile, r, mailer, registry, now)] += 1
+    if counts["sent"] or counts["failed"] or counts.get("deferred"):
         store.log(Event(profile_id=profile.id, actor=Actor.ENGINE, action=RELEASE_ACTION,
                         detail=dict(counts)))
+    return counts
+
+
+def drain(store, profile: Profile, mailer, *, registry: Registry | None = None,
+          now: datetime | None = None) -> dict[str, int]:
+    """One pass over this profile's queued email.
+
+    A message the mailer already accepted is recorded once and not sent again.
+    A message that never reached the mailer is sent when the approval rules and
+    the WO-332 backoff already allow it. Counts and codes only.
+    """
+    counts: dict[str, int] = {"sent": 0, "recorded": 0, "failed": 0, "deferred": 0}
+    now = now or utcnow()
+    from ..consent import consent_ok
+    allowed = consent_ok(profile, store)[0]
+    queued = store.list_requests(profile.id, status=RequestStatus.QUEUED_FOR_APPROVAL)
+    for req in queued:
+        if req.dry_run or req.method != Method.EMAIL:
+            continue
+        if _handed_off(store, req):
+            outcome = _finish_send(store, profile, req, mailer, registry, now)
+            counts["recorded" if outcome == "sent" else "failed"] += 1
+            continue
+        if not allowed or not _auto_releasable(profile, req) or needs_approval(
+                profile, req.kind, store):
+            continue
+        if _retry_waiting(store, req, now):
+            counts["deferred"] += 1
+            continue
+        outcome = _finish_send(store, profile, req, mailer, registry, now)
+        counts["sent" if outcome == "sent" else "failed"] += 1
+    log.info("outbox drain sent=%s recorded=%s failed=%s deferred=%s",
+             counts["sent"], counts["recorded"], counts["failed"], counts["deferred"])
     return counts
