@@ -11,8 +11,8 @@ Structure: **epic -> work orders (WO-NNN.md) -> task checklists** (the `## Tasks
 5. Numbering: Codex WO-291..299 then WO-401 upward; Grok WO-501 upward. Never reuse a number.
 
 ## Totals (written so far)
-- Work orders written: 61 (52 queued, 9 blocked).
-- Codex: 30. Grok: 31.
+- Work orders written: 65 (55 queued, 10 blocked).
+- Codex: 33. Grok: 32.
 
 ## E1. Helper setup bundle backend ("Set it up for someone else")
 **Owner team:** Grok (backend-core, test-writer)
@@ -218,9 +218,13 @@ Structure: **epic -> work orders (WO-NNN.md) -> task checklists** (the `## Tasks
 **Goal:** ROADMAP 3.3 (phone number and email-only removals; ACP guidance). Make the value-only path (BL-IN-08) solid and add backend data for state ACP guidance.
 
 **Sub-work-orders:**
-- Codex: WO-422..424. Grok: WO-532. (to be written in this wave; see `git log docs/vendor/EPICS.md`)
+- WO-422 [codex, Ravi Menon]: Matcher: a phone number with an extension still matches (after WO-277)
+- WO-423 [codex, Felix Grant]: Phone and email-only scans: guards for the edge cases (after WO-402)
+- WO-424 [codex, Ravi Menon]: Address confidentiality programs: look one up by state **(blocked)** (after WO-246, WO-284, WO-297)
+- WO-532 [grok, Ethan Brandt]: Phone and email-only removals through the runner, end to end with fakes
 
 **Dependencies:** WO-275 (letters), WO-345 (tiers), WO-338/354 (filler).
 
 **What in-house must do:**
 - Add the ACP guidance entries and screen; decide whether ACP is a checklist or its own flow.
+- Unblock WO-424: In-house must (1) get the owner's decision on the feature and a safety review: guidance for survivors must be shown only on the device, never stored in an event, a log, a letter or an export, and must not appear in the monthly update or the printable report; (2) add the contract: a model (for example `AcpProgram` in `models.py`: state, program name, who may apply, how to apply in plain words, official URL, phone, source URLs, `date_checked`) and a sourced data file (for example `brokers/acp_programs.yaml`, each row with official source URLs and a checked date, entries marked "not sure" where a state's page could not be read); (3) say whether the lookup lives in `law_matrix.py` (this WO's assumption) or the checklists loader.

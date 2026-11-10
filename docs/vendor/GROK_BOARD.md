@@ -106,3 +106,4 @@ Rows added by in-house when the batch was issued. Helen Ashford owns them from h
 | WO-529 | blocked: needs in-house to build the print-ready report page first; after WO-299 merged | `docs/user/printable-report.md` | Margaret Lund | 2026-11-09 E9 epic batch |
 | WO-530 | queued (pre-approved); after WO-358 merged | `docs/user/listing-came-back.md` | Linda Moreau | 2026-11-09 E9 epic batch |
 | WO-531 | queued (pre-approved); after WO-517 merged | `docs/user/monthly-update.md` | Linda Moreau | 2026-11-09 E9 epic batch |
+| WO-532 | queued (pre-approved); none | `tests/grok/test_gk_value_only_runner.py` | Ethan Brandt | 2026-11-09 E12 epic batch |
