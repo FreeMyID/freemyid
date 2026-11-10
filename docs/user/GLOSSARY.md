@@ -1,6 +1,6 @@
 # Free My ID in plain words: a short glossary
 
-These are 15 words you may see in Free My ID or its help pages. Each has one or
+These are 21 words you may see in Free My ID or its help pages. Each has one or
 two sentences. The source file is named under each word so a helper can check it.
 Where the repo does not say, the entry says "not sure".
 
@@ -22,8 +22,47 @@ The page on a site that shows your details. A site saying it removed your listin
 Source: `docs/USER_GUIDE.md:42`, `docs/USER_GUIDE.md:146`.
 
 ### Practice mode (practice run)
-Free My ID starts here. It looks for your details and shows what it would do, but sends no removal requests.
-Source: `docs/USER_GUIDE.md:117`, `docs/CLI.md:9`.
+Free My ID starts here. It still searches people-search sites, and no removal requests go out until you say so in Settings.
+<!-- src/freemyid/wizard/dashboard.py:237-238 -->
+<!-- src/freemyid/engine/runner.py:270-271 -->
+<!-- src/freemyid/engine/runner.py:467 -->
+Source: `src/freemyid/wizard/dashboard.py:237-238`, `src/freemyid/engine/runner.py:270-271`, `src/freemyid/engine/runner.py:467`.
+
+### "Is this you?" review
+Free My ID asks this when a page might be Jane Q Testperson, but it is not sure. Look first, then press "Yes, this is me" or "No, this is not me": Yes means Free My ID may ask that site on a later check, and No means no removal request goes out for that page and it will not ask again.
+<!-- src/freemyid/wizard/dashboard.py:122-133 -->
+<!-- src/freemyid/engine/runner.py:990-991 -->
+<!-- src/freemyid/wizard/server.py:60-61 -->
+Source: `src/freemyid/wizard/dashboard.py:122-133`, `src/freemyid/engine/runner.py:990-991`, `src/freemyid/wizard/server.py:60-61`.
+
+### Listing score
+The number from 0 to 100 under "Where you are listed" (lower is better). It only describes what was found on the sites we could check, not every website.
+<!-- src/freemyid/wizard/views.py:50 -->
+<!-- src/freemyid/wizard/views.py:78-82 -->
+<!-- src/freemyid/engine/exposure_score.py:206-207 -->
+Source: `src/freemyid/wizard/views.py:50`, `src/freemyid/wizard/views.py:78-82`, `src/freemyid/engine/exposure_score.py:206-207`.
+
+### Requested (the screen says "asked")
+A removal request has gone to that one site. The screen says "asked", or that the site still needs to confirm, which is not the same as confirmed.
+<!-- src/freemyid/wizard/ui.py:26-27 -->
+<!-- src/freemyid/wizard/views.py:30-31 -->
+Source: `src/freemyid/wizard/ui.py:26-27`, `src/freemyid/wizard/views.py:30-31`.
+
+### Confirmed
+That one site has answered ("site confirmed" or "They confirmed"), or a later check no longer finds the listing ("not listed now"). The Today line counts both as confirmed, and neither is the same as pressing "Yes, this is me".
+<!-- src/freemyid/wizard/ui.py:28 -->
+<!-- src/freemyid/wizard/views.py:32-33 -->
+<!-- src/freemyid/wizard/dashboard.py:27 -->
+<!-- src/freemyid/models.py:137-138 -->
+Source: `src/freemyid/wizard/ui.py:28`, `src/freemyid/wizard/views.py:32-33`, `src/freemyid/wizard/dashboard.py:27`, `src/freemyid/models.py:137-138`.
+
+### Relisted (the screen says "reappeared")
+A listing that had gone has shown up on that site again. The screen says "reappeared" or "It came back. We are asking again", and the next real run asks again.
+<!-- src/freemyid/wizard/ui.py:29 -->
+<!-- src/freemyid/wizard/views.py:34 -->
+<!-- src/freemyid/state.py:79-80 -->
+<!-- src/freemyid/state.py:94-95 -->
+Source: `src/freemyid/wizard/ui.py:29`, `src/freemyid/wizard/views.py:34`, `src/freemyid/state.py:79-80`, `src/freemyid/state.py:94-95`.
 
 ### Real requests
 The step after practice. You switch it on once in Settings and confirm.
@@ -49,6 +88,20 @@ Source: `docs/USER_GUIDE.md:84`, `docs/USER_GUIDE.md:87`.
 A status meaning Free My ID cannot go further without a person, such as a mailed letter or a phone call.
 Source: `docs/USER_GUIDE.md:148`, `docs/USER_GUIDE.md:158-160`.
 
+### Assisted step ("Do it with me")
+Some sites need you to finish the form in your own browser: Free My ID shows the steps and Copy buttons, and you press "I did it" when you are done. If you choose "Fill it in for me" and then press Submit on the site, that request is real even in practice mode.
+<!-- src/freemyid/models.py:203 -->
+<!-- src/freemyid/wizard/dashboard.py:163-165 -->
+<!-- src/freemyid/wizard/dashboard.py:347-350 -->
+Source: `src/freemyid/models.py:203`, `src/freemyid/wizard/dashboard.py:163-165`, `src/freemyid/wizard/dashboard.py:347-350`.
+
+### Phone-call note
+On a phone-call step you may type a short note, or leave the box blank. The note stays on this computer as your own record, so please do not write passwords or ID numbers.
+<!-- src/freemyid/wizard/dashboard.py:188-192 -->
+<!-- src/freemyid/wizard/proof_input.py:46-55 -->
+<!-- src/freemyid/models.py:216 -->
+Source: `src/freemyid/wizard/dashboard.py:188-192`, `src/freemyid/wizard/proof_input.py:46-55`, `src/freemyid/models.py:216`.
+
 ### CAPTCHA ("prove you're human")
 A check some sites show. Free My ID does not try to get around it. It opens the page and you do the step.
 Source: `docs/USER_GUIDE.md:162-164`.
@@ -56,10 +109,6 @@ Source: `docs/USER_GUIDE.md:162-164`.
 ### Emails to approve
 In the default mode, Free My ID writes each email but does not send it until you approve it. Firmer letters always wait for your approval.
 Source: `docs/USER_GUIDE.md:198-204`.
-
-### Reappeared
-A listing that had gone came back. This is normal, and Free My ID files a new request on the next real run.
-Source: `docs/USER_GUIDE.md:147`, `docs/USER_GUIDE.md:219-224`.
 
 ### Run automatically (background check)
 Free My ID keeps checking by itself, and catches up if the computer was asleep or off. You can turn it on or off in Settings.
