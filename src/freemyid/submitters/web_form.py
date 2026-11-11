@@ -141,7 +141,7 @@ async def _text(el: Any, sel: str | None) -> str | None:
 def _split(t: str | None) -> list[str]:
     if not t:
         return []
-    return [p.strip() for p in re.split(r"[\n;|]+", t) if p.strip()][:20]
+    return [p.strip() for p in re.split(r"[\n;|]+|\s+-\s+", t) if p.strip()][:20]
 
 
 async def parse_results(page: Page, broker: Broker) -> list[matcher.Candidate]:

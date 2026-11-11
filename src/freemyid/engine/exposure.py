@@ -323,10 +323,11 @@ class BrowserFetcher:
 
 
 def _split(t: str | None) -> list[str]:
+    """Lines / ";" / "|" / " - " separate values ("Age 60 - City, ST" is two, CR-A)."""
     import re
     if not t:
         return []
-    return [p.strip() for p in re.split(r"[\n;|]+", t) if p.strip()][:20]
+    return [p.strip() for p in re.split(r"[\n;|]+|\s+-\s+", t) if p.strip()][:20]
 
 
 def parse_candidates(broker: Broker, page_url: str, html: str) -> list[matcher.Candidate]:
