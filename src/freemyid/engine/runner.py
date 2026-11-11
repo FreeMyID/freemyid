@@ -24,7 +24,7 @@ import asyncio
 import logging
 from collections import Counter
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 from .. import config as cfgmod
@@ -78,12 +78,49 @@ log = logging.getLogger(__name__)
 #: extension a broker may claim, used when no verified state-law figure is available.
 LEGAL_WINDOW_DAYS = 45
 LEGAL_EXTENSION_DAYS = 45
+#: A stated deadline shorter than the standard state-law window (calendar days).
+SHORT_DEADLINE_DAYS = 15
 EXTENSION_EVENT = "broker_extension"
 _EPOCH = datetime.min.replace(tzinfo=UTC)
 _SUBMITTED_STATES = (S.SUBMITTED, S.AWAITING_VERIFICATION, S.CONFIRMED)
 ID_REQUEST_REASON = "id_requested"
 CPPA_COMPLAINT_URL = "https://cppa.ca.gov/webapplications/complaint"
 AG_DIRECTORY_URL = "https://www.usa.gov/state-attorney-general"
+
+
+@dataclass(frozen=True)
+class RequestDeadline:
+    """Calendar due day of one sent removal request. `due_on` is None if it was never sent."""
+
+    overdue: bool
+    due_on: date | None
+
+
+def _calendar_date(moment: datetime) -> date:
+    """Date fields of `moment`. The clock and any DST offset are ignored."""
+    return moment.date()
+
+
+def request_deadline(
+    sent_at: datetime | None,
+    now: datetime,
+    *,
+    shorter_deadline: bool = False,
+    extension_days: int = 0,
+) -> RequestDeadline:
+    """When a sent removal request is overdue.
+
+    A standard state-law request is due 45 calendar days after the send date. A stated
+    shorter deadline is due in 15. Days the broker claimed as an extension are added.
+    Nothing sent is never overdue. Leap days and DST changes do not move the due day,
+    because the count is dates, not elapsed hours.
+    """
+    if sent_at is None:
+        return RequestDeadline(False, None)
+    extra = max(0, extension_days)
+    base = SHORT_DEADLINE_DAYS if shorter_deadline else LEGAL_WINDOW_DAYS
+    due_on = _calendar_date(sent_at) + timedelta(days=base + extra)
+    return RequestDeadline(_calendar_date(now) >= due_on, due_on)
 
 
 @dataclass
@@ -837,12 +874,24 @@ class Runner:
             return st
         law = self._law(profile)
         window_end = self.legal_window_end(profile, broker, st, law)
-        early = window_end is not None and self.now < window_end
+        shorter, extra = self._overdue_parts(profile, broker, law)
+        sent_at = self._first_sent_at(profile, broker, st)
+        deadline = request_deadline(sent_at, self.now, shorter_deadline=shorter,
+                                    extension_days=extra)
+        due_on = deadline.due_on
+        # A verified window longer than 45 days (Iowa is 90) still has to finish.
+        # A stated shorter window is the 15-day clock, not that raw number.
+        if (not shorter and window_end is not None and due_on is not None
+                and window_end.date() > due_on):
+            due_on = window_end.date()
+        overdue = due_on is not None and _calendar_date(self.now) >= due_on
+        early = window_end is not None and not overdue
         if window_end is not None and early and \
                 dec.action in (Escalation.LEGAL_DEMAND, Escalation.COMPLAINT):
-            # BL-IN-10: no legal demand (or complaint) before the statutory window has passed
+            # BL-IN-10: no legal demand (or complaint hand-off) before the due day
+            until = due_on if due_on is not None else window_end.date()
             self._event(profile, broker.id, "escalation_waiting", rung=dec.action.value,
-                        why="legal_window", until=window_end.date().isoformat())
+                        why="legal_window", until=until.isoformat())
             return st
         if early and dec.action == Escalation.FOLLOW_UP:
             law = None        # a polite reminder: no statute, no legal deadline
@@ -887,6 +936,27 @@ class Runner:
         return any(e.action == EXTENSION_EVENT
                    for e in self.store.events(profile.id, broker.id, limit=2000))
 
+    def _first_sent_at(self, profile: Profile, broker: Broker, st: Any) -> datetime | None:
+        """First real opt-out or resubmit, else the status clock. None if nothing was sent."""
+        sent = [r.sent_at for r in self.store.list_requests(
+                    profile.id, broker.id, status=RequestStatus.SENT)
+                if r.sent_at is not None and not r.dry_run and
+                r.kind in (RequestKind.OPT_OUT, RequestKind.RESUBMIT)]
+        return min(sent, default=None) or st.last_submitted_at
+
+    def _overdue_parts(self, profile: Profile, broker: Broker,
+                       law: StateLaw | None) -> tuple[bool, int]:
+        """(shorter deadline was stated, extension days the broker claimed)."""
+        from .outbox import effective_law
+        eff = effective_law(profile, law, self.now.date())
+        stated = eff.response_days if eff and eff.response_days else None
+        shorter = stated is not None and stated < LEGAL_WINDOW_DAYS
+        extra = 0
+        if self._extension_claimed(profile, broker):
+            extra = (eff.extension_days if eff and eff.extension_days
+                     else LEGAL_EXTENSION_DAYS)
+        return shorter, extra
+
     def legal_window_end(self, profile: Profile, broker: Broker, st: Any,
                          law: StateLaw | None) -> datetime | None:
         """BL-IN-10: when the statutory response window for the FIRST request ends:
@@ -894,11 +964,7 @@ class Runner:
         `extension_days`, else 45) once the broker has said it is taking more time. Before
         this, a follow-up is a polite reminder and no legal demand goes out. None = nothing
         was ever sent."""
-        sent = [r.sent_at for r in self.store.list_requests(profile.id, broker.id,
-                                                            status=RequestStatus.SENT)
-                if r.sent_at is not None and not r.dry_run and
-                r.kind in (RequestKind.OPT_OUT, RequestKind.RESUBMIT)]
-        first = min(sent, default=None) or st.last_submitted_at
+        first = self._first_sent_at(profile, broker, st)
         if first is None:
             return None
         from .outbox import effective_law
