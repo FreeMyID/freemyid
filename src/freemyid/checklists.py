@@ -10,6 +10,7 @@ import yaml
 
 from . import paths
 from .models import ChecklistFile
+from .registry import _NoAliasLoader
 
 MAX_BYTES = 512 * 1024
 
@@ -25,5 +26,7 @@ def load(path: Path | None = None) -> ChecklistFile:
         if p and p.is_file():
             if p.stat().st_size > MAX_BYTES:
                 raise ValueError(f"{p.name} is too large")
-            return ChecklistFile.model_validate(yaml.safe_load(p.read_text(encoding="utf-8")))
+            contents = p.read_text(encoding="utf-8-sig")
+            raw = yaml.load(contents, Loader=_NoAliasLoader)
+            return ChecklistFile.model_validate(raw)
     raise FileNotFoundError("checklists.yaml not found")

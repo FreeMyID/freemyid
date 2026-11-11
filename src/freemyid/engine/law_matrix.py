@@ -23,12 +23,15 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from .. import paths
+from ..registry import _NoAliasLoader
+from .matcher import STATE_NAMES
 
 log = logging.getLogger(__name__)
 
 FILE_NAME = "state_law_deletion_matrix.yaml"
 MAX_BYTES = 256 * 1024
 VERIFIED = "statute_text"
+EVIDENCE_VALUES = {"statute_text", "background", "limited", "not_yet"}
 
 
 class MatrixEntry(BaseModel):
@@ -94,10 +97,35 @@ def parse(raw: Any) -> Matrix:
     """Validate a parsed YAML document. Raises ValueError on a bad shape."""
     if not isinstance(raw, dict) or not isinstance(raw.get("states"), list):
         raise ValueError("matrix has no states list")  # noqa: TRY004 (load() catches it)
-    try:
-        entries = [MatrixEntry.model_validate(s) for s in raw["states"]]
-    except ValidationError as e:
-        raise ValueError(f"matrix entry failed validation: {e.error_count()} error(s)") from e
+    entries: list[MatrixEntry] = []
+    for item in raw["states"]:
+        if not isinstance(item, dict):
+            try:
+                MatrixEntry.model_validate(item)
+            except ValidationError as e:
+                raise ValueError(f"matrix entry failed validation: {e.error_count()} error(s)") from e
+            continue
+
+        state_value = item.get("state")
+        state_code = (state_value.upper() if isinstance(state_value, str)
+                      and len(state_value) == 2 and state_value.isascii()
+                      and state_value.isalpha() else "??")
+        if state_code not in STATE_NAMES:
+            log.warning("dropping state-law matrix entry for state code %s", state_code)
+            continue
+
+        evidence = item.get("evidence", "background")
+        response_evidence = item.get("response_days_evidence")
+        if (not isinstance(evidence, str) or evidence not in EVIDENCE_VALUES
+                or (response_evidence is not None
+                    and (not isinstance(response_evidence, str)
+                         or response_evidence not in EVIDENCE_VALUES))):
+            log.warning("dropping state-law matrix entry for state code %s", state_code)
+            continue
+        try:
+            entries.append(MatrixEntry.model_validate(item))
+        except ValidationError as e:
+            raise ValueError(f"matrix entry failed validation: {e.error_count()} error(s)") from e
     by_state: dict[str, MatrixEntry] = {}
     for ent in entries:
         if ent.state in by_state:
@@ -117,7 +145,8 @@ def load(path: Path | None = None) -> Matrix:
         try:
             if p.stat().st_size > MAX_BYTES:
                 raise ValueError("matrix file is too large")
-            return parse(yaml.safe_load(p.read_text(encoding="utf-8")))
+            contents = p.read_text(encoding="utf-8-sig")
+            return parse(yaml.load(contents, Loader=_NoAliasLoader))
         except (OSError, UnicodeDecodeError, yaml.YAMLError, ValueError) as e:
             log.warning("state-law matrix unusable, letters will not cite a law: %s",
                         type(e).__name__)
