@@ -274,7 +274,7 @@ def test_persistent_launch_is_headed_and_background_is_off_screen() -> None:
     assert any(a.startswith("--host-resolver-rules=") for a in bg["args"])
     vis = bm.persistent_launch_kwargs("visible")
     assert vis["headless"] is False
-    assert not any(a.startswith("--window-position") for a in vis["args"])
+    assert "--window-position=80,60" in vis["args"]           # SEC-WO612-7: on-screen
     with pytest.raises(ValueError):
         bm.persistent_launch_kwargs("background", test_headless=True)   # not in fixture mode
     with pytest.raises(ValueError):
@@ -288,9 +288,9 @@ def test_run_session_builds_a_headed_window(store, monkeypatch, tmp_path) -> Non
     seen: list[tuple[bool, str]] = []
 
     class Spy(ss.PlaywrightWindow):
-        def __init__(self, bm, folder, mode, test_headless=False):
+        def __init__(self, bm, folder, mode, test_headless=False, **kw):
             seen.append((bm.headless, test_headless))
-            super().__init__(bm, folder, mode, test_headless)
+            super().__init__(bm, folder, mode, test_headless, **kw)
 
         async def load(self, broker, url):
             raise ss.WindowUnavailable
@@ -541,3 +541,228 @@ def test_site_and_session_budgets(store) -> None:
     assert f.runs["devblocked"].outcome == "error" and win.loads == ["devauto"]
     assert beats == [1, 1]                    # the lock is refreshed per site
     f.close()
+
+
+# --------------------------------------------------------------------------- SEC-WO612-1/5
+
+
+class FakePage:
+    def __init__(self) -> None:
+        self.url = "about:blank"
+        self.frames: list = []
+        self.gotos: list[str] = []
+
+    async def content(self) -> str:
+        return RESULT
+
+    async def goto(self, url, **kw):
+        self.gotos.append(url)
+        self.url = url
+
+
+class FakeCtx:
+    def __init__(self, cookies=None) -> None:
+        self.pages = [FakePage()]
+        self.added: list = []
+        self._cookies = cookies or []
+
+    async def add_cookies(self, cookies) -> None:
+        self.added.extend(cookies)
+
+    async def cookies(self):
+        return self._cookies
+
+
+class FakeBM:
+    """Records what PlaywrightWindow asks of BrowserManager; opens nothing."""
+
+    def __init__(self, cookies=None, hang_close: bool = False) -> None:
+        self.dirs: list[Path] = []
+        self.ctx = FakeCtx(cookies)
+        self.hang_close, self.killed, self.escape = hang_close, 0, None
+        self.dropped: list[str] = []
+
+    async def persistent_context(self, user_data_dir, *, window, test_headless=False):
+        d = Path(user_data_dir)
+        assert d.is_dir()
+        (d / "History").write_text("jane testperson")     # what Chromium would write
+        self.dirs.append(d)
+        return self.ctx
+
+    def retarget(self, ctx, domains, extra=None):
+        out, self.dropped = self.dropped, []
+        return out
+
+    async def goto(self, page, url, check_challenge=True):
+        await page.goto(url)
+
+    def check_escaped(self, page) -> None:
+        from freemyid.engine.browser import BlockedByPolicy
+        if self.escape:
+            raise BlockedByPolicy(self.escape)
+
+    async def close(self) -> None:
+        if self.hang_close:
+            import asyncio
+            await asyncio.sleep(3600)
+
+    async def kill(self) -> None:
+        self.killed += 1
+
+
+def _cookie(name: str, expires: float) -> dict:
+    return {"name": name, "value": "v-" + name, "domain": ".devauto.example", "path": "/",
+            "expires": expires, "httpOnly": True, "secure": True, "sameSite": "Lax"}
+
+
+def test_window_runs_on_a_temp_folder_and_keeps_only_encrypted_cookies(store,
+                                                                        tmp_path) -> None:
+    """SEC-WO612-1: a fresh folder per window, deleted at close; only this person's
+    persistent cookies survive, encrypted, next to their evidence."""
+    import asyncio
+    import time as _time
+    p = _person(store)
+    jar = ss.CookieJar(p.id)
+    keep = _cookie("cf_clearance", _time.time() + 3600)
+    bm = FakeBM(cookies=[keep, _cookie("sess", -1), _cookie("old", _time.time() - 5)])
+    folder = tmp_path / "browser_profile"
+    win = ss.PlaywrightWindow(bm, folder, "background", jar=jar)
+    broker = _registry().get("devauto")
+
+    async def go():
+        await win.load(broker, "https://devauto.example/name/jane-testperson/il")
+        await win.leave()
+        await win.close()
+
+    asyncio.run(go())
+    assert bm.dirs[0].parent == folder and bm.dirs[0].name.startswith(ss.TEMP_PREFIX)
+    assert list(folder.iterdir()) == []                 # the window's folder is gone
+    raw = jar.path.read_bytes()
+    assert jar.path.parent.name == p.id and b"cf_clearance" not in raw and b"v-" not in raw
+    assert [c["name"] for c in jar.load()] == ["cf_clearance"]   # session/expired dropped
+
+    bm2 = FakeBM()
+    win2 = ss.PlaywrightWindow(bm2, folder, "background", jar=ss.CookieJar(p.id))
+    asyncio.run(win2.load(broker, "https://devauto.example/x"))
+    assert [c["name"] for c in bm2.ctx.added] == ["cf_clearance"]  # restored at launch
+    asyncio.run(win2.close())
+    store.delete_profile(p.id)                           # deleting the person removes them
+    assert not jar.path.exists()
+
+
+def test_cookie_jar_rejects_bad_ids_and_unreadable_state(store, tmp_path) -> None:
+    with pytest.raises(ValueError):
+        ss.CookieJar("../evil")
+    p = _person(store)
+    jar = ss.CookieJar(p.id)
+    jar.path.parent.mkdir(parents=True, exist_ok=True)
+    jar.path.write_bytes(b"not encrypted")
+    assert jar.load() == [] and not jar.path.exists()
+
+
+def test_hung_close_stops_the_driver_and_still_deletes_the_folder(tmp_path) -> None:
+    import asyncio
+    bm = FakeBM(hang_close=True)
+    folder = tmp_path / "browser_profile"
+    win = ss.PlaywrightWindow(bm, folder, "background", close_s=0.1)
+    asyncio.run(win.load(_registry().get("devauto"), "https://devauto.example/x"))
+    asyncio.run(win.close())
+    assert bm.killed == 1 and list(folder.iterdir()) == []
+
+
+def test_session_sweeps_leftover_and_legacy_profiles(store, monkeypatch, tmp_path) -> None:
+    """A crashed session's folder and an older version's persistent profile (plain-text
+    history) are deleted under the lock, before and after the session."""
+    folder = tmp_path / "browser_profile"
+    (folder / "session-crashed").mkdir(parents=True)
+    (folder / "session-crashed" / "History").write_text("jane testperson")
+    (folder / "Default").mkdir()
+    (folder / "Default" / "Cookies").write_text("jane testperson")
+    (folder / "Local State").write_text("{}")
+
+    class Dead(ss.PlaywrightWindow):
+        async def load(self, broker, url):
+            raise ss.WindowUnavailable
+
+    monkeypatch.setattr(ss, "PlaywrightWindow", Dead)
+    monkeypatch.setattr(ss, "profile_dir", lambda: folder)
+    monkeypatch.setattr(ss, "has_display", lambda platform=None: True)
+    monkeypatch.setattr(ss, "background_supported", lambda platform=None: True)
+    p = _person(store)
+    ss.run_session(store, p.id, mode="background", registry=_registry(), cfg=CFG,
+                   notifier=Notes(), refresh=True)
+    assert folder.is_dir() and list(folder.iterdir()) == []
+
+
+def test_leave_checks_the_allowlist_then_blanks_the_page(store, tmp_path) -> None:
+    """SEC-WO612-5: after each read the page is checked and set to about:blank; an
+    escape found then marks that site BLOCKED_BY_POLICY."""
+    import asyncio
+    bm = FakeBM()
+    win = ss.PlaywrightWindow(bm, tmp_path / "browser_profile", "background")
+    broker = _registry().get("devauto")
+    asyncio.run(win.load(broker, "https://devauto.example/x"))
+    page = bm.ctx.pages[0]
+    asyncio.run(win.leave())
+    assert page.gotos[-1] == "about:blank"
+    bm.escape = "elsewhere.example"
+    from freemyid.engine.browser import BlockedByPolicy
+    with pytest.raises(BlockedByPolicy):
+        asyncio.run(win.leave())
+    assert page.gotos[-1] == "about:blank"
+    asyncio.run(win.close())
+
+    class Leaky(FakeWindow):
+        """Reads fine, then the page tries to leave the allowlist."""
+
+        async def leave(self) -> None:
+            if self._host == "devauto.example":
+                raise BlockedByPolicy("elsewhere.example")
+
+    p = _person(store)
+    rep = _run(store, p, Leaky({**SCRIPT, "devblocked.example": "open"}))
+    assert rep.outcomes["devauto"] == "blocked_by_policy"
+    assert rep.outcomes["devblocked"] == "read"
+
+
+def test_retarget_reports_the_previous_sites_late_escape(store, tmp_path) -> None:
+    """SEC-WO612-5: escapes recorded after a site's last check are not lost when the
+    allowlist moves to the next site: that site becomes BLOCKED_BY_POLICY."""
+    import asyncio
+    bm = FakeBM()
+    win = ss.PlaywrightWindow(bm, tmp_path / "browser_profile", "background")
+    reg = _registry()
+    asyncio.run(win.load(reg.get("devauto"), "https://devauto.example/x"))
+    bm.dropped = ["elsewhere.example"]
+    asyncio.run(win.load(reg.get("devblocked"), "https://devblocked.example/x"))
+    assert win.late_escapes == ["devauto"]
+    asyncio.run(win.close())
+
+    class Late(FakeWindow):
+        def __init__(self, script) -> None:
+            super().__init__(script)
+            self.late_escapes: list[str] = []
+
+        async def load(self, broker, url):
+            if broker.id == "devblocked":
+                self.late_escapes.append("devauto")
+            return await super().load(broker, url)
+
+    p = _person(store)
+    rep = _run(store, p, Late({**SCRIPT, "devblocked.example": "open"}))
+    assert rep.outcomes["devauto"] == "blocked_by_policy"
+    assert rep.outcomes["devblocked"] == "read"
+
+
+def test_real_retarget_returns_and_logs_dropped_escapes(caplog) -> None:
+    class Ctx:
+        def __init__(self) -> None:
+            self.freemyid_hosts = {"devauto.example"}
+            self.freemyid_escaped = ["elsewhere.example"]
+            self.freemyid_blocked = ["x.example"]
+
+    ctx = Ctx()
+    assert _bm().retarget(ctx, ["devblocked.example"]) == ["elsewhere.example"]
+    assert ctx.freemyid_escaped == [] and "devblocked.example" in ctx.freemyid_hosts
+    assert "blocked_by_policy" in caplog.text
+    assert _bm().retarget(ctx, ["devauto.example"]) == []

@@ -26,16 +26,12 @@ from .test_search_session import CFG, Hooks, Notes, _browser_registry, _registry
 # --------------------------------------------------------------------------- F1 profile PII
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-WO612-1: `freemyid wipe` leaves the app's "
-                   "browser profile (history/cache with search URLs) on disk")
 def test_wipe_covers_the_session_browser_profile() -> None:
     assert ss.profile_dir().name in paths.OWNED_ENTRIES
     assert "browser_profile.lock" in paths.OWNED_ENTRIES
 
 
 @pytest.mark.browser
-@pytest.mark.xfail(strict=True, reason="SEC-WO612-1: the persistent Chromium profile keeps "
-                   "the person's name (search URLs / page text) in plaintext files")
 def test_session_profile_keeps_no_plaintext_pii(store, monkeypatch, tmp_path) -> None:
     from playwright.sync_api import sync_playwright
 

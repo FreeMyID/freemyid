@@ -2,8 +2,9 @@
 
 The app runs on the person's computer with their home connection, so it searches there the
 way the person would: ONE window of their installed browser (Edge on Windows, through
-`BrowserManager`), on a dedicated Free My ID profile folder (`paths.home()/browser_profile`,
-never their everyday profile), one site at a time at human pacing, honest user agent, every
+`BrowserManager`), on a fresh Free My ID folder under `paths.home()/browser_profile` that is
+deleted when the window closes (never their everyday profile; only the person's cookies
+persist, encrypted, see `CookieJar`), one site at a time at human pacing, honest user agent, every
 request through NetPolicy. Pages are read with the registry `search:` spec
 (`exposure.parse_candidates` via `exposure.scan_exposure(site_fetch=...)`), and matches go
 to the matcher / review flow as in any exposure scan.
@@ -24,8 +25,8 @@ Two modes:
 
 Hard limits (shared rule 5): Free My ID never clicks, types into, scripts or otherwise
 touches a challenge or its frames, never uses a solver, stealth plugin, fingerprint or UA
-trick, proxy or IP rotation. Cookies the person earned by passing a check stay in the app's
-own profile (that is a person passing the check, not a bypass).
+trick, proxy or IP rotation. Cookies the person earned by passing a check are kept,
+encrypted, for that person's next window (that is a person passing the check, not a bypass).
 
 Events (`action="search_session"`): broker id, the `Outcome` value, the mode and timings only.
 """
@@ -33,9 +34,13 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import json
 import logging
 import os
+import re
+import shutil
 import sys
+import tempfile
 import time
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
@@ -129,16 +134,125 @@ class WindowUnavailable(Exception):
     pass
 
 
+# --------------------------------------------------------------------------- browser data
+
+
+#: Each window runs on a fresh folder `<profile_dir>/session-*`, deleted when it closes
+#: (SEC-WO612-1): history, cache and page storage, which hold the searched name in plain
+#: text, never outlive the window. Leftovers from a crash are swept at the next session.
+TEMP_PREFIX = "session-"
+#: The ONE thing that persists: this person's cookies (a check the person passed stays
+#: passed), encrypted with the app's data key next to their evidence, so deleting the
+#: person (Store.delete_profile) or `freemyid wipe` removes it. Cookies only, no page
+#: storage; per person, so a site cannot link the searches of two people on one computer.
+SESSION_STATE = "browser_session.enc"
+MAX_COOKIES = 300
+_COOKIE_KEYS = ("name", "value", "domain", "path", "expires", "httpOnly", "secure",
+                "sameSite")
+_PID = re.compile(r"^[0-9a-f]{32}$")
+
+
+def _keep_cookies(cookies: Any, now: float) -> list[dict[str, Any]]:
+    """Persistent, unexpired, well-formed cookies with the standard fields only."""
+    out: list[dict[str, Any]] = []
+    for c in cookies if isinstance(cookies, list) else []:
+        if not isinstance(c, dict) or not isinstance(c.get("name"), str) or \
+                not isinstance(c.get("value"), str) or not isinstance(c.get("domain"), str):
+            continue
+        exp = c.get("expires")
+        if not isinstance(exp, int | float) or exp <= now:   # session cookie or expired
+            continue
+        keep = {k: c[k] for k in _COOKIE_KEYS if k in c}
+        if keep.get("sameSite") not in (None, "Strict", "Lax", "None"):
+            keep.pop("sameSite")
+        out.append(keep)
+    return out[:MAX_COOKIES]
+
+
+class CookieJar:
+    """One person's search-window cookies, AES-GCM encrypted at rest (SEC-WO612-1).
+
+    Lives at `evidence/<profile_id>/browser_session.enc` (the file AAD binds it to that
+    path), so `Store.delete_profile` and `freemyid wipe` remove it with the person."""
+
+    def __init__(self, profile_id: str, cipher: Any = None) -> None:
+        if not _PID.match(profile_id):
+            raise ValueError("invalid profile id")
+        self.profile_id = profile_id
+        self._cipher_obj = cipher
+
+    @property
+    def path(self) -> Path:
+        from .. import paths
+        return paths.evidence_dir() / self.profile_id / SESSION_STATE
+
+    def _cipher(self) -> Any:
+        if self._cipher_obj is None:
+            from ..crypto import Cipher
+            self._cipher_obj = Cipher()
+        return self._cipher_obj
+
+    def load(self) -> list[dict[str, Any]]:
+        p = self.path
+        if not p.is_file():
+            return []
+        try:
+            data = json.loads(self._cipher().decrypt_file(p))
+        except Exception as e:  # noqa: BLE001 - unreadable: start clean
+            log.info("search window cookies unreadable (%s); starting clean", type(e).__name__)
+            self.clear()
+            return []
+        return _keep_cookies(data, time.time())
+
+    def save(self, cookies: Any) -> None:
+        keep = _keep_cookies(cookies, time.time())
+        if not keep:
+            self.clear()
+            return
+        p = self.path
+        p.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        self._cipher().encrypt_file(json.dumps(keep).encode(), p)
+
+    def clear(self) -> None:
+        with contextlib.suppress(OSError):
+            self.path.unlink(missing_ok=True)
+
+
+def sweep_profiles(folder: Path) -> None:
+    """Delete everything inside the app's browser folder: leftover `session-*` window
+    folders after a crash, and the persistent profile older versions kept there (plain
+    text history). Call it only while holding the session lock."""
+    if not folder.is_dir() or folder.is_symlink():
+        return
+    for child in folder.iterdir():
+        try:
+            if child.is_dir() and not child.is_symlink():
+                shutil.rmtree(child, ignore_errors=True)
+            else:
+                child.unlink(missing_ok=True)
+        except OSError as e:
+            log.debug("browser folder sweep: %s", type(e).__name__)
+
+
+# --------------------------------------------------------------------------- the real window
+
+
 class PlaywrightWindow:
-    """The real window: `BrowserManager.persistent_context`. Reads pages, never acts on them."""
+    """The real window: `BrowserManager.persistent_context` on a fresh temp folder per
+    window, with the person's encrypted cookies restored. Reads pages, never acts on them."""
 
     def __init__(self, bm: BrowserManager, profile_dir: Path, mode: Mode,
-                 test_headless: bool = False) -> None:
+                 test_headless: bool = False, jar: CookieJar | None = None,
+                 close_s: float = 45.0) -> None:
         self.bm, self.profile_dir, self.mode = bm, profile_dir, mode
         self.test_headless = test_headless
+        self.jar, self.close_s = jar, close_s
         self._ctx: Any = None
         self._page: Any = None
+        self._tmp: Path | None = None
         self._failed = False
+        self._broker_id: str | None = None
+        self.late_escapes: list[str] = []     # read by SessionFetcher (SEC-WO612-5)
 
     async def _ensure(self) -> Any:
         if self._page is not None:
@@ -147,15 +261,30 @@ class PlaywrightWindow:
             raise WindowUnavailable
         try:
             self.profile_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+            self._tmp = Path(tempfile.mkdtemp(prefix=TEMP_PREFIX, dir=self.profile_dir))
             window = "background" if self.mode == "background" else "visible"
             self._ctx = await self.bm.persistent_context(
-                str(self.profile_dir), window=window, test_headless=self.test_headless)
+                str(self._tmp), window=window, test_headless=self.test_headless)
+            await self._restore_cookies()
             self._page = self._ctx.pages[0] if self._ctx.pages else await self._ctx.new_page()
         except Exception as e:
             self._failed = True
             log.warning("search window unavailable (%s)", type(e).__name__)
+            await self._teardown()
             raise WindowUnavailable from e
         return self._page
+
+    async def _restore_cookies(self) -> None:
+        if self.jar is None:
+            return
+        cookies = self.jar.load()
+        if not cookies:
+            return
+        try:
+            await self._ctx.add_cookies(cookies)
+        except Exception as e:  # noqa: BLE001 - a bad cookie never stops the search
+            log.info("search window cookies not restored (%s)", type(e).__name__)
+            self.jar.clear()
 
     async def _view(self, status: int | None) -> View:
         from .browser import detect_challenge
@@ -166,9 +295,14 @@ class PlaywrightWindow:
 
     async def load(self, broker: Broker, url: str) -> View:
         page = await self._ensure()
-        self.bm.retarget(self._ctx, list(broker.domains))
+        dropped = self.bm.retarget(self._ctx, list(broker.domains))
+        if dropped and self._broker_id is not None:
+            self.late_escapes.append(self._broker_id)
+        self._broker_id = broker.id
         resp = await self.bm.goto(page, url, check_challenge=False)
-        return await self._view(resp.status if resp is not None else None)
+        view = await self._view(resp.status if resp is not None else None)
+        self.bm.check_escaped(page)
+        return view
 
     async def look(self) -> View:
         page = await self._ensure()
@@ -184,8 +318,44 @@ class PlaywrightWindow:
         page = await self._ensure()
         await page.bring_to_front()
 
+    async def leave(self) -> None:
+        """After a site's last read: check the page stayed on the allowlist (raises
+        BlockedByPolicy), then load about:blank so nothing of it runs between sites."""
+        page = self._page
+        if page is None:
+            return
+        try:
+            self.bm.check_escaped(page)
+        finally:
+            await page.goto("about:blank")
+
     async def close(self) -> None:
-        await self.bm.close()
+        """Save this person's cookies (encrypted), close the browser, delete the window's
+        folder. Every step is bounded; a later `load` opens a fresh window."""
+        try:
+            if self._ctx is not None and self.jar is not None:
+                try:
+                    self.jar.save(await asyncio.wait_for(self._ctx.cookies(), LOOK_S))
+                except Exception as e:  # noqa: BLE001 - losing cookies is harmless
+                    log.info("search window cookies not saved (%s)", type(e).__name__)
+        finally:
+            await self._teardown()
+
+    async def _teardown(self) -> None:
+        self._ctx = self._page = None
+        self._broker_id = None
+        try:
+            await asyncio.wait_for(self.bm.close(), self.close_s)
+        except Exception as e:  # noqa: BLE001 - hung or broken: stop the driver instead
+            log.info("search window did not close cleanly (%s)", type(e).__name__)
+            try:
+                await asyncio.wait_for(self.bm.kill(), 10)
+            except Exception as e2:  # noqa: BLE001
+                log.info("search window driver stop failed (%s)", type(e2).__name__)
+        finally:
+            tmp, self._tmp = self._tmp, None
+            if tmp is not None:
+                shutil.rmtree(tmp, ignore_errors=True)
 
 
 # --------------------------------------------------------------------------- hooks (UI)
@@ -744,9 +914,15 @@ def run_session(store: Store, profile_id: str, *, mode: Mode = "background",
         bm = BrowserManager(NetPolicy(registry), headless=False,
                             cfg=cfg.model_copy(update={"max_retries": 1}), fixture_base=fixture)
         folder = profile_dir()
-        window = PlaywrightWindow(bm, folder, mode, test_headless=test_headless)
+        window = PlaywrightWindow(bm, folder, mode, test_headless=test_headless,
+                                  jar=CookieJar(profile.id))
         lock = _session_lock(folder)
+        swept = folder
+    else:
+        swept = None
     with lock as held:
+        if swept is not None:
+            sweep_profiles(swept)       # a crashed session's folder, an older version's profile
         fetcher = SessionFetcher(window, mode, hooks, timeout_s=timeout_s, grace_s=grace_s,
                                  poll_s=poll_s, step_s=step_s, look_s=look_s,
                                  session_s=session_s,
@@ -758,6 +934,8 @@ def run_session(store: Store, profile_id: str, *, mode: Mode = "background",
                 broker_ids=broker_ids, refresh=refresh, now=now, sleep=lambda _s: None)
         finally:
             fetcher.close()
+            if swept is not None:
+                sweep_profiles(swept)
     entries = {e.broker_id: e for e in report.result.entries}
     for b in brokers:
         run = fetcher.runs.get(b.id)

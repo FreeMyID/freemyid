@@ -362,7 +362,10 @@ class BrowserManager:
     #: nothing about the browser's identity changes.
     BACKGROUND_ARGS = ("--window-position=-32000,-32000", "--window-size=1280,900",
                        "--no-first-run", "--no-default-browser-check")
-    VISIBLE_ARGS = ("--window-size=1280,900", "--no-first-run", "--no-default-browser-check")
+    #: The attended window: an explicit on-screen position (SEC-WO612-7), so a profile or
+    #: OS that remembered the off-screen spot can never hide the window the person needs.
+    VISIBLE_ARGS = ("--window-position=80,60", "--window-size=1280,900", "--no-first-run",
+                    "--no-default-browser-check")
 
     def persistent_args(self, window: str) -> list[str]:
         """Launch flags for the search-session window: the SEC-16 network floor (+ the
@@ -438,14 +441,23 @@ class BrowserManager:
         return ctx
 
     def retarget(self, ctx: BrowserContext, domains: list[str],
-                 extra: list[str] | None = None) -> None:
+                 extra: list[str] | None = None) -> list[str]:
         """Point the session window's allowlist at one broker, in place (the route handler
-        and request listener hold these objects). Clears the per-broker escape record."""
+        and request listener hold these objects). Clears the per-broker escape record.
+
+        Returns the off-allowlist hosts the previous site tried to reach since its last
+        check (SEC-WO612-5) so the caller can mark that site BLOCKED_BY_POLICY; they are
+        never silently dropped (logged here as well)."""
+        dropped = list(ctx.freemyid_escaped)  # type: ignore[attr-defined]
+        if dropped:
+            log.warning("search window: the previous site tried to leave the allowlist "
+                        "(%d request(s)); recorded as blocked_by_policy", len(dropped))
         hosts: set[str] = ctx.freemyid_hosts  # type: ignore[attr-defined]
         hosts.clear()
         hosts.update(self.allowed_hosts(domains, extra))
         ctx.freemyid_escaped.clear()  # type: ignore[attr-defined]
         ctx.freemyid_blocked.clear()  # type: ignore[attr-defined]
+        return dropped
 
     async def polite_delay(self, host: str) -> None:
         if self.fast:
@@ -504,6 +516,15 @@ class BrowserManager:
         kind = await page_challenge(page, status)
         if kind:
             raise ChallengeEncountered(kind, page.url)
+
+    async def kill(self) -> None:
+        """Last resort when `close` hangs (SEC-WO612-3): stop the Playwright driver, which
+        ends the browser it launched. Forgets every handle."""
+        pw, self._pw = self._pw, None
+        self._persistent, self._browser = None, None
+        self._headed.clear()
+        if pw is not None:
+            await pw.stop()
 
     async def close(self) -> None:
         try:
