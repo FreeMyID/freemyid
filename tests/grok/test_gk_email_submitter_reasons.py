@@ -21,7 +21,6 @@ from freemyid.models import (
     RequestKind,
     RequestStatus,
     SubmitOutcome,
-    TodoKind,
 )
 from freemyid.netpolicy import NetPolicy
 from freemyid.submitters.email import (
@@ -196,12 +195,14 @@ async def test_connection_error(store, exc: BaseException) -> None:
 async def test_first_email_approval_missing(store) -> None:
     mailer = RaisingMailer(ConnectionError(f"down {RECIPIENT}"))
     out, profile, broker = await _submit(store, mailer, opened=False)
-    _assert_not_sent(out, REASON_FIRST)
+    assert out.message == f"not sent: {REASON_FIRST}"
     assert mailer.calls == 0
     assert out.request is not None
     assert out.request.status == RequestStatus.QUEUED_FOR_APPROVAL
-    assert out.todos[0].kind == TodoKind.APPROVE_EMAIL
-    assert "approve" in out.todos[0].body.lower()
+    # Review: no APPROVE_EMAIL card; the approval screen already lists the held email and
+    # approving never closed the card (tests/test_email_submitter_review.py).
+    assert out.todos == []
+    assert RECIPIENT not in _reason_text(out)
     queued = store.list_requests(profile.id, broker.id,
                                  status=RequestStatus.QUEUED_FOR_APPROVAL)
     assert len(queued) == 1

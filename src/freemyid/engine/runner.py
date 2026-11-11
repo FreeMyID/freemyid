@@ -63,6 +63,7 @@ from ..state import (
 )
 from ..submitters import assisted
 from ..submitters import base as sbase
+from ..submitters.email import NOT_SENT
 from . import handoff as hmod
 from . import matcher, plugins, tiers
 from .mail import DATE_SLACK, ReplyScan
@@ -866,7 +867,10 @@ class Runner:
                                            kind=RequestKind.RESUBMIT, again=True)
                 for t in out.todos:
                     hmod.persist_todo(self.store, t)
-                if out.request is not None and out.request.status == RequestStatus.SENT:
+                if out.request is None and out.message.startswith(NOT_SENT):
+                    # WO-348: the email submitter reports a failed send instead of raising
+                    done = f"failed:{out.message[:40]}"
+                elif out.request is not None and out.request.status == RequestStatus.SENT:
                     st = mark_submitted(st, self.now)
                     self.report.submitted += 1
                 elif out.request is not None:

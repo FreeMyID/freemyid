@@ -31,6 +31,7 @@ REASON_REFUSED = "refused address"
 REASON_CONNECTION = "connection error"
 REASON_FIRST = "first-email approval missing"
 REASON_OTHER = "could not send"
+NOT_SENT = "not sent: "   # SubmitOutcome.message prefix; the runner treats it as a failed rung
 
 _SETUP_PHRASES = (
     "no removal mailbox",
@@ -101,21 +102,28 @@ class _CaughtMailer:
     def __init__(self, inner: Any) -> None:
         self._inner = inner
         self.error: BaseException | None = None
+        self.request_id: str | None = None
 
-    def send(self, profile: Any, to: str, subject: str, body: str, request_id: str) -> str:
+    def send(self, profile: Any, to: str, subject: str, body: str, request_id: str) -> Any:
+        self.request_id = request_id
         try:
             mid = self._inner.send(profile, to, subject, body, request_id)
         except Exception as exc:
             self.error = exc
             raise
-        return str(mid)
+        return mid      # unchanged: a None id must stay falsy for has_message_id
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self._inner, name)
 
 
+# Too broad to mean "connection": every SMTPException and PermissionError is an OSError.
+_BROAD_BASES = frozenset({"OSError", "Exception", "BaseException", "object"})
+
+
 def _names(exc: BaseException) -> set[str]:
-    names = {cls.__name__ for cls in type(exc).__mro__}
+    names = {cls.__name__ for cls in type(exc).__mro__[1:]} - _BROAD_BASES
+    names.add(type(exc).__name__)
     text = str(exc).strip()
     for pat in (_SMTP_FAILED, _SEND_FAILED):
         match = pat.fullmatch(text)
@@ -147,11 +155,6 @@ def _reason_from_failure(wrapped: BaseException, origin: BaseException | None) -
     return _classify(origin if origin is not None else wrapped)
 
 
-def _failed_request_id(ctx: RunContext) -> str | None:
-    rows = ctx.store.list_requests(ctx.profile.id, ctx.broker.id, status=RequestStatus.FAILED)
-    return rows[-1].id if rows else None
-
-
 def _todo(ctx: RunContext, reason: str, request_id: str | None) -> Todo:
     title, body = _TODO_TEXT.get(reason, _TODO_TEXT[REASON_OTHER])
     kind = TodoKind.APPROVE_EMAIL if reason == REASON_FIRST else TodoKind.OTHER
@@ -169,14 +172,19 @@ class EmailSubmitter(Submitter):
     async def search(self, ctx: RunContext) -> list[Listing]:
         return []          # email brokers are not searched; the letter names the person
 
-    def _unsent(self, ctx: RunContext, reason: str, *,
-                request: Request | None = None) -> SubmitOutcome:
-        req_id = request.id if request is not None else _failed_request_id(ctx)
-        # A queued first email stays attached so the approval list is unchanged.
-        # A failed send does not: the runner would otherwise count it as waiting.
-        state = ListingState.FOUND if request is not None else ListingState.NEEDS_HUMAN
-        return SubmitOutcome(new_state=state, request=request, todos=[_todo(ctx, reason, req_id)],
-                             message=f"not sent: {reason}")
+    def _unsent(self, ctx: RunContext, reason: str, *, request: Request | None = None,
+                request_id: str | None = None) -> SubmitOutcome:
+        if request is not None:
+            # A queued first email stays attached so the approval list is unchanged. The
+            # approval screen already lists it: no extra card (it was never closed by
+            # approving, so it went stale and doubled the end-of-run count).
+            return SubmitOutcome(new_state=ListingState.FOUND, request=request,
+                                 message=f"{NOT_SENT}{reason}")
+        # A failed send is not attached: the runner would otherwise count it as waiting.
+        # The to-do links the request this send attempt was for (None if none was tried).
+        return SubmitOutcome(new_state=ListingState.NEEDS_HUMAN,
+                             todos=[_todo(ctx, reason, request_id)],
+                             message=f"{NOT_SENT}{reason}")
 
     async def submit(self, ctx: RunContext, listings: list[Listing]) -> SubmitOutcome:
         from ..engine.outbox import (
@@ -205,7 +213,8 @@ class EmailSubmitter(Submitter):
                               original=original, now=ctx.now)
         except OutboxError as exc:
             origin = watched.error if watched is not None else None
-            return self._unsent(ctx, _reason_from_failure(exc, origin))
+            tried = watched.request_id if watched is not None else None
+            return self._unsent(ctx, _reason_from_failure(exc, origin), request_id=tried)
         if req.status == RequestStatus.SENT:
             new = (ListingState.AWAITING_VERIFICATION if ctx.broker.needs_email_verification
                    else ListingState.SUBMITTED)
