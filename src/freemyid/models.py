@@ -9,13 +9,21 @@ from __future__ import annotations
 import re
 import string
 import uuid
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from enum import StrEnum
 from pathlib import PurePosixPath
 from typing import Annotated, Any, Literal
 from urllib.parse import urlsplit
 
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator, model_validator
+from pydantic import (
+    AwareDatetime,
+    BaseModel,
+    ConfigDict,
+    Field,
+    HttpUrl,
+    field_validator,
+    model_validator,
+)
 
 
 def utcnow() -> datetime:
@@ -215,6 +223,28 @@ class EvidenceKind(StrEnum):
     USER_ATTESTATION = "user_attestation"   # the person's "I did it" (what, when, how)
     PHONE_CALL_NOTE = "phone_call_note"     # the call script plus the person's note
     POSTAL_RECEIPT = "postal_receipt"       # a photo/scan of a mailing receipt they attach
+    BLOCK_CAPTURE = "block_capture"         # JSON facts of an obstruction (EVIDENCE_ENGINE.md)
+    RESPONSE_TIMELINE = "response_timeline"  # dated list of request, replies and clock events
+
+
+class ObstructionKind(StrEnum):
+    """How a broker obstructed a lawful request (docs/EVIDENCE_ENGINE.md section 4)."""
+    CAPTCHA_ON_REQUEST = "captcha_on_request"
+    BLOCKED_REQUEST = "blocked_request"
+    ACCOUNT_REQUIRED = "account_required"
+    PHONE_REQUIRED = "phone_required"
+    EXCESS_VERIFICATION = "excess_verification"
+    AGENT_REFUSED = "agent_refused"
+    REQUEST_DENIED = "request_denied"
+    DEADLINE_MISSED = "deadline_missed"
+    UNAVAILABLE = "unavailable"
+
+
+# Seen on a page, so they need a second sighting on another day before they count.
+TECHNICAL_OBSTRUCTIONS = frozenset({
+    ObstructionKind.CAPTCHA_ON_REQUEST, ObstructionKind.BLOCKED_REQUEST,
+    ObstructionKind.UNAVAILABLE,
+})
 
 
 # --------------------------------------------------------------------------- profile
@@ -719,6 +749,134 @@ class Evidence(_Base):
     caption: str | None = None
 
     _relpath_ok = field_validator("relpath")(classmethod(lambda cls, v: _safe_relpath(v)))
+
+
+RequestSurface = Literal["optout_form", "deletion_form", "email", "postal", "confirmation_link"]
+
+
+class ObstructionVendor(StrEnum):
+    """Who served a block or challenge (from frame hosts / vendor headers). Fixed set, so the
+    field can never carry free text (SEC-WO620-3)."""
+    RECAPTCHA_V2 = "recaptcha-v2"
+    RECAPTCHA_V3 = "recaptcha-v3"
+    RECAPTCHA_ENTERPRISE = "recaptcha-enterprise"
+    HCAPTCHA = "hcaptcha"
+    TURNSTILE = "turnstile"
+    ARKOSE = "arkose"
+    DATADOME = "datadome"
+    PERIMETERX = "perimeterx"
+    CLOUDFLARE_BLOCK = "cloudflare-block"
+    AKAMAI_BLOCK = "akamai-block"
+    OTHER = "other"
+
+
+USPS_STATES = frozenset(
+    ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY", "PR", "GU", "VI", "AS", "MP"])
+
+_MAX_ITEMS = 64
+_SLUG = Annotated[str, Field(pattern=r"^[a-z0-9][a-z0-9._-]{0,63}$")]
+_CONFIRM_SPAN = timedelta(hours=24)
+_UNAVAILABLE_SPAN = timedelta(days=7)
+_UNAVAILABLE_SIGHTINGS = 3
+
+
+class ObstructionRecord(_Base):
+    """A broker obstructing one lawful request (docs/EVIDENCE_ENGINE.md section 4).
+
+    PII-free by construction: ids, enums, a vendor name, an HTTP status and dates. The proof
+    itself lives in encrypted Evidence rows (`evidence_ids`). Only request surfaces count: a
+    CAPTCHA on a search page is never an obstruction, so there is no "search" surface here.
+    """
+    id: Id = Field(default_factory=new_id)
+    profile_id: Id
+    broker_id: BrokerId
+    request_id: Id | None = None
+    surface: RequestSurface
+    kind: ObstructionKind
+    vendor: ObstructionVendor | None = None
+    http_status: int | None = Field(default=None, ge=100, le=599)
+    observed_at: list[AwareDatetime] = Field(min_length=1, max_length=_MAX_ITEMS)
+    request_sent_at: AwareDatetime | None = None
+    legal_due_on: date | None = None
+    state: str = Field(description="The person's USPS state or territory code")
+    statute_ids: list[_SLUG] = Field(default=[], max_length=_MAX_ITEMS)
+    evidence_ids: list[Id] = Field(default=[], max_length=_MAX_ITEMS)
+    confidence: Literal["observed", "confirmed"] = "observed"
+
+    @field_validator("state")
+    @classmethod
+    def _usps_state(cls, v: str) -> str:
+        v = v.upper()
+        if v not in USPS_STATES:
+            raise ValueError("state must be a USPS state or territory code")
+        return v
+
+    @field_validator("observed_at")
+    @classmethod
+    def _utc_distinct(cls, v: list[datetime]) -> list[datetime]:
+        # Same instant written in two timezones is one sighting (SEC-WO620-1).
+        return sorted({t.astimezone(UTC) for t in v})
+
+    @model_validator(mode="after")
+    def _confirmation_rules(self) -> ObstructionRecord:
+        """Technical kinds need real elapsed time, not calendar labels (SEC-WO620-1):
+        >= 24 h between first and last sighting; UNAVAILABLE needs >= 3 sightings spanning
+        >= 7 days (SEC-WO620-2). Reply and clock kinds confirm at once."""
+        if self.confidence != "confirmed" or self.kind not in TECHNICAL_OBSTRUCTIONS:
+            return self
+        span = self.observed_at[-1] - self.observed_at[0]
+        if self.kind == ObstructionKind.UNAVAILABLE:
+            if len(self.observed_at) < _UNAVAILABLE_SIGHTINGS or span < _UNAVAILABLE_SPAN:
+                raise ValueError("UNAVAILABLE is confirmed only after 3 sightings spanning "
+                                 "7 days")
+        elif span < _CONFIRM_SPAN:
+            raise ValueError("a technical obstruction is confirmed only after sightings "
+                             "on two different days (24 hours apart)")
+        return self
+
+
+_SHA256 = Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
+# Genesis link of every bundle hash chain: sha256(b"freemyid-bundle-v1"), hex.
+BUNDLE_GENESIS = "b3e4e29de521c9ea73b1d29a7d951ab1a275c91c979fde74e47328c82013fae2"
+
+
+class BundleEntry(_Base):
+    """One item in a tamper-evident evidence bundle. `prev_hash` chains the entries."""
+    seq: int = Field(ge=0)
+    evidence_id: Id
+    kind: EvidenceKind
+    created_at: datetime
+    sha256: _SHA256
+    prev_hash: _SHA256
+
+
+class BundleManifest(_Base):
+    """The manifest of an evidence bundle (docs/EVIDENCE_ENGINE.md section 4).
+
+    Hash chain: entry 0's `prev_hash` is the genesis value BUNDLE_GENESIS; each later
+    `prev_hash` is sha256(prev_hash + canonical(previous entry without prev_hash)).
+    `chain_head` is the last entry's chained hash. `manifest_sha256` covers the canonical
+    manifest EXCLUDING both `manifest_sha256` and `timestamp_token`. `timestamp_token` is an
+    optional RFC 3161 token over `manifest_sha256` (decision E2: later).
+    """
+    version: Literal[1] = 1
+    bundle_id: Id = Field(default_factory=new_id)
+    obstruction_id: Id
+    created_at: datetime = Field(default_factory=utcnow)
+    app_version: str = Field(pattern=r"^\d+\.\d+\.\d+(?:[.+-][0-9A-Za-z.+-]{1,32})?$")
+    entries: list[BundleEntry] = Field(min_length=1, max_length=4096)
+    chain_head: _SHA256
+    manifest_sha256: _SHA256
+    timestamp_token: str | None = None
+
+    @model_validator(mode="after")
+    def _ordered(self) -> BundleManifest:
+        if [e.seq for e in self.entries] != list(range(len(self.entries))):
+            raise ValueError("bundle entries must be numbered 0..n-1 in order")
+        ids = [e.evidence_id for e in self.entries]
+        if len(set(ids)) != len(ids):
+            raise ValueError("an evidence item may appear only once in a bundle")
+        return self
 
 
 class Event(_Base):

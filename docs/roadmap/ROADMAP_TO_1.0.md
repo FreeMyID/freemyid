@@ -205,7 +205,7 @@ The goal in bar 9 is an engineering problem, not a staffing one. The tracks belo
 **Read broker replies like a person would.** A local reply classifier sorts each answer (done / needs more info / verify identity / refused / auto-reply). It uses rules first, with an optional on-device model later, and never a cloud call with PII. "Verify identity" requests get a template answer that cites the statute and offers only the fields the person allowed (rule 6); handing over an ID document is never automatic.
 
 **A registry that heals itself (no staff curating it).**
-- Nightly canary searches with fake names on each broker, from in-house home machines, detect layout drift.
+- Nightly canary checks from in-house home machines detect layout drift: fake-name searches on search pages, and load-only checks of request pages (never fill, never submit; WO-626).
 - Drift opens a work order automatically. Agents patch the spec, qa reviews it, and the signed feed (0.7) ships the fix to every install within a day.
 - Opt-in, PII-free outcome counts (route, broker, result; no names, no addresses) tell us which routes stopped working. Off by default; the site stays script-free.
 
@@ -215,6 +215,16 @@ The goal in bar 9 is an engineering problem, not a staffing one. The tracks belo
 - Inbound support mail classified and answered from tested templates by the mail gateway. Only what automation cannot answer reaches the owner, and each such case becomes a template, a self-repair or a bug fix, so the owner queue shrinks every release.
 
 **Metrics in the release gate (from 0.6).** Person actions per person per quarter; share of brokers with a fully automatic route; median days to a confirmed removal; re-listing catch time; support mails per 100 users that reached a human. Each release must not make any of them worse.
+
+## 7b. Leverage: make obstruction cost more than compliance
+
+Detail in `LEVERAGE.md` and `../EVIDENCE_ENGINE.md`. Lawful and honest only: no evasion, no false data, no load for its own sake, no unauthorized practice of law.
+
+- **0.5 Compliance-evidence engine** (WO-620 to 626): blocked lawful requests become confirmed obstruction records, tamper-evident evidence bundles and pre-filled regulator complaints the person approves.
+- **0.6 Access-then-delete audit** (WO-627/628): a right-to-know request within the legal frequency cap; the export is parsed on the person's own computer; a plain "what they held" report; a cited deletion; proof of deletion afterwards. Genuinely wrong data (mixed-up identities) is corrected with true information.
+- **0.8 Attorney handoff** (WO-629): an opt-in export of a case bundle to an attorney the person chooses. Free My ID never files claims.
+- **1.x Privacy-preserving identity proof** (WO-630): mDL / Verifiable Credentials selective disclosure, plus a machine-readable privacy-request endpoint proposal for regulators.
+- **Rejected:** synthetic "corrections" (false data, harms the person in background checks) and automated mass arbitration (no contract with the people listed; risk of unauthorized practice of law).
 
 ## 7. Cross-cutting tracks
 
