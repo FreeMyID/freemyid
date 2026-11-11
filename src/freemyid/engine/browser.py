@@ -19,6 +19,11 @@
   CAPTCHA widget hosts (`netpolicy.captcha_subresource_allowed` / `captcha_hosts`) load as
   sub-frames / sub-resources (never a main-frame navigation, never headless, never in dev
   fixture mode), so the person can tick the robot box themselves. Free My ID never touches it.
+* WO-612 search session: `persistent_context` opens ONE headed window of the installed
+  browser on a dedicated Free My ID profile folder (never the person's everyday profile), so
+  cookies a person earned by passing a site's check persist. "background" places the window
+  off-screen (no focus steal) for scheduled runs; "visible" is the attended batch. Never
+  headless (tests in dev fixture mode only). `retarget` swaps the allowlist per broker.
 * Honest user agent: the browser's real UA + `config.user_agent_suffix`.
 * Random delay min_delay_s..max_delay_s before each navigation, per-domain rate limit,
   retries with exponential backoff.
@@ -184,6 +189,7 @@ class BrowserManager:
         self._browser: Browser | None = None
         self._ua: str | None = None
         self._headed: list[Browser] = []
+        self._persistent: BrowserContext | None = None
         self.rate = RateLimiter(self.cfg.min_delay_s)
         self.fast = self.cfg.max_delay_s <= 0 or bool(fixture_base)   # dev/test: no sleeps
 
@@ -352,6 +358,95 @@ class BrowserManager:
         ctx.freemyid_captcha_frames = captcha_ok  # type: ignore[attr-defined]
         return ctx
 
+    #: Off-screen placement for the background window (WO-612): plain window-manager flags,
+    #: nothing about the browser's identity changes.
+    BACKGROUND_ARGS = ("--window-position=-32000,-32000", "--window-size=1280,900",
+                       "--no-first-run", "--no-default-browser-check")
+    VISIBLE_ARGS = ("--window-size=1280,900", "--no-first-run", "--no-default-browser-check")
+
+    def persistent_args(self, window: str) -> list[str]:
+        """Launch flags for the search-session window: the SEC-16 network floor (+ the
+        CAPTCHA widget hosts, SEC-36: the window is headed so a person can tick the box)
+        and window placement only."""
+        extra = captcha_hosts() if not self.fixture_base else None
+        place = self.BACKGROUND_ARGS if window == "background" else self.VISIBLE_ARGS
+        return [*self.launch_args(extra), *place]
+
+    def persistent_launch_kwargs(self, window: str, test_headless: bool = False
+                                 ) -> dict[str, Any]:
+        """Keyword arguments for `launch_persistent_context` (pure; unit-tested)."""
+        if window not in ("background", "visible"):
+            raise ValueError(window)
+        if test_headless and not self.fixture_base:
+            raise ValueError("headless search sessions are for dev fixture tests only")
+        return {"headless": bool(test_headless), "args": self.persistent_args(window),
+                "locale": "en-US", "service_workers": "block",
+                "no_viewport": not test_headless}
+
+    async def persistent_context(self, user_data_dir: str, *, window: str = "background",
+                                 test_headless: bool = False) -> BrowserContext:
+        """WO-612: one headed window of the installed browser on a dedicated profile folder.
+
+        `window` is "background" (off-screen, scheduled runs) or "visible" (attended batch).
+        `test_headless` exists only for CI in dev fixture mode; anywhere else it raises.
+        The allowlist starts empty (everything blocked) until `retarget` names a broker."""
+        kw = self.persistent_launch_kwargs(window, test_headless)
+        from playwright.async_api import async_playwright
+        if self._pw is None:
+            self._pw = await async_playwright().start()
+        launch = self._pw.chromium.launch_persistent_context
+        exe = os.environ.get("FREEMYID_BROWSER_EXECUTABLE")
+        ctx: BrowserContext | None = None
+        if exe:
+            ctx = await launch(user_data_dir, executable_path=exe, **kw)
+        else:
+            for chan in channel_candidates(self.cfg.browser_channel):
+                try:
+                    ctx = await launch(user_data_dir, channel=chan, **kw)
+                    break
+                except Exception as e:  # noqa: BLE001 - try the next one
+                    log.info("browser channel %s unavailable (%s)", chan, type(e).__name__)
+            if ctx is None:
+                try:
+                    ctx = await launch(user_data_dir, **kw)
+                except Exception:
+                    shell = _cached_headless_shell() if test_headless else None
+                    if shell is None:
+                        raise
+                    ctx = await launch(user_data_dir, executable_path=shell, **kw)
+        self._persistent = ctx
+        captcha_ok = not self.fixture_base and not test_headless
+        hosts: set[str] = set()
+        blocked: list[str] = []
+        escaped: list[str] = []
+
+        def _on_request(req: Any) -> None:
+            if self.is_escape(req, hosts, captcha_ok):
+                escaped.append(host_of(req.url) or "?")
+
+        ctx.on("request", _on_request)
+        await ctx.route("**/*", self.make_route_handler(hosts, blocked, captcha_ok))
+        ctx.freemyid_blocked = blocked  # type: ignore[attr-defined]
+        ctx.freemyid_escaped = escaped  # type: ignore[attr-defined]
+        ctx.freemyid_hosts = hosts      # type: ignore[attr-defined]
+        ctx.freemyid_captcha_frames = captcha_ok  # type: ignore[attr-defined]
+        # Honest UA: this browser's own UA string plus the suffix, read on a blank page.
+        probe = ctx.pages[0] if ctx.pages else await ctx.new_page()
+        real = await probe.evaluate("navigator.userAgent")
+        self._ua = f"{real} {self.cfg.user_agent_suffix}".strip()
+        await ctx.set_extra_http_headers({"User-Agent": self._ua})
+        return ctx
+
+    def retarget(self, ctx: BrowserContext, domains: list[str],
+                 extra: list[str] | None = None) -> None:
+        """Point the session window's allowlist at one broker, in place (the route handler
+        and request listener hold these objects). Clears the per-broker escape record."""
+        hosts: set[str] = ctx.freemyid_hosts  # type: ignore[attr-defined]
+        hosts.clear()
+        hosts.update(self.allowed_hosts(domains, extra))
+        ctx.freemyid_escaped.clear()  # type: ignore[attr-defined]
+        ctx.freemyid_blocked.clear()  # type: ignore[attr-defined]
+
     async def polite_delay(self, host: str) -> None:
         if self.fast:
             return
@@ -412,6 +507,9 @@ class BrowserManager:
 
     async def close(self) -> None:
         try:
+            if self._persistent is not None:
+                ctx, self._persistent = self._persistent, None
+                await ctx.close()
             for hb in self._headed:
                 await hb.close()
             self._headed.clear()
