@@ -307,10 +307,9 @@ def _do_run(profile, broker, scan_only, dry_run, scheduled, headless: bool = Fal
               f"({len(skipped)} skipped); open Free My ID to give permission")
     from .engine import search_session as ss
     if scheduled and people and not headless and ss.background_supported():
-        # WO-612: look in the home browser first (off-screen, never raises, skips itself with
-        # no display or another session running) so the runner below finds today's reads.
-        # Practice mode too: searching is free. Windows only until WO-616 checks the other
-        # platforms (SEC-WO612-2); --headless (cron/launchd/systemd/Docker) never opens it.
+        # WO-612: home browser first, off-screen, never raises, so the runner finds today's
+        # reads (practice mode too). Windows task only until WO-616 checks macOS/Linux, and
+        # never with --headless (cron/launchd/systemd/Docker): SEC-WO612-2.
         ss.run_for_profiles(store, [p.id for p in people], mode="background",
                             registry=_registry(), cfg=cfg)
     rep = engine_run(store, _registry(), people, scan_only=scan_only,
