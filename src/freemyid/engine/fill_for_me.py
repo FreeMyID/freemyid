@@ -653,10 +653,9 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
                     how = new_signal(submit["base"], now, url_re)
                     if how:
                         break
-                # Checked only when no success signal matched. A move to an error address
-                # is its own reason: not a timeout, and not a closed window.
-                if _missed_on_error_page(submit["base"].url, now.url):
-                    return fallback(REASON_ERROR_PAGE)
+                # An error address mid-run is often a validation message the person can
+                # fix and resubmit, so it never ends the fill early (the window would
+                # close). error_page is decided from seen_url when the time runs out.
                 if await _eval_t(page, _NEEDS_BANNER_JS):
                     await _eval_t(page, banner)   # page reloaded (e.g. a validation error)
             except Exception:  # noqa: BLE001 - mid-navigation; try again next tick

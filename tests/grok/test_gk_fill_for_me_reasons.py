@@ -384,3 +384,33 @@ async def test_success_signal_beats_an_error_url(store: Any, monkeypatch: pytest
     assert res.status == "submitted" and res.reason == "success_text"
     assert not any(e.action == "fill_for_me_fallback" for e in store.events(profile.id))
     _assert_codes_only(store, caplog, profile.id)
+
+
+class _RetryPage(_Page):
+    """Submit lands on an error address (a validation message), the person fixes the form
+    and submits again, then the success text shows. The window must stay open meanwhile."""
+
+    def __init__(self) -> None:
+        super().__init__("success")
+
+    async def evaluate(self, _js: str, arg: object = None) -> object:
+        if isinstance(arg, list) and arg and arg[0] == ffm.BANNER_ID:
+            self._snaps += 1
+            n = 0
+            if self._snaps in (2, 3, 4):
+                self._url = f"{FORM}?error=missing_field"
+            elif self._snaps >= 5:
+                self._url, n = f"{HOST}/done", 1
+            return {"counts": [n], "present": [], "formLeft": 1}
+        return True
+
+
+async def test_error_address_mid_run_does_not_end_the_fill(
+        store: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Review of PR #126: a validation error address must not close the window early.
+
+    error_page is decided only when the time runs out, so the person can still fix the
+    form and press Submit again."""
+    res, profile = await _run(store, "ff_retry", _RetryPage(), monkeypatch=monkeypatch)
+    assert res.status == "submitted" and res.reason == "success_text"
+    assert not any(e.action == "fill_for_me_fallback" for e in store.events(profile.id))
