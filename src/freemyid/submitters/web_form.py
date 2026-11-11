@@ -138,6 +138,15 @@ async def _text(el: Any, sel: str | None) -> str | None:
     return t[:500] or None
 
 
+async def _texts(el: Any, sel: str | None) -> str | None:
+    """Every match in the card, one per line (CR-D: relatives / past places are siblings)."""
+    if not sel:
+        return None
+    parts = [t for t in [(await s.inner_text()).strip()
+                         for s in (await el.query_selector_all(sel))[:20]] if t]
+    return "\n".join(parts)[:1000] or None
+
+
 def _split(t: str | None) -> list[str]:
     if not t:
         return []
@@ -160,10 +169,10 @@ async def parse_results(page: Page, broker: Broker) -> list[matcher.Candidate]:
         if not on_broker_url(broker, url):      # SEC-89
             continue
         name = await _text(el, spec.name_selector)
-        locs = _split(await _text(el, spec.location_selector))
+        locs = _split(await _texts(el, spec.location_selector))
         out.append(matcher.Candidate(
             url=url, name=name, age=matcher.parse_age(await _text(el, spec.age_selector)),
-            locations=locs, relatives=_split(await _text(el, spec.relatives_selector))))
+            locations=locs, relatives=_split(await _texts(el, spec.relatives_selector))))
     return out
 
 
