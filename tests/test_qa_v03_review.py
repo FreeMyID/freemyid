@@ -243,6 +243,30 @@ def test_htmlsel_ignores_scripts_and_never_runs_markup():
 # --------------------------------------------------------------------------- events / consent
 
 
+_PII_WORDS = ("jane", "testperson", "springfield", "evergreen", "http", "217-555-0142",
+              "555-0142")
+# Numbers only count as a hit when no hex digit sits on either side, so a random id or a
+# timestamp that happens to contain "555" or the ZIP digits is not a false alarm.
+_PII_NUMBERS = ("62704", "2175550142", "5550142")
+
+
+def _pii_hits(blob: str) -> list[str]:
+    import re
+    low = blob.lower()
+    hits = [w for w in _PII_WORDS if w in low]
+    hits += [n for n in _PII_NUMBERS if re.search(rf"(?<![0-9a-f]){n}(?![0-9a-f])", low)]
+    return hits
+
+
+def test_pii_scan_ignores_digit_runs_inside_ids_but_catches_the_real_values():
+    # The old check ("555" anywhere) flaked when a random id or timestamp held "555".
+    noise = json.dumps({"id": "a1555f0e627041bc", "ts": "2026-11-11T05:55:55.627049"})
+    assert _pii_hits(noise) == []
+    assert _pii_hits(json.dumps({"phone": "217-555-0142"})) == ["217-555-0142", "555-0142"]
+    assert _pii_hits(json.dumps({"p": "2175550142", "z": "62704"})) == ["62704", "2175550142"]
+    assert _pii_hits(json.dumps({"n": "Jane"})) == ["jane"]
+
+
 def test_exposure_check_events_are_pii_free(store):
     p = make_profile()
     store.save_profile(p)
@@ -251,9 +275,7 @@ def test_exposure_check_events_are_pii_free(store):
                      use_browser=False)
     evs = [e for e in store.events(p.id) if e.action in (ex.EVENT_ACTION, ex.CHECK_ACTION)]
     assert any(e.action == ex.CHECK_ACTION for e in evs)
-    blob = json.dumps([e.detail for e in evs]).lower()
-    for pii in ("jane", "testperson", "springfield", "62704", "555", "evergreen", "http"):
-        assert pii not in blob, pii
+    assert _pii_hits(json.dumps([e.detail for e in evs])) == []
 
 
 def test_exposure_without_consent_fetches_nothing(store):

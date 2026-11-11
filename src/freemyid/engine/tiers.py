@@ -10,10 +10,14 @@
 
 `covered_by` brokers never get their own submission: `submit_target` names the parent and
 `tier_for(..., registry=...)` reports the parent's tier.
+
+`tier_reason` is that same choice as a code (`email_ok`, `no_email_route`,
+`form_not_verified`, `permissions_block`, `automation_off`), or None when the
+tier is automatic. The code never includes contact data.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from ..models import (
     Broker,
@@ -27,6 +31,22 @@ from ..models import (
 
 if TYPE_CHECKING:
     from ..config import Config
+
+TierReason = Literal[
+    "no_email_route",
+    "form_not_verified",
+    "permissions_block",
+    "automation_off",
+    "email_ok",
+]
+
+# Assisted codes for the automatic-eligibility gates that have one. Any other
+# gate (no real form, captcha, account, human step) stays `no_email_route`.
+_ASSISTED_REASON: dict[str, TierReason] = {
+    "not_verified": "form_not_verified",
+    "permissions": "permissions_block",
+    "automation": "automation_off",
+}
 
 
 def browser_automation_allowed(cfg: Config | None) -> bool:
@@ -62,16 +82,27 @@ def has_real_form(broker: Broker) -> bool:
     return any(st.action in _INTERACTIVE_STEPS for st in broker.form)
 
 
+def _automatic_block(broker: Broker, profile: Profile, cfg: Config | None) -> str | None:
+    """First failed automatic check, or None when every check passes."""
+    if not has_real_form(broker):
+        return "no_form"
+    if broker.verification_status != VerificationStatus.VERIFIED:
+        return "not_verified"
+    if broker.has_captcha:
+        return "captcha"
+    if broker.method == Method.ACCOUNT_REQUIRED:  # never creates accounts itself
+        return "account"
+    if any(st.action == "human" for st in broker.form):
+        return "human"
+    if _permissions_block(broker, profile):
+        return "permissions"
+    if not browser_automation_allowed(cfg):
+        return "automation"
+    return None
+
+
 def automatic_eligible(broker: Broker, profile: Profile, cfg: Config | None = None) -> bool:
-    return (
-        has_real_form(broker)
-        and broker.verification_status == VerificationStatus.VERIFIED
-        and not broker.has_captcha
-        and broker.method != Method.ACCOUNT_REQUIRED       # never creates accounts itself
-        and not any(st.action == "human" for st in broker.form)
-        and not _permissions_block(broker, profile)
-        and browser_automation_allowed(cfg)
-    )
+    return _automatic_block(broker, profile, cfg) is None
 
 
 def can_scan(broker: Broker, cfg: Config | None = None) -> bool:
@@ -140,3 +171,35 @@ def tier_for(broker: Broker, profile: Profile, cfg: Config | None = None, *,
     if has_email_route(target) and profile.mailbox is not None:
         return Tier.EMAIL
     return Tier.ASSISTED
+
+
+def tier_reason(broker: Broker, profile: Profile, cfg: Config | None = None, *,
+                registry: Registry | None = None) -> TierReason | None:
+    """Why `tier_for` chose this tier. One code, or None when the tier is automatic.
+
+    email_ok           email: the site takes email and a removal mailbox is set.
+    form_not_verified  assisted: the form steps are not verified.
+    permissions_block  assisted: the profile disallows an ID or phone the site
+                       requires, and that check is what blocked automatic.
+    automation_off     assisted: browser automation is off, and that check is
+                       what blocked automatic.
+    no_email_route     assisted for any other reason, including no usable email
+                       tier (no email route, or a route and no mailbox).
+
+    A phone-only or email-only removal never runs a form, so it is only
+    `email_ok` or `no_email_route`. Automatic has no code in this set.
+    The result is a code or None, never an address, mailbox or URL.
+    """
+    target = submit_target(broker, registry)
+    tier = tier_for(broker, profile, cfg, registry=registry)
+    if tier is Tier.AUTOMATIC:
+        return None
+    if tier is Tier.EMAIL:
+        return "email_ok"
+    if profile.value_only:
+        return "no_email_route"
+    block = _automatic_block(target, profile, cfg)
+    found = _ASSISTED_REASON.get(block) if block is not None else None
+    if found is not None:
+        return found
+    return "no_email_route"

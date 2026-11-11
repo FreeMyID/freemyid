@@ -7,18 +7,26 @@ DATA MINIMIZATION (shared rule 6): a broker only ever gets
     broker requires them;
   * the removal mailbox (never a personal email);
   * a phone number only if shown AND required AND permissions.allow_phone_disclosure.
-DOB, relatives and personal emails are never included.
+DOB, relatives and personal emails are never included. Address lines come only from the
+address marked current; a past address is never a substitute.
 """
 from __future__ import annotations
 
 from types import SimpleNamespace
 
-from ..models import Broker, Evidence, EvidenceKind, Listing, MatchLevel, Profile, ProfileField
+from ..models import (
+    Address,
+    Broker,
+    Evidence,
+    EvidenceKind,
+    Listing,
+    MatchLevel,
+    Profile,
+    ProfileField,
+)
 
 F = ProfileField
 _DEFAULT_NEEDS = {F.FULL_NAME, F.CITY, F.STATE, F.LISTING_URL, F.EMAIL}
-_BLIND_OK = {F.FULL_NAME, F.FIRST_NAME, F.LAST_NAME, F.MIDDLE_NAME, F.CITY, F.STATE,
-             F.LISTING_URL, F.EMAIL}
 _NEVER = {F.DOB, F.ID_DOCUMENT}
 
 
@@ -35,12 +43,18 @@ def allowed_fields(profile: Profile, broker: Broker, listings: list[Listing]) ->
         shown = {f for li in listings for f in li.shown_fields} | {F.LISTING_URL, F.EMAIL}
         if F.FULL_NAME in shown:
             shown |= {F.FIRST_NAME, F.LAST_NAME}
+        out = (needs & shown) - _NEVER
     else:
-        shown = set(_BLIND_OK)
-    out = (needs & shown) - _NEVER
+        # No listing: the name, city/state only when this broker lists them, plus the mailbox.
+        out = {F.FULL_NAME, F.FIRST_NAME, F.LAST_NAME}
+        if F.CITY in broker.required_fields:
+            out.add(F.CITY)
+        if F.STATE in broker.required_fields:
+            out.add(F.STATE)
+        if F.EMAIL in needs:
+            out.add(F.EMAIL)
     if F.PHONE in out and not profile.permissions.allow_phone_disclosure:
         out.discard(F.PHONE)
-    out.add(F.FULL_NAME)      # the name is how any broker finds the record
     return out
 
 
@@ -53,8 +67,9 @@ def shown_age(listings: list[Listing]) -> int | None:
     return None
 
 
-def _current(profile: Profile):
-    return next((a for a in profile.addresses if a.current), profile.addresses[0])
+def _current(profile: Profile) -> Address | None:
+    """The address marked current. A past address is never used in its place."""
+    return next((a for a in profile.addresses if a.current), None)
 
 
 def value_copy_fields(profile: Profile, listings: list[Listing]) -> dict[str, str]:
@@ -88,13 +103,13 @@ def copy_fields(profile: Profile, broker: Broker, listings: list[Listing]) -> di
         out["First name"] = profile.name.first
     if F.LAST_NAME in allowed and F.LAST_NAME in broker.required_fields:
         out["Last name"] = profile.name.last
-    if F.CITY in allowed:
+    if cur is not None and F.CITY in allowed:
         out["City"] = cur.city
-    if F.STATE in allowed:
+    if cur is not None and F.STATE in allowed:
         out["State"] = cur.state
-    if F.STREET_ADDRESS in allowed and cur.street:
+    if cur is not None and F.STREET_ADDRESS in allowed and cur.street:
         out["Street address"] = cur.street
-    if F.ZIP in allowed and cur.zip:
+    if cur is not None and F.ZIP in allowed and cur.zip:
         out["ZIP code"] = cur.zip
     if F.AGE in allowed and (age := shown_age(listings)) is not None:
         out["Age"] = str(age)
@@ -114,18 +129,21 @@ def form_vars(profile: Profile, broker: Broker, listing: Listing | None) -> dict
     allowed = allowed_fields(profile, broker, lis)
     cur = _current(profile)
     p: dict[str, object] = {}
-    if F.FULL_NAME in allowed or F.FIRST_NAME in allowed:
-        p.update(first=profile.name.first, last=profile.name.last,
-                 full_name=f"{profile.name.first} {profile.name.last}")
+    if F.FULL_NAME in allowed:
+        p["full_name"] = f"{profile.name.first} {profile.name.last}"
+    if F.FIRST_NAME in allowed:
+        p["first"] = profile.name.first
+    if F.LAST_NAME in allowed:
+        p["last"] = profile.name.last
     if F.MIDDLE_NAME in allowed and profile.name.middle:
         p["middle"] = profile.name.middle
-    if F.CITY in allowed:
+    if cur is not None and F.CITY in allowed:
         p["city"] = cur.city
-    if F.STATE in allowed:
+    if cur is not None and F.STATE in allowed:
         p["state"] = cur.state
-    if F.STREET_ADDRESS in allowed and cur.street:
+    if cur is not None and F.STREET_ADDRESS in allowed and cur.street:
         p["street"] = cur.street
-    if F.ZIP in allowed and cur.zip:
+    if cur is not None and F.ZIP in allowed and cur.zip:
         p["zip"] = cur.zip
     if F.AGE in allowed and (age := shown_age(lis)) is not None:
         p["age"] = age          # SEC-115: the listing's own age, never a computed one
