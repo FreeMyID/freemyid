@@ -19,8 +19,8 @@ Flow (only ever started by the person, from the dashboard; scheduled runs never 
      was when the person pressed Submit, SEC-37, and the confirmation without our banner),
      a SENT web-form Request, the broker moves to SUBMITTED (or AWAITING_VERIFICATION)
      exactly like a successful web_form submission, and the Assisted to-do is closed;
-  6. timeout / window closed / no success signal / any error: the Assisted to-do card
-     stays (or is created), so nothing is lost.
+  6. timeout / window closed / the page moved to an error address / no success signal /
+     any error: the Assisted to-do stays (or is created) and names the next step.
 
 Practice mode (`real_submissions_enabled: false`) still fills: the person, not Free My ID,
 presses Submit. The banner then says plainly that Submit sends a real request.
@@ -80,9 +80,10 @@ Status = Literal["submitted", "fallback", "refused"]
 class FillResult:
     """Outcome of one 'Fill it in for me' attempt. PII-free (keys, ids, labels)."""
     status: Status
-    reason: str                     # success_text | success_selector | timeout |
-    #                                 window_closed | unverified | nothing_filled | blocked |
-    #                                 browser_unavailable | error:<Type> | consent | ...
+    reason: str                     # success_text | success_selector | success_url |
+    #                                 timeout | window_closed | error_page | unverified |
+    #                                 nothing_filled | blocked | browser_unavailable |
+    #                                 error:<Type> | consent | ...
     broker_id: str
     filled: list[str] = field(default_factory=list)
     not_found: list[str] = field(default_factory=list)
@@ -297,6 +298,71 @@ def _path_of(url: str) -> str:
     return (u.path or "/") + (f"?{u.query}" if u.query else "")
 
 
+# Path segment (before a dot) or query key that means the site showed an error page.
+# A confirmation such as /done is not in this set. HTTP status is not on the snapshot,
+# and engine/browser.py is not ours to change, so the address is the signal we have.
+_ERROR_SEGMENTS = frozenset({
+    "error", "errors", "404", "403", "410", "500", "502", "503", "oops", "failure", "failed",
+})
+_ERROR_QUERY_KEYS = frozenset({"error", "errors", "error_code", "errcode"})
+REASON_ERROR_PAGE = "error_page"
+
+# Plain next step on the Assisted card. Codes stay in the result, the event and the log.
+_NEXT_STEP: dict[str, str] = {
+    "timeout": (
+        "Next step: the site did not confirm it in time. "
+        "Open the opt-out page and press Submit yourself."
+    ),
+    "window_closed": (
+        "Next step: the window closed before the site confirmed it. "
+        "Open the opt-out page and finish the form."
+    ),
+    REASON_ERROR_PAGE: (
+        "Next step: the site showed an error page, not a success page. "
+        "Open the opt-out page and try the form again."
+    ),
+}
+
+
+def _error_segment(segment: str) -> bool:
+    stem = segment.split(".", 1)[0]
+    if stem in _ERROR_SEGMENTS:
+        return True
+    return stem.startswith("error-") or stem.endswith("-error")
+
+
+def _url_is_error_page(url: str) -> bool:
+    """True when the path or query names an error page. The query value is ignored."""
+    from urllib.parse import parse_qsl, urlsplit
+    try:
+        parts = urlsplit(url)
+    except ValueError:
+        return False
+    for segment in (parts.path or "").lower().split("/"):
+        if segment and _error_segment(segment):
+            return True
+    for key, _value in parse_qsl(parts.query, keep_blank_values=True):
+        if key.lower() in _ERROR_QUERY_KEYS:
+            return True
+    return False
+
+
+def _missed_on_error_page(base_url: str, now_url: str) -> bool:
+    """Success was not seen, and the address changed to an error page."""
+    if _path_of(base_url) == _path_of(now_url):
+        return False
+    return _url_is_error_page(now_url)
+
+
+def _todo_reason(reason: str) -> str | None:
+    """What `_fallback_todo` should hear. `error:*` stays the generic assisted reason."""
+    if reason in _NEXT_STEP:
+        return reason
+    if reason.startswith("error"):
+        return "error"
+    return None
+
+
 def new_signal(base: _Snap, now: _Snap, url_pattern: str | None) -> str | None:
     """A success signal that was NOT there at baseline (SEC-32), or None."""
     if url_pattern and url_matches(url_pattern, now.url) and \
@@ -331,13 +397,22 @@ def _event(store: Store, profile_id: str, broker_id: str, action: str, actor: Ac
 
 def _fallback_todo(store: Store, profile: Profile, broker: Broker, listings: list[Listing],
                    law: StateLaw | None, reason: str | None) -> str:
-    """Make sure the Assisted card exists (deduplicated) and return its id."""
+    """Make sure the Assisted card exists (deduplicated) and return its id.
+
+    `timeout`, `window_closed` and `error_page` put a plain next step on a new card.
+    An existing card is reused as-is (same id). `error` / `challenge` stay the words
+    `assisted_todo` already knows.
+    """
     from ..submitters import assisted
     from .handoff import persist_todo
     for t in store.list_todos(profile.id):
         if t.broker_id == broker.id and t.kind == TodoKind.ASSISTED_OPT_OUT:
             return t.id
-    todo = assisted.assisted_todo(profile, broker, listings, reason=reason)
+    known = reason if reason in ("error", "challenge") else None
+    todo = assisted.assisted_todo(profile, broker, listings, reason=known)
+    step = _NEXT_STEP.get(reason or "")
+    if step:
+        todo = todo.model_copy(update={"body": step + "\n" + todo.body})
     return persist_todo(store, todo).id
 
 
@@ -427,8 +502,10 @@ async def fill_for_me(store: Store, profile_id: str, broker_id: str, *, timeout_
 
     def fallback(reason: str) -> FillResult:
         res.status, res.reason = "fallback", reason
-        res.todo_id = _fallback_todo(store, profile, broker, listings, law,
-                                     "error" if reason.startswith("error") else None)
+        res.todo_id = _fallback_todo(store, profile, broker, listings, law, _todo_reason(reason))
+        # Codes and counts only: never the page address, the next-step sentence, or a value.
+        log.info("fill_for_me fallback code=%s filled=%s submit_seen=%s",
+                 reason[:40], len(res.filled), int(res.submit_seen))
         _event(store, profile.id, broker.id, "fill_for_me_fallback", reason=reason[:40],
                submit_seen=res.submit_seen)
         return res
@@ -558,6 +635,7 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
     loop = asyncio.get_running_loop()
     deadline = loop.time() + max(1, timeout_s)
     how: str | None = None
+    seen_url = submit["base"].url
     try:
         while loop.time() < deadline:
             if closed["v"] or page.is_closed():
@@ -567,6 +645,7 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
             res.submit_seen = res.submit_seen or submitted_before
             try:
                 now = await _snap_t(page, texts, sels, controls)
+                seen_url = now.url
                 if not submitted_before:
                     if submit["n"] == 0:      # nothing was submitted while we looked
                         submit["base"] = _merge_baseline(submit["base"], now)
@@ -574,6 +653,10 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
                     how = new_signal(submit["base"], now, url_re)
                     if how:
                         break
+                # Checked only when no success signal matched. A move to an error address
+                # is its own reason: not a timeout, and not a closed window.
+                if _missed_on_error_page(submit["base"].url, now.url):
+                    return fallback(REASON_ERROR_PAGE)
                 if await _eval_t(page, _NEEDS_BANNER_JS):
                     await _eval_t(page, banner)   # page reloaded (e.g. a validation error)
             except Exception:  # noqa: BLE001 - mid-navigation; try again next tick
@@ -581,6 +664,8 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
                     return fallback("window_closed")
             await asyncio.sleep(_POLL_S)
         if how is None:
+            if _missed_on_error_page(submit["base"].url, seen_url):
+                return fallback(REASON_ERROR_PAGE)
             if not (texts or sels or url_re) and res.submit_seen:
                 return fallback("unverified")
             return fallback("timeout")
