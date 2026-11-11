@@ -22,7 +22,7 @@ The common submitter helper builds a relative path from the profile ID, broker I
 
 The profile page groups evidence by broker but leaves out `_consent` items. The broker page receives the evidence list for its profile and broker (`src/freemyid/wizard/server.py:261-286`). In that page, received replies have links under “What came back”; the receipts section shows screenshot thumbnails and links to other evidence using the evidence route (`src/freemyid/wizard/views.py:139-170`).
 
-`GET /evidence/{pid}/{eid}` searches evidence belonging to the requested profile, reads the matching item and returns PNG or JPEG bytes as an image. Other content is returned as an attachment. A failed read returns 500; an unknown item returns 404 (`src/freemyid/wizard/server.py:336-354`).
+`GET /evidence/{pid}/{eid}` searches evidence belonging to the requested profile, reads the matching item and returns PNG or JPEG bytes as an image. Other content is returned as a download (`application/octet-stream`). Every response carries a sandboxing Content-Security-Policy header. A failed read returns 500; an unknown item returns 404 (`src/freemyid/wizard/server.py:336-354`).
 
 ## The progress report is a separate summary
 
@@ -32,7 +32,7 @@ The builder writes generated HTML under `artifacts/`. When PDF is requested it t
 
 ## What wipe removes
 
-`freemyid wipe` first checks the selected data folder and asks for confirmation unless `--yes` is supplied. Its file-removal loop visits only `OWNED_ENTRIES` inside that folder: these include the database, `evidence/`, `artifacts/`, logs and app configuration/cache files. It then tries to remove the now-empty folder, leaving other top-level names in place (`src/freemyid/cli.py:582-595,618-627`; `src/freemyid/paths.py:30-34`). A copy saved elsewhere is outside that directory-removal loop (`src/freemyid/cli.py:618-627`).
+`freemyid wipe` first checks that the selected data folder is clearly Free My ID's own (a `.freemyid-home` marker or its database, and never a home or system root), then asks for confirmation unless `--yes` is supplied. The confirmation warns that other Free My ID data folders on the same computer that use the system keychain will stop working too, because the wipe deletes this folder's encryption key and the saved mailbox passwords from the keychain, and the keychain entry is shared (a key held for a different folder is left alone, `src/freemyid/crypto.py:116-122`). It also removes the background task. Its file-removal loop then visits only `OWNED_ENTRIES` inside that folder: these include the database, `evidence/`, `artifacts/`, logs and app configuration/cache files. Finally it tries to remove the now-empty folder, leaving other top-level names in place (`src/freemyid/cli.py:582-627`; `src/freemyid/paths.py:30-45`). A copy saved elsewhere is outside that loop (`src/freemyid/cli.py:618-627`).
 
 ## What this guide does not cover
 
