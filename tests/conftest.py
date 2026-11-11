@@ -369,6 +369,10 @@ def freemyid_env(tmp_path, monkeypatch):
     home = tmp_path / "vhome"
     monkeypatch.setenv("FREEMYID_HOME", str(home))
     monkeypatch.setenv("FREEMYID_TEST_KEY", "unit-test-key-not-secret")
+    from freemyid import crypto
+    # The throwaway home counts as the default folder (legacy db-key-v1 entry), so older
+    # keychain tests keep their meaning; tests/test_keychain_per_folder.py overrides it (WO-605).
+    monkeypatch.setattr(crypto, "default_home", lambda: home)
     monkeypatch.setattr(socket.socket, "connect", _guarded_connect)
     # WO-612: scheduled runs now open the home-browser search session first. No test may
     # launch a real browser window, so the session sees "no display" unless a test injects a
