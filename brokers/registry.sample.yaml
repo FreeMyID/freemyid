@@ -61,8 +61,8 @@ brokers:
     priority: 90
     search_url_pattern: https://www.spokeo.com/{first}-{last}/{state_name}/{city}
     search_access: bot_blocked
-    search_access_note: 'Direct fetch returned HTTP 403. Pages are indexed by the search tool, so they are public in a browser. Name-only and state-only pages also exist: /John-Smith/Colorado.'
-    search_url_checked: '2026-11-07'
+    search_access_note: 'Plain fetch HTTP 403 on 2026-11-07 and 2026-11-11 (fake test name, state+city URL). Not worked around. Indexed name-only and state-only pages also exist: /John-Smith/Colorado.'
+    search_url_checked: '2026-11-11'
     slug_case: title
   - id: freepeopledirectory
     name: FreePeopleDirectory
@@ -173,8 +173,9 @@ brokers:
     verification_notes: "The CA registry (2026-11-06) lists peoplelooker.com among BeenVerified, Inc.'s subsidiary sites, which supports common ownership. The legacy seed opt-out path /f/optout/search returned HTTP 404 on 2026-11-05. covered_by is an assumption from common ownership; if PeopleLooker still lists after the BeenVerified opt-out, remove covered_by and find the live form."
     priority: 70
     search_url_pattern: https://www.peoplelooker.com/people-search/{first}-{last}/
-    search_access_note: Only one indexed page seen (/people-search/john-smithies/). No state or city variant seen.
-    search_url_checked: '2026-11-07'
+    search_access_note: 'Plain fetch of /people-search/<first>-<last>/ (fake test name) returned HTTP 403 on 2026-11-11. Only one indexed page seen earlier; no state or city variant seen.'
+    search_url_checked: '2026-11-11'
+    search_access: bot_blocked
   - id: peopleconnect
     name: PeopleConnect Suppression Center (Intelius, Instant Checkmate, TruthFinder, US Search, ZabaSearch)
     url: https://suppression.peopleconnect.us/
@@ -242,8 +243,9 @@ brokers:
     verification_notes: "truthfinder.com/opt-out returned HTTP 403. Covered by the PeopleConnect Suppression Center per BADBOOL; not confirmed from a primary page. help@truthfinder.com is the 'primary contact email' for TruthFinder, LLC in the CA CPPA registry 2025 CSV (2026-11-06)."
     priority: 70
     search_url_pattern: https://www.truthfinder.com/people-search/{first}-{last}/{state_name}/
-    search_access_note: 'Seen: /people-search/john-smith/ and /people-search/john-smith/illinois/. No city level seen. Single-person listing URL not seen.'
-    search_url_checked: '2026-11-07'
+    search_access_note: 'Plain fetch of /people-search/<first>-<last>/<state>/ (fake test name) returned HTTP 403 on 2026-11-11. No city level seen. Single-person listing URL not seen.'
+    search_url_checked: '2026-11-11'
+    search_access: bot_blocked
   - id: peoplefinders
     name: PeopleFinders
     url: https://www.peoplefinders.com/
@@ -267,8 +269,9 @@ brokers:
     verification_notes: "Opened in a real browser 2026-11-07: /opt-out shows 'Right to Opt-out' with a Next button; later steps not seen, so still unverified. Earlier: HTTP 403 on fetch (opt-out and /about/privacy). URL from the legacy seed only. BADBOOL notes an opt-out at SmartBackgroundChecks likely also removes PeopleFinders. Email customercare@peoplefinders.com is the 'primary contact email' for Peoplefinders LLC in the CA CPPA registry 2025 CSV (2026-11-06), a customer-service mailbox. The registry says CCPA requests go through links in section V of peoplefinders.com/about/privacy. A search result (third party) mentions a 24-hour email verification link; sender domain assumed peoplefinders.com. privacy@peoplefinders.com appears only in a third-party guide; not recorded."
     priority: 70
     search_url_pattern: https://www.peoplefinders.com/name/{first}-{last}/{state}/{city}
-    search_access_note: 'Seen: /name/john-smith, /name/julie-williams/mn, /name/karen-smith/il/naperville. A person-report listing URL was not seen (reports are paywalled); address pages are /address/<slug>/<id>.'
-    search_url_checked: '2026-11-07'
+    search_access_note: 'Plain fetch of /name/<first>-<last>/<st>/<city> (fake test name) returned HTTP 403 on 2026-11-11. Person reports are paywalled; address pages are /address/<slug>/<id>.'
+    search_url_checked: '2026-11-11'
+    search_access: bot_blocked
   - id: truepeoplesearch
     name: TruePeopleSearch
     success_text: ["The following information was submitted to our system successfully", "Expect your information to be fully removed in 3 days or less"]
@@ -325,9 +328,16 @@ brokers:
     last_verified: 2026-11-07
     priority: 85
     search_url_pattern: https://www.fastpeoplesearch.com/name/{first}-{last}_{city}-{state}
-    search_access: bot_blocked
-    search_access_note: Fetch tool refused the domain. Shape is from background knowledge, UNCONFIRMED. Hand to a human.
-    search_url_checked: '2026-11-07'
+    search_access: js_required
+    search_access_note: 'Structure from an owner-saved page, 2026-11-11 (fake test name; URL /name/jane-testperson_springfield-il confirmed). Home browser loaded it; research fetch tool refused the domain. span.grey shows age OR city; relatives blocks have no class hooks.'
+    search_url_checked: '2026-11-11'
+    listing_url_pattern: ^/[a-z0-9-]+_id_G-?[0-9]+$
+    search:
+      result_selector: 'div.people-list > div.card'
+      name_selector: 'h3.card-title span.larger'
+      age_selector: 'h3.card-title span.grey'
+      location_selector: 'h3.card-title span.grey'
+      link_selector: 'a.link-to-details'
   - id: radaris
     name: Radaris
     url: https://radaris.com/
@@ -366,8 +376,9 @@ brokers:
     priority: 70
     search_url_pattern: https://www.mylife.com/{first}-{last}/
     listing_url_pattern: ^/[a-z-]+/e[0-9]+$
-    search_access_note: 'Not fetched directly. Alternate state page seen: /people-search/{state}/find/{first}-{last}. No city parameter seen.'
-    search_url_checked: '2026-11-07'
+    search_access_note: 'Plain fetch of /<first>-<last>/ (fake test name) returned HTTP 403 on 2026-11-11. Alternate state page seen: /people-search/{state}/find/{first}-{last}. No city parameter seen.'
+    search_url_checked: '2026-11-11'
+    search_access: bot_blocked
   - id: nuwber
     name: Nuwber
     url: https://nuwber.com/
@@ -392,8 +403,8 @@ brokers:
     search_url_pattern: https://nuwber.com/name/{first}-{last}/{state}/{city}
     listing_url_pattern: ^/person/[0-9a-f]{24}$
     search_access: bot_blocked
-    search_access_note: Fetch of /search?name=...&state=IL returned HTTP 403 (and that query URL shape is NOT confirmed). Indexed shape is /name/john-smith, /name/john-smith/dc/washington, listings /person/<24 hex>.
-    search_url_checked: '2026-11-07'
+    search_access_note: 'HTTP 403 on 2026-11-07 (/search?...) and 2026-11-11 (/name/<first>-<last>/<st>/<city>, fake test name). Not worked around. Indexed: /name/john-smith, /name/john-smith/dc/washington; listings /person/<24 hex>.'
+    search_url_checked: '2026-11-11'
   - id: thatsthem
     name: That's Them
     url: https://thatsthem.com/
@@ -418,7 +429,7 @@ brokers:
     phone_search_url_pattern: https://thatsthem.com/phone/{phone_dashed}
     email_search_url_pattern: https://thatsthem.com/email/{email}
     search_access_note: City/state variant /name/John-Smith/Springfield-IL returned HTTP 403 to fetch and is NOT confirmed. Indexed pages are /name/First-M-Last, which are name pages (several people per page), not single-person pages. There is also an origin.production.thatsthem.com host in search results; do not use it.
-    search_url_checked: '2026-11-07'
+    search_url_checked: '2026-11-11'
     slug_case: title
   - id: familytreenow
     name: FamilyTreeNow
@@ -442,7 +453,7 @@ brokers:
     search_url_pattern: https://www.familytreenow.com/records/genealogy/{last}
     search_access: bot_blocked
     search_access_note: 'The form-style search URL /search/genealogy/results?first=&last=&state= returned HTTP 403 and is NOT confirmed. Indexed shapes: /records/genealogy/<surname>, /records/census/<last>/<first>, /records/people/address/<street>_<city>-<st>-<zip>.'
-    search_url_checked: '2026-11-07'
+    search_url_checked: '2026-11-11'
   - id: searchpeoplefree
     name: SearchPeopleFree
     success_text: ["Your record request has been received and accepted"]
@@ -479,9 +490,9 @@ brokers:
     priority: 60
     search_url_pattern: https://www.searchpeoplefree.com/find/{first}-{last}
     listing_url_pattern: ^/find/[a-z0-9~-]+/[A-Za-z0-9]+$
-    search_access: bot_blocked
-    search_access_note: 'Fetch of /find/john-smith/il returned HTTP 403, so a state suffix is NOT confirmed. Listings seen as /find/<first>-<last>/<id>. Address pages: /address/{state}/{city}/{street}/{number}.'
-    search_url_checked: '2026-11-07'
+    search_access: js_required
+    search_access_note: 'Structure from an owner-saved page, 2026-11-11 (/find/jane-testperson, nationwide). Home browser loaded it; plain research fetch got HTTP 403. Name is a bare text node beside location and aka spans; no spec wired until the parser can isolate it.'
+    search_url_checked: '2026-11-11'
   - id: peoplesearchnow
     name: PeopleSearchNow
     success_text: ["The following information was submitted to our system successfully", "Expect your information to be fully removed in 3 days or less"]
@@ -517,9 +528,9 @@ brokers:
     confirmation_domains: [peoplesearchnow.com]
     priority: 50
     search_url_pattern: https://www.peoplesearchnow.com/person/{first}-{last}
-    search_access: open
-    search_access_note: Home page and /names loaded with a plain fetch on 2026-11-07 (no 403). The home page links person pages as /person/<first>-<last>, reverse phone as /phone-number and /phone, address search as /address, a name directory at /names and letter pages /a to /z.
-    search_url_checked: '2026-11-07'
+    search_access: bot_blocked
+    search_access_note: 'Human-checked 2026-11-11: the owner could not reach the site at all from a normal home browser. A plain research fetch of /person/<first>-<last> (fake test name) also got HTTP 403. Not worked around. No spec.'
+    search_url_checked: '2026-11-11'
   - id: acxiom
     name: Acxiom
     success_text: ["Thank You for Submitting Your Opt Out Request to Acxiom"]

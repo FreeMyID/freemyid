@@ -323,10 +323,11 @@ class BrowserFetcher:
 
 
 def _split(t: str | None) -> list[str]:
+    """Lines / ";" / "|" / " - " separate values ("Age 60 - City, ST" is two, CR-A)."""
     import re
     if not t:
         return []
-    return [p.strip() for p in re.split(r"[\n;|]+", t) if p.strip()][:20]
+    return [p.strip() for p in re.split(r"[\n;|]+|\s+-\s+", t) if p.strip()][:20]
 
 
 def parse_candidates(broker: Broker, page_url: str, html: str) -> list[matcher.Candidate]:
@@ -345,6 +346,13 @@ def parse_candidates(broker: Broker, page_url: str, html: str) -> list[matcher.C
         t = sub.text().strip() if sub is not None else ""
         return t[:500] or None
 
+    def txts(el: htmlsel.Node, sel: str | None) -> str | None:
+        # CR-D: every match in the card (a site lists relatives / past places as siblings)
+        if not sel:
+            return None
+        parts = [t for t in (s.text().strip() for s in el.select(sel)[:20]) if t]
+        return "\n".join(parts)[:1000] or None
+
     out: list[matcher.Candidate] = []
     for el in root.select(spec.result_selector)[:_MAX_RESULTS]:
         href = None
@@ -357,8 +365,8 @@ def parse_candidates(broker: Broker, page_url: str, html: str) -> list[matcher.C
         out.append(matcher.Candidate(
             url=url, name=txt(el, spec.name_selector),
             age=matcher.parse_age(txt(el, spec.age_selector)),
-            locations=_split(txt(el, spec.location_selector)),
-            relatives=_split(txt(el, spec.relatives_selector))))
+            locations=_split(txts(el, spec.location_selector)),
+            relatives=_split(txts(el, spec.relatives_selector))))
     return out
 
 
@@ -452,7 +460,9 @@ def _read(profile: Profile, broker: Broker, url: str, fetch: Fetcher,
         cands = parse_candidates(broker, page.url, page.html)
     except htmlsel.UnsupportedSelector as e:
         raise FetchFailed("no_parser") from e
-    if not cands and spec.no_results_text:
+    if not cands:
+        # CR-C: only the site's own "no results" text proves absence; zero cards without
+        # it is a changed layout, never "not found"
         raise FetchFailed("page_unrecognized")
     kind = _lookup(profile)
     if kind:

@@ -220,6 +220,23 @@ def test_unrecognized_page_and_bad_selector_go_to_hand(store):
     assert res.entries[0].reason == "no_parser"
 
 
+def test_zero_cards_without_no_results_text_is_never_not_found(store):
+    # CR-C: a spec with no "no results" wording cannot prove absence; zero cards means
+    # the page changed, so the broker goes to "check by hand", not "not found"
+    p = _saved(store)
+    reg = _reg(devblocked="bot_blocked")
+    b = reg.get("devauto")
+    bare = b.model_copy(update={"search": b.search.model_copy(
+        update={"no_results_text": None})})
+    reg = reg.model_copy(update={"brokers": [bare if x.id == "devauto" else x
+                                             for x in reg.brokers]})
+    calls = Calls(page=ex.Fetched("https://devauto.example/", 200, "<p>No records found</p>"))
+    res = ex.scan_exposure(store, p.id, registry=reg, fetch=calls, refresh=True,
+                           use_browser=False)
+    assert (res.entries[0].status, res.entries[0].reason) == ("check_by_hand",
+                                                              "page_unrecognized")
+
+
 def test_consent_is_required(store):
     from freemyid.models import Consent, ConsentBasis
     p = _saved(store, consent=Consent(basis=ConsentBasis.SELF, attested_by="x",
