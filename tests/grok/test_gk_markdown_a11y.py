@@ -111,8 +111,11 @@ def _strip_comments(line: str) -> tuple[str, bool]:
     """Drop HTML comments. The bool is true when a comment runs past this line."""
     parts: list[str] = []
     index = 0
+    spans = _code_ranges(line)
     while True:
         start = line.find("<!--", index)
+        while start != -1 and _inside(start, spans):
+            start = line.find("<!--", start + 4)
         if start == -1:
             parts.append(line[index:])
             return "".join(parts), False
@@ -447,7 +450,9 @@ def _cases() -> list[pytest.ParameterSet]:
                     rel,
                     rule,
                     id=f"{rel}:{rule}",
-                    marks=pytest.mark.xfail(strict=True, reason=reason),
+                    marks=pytest.mark.xfail(
+                        strict=True, reason=f"WO-325 (freemyid-pm#245) doc not fixed yet: {reason}"
+                    ),
                 )
             )
     return params
@@ -721,3 +726,12 @@ def test_emoji_only_flags_and_passes(tmp_path: Path) -> None:
         Finding(RULE_EMOJI, 10, "emoji is the only signal in link text"),
     ]
     assert _hits(good, RULE_EMOJI) == []
+
+
+def test_comment_opener_inside_inline_code_does_not_hide_later_lines(tmp_path: Path) -> None:
+    page = tmp_path / "page.md"
+    page.write_text(
+        "# Title\n\nUse `<!--` to open a comment.\n\n[here](https://example.invalid/a)\n",
+        encoding="utf-8",
+    )
+    assert _hits(page, RULE_LINK) == [Finding(RULE_LINK, 5, "link text is 'here'")]
