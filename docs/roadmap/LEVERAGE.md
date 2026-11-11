@@ -57,12 +57,12 @@ Brokers ask for ID scans and phone calls "to verify". The answer is an open stan
 | V3 attorney handoff (opt-in bundle export to an attorney the person chooses) | 0.8, after the D6 attorney review | WO-629 (research and design) |
 | V4 privacy-preserving identity proof plus the privacy-request endpoint standard | 1.x, research starts now | WO-630 (research) |
 
-## Owner decisions
+## Owner decisions (DECIDED 2026-11-11, as recommended)
 
-- **L1.** V1 access requests are on by default, or opt-in per broker (recommended: opt-in at first; the exports are very sensitive)?
-- **L2.** Is an on-device model allowed for parsing exports (recommended: yes, local only, deterministic parsers first)?
-- **L3.** Attorney handoff partners and any fee arrangement go to the attorney (D6) before anything is built.
-- **L4.** Spend effort on a public standards push (V4) before 1.0 (recommended: research only before 1.0)?
+- **L1. DECIDED 2026-11-11:** right-to-know requests are opt-in per broker, not on by default (the exports are very sensitive).
+- **L2. DECIDED 2026-11-11:** an on-device model may parse broker data exports: local only, and only after the deterministic parsers.
+- **L3. DECIDED 2026-11-11:** attorney partners and any fee arrangement go to the attorney (D6) before anything is built.
+- **L4. DECIDED 2026-11-11:** the standards push (V4) is research only before 1.0.
 
 ## Appendix: the edited think-tank prompt for future agents
 

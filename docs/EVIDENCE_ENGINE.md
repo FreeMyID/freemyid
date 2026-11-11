@@ -169,8 +169,8 @@ States with no comprehensive privacy law (NC, SC and AZ today) get the FTC and b
 | WO-625 | Research: OBSTRUCTION_LAW.md, regulator channels, GPC state table | Priya | none (running) |
 | WO-626 | Block atlas: nightly fake-name canaries producing PII-free obstruction statistics per broker | Theo, then Dana for scheduling | 621 |
 
-## 9. Owner decisions
+## 9. Owner decisions (DECIDED 2026-11-11, as recommended)
 
-- **E1.** Complaint filing needs one approval (recommended: yes, as a legal act in the person's name; batched).
-- **E2.** RFC 3161 timestamping (sends only a hash to one timestamp-authority host; recommended: yes, after 1.0 if needed).
-- **E3.** Publish an aggregate "obstruction index" per broker (PII-free; press and regulator leverage; recommended: after 0.9 with attorney review, D6).
+- **E1. DECIDED 2026-11-11:** filing a complaint needs one approval from the person (a legal act in their name). Approvals are batched and count toward the bar 9 residual.
+- **E2. DECIDED 2026-11-11:** RFC 3161 timestamping comes later; the local hash chain is the MVP.
+- **E3. DECIDED 2026-11-11:** the per-broker obstruction index (PII-free) is published after 0.9, after attorney review (D6).
