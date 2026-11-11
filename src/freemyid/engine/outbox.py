@@ -8,6 +8,7 @@ to the request, so what the user approves is exactly what gets sent.
 * LEGAL_DEMAND               -> always QUEUED_FOR_APPROVAL
 * email_mode AUTO + mailer   -> sent now
 * after a send               -> EMAIL_SENT evidence (the raw message), Request SENT.
+* transient mail error       -> status stays; FAILED on the 3rd, or on a permanent error.
 
 `approve_and_send(store, request_id)` is the user-approved send (CLI `outbox approve`,
 dashboard). It refuses unless `config.real_submissions_enabled` (or a mailer is injected,
@@ -21,8 +22,11 @@ from __future__ import annotations
 
 import logging
 import os
+import smtplib
+import socket
 import sys
-from datetime import date, datetime
+from datetime import UTC, date, datetime, timedelta
+from typing import Any
 from urllib.parse import quote, urlencode
 
 from .. import config as cfgmod
@@ -380,9 +384,94 @@ def queue_email(store, profile: Profile, broker: Broker, listings: list[Listing]
     return send_request(store, req, profile, mailer, now=now)
 
 
+# Attempts are email_failed rows in the event log, not a Request field.
+# Backoff after a transient failure: 15 minutes, then 1 hour. The third is FAILED.
+_TRANSIENT_ATTEMPTS = 3
+_BACKOFF_FIRST = timedelta(minutes=15)
+_BACKOFF_LATER = timedelta(hours=1)
+_FAILURE_EVENT_LIMIT = 2000
+
+
+def is_transient_mail_error(exc: BaseException) -> bool:
+    """True for a timeout, a dropped connection, or an SMTP 4xx.
+
+    Permanent: everything else, including SMTPAuthenticationError (even a 4xx auth code)
+    and any 5xx. ``socket.timeout`` aliases ``TimeoutError`` on Python 3.10+; both names
+    are listed so the check matches the spec on a runtime that still separates them.
+    """
+    if isinstance(exc, smtplib.SMTPAuthenticationError):
+        return False
+    transient = (TimeoutError, socket.timeout, ConnectionError, smtplib.SMTPServerDisconnected)
+    if isinstance(exc, transient):
+        return True
+    if isinstance(exc, smtplib.SMTPResponseException):
+        code = exc.smtp_code
+        return isinstance(code, int) and 400 <= code < 500
+    return False
+
+
+def _mail_failure(exc: BaseException) -> BaseException:
+    """Exception to classify. The real mailer wraps SMTP errors in MailError."""
+    from .mail import MailError
+    if not isinstance(exc, MailError):
+        return exc
+    inner = exc.__cause__ if exc.__cause__ is not None else exc.__context__
+    return inner if isinstance(inner, BaseException) else exc
+
+
+def _as_utc(ts: datetime) -> datetime:
+    return ts if ts.tzinfo is not None else ts.replace(tzinfo=UTC)
+
+
+def _transient_failures(store, req: Request) -> list[Event]:
+    """Newest-first transient email_failed rows for this request."""
+    found: list[Event] = []
+    rows = store.events(req.profile_id, req.broker_id, limit=_FAILURE_EVENT_LIMIT)
+    for ev in rows:
+        if ev.action != "email_failed" or ev.detail.get("request_id") != req.id:
+            continue
+        if ev.detail.get("transient") is True:
+            found.append(ev)
+    return found
+
+
+def _retry_waiting(store, req: Request, now: datetime) -> bool:
+    """True when the last transient failure is newer than this request's backoff."""
+    failures = _transient_failures(store, req)
+    if not failures:
+        return False
+    wait = _BACKOFF_FIRST if len(failures) == 1 else _BACKOFF_LATER
+    # events() is newest-first, so the first row is the last failure.
+    return _as_utc(now) - _as_utc(failures[0].ts) < wait
+
+
+def _note_send_failure(store, req: Request, profile: Profile,
+                       failure: BaseException) -> None:
+    transient = is_transient_mail_error(failure)
+    detail: dict[str, Any] = {
+        "request_id": req.id,
+        "error": type(failure).__name__,
+        "transient": transient,
+    }
+    give_up = not transient
+    if transient:
+        attempt = len(_transient_failures(store, req)) + 1
+        detail["attempt"] = attempt
+        give_up = attempt >= _TRANSIENT_ATTEMPTS
+    if give_up:
+        store.save_request(req.model_copy(update={"status": RequestStatus.FAILED}))
+    store.log(Event(profile_id=profile.id, broker_id=req.broker_id, actor=Actor.ENGINE,
+                    action="email_failed", detail=detail))
+
+
 def send_request(store, req: Request, profile: Profile, mailer, *,
                  now: datetime | None = None) -> Request:
-    """Send a stored request letter. Never for dry-run requests."""
+    """Send a stored request letter. Never for dry-run requests.
+
+    A transient mail error leaves the status as it is, logs email_failed with
+    transient and the attempt number, and still raises OutboxError. The third
+    transient failure for this request, and any permanent error, marks it FAILED.
+    """
     if req.dry_run:
         raise OutboxError("dry-run requests are never sent")
     if req.status not in (RequestStatus.QUEUED_FOR_APPROVAL, RequestStatus.DRAFT):
@@ -393,12 +482,10 @@ def send_request(store, req: Request, profile: Profile, mailer, *,
     to, subject, body = letter_for(store, req)
     try:
         mid = mailer.send(profile, to, subject, body, req.id)
-    except Exception as e:  # noqa: BLE001 - any mailer failure marks the request FAILED
-        store.save_request(req.model_copy(update={"status": RequestStatus.FAILED}))
-        store.log(Event(profile_id=profile.id, broker_id=req.broker_id, actor=Actor.ENGINE,
-                        action="email_failed",
-                        detail={"request_id": req.id, "error": type(e).__name__}))
-        raise OutboxError(f"send failed: {type(e).__name__}") from None
+    except Exception as e:  # noqa: BLE001 - classified, then re-raised as OutboxError
+        failure = _mail_failure(e)
+        _note_send_failure(store, req, profile, failure)
+        raise OutboxError(f"send failed: {type(failure).__name__}") from None
     raw = getattr(mailer, "last_raw", None) or _letter_blob(to, subject, body)
     _save_blob(store, profile.id, req.broker_id, EvidenceKind.EMAIL_SENT, raw, req.id,
                f"{req.kind.value} email sent", "eml")
@@ -478,8 +565,14 @@ def release_held(store, profile: Profile, *, mailer, registry: Registry | None =
                  now: datetime | None = None) -> dict[str, int]:
     """SEC-27: after the profile's first approved send, send the AUTO emails that were held
     for it. Legal demands, dry-run and non-AUTO requests are never touched. One failure
-    never stops the rest (the failed request is marked FAILED by send_request)."""
-    counts = {"sent": 0, "failed": 0}
+    never stops the rest.
+
+    A request still inside its backoff (15 minutes after the first transient failure, one
+    hour after the second) is skipped and counted as deferred on the release event.
+    deferred is omitted when nothing was skipped. A permanent error, or the third
+    transient failure, is marked FAILED by send_request and counted as failed.
+    """
+    counts: dict[str, int] = {"sent": 0, "failed": 0}
     if profile.email_mode != EmailMode.AUTO or not email_sent_before(store, profile.id):
         return counts
     from ..consent import consent_ok
@@ -488,6 +581,10 @@ def release_held(store, profile: Profile, *, mailer, registry: Registry | None =
     now = now or utcnow()
     for r in store.list_requests(profile.id, status=RequestStatus.QUEUED_FOR_APPROVAL):
         if not _auto_releasable(profile, r):
+            continue
+        # Omitted when zero: existing release events are exactly {sent, failed}.
+        if _retry_waiting(store, r, now):
+            counts["deferred"] = counts.get("deferred", 0) + 1
             continue
         try:
             sent = send_request(store, r, profile, mailer, now=now)
@@ -502,7 +599,7 @@ def release_held(store, profile: Profile, *, mailer, registry: Registry | None =
                 broker = None
         apply_sent(store, sent, broker, now)
         counts["sent"] += 1
-    if counts["sent"] or counts["failed"]:
+    if counts["sent"] or counts["failed"] or counts.get("deferred"):
         store.log(Event(profile_id=profile.id, actor=Actor.ENGINE, action=RELEASE_ACTION,
                         detail=dict(counts)))
     return counts
