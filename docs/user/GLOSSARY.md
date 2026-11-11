@@ -24,7 +24,7 @@ The page on a site that shows your details. The screen can say "Found a listing"
 Source: `docs/USER_GUIDE.md:42`, `docs/USER_GUIDE.md:146`.
 
 ### Practice mode (practice run)
-Free My ID starts here. It still searches people-search sites, and no removal requests go out until you say so in Settings ("Practice mode"). <!-- src/freemyid/wizard/dashboard.py:237 -->
+Free My ID starts here. It still searches people-search sites, and no removal requests go out until you say so in Settings ("Practice mode"). One exception: on a "Do it with me" step, if you choose "Fill it in for me" and press Submit on the site, that request is real. <!-- src/freemyid/wizard/dashboard.py:237, :347-350 -->
 <!-- src/freemyid/wizard/dashboard.py:237-238 -->
 <!-- src/freemyid/engine/runner.py:270-271 -->
 Source: `src/freemyid/wizard/dashboard.py:237-238`, `src/freemyid/engine/runner.py:270-271`.
@@ -52,7 +52,7 @@ A removal request has gone to that one site. The screen says "asked", or that th
 Source: `src/freemyid/wizard/ui.py:26-27`, `src/freemyid/wizard/views.py:30-31`.
 
 ### Confirmed
-That one site has answered, and the screen says "site confirmed" or "not listed now". <!-- src/freemyid/wizard/ui.py:28 -->
+That one site has answered (the screen says "site confirmed"), or a later check of that site no longer finds the listing (the screen says "not listed now"). Those are two different things: an answer from the site, and a check by Free My ID. <!-- src/freemyid/wizard/ui.py:28 -->
 The report can say They confirmed, the Today line counts both as confirmed, and neither is the same as pressing "Yes, this is me". <!-- src/freemyid/wizard/dashboard.py:122 -->
 <!-- src/freemyid/wizard/ui.py:28 -->
 <!-- src/freemyid/wizard/views.py:32-33 -->
@@ -61,7 +61,7 @@ The report can say They confirmed, the Today line counts both as confirmed, and 
 Source: `src/freemyid/wizard/ui.py:28`, `src/freemyid/wizard/views.py:32-33`, `src/freemyid/wizard/dashboard.py:27`, `src/freemyid/models.py:137-138`.
 
 ### Relisted (came back; the screen says "reappeared")
-A listing that had gone has shown up on that site again, and the screen says "reappeared". <!-- src/freemyid/wizard/ui.py:29 -->
+A listing that Free My ID had marked as gone has shown up on that site again, and the screen says "reappeared". <!-- src/freemyid/wizard/ui.py:29 -->
 It can also say "It came back. We are asking again", and the next real run asks again. <!-- src/freemyid/wizard/views.py:34 -->
 <!-- src/freemyid/wizard/ui.py:29 -->
 <!-- src/freemyid/wizard/views.py:34 -->

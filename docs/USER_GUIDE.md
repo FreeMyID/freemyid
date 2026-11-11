@@ -261,7 +261,7 @@ Jane Q Testperson in Springfield, IL is only the example. Your card uses your sh
 
 The card says why it is only a possible match. If the extra detail is the city, it says the name is the same, and so is the city. It also says: open the page first if you want to look. Only you can say whether it is you.
 
-<!-- why text and "only you": src/freemyid/wizard/dashboard.py:112-126 -->
+<!-- why text and "Only you": src/freemyid/wizard/dashboard.py:125 -->
 
 ### The buttons
 
@@ -371,7 +371,8 @@ Press **I finished it** after the call, even if the note box is empty. The app s
 
 That marks the call as done. When the site had a listing to remove, Free My ID records that a removal was requested (the site list shows **asked**). **Site confirmed** is a later step, after the site agrees or the listing is gone. It is not what this button means.
 
-<!-- "I finished it" because the phone task has a resume token: src/freemyid/wizard/dashboard.py:185-186 and src/freemyid/submitters/assisted.py:142 -->
+<!-- "I finished it" because the phone task has a resume token: src/freemyid/wizard/dashboard.py:185 -->
+<!-- the phone token is set at src/freemyid/submitters/assisted.py:142 -->
 <!-- thank-you: src/freemyid/wizard/server.py:50 and src/freemyid/wizard/server.py:550-567 -->
 <!-- phone calls count as requested (asked), not as site confirmed: src/freemyid/engine/handoff.py:193-201 and src/freemyid/engine/handoff.py:224-254 -->
 <!-- "asked" vs "site confirmed": src/freemyid/wizard/ui.py:27-28 -->

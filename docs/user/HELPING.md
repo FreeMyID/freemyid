@@ -75,7 +75,7 @@ Free My ID starts in practice mode. On Today, the banner says: "Practice mode: F
 
 Practice mode still searches. It looks up the name and city on people-search sites. For Jane Q Testperson, Springfield IL, that search uses that name and that city. The search does reach those sites.
 
-No removal requests go out until the person says so. A removal request is the ask that a site take a listing down. Practice mode does not send that ask. The daily check still runs. It still searches. It still does not send removal requests.
+No removal requests go out until the person says so. A removal request is the ask that a site take a listing down. Practice mode does not send that ask by itself. One exception: if the person chooses **Fill it in for me** on a step and then presses Submit on the site, that request is real even in practice mode. If **Run automatically** is on, the daily check still runs in practice mode. It still searches, and it still does not send removal requests.
 
 <!-- src/freemyid/engine/runner.py:269-271 -->
 <!-- src/freemyid/engine/runner.py:545-556 -->
@@ -97,7 +97,7 @@ They can press **Go back to practice mode** later in Settings. A request that al
 
 When a newer Free My ID is ready, download the installer again from the same place as the first time. Follow [INSTALL.md](INSTALL.md), the "Windows 10 or 11" part. Open the new installer. Do not uninstall the old one first. Windows may show the same blue box. If it looks wrong, stop.
 
-The new installer keeps the person's details and the scheduled check. The name, the city, the settings, and the daily check stay on the computer. Those details are kept apart from the program files the installer replaces. If **Run automatically** was already on, it stays on. The new installer does not turn it off, and it does not turn it on by itself. The daily check is removed only when someone uninstalls Free My ID. An update does not do that.
+The new installer keeps the person's details and the scheduled check. The name, the city, the settings, and the scheduled check (if it was on) stay on the computer. Those details are kept apart from the program files the installer replaces. If **Run automatically** was already on, it stays on. The new installer does not turn it off, and it does not turn it on by itself. The daily check is removed only when someone uninstalls Free My ID. An update does not do that.
 
 <!-- src/freemyid/paths.py:13-16 -->
 <!-- src/freemyid/scheduler/__init__.py:1-4 -->

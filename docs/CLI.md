@@ -30,7 +30,7 @@ freemyid wipe                           # delete everything Free My ID saved her
 * `freemyid exposure` only reads. `--old-addresses` searches each site once more at a previous
   address (at most one extra page per site). A site already checked in the last 24 hours is
   reused from the saved result unless you also add `--refresh`, so the flag may change nothing
-  until then (`exposure.py:79`, `exposure.py:599-602`). Leave the flag off and config
+  until then (`src/freemyid/engine/exposure.py:79`, `src/freemyid/engine/exposure.py:599-602`). Leave the flag off and config
   `exposure_old_addresses` decides; that setting is off unless someone turned it on
   (`cli.py:415-418`, `cli.py:447-449`).
 * `freemyid search-engines` with no action lists the steps. The word `list` is not a command:
@@ -273,7 +273,7 @@ counts in `found` but not in `sites_checked`. Show `coverage_note` next to the s
 is in California. `old_address_checked` is true when one previous-address search was read
 for that site. The `--old-addresses` flag forces that extra page on for this run (at most one
 per site). Leaving the flag off passes the choice to config `exposure_old_addresses`, which
-is off unless it was set (`cli.py:447-449`, `engine/exposure.py:580-581`). There is no
+is off unless it was set (`cli.py:447-449`, `src/freemyid/engine/exposure.py:580-581`). There is no
 previous-name flag. `previous_name_checked` is true when one previous-name search was read
 (config `exposure_previous_names`, off by default). These fields were added in v0.3; `counts`
 is unchanged.
@@ -291,7 +291,7 @@ when at least one site is in the list it says this score does not mean you are s
 * then, if `uncertain` is not 0: "N site may show you; please tell us if it is you." (or
   "sites" / "they are").
 
-`headline` (`engine/exposure_score.py:197-215`) is one line shown with the number. It never
+`headline` (`src/freemyid/engine/exposure_score.py:197-215`) is one line shown with the number. It never
 says "safe", "clean" or "protected". It does not always contain a site count:
 
 * no sites: "No sites could be searched for you yet, so there is no score yet."
@@ -306,7 +306,7 @@ says "safe", "clean" or "protected". It does not always contain a site count:
 
 `band` is `not_checked` (score 0 and nothing checked, found or uncertain), `none_found`
 (score 0 otherwise), `low` (1-24), `medium` (25-59) or `high` (60-100)
-(`engine/exposure_score.py:185-194`).
+(`src/freemyid/engine/exposure_score.py:185-194`).
 
 Text output for one person (`cli.py:458-491`), in this order:
 
@@ -338,7 +338,7 @@ DATE is the previous point's day. "point" is singular only when N is 1. If fewer
 be checked than last time, it adds "Fewer sites could be checked this time, so the change may
 not be real." If `score_version` differs between those two scans, it adds "The way the score
 is worked out changed between these scans, so part of the change comes from that."
-(`engine/exposure.py:847-865`). `points` do not carry `score_version`; that difference shows
+(`src/freemyid/engine/exposure.py:847-865`). `points` do not carry `score_version`; that difference shows
 up only in `note`.
 
 ### `checklists/1`

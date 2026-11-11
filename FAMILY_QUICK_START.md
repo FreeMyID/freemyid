@@ -15,10 +15,10 @@ Free My ID does not change what Facebook or Google does with your account.
 
 ## 1. Install (about 2 minutes)
 
-This page is for app version **0.3.1**. The download on freemyid.org is version **0.3.0**, about
-**64.5 MB**, dated **2026-11-09**.
+This page is for app version **0.3.1**. The download on freemyid.org is version **0.3.1**, about
+**64.6 MB**, dated **2026-11-10**.
 
-1. Click **Download Free My ID**. Open **FreeMyIDSetup** from **Downloads**. The name may include a number.
+1. Go to freemyid.org and open the Download page. Click the big download button on that page. Open **FreeMyIDSetup** from **Downloads**. The name may include a number.
 2. If Windows says **"Windows protected your PC"**, click **More info**, then **Run anyway**. If you do not see that box, carry on.
 3. Click **Next**, then **Install**. You do not need a password.
 4. Leave **Open Free My ID now** ticked and click **Finish**.
@@ -32,8 +32,8 @@ Press **Next**, or **Back** to change an answer. Example only: Jane Q Testperson
 
 | Screen | What to do |
 |---|---|
-| 1. Welcome | You, your child under 18, or an adult who gave you signed permission. Type your full name and tick the box. |
-| 2. Name | The name, plus nicknames or a maiden name if any. |
+| 1. Welcome | Choose who the setup is for: **This is for me**, **This is for my child**, or **This is for an adult who asked me to help** (that adult must give signed permission). Type your full name and tick the box. |
+| 2. Name | The name. If there are nicknames or a maiden name, click **Any other names? (nicknames, maiden name)** to open those boxes. |
 | 3. Address | City and 2-letter state, such as Springfield IL. |
 | 4. A few details | Birth year, phone and email help it recognize the right person. A birth year is not sent to a site. If a site's form asks for an age, it gets only the age its own listing shows. A phone number goes to a site only if you switch that on. |
 | 5. Email for removals | Follow the steps, or choose **Skip, I'll do these by hand**. Skipping is fine. |
@@ -43,7 +43,7 @@ Press **Next**, or **Back** to change an answer. Example only: Jane Q Testperson
 
 Today shows one card: the next thing for you. The rest is behind **More: safety steps and details**. Under the card, one line gives the counts: requests sent, sites confirmed, and how many need you.
 
-Use the button on that card (**Open the site**, **Fill it in for me**, **Open in Gmail**, **Open in Outlook**, or **Open in Yahoo Mail**). Then click **I did it**, **I sent it**, or **I couldn't**. If emails are waiting, press **Approve**. They wait until you do. If the card says **Nothing needs you today**, you can close the window. Free My ID keeps checking.
+Use the button on that card (**Open the site**, **Fill it in for me**, **Open in Gmail**, **Open in Outlook**, or **Open in Yahoo Mail**). Then click **I did it**, **I sent it**, or **I couldn't**. If emails are waiting, the card says so: click **Look at them**, then press **Approve and send** on each one you are happy with (or **Cancel it**). Those emails wait until you do. If the card says **Nothing needs you today**, you can close the window. Free My ID keeps checking.
 
 **Is this you?** The buttons are exactly **Yes, this is me** and **No, this is not me**. You may open the page first. The first answer stays. Free My ID will not ask about that listing again.
 
@@ -53,7 +53,7 @@ Practice mode still searches. No removal requests go out until you say so. Open 
 
 ## Need help?
 
-Open Free My ID from the **Start Menu** or the Desktop icon. If nothing opens: The first time can take up to a minute. Please wait; there is no need to click it again. Try the Start Menu once. Do not keep double-clicking.
+Open Free My ID from the **Start Menu** or the Desktop icon. If nothing opens: The first time can take up to a minute. Please wait; there is no need to click it again. Try the Start Menu once. Do not keep double-clicking. If it still does not open after a few minutes, restart the computer once and try the Start Menu again. If that does not work, stop and ask someone you trust to look with you.
 
 To remove it: Windows **Settings > Apps > Free My ID > Uninstall**. It asks before it deletes anything you saved. Choose **Yes** to remove saved people, reports and screenshots. Choose **No** to keep them.
 
@@ -68,8 +68,8 @@ Six screens: draft.py:65
 Age from the listing only: ui.py:307 base.py:48
 Progress counts, no percent: dashboard.py:214
 Nothing needs you today: dashboard.py:267
-App version 0.3.1: __init__.py:2
-Website download is version 0.3.0, about 64.5 MB, dated 2026-11-09 (release.yaml).
+App version 0.3.1: src/freemyid/__init__.py:2
+Website download is version 0.3.1, about 64.6 MB, dated 2026-11-10 (release.yaml:5-7).
 First start: splash_win.py, line 20. Slow text: splash_win.py, line 23.
 Open Free My ID now: freemyid.iss, line 56.
 Update keeps details and the scheduled check; the app may need to be opened again: freemyid.iss, lines 9, 28, 64 and 83.

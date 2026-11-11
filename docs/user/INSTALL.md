@@ -151,7 +151,7 @@ before downloading a browser of its own if you have neither (`README.md:50`).
 - [Google and Bing on Protect yourself](google-and-bing.md)
 - [Protect yourself](protect-yourself.md)
 - [Larger text](larger-text.md)
-- [What Free My ID never asks for](never-asks.md)
+- [The promises Free My ID makes about your private details](never-asks.md)
 - [Printable checklists](printable-checklist.md)
 - [Helping someone by phone](helping-by-phone.md)
 
