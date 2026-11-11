@@ -13,6 +13,7 @@ but `for_broker` never hands loopback to a browser run unless loopback was opted
 from __future__ import annotations
 
 import copy
+import unicodedata
 from urllib.parse import urlsplit
 
 from . import config
@@ -35,6 +36,14 @@ def _is_loopback(host: str) -> bool:
     return h in LOOPBACK_HOSTS or h.endswith(".localhost") or h.startswith("127.")
 
 
+def _unsafe_char(c: str) -> bool:
+    """Whitespace, control, or an invisible/unassigned code point (Cf format chars such as
+    U+200B zero-width space or U+200E LRM, private use, unassigned): any of these can make a
+    host look like an allowed broker while naming another one."""
+    return (c.isspace() or ord(c) < 0x20 or ord(c) == 0x7F
+            or unicodedata.category(c) in {"Cf", "Co", "Cn", "Cs"})
+
+
 def host_of(url_or_host: str) -> str | None:
     """Hostname of a URL (or a bare host); None if it is unsafe or unparsable.
 
@@ -42,7 +51,7 @@ def host_of(url_or_host: str) -> str | None:
     browsers read it as evil.com), whitespace and control characters.
     """
     s = url_or_host
-    if not s or "\\" in s or any(c.isspace() or ord(c) < 0x20 or ord(c) == 0x7F for c in s):
+    if not s or "\\" in s or any(_unsafe_char(c) for c in s):
         return None
     if "://" in s:
         try:
