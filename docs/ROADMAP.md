@@ -4,6 +4,19 @@ Owner/PM: Morgan Reyes (orchestrator). Written 2026-11-07, after v0.1.2. This is
 
 Legend. **Tier:** F = Free, P = Plus, Fam = Family, Pro = Pro/self-host, B = Business/Partner. **Phase:** 0.2, 0.3, 0.4, 0.5, 1.0, Later, Dream.
 
+## Roadmaps (added 2026-11-11, at v0.3.1)
+
+This file stays the feature catalogue, the editions and the principles. The release plan and the per-platform plans now live in `docs/roadmap/`:
+
+| File | What it holds |
+|---|---|
+| [`roadmap/ROADMAP_TO_1.0.md`](roadmap/ROADMAP_TO_1.0.md) | The release train 0.3.2, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0: scope, exit criteria, who builds it, what "1.0" means, the cross-cutting tracks |
+| [`roadmap/DESKTOP.md`](roadmap/DESKTOP.md) | Windows, macOS and Linux: installers, signing, scheduler, keyring, browser, updates, CI and the real-machine test matrix |
+| [`roadmap/MOBILE.md`](roadmap/MOBILE.md) | Android and iOS: platform limits, options, recommended architecture, store rules, milestones (after desktop 1.0) |
+| [`roadmap/WEBSITE.md`](roadmap/WEBSITE.md) | freemyid.org: pages per release, help centre, search, budgets, hosting |
+
+Where a phase tag in section 3 or 5 below differs from those files, the files in `docs/roadmap/` win. Each of them ends with a table of decisions the owner must make.
+
 ---
 
 ## 1. What Free My ID is
@@ -134,8 +147,8 @@ Each line: feature, tier, phase. Status: **shipped** items are in v0.1.x.
 - Docker image on GHCR (non-root, read-only rootfs, Playwright Chromium bundled, volume for data) - Pro - 0.2
 - Developer page freemyid.org/developers: install for Linux/macOS/Docker, CLI reference, config schema, broker-contribution guide - F - 0.2
 - Homebrew tap, AUR, Flatpak, Nix flake - F - 0.3 to Later
-- Signed macOS .app with notarization (owner decision: Apple Developer $99/yr) - F - Later
-- Native Linux desktop packages (.deb/.rpm/AppImage) with the app window - F - 0.4
+- Signed macOS .app with notarization (owner decision: Apple Developer $99/yr) - F - 0.5 (was Later; see roadmap/DESKTOP.md)
+- Native Linux desktop packages (.deb/.rpm/AppImage) with the app window - F - 0.5 (was 0.4)
 - Plugin API for community submitters (sandboxed, reviewed, signed in the feed) - F - 0.5
 - Home Assistant / Prometheus exporter for homelabs - Pro - Later
 - Self-hosted multi-profile server for a household (one Docker box, many people, each with own key) - Pro - Later
@@ -155,7 +168,7 @@ Each line: feature, tier, phase. Status: **shipped** items are in v0.1.x.
 
 ### 3.11 Trust, security, privacy
 - Reproducible builds and published SBOM - F - 0.3
-- Code signing: SignPath (pending) or Azure fallback - F - 0.2/0.3
+- Code signing on Windows - F - not done in 0.2/0.3; recommended at 0.5, required for 1.0. Options and the SignPath status to confirm: roadmap/DESKTOP.md section 2.2
 - Opt-in, PII-free crash reports (scrubbed locally, user previews before send) - F - 0.4
 - Independent security audit before 1.0 - 1.0
 - Transparency page: what we host, what we never see, warrant canary - F - 1.0
@@ -201,6 +214,8 @@ Each line: feature, tier, phase. Status: **shipped** items are in v0.1.x.
 
 ## 6. Release plan
 
+> **Superseded 2026-11-11 by [`roadmap/ROADMAP_TO_1.0.md`](roadmap/ROADMAP_TO_1.0.md).** The list below is the earlier three-step plan, kept as a record. Main changes: desktop installers for macOS and Linux get their own release (0.5), the helper relay and Spanish move to 0.6, the signed feed (0.7) and payments (0.8) are split, the audit has its own release (0.9), and Business/Partner and the plugin API are proposed for 1.x.
+
 - **v0.2 "Every platform"** (now): Linux/macOS headless and CLI, secrets fallback, real schedulers, `--json`, YAML config, `doctor`, Docker image, PyPI, developer page, CI matrix. Also: Bluesky poster fixes (SEC-57/58/59) and v0.1.3 installer fixes (uninstall while running, calm Bridge copy, Ready page, password wording).
 - **v0.3 "See it, fix it"** (re-scoped 2026-11-07 on the Codex lead's advice): one understandable journey from finding listings to acting on them: exposure scan + score with coverage, 'Is this you?' reviews, state-law letters, DROP, the identity-safety checklists, the app redesign, printable summary, accessibility. Each with its own acceptance gate. Moved to v0.4: proof vault + PDF, Outlook OAuth, broker monitoring.
 - **What counts as 'available'**: only what is in a published release (GitHub release + site_src/data/release.yaml). Merged-but-unreleased work is 'coming' on the website.
@@ -215,7 +230,7 @@ Each line: feature, tier, phase. Status: **shipped** items are in v0.1.x.
 - Removal that happens *before* listing: monitor new broker scrapes and request suppression the day a record appears.
 - A "privacy will" for after death: instructions and requests so a relative can remove a deceased person's listings (identity theft of the deceased is common).
 - Browser extension that warns "this site sells people's data; opt out?" and starts the flow.
-- Phone app (Android first) for scanning and approving, PII still on the user's own devices.
+- Phone app (Android first) for scanning and approving, PII still on the user's own devices. Now planned in roadmap/MOBILE.md: a companion first, after desktop 1.0.
 - Local AI helper (runs on-device, no cloud) that reads broker replies and drafts the right follow-up.
 - Automatic letters by real mail for brokers that only accept postal requests (print-and-mail partner, opt-in, PII sent only for that letter).
 - Collective action: anonymous, aggregated stats on which brokers ignore the law, published for regulators and press.
@@ -237,7 +252,8 @@ Each line: feature, tier, phase. Status: **shipped** items are in v0.1.x.
 ## 9. Open questions for the owner
 - Apple Developer account ($99/yr) for a signed Mac app: when?
 - Final prices after a sourced competitor check (brand-marketing).
-- Business entity, payment processor account, and terms of service: needed before 1.0 payments.
+- Business entity, payment processor account, and terms of service: needed before payments open (0.8 in the new plan).
+- The full, current list is in the "Decisions the owner must make" tables at the end of each file in `docs/roadmap/`.
 
 ## 0.4 order (decided 2026-11-09, project lead; owner delegated full control)
 Codex challenge CODEX-149 #6 accepted: 0.4 is built around Pat's journey (72, Windows 10, a grandchild sent the link), in this order:
