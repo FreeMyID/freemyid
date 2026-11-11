@@ -132,7 +132,7 @@ def install() -> str:
                     "runs when it next starts. On a server nobody logs in to, also run: "
                     "loginctl enable-linger $USER")
         if shutil.which("crontab"):
-            new = _strip_cron(_crontab_get()) + render.cron_lines(cmd)
+            new = _strip_cron(_crontab_get()) + render.cron_lines(cmd, _job_env())
             if _run(["crontab", "-"], input=new).returncode != 0:
                 raise RuntimeError("Could not update crontab.")
             return "Installed a daily cron job plus a run at startup."
@@ -146,7 +146,8 @@ def install() -> str:
         _run(["launchctl", "bootout", f"{_launchd_domain()}/{render.LABEL}"])  # ok if absent
         if _run(["launchctl", "bootstrap", _launchd_domain(), str(p)]).returncode != 0:
             raise RuntimeError("Could not load the launchd agent.")
-        return "Installed a daily launchd agent. Missed runs happen when the Mac wakes."
+        return ("Installed a daily launchd agent. A check missed while the Mac was "
+                "switched off runs at the next login.")
     xml = paths.home() / "freemyid-task.xml"
     xml.write_text(render.windows_task_xml(cmd), encoding="utf-16")
     try:   # /F replaces an existing task, so installing twice is harmless
