@@ -357,7 +357,8 @@ def queue_email(store, profile: Profile, broker: Broker, listings: list[Listing]
         # SEC-27: an AUTO email that was held for the first approval goes out once the
         # profile has an approved send (approve_and_send also releases them right away).
         if (mailer is not None and _auto_releasable(profile, existing)
-                and not needs_approval(profile, kind, store)):
+                and not needs_approval(profile, kind, store)
+                and not _retry_waiting(store, existing, now)):   # WO-332 backoff
             return send_request(store, existing, profile, mailer, now=now)
         return existing
     subject, body = compose(profile, broker, listings, state_law, kind, original=original)

@@ -394,3 +394,21 @@ def test_release_held_counts_a_retryable_failure_as_deferred_not_failed(store):
     assert store.get_request(req.id).status == RequestStatus.QUEUED_FOR_APPROVAL
     rel = [e for e in store.events(p.id) if e.action == outbox.RELEASE_ACTION]
     assert rel[0].detail == {"sent": 0, "failed": 0, "deferred": 1}
+
+
+def test_queue_email_reuse_respects_the_backoff(store):
+    """PR #111 review: the next run's queue_email reuses the queued letter and must not send
+    it again inside its backoff (only release_held checked it)."""
+    p, (req,) = _held(store, "fakeb")
+    with pytest.raises(outbox.OutboxError):
+        outbox.send_request(store, req, p, RaisingMailer(TimeoutError(), failures=1))
+    anchor = utcnow()
+    early = RaisingMailer()
+    got = outbox.queue_email(store, p, _broker("fakeb"), [], dry_run=False, mailer=early,
+                             now=anchor + timedelta(minutes=5))
+    assert early.calls == 0
+    assert got.id == req.id and got.status == RequestStatus.QUEUED_FOR_APPROVAL
+    late = RaisingMailer()
+    sent = outbox.queue_email(store, p, _broker("fakeb"), [], dry_run=False, mailer=late,
+                              now=anchor + timedelta(minutes=16))
+    assert late.calls == 1 and sent.status == RequestStatus.SENT
