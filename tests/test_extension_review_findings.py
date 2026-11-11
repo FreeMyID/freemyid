@@ -241,8 +241,6 @@ def test_serve_stops_quietly_when_the_browser_closes_the_pipe() -> None:
 
 # ------------------------------------------------------------------------------ build script
 
-@pytest.mark.xfail(strict=True,
-                   reason="SEC-EXT-5: the sample-only guard checks the file name, not the target")
 def test_a_sample_name_that_points_at_the_private_registry_is_refused(tmp_path: Path) -> None:
     private = tmp_path / "registry.yaml"
     private.write_text("version: x\nbrokers: []\n", encoding="utf-8")
@@ -250,6 +248,102 @@ def test_a_sample_name_that_points_at_the_private_registry_is_refused(tmp_path: 
     disguised.symlink_to(private)
     with pytest.raises(build_extension.BuildError):
         build_extension.sample_registry_path(ROOT, disguised)
+
+
+_PRIVATE_YAML = ('version: "private"\nbrokers:\n  - id: private_only_broker\n'
+                 "    name: Private Only\n    url: https://www.private-only.example/\n"
+                 "    category: people_search\n    domains: [www.private-only.example]\n")
+_SAMPLE_YAML = _PRIVATE_YAML.replace("private", "public").replace("Private", "Public")
+
+
+def _fake_repo(tmp_path: Path) -> Path:
+    """A stand-in repository root: brokers/ with a sample and a private registry, and tests/."""
+    root = tmp_path / "repo"
+    (root / "brokers").mkdir(parents=True)
+    (root / "tests" / "fixtures").mkdir(parents=True)
+    (root / "brokers" / "registry.sample.yaml").write_text(_SAMPLE_YAML, encoding="utf-8")
+    (root / "brokers" / "registry.yaml").write_text(_PRIVATE_YAML, encoding="utf-8")
+    (root / "tests" / "fixtures" / "tiny.sample.yaml").write_text(_SAMPLE_YAML, encoding="utf-8")
+    return root
+
+
+def test_only_the_sample_or_a_file_under_tests_is_accepted(tmp_path: Path) -> None:
+    """SEC-EXT-5: the answer depends on where the path really leads."""
+    root = _fake_repo(tmp_path)
+    sample = (root / "brokers" / "registry.sample.yaml").resolve()
+    fixture = (root / "tests" / "fixtures" / "tiny.sample.yaml").resolve()
+    assert build_extension.sample_registry_path(root) == sample
+    assert build_extension.sample_registry_path(root, sample) == sample
+    assert build_extension.sample_registry_path(root, fixture) == fixture
+    # the same two files through a path with ".." in it
+    assert build_extension.sample_registry_path(
+        root, root / "tests" / ".." / "brokers" / "registry.sample.yaml") == sample
+    assert build_extension.load_domain_list(root, fixture)["hosts"] == {
+        "www.public-only.example": "public_only_broker"}
+
+    elsewhere = tmp_path / "elsewhere.sample.yaml"
+    elsewhere.write_text(_SAMPLE_YAML, encoding="utf-8")
+    other_dir = root / "brokers" / "other.sample.yaml"
+    other_dir.write_text(_SAMPLE_YAML, encoding="utf-8")
+    for refused in (elsewhere, other_dir, root / "brokers" / "registry.yaml",
+                    root / "tests" / ".." / "brokers" / "registry.yaml",
+                    root / "tests" / "fixtures" / "tiny.yaml"):
+        with pytest.raises(build_extension.BuildError, match="public sample"):
+            build_extension.sample_registry_path(root, refused)
+
+
+def test_no_kind_of_link_reaches_the_private_registry(tmp_path: Path) -> None:
+    """SEC-EXT-5: a symlink (file or folder) or a hard link with an innocent name is refused."""
+    root = _fake_repo(tmp_path)
+    private = root / "brokers" / "registry.yaml"
+    fixtures = root / "tests" / "fixtures"
+
+    file_link = fixtures / "linked.sample.yaml"
+    file_link.symlink_to(private)
+    harmless_link = fixtures / "also-tiny.sample.yaml"
+    harmless_link.symlink_to(fixtures / "tiny.sample.yaml")          # links are refused as such
+    folder_link = root / "tests" / "linked-brokers"
+    folder_link.symlink_to(root / "brokers", target_is_directory=True)
+    hard_link = fixtures / "hard.sample.yaml"
+    hard_link.hardlink_to(private)
+    private_dir = tmp_path / "private"
+    private_dir.mkdir()
+    (private_dir / "registry.sample.yaml").write_text(_PRIVATE_YAML, encoding="utf-8")
+    outside_link = root / "tests" / "outside"
+    outside_link.symlink_to(private_dir, target_is_directory=True)
+
+    for refused in (file_link, harmless_link, folder_link / "registry.yaml", hard_link,
+                    outside_link / "registry.sample.yaml"):
+        with pytest.raises(build_extension.BuildError, match="public sample"):
+            build_extension.sample_registry_path(root, refused)
+        with pytest.raises(build_extension.BuildError):
+            build_extension.load_domain_list(root, refused)
+
+
+def test_a_sample_that_is_itself_a_link_to_the_private_registry_is_refused(tmp_path: Path) -> None:
+    """SEC-EXT-5: the default path gets the same check as an override."""
+    root = _fake_repo(tmp_path)
+    sample = root / "brokers" / "registry.sample.yaml"
+    sample.unlink()
+    sample.symlink_to(root / "brokers" / "registry.yaml")
+    with pytest.raises(build_extension.BuildError, match="public sample"):
+        build_extension.sample_registry_path(root)
+    sample.unlink()
+    sample.hardlink_to(root / "brokers" / "registry.yaml")
+    with pytest.raises(build_extension.BuildError, match="public sample"):
+        build_extension.sample_registry_path(root)
+
+
+def test_the_command_line_refuses_a_disguised_private_registry(tmp_path: Path, capsys) -> None:
+    """SEC-EXT-5 end to end: --registry with a link writes nothing and names no file content."""
+    private = tmp_path / "registry.yaml"
+    private.write_text(_PRIVATE_YAML, encoding="utf-8")
+    disguised = tmp_path / "public.sample.yaml"
+    disguised.symlink_to(private)
+    out = tmp_path / "out"
+    assert build_extension.main(["--registry", str(disguised), "--out", str(out)]) == 1
+    assert not out.exists()
+    assert "private-only" not in capsys.readouterr().err
 
 
 def test_validator_refuses_a_match_pattern_with_a_newline() -> None:

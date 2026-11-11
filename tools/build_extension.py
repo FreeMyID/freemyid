@@ -34,6 +34,8 @@ from urllib.parse import urlsplit
 ROOT = Path(__file__).resolve().parent.parent
 BROWSERS = ("chrome", "edge", "firefox")
 SAMPLE_REGISTRY_REL = "brokers/registry.sample.yaml"   # public sample ONLY
+PRIVATE_REGISTRY_REL = "brokers/registry.yaml"         # never read, whatever name points at it
+TEST_DATA_REL = "tests"                                # --registry may also name a file in here
 
 # The complete permission list. Adding one needs a rationale in docs/EXTENSION.md and review.
 ALLOWED_PERMISSIONS = frozenset({"activeTab", "nativeMessaging", "storage"})
@@ -80,12 +82,30 @@ class BuildError(Exception):
 # ----------------------------------------------------------------- registry (public sample only)
 
 def sample_registry_path(root: Path = ROOT, override: Path | None = None) -> Path:
-    """Path of the public sample registry. An override must also be a *.sample.yaml file."""
-    path = Path(override) if override else root / SAMPLE_REGISTRY_REL
-    if not path.name.endswith(".sample.yaml"):
-        raise BuildError(f"{path.name}: only the public sample registry (*.sample.yaml) may be "
-                         "used to build the extension")
-    return path
+    """The real path of the registry file to read: the public sample, or a test file.
+
+    The decision is made on where the path really leads, not on its name. Accepted:
+    <root>/brokers/registry.sample.yaml, or a *.sample.yaml file under <root>/tests/.
+    Refused: a link of any kind, any other place, and the private registry itself (also when it
+    is reached through a link in a folder name or a second name for the same file).
+    """
+    root = Path(root).resolve()
+    sample = root / SAMPLE_REGISTRY_REL
+    private = root / PRIVATE_REGISTRY_REL
+    path = Path(override) if override else sample
+    refusal = BuildError(f"{path.name}: only the public sample registry ({SAMPLE_REGISTRY_REL}, "
+                         f"or a *.sample.yaml file under {TEST_DATA_REL}/) may be used to build "
+                         "the extension; links are not followed")
+    if not path.name.endswith(".sample.yaml") or path.is_symlink():
+        raise refusal
+    real = path.resolve()
+    if real != sample and not real.is_relative_to(root / TEST_DATA_REL):
+        raise refusal
+    if not real.name.endswith(".sample.yaml") or real == private:
+        raise refusal
+    if private.exists() and real.exists() and real.samefile(private):
+        raise refusal
+    return real
 
 
 def _scalar(raw: str) -> str:
@@ -413,7 +433,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--browser", choices=(*BROWSERS, "all"), default="all")
     parser.add_argument("--out", type=Path, default=ROOT / "dist" / "extension")
     parser.add_argument("--registry", type=Path, default=None,
-                        help="another public *.sample.yaml (never the private registry)")
+                        help="a public *.sample.yaml test file under tests/ (never the private "
+                             "registry; links are refused)")
     args = parser.parse_args(argv)
     try:
         for browser in BROWSERS if args.browser == "all" else (args.browser,):
