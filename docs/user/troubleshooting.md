@@ -107,7 +107,7 @@ The first time can take up to a minute. Please wait; there is no need to click i
 After two minutes, the window says "Free My ID is still starting." It also says "This is taking longer than usual." and "Please wait; there is no need to click it again."
 <!-- packaging/windows/splash_win.py (two minutes is 120 seconds at :24; the click sentence at :23) -->
 
-**Do this:** keep waiting. There is no need to click again.
+**Do this:** keep waiting. There is no need to click again. If the window is still there after about five minutes, close it, wait a moment, and open Free My ID again from the Desktop icon. If it still does not open, stop and ask someone you trust to look with you.
 
 ### After an update
 
@@ -169,6 +169,10 @@ the download is genuine**.
    Get-FileHash -Path "$env:USERPROFILE\Downloads\FreeMyIDSetup.exe" -Algorithm SHA256
    ```
 
+   This line assumes the file is in your Downloads folder and is named
+   **FreeMyIDSetup.exe**. If your browser saved it under another name, such as
+   **FreeMyIDSetup (1).exe**, put that exact name in the line instead.
+
    The download page writes the same check as `Get-FileHash .\FreeMyIDSetup.exe`
    once you are in the Downloads folder. The line above already includes that
    folder, so one paste is enough.
@@ -180,7 +184,7 @@ the download is genuine**.
    **FreeMyIDSetup.exe**. If the name is different, stop and ask a helper.
    Do not open some other file.
 
-<!-- site_src/data/release.yaml:8 sha256 for version 0.3.0: a234c8cd560e436c81f48aacffb91da6408618d979f039bf2f5612de57ccfe9c -->
+<!-- site_src/data/release.yaml:8 sha256 for version 0.3.1: ca150f126feef34b20a8504c9b2679718937b07a0ad0dae54cb226ca3dc2fe46 -->
 
 **Do this:** if the codes match, open **FreeMyIDSetup.exe** again. When the
 blue box comes back, click **More info**. Check that the app name is

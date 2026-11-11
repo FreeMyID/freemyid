@@ -125,7 +125,7 @@ Version **0.3.1** opens on **Today**. You see one card. The rest of the list is 
 
 1. **Practice first.** Free My ID starts in practice mode. It looks for your listings. No removal requests go out until you say so.
 2. **Look at Today.** One card is the next step.
-3. **Turn on real requests (one time only).** Open **Settings** and click **Start sending real requests**. The next screen asks **Yes, start sending real requests** or **No, stay in practice mode**.
+3. **Turn on real requests (one time only).** Open **Settings** and click **Start sending real requests**. The next screen lists who it is for and asks **Yes, start sending real requests** or **No, stay in practice mode**. Read it, then choose. Emails for people who chose "approve each" wait for your OK, and the first email for every person always waits for your OK. Requests that are already sent cannot be taken back.
 4. **Let it work.** You can close the window. If a site needs you, a card appears on Today.
 
 ## For helpers: the command line
@@ -202,7 +202,7 @@ A short note under the buttons says a site that deleted you has done that for **
 
 The card is whichever of these comes first.
 
-1. **Emails waiting for your OK.** The heading looks like **2 emails waiting for your OK** (or **1 email**). The words under it say: look at each one, then press Approve. The button on this card is **Look at them**. That opens **Emails**. On the Emails page the buttons are **Approve and send** and **Cancel it**. Press **Approve and send** when you want that request to go out. The screen says "press Approve". The button you actually press is **Approve and send**.
+1. **Emails waiting for your OK.** The heading looks like **2 emails waiting for your OK** (or **1 email**). The words under it say: look at each one, then press Approve. The button on this card is **Look at them**. That opens **Emails**. On the Emails page the buttons are **Approve and send** and **Cancel it**. Press **Approve and send** when you want that request to go out. Emails for a person who did not choose "approve each" can go out without waiting here, once real requests are on. The first email for each person always waits. The screen says "press Approve". The button you actually press is **Approve and send**.
 
 2. **One task**, such as "Is this you?" or a phone call. That task fills the card. Any other tasks stay on **More**.
 
@@ -323,7 +323,7 @@ The first answer is the one that counts. A second press does not flip it. The ap
 
 **That question was already answered. Nothing was changed.**
 
-If you are not sure, press **Open the page** before you press yes or no. There is no button on the card to take an answer back. If you already pressed the wrong one, ask the person who set Free My ID up for you before the next check.
+If you are not sure, press **Open the page** before you press yes or no. There is no button on the card to take an answer back. If you already pressed the wrong one, do not press again: it will not change. Note which site and page it was, and ask the person who set Free My ID up for you before the next check.
 
 <!-- second press: src/freemyid/wizard/server.py:539-547 -->
 
@@ -384,7 +384,7 @@ This does not change your Google or Facebook account. It is a separate step, aft
 
 ### Where to find the steps
 
-1. On **More**, look for **Google and Bing: 2 steps to do** (the number can be 1). That link is for one person, such as Jane.
+1. On **More**, look for **Google and Bing: 2 steps to do** (the number can be 1). That link is for one person, such as Jane. If Free My ID is set up for more than one person, choose that person's name at the top of **Protect yourself** first.
 2. Or open **Protect yourself** from the top of the window.
 
 The first block on **Protect yourself** is titled **Google and Bing**. The words under the title are:
@@ -434,7 +434,7 @@ When both are done, the **Google and Bing:** line on **More** goes away. If Bing
 
 Further down **Protect yourself**, the full list repeats Google and Bing, with the steps written out. You can use either place. **I did this** in either place ticks the same step.
 
-On the longer card the open button says **Open the web page**, not **Open the page for me**. The done button is still **I did this**, and later **I have not done this**.
+To reach the longer cards, scroll down on **Protect yourself**, below the **Google and Bing** block, to the full list. On the longer card the open button says **Open the web page**, not **Open the page for me**. The done button is still **I did this**, and later **I have not done this**.
 
 Those longer cards can also say:
 
@@ -449,7 +449,7 @@ Read that note. Then check the address on the company's own page before you type
 
 Steps the longer card lists:
 
-1. Open the web address, or open the Google app and tap your picture, then **Results about you**.
+1. Open the web address, or open the Google app and tap your picture, then **Results about you**. Come back to Free My ID when you have finished and tick **I did this**.
 2. Sign in and type the details you want watched (name, address, phone, email).
 3. Google lists results that match. Open one and choose **Request to remove**.
 4. Type your contact info exactly as it shows on that page when asked.

@@ -28,7 +28,9 @@ freemyid wipe                           # delete everything Free My ID saved her
   otherwise it exits 2). `--timeout` is how many seconds to wait: 30 to 3600, default 600
   (`cli.py:361-376`).
 * `freemyid exposure` only reads. `--old-addresses` searches each site once more at a previous
-  address (at most one extra page per site). Leave the flag off and config
+  address (at most one extra page per site). A site already checked in the last 24 hours is
+  reused from the saved result unless you also add `--refresh`, so the flag may change nothing
+  until then (`exposure.py:79`, `exposure.py:599-602`). Leave the flag off and config
   `exposure_old_addresses` decides; that setting is off unless someone turned it on
   (`cli.py:415-418`, `cli.py:447-449`).
 * `freemyid search-engines` with no action lists the steps. The word `list` is not a command:
@@ -38,7 +40,10 @@ freemyid wipe                           # delete everything Free My ID saved her
   My ID data folders on this computer that use the system keychain, they will stop working
   too." `--yes` skips the question. If the folder does not look like a Free My ID data folder
   it refuses and exits 2. It removes the saved people, evidence, mailbox passwords, the
-  encryption key and the background task (`cli.py:581-628`).
+  encryption key and the background task (`cli.py:581-628`). Each cleanup step is best effort:
+  if one cannot finish (a mailbox password the keychain will not release, or a file that is
+  in use), the command still carries on and prints "All Free My ID data deleted." Check the
+  data folder afterwards if that matters to you.
 
 Global option: `-v/--verbose` (more detail in the log). The top-level `--help` also shows
 Typer's `--install-completion` and `--show-completion`; those are not Free My ID actions.
@@ -230,7 +235,8 @@ When a headless run fails closed before starting, `--json` prints
 ```json
 {"schema": "exposure/1", "offline": false, "headless": false, "exit_code": 0,
  "profiles": [{"profile_id": "…", "label": "Mom", "created_at": "…", "practice_mode": true,
-   "score": 28, "explanation": [{"points": 15, "text": "1 site shows a listing that is you …"}],
+   "score": 28, "explanation": [{"points": 15, "text": "1 site shows a listing that is you …"},
+     {"points": 13, "text": "… (more lines like this add up to the score)"}],
    "counts": {"confirmed_sites": 1, "possible_sites": 0, "check_by_hand": 1, "not_found": 0},
    "coverage": {"sites_total": 2, "sites_checked": 1, "found": 1, "not_found": 0,
      "check_by_hand": 1, "uncertain": 0},

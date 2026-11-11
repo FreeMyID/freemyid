@@ -9,13 +9,13 @@ Example person used below: Jane Q Testperson, Springfield IL.
 ## What "available" means here
 
 A way to install is **available** only if it is in a published release. The
-release record is `site_src/data/release.yaml`. It lists version 0.3.0,
-published 2026-11-09, about 64.5 MB, with the checksum of the Windows installer
+release record is `site_src/data/release.yaml`. It lists version 0.3.1,
+published 2026-11-10, about 64.6 MB, with the checksum of the Windows installer
 (`site_src/data/release.yaml:5-8`). The comment at the top of that file says the
-values come from the published `FreeMyIDSetup.exe`. The app in this tree reports
-0.3.1. The command-line package is installed with `pipx install freemyid`. This
-page did not recheck the version on PyPI. Anything not in that release record
-is **coming**.
+values come from the published `FreeMyIDSetup.exe`. The app in this tree also reports
+0.3.1. The Windows record and the command-line package (`pipx install freemyid`,
+on PyPI, which listed 0.3.1 when this page was checked on 2026-11-11) are two
+separate things. Anything not in the release record or on PyPI is **coming**.
 
 ## Which way is for me?
 
@@ -45,7 +45,7 @@ then, please do not look for it: it is not there yet.
 ## Windows 10 or 11 (available)
 
 1. Open the [download page](https://freemyid.org/download/) (`README.md:48`).
-2. Download the installer. The release record lists version 0.3.0, about 64.5 MB (`site_src/data/release.yaml:5,7`). The app reports 0.3.1.
+2. Download the installer. The release record lists version 0.3.1, about 64.6 MB (`site_src/data/release.yaml:5,7`). The app reports 0.3.1.
 3. Open the file. The installer is **unsigned for now**, so Windows shows a
    blue SmartScreen box the first time. The download page shows what to click
    (`README.md:48`). If the box worries you, stop and ask someone you trust to
@@ -70,6 +70,9 @@ starting." The main window shows up by itself.
 <!-- packaging/windows/freemyid.iss:34 -->
 
 After two minutes, that window says Free My ID is still starting. Keep waiting.
+If it is still there after about five minutes, close it, wait a moment, and open
+Free My ID again from the Desktop icon. If it still does not open, stop and ask
+someone you trust to look with you.
 <!-- packaging/windows/splash_win.py (still starting at :22; "no need to click it again" at :23; two minutes is 120 seconds at :24) -->
 
 ### Updating (version 0.3.1)
@@ -107,8 +110,9 @@ service for the steps:
 - [Yahoo, iCloud, Outlook and others](mail-other.md)
 
 If you want to check your download, the checksum (SHA-256) published for
-version 0.3.0 is in `site_src/data/release.yaml:8`. Not sure whether the
-download page also shows it.
+version 0.3.1 is in `site_src/data/release.yaml:8`. Not sure whether the
+download page also shows it. Checking it is optional, and the
+[troubleshooting page](troubleshooting.md#the-blue-windows-box) shows how.
 
 ## Mac and Linux (terminal only for now)
 
@@ -137,6 +141,19 @@ pipx install git+https://github.com/FreeMyID/freemyid.git
 
 (`README.md:52-57`.) Free My ID uses your own Chrome or Edge first, and asks
 before downloading a browser of its own if you have neither (`README.md:50`).
+
+## More help pages
+
+- [What is new in version 0.3](whats-new-0.3.md)
+- [Practice mode](practice-mode.md)
+- [Is this you?](is-this-you.md)
+- [What to do when the screen worries you](what-to-do-when.md)
+- [Google and Bing on Protect yourself](google-and-bing.md)
+- [Protect yourself](protect-yourself.md)
+- [Larger text](larger-text.md)
+- [What Free My ID never asks for](never-asks.md)
+- [Printable checklists](printable-checklist.md)
+- [Helping someone by phone](helping-by-phone.md)
 
 ## If something goes wrong
 
