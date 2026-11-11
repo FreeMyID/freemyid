@@ -174,7 +174,6 @@ def test_a_failed_reply_always_carries_a_plain_error_code(result: dict) -> None:
     assert stub["error"] == "not_implemented"
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-EXT-4: serve() crashes when a reply cannot be encoded")
 def test_serve_answers_internal_error_when_a_reply_cannot_be_encoded(monkeypatch) -> None:
     def too_big(message: object) -> dict:
         return {"v": 1, "id": "a", "type": "ping", "ok": True, "x": "a" * (2 * 1024 * 1024)}
@@ -185,6 +184,59 @@ def test_serve_answers_internal_error_when_a_reply_cannot_be_encoded(monkeypatch
     assert native_host.serve(stdin, out) in (0, 1)   # no exception, no traceback on stderr
     (length,) = struct.unpack("=I", out.getvalue()[:4])
     assert json.loads(out.getvalue()[4:4 + length])["error"] == "internal_error"
+
+
+def _replies(data: bytes) -> list[dict]:
+    out = []
+    while data:
+        (length,) = struct.unpack("=I", data[:4])
+        out.append(json.loads(data[4:4 + length]))
+        data = data[4 + length:]
+    return out
+
+
+@pytest.mark.parametrize("bad_reply", [
+    {"v": 1, "id": "a", "type": "ping", "ok": True, "x": {1, 2}},            # not JSON
+    {"v": 1, "id": "a", "type": "ping", "ok": True, "x": "\ud800"},          # not UTF-8
+    {"v": 1, "id": "a", "type": "ping", "ok": True, "x": b"bytes"},
+    RuntimeError("Jane Q Testperson"),                                       # a bug in a handler
+])
+def test_serve_keeps_going_after_a_reply_it_cannot_send(monkeypatch, capsys,
+                                                        bad_reply: object) -> None:
+    """SEC-EXT-4: the bad reply becomes internal_error for that request id; the next request is
+    answered normally; nothing reaches stderr."""
+    real = native_host.handle_message
+    calls: list[object] = []
+
+    def flaky(message: object) -> dict:
+        calls.append(message)
+        if len(calls) == 1:
+            if isinstance(bad_reply, Exception):
+                raise bad_reply
+            return bad_reply
+        return real(message)
+
+    monkeypatch.setattr(native_host, "handle_message", flaky)
+    stdin = io.BytesIO(native_host.encode_message(_req("status"))
+                       + native_host.encode_message(_req("ping")))
+    out = io.BytesIO()
+    assert native_host.serve(stdin, out) == 0
+    first, second = _replies(out.getvalue())
+    assert first == {"v": 1, "id": _req("x")["id"], "type": "status", "ok": False,
+                     "error": "internal_error"}
+    assert second["ok"] is True and second["pong"] is True
+    captured = capsys.readouterr()
+    assert captured.out == "" and captured.err == ""
+
+
+def test_serve_stops_quietly_when_the_browser_closes_the_pipe() -> None:
+    """SEC-EXT-4: a write that fails ends the host with exit code 1, not a traceback."""
+    class ClosedPipe(io.BytesIO):
+        def write(self, _data: bytes) -> int:   # type: ignore[override]
+            raise BrokenPipeError
+
+    stdin = io.BytesIO(native_host.encode_message(_req("ping")))
+    assert native_host.serve(stdin, ClosedPipe()) == 1
 
 
 # ------------------------------------------------------------------------------ build script

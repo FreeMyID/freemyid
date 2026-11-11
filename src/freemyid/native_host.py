@@ -172,6 +172,16 @@ def _start_removal_stub(broker_id: str) -> dict[str, Any]:
     return {"ok": False, "error": "not_implemented"}
 
 
+def _envelope_ids(message: Any) -> tuple[str, str]:
+    """(id, type) of a request when they are well formed, "" for each one that is not."""
+    if not isinstance(message, dict):
+        return "", ""
+    raw_id, raw_type = message.get("id"), message.get("type")
+    request_id = raw_id if isinstance(raw_id, str) and _ID.fullmatch(raw_id) else ""
+    msg_type = raw_type if isinstance(raw_type, str) and raw_type in MESSAGE_TYPES else ""
+    return request_id, msg_type
+
+
 def _plain(value: Any) -> bool:
     """A reply value may be null, true/false or one short lower-case word."""
     return (value is None or isinstance(value, bool)
@@ -202,9 +212,7 @@ def handle_message(message: Any, *, site_check: Handler = _site_check_stub,
     """
     if not isinstance(message, dict):
         return _error("", "", "bad_request")
-    raw_id, raw_type = message.get("id"), message.get("type")
-    request_id = raw_id if isinstance(raw_id, str) and _ID.fullmatch(raw_id) else ""
-    msg_type = raw_type if isinstance(raw_type, str) and raw_type in MESSAGE_TYPES else ""
+    request_id, msg_type = _envelope_ids(message)
     if not request_id:
         return _error("", msg_type, "bad_request")
     version = message.get("v")
@@ -236,7 +244,11 @@ def handle_message(message: Any, *, site_check: Handler = _site_check_stub,
 
 
 def serve(stdin: BinaryIO, stdout: BinaryIO) -> int:
-    """Answer requests until the browser closes the pipe. Returns a process exit code."""
+    """Answer requests until the browser closes the pipe. Returns a process exit code.
+
+    Never raises and never prints a traceback (a traceback could quote a message). A reply that
+    cannot be encoded, or is too large, is replaced by a bare ``internal_error``.
+    """
     while True:
         try:
             message = read_message(stdin)
@@ -244,7 +256,16 @@ def serve(stdin: BinaryIO, stdout: BinaryIO) -> int:
             return 1   # out of step with the browser: stop, the browser starts a new host
         if message is None:
             return 0
-        write_message(stdout, handle_message(message))
+        try:
+            frame = encode_message(handle_message(message))
+        except Exception:   # noqa: BLE001 - not encodable, too large, or a bug: say so, go on
+            request_id, msg_type = _envelope_ids(message)
+            frame = encode_message(_error(request_id, msg_type, "internal_error"))
+        try:
+            stdout.write(frame)
+            stdout.flush()
+        except OSError:
+            return 1   # the browser went away in the middle of a reply
 
 
 # ------------------------------------------------------------------------------ host manifest
