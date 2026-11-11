@@ -581,9 +581,14 @@ def scan_exposure(store: Store, profile_id: str, *, registry: Registry | None = 
                   broker_ids: list[str] | None = None, now: datetime | None = None,
                   sleep: Callable[[float], None] = time.sleep,
                   old_addresses: bool | None = None,
-                  previous_names: bool | None = None) -> ExposureResult:
+                  previous_names: bool | None = None,
+                  site_fetch: Fetcher | None = None) -> ExposureResult:
     """Run the exposure scan for one person and store it. Never raises for a broker's
     failure (that broker becomes "check by hand"). Raises ExposureRefused without consent.
+
+    `site_fetch` (WO-612, `engine.search_session`): the home-browser window. When given it
+    reads every broker that has a parser, whatever its `search_access` (bot_blocked and
+    unknown included); challenge handling is the window's job, never a workaround.
 
     `fetch` / `browser_fetch` are injectable for tests. Fresh results from the last
     `CACHE_HOURS` are reused unless `refresh`. `old_addresses` (default: the config flag
@@ -627,7 +632,7 @@ def scan_exposure(store: Store, profile_id: str, *, registry: Registry | None = 
                 continue
             entry = _scan_broker(store, profile, broker, now, offline, prev.get(broker.id),
                                  fetch, browser_fetch, cfg, fast, sleep, pace, old_addresses,
-                                 previous_names)
+                                 previous_names, site_fetch)
             entry.category = broker.category
             entries.append(entry)
     finally:
@@ -647,7 +652,8 @@ def _scan_broker(store: Store, profile: Profile, broker: Broker, now: datetime, 
                  browser_fetch: Fetcher | None, cfg: cfgmod.Config, fast: bool,
                  sleep: Callable[[float], None], pace: dict[str, bool],
                  old_addresses: bool = False,
-                 previous_names: bool = False) -> ExposureEntry:
+                 previous_names: bool = False,
+                 site_fetch: Fetcher | None = None) -> ExposureEntry:
     urls = _main_urls(broker, profile)
     url = urls[0] if urls else None
 
@@ -672,11 +678,15 @@ def _scan_broker(store: Store, profile: Profile, broker: Broker, now: datetime, 
                                     "check_url": url})
         return _fill(e, store.list_listings(profile.id, broker.id))
     access = broker.search_access
-    if access == "bot_blocked":
+    fetcher: Fetcher | None
+    if site_fetch is not None and has_parser(broker):
+        fetcher = site_fetch              # WO-612: the person's own browser, never headless
+    elif access == "bot_blocked":
         return hand("bot_blocked")
-    if access == "unknown":
+    elif access == "unknown":
         return hand("unknown_access")
-    fetcher = fetch if access == "open" else browser_fetch
+    else:
+        fetcher = fetch if access == "open" else browser_fetch
     if fetcher is None:
         return hand("needs_browser")
     if not has_parser(broker):

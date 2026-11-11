@@ -1153,3 +1153,63 @@ Tests: tests/test_runner_notify.py.
   own-text flag + htmlsel own_text + parse_location dropping a leading "in "/"Lives in:").
 - Tests: tests/test_search_specs_wo601.py (fixture-backed), tests/test_exposure.py
   (bare-spec zero-cards case).
+||||||| merged common ancestors
+
+
+## 2026-11-11 WO-612 unattended home-browser search session (Theo Park, not pushed)
+New `engine/search_session.py`. `run_session(store, pid, mode="background"|"attended")`
+searches every enabled broker with a `search:` spec (bot_blocked / unknown included) in ONE
+headed window of the installed browser (`BrowserManager.persistent_context`: Edge first on
+Windows, Playwright CDP, real UA + suffix, dedicated profile folder `paths.home()/
+browser_profile`, never the everyday profile; one session at a time via a lock file).
+"background" places the window off-screen (`--window-position=-32000,-32000`) and never
+calls bring_to_front; "attended" is visible and shows the banner through `SessionHooks`
+(console by default; the wizard subclasses it). Pages are parsed by
+`exposure.scan_exposure(site_fetch=...)` -> matcher / review flow / merge_listings as today.
+Challenge: Free My ID only READS the page (content, frame URLs) until it is gone. Background:
+20 s grace for a self-clearing interstitial, then CHALLENGE_RETRY; the next challenged run
+QUEUES the site (CAPTCHA to-do, token `search_session:<id>`); ONE notice ("N sites need one
+click from you, about a minute.", count only) at >= 3 queued or 14 days, repeated only when
+the queue grows or 14 days pass. Attended: timeout (600 s) / "Skip this site" -> hand-check
+to-do (`hand_check:<id>`); a read closes both kinds. Events `search_session`: broker id,
+outcome enum, mode, elapsed_ms, waited_ms only. `browser.py`: `persistent_launch_kwargs`
+(pure; headless only in dev fixture mode, else ValueError), `persistent_context`,
+`retarget` (per-broker allowlist swap in place). `runner._scan`: `session_only` sites
+(bot_blocked always; unknown once a session has visited it for that person, since
+`unknown` is also the model default) are never searched by the headless runner; it uses the
+session's fresh (< 24 h) read via `fresh_read`, else stays blind (presumed listed).
+`run_for_profiles(...)`: the non-raising CLI / scheduler entry point.
+Tests: tests/test_search_session.py (fake windows for every outcome, a real fixture-mode
+window in both modes with an allowlist spy, rule-5 grep, PII-free events, runner).
+Fixture page: engine/_dev/site/devclear.example (self-clearing interstitial).
+
+CHANGE REQUEST (Morgan, cli.py = contract):
+1. `freemyid scan --attended` (the wizard's "Look for me now" calls the same):
+   ```python
+   attended: Annotated[bool, typer.Option("--attended",
+       help="Open your browser and look for you now; you may be asked to tick a box.")] = False
+   ...
+   if attended:
+       from .engine import search_session as ss
+       out = ss.run_for_profiles(store, [p.id for p in profiles], mode="attended",
+                                 registry=_registry())
+       # print per person: count of read / hand-check outcomes, or the reason string
+       return
+   ```
+2. Scheduled runs: in `_do_run`, when `scheduled` (practice mode too: searching is free,
+   see open question b), BEFORE `runner.run(...)`:
+   ```python
+   from .engine import search_session as ss
+   ss.run_for_profiles(store, [p.id for p in profiles], mode="background",
+                       registry=reg, cfg=cfg, notifier=notifier)
+   ```
+   It never raises and never opens a visible window; "no_display" / "busy" just skip it.
+3. docs/CLI.md: document `scan --attended`.
+
+Open questions: (a) Windows may still flash the off-screen window in the taskbar at launch;
+WO-616 should check on the owner's PC whether `--window-position` is enough or a
+minimise-after-launch step is wanted (CDP `Browser.setWindowBounds` windowState
+"minimized" is plain window management, not page interaction). (b) Should the session also
+run in scheduled practice-mode runs? I assumed yes (scanning is free). (c) Nina: the wizard
+banner + "Skip this site" button = a `SessionHooks` subclass; `pending_sites()` feeds the
+"Look for me now" badge.
