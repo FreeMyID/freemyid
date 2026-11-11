@@ -61,9 +61,10 @@ _RESOURCE_TYPES = frozenset({"main_frame", "sub_frame", "stylesheet", "script", 
                              "other"})
 FIREFOX_ID = "extension@freemyid.org"
 
-_HOST = re.compile(r"^(?=.{4,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$")
-_BROKER_ID = re.compile(r"^[a-z0-9_]{1,64}$")
-_VERSION = re.compile(r"^\d{1,5}(\.\d{1,5}){0,3}$")
+# These three are always used with .fullmatch(): "$" would let a trailing newline through.
+_HOST = re.compile(r"(?=.{4,253}\Z)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}")
+_BROKER_ID = re.compile(r"[a-z0-9_]{1,64}")
+_VERSION = re.compile(r"\d{1,5}(\.\d{1,5}){0,3}")
 _ENTRY = re.compile(r"^  - id:\s*(\S+)\s*$")
 _SCALAR = re.compile(r"^    (name|url|category):\s+(.*\S)\s*$")
 _DOMAINS_FLOW = re.compile(r"^    domains:\s*\[(.*)\]\s*$")
@@ -158,13 +159,13 @@ def build_domain_list(version: str, brokers: list[dict]) -> dict:
         bid, category = b["id"], b["category"]
         if category not in LISTED_CATEGORIES:
             continue
-        if not _BROKER_ID.match(bid):
+        if not _BROKER_ID.fullmatch(bid):
             raise BuildError(f"broker id {bid!r} is not a plain lower-case id")
         root = _site_root(b["url"])
         own = []
         for raw in b["domains"]:
             host = raw.lower()
-            if not _HOST.match(host):
+            if not _HOST.fullmatch(host):
                 raise BuildError(f"broker {bid}: {raw!r} is not a plain hostname")
             if root and (host == root or host.endswith("." + root)) and host not in hosts:
                 hosts[host] = bid
@@ -259,7 +260,7 @@ def validate_manifest(manifest: dict, browser: str) -> list[str]:
     errors: list[str] = []
     if manifest.get("manifest_version") != 3:
         errors.append("manifest_version must be 3")
-    if not _VERSION.match(str(manifest.get("version", ""))):
+    if not _VERSION.fullmatch(str(manifest.get("version", ""))):
         errors.append("version must be 1 to 4 dot-separated numbers")
     for key in ("name", "description", "default_locale", "icons", "action", "background"):
         if not manifest.get(key):
@@ -290,7 +291,7 @@ def validate_manifest(manifest: dict, browser: str) -> list[str]:
             errors.append("content script must stay in the top frame and the isolated world")
         for pattern in cs.get("matches", []):
             m = re.fullmatch(r"https://([^/*]+)/\*", pattern)
-            if not m or not _HOST.match(m.group(1)):
+            if not m or not _HOST.fullmatch(m.group(1)):
                 errors.append(f"content script match {pattern!r} is not an exact https host")
         if not cs.get("matches"):
             errors.append("content script has no matches")

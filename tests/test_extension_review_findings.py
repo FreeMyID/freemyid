@@ -46,13 +46,13 @@ def test_deeply_nested_json_is_a_framing_error() -> None:
     b"[" * 5 + b"]" * 5,                                  # one level past the limit
     b'{"a":' * 5 + b"1" + b"}" * 5,
     b'{"v":1,"type":"ping","id":"a","x":[[[[1]]]]}',      # nested inside an envelope
-    b'{"a":"\\"' + b"[" * 50_000,                        # an escaped backslash ends the string
+    b'{"a":"\\\\"' + b"[" * 50_000,                      # an escaped backslash ends the string
 ])
 def test_json_nested_past_the_limit_is_refused_without_echoing_it(body: bytes) -> None:
     """SEC-EXT-1: a request is one flat object; anything deeper never reaches the parser."""
     with pytest.raises(native_host.FramingError) as caught:
         native_host.read_message(io.BytesIO(_frame_bytes(body)))
-    assert str(caught.value) in ("message is nested too deeply", "message is not UTF-8 JSON")
+    assert str(caught.value) == "message is nested too deeply"
     assert native_host.serve(io.BytesIO(_frame_bytes(body)), io.BytesIO()) == 1
 
 
@@ -76,7 +76,6 @@ def test_a_recursion_error_from_the_parser_is_a_framing_error(monkeypatch) -> No
         native_host.read_message(io.BytesIO(_frame_bytes(b"{}")))
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-EXT-2: re.match with '$' accepts a trailing newline")
 @pytest.mark.parametrize("request_", [
     {"v": 1, "type": "ping", "id": "abc\n"},
     _req("site_check", hostname="www.spokeo.com\n"),
@@ -85,6 +84,29 @@ def test_a_recursion_error_from_the_parser_is_a_framing_error(monkeypatch) -> No
 def test_a_trailing_newline_is_refused(request_: dict) -> None:
     reply = native_host.handle_message(request_)
     assert reply["ok"] is False and reply["error"] == "bad_request"
+
+
+def test_a_trailing_newline_never_reaches_a_handler_or_the_reply() -> None:
+    """SEC-EXT-2: the handler is not called, and the bad id is not echoed back."""
+    seen: list[str] = []
+
+    def record(value: str) -> dict:
+        seen.append(value)
+        return {"ok": True}
+
+    for request_ in (_req("site_check", hostname="www.spokeo.com\n"),
+                     _req("start_removal", broker_id="spokeo\n")):
+        native_host.handle_message(request_, site_check=record, start_removal=record)
+    assert seen == []
+    assert native_host.handle_message({"v": 1, "type": "ping", "id": "abc\n"})["id"] == ""
+
+
+def test_host_manifest_refuses_an_extension_id_with_a_trailing_newline() -> None:
+    """SEC-EXT-2: the id goes into allowed_origins, so it must be exactly 32 letters."""
+    with pytest.raises(ValueError, match="32-letter"):
+        native_host.host_manifest("chromium", "/opt/freemyid/host", ("a" * 32 + "\n",))
+    assert native_host.host_manifest("chromium", "/opt/freemyid/host", ("a" * 32,))[
+        "allowed_origins"] == ["chrome-extension://" + "a" * 32 + "/"]
 
 
 @pytest.mark.xfail(strict=True, reason="SEC-EXT-3: reply fields from a handler are not allow-listed")
@@ -124,9 +146,33 @@ def test_a_sample_name_that_points_at_the_private_registry_is_refused(tmp_path: 
         build_extension.sample_registry_path(ROOT, disguised)
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-EXT-2: the match-pattern validator accepts a newline")
 def test_validator_refuses_a_match_pattern_with_a_newline() -> None:
     domains = build_extension.load_domain_list()
     manifest = build_extension.build_manifest("chrome", domains)
     manifest["content_scripts"][0]["matches"] = ["https://www.spokeo.com\n/*"]
     assert build_extension.validate_manifest(manifest, "chrome")
+
+
+def test_validator_refuses_a_version_with_a_trailing_newline() -> None:
+    """SEC-EXT-2: same rule for the version string."""
+    manifest = build_extension.build_manifest("chrome", build_extension.load_domain_list())
+    assert build_extension.validate_manifest(manifest, "chrome") == []
+    manifest["version"] += "\n"
+    assert build_extension.validate_manifest(manifest, "chrome") == [
+        "version must be 1 to 4 dot-separated numbers"]
+
+
+@pytest.mark.parametrize(("broker_id", "host"), [
+    ("examplebroker\n", "www.examplebroker.test"),
+    ("examplebroker", "www.examplebroker.test\n"),
+])
+def test_domain_list_refuses_an_id_or_host_with_a_trailing_newline(broker_id: str,
+                                                                   host: str) -> None:
+    """SEC-EXT-2: build_extension's own _BROKER_ID and _HOST checks."""
+    broker = {"id": broker_id, "name": "Example Broker", "category": "people_search",
+              "url": "https://www.examplebroker.test/", "domains": [host]}
+    with pytest.raises(build_extension.BuildError):
+        build_extension.build_domain_list("test", [broker])
+    broker.update(id="examplebroker", domains=["www.examplebroker.test"])
+    assert build_extension.build_domain_list("test", [broker])["hosts"] == {
+        "www.examplebroker.test": "examplebroker"}

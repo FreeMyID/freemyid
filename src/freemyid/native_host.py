@@ -49,10 +49,11 @@ MESSAGE_TYPES = ("ping", "status", "site_check", "start_removal")
 _EXTRA_FIELD = {"ping": None, "status": None, "site_check": "hostname",
                 "start_removal": "broker_id"}
 
-_ID = re.compile(r"^[A-Za-z0-9-]{1,64}$")
-_HOSTNAME = re.compile(r"^(?=.{4,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$")
-_BROKER_ID = re.compile(r"^[a-z0-9_]{1,64}$")
-_CHROME_EXTENSION_ID = re.compile(r"^[a-p]{32}$")
+# Always used with .fullmatch(): "$" would let a trailing newline through, .fullmatch() does not.
+_ID = re.compile(r"[A-Za-z0-9-]{1,64}")
+_HOSTNAME = re.compile(r"(?=.{4,253}\Z)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}")
+_BROKER_ID = re.compile(r"[a-z0-9_]{1,64}")
+_CHROME_EXTENSION_ID = re.compile(r"[a-p]{32}")
 _LENGTH = struct.Struct("=I")
 
 Handler = Callable[[str], dict[str, Any]]
@@ -174,7 +175,7 @@ def handle_message(message: Any, *, site_check: Handler = _site_check_stub,
     if not isinstance(message, dict):
         return _error("", "", "bad_request")
     raw_id, raw_type = message.get("id"), message.get("type")
-    request_id = raw_id if isinstance(raw_id, str) and _ID.match(raw_id) else ""
+    request_id = raw_id if isinstance(raw_id, str) and _ID.fullmatch(raw_id) else ""
     msg_type = raw_type if isinstance(raw_type, str) and raw_type in MESSAGE_TYPES else ""
     if not request_id:
         return _error("", msg_type, "bad_request")
@@ -196,7 +197,7 @@ def handle_message(message: Any, *, site_check: Handler = _site_check_stub,
         return _reply(request_id, msg_type, True, connected=True, app_version=__version__)
     value = message.get(extra)
     pattern = _HOSTNAME if msg_type == "site_check" else _BROKER_ID
-    if not isinstance(value, str) or not pattern.match(value):
+    if not isinstance(value, str) or not pattern.fullmatch(value):
         return _error(request_id, msg_type, "bad_request")
     handler = site_check if msg_type == "site_check" else start_removal
     try:
@@ -240,7 +241,7 @@ def host_manifest(browser: str, host_path: str,
     if browser == "firefox":
         manifest["allowed_extensions"] = [FIREFOX_EXTENSION_ID]
     elif browser == "chromium":
-        bad = [i for i in chrome_extension_ids if not _CHROME_EXTENSION_ID.match(i)]
+        bad = [i for i in chrome_extension_ids if not _CHROME_EXTENSION_ID.fullmatch(i)]
         if bad or not chrome_extension_ids:
             raise ValueError("chromium needs one or more 32-letter extension ids")
         manifest["allowed_origins"] = [f"chrome-extension://{i}/" for i in chrome_extension_ids]
