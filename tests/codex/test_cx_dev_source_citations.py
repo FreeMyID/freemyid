@@ -1,4 +1,4 @@
-"""Keep cited file-and-line references in selected contributor docs resolvable.
+"""Keep cited file-and-line references in developer and i18n docs resolvable.
 
 This verifies file existence and line bounds only. A valid citation does not
 prove that the cited code still supports the surrounding prose.
@@ -13,12 +13,19 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-DOCS = (
-    "docs/dev/ARCHITECTURE.md",
-    "docs/dev/TESTING.md",
-    "docs/i18n/STRINGS.md",
-    "docs/i18n/GLOSSARY_ES.md",
-)
+
+
+def discover_documents(root: Path) -> tuple[str, ...]:
+    """Include new top-level Markdown guides without a hand-maintained registry."""
+    return tuple(sorted(
+        document.relative_to(root).as_posix()
+        for folder in (root / "docs" / "dev", root / "docs" / "i18n")
+        for document in folder.glob("*.md")
+        if document.is_file()
+    ))
+
+
+DOCS = discover_documents(ROOT)
 CODE_SPAN = re.compile(r"`([^`]+)`")
 SOURCE_SUFFIX = r"(?:py|md|toml|ya?ml|ts|tsx|astro|css|json|html|js|mjs|txt)"
 REFERENCE = re.compile(
@@ -99,7 +106,7 @@ def document_findings(document: str, *, root: Path = ROOT) -> list[str]:
     return findings
 
 
-@pytest.mark.parametrize("document", DOCS)
+@pytest.mark.parametrize("document", DOCS, ids=lambda document: Path(document).name)
 def test_selected_docs_cite_existing_files_and_in_bounds_lines(document: str) -> None:
     findings = document_findings(document)
     assert not findings, "Invalid source citations:\n" + "\n".join(findings)
@@ -132,10 +139,10 @@ def test_parser_rejects_malformed_or_non_repository_citations(token: str) -> Non
 
 
 def test_findings_name_the_document_and_bad_citation(tmp_path: Path) -> None:
-    (tmp_path / "docs/dev").mkdir(parents=True)
+    (tmp_path / "docs" / "dev").mkdir(parents=True)
     (tmp_path / "src").mkdir()
     (tmp_path / "src/example.py").write_text("one\ntwo\n", encoding="utf-8")
-    (tmp_path / "docs/dev/guide.md").write_text(
+    (tmp_path / "docs" / "dev" / "guide.md").write_text(
         "Missing file: `src/missing.py:1`.\n"
         "Out of range: `src/example.py:2-4`.\n"
         "Malformed: `src/example.py:1-`.\n",
@@ -153,3 +160,27 @@ def test_findings_name_the_document_and_bad_citation(tmp_path: Path) -> None:
 
 def test_non_file_code_span_is_not_treated_as_a_citation() -> None:
     assert parse_citation("freemyid.cli:app") is None
+
+
+def test_discovery_covers_new_guides_without_registry_edits(tmp_path: Path) -> None:
+    dev = tmp_path / "docs" / "dev"
+    i18n = tmp_path / "docs" / "i18n"
+    dev.mkdir(parents=True)
+    i18n.mkdir()
+    (dev / "z-guide.md").write_text("Guide.", encoding="utf-8")
+    (dev / "a-guide.md").write_text("Guide.", encoding="utf-8")
+    (dev / "notes.txt").write_text("Not Markdown.", encoding="utf-8")
+    (dev / "directory.md").mkdir()
+    (dev / "nested").mkdir()
+    (dev / "nested" / "guide.md").write_text("Nested.", encoding="utf-8")
+    (tmp_path / "README.md").write_text("Outside the selected folders.", encoding="utf-8")
+
+    assert discover_documents(tmp_path) == (
+        "docs/dev/a-guide.md", "docs/dev/z-guide.md",
+    )
+
+    (i18n / "new-strings.md").write_text("New inventory.", encoding="utf-8")
+
+    assert discover_documents(tmp_path) == (
+        "docs/dev/a-guide.md", "docs/dev/z-guide.md", "docs/i18n/new-strings.md",
+    )

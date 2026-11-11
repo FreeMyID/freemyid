@@ -30,12 +30,14 @@ def test_broker_guide_public_citations_are_in_bounds(target: str) -> None:
     line_count = len(target_file.read_text(encoding="utf-8").splitlines())
 
     # Limit parsing to the guide's existing backticked path:range syntax.
-    citations = re.findall(r"`([^`]*" + re.escape(target) + r":[^`]*)`", guide)
+    citations = [citation for citation in re.findall(r"`([^`\n]+)`", guide) if target in citation]
     assert citations, f"No citation found for {target}"
 
     for citation in citations:
-        prefix, ranges = citation.rsplit(target + ":", maxsplit=1)
-        assert not prefix, f"Malformed citation for {target}: `{citation}`"
+        assert citation.startswith(target + ":"), (
+            f"Malformed citation for {target}: `{citation}`"
+        )
+        ranges = citation.removeprefix(target + ":")
         assert RANGE_LIST.fullmatch(ranges), f"Malformed line range for {target}: `{citation}`"
         for item in ranges.split(","):
             start_text, separator, end_text = item.partition("-")
