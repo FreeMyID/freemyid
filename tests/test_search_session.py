@@ -308,7 +308,7 @@ def test_run_session_builds_a_headed_window(store, monkeypatch, tmp_path) -> Non
 
 def test_no_display_and_busy_profile(store, monkeypatch, tmp_path) -> None:
     p = _person(store)
-    real_has_display = ss.has_display
+    real_has_display = getattr(ss, "real_has_display", ss.has_display)  # conftest stubs it
     monkeypatch.setattr(ss, "has_display", lambda platform=None: False)
     with pytest.raises(ss.SessionUnavailable, match="no_display"):
         ss.run_session(store, p.id, registry=_registry(), cfg=CFG, notifier=Notes())

@@ -370,6 +370,13 @@ def freemyid_env(tmp_path, monkeypatch):
     monkeypatch.setenv("FREEMYID_HOME", str(home))
     monkeypatch.setenv("FREEMYID_TEST_KEY", "unit-test-key-not-secret")
     monkeypatch.setattr(socket.socket, "connect", _guarded_connect)
+    # WO-612: scheduled runs now open the home-browser search session first. No test may
+    # launch a real browser window, so the session sees "no display" unless a test injects a
+    # window or passes test_headless (tests/test_search_session.py).
+    from freemyid.engine import search_session
+    monkeypatch.setattr(search_session, "real_has_display", search_session.has_display,
+                        raising=False)
+    monkeypatch.setattr(search_session, "has_display", lambda platform=None: False)
     from freemyid import registry
     monkeypatch.setattr(registry, "_loaded", None)        # no fallback state across tests
     monkeypatch.setattr(registry, "load_warnings", [])
