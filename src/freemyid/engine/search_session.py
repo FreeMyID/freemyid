@@ -375,6 +375,11 @@ def _previous_outcome(store: Store, profile_id: str, broker_id: str) -> str | No
 SESSION_ONLY_ACCESS = ("bot_blocked", "unknown")
 FRESH_FOR = timedelta(hours=24)
 _READ_NOW = {Outcome.READ, Outcome.SELF_CLEARED, Outcome.READ_AFTER_CHALLENGE}
+#: Visits that show the window really reached the site: it read the page, or the site put
+#: up a challenge. No window (NO_BROWSER), network trouble (ERROR) and NOT_TRIED say
+#: nothing about the site, so they never take an "unknown" site away from the runner.
+_TAKES_OVER = _READ_NOW | {Outcome.CHALLENGE_RETRY, Outcome.QUEUED, Outcome.TIMED_OUT,
+                           Outcome.SKIPPED}
 
 
 def fresh_read(store: Store, profile_id: str, broker_id: str,
@@ -393,14 +398,14 @@ def fresh_read(store: Store, profile_id: str, broker_id: str,
 def session_only(store: Store, profile_id: str, broker: Broker) -> bool:
     """True when the runner must not search this site with its headless browser.
 
-    `bot_blocked`: always. `unknown`: once the home-browser session has visited the site for
-    this person. (`unknown` is also the model default for a site nobody has researched, so
+    `bot_blocked`: always. `unknown`: once the home-browser session has read the site, or
+    met its challenge, for this person (`_TAKES_OVER`; SEC-WO612-6). (`unknown` is also the model default for a site nobody has researched, so
     a person who never runs a session keeps today's behaviour.)"""
     if broker.search_access == "bot_blocked":
         return True
     if broker.search_access not in SESSION_ONLY_ACCESS:
         return False
-    return any(ev.action == EVENT_ACTION
+    return any(ev.action == EVENT_ACTION and ev.detail.get("outcome") in _TAKES_OVER
                for ev in store.events(profile_id, broker.id, limit=200))
 
 

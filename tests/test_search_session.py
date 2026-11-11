@@ -450,3 +450,24 @@ def test_run_for_profiles_never_raises(store, monkeypatch) -> None:
     monkeypatch.setattr(ss, "has_display", lambda platform=None: False)
     assert ss.run_for_profiles(store, [ok.id], registry=_registry(), cfg=CFG) == \
         {ok.id: "no_display"}
+
+
+@pytest.mark.parametrize("outcome,takes_over", [
+    ("read", True), ("self_cleared", True), ("read_after_challenge", True),
+    ("challenge_retry", True), ("queued", True), ("timed_out", True), ("skipped", True),
+    ("no_browser", False), ("error", False), ("not_tried", False), ("cached", False),
+    ("hand_check", False), ("blocked_by_policy", False)])
+def test_unknown_site_is_session_only_after_a_real_visit(store, outcome, takes_over) -> None:
+    """SEC-WO612-6: only a read or a challenge makes an `unknown` site session-only. A
+    session that never got a window, hit network trouble or had nothing to visit leaves the
+    runner's normal handling in place. `bot_blocked` is always session-only."""
+    from freemyid.models import Actor
+    reg = _registry(devauto="unknown")
+    broker = reg.get("devauto")
+    p = _person(store)
+    assert not ss.session_only(store, p.id, broker)
+    store.log(Event(ts=utcnow(), profile_id=p.id, broker_id="devauto", actor=Actor.ENGINE,
+                    action=ss.EVENT_ACTION, detail={"outcome": outcome, "mode": "background"}))
+    assert ss.session_only(store, p.id, broker) is takes_over
+    blocked = _registry(devauto="bot_blocked").get("devauto")
+    assert ss.session_only(store, p.id, blocked)
