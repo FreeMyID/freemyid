@@ -892,10 +892,10 @@ def _cleanup_source(source: SecretBackend, key: bytes, ids: list[tuple[str, str]
                     target: str, remove_keychain_key: bool) -> str:
     """Delete the source copies; returns a notice for the user ("" if none).
 
-    The keychain entry is global and every keyring folder on this computer shares it (a
-    second folder's first run reuses it), so moving one folder off the keychain must not
-    delete it, or the other folders' data can never be opened again (SEC-82). Only this
-    folder's mailbox passwords go; the key goes only with `remove_keychain_key`."""
+    The default folder's legacy entry may still be read by older non-default folders, so
+    moving the default folder off the keychain must not delete it (SEC-82): only its
+    mailbox passwords go, and the key goes only with `remove_keychain_key`. A non-default
+    folder's own entry is its alone and goes; the shared legacy entry never does (WO-605)."""
     if isinstance(source, PassphraseBackend):
         source.delete_data_key()   # wrap and secrets.enc are this folder's files
         return ""
