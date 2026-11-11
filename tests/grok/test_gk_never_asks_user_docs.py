@@ -40,6 +40,14 @@ _CORE_ITEMS: tuple[tuple[str, re.Pattern[str]], ...] = (
 )
 
 _NEVER_ASKS = re.compile(r"\bnever\s+asks?\b", re.IGNORECASE)
+# Other ways to promise it ("does not ask", "won't ever ask"). These count as the
+# promise only when the same text also names a core item, so "does not ask you to
+# restart" is not read as a weak promise.
+_NEVER_ASKS_OTHER = re.compile(
+    r"\b(?:will\s+not|would\s+not|does\s+not|do\s+not|won'?t|doesn'?t|don'?t)"
+    r"\s+(?:ever\s+)?asks?\b",
+    re.IGNORECASE,
+)
 _LIST_ITEM = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+(.*\S)\s*$")
 _FENCE_OR_COMMENT = re.compile(r"```.*?```|<!--.*?-->", re.DOTALL)
 _PY_CITE = re.compile(r"(\b[A-Za-z0-9_]+)\.py\b")
@@ -49,9 +57,11 @@ _NEGATED_ASK = re.compile(
     re.IGNORECASE,
 )
 _WILL_ASK = re.compile(
-    r"\b(?:free my id|the app|the program)\b[^.!?]{0,120}?"
-    r"\b(?:will ask|would ask|asks?|needs|requires)\b"
-    r"|\bit\s+(?:will ask|would ask|asks)\b",
+    r"\b(?:free my id|the app|the program|the wizard|we)\b[^.!?]{0,120}?"
+    r"\b(?:will ask|would ask|asks?|needs?|will need|requires?|wants?|will want"
+    r"|prompts?|will prompt|collects?|will collect|must have)\b"
+    r"|\b(?:it|this|the next screen)\s+(?:will ask|would ask|asks|needs|will need|requires"
+    r"|prompts|will prompt|collects)\b",
     re.IGNORECASE,
 )
 _BANK_NUMBER = re.compile(
@@ -106,6 +116,15 @@ def _intro_before(lines: list[str], start: int) -> tuple[int, str]:
     return cursor + 2, " ".join(collected)
 
 
+def _is_promise(text: str) -> bool:
+    if _NEVER_ASKS.search(text):
+        return True
+    return bool(
+        _NEVER_ASKS_OTHER.search(text)
+        and any(pattern.search(text) for _name, pattern in _CORE_ITEMS)
+    )
+
+
 def _never_asks_units(text: str) -> list[tuple[int, str]]:
     """Each "never asks" sentence, or a list whose intro says "never asks"."""
     lines = _mask_fences_and_comments(text).splitlines()
@@ -133,7 +152,7 @@ def _never_asks_units(text: str) -> list[tuple[int, str]]:
             break
         intro_line, intro = _intro_before(lines, start)
         block = " ".join(part for part in (intro, *items) if part)
-        if _NEVER_ASKS.search(block):
+        if _is_promise(block):
             units.append((intro_line, " ".join(block.split())))
             if intro:
                 consumed.update(range(intro_line - 1, start))
@@ -146,7 +165,7 @@ def _never_asks_units(text: str) -> list[tuple[int, str]]:
         start_line = paragraph[0][0]
         flat = " ".join(piece for _, piece in paragraph)
         for sentence in _split_sentences(flat):
-            if _NEVER_ASKS.search(sentence):
+            if _is_promise(sentence):
                 units.append((start_line, sentence))
         paragraph.clear()
 
@@ -228,6 +247,7 @@ def test_root_quick_start_names_core_items_and_never_paying_or_charging() -> Non
     report = _promise_report(text)
     assert not report, "FAMILY_QUICK_START.md " + "; ".join(report)
     flat = " ".join(text.split())
+    assert _never_asks_units(text), "FAMILY_QUICK_START.md has no never-asks promise"
     pays = _NEVER_PAYS_OR_CHARGES.search(flat)
     assert pays, "FAMILY_QUICK_START.md missing never paying or charging"
 
@@ -242,6 +262,47 @@ def test_user_page_never_asks_names_all_three_in_one_place(page: Path) -> None:
 def test_user_page_does_not_say_it_will_ask_for_secrets(page: Path) -> None:
     hits = _forbidden_asks(page.read_text(encoding="utf-8"))
     assert not hits, f"{page.relative_to(ROOT).as_posix()}: " + "; ".join(hits)
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "WO-324 (freemyid-pm#244): main's docs/user pages (GLOSSARY, HELPING, INSTALL) "
+        "make no never-asks promise. Drop this marker once the Grok user-doc PRs "
+        "(#78-#106) land; strict xfail reports XPASS then."
+    ),
+)
+def test_at_least_one_user_page_makes_the_promise() -> None:
+    assert any(
+        _never_asks_units(page.read_text(encoding="utf-8")) for page in _user_pages()
+    ), "no docs/user page says Free My ID never asks for these items"
+
+
+def test_deleting_the_promise_is_not_a_pass() -> None:
+    assert _never_asks_units("Free My ID is friendly. Nothing else to say.") == []
+
+
+def test_other_ways_to_promise_are_recognised() -> None:
+    for sample in (
+        "Free My ID will never ask for your Social Security number.",
+        "Free My ID does not ask for your Social Security number.",
+        "Free My ID doesn't ever ask for your Social Security number.",
+        "We won't ask for your Social Security number.",
+    ):
+        units = _never_asks_units(sample)
+        assert units, sample
+        assert _promise_report(sample), sample
+
+
+def test_other_ways_to_say_it_will_ask_fail() -> None:
+    for sample in (
+        "Free My ID wants your Social Security number.",
+        "We will collect your bank number.",
+        "The wizard prompts for your card number.",
+        "The app will need a password.",
+        "It requires your Social Security number.",
+    ):
+        assert _forbidden_asks(sample), sample
 
 
 def test_full_promise_passes() -> None:
