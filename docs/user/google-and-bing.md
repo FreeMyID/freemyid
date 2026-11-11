@@ -113,7 +113,8 @@ The More page says "Free My ID does not change anything on Facebook or Google." 
 That line means Free My ID does not change those accounts by itself.
 You still open the page and send the request yourself.
 
-"Free My ID never pays for you and never asks for your Social Security number. These steps happen on the real company websites, in your own browser." <!-- src/freemyid/wizard/views.py:273 -->
+"Free My ID never pays for you". It also says "These steps happen on the real company websites, in your own browser." <!-- src/freemyid/wizard/views.py:273-274 -->
+Free My ID never asks for your Social Security number, bank details or card details. <!-- src/freemyid/wizard/ui.py:266-267 -->
 
 ## A note on the lower card
 

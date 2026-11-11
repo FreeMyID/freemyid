@@ -76,7 +76,8 @@ Press the button. Do not type a web address from memory.
 
 ## What Free My ID will not ask
 
-The bottom of the screen says "Free My ID never pays for you and never asks for your Social Security number. These steps happen on the real company websites, in your own browser." <!-- src/freemyid/wizard/views.py:273 -->
+The bottom of the screen says "Free My ID never pays for you". It also says "These steps happen on the real company websites, in your own browser." <!-- src/freemyid/wizard/views.py:273-274 -->
+Free My ID never asks for your Social Security number, bank details or card details. <!-- src/freemyid/wizard/ui.py:266-267 -->
 
 The welcome screen also says "Never asks for your Social Security number, bank or card details." <!-- src/freemyid/wizard/ui.py:267 -->
 

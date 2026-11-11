@@ -1,6 +1,6 @@
-# What Free My ID will never ask you for
+# Free My ID never asks for a Social Security number, bank details or card details
 
-This page helps you, or a helper, see what Free My ID never asks for.
+This page helps you, or a helper, see what Free My ID never asks for: a Social Security number, bank details or card details.
 
 Example person: Jane Q Testperson, Springfield IL.
 
@@ -16,7 +16,7 @@ That hint says "It never pays." <!-- src/freemyid/wizard/dashboard.py:529 -->
 
 It also says "It will never ask for a Social Security number or bank or card details." <!-- src/freemyid/wizard/dashboard.py:529 -->
 
-On Protect yourself, the hint says "Free My ID never pays for you and never asks for your Social Security number." <!-- src/freemyid/wizard/views.py:273 -->
+On Protect yourself, the hint says "Free My ID never pays for you". <!-- src/freemyid/wizard/views.py:273 -->
 
 The same hint says "These steps happen on the real company websites, in your own browser." <!-- src/freemyid/wizard/views.py:274 -->
 

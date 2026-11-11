@@ -21,7 +21,7 @@ The line under the heading is below.
 **What it means**
 
 Free My ID has no step for you today.
-It keeps looking on its own.
+If **Run automatically** is on in Settings, it keeps looking on its own. If that is off, it only looks when a check is started by hand.
 It will say so if that changes.
 You can close the window.
 
@@ -54,7 +54,7 @@ This is not an error.
 **One thing to do**
 
 1. Stay on this page.
-2. Let it update by itself.
+2. Let it update by itself. If the page has not changed after a few minutes, close the window and open Free My ID again from its icon.
 
 **When to stop and ask someone you trust**
 
@@ -80,7 +80,7 @@ It is not broken.
 
 1. Let it keep looking if you are not ready.
 2. Open Settings when you want requests to go out.
-3. Press **Start sending real requests** only when you mean it.
+3. Press **Start sending real requests** only when you mean it. The next screen asks you to confirm: press **Yes, start sending real requests**, or **No, stay in practice mode**. Nothing goes out until you press Yes.
 
 The link says "Start sending real requests". <!-- src/freemyid/wizard/dashboard.py:515 -->
 
@@ -119,6 +119,7 @@ They wait for you.
 Press **Approve and send** when you want that request to go out.
 The first email for a person may also send other emails that are waiting.
 Read that note before you say yes.
+Which emails wait depends on the choice made during setup. If "approve each" was chosen for this person, every email waits for your OK. If not, only the first email and firmer letters wait.
 A formal demand is a firmer letter.
 That kind still waits for you.
 After that first approval, ordinary emails can go out on their own.
@@ -132,7 +133,7 @@ After that first approval, ordinary emails can go out on their own.
 **When to stop and ask someone you trust**
 
 Do not press the button if the email asks for money.
-Do not press it if it asks for a Social Security number.
+Do not press it if the email mentions a Social Security number.
 Ask someone you trust to read it with you.
 If the screen says the email could not go out, open [Troubleshooting](troubleshooting.md#sending-email).
 
@@ -227,7 +228,7 @@ It can also say the line below.
 
 A later check found the listing again.
 That can happen.
-Free My ID makes a new request.
+On the next real run (not in practice mode), Free My ID can ask that site again.
 Requested is not the same as confirmed.
 One site's words are about that site only.
 This is not a promise about every site.
@@ -258,7 +259,7 @@ One button says "Turn on". <!-- src/freemyid/wizard/dashboard.py:506 -->
 
 **What it means**
 
-With the daily check on, one missed run happens when the computer is on.
+With the daily check on, a missed run is made up when the computer is next on. On Windows that is when it starts again. On a Mac, a run missed during sleep happens when the Mac wakes, but a run missed while it was shut down is not made up.
 Free My ID catches up then.
 You do not redo a step for each missed day.
 The words after "Right now" tell you the state of that check. <!-- src/freemyid/wizard/dashboard.py:504 -->
@@ -335,6 +336,7 @@ The other button says "Turn on". <!-- src/freemyid/wizard/dashboard.py:506 -->
 **What it means**
 
 **Go back to practice mode** stops new requests.
+A check that is already running was started under the old setting, so it may still send what it began. Wait for it to finish before you rely on the change.
 Free My ID can still look.
 A request already sent stays sent.
 **Turn off** stops the once-a-day check.
@@ -369,13 +371,12 @@ The same line says the words below.
 
 The Protect yourself page says the words below.
 
-"Free My ID never pays for you and never asks for your Social Security number." <!-- src/freemyid/wizard/views.py:273-274 -->
+"Free My ID never pays for you". <!-- src/freemyid/wizard/views.py:273 -->
 
 **What it means**
 
 A person using the name Free My ID is not the app.
-The app never asks for a Social Security number.
-The app never asks for bank or card details.
+The app never asks for a Social Security number, bank details or card details.
 The app never pays for you.
 It does not ask you for money.
 
