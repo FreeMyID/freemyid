@@ -9,7 +9,7 @@ Roadmap: bar 9 and section 7a in `docs/roadmap/ROADMAP_TO_1.0.md`. Work orders W
 1. **No evasion.** No CAPTCHA solving, stealth, UA or fingerprint spoofing, proxies or IP rotation, in any form or behind any flag.
 2. **Honest identity.** Requests run from the person's own computer, mailbox and browser, as the person or as their authorized agent. The app's own HTTP client names itself; the WO-612 browser session keeps the real UA plus the Free My ID suffix.
 3. **Fail loudly, never reshape.** A block is never retried with altered headers, timing tricks or a different client.
-   - A transient failure (429, 5xx, timeout) is retried later with the same request.
+   - A transient failure (429, 5xx, timeout) is retried later with the same request. A 429 caused by our own retries is never an obstruction (SEC-EE-2).
    - A real block goes straight to evidence capture.
 4. **The person files.** The engine prepares the complaint; the person reviews and sends it. It is a legal act in their name, so it needs one approval. That approval is batched with others and counts toward the bar 9 residual-click budget.
 5. **Privacy.**
@@ -72,7 +72,7 @@ class ObstructionRecord(_Base):          # PII-free by construction: safe for Ev
     request_id: Id | None                # the lawful request that was obstructed
     surface: Literal["optout_form", "deletion_form", "email", "postal", "confirmation_link"]
     kind: ObstructionKind
-    vendor: str | None                   # "recaptcha-v2", "hcaptcha", "turnstile", "cloudflare-block", ...
+    vendor: ObstructionVendor | None     # fixed enum: recaptcha-v2/v3/enterprise, hcaptcha, turnstile, arkose, datadome, perimeterx, cloudflare-block, akamai-block, other
     http_status: int | None
     observed_at: list[datetime]          # every sighting; technical kinds need >= 2 on different days
     request_sent_at: datetime | None
@@ -104,7 +104,14 @@ class BundleManifest(_Base):
 
 **Why a hash chain, and what it does and doesn't prove.** The chain makes any later edit, reorder or deletion detectable, and `verify_bundle()` re-derives every hash. On its own it can't prove *when* the bundle was made, because the person's own computer could have produced it at any time. For that the bundle sends only `manifest_sha256`, a hash with no personal data in it, to an RFC 3161 timestamp authority. The token proves the bundle existed at that moment. This adds a network host to the allowlist, so it waits for owner decision E2; the hash chain is the MVP. The emails in the bundle carry their own server timestamps and DKIM signatures, which the bundle keeps verbatim as independent proof.
 
-**Export.** A zip with the readable complaint (text, then PDF in WO-624), `manifest.json`, the decrypted evidence files named by `seq`, and a plain `HOW_TO_VERIFY.txt` (sha256sum commands). It is written only when the person sends a complaint.
+**Export (SEC-EE-4).** A zip with the readable complaint (text, then PDF in WO-624), `manifest.json`, the decrypted evidence files named by `seq`, and a plain `HOW_TO_VERIFY.txt` (sha256sum commands).
+- Written only at the person's send step, to a place the person chooses, with a plain warning that it holds their personal data.
+- Temp copies are deleted afterwards.
+- It holds only that obstruction's `evidence_ids`.
+- A passphrase-encrypted variant (the existing `crypto.export_with_passphrase` pattern) is offered.
+- Captured broker pages can include third-party data (relatives). That is accepted on purpose, because it is the evidence, and `HOW_TO_VERIFY.txt` says so.
+- Hash-chain details: the genesis value is `BUNDLE_GENESIS` = sha256(`freemyid-bundle-v1`); `manifest_sha256` excludes both itself and `timestamp_token`.
+- Timestamping (E2, later): only `manifest_sha256` is sent, to one NetPolicy-allowlisted host, with no client identity. The timestamp server still learns the person's IP address and the time, and the complaint screen will say so.
 
 ## 5. BlockDetector (WO-621): an obstruction, or just an error?
 
@@ -116,8 +123,8 @@ class BundleManifest(_Base):
 | 404 on the listing URL after a request | not an obstruction; the listing may be gone, so re-scan it |
 | 5xx, timeout, connection reset | TRANSIENT: same request on the next run; `UNAVAILABLE` only after >= 3 failures over >= 7 days |
 | DNS failure, seizure banner, parked page | broker GONE (router), not a complaint |
-| Challenge widget still there after the grace period (vendor from frame hosts) | `CAPTCHA_ON_REQUEST` |
-| 403, 429 or a vendor block page in the person's real browser, with no widget | `BLOCKED_REQUEST` |
+| Challenge widget still there after the grace period, a fixed passive wait (as in WO-612) for a challenge that clears by itself, never extended and never waiting for a solver (SEC-EE-5) | `CAPTCHA_ON_REQUEST` |
+| 403 or a vendor block page in the person's real browser, with no widget; 429 counts only if it repeats on different days (SEC-EE-2) | `BLOCKED_REQUEST` |
 | The form wants an account or login | `ACCOUNT_REQUIRED` |
 | The form or reply needs a phone call or SMS | `PHONE_REQUIRED` |
 | The reply asks for an ID document or more data than the law allows (`classify_reply` needs_id, plus a law check) | `EXCESS_VERIFICATION` |
@@ -131,7 +138,7 @@ class BundleManifest(_Base):
 **Capture.** On every sighting the detector saves, through the existing encrypted `Evidence` path:
 - the page (`HTML`)
 - a `SCREENSHOT`
-- a `BLOCK_CAPTURE` JSON with status, final URL, redirect chain, the response headers that identify the vendor (an allowlisted set, no cookies), frame hosts, the timestamp, and the outgoing request (which fields were sent, plus the sha256 of each value)
+- a `BLOCK_CAPTURE` JSON with status, final URL, redirect chain, the response headers that identify the vendor (an allowlisted set, no cookies), frame hosts, the timestamp, and the outgoing request as field NAMES and value LENGTHS only. Hashes of short values like names and ZIP codes can be reversed, so none are stored (SEC-EE-3). URLs keep scheme, host and path only; query strings and fragments are dropped. Captures (URLs, headers) never reach events, statistics or the atlas
 
 It never captures cookies, auth tokens or the person's other tabs.
 
@@ -167,7 +174,10 @@ States with no comprehensive privacy law (NC, SC and AZ today) get the FTC and b
 | WO-623 | `evidence_bundle.py`: build, verify, export; hash chain; golden tests for tamper detection | Theo, then Marcus | 620 |
 | WO-624 | Complaint generator plus the review screen | Theo (engine), Nina (screen), Jordan (wording), Marcus | 621-623, 625 |
 | WO-625 | Research: OBSTRUCTION_LAW.md, regulator channels, GPC state table | Priya | none (running) |
-| WO-626 | Block atlas: nightly fake-name canaries producing PII-free obstruction statistics per broker | Theo, then Dana for scheduling | 621 |
+| WO-626 | Block atlas: nightly LOAD-ONLY checks of request pages (never fill, never submit, never retry); `CanaryObservation` with no profile; results labelled datacenter-origin and never used for complaints or the public index unless real-user records confirm them (SEC-EE-1) | Theo, then Dana for scheduling | 621 |
+| WO-631 | Evidence viewing: friendly labels for the new kinds; in-app escaped view instead of plaintext download | Nina, then Marcus | 620 |
+
+**Upgrade note.** From 0.5 the evidence table can hold `block_capture` and `response_timeline`. An older app version will fail to list that evidence, so downgrading below 0.5 is not supported (qa-security LOW).
 
 ## 9. Owner decisions (DECIDED 2026-11-11, as recommended)
 

@@ -7,6 +7,7 @@ import pytest
 from pydantic import ValidationError
 
 from freemyid.models import (
+    BUNDLE_GENESIS,
     TECHNICAL_OBSTRUCTIONS,
     BundleEntry,
     BundleManifest,
@@ -37,7 +38,7 @@ def test_search_surface_is_not_a_request_surface():
         _rec(surface="search_page")
 
 
-@pytest.mark.parametrize("kind", sorted(TECHNICAL_OBSTRUCTIONS))
+@pytest.mark.parametrize("kind", sorted(TECHNICAL_OBSTRUCTIONS - {ObstructionKind.UNAVAILABLE}))
 def test_technical_kind_needs_two_days_to_confirm(kind):
     with pytest.raises(ValidationError, match="two different days"):
         _rec(kind=kind, confidence="confirmed", observed_at=[T0, T0 + timedelta(hours=3)])
@@ -92,3 +93,8 @@ def test_manifest_requires_ordered_entries_and_hex_hashes():
     with pytest.raises(ValidationError):
         BundleEntry(seq=0, evidence_id=new_id(), kind=EvidenceKind.HTML, created_at=T0,
                     sha256="XYZ", prev_hash=H)
+
+
+def test_bundle_genesis_is_sha256_of_the_version_tag():
+    import hashlib
+    assert BUNDLE_GENESIS == hashlib.sha256(b"freemyid-bundle-v1").hexdigest()

@@ -43,14 +43,12 @@ def _entry(seq: int, evidence_id: str | None = None) -> BundleEntry:
 # calendar labels, not elapsed time. A complaint (a legal act in the person's name) could
 # rest on one transient blip.
 
-@pytest.mark.xfail(strict=True, reason="SEC-WO620-1: 10 minutes across UTC midnight confirms")
 def test_two_sightings_minutes_apart_across_midnight_do_not_confirm():
     late = datetime(2026, 11, 11, 23, 55, tzinfo=UTC)
     with pytest.raises(ValidationError):
         _rec(confidence="confirmed", observed_at=[late, late + timedelta(minutes=10)])
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-WO620-1: one instant in two timezones confirms")
 def test_same_instant_in_two_timezones_is_one_sighting():
     t = datetime(2026, 11, 11, 2, 0, tzinfo=UTC)
     eastern = t.astimezone(timezone(timedelta(hours=-5)))     # 2026-11-10 21:00 local
@@ -58,7 +56,6 @@ def test_same_instant_in_two_timezones_is_one_sighting():
         _rec(confidence="confirmed", observed_at=[t, eastern])
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-WO620-1: naive datetimes are accepted")
 def test_observed_at_must_be_timezone_aware():
     with pytest.raises(ValidationError):
         _rec(observed_at=[datetime(2026, 11, 11, 1, 0)])
@@ -68,7 +65,6 @@ def test_observed_at_must_be_timezone_aware():
 # EVIDENCE_ENGINE.md section 4/5: UNAVAILABLE needs >= 3 runs over >= 7 days. The validator
 # gives it the generic two-day rule.
 
-@pytest.mark.xfail(strict=True, reason="SEC-WO620-2: UNAVAILABLE confirms after 2 days")
 def test_unavailable_needs_three_runs_over_seven_days():
     with pytest.raises(ValidationError):
         _rec(kind=ObstructionKind.UNAVAILABLE, confidence="confirmed",
@@ -83,19 +79,16 @@ def test_unavailable_needs_three_runs_over_seven_days():
 # statute_ids takes any string of any length, and vendor/state take anything slug- or
 # two-character-shaped.
 
-@pytest.mark.xfail(strict=True, reason="SEC-WO620-3: statute_ids is unbounded free text")
 def test_statute_ids_cannot_carry_free_text():
     with pytest.raises(ValidationError):
         _rec(statute_ids=["Jane Q Testperson, 12 Elm St, Springfield IL 62701"])
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-WO620-3: vendor accepts a name-shaped slug")
 def test_vendor_is_a_known_vendor_not_any_slug():
     with pytest.raises(ValidationError):
         _rec(vendor="jane.q.testperson")
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-WO620-3: state accepts any two characters")
 def test_state_is_two_letters():
     with pytest.raises(ValidationError):
         _rec(state="1!")
@@ -103,7 +96,6 @@ def test_state_is_two_letters():
 
 # --------------------------------------------------------------- SEC-WO620-4 (LOW)
 
-@pytest.mark.xfail(strict=True, reason="SEC-WO620-4: list sizes are unbounded")
 def test_lists_are_bounded():
     with pytest.raises(ValidationError):
         _rec(observed_at=[T0] * 10_000)
@@ -111,7 +103,6 @@ def test_lists_are_bounded():
 
 # --------------------------------------------------------------- SEC-WO620-5 (LOW)
 
-@pytest.mark.xfail(strict=True, reason="SEC-WO620-5: one Evidence row may appear twice")
 def test_bundle_rejects_duplicate_evidence():
     eid = new_id()
     with pytest.raises(ValidationError):
@@ -120,7 +111,6 @@ def test_bundle_rejects_duplicate_evidence():
                        manifest_sha256=H)
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-WO620-5: app_version is free text")
 def test_app_version_is_a_version_string():
     with pytest.raises(ValidationError):
         BundleManifest(obstruction_id=new_id(), app_version="Jane Q Testperson",

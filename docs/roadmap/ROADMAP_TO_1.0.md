@@ -205,7 +205,7 @@ The goal in bar 9 is an engineering problem, not a staffing one. The tracks belo
 **Read broker replies like a person would.** A local reply classifier sorts each answer (done / needs more info / verify identity / refused / auto-reply). It uses rules first, with an optional on-device model later, and never a cloud call with PII. "Verify identity" requests get a template answer that cites the statute and offers only the fields the person allowed (rule 6); handing over an ID document is never automatic.
 
 **A registry that heals itself (no staff curating it).**
-- Nightly canary searches with fake names on each broker, from in-house home machines, detect layout drift.
+- Nightly canary checks from in-house home machines detect layout drift: fake-name searches on search pages, and load-only checks of request pages (never fill, never submit; WO-626).
 - Drift opens a work order automatically. Agents patch the spec, qa reviews it, and the signed feed (0.7) ships the fix to every install within a day.
 - Opt-in, PII-free outcome counts (route, broker, result; no names, no addresses) tell us which routes stopped working. Off by default; the site stays script-free.
 

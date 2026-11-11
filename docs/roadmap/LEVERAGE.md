@@ -19,7 +19,7 @@ Every legal point marked *verify* goes to Priya (WO-625) and then to the attorne
 
 The person's right to know becomes a **proof** tool, not a load generator:
 1. Send one right-to-know request through the person's own mailbox (or as their authorized agent, where `authorized_agent_allowed` allows it), within the legal frequency cap.
-2. Ingest the export on the person's own computer: PDF, CSV, JSON, HTML or zip. Parsing is local: deterministic parsers first, with an optional on-device model (for example a local Ollama model) for messy PDFs. No cloud calls, ever.
+2. Ingest the export on the person's own computer: PDF, CSV, JSON, HTML or zip. Parsing is local: deterministic parsers first. An on-device model for messy PDFs comes later and only under the SEC-LV-1 conditions below. No cloud calls, ever.
 3. Show the person, in plain words, what the broker held: addresses, relatives, phone numbers, inferred traits, and who it was sold to, where disclosed.
 4. Then the deletion request, which cites exactly what to delete.
 5. Re-scan, and request access again after the next allowed window: **proof of deletion**, or evidence of a false claim (it feeds `ObstructionRecord`, `REQUEST_DENIED` / `DEADLINE_MISSED`, EVIDENCE_ENGINE.md).
@@ -35,7 +35,7 @@ The lawful version is better anyway: **correct what is really wrong** (an old ad
 
 ## V3. Attorney handoff (reframed from mass arbitration)
 
-Software doesn't file legal claims. What it can do lawfully, and what no competitor offers:
+Software doesn't file legal claims. What it can do lawfully:
 - When a confirmed obstruction exists (a deadline missed, a denial, a blocked request), the person may choose to send their **evidence bundle** (EVIDENCE_ENGINE.md section 4) to a privacy attorney of their choice. Opt-in, per person, per case.
 - In states with a private right of action, or where an arbitration agreement really does bind the broker and the person (for example the person once bought a report), the attorney decides whether a claim exists. Lawyers who run mass arbitration for real claimants exist; our tamper-evident bundles make their intake cheap.
 - Free My ID takes no fee for referrals unless the attorney (D6) clears it; no referral fees otherwise.
@@ -46,7 +46,7 @@ Brokers ask for ID scans and phone calls "to verify". The answer is an open stan
 - Build on existing standards rather than new cryptography: ISO/IEC 18013-5 mobile driver's licences (mDL) with selective disclosure, W3C Verifiable Credentials 2.0, and OpenID for Verifiable Presentations (*verify current versions*). Several states already issue mobile IDs; Arizona, one of the family states, does in Apple Wallet (*verify*).
 - The proof says "a real person, resident of state X, named the same as the request", and nothing about the device, the browser or any other attribute.
 - Pair it with item 4 of the earlier plan: a machine-readable "privacy request" endpoint (think `security.txt` for privacy) that accepts these proofs. The first goal is to get regulators (the CPPA) or privacy organisations to endorse it, not to force brokers.
-- When a broker turns down a request backed by a valid proof, "bot defense" is no longer an excuse: that's an `EXCESS_VERIFICATION` obstruction with strong evidence.
+- When a broker turns down a request backed by a valid proof, "bot defense" is no longer an excuse: that may be an `EXCESS_VERIFICATION` obstruction (*verify*: brokers don't have to accept such proofs yet).
 
 ## Roadmap placement
 
@@ -61,6 +61,10 @@ Brokers ask for ID scans and phone calls "to verify". The answer is an open stan
 
 - **L1. DECIDED 2026-11-11:** right-to-know requests are opt-in per broker, not on by default (the exports are very sensitive).
 - **L2. DECIDED 2026-11-11:** an on-device model may parse broker data exports: local only, and only after the deterministic parsers.
+  **SEC-LV-1 conditions (qa-security):** shared rule 2 says no AI at runtime, so L2 needs an explicit owner amendment of rule 2 before any model code lands. Then:
+  - the model is reached only through NetPolicy as a loopback-only host;
+  - the broker export is untrusted input (rule 8), so model output is treated as data, validated against a schema, and never allowed to trigger an action.
+  Until the amendment, the deterministic parsers only.
 - **L3. DECIDED 2026-11-11:** attorney partners and any fee arrangement go to the attorney (D6) before anything is built.
 - **L4. DECIDED 2026-11-11:** the standards push (V4) is research only before 1.0.
 
