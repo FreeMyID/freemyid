@@ -425,11 +425,19 @@ def _hand_check_url(broker: Broker, profile: Profile) -> str:
     return urls[0] if urls else str(broker.search_page_url or broker.url)
 
 
+def has_parser(broker: Broker) -> bool:
+    """WO-604: a search page we can read. Without one, fetching it only tells the broker that
+    someone is looking this person up (name + city in the URL) for no possible benefit."""
+    return broker.search is not None and bool(broker.search.result_selector)
+
+
 def _read(profile: Profile, broker: Broker, url: str, fetch: Fetcher,
           now: datetime) -> list[Listing]:
     """Fetch one search page and score what it shows (a value-only person's lookup page is
-    scored by value, BL-IN-08). Raises FetchFailed."""
+    scored by value, BL-IN-08). Raises FetchFailed; "no_parser" before any fetch."""
     from .browser import detect_challenge
+    if not has_parser(broker):
+        raise FetchFailed("no_parser")          # WO-604: never fetch a page we can't read
     page = fetch(broker, url)
     if detect_challenge(page.html, status=page.status):
         raise FetchFailed("challenge")
@@ -661,6 +669,11 @@ def _scan_broker(store: Store, profile: Profile, broker: Broker, now: datetime, 
     fetcher = fetch if access == "open" else browser_fetch
     if fetcher is None:
         return hand("needs_browser")
+    if not has_parser(broker):
+        # WO-604: no fetch (main or extra pages) and no polite gap spent on it
+        entry = hand("no_parser")
+        _check_event(store, profile, broker, entry)
+        return entry
 
     def gap() -> None:                    # polite gap between requests
         if not fast:
@@ -684,6 +697,12 @@ def _scan_broker(store: Store, profile: Profile, broker: Broker, now: datetime, 
     except Exception as e:  # noqa: BLE001 - one broker never stops the scan
         log.warning("exposure: %s failed (%s)", broker.id, type(e).__name__)
         entry = hand("network")
+    _check_event(store, profile, broker, entry)
+    return entry
+
+
+def _check_event(store: Store, profile: Profile, broker: Broker, entry: ExposureEntry) -> None:
+    """One PII-free Event per broker check: ids, enums and counts only."""
     store.log(Event(profile_id=profile.id, broker_id=broker.id, actor=Actor.ENGINE,
                     action=CHECK_ACTION, detail={
                         "status": entry.status, "reason": entry.reason,
@@ -691,7 +710,6 @@ def _scan_broker(store: Store, profile: Profile, broker: Broker, now: datetime, 
                         "listings": len(entry.listings),
                         "old_address": entry.old_address_checked,
                         "previous_name": entry.previous_name_checked}))
-    return entry
 
 
 # --------------------------------------------------------------------------- storage

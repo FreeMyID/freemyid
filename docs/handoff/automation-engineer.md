@@ -1110,3 +1110,13 @@ will ask anyway: N", and adds `NO_SEARCH_LINE` when the run searched no site. Ne
 `presumed_listed(store, status)`: FOUND with no still-shown CONFIRMED listing stored; meant
 for `status`/dashboard (CHANGE REQUESTS: Morgan for cli.py/cli_json.py run/1 `presumed` +
 docs/CLI.md; wizard-packager for the dashboard chip). Tests: tests/test_runner_presumed.py.
+
+## 2026-11-11 WO-604 no fetch without a parser (Theo Park, not pushed)
+`engine/exposure.py`: new `has_parser(broker)` (search spec with a result_selector).
+`_read` raises FetchFailed("no_parser") BEFORE fetching (covers the main page and every
+old-address / previous-name / other-value page), and `_scan_broker` returns "check by hand"
+/ `no_parser` before the polite gap, so no request and no delay. The per-broker check Event
+moved into `_check_event` (same ids/enums/counts detail). Tests:
+tests/test_exposure_no_parser.py (must-not-be-called fetcher, two brokers, sleep recorder).
+For Morgan: tell the Codex lead in docs/vendor/CLAUDE_TO_CODEX.md that exposure.py changed
+in-house (not in my allowed paths).
