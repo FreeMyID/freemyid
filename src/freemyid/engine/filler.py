@@ -58,7 +58,7 @@ _NEGATIVE = re.compile(
     rf"\b(?:middle|maiden|nick ?name|user ?name|username|login|company|business|"
     rf"organi[sz]ation|employer|search|query|coupon|promo|phone|tel|telephone|mobile|cell|fax|"
     rf"password|passcode|captcha|recaptcha|robot|human|comment|comments|message|subject|"
-    rf"reason|age|birth|birthday|dob|country|line 2|address 2|apt|apartment|suite|unit|"
+    rf"reason|age|birth|birthday|dob|country|(?:address|addr|street|line) ?[2-9]|zip ?4|plus ?4|apt|apartment|suite|unit|"
     rf"honeypot|leave (this )?blank|confirm(?:ation)? code|otp|verification|"
     rf"{_PAYMENT_RE}|{_ID_RE})\b")
 
@@ -76,12 +76,12 @@ _PATTERNS: dict[str, re.Pattern[str]] = {
     "full_name": re.compile(r"\b(full ?name|your name|name)\b"),
     # "postal address" is a street; bare "postal" / "postal code" is the ZIP.
     "zip": re.compile(
-        r"\b(zipcode|zip ?code|postal ?code|postcode|post ?code|zip\d?)\b|"
+        r"\b(zipcode|zip ?code|postal ?code|postcode|post ?code|zip ?5|zip)\b|"
         r"\bpostal\b(?! address)"),
     "state": re.compile(r"\b(state|province)\b"),
     "city": re.compile(r"\b(city|town|locality|municipality)\b"),
     "street": re.compile(
-        r"\b(street ?address|street\d+|address ?line ?1|address\d+|addr\d+|"
+        r"\b(street ?address|street ?1|address ?line ?1|address ?1|addr ?1|"
         r"street|address|addr)\b"),
 }
 
@@ -139,8 +139,8 @@ class Control:
             return True
         if self.tag == "input" and self.type in _PROTECTED_TYPES:
             return True
-        ac = (self.autocomplete or "").strip().lower()
-        if ac.startswith("cc-"):
+        # Any token, not only the first: "billing cc-given-name" is a card field too.
+        if any(tok.startswith("cc-") for tok in (self.autocomplete or "").lower().split()):
             return True
         blob = _norm(" ".join([*self.sources(), self.name, self.id, self.autocomplete]))
         if re.search(r"\b(g recaptcha|h captcha|cf turnstile|captcha)\b", blob):
