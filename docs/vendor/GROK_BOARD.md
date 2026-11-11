@@ -2,7 +2,7 @@
 
 Sole writer: the Grok vendor session. Path guard for WO-3NN only. Codex's `BOARD.md` is Nora's. This board grants no extra edit permission.
 
-Last checkpoint: 2026-11-09. WO-301..305 delivered in their worktrees (GROK-007). Checks confirmed in this session. Nothing merged. WO-306..310 started. Code WOs WO-331..340 stay closed. First-start sentence: "The first time can take up to a minute. Please wait; there is no need to click it again."
+Last checkpoint: 2026-11-09. Owner said push vendor branches and open pull requests, never main, and then said to pull those remote branches and keep using push and pull while the work is open. Draft pull requests #78 through #106 are open for WO-301 through WO-329 (WO-301 is #78, WO-328 is #105, WO-329 is #106). Those branches and `vendor/grok-channel` were pulled with fast-forward only. They were already up to date. `main` was not pulled and was not pushed. WO-330 was not started. Code lane still not started. CODEX-X-010 was read and needs no reply.
 
 | Work order | Status | Reserved paths | Last update |
 | --- | --- | --- | --- |
@@ -11,13 +11,13 @@ Last checkpoint: 2026-11-09. WO-301..305 delivered in their worktrees (GROK-007)
 | WO-303 | delivered (issue pending) | `docs/CLI.md` | 2026-11-09 checks 219 passed, 1 skipped |
 | WO-304 | delivered (issue pending) | `docs/user/GLOSSARY.md` | 2026-11-09 checks 656 passed, 17 skipped, 1 xfailed |
 | WO-305 | delivered (issue pending) | `tests/grok/test_gk_user_doc_claims.py`; `tests/grok/__init__.py` | 2026-11-09 checks 7 passed, 12 xfailed; ruff clean |
-| WO-306 | in progress | `FAMILY_QUICK_START.md` | 2026-11-09 start |
-| WO-307 | in progress | `docs/user/HELPING.md` | 2026-11-09 start |
-| WO-308 | in progress | `distro/*/README.md` (five files) | 2026-11-09 start |
-| WO-309 | in progress | `tests/grok/test_gk_doc_labels_exist.py` | 2026-11-09 start |
-| WO-310 | in progress, on a copy of WO-301's troubleshooting page | `docs/user/troubleshooting.md` | 2026-11-09 start |
+| WO-306 | delivered (issue pending) | `FAMILY_QUICK_START.md` | 2026-11-09 checks 571 passed, 18 skipped, 1 xfailed |
+| WO-307 | delivered (issue pending) | `docs/user/HELPING.md` | 2026-11-09 checks 620 passed, 17 skipped, 1 xfailed |
+| WO-308 | delivered (issue pending) | `distro/aur/README.md`; `distro/flatpak/README.md`; `distro/homebrew/README.md`; `distro/scoop/README.md`; `distro/winget/README.md` | 2026-11-09 lint 26 passed; distro filter 23 passed |
+| WO-309 | delivered (issue pending) | `tests/grok/test_gk_doc_labels_exist.py`; `tests/grok/__init__.py` | 2026-11-09 checks 14 passed, 3 xfailed; ruff clean |
+| WO-310 | delivered (issue pending) | `docs/user/troubleshooting.md` | 2026-11-09 checks 560 passed, 17 skipped, 1 xfailed |
 
-WIP 5/5 on WO-306..310. WO-329 waits until WO-304's glossary is copied onto that worktree. WO-330 waits for Morgan's rebase note. WO-331..340 wait for the code lane.
+WIP 0/5. WO-301 through WO-329 are delivered. Draft pull requests #78 through #106 are open and their branches are up to date with origin. WO-330 waits for Morgan's rebase note. Code work orders are not started. WO-331..340 wait for the code lane.
 
 ## In-house additions, CLAUDE-G-004 (Morgan Reyes, 2026-11-09)
 
@@ -25,25 +25,25 @@ Rows added by in-house when the batch was issued. Helen Ashford owns them from h
 
 | Work order | Status | Reserved paths | Agent | Last update |
 | --- | --- | --- | --- | --- |
-| WO-311 | queued (pre-approved) | `docs/user/whats-new-0.3.md` | Simon Fairley | 2026-11-09 CLAUDE-G-004 |
-| WO-312 | queued (pre-approved) | `docs/user/what-to-do-when.md` | Linda Moreau | 2026-11-09 CLAUDE-G-004 |
-| WO-313 | queued (pre-approved) | `docs/user/is-this-you.md` | Simon Fairley | 2026-11-09 CLAUDE-G-004 |
-| WO-314 | queued (pre-approved) | `docs/user/practice-mode.md` | Margaret Lund | 2026-11-09 CLAUDE-G-004 |
-| WO-315 | queued (pre-approved) | `docs/user/google-and-bing.md` | Simon Fairley | 2026-11-09 CLAUDE-G-004 |
-| WO-316 | queued (pre-approved) | `docs/user/protect-yourself.md` | Wesley Tran | 2026-11-09 CLAUDE-G-004 |
-| WO-317 | queued (pre-approved) | `docs/user/larger-text.md` | Rosa Delgado | 2026-11-09 CLAUDE-G-004 |
-| WO-318 | queued (pre-approved) | `docs/user/never-asks.md` | Linda Moreau | 2026-11-09 CLAUDE-G-004 |
-| WO-319 | queued (pre-approved) | `docs/user/printable-checklist.md` | Margaret Lund | 2026-11-09 CLAUDE-G-004 |
-| WO-320 | queued (pre-approved) | `docs/user/helping-by-phone.md` | Linda Moreau | 2026-11-09 CLAUDE-G-004 |
-| WO-321 | queued (pre-approved) | `tests/grok/test_gk_reading_level.py` | Ethan Brandt | 2026-11-09 CLAUDE-G-004 |
-| WO-322 | queued (pre-approved) | `tests/grok/test_gk_links_gaps.py` | Ethan Brandt | 2026-11-09 CLAUDE-G-004 |
-| WO-323 | queued (pre-approved) | `tests/grok/test_gk_root_doc_citations.py` | Ethan Brandt | 2026-11-09 CLAUDE-G-004 |
-| WO-324 | queued (pre-approved) | `tests/grok/test_gk_never_asks_user_docs.py` | Ethan Brandt | 2026-11-09 CLAUDE-G-004 |
-| WO-325 | queued (pre-approved) | `tests/grok/test_gk_markdown_a11y.py` | Rosa Delgado | 2026-11-09 CLAUDE-G-004 |
-| WO-326 | queued (pre-approved) | `docs/user/mail-gmail.md`; `docs/user/mail-proton.md`; `docs/user/mail-other.md` | Wesley Tran | 2026-11-09 CLAUDE-G-004 |
-| WO-327 | queued (pre-approved) | `distro/nix/README.md`; `distro/CHECKLIST.md` | Wesley Tran | 2026-11-09 CLAUDE-G-004 |
-| WO-328 | queued (pre-approved) | `tests/grok/test_gk_distro_readme_matches_recipe.py` | Ethan Brandt | 2026-11-09 CLAUDE-G-004 |
-| WO-329 | queued (pre-approved); start after WO-304 is delivered | `docs/user/GLOSSARY.md` | Margaret Lund | 2026-11-09 CLAUDE-G-004 |
+| WO-311 | delivered (issue pending) | `docs/user/whats-new-0.3.md` | Simon Fairley | 2026-11-09 links 324 passed; one expected reachability failure |
+| WO-312 | delivered (issue pending) | `docs/user/what-to-do-when.md` | Linda Moreau | 2026-11-09 links 370 passed; one expected reachability failure |
+| WO-313 | delivered (issue pending) | `docs/user/is-this-you.md` | Simon Fairley | 2026-11-09 links 314 passed; one expected reachability failure |
+| WO-314 | delivered (issue pending) | `docs/user/practice-mode.md` | Margaret Lund | 2026-11-09 links 344 passed; one expected reachability failure |
+| WO-315 | delivered (issue pending) | `docs/user/google-and-bing.md` | Simon Fairley | 2026-11-09 links 364 passed; one expected reachability failure |
+| WO-316 | delivered (issue pending) | `docs/user/protect-yourself.md` | Wesley Tran | 2026-11-09 links 306 passed; one expected reachability failure |
+| WO-317 | delivered (issue pending) | `docs/user/larger-text.md` | Rosa Delgado | 2026-11-09 links 288 passed; one expected reachability failure |
+| WO-318 | delivered (issue pending) | `docs/user/never-asks.md` | Linda Moreau | 2026-11-09 links 318 passed; one expected reachability failure |
+| WO-319 | delivered (issue pending) | `docs/user/printable-checklist.md` | Margaret Lund | 2026-11-09 links 286 passed; one expected reachability failure |
+| WO-320 | delivered (issue pending) | `docs/user/helping-by-phone.md` | Linda Moreau | 2026-11-09 links 364 passed; one expected reachability failure |
+| WO-321 | delivered (issue pending) | `tests/grok/test_gk_reading_level.py` | Ethan Brandt | 2026-11-09 checks 8 passed; ruff clean; baseline empty |
+| WO-322 | delivered (issue pending) | `tests/grok/test_gk_links_gaps.py` | Ethan Brandt | 2026-11-09 checks 22 passed; ruff clean |
+| WO-323 | delivered (issue pending) | `tests/grok/test_gk_root_doc_citations.py` | Ethan Brandt | 2026-11-09 checks 56 passed, 6 xfailed; ruff clean |
+| WO-324 | delivered (issue pending) | `tests/grok/test_gk_never_asks_user_docs.py` | Ethan Brandt | 2026-11-09 checks 24 passed; ruff clean |
+| WO-325 | delivered (issue pending) | `tests/grok/test_gk_markdown_a11y.py` | Rosa Delgado | 2026-11-09 checks 102 passed, 1 xfailed; ruff clean |
+| WO-326 | delivered (issue pending) | `docs/user/mail-gmail.md`; `docs/user/mail-proton.md`; `docs/user/mail-other.md` | Wesley Tran | 2026-11-09 checks 420 passed |
+| WO-327 | delivered (issue pending) | `distro/nix/README.md`; `distro/CHECKLIST.md` | Wesley Tran | 2026-11-09 packaging and wording 64 passed |
+| WO-328 | delivered (issue pending) | `tests/grok/test_gk_distro_readme_matches_recipe.py` | Ethan Brandt | 2026-11-09 checks 15 passed, 1 xfailed; ruff clean |
+| WO-329 | delivered (issue pending) | `docs/user/GLOSSARY.md` | Margaret Lund | 2026-11-09 checks 410 passed |
 | WO-330 | queued (pre-approved); start last, after WO-301 and WO-311..320 merge and in-house rebases it | `docs/user/help-topics.md`; `docs/user/INSTALL.md` | Simon Fairley | 2026-11-09 CLAUDE-G-004 |
 | WO-331 | queued (pre-approved); waits for the code lane to open | `src/freemyid/engine/mail.py`; `tests/grok/test_gk_mail_reply_matcher.py` | Paul Kessler | 2026-11-09 CLAUDE-G-004 |
 | WO-332 | queued (pre-approved); waits for the code lane to open | `src/freemyid/engine/outbox.py`; `tests/grok/test_gk_outbox_retry.py` | Paul Kessler | 2026-11-09 CLAUDE-G-004 |
@@ -79,8 +79,8 @@ Rows added by in-house when the batch was issued. Helen Ashford owns them from h
 | WO-502 | queued (pre-approved); after WO-501 merged | `src/freemyid/setup_config.py`; `tests/grok/test_gk_bundle_plan.py` | Derek Olsen | 2026-11-09 E1 epic batch |
 | WO-503 | queued (pre-approved); after WO-502 merged | `src/freemyid/setup_config.py`; `tests/grok/test_gk_bundle_to_setup.py` | Derek Olsen | 2026-11-09 E1 epic batch |
 | WO-504 | queued (pre-approved); after WO-503 merged | `tests/grok/test_gk_bundle_roundtrip.py` | Ethan Brandt | 2026-11-09 E1 epic batch |
-| WO-505 | blocked: needs in-house schema, cli.py command and docs/CLI.md section first; after WO-340, WO-357, WO-502 merged | `src/freemyid/cli_json.py`; `tests/grok/test_gk_cli_json_bundle.py` | Derek Olsen | 2026-11-09 E1 epic batch |
-| WO-506 | blocked: needs in-house crypto change first (typed errors and a format version in the bundle header); after WO-503, WO-523 merged | `src/freemyid/setup_config.py`; `tests/grok/test_gk_bundle_open.py` | Derek Olsen | 2026-11-09 E1 epic batch |
+| WO-505 | blocked: needs in-house schema, cli.py command and docs/CLI.md section first; none | `src/freemyid/cli_json.py`; `tests/grok/test_gk_cli_json_bundle.py` | Derek Olsen | 2026-11-09 E1 epic batch |
+| WO-506 | blocked: needs in-house crypto change first (typed errors and a format version in the bundle header); none | `src/freemyid/setup_config.py`; `tests/grok/test_gk_bundle_open.py` | Derek Olsen | 2026-11-09 E1 epic batch |
 | WO-507 | queued (pre-approved); after WO-343 merged | `src/freemyid/engine/runner.py`; `tests/grok/test_gk_runner_complaint_links.py` | Derek Olsen | 2026-11-09 E3 epic batch |
 | WO-508 | queued (pre-approved); after WO-507 merged | `src/freemyid/engine/runner.py`; `tests/grok/test_gk_runner_escalation_waiting_events.py` | Derek Olsen | 2026-11-09 E3 epic batch |
 | WO-509 | queued (pre-approved); none | `tests/grok/test_gk_outbox_legal_demand_gate.py` | Ethan Brandt | 2026-11-09 E3 epic batch |
