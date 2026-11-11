@@ -200,8 +200,12 @@
     "description": "Shown after the signal was switched off."
   },
   "optionsGpcDeclined": {
-    "message": "Not turned on. Your browser did not give permission.",
-    "description": "Shown when the person or the browser said no to the permission question."
+    "message": "Not turned on. Your browser did not give permission, or could not switch it on. Nothing was changed.",
+    "description": "Shown when the person or the browser said no to the permission question, or a step failed after a yes and everything was switched off again."
+  },
+  "optionsGpcStillOn": {
+    "message": "Still on. Your browser could not switch it off. Please try again.",
+    "description": "Shown when switching the signal off failed and the browser reports it is still on."
   },
   "optionsGpcAlready": {
     "message": "Your browser already sends this signal. There is nothing to turn on here.",

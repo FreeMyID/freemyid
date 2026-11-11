@@ -46,17 +46,20 @@ if (support === "extension") {
     // question in answer to the person's own click.
     gpcBox.disabled = true;
     try {
+      // Both calls answer with what the browser reports afterwards, so the box and the
+      // sentence below it always show the real state, also when a step failed.
       if (gpcBox.checked) {
         const on = await turnGpcOn();
         gpcBox.checked = on;
         gpcResult.textContent = t(on ? "optionsGpcOn" : "optionsGpcDeclined");
       } else {
-        await turnGpcOff();
-        gpcResult.textContent = t("optionsGpcOff");
+        const off = await turnGpcOff();
+        gpcBox.checked = !off;
+        gpcResult.textContent = t(off ? "optionsGpcOff" : "optionsGpcStillOn");
       }
     } catch {
       gpcBox.checked = await isGpcOn();
-      gpcResult.textContent = t(gpcBox.checked ? "optionsGpcOn" : "optionsGpcDeclined");
+      gpcResult.textContent = t(gpcBox.checked ? "optionsGpcStillOn" : "optionsGpcDeclined");
     } finally {
       gpcBox.disabled = false;
     }
