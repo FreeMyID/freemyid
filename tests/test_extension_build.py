@@ -493,9 +493,20 @@ def test_gpc_code_matches_the_manifest_and_starts_from_the_options_page_only() -
     assert 'GPC_SCRIPT_FILE = "src/content/gpc.js"' in lib
     assert 'permissions: ["scripting"], origins: ["*://*/*"]' in lib
     assert "permissions.request(GPC_GRANT)" in lib and "permissions.remove(GPC_GRANT)" in lib
-    importers = [p.relative_to(EXT).as_posix() for p in SHIPPED_JS
-                 if re.search(r"""from\s+["'][./]+(?:lib/)?gpc\.js["']""", p.read_text(encoding="utf-8"))]
-    assert importers == ["src/options/options.js"]
+    importers = sorted(p.relative_to(EXT).as_posix() for p in SHIPPED_JS
+                       if re.search(r"""from\s+["'][./]+(?:lib/)?gpc\.js["']""",
+                                    p.read_text(encoding="utf-8")))
+    assert importers == ["src/background/main.js", "src/options/options.js"]
+    # Switching it ON starts from the options page only (the person's own click). The
+    # background imports one thing: the function that switches it off (SEC-EXT-8).
+    users_of_on = sorted(p.relative_to(EXT).as_posix() for p in SHIPPED_JS
+                         if "turnGpcOn" in _strip_js_comments(p.read_text(encoding="utf-8")))
+    assert users_of_on == ["src/lib/gpc.js", "src/options/options.js"]
+    background = _strip_js_comments((EXT / "src" / "background" / "main.js").read_text(encoding="utf-8"))
+    assert 'import { turnGpcOffIfGrantGone } from "../lib/gpc.js";' in background
+    assert not re.search(r"permissions\??\.(request|contains|remove)\b", background)
+    assert "permissions.request" not in _strip_js_comments(
+        (EXT / "src" / "options" / "options.js").read_text(encoding="utf-8"))
     page = _strip_js_comments((EXT / "src" / "content" / "gpc.js").read_text(encoding="utf-8"))
     assert "globalPrivacyControl" in page
     for pattern in (r"\bchrome\b", r"\bbrowser\b", r"sendMessage", r"\bdocument\b", r"\bfetch\b",

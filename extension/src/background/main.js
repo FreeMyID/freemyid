@@ -11,6 +11,7 @@
 
 import { api } from "../lib/browser.js";
 import { isKnownBroker, lookupHost } from "../lib/brokers.js";
+import { turnGpcOffIfGrantGone } from "../lib/gpc.js";
 import { checkSite, getAppStatus, startRemoval } from "../lib/native.js";
 import {
   ErrorCode,
@@ -148,6 +149,16 @@ async function handle(message, sender) {
       return { ok: false, error: ErrorCode.BAD_REQUEST };
   }
 }
+
+// Global Privacy Control. The person can take the "all websites" permission back in the
+// browser's own settings, without opening ours. When that happens, and each time the
+// background starts, the rest of the signal is switched off too if the permission is gone, so
+// nothing stays half on. The background can only switch it OFF; switching it on needs the
+// person's click on the Settings page.
+api.permissions?.onRemoved?.addListener(() => {
+  void turnGpcOffIfGrantGone();
+});
+void turnGpcOffIfGrantGone();
 
 api.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (sender.id !== api.runtime.id) return false;
