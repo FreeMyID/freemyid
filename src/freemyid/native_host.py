@@ -54,6 +54,12 @@ _ID = re.compile(r"[A-Za-z0-9-]{1,64}")
 _HOSTNAME = re.compile(r"(?=.{4,253}\Z)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}")
 _BROKER_ID = re.compile(r"[a-z0-9_]{1,64}")
 _CHROME_EXTENSION_ID = re.compile(r"[a-p]{32}")
+# Reply text is a broker id, a state word or an error code. Nothing else fits, so a name, an
+# address or a sentence cannot ride along in a reply.
+_REPLY_WORD = re.compile(r"[a-z0-9_]{1,64}")
+# What a handler may add to a reply, per message type ("error" too, when ok is false).
+_REPLY_FIELDS = {"site_check": ("broker_id", "listing_state", "stub"),
+                 "start_removal": ("accepted",)}
 _LENGTH = struct.Struct("=I")
 
 Handler = Callable[[str], dict[str, Any]]
@@ -166,6 +172,28 @@ def _start_removal_stub(broker_id: str) -> dict[str, Any]:
     return {"ok": False, "error": "not_implemented"}
 
 
+def _plain(value: Any) -> bool:
+    """A reply value may be null, true/false or one short lower-case word."""
+    return (value is None or isinstance(value, bool)
+            or (isinstance(value, str) and _REPLY_WORD.fullmatch(value) is not None))
+
+
+def _handler_reply(request_id: str, msg_type: str, fields: dict[Any, Any]) -> dict[str, Any]:
+    """Build the reply from what a handler returned, keeping only the fields on the list.
+
+    The envelope is ours. Every other key, and every value that is not null, true/false or a
+    short word, is dropped without comment, so a handler cannot pass anything else through.
+    """
+    ok = fields.get("ok") is True
+    kept = {key: fields[key] for key in _REPLY_FIELDS[msg_type]
+            if key in fields and _plain(fields[key])}
+    if not ok:
+        error = fields.get("error")
+        kept["error"] = (error if isinstance(error, str) and _REPLY_WORD.fullmatch(error)
+                         else "internal_error")
+    return _reply(request_id, msg_type, ok, **kept)
+
+
 def handle_message(message: Any, *, site_check: Handler = _site_check_stub,
                    start_removal: Handler = _start_removal_stub) -> dict[str, Any]:
     """Answer one request envelope. Never raises; a bad request gets ``ok: false``.
@@ -204,9 +232,7 @@ def handle_message(message: Any, *, site_check: Handler = _site_check_stub,
         fields = dict(handler(value))
     except Exception:   # noqa: BLE001 - the reason is not passed on: it could name a person
         return _error(request_id, msg_type, "internal_error")
-    ok = fields.pop("ok", False) is True
-    # the envelope keys always win over anything a handler returns
-    return {**fields, **_reply(request_id, msg_type, ok)}
+    return _handler_reply(request_id, msg_type, fields)
 
 
 def serve(stdin: BinaryIO, stdout: BinaryIO) -> int:

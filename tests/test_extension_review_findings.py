@@ -109,7 +109,6 @@ def test_host_manifest_refuses_an_extension_id_with_a_trailing_newline() -> None
         "allowed_origins"] == ["chrome-extension://" + "a" * 32 + "/"]
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-EXT-3: reply fields from a handler are not allow-listed")
 def test_a_handler_cannot_add_fields_to_the_reply() -> None:
     def leaky(_hostname: str) -> dict:
         return {"ok": True, "broker_id": "spokeo", "listing_state": "found",
@@ -118,6 +117,61 @@ def test_a_handler_cannot_add_fields_to_the_reply() -> None:
     reply = native_host.handle_message(_req("site_check", hostname="www.spokeo.com"),
                                        site_check=leaky)
     assert set(reply) <= {"v", "id", "type", "ok", "error", "broker_id", "listing_state", "stub"}
+    assert "Testperson" not in json.dumps(reply) and "Springfield" not in json.dumps(reply)
+    assert reply["broker_id"] == "spokeo" and reply["listing_state"] == "found"
+
+
+def test_reply_fields_are_listed_per_message_type() -> None:
+    """SEC-EXT-3: a field that belongs to one type is dropped from the other."""
+    everything = {"ok": True, "broker_id": "spokeo", "listing_state": "found", "stub": True,
+                  "accepted": True, "error": "ignored_when_ok", "pong": True, "app_version": "9"}
+    site = native_host.handle_message(_req("site_check", hostname="www.spokeo.com"),
+                                      site_check=lambda _h: dict(everything))
+    assert set(site) == {"v", "id", "type", "ok", "broker_id", "listing_state", "stub"}
+    removal = native_host.handle_message(_req("start_removal", broker_id="spokeo"),
+                                         start_removal=lambda _b: dict(everything))
+    assert set(removal) == {"v", "id", "type", "ok", "accepted"}
+    assert removal["accepted"] is True
+
+
+@pytest.mark.parametrize("value", [
+    "Jane Q Testperson",                 # spaces and capitals: not an id or a state word
+    "jane.testperson@example.test",
+    "x" * 65,                            # too long
+    "",
+    "found\n",
+    12, 1.5, ["found"], {"state": "found"}, b"found",
+])
+def test_reply_values_must_be_a_short_word_true_false_or_null(value: object) -> None:
+    """SEC-EXT-3: anything else is dropped, whichever listed field it sits in."""
+    reply = native_host.handle_message(
+        _req("site_check", hostname="www.spokeo.com"),
+        site_check=lambda _h: {"ok": True, "broker_id": value, "listing_state": value,
+                               "stub": value})
+    assert reply == {"v": 1, "id": _req("x")["id"], "type": "site_check", "ok": True}
+    kept = native_host.handle_message(
+        _req("site_check", hostname="www.spokeo.com"),
+        site_check=lambda _h: {"ok": True, "broker_id": None, "listing_state": "x" * 64,
+                               "stub": False})
+    assert (kept["broker_id"], kept["listing_state"], kept["stub"]) == (None, "x" * 64, False)
+
+
+@pytest.mark.parametrize("result", [
+    {"ok": False},
+    {"ok": False, "error": "Jane Q Testperson was not found"},
+    {"ok": False, "error": 7},
+    {"ok": "yes", "error": None},
+    {},
+    {7: "x", None: "y"},
+])
+def test_a_failed_reply_always_carries_a_plain_error_code(result: dict) -> None:
+    """SEC-EXT-3: ok false means an error code, and only a code."""
+    reply = native_host.handle_message(_req("start_removal", broker_id="spokeo"),
+                                       start_removal=lambda _b: result)
+    assert reply == {"v": 1, "id": _req("x")["id"], "type": "start_removal", "ok": False,
+                     "error": "internal_error"}
+    stub = native_host.handle_message(_req("start_removal", broker_id="spokeo"))
+    assert stub["error"] == "not_implemented"
 
 
 @pytest.mark.xfail(strict=True, reason="SEC-EXT-4: serve() crashes when a reply cannot be encoded")
