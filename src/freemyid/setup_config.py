@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import difflib
 import os
+import re
 from datetime import date
 from pathlib import Path
 from types import UnionType
@@ -397,10 +398,21 @@ def _plain_message(err: Any) -> str:
     return "is not a value this file can use"
 
 
+# A key that looks like a setting name. Anything else (spaces, @, digits first, not text)
+# is likely a value that a misplaced colon turned into a key, so it is not repeated.
+_SETTING_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]{0,39}")
+_HIDDEN_KEY = "has a line that is not a setting Free My ID knows; check the colons and spaces"
+
+
 def _plain_problems(exc: ValidationError) -> list[str]:
     problems: list[str] = []
-    for err in exc.errors():
-        loc = err.get("loc") or ()
+    for err in exc.errors():   # input is read only to pick a phrase, never shown
+        loc = tuple(err.get("loc") or ())
+        if err.get("type") in {"extra_forbidden", "invalid_key"} and loc and not (
+                isinstance(loc[-1], str) and _SETTING_NAME.fullmatch(loc[-1])):
+            parent = ".".join(str(part) for part in loc[:-1]) or "file"
+            problems.append(f"{parent}: {_HIDDEN_KEY}")
+            continue
         path = ".".join(str(part) for part in loc) or "file"
         problems.append(f"{path}: {_plain_message(err)}")
     return problems
