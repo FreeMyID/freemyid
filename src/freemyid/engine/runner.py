@@ -124,6 +124,33 @@ def request_deadline(
     return RequestDeadline(_calendar_date(now) >= due_on, due_on)
 
 
+#: WO-602: plain words for the run summary (no state names). FOUND is split in two below.
+_PLAIN: dict[ListingState, str] = {
+    S.FOUND: "found on the site",
+    S.REAPPEARED: "listed again",
+    S.NEEDS_HUMAN: "need you",
+    S.SUBMITTED: "request sent",
+    S.AWAITING_VERIFICATION: "waiting for a confirmation email",
+    S.CONFIRMED: "site confirmed the request",
+    S.REMOVED: "removed",
+    S.NOT_FOUND: "not on the site when we looked",
+    S.UNKNOWN: "not checked yet",
+    S.ERROR: "could not be checked (will retry)",
+}
+PRESUMED_WORDS = "not checked, we will ask anyway"
+NO_SEARCH_LINE = "No site could be searched automatically; requests will still be sent."
+
+
+def presumed_listed(store: Store, st: Any) -> bool:
+    """WO-602: FOUND only because the site was never searched (a blind broker presumed to
+    hold data so a request can go out), not because a matching listing was seen. A FOUND
+    status with a still-shown CONFIRMED listing stored is a real "found on the site"."""
+    if st.state != S.FOUND:
+        return False
+    return not any(li.gone_since is None and li.match_level == MatchLevel.CONFIRMED
+                   for li in store.list_listings(st.profile_id, st.broker_id))
+
+
 @dataclass
 class RunReport:
     per_profile: dict[str, dict[ListingState, int]] = field(default_factory=dict)
@@ -138,14 +165,32 @@ class RunReport:
     skipped_profiles: int = 0
     labels: dict[str, str] = field(default_factory=dict)
     dry_run: bool = False
+    #: WO-602, per profile: FOUND sites that were never searched (included in per_profile's
+    #: FOUND count), sites searched this run, and sites that could not be searched this run
+    presumed: dict[str, int] = field(default_factory=dict)
+    searched: dict[str, int] = field(default_factory=dict)
+    blind: dict[str, int] = field(default_factory=dict)
+
+    def _profile_parts(self, pid: str, counts: dict[ListingState, int]) -> list[str]:
+        presumed = min(self.presumed.get(pid, 0), counts.get(S.FOUND, 0))
+        parts: list[str] = []
+        for state, words in _PLAIN.items():
+            n = counts.get(state, 0) - (presumed if state == S.FOUND else 0)
+            if n > 0:
+                parts.append(f"{words}: {n}")
+            if state == S.FOUND and presumed:
+                parts.append(f"{PRESUMED_WORDS}: {presumed}")
+        return parts
 
     def summary_lines(self) -> list[str]:
-        """PII-free (profile labels like 'Mom' are user-chosen display names)."""
+        """PII-free (profile labels like 'Mom' are user-chosen display names). Plain words,
+        no state names; never-searched sites are not called "found" (WO-602)."""
         out = ["Dry run: nothing was sent or submitted." if self.dry_run else "Run finished."]
+        if sum(self.blind.values()) and not sum(self.searched.values()):
+            out.append(NO_SEARCH_LINE)
         for pid, counts in self.per_profile.items():
             label = self.labels.get(pid, pid[:8])
-            parts = ", ".join(f"{k.value.replace('_', ' ')}: {v}"
-                              for k, v in sorted(counts.items(), key=lambda kv: kv[0].value))
+            parts = ", ".join(self._profile_parts(pid, counts))
             tc = self.tiers.get(pid, {})
             tparts = ", ".join(f"{t.value}: {n}" for t, n in sorted(tc.items()))
             out.append(f"{label}: {parts or 'nothing to do'}")
@@ -431,6 +476,7 @@ class Runner:
     async def run_profile(self, profile: Profile) -> None:
         counts: Counter[ListingState] = Counter()
         tcounts: Counter[Tier] = Counter()
+        presumed = 0
         if not self.scan_only:
             self._drop_first(profile)
         for broker in self.brokers():
@@ -450,12 +496,15 @@ class Runner:
             if st is None:
                 continue
             counts[st.state] += 1
+            if st.state == S.FOUND and presumed_listed(self.store, st):
+                presumed += 1
             if st.tier:
                 tcounts[st.tier] += 1
             if st.state == S.NEEDS_HUMAN:
                 self.report.needs_human += 1
         self.report.per_profile[profile.id] = dict(counts)
         self.report.tiers[profile.id] = dict(tcounts)
+        self.report.presumed[profile.id] = presumed
 
     def _mark_error(self, profile: Profile, broker: Broker, err: str) -> Any:
         try:
@@ -509,6 +558,8 @@ class Runner:
 
         # 3. scan (or blind)
         listings, scanned = await self._scan(ctx, st, tier)
+        tally = self.report.searched if scanned else self.report.blind
+        tally[profile.id] = tally.get(profile.id, 0) + 1
         st = self._apply_scan(profile, broker, st, listings, scanned)
 
         # 4. submit (paused while the site's request for ID waits on a person)

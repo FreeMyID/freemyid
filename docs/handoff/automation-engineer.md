@@ -1100,3 +1100,13 @@ The 30 s budget is checked before each request and also cuts off a slow page bod
 (`httpx_requester`'s `read_budget`): a trickling body is reported `unreachable`, never checked
 half-read (docs/MONITOR.md, module docstring). Not done: search pages aren't monitored, because they need a person's name and CI has
 no person.
+
+## 2026-11-11 WO-602 "not checked" instead of "found" (Theo Park, not pushed)
+`engine/runner.py`: `RunReport` gains per-profile `presumed` (FOUND sites never searched;
+still inside per_profile's FOUND count, the state machine is unchanged), `searched` and
+`blind` (sites searched / not searchable this run). `summary_lines()` uses plain words
+(`_PLAIN`, no state names), splits FOUND into "found on the site: N" and "not checked, we
+will ask anyway: N", and adds `NO_SEARCH_LINE` when the run searched no site. New helper
+`presumed_listed(store, status)`: FOUND with no still-shown CONFIRMED listing stored; meant
+for `status`/dashboard (CHANGE REQUESTS: Morgan for cli.py/cli_json.py run/1 `presumed` +
+docs/CLI.md; wizard-packager for the dashboard chip). Tests: tests/test_runner_presumed.py.
