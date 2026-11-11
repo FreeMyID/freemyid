@@ -10,6 +10,7 @@ a phone the listing does not show, a date of birth and a past address never are.
 from __future__ import annotations
 
 import random
+import re
 import socket
 from datetime import date
 from typing import NamedTuple
@@ -44,6 +45,8 @@ MB = MailboxConfig(address="removals.testperson@example.com", imap_host="imap.ex
 # Shown full name is sent as first + last. Middle stays a separate field (never folded in).
 BARE_NAME = "Jane Testperson"
 WITH_MIDDLE = "Jane Q Testperson"
+# A fixed day keeps the "real age" check stable; base.py never reads the clock for age.
+TODAY = date(2026, 11, 11)
 _DOB_TEXT = ("1980-04-01", "04/01/1980", "4/1/1980", "1980/04/01", "04-01-1980", "1980")
 _COPY_FIELD = {
     "Full name": F.FULL_NAME,
@@ -153,17 +156,23 @@ def _current(profile: Profile) -> Address | None:
 
 
 def _banned(profile: Profile, listings: list[Listing]) -> list[str]:
-    banned = [PERSONAL_EMAIL, RELATIVE, PAST_STREET, PAST_ZIP, WITH_MIDDLE, *_DOB_TEXT]
+    return [PERSONAL_EMAIL, RELATIVE, PAST_STREET, PAST_ZIP, WITH_MIDDLE, *_DOB_TEXT]
+
+
+def _real_age_unshown(profile: Profile, listings: list[Listing]) -> int | None:
+    """The computed age, when no listing shows that same age (it must then never be sent)."""
     shown_ages = {li.age_shown for li in listings if li.age_shown is not None}
-    real = profile.estimated_age(date.today())
-    if real is not None and real not in shown_ages:
-        banned.append(str(real))
-    return banned
+    real = profile.estimated_age(TODAY)
+    return real if real is not None and real not in shown_ages else None
 
 
 def _assert_text_clean(blob: str, profile: Profile, listings: list[Listing], where: str) -> None:
     for bad in _banned(profile, listings):
         assert bad not in blob, (where, bad)
+    real = _real_age_unshown(profile, listings)
+    if real is not None:
+        # Whole number only: "55" inside the phone 217-555-0142 is not an age.
+        assert not re.search(rf"(?<!\d){real}(?!\d)", blob), (where, real)
     if _current(profile) is None:
         assert "Springfield" not in blob and "Evergreen" not in blob, where
     if PHONE in blob:
@@ -337,7 +346,7 @@ def _label_locks(case: Case, profile: Profile, broker: Broker, listings: list[Li
 
 
 def _ages_ok() -> tuple[int, ...]:
-    real = make_profile().estimated_age(date.today())
+    real = make_profile().estimated_age(TODAY)
     return tuple(n for n in (33, 52, 61, 70) if n != real)
 
 
@@ -424,3 +433,16 @@ def test_socket_connect_and_create_connection_raise() -> None:
         sock.connect(("example.com", 443))
     with pytest.raises(AssertionError, match="network is disabled"):
         socket.create_connection(("example.com", 80))
+
+
+def test_real_age_check_is_whole_number_and_date_stable() -> None:
+    """CodeRabbit #113: the age guard must not depend on today's date or digit substrings."""
+    aged_55 = make_profile(dob=date(1971, 4, 1), addresses=[CURRENT],
+                           permissions=Permissions(allow_phone_disclosure=True))
+    assert aged_55.estimated_age(TODAY) == 55
+    li = Listing(profile_id=aged_55.id, broker_id="fakeb", url="https://fakeb.example/p/1",
+                 name_shown=BARE_NAME, match_score=90.0, match_level=MatchLevel.CONFIRMED,
+                 shown_fields=[F.FULL_NAME, F.PHONE])
+    _assert_text_clean(f"{BARE_NAME}\n{PHONE}", aged_55, [li], "phone holds 55")
+    with pytest.raises(AssertionError):
+        _assert_text_clean(f"{BARE_NAME}\nAge 55", aged_55, [li], "age sent")
