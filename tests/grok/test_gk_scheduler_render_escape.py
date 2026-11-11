@@ -11,7 +11,7 @@ import re
 import shlex
 import socket
 import xml.etree.ElementTree as ET
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from subprocess import list2cmdline
 
 import pytest
@@ -21,9 +21,9 @@ from freemyid.scheduler import render
 # The path is the caller's. é is one accented character (U+00E9).
 ACCENT = "\u00e9"
 SPECIAL = f"data & <files> Jane's \"Q\" 100% caf{ACCENT}"
-POSIX_PATH = f"/home/Jane Q Testperson/{SPECIAL}/freemyid"
+POSIX_PATH = str(PurePosixPath("/home/Jane Q Testperson", SPECIAL, "freemyid"))
 WIN_PATH = f"C:\\Users\\Jane Q Testperson\\{SPECIAL}\\FreeMyID.exe"
-LOG_PATH = f"/home/Jane Q Testperson/{SPECIAL}/scheduler.log"
+LOG_PATH = str(PurePosixPath("/home/Jane Q Testperson", SPECIAL, "scheduler.log"))
 NS = {"t": "http://schemas.microsoft.com/windows/2004/02/mit/task"}
 
 PLAIN_CMD = ["/home/Jane Q Testperson/FreeMyID/freemyid", "run", "--scheduled"]

@@ -4,8 +4,8 @@ import pytest
 from freemyid.netpolicy import host_of
 
 
-@pytest.mark.parametrize("ch", ["\u200b", "‌", "‍", "‎", "‏",
-                                "⁠", "﻿", "‮", "­", ""])
+@pytest.mark.parametrize("ch", ["\u200b", "\u200c", "\u200d", "\u200e", "\u200f",
+                                "\u2060", "\ufeff", "\u202e", "\xad", "\ue000"])
 @pytest.mark.parametrize("template", ["https://fake{c}people.example/",
                                       "https://fakepeople.example{c}/", "fake{c}people.example"])
 def test_invisible_or_private_char_is_rejected(ch: str, template: str) -> None:
