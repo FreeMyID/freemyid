@@ -486,3 +486,58 @@ def test_background_window_is_windows_only_until_wo616(store, monkeypatch) -> No
     with pytest.raises(ss.SessionUnavailable, match="no_display"):
         ss.run_session(store, p.id, mode="background", registry=_registry(), cfg=CFG,
                        notifier=Notes())
+
+
+class HangingLoad(FakeWindow):
+    """`hang` hosts never finish loading (a page whose main thread is stuck)."""
+
+    def __init__(self, script, hang: set[str]) -> None:
+        super().__init__(script)
+        self.hang = hang
+
+    async def load(self, broker, url):
+        if urlsplit(url).hostname in self.hang:
+            import asyncio
+            await asyncio.sleep(3600)
+        return await super().load(broker, url)
+
+
+def test_hung_load_closes_the_window_records_error_and_the_run_goes_on(store) -> None:
+    """SEC-WO612-3: a load past `step_s` closes the window (the next site opens a fresh
+    one), records ERROR (the next run tries again) and the session carries on."""
+    import time as _time
+    win = HangingLoad(SCRIPT, hang={"devauto.example"})
+    p = _person(store)
+    t = _time.monotonic()
+    rep = ss.run_session(store, p.id, mode="background", registry=_registry(), cfg=CFG,
+                         window=win, poll_s=0, refresh=True, notifier=Notes(),
+                         step_s=0.2, look_s=0.2)
+    assert _time.monotonic() - t < 10
+    assert rep.outcomes["devauto"] == "error"
+    assert rep.outcomes["devblocked"] == "self_cleared"
+    assert rep.outcomes["dev403"] == "hand_check"
+    assert win.closed >= 2                    # once after the hang, once at the end
+
+
+def test_site_and_session_budgets(store) -> None:
+    """Each site has a budget from its first page and the session one overall; out of
+    budget = ERROR without a visit."""
+    now = [0.0]
+    win = FakeWindow(SCRIPT)
+    beats: list[int] = []
+    f = ss.SessionFetcher(win, "background", grace_s=0.5, poll_s=0, clock=lambda: now[0],
+                          site_s=10, session_s=100, heartbeat=lambda: beats.append(1))
+    reg = _registry()
+    auto, blocked = reg.get("devauto"), reg.get("devblocked")
+    f(auto, "https://devauto.example/name/jane-testperson/il")
+    assert beats == [1]
+    now[0] = 11.0                             # devauto's own budget is used up
+    with pytest.raises(ss.FetchFailed, match="network"):
+        f(auto, "https://devauto.example/name/jane-testperson/il?again")
+    assert beats == [1]                       # same site: no new heartbeat
+    now[0] = 101.0                            # the whole session is out of time
+    with pytest.raises(ss.FetchFailed, match="network"):
+        f(blocked, "https://devblocked.example/name/jane-testperson/il")
+    assert f.runs["devblocked"].outcome == "error" and win.loads == ["devauto"]
+    assert beats == [1, 1]                    # the lock is refreshed per site
+    f.close()

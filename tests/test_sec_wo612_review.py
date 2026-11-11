@@ -109,8 +109,6 @@ class _HungLook:
         return None
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-WO612-3: the grace/timeout limit is only "
-                   "checked between looks; a look that never returns hangs the scheduled run")
 def test_hung_page_cannot_hang_the_session() -> None:
     broker = _registry().get("devblocked")
     fetcher = ss.SessionFetcher(_HungLook(), "background", grace_s=0.3, timeout_s=0.3,

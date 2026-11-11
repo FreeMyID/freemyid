@@ -70,6 +70,10 @@ NOTICE_MAX_WAIT = timedelta(days=14)
 CHALLENGE_TIMEOUT_S = 600            # attended: how long the window waits for the person
 BACKGROUND_GRACE_S = 20              # background: a site's own interstitial may clear itself
 POLL_S = 1.0
+STEP_S = 90.0                        # one load (polite delay + 30 s navigation) or close
+LOOK_S = 15.0                        # one look at the page (its HTML and frame URLs)
+#: Whole-session wall clock (SEC-WO612-3): a scheduled run never waits longer than this.
+SESSION_BUDGET_S: dict[str, float] = {"background": 3600.0, "attended": 5400.0}
 
 
 class Outcome(StrEnum):
@@ -221,44 +225,150 @@ def _same_page(a: str, b: str) -> bool:
     return norm(a) == norm(b)
 
 
+class _StepTimeout(Exception):
+    """One window step (load / look / show / leave / close) ran past its wall clock."""
+
+
 class SessionFetcher:
     """An `exposure.Fetcher` backed by the window. Records one `SiteRun` per broker (its
-    main page). Raises `exposure.FetchFailed` for anything that is not a readable page."""
+    main page). Raises `exposure.FetchFailed` for anything that is not a readable page.
+
+    Wall-clock bounds (SEC-WO612-3; a page whose main thread hangs never answers
+    `page.content()`): every window step has its own timeout (`step_s` for loads and
+    closes, `look_s` for looks / show / leave, never past the challenge limit), each site a
+    budget (`site_s`, from its first page) and the whole session one (`session_s`). A step
+    or site that runs out closes the window (the next site opens a fresh one) and records
+    ERROR, so the next run tries again; the session carries on with the next site. A
+    session out of budget visits nothing more (ERROR for the rest)."""
 
     def __init__(self, window: SiteWindow, mode: Mode, hooks: SessionHooks | None = None, *,
                  timeout_s: float = CHALLENGE_TIMEOUT_S, grace_s: float = BACKGROUND_GRACE_S,
-                 poll_s: float = POLL_S, clock: Callable[[], float] = time.monotonic) -> None:
+                 poll_s: float = POLL_S, clock: Callable[[], float] = time.monotonic,
+                 step_s: float = STEP_S, look_s: float = LOOK_S,
+                 site_s: float | None = None, session_s: float | None = None,
+                 heartbeat: Callable[[], None] | None = None) -> None:
         self.window, self.mode = window, mode
         self.hooks = hooks or SessionHooks()
         self.timeout_s, self.grace_s, self.poll_s, self.clock = timeout_s, grace_s, poll_s, clock
+        self.step_s, self.look_s = step_s, look_s
+        limit = timeout_s if mode == "attended" else grace_s
+        self.site_s = site_s if site_s is not None else limit + 3 * step_s
+        self.session_s = session_s if session_s is not None else SESSION_BUDGET_S[mode]
+        self.heartbeat = heartbeat
         self.runs: dict[str, SiteRun] = {}
         self._loop: asyncio.AbstractEventLoop | None = None
+        self._t_session: float | None = None
+        self._site_t0: dict[str, float] = {}
+        self._stale = False          # a step timed out: the window is closed after this page
 
     def __call__(self, broker: Broker, url: str) -> Fetched:
         if self._loop is None:
             self._loop = asyncio.new_event_loop()
-        return self._loop.run_until_complete(self._fetch(broker, url))
+        now = self.clock()
+        if self._t_session is None:
+            self._t_session = now
+        if broker.id not in self._site_t0:
+            self._site_t0[broker.id] = now
+            if self.heartbeat is not None:
+                try:
+                    self.heartbeat()
+                except Exception as e:  # noqa: BLE001 - the lock refresh never fails a run
+                    log.debug("session heartbeat failed (%s)", type(e).__name__)
+        left = min(self._site_t0[broker.id] + self.site_s,
+                   self._t_session + self.session_s) - now
+        try:
+            if left <= 0:
+                self._rec(broker, Outcome.ERROR, now)
+                raise FetchFailed("network")
+            try:
+                return self._loop.run_until_complete(
+                    asyncio.wait_for(self._fetch(broker, url), left))
+            except TimeoutError:
+                log.info("search session: site budget used up")
+                self._rec(broker, Outcome.ERROR, now)
+                self._stale = True
+                raise FetchFailed("network") from None
+        finally:
+            self._late_escapes()
+            if self._stale:
+                self._loop.run_until_complete(self._reset())
 
     def close(self) -> None:
         if self._loop is None:
             return
         try:
-            self._loop.run_until_complete(self.window.close())
+            self._loop.run_until_complete(self._close_window())
+            self._late_escapes()
+        finally:
+            self._loop.close()
+            self._loop = None
+
+    async def _close_window(self) -> None:
+        try:
+            await asyncio.wait_for(self.window.close(), self.step_s)
         except Exception as e:  # noqa: BLE001 - closing never fails a run
             log.debug("search window close failed (%s)", type(e).__name__)
-        self._loop.close()
-        self._loop = None
+
+    async def _reset(self) -> None:
+        """Close a window that stopped answering; the next `load` opens a fresh one."""
+        self._stale = False
+        await self._close_window()
+
+    def _late_escapes(self) -> None:
+        """Off-allowlist attempts a site made after its read (`PlaywrightWindow.leave` /
+        `retarget`, SEC-WO612-5) mark that site BLOCKED_BY_POLICY, whatever it showed."""
+        late = getattr(self.window, "late_escapes", None)
+        while late:
+            bid = late.pop(0)
+            run = self.runs.get(bid)
+            self.runs[bid] = SiteRun(Outcome.BLOCKED_BY_POLICY,
+                                     run.elapsed_ms if run else 0, run.waited_ms if run else 0)
 
     def _rec(self, broker: Broker, outcome: str, t0: float, waited: float = 0.0) -> None:
         if broker.id not in self.runs:       # the main page decides; extra pages don't
             self.runs[broker.id] = SiteRun(outcome, int((self.clock() - t0) * 1000),
                                            int(waited * 1000))
 
+    async def _step(self, coro: Any, seconds: float) -> Any:
+        try:
+            return await asyncio.wait_for(coro, max(0.01, seconds))
+        except TimeoutError:
+            self._stale = True
+            raise _StepTimeout from None
+
     async def _fetch(self, broker: Broker, url: str) -> Fetched:
+        try:
+            got = await self._fetch_page(broker, url)
+        except FetchFailed:
+            await self._leave(broker, failed=True)
+            raise
+        await self._leave(broker, failed=False)
+        return got
+
+    async def _leave(self, broker: Broker, failed: bool) -> None:
+        """Done with this page: check it stayed on the allowlist, then blank the window
+        (`SiteWindow.leave`, optional) so nothing keeps running between sites."""
+        from .browser import BlockedByPolicy
+        leave = getattr(self.window, "leave", None)
+        if leave is None or self._stale:
+            return
+        try:
+            await self._step(leave(), self.look_s)
+        except BlockedByPolicy as e:
+            self.runs[broker.id] = SiteRun(Outcome.BLOCKED_BY_POLICY)
+            if not failed:
+                raise FetchFailed("blocked_by_policy") from e
+        except _StepTimeout:
+            log.info("search window did not leave the page in time")
+        except Exception as e:  # noqa: BLE001 - leaving never fails the read
+            log.debug("search window leave failed (%s)", type(e).__name__)
+            self._stale = True
+
+    async def _fetch_page(self, broker: Broker, url: str) -> Fetched:
         from .browser import BlockedByPolicy
         t0 = self.clock()
         try:
-            view = await self.window.load(broker, url)
+            view = await self._step(self.window.load(broker, url), self.step_s)
             outcome, waited = Outcome.READ, 0.0
             if view.challenge:
                 view, outcome, waited = await self._wait(broker, url, t0)
@@ -270,7 +380,7 @@ class SessionFetcher:
         except WindowUnavailable as e:
             self._rec(broker, Outcome.NO_BROWSER, t0)
             raise FetchFailed("needs_browser") from e
-        except Exception as e:
+        except Exception as e:      # _StepTimeout included: the page never answered
             self._rec(broker, Outcome.ERROR, t0)
             raise FetchFailed("network") from e
         if view.status is not None and view.status >= 400:
@@ -282,24 +392,35 @@ class SessionFetcher:
 
     async def _wait(self, broker: Broker, url: str, t0: float) -> tuple[View, Outcome, float]:
         """Watch (read-only) until the challenge is gone. Attended: show the window and the
-        banner and wait for the person. Background: a short grace period, never shown."""
+        banner and wait for the person. Background: a short grace period, never shown.
+        A look that hangs counts as "not cleared yet", never past the limit."""
         attended = self.mode == "attended"
         limit = self.timeout_s if attended else self.grace_s
         if attended:
-            await self.window.show()
+            try:
+                await self._step(self.window.show(), self.look_s)
+            except _StepTimeout:
+                log.info("search window did not come to the front in time")
             self.hooks.on_challenge(broker.id, broker.name)
         start = self.clock()
-        while self.clock() - start < limit:
+
+        def left() -> float:
+            return limit - (self.clock() - start)
+
+        while left() > 0:
             if attended and self.hooks.skip_requested(broker.id):
                 self._rec(broker, Outcome.SKIPPED, t0, self.clock() - start)
                 raise FetchFailed("challenge")
-            await asyncio.sleep(self.poll_s)
-            cur = await self.window.look()
+            await asyncio.sleep(min(self.poll_s, max(0.0, left())))
+            try:
+                cur = await self._step(self.window.look(), min(self.look_s, left()))
+            except _StepTimeout:
+                continue
             if cur.challenge:
                 continue
             waited = self.clock() - start
             if not _same_page(cur.url, url):     # cleared onto another page: load ours
-                cur = await self.window.load(broker, url)
+                cur = await self._step(self.window.load(broker, url), self.step_s)
                 if cur.challenge:
                     continue
             else:
@@ -311,7 +432,6 @@ class SessionFetcher:
         self._rec(broker, Outcome.TIMED_OUT if attended else _CHALLENGED, t0,
                   self.clock() - start)
         raise FetchFailed("challenge")
-
 
 # --------------------------------------------------------------------------- queue + to-dos
 
@@ -587,7 +707,9 @@ def run_session(store: Store, profile_id: str, *, mode: Mode = "background",
                 notifier: Notifier | None = None, broker_ids: list[str] | None = None,
                 refresh: bool = False, now: datetime | None = None,
                 timeout_s: float = CHALLENGE_TIMEOUT_S, grace_s: float = BACKGROUND_GRACE_S,
-                poll_s: float = POLL_S, test_headless: bool = False) -> SessionReport:
+                poll_s: float = POLL_S, test_headless: bool = False,
+                step_s: float = STEP_S, look_s: float = LOOK_S,
+                session_s: float | None = None) -> SessionReport:
     """Search every enabled broker that has a `search:` spec in the home-browser window.
 
     Raises `exposure.ExposureRefused` without consent and `SessionUnavailable` when no
@@ -609,7 +731,7 @@ def run_session(store: Store, profile_id: str, *, mode: Mode = "background",
         registry = load_registry()
     brokers = session_brokers(registry, profile, broker_ids)
     report = SessionReport(mode=mode)
-    lock: contextlib.AbstractContextManager[None] = contextlib.nullcontext()
+    lock: contextlib.AbstractContextManager[SessionLock | None] = contextlib.nullcontext()
     if window is None:
         from ..netpolicy import NetPolicy
         from .browser import BrowserManager
@@ -624,9 +746,11 @@ def run_session(store: Store, profile_id: str, *, mode: Mode = "background",
         folder = profile_dir()
         window = PlaywrightWindow(bm, folder, mode, test_headless=test_headless)
         lock = _session_lock(folder)
-    with lock:
+    with lock as held:
         fetcher = SessionFetcher(window, mode, hooks, timeout_s=timeout_s, grace_s=grace_s,
-                                 poll_s=poll_s)
+                                 poll_s=poll_s, step_s=step_s, look_s=look_s,
+                                 session_s=session_s,
+                                 heartbeat=held.refresh if held is not None else None)
         try:
             report.result = ex.scan_exposure(
                 store, profile.id, registry=registry, cfg=cfg, fetch=fetcher,
