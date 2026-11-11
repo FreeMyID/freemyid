@@ -28,6 +28,7 @@ from ..models import (
     Permissions,
     PersonName,
     Profile,
+    RemovalScope,
     ScheduleConfig,
     new_id,
     utcnow,
@@ -120,6 +121,8 @@ class Draft:
     suffix: str = ""
     nicknames: list[str] = field(default_factory=list)
     previous_names: list[str] = field(default_factory=list)
+    # suffixes of previous names (keyed by the name text) so an edit does not drop them
+    previous_name_suffixes: dict[str, str] = field(default_factory=dict)
     # addresses
     addresses: list[dict[str, Any]] = field(default_factory=list)
     # details
@@ -132,6 +135,10 @@ class Draft:
     allow_id_upload: bool = False
     allow_account_creation: bool = False
     allow_phone_disclosure: bool = False
+    # no wizard screen sets these; an edit must carry the saved values through unchanged
+    allow_email_disclosure: bool = False
+    removal_scope: str = RemovalScope.FULL.value
+    respect_broker_intervals: bool = True
     # mailbox
     skip_mailbox: bool = False
     mailbox_answered: bool = False   # the mailbox screen has been completed
@@ -254,7 +261,8 @@ def apply_step(d: Draft, step: str, f: FormLike, files: dict[str, tuple[str, byt
                 errs.append(f"Please give a city and a 2-letter state (like IL) for address {i + 1}.")
                 continue
             old = rows[i] or {}
-            rows[i] = {"street": (f.get(f"street{i}") or old.get("street") or "").strip(),
+            years = {k: old[k] for k in ("from_year", "to_year") if old.get(k) is not None}
+            rows[i] = {**years, "street": (f.get(f"street{i}") or old.get("street") or "").strip(),
                        "city": city, "state": st,
                        "zip": (f.get(f"zip{i}") or old.get("zip") or "").strip(),
                        "current": bool(old.get("current")) if cur is None else str(i) == cur}
@@ -501,6 +509,13 @@ _CHANGED_MSG = ("The security code of your mail app is not the one you approved.
 # --------------------------------------------------------------------------- build + save
 
 
+def _previous_name(d: Draft, text: str) -> PersonName:
+    name = parse_person_name(text)
+    if suffix := d.previous_name_suffixes.get(text):
+        name = name.model_copy(update={"suffix": suffix})
+    return name
+
+
 def build_profile(d: Draft) -> Profile:
     if not d.consent_ack and d.existing_consent is None:
         raise SaveError("Consent has not been given.")
@@ -529,7 +544,7 @@ def build_profile(d: Draft) -> Profile:
             name=PersonName(first=d.first, middle=d.middle or None, last=d.last,
                             suffix=d.suffix or None),
             nicknames=d.nicknames,
-            previous_names=[parse_person_name(n) for n in d.previous_names],
+            previous_names=[_previous_name(d, n) for n in d.previous_names],
             addresses=[Address(**{k: (v or None) if k in ("street", "zip") else v  # type: ignore[arg-type]
                                   for k, v in a.items()}) for a in d.addresses],
             dob=date.fromisoformat(d.dob) if d.dob else None,
@@ -538,9 +553,12 @@ def build_profile(d: Draft) -> Profile:
             mailbox=mailbox, email_mode=EmailMode(d.email_mode),
             permissions=Permissions(allow_id_upload=d.allow_id_upload,
                                     allow_account_creation=d.allow_account_creation,
-                                    allow_phone_disclosure=d.allow_phone_disclosure),
+                                    allow_phone_disclosure=d.allow_phone_disclosure,
+                                    allow_email_disclosure=d.allow_email_disclosure),
+            removal_scope=RemovalScope(d.removal_scope),
             schedule=ScheduleConfig(weekly_recheck=d.weekly_recheck, weekday=d.weekday,
-                                    hour=d.hour),
+                                    hour=d.hour,
+                                    respect_broker_intervals=d.respect_broker_intervals),
         )
     except ValueError as e:   # pydantic ValidationError subclasses ValueError
         raise SaveError("Some details are missing or invalid; please go back and check them."
@@ -603,19 +621,30 @@ def _has_saved_password(p: Profile) -> bool:
         return False
 
 
+def _name_text(n: PersonName) -> str:
+    return " ".join(x for x in (n.first, n.middle, n.last) if x)
+
+
 def draft_from_profile(p: Profile, *, keep_consent: bool = True) -> Draft:
     d = Draft(provider=_provider_of(p), id=p.id, editing=True, label=p.label, first=p.name.first,
               middle=p.name.middle or "", last=p.name.last, suffix=p.name.suffix or "",
               nicknames=list(p.nicknames),
-              previous_names=[" ".join(x for x in (n.first, n.middle, n.last) if x)
-                              for n in p.previous_names],
+              previous_names=[_name_text(n) for n in p.previous_names],
+              previous_name_suffixes={_name_text(n): n.suffix for n in p.previous_names
+                                      if n.suffix},
               addresses=[{"street": a.street or "", "city": a.city, "state": a.state,
-                              "zip": a.zip or "", "current": a.current} for a in p.addresses],
+                          "zip": a.zip or "", "current": a.current,
+                          **{k: v for k in ("from_year", "to_year")
+                             if (v := getattr(a, k)) is not None}}
+                         for a in p.addresses],
               dob=p.dob.isoformat() if p.dob else "", age=str(p.age) if p.age is not None else "",
               phones=list(p.phones), emails=list(p.emails), relatives=list(p.relatives),
               allow_id_upload=p.permissions.allow_id_upload,
               allow_account_creation=p.permissions.allow_account_creation,
               allow_phone_disclosure=p.permissions.allow_phone_disclosure,
+              allow_email_disclosure=p.permissions.allow_email_disclosure,
+              removal_scope=str(p.removal_scope.value),
+              respect_broker_intervals=p.schedule.respect_broker_intervals,
               email_mode=p.email_mode.value, weekly_recheck=p.schedule.weekly_recheck,
               weekday=p.schedule.weekday, hour=p.schedule.hour,
               basis=p.consent.basis.value, attested_by=p.consent.attested_by)

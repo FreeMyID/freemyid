@@ -270,7 +270,7 @@ def load_bundle(blob: bytes, passphrase: str) -> dr.Draft:
     # Never trust identifiers from a file: a fresh id is minted on save (path-traversal guard).
     for k in ("id", "consent", "mailbox", "created_at", "updated_at", "is_minor"):
         pr.pop(k, None)
-    from ..models import Consent, ConsentBasis
+    from ..models import Consent, ConsentBasis, RemovalScope
     tmp = Profile.model_validate({
         **pr, "consent": Consent(basis=ConsentBasis.SELF, attested_by="x",
                                  text_version="import").model_dump(mode="json")})
@@ -278,6 +278,8 @@ def load_bundle(blob: bytes, passphrase: str) -> dr.Draft:
     d.editing = False
     d.imported = True
     d.attested_by = ""
+    # SEC-114: an imported file never sets these two; edits of a saved profile do carry them.
+    d.removal_scope, d.allow_email_disclosure = RemovalScope.FULL.value, False
     d.basis = ConsentBasis.SELF.value
     d.mailbox, d.skip_mailbox, d.mailbox_answered = {}, False, False
     return d
