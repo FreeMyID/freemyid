@@ -29,6 +29,8 @@ These are the steps it lists. They are the app's own words. Google's page may lo
 4. "Type Free My ID as the name and click Create." Google's page may look different. <!-- src/freemyid/wizard/ui.py:218 -->
 5. "Google shows a box of 16 letters. Copy them, then paste them in the Password box below. This is not your usual Gmail password." Google's page may look different. <!-- src/freemyid/wizard/ui.py:219 -->
 
+The "Password box below" is the "App password" box on the Free My ID screen. It appears after you pick "Gmail", so do Step 2, line 1, before you paste.
+
 If a button has moved, use the search box in step 3, or ask a family member to sit with you.
 
 ## Step 2: Fill in the Free My ID screen
@@ -47,6 +49,7 @@ If a button has moved, use the search box in step 3, or ask a family member to s
 3. Press "Next". <!-- src/freemyid/wizard/ui.py:407 -->
 
 The screen says "The test only talks to your email company. The password is kept in your computer's protected store, not in Free My ID's files." <!-- src/freemyid/wizard/ui.py:390 -->
+On Windows the protected store is the Windows Credential Manager. On a computer set up another way (for example a passphrase), the password is kept in an encrypted file in Free My ID's own folder instead. It is never kept as plain text. <!-- src/freemyid/secrets.py:2-4 -->
 
 If you have typed a password but not finished, the hint says "Your password is ready but not saved yet. Leave empty to use it." <!-- src/freemyid/wizard/ui.py:361 -->
 

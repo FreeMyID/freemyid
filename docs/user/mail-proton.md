@@ -65,7 +65,7 @@ Free My ID shows it with colons and capital letters. <!-- src/freemyid/engine/ma
 
 Proton's page may look different, so this guide does not guess Bridge's menus. Proton's settings guide explains the certificate export: [comprehensive guide to Bridge settings](https://proton.me/support/comprehensive-guide-to-bridge-settings).
 
-Treat the exported file as private. Save it only in a private folder on this computer, do not send it to anyone, and delete the exported copy when you are done. If the file includes a private key, that care matters.
+When you export, choose only the certificate. Do not export a private key. Treat the exported file as private. Save it only in a private folder on this computer, do not send it to anyone, and delete the exported copy when you are done. If the file includes a private key, that care matters.
 
 A helper can read the fingerprint with:
 

@@ -23,6 +23,7 @@ The screen says "The test only talks to your email company. The password is kept
 If you have typed a password but not finished, the hint says "Your password is ready but not saved yet. Leave empty to use it." <!-- src/freemyid/wizard/ui.py:361 -->
 The save step's note says "put the mailbox password in the keychain". <!-- src/freemyid/wizard/draft.py:560 -->
 The password store's note says "Never stored in clear text." <!-- src/freemyid/secrets.py:4 -->
+On Windows the protected store is the Windows Credential Manager. On a computer set up another way (for example a passphrase), the password is kept in an encrypted file in Free My ID's own folder instead. <!-- src/freemyid/secrets.py:2-3 -->
 
 ## Outlook.com and Hotmail: not supported yet
 
@@ -85,7 +86,7 @@ The screen shows "Using another email service", then these two steps. <!-- src/f
 
 Ask your email company for all of this:
 
-- An app password, sometimes called a program password. It is not your usual mailbox password.
+- An app password, sometimes called a program password. It is usually different from your usual mailbox password. Some companies do use the mailbox password for programs: if yours says so, use what they tell you.
 - The incoming mail server name and its port.
 - The outgoing mail server name and its port.
 - Whether incoming mail should use "Incoming is secure (SSL)", or "Incoming uses STARTTLS (only if SSL is off)". <!-- src/freemyid/wizard/ui.py:375 --> <!-- src/freemyid/wizard/ui.py:376 -->
