@@ -36,12 +36,44 @@ def _req(msg_type: str, **fields: object) -> dict:
 
 # ------------------------------------------------------------------------------ native host
 
-@pytest.mark.xfail(strict=True, raises=RecursionError,
-                   reason="SEC-EXT-1: deeply nested JSON escapes read_message as RecursionError")
 def test_deeply_nested_json_is_a_framing_error() -> None:
     body = b"[" * 50_000   # well under MAX_REQUEST_BYTES
     with pytest.raises(native_host.FramingError):
         native_host.read_message(io.BytesIO(_frame_bytes(body)))
+
+
+@pytest.mark.parametrize("body", [
+    b"[" * 5 + b"]" * 5,                                  # one level past the limit
+    b'{"a":' * 5 + b"1" + b"}" * 5,
+    b'{"v":1,"type":"ping","id":"a","x":[[[[1]]]]}',      # nested inside an envelope
+    b'{"a":"\\"' + b"[" * 50_000,                        # an escaped backslash ends the string
+])
+def test_json_nested_past_the_limit_is_refused_without_echoing_it(body: bytes) -> None:
+    """SEC-EXT-1: a request is one flat object; anything deeper never reaches the parser."""
+    with pytest.raises(native_host.FramingError) as caught:
+        native_host.read_message(io.BytesIO(_frame_bytes(body)))
+    assert str(caught.value) in ("message is nested too deeply", "message is not UTF-8 JSON")
+    assert native_host.serve(io.BytesIO(_frame_bytes(body)), io.BytesIO()) == 1
+
+
+@pytest.mark.parametrize("message", [
+    {"v": 1, "type": "ping", "id": "a"},
+    {"a": {"b": {"c": {"d": 1}}}},                        # exactly MAX_JSON_DEPTH levels
+    {"text": "[[[[[[[[ {{{{{{{{ \\\" [[[[[[[[ not nesting, just a string"},
+])
+def test_flat_messages_and_brackets_inside_strings_still_parse(message: dict) -> None:
+    body = json.dumps(message).encode("utf-8")
+    assert native_host.read_message(io.BytesIO(_frame_bytes(body))) == message
+
+
+def test_a_recursion_error_from_the_parser_is_a_framing_error(monkeypatch) -> None:
+    """SEC-EXT-1: even if the depth scan were wrong, the parser's RecursionError cannot escape."""
+    def explode(_text: str) -> object:
+        raise RecursionError("maximum recursion depth exceeded")
+
+    monkeypatch.setattr(native_host.json, "loads", explode)
+    with pytest.raises(native_host.FramingError):
+        native_host.read_message(io.BytesIO(_frame_bytes(b"{}")))
 
 
 @pytest.mark.xfail(strict=True, reason="SEC-EXT-2: re.match with '$' accepts a trailing newline")

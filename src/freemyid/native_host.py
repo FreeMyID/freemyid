@@ -40,6 +40,9 @@ FIREFOX_EXTENSION_ID = "extension@freemyid.org"
 MAX_REQUEST_BYTES = 64 * 1024
 # The browsers refuse a reply over 1 MB.
 MAX_REPLY_BYTES = 1024 * 1024
+# A request is one flat object. A few levels are tolerated, deep nesting is refused before the
+# JSON parser sees it (the parser recurses once per level).
+MAX_JSON_DEPTH = 4
 
 MESSAGE_TYPES = ("ping", "status", "site_check", "start_removal")
 # The one extra field each type may carry, next to v/type/id.
@@ -85,11 +88,38 @@ def _read_exact(stream: BinaryIO, count: int) -> bytes:
     return b"".join(chunks)
 
 
+def _nested_too_deep(text: str) -> bool:
+    """True when the JSON text opens more than MAX_JSON_DEPTH arrays/objects inside each other.
+
+    A plain scan, no recursion: brackets inside strings do not count. Text that is not JSON at
+    all may be miscounted, which does not matter: the parser refuses it next.
+    """
+    depth = 0
+    in_string = escaped = False
+    for ch in text:
+        if in_string:
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == '"':
+                in_string = False
+        elif ch == '"':
+            in_string = True
+        elif ch in "[{":
+            depth += 1
+            if depth > MAX_JSON_DEPTH:
+                return True
+        elif ch in "]}":
+            depth -= 1
+    return False
+
+
 def read_message(stream: BinaryIO) -> Any | None:
     """Read one message. Returns None at a clean end of input (the browser closed the pipe).
 
-    Raises FramingError for a short read, an oversized message or bytes that are not JSON. The
-    error text never includes the bytes.
+    Raises FramingError for a short read, an oversized message, bytes that are not JSON or JSON
+    nested more than MAX_JSON_DEPTH levels. The error text never includes the bytes.
     """
     header = _read_exact(stream, _LENGTH.size)
     if not header:
@@ -103,8 +133,14 @@ def read_message(stream: BinaryIO) -> Any | None:
     if len(body) < length:
         raise FramingError("short message body")
     try:
-        return json.loads(body.decode("utf-8"))
-    except (UnicodeDecodeError, ValueError):
+        text = body.decode("utf-8")
+    except UnicodeDecodeError:
+        raise FramingError("message is not UTF-8 JSON") from None
+    if _nested_too_deep(text):
+        raise FramingError("message is nested too deeply")
+    try:
+        return json.loads(text)
+    except (ValueError, RecursionError):   # RecursionError: belt and braces behind the scan
         raise FramingError("message is not UTF-8 JSON") from None
 
 
