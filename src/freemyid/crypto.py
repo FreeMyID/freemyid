@@ -27,6 +27,7 @@ import hmac
 import logging
 import os
 import sys
+import unicodedata
 from pathlib import Path
 from typing import NamedTuple
 
@@ -87,7 +88,14 @@ def default_home() -> Path:
 
 
 def _norm(p: Path) -> str:
-    return os.path.normcase(str(Path(os.path.abspath(p)).resolve()))
+    """The resolved folder path in one canonical form. Windows: `normcase` (case and `/`).
+    macOS: APFS and HFS+ are case-insensitive by default, so the path is also NFC-normalised
+    and case-folded, giving one folder one name however it is typed. Linux paths are taken
+    as they are (case-sensitive)."""
+    s = os.path.normcase(str(Path(os.path.abspath(p)).resolve()))
+    if sys.platform == "darwin":
+        s = unicodedata.normalize("NFC", s).casefold()
+    return s
 
 
 def is_default_home(home: Path | None = None) -> bool:
