@@ -87,16 +87,16 @@ Before dispatch or proposals, check this board, exact work-order paths and Claud
 | WO-270 | issue pending | Hannah Cole | delivered for review; 44 passed; Ruff passed; app scan clean | CLAUDE-063 GO | tests/codex/test_cx_app_practice_wording.py; VENDOR_STATUS.md | 2026-11-09 CODEX-152 |
 | WO-236 | issue pending | Imani Reid | delivered for in-house review; Owen PASS; 75 passed, 2 strict xfailed; Ruff passed | CLAUDE-064 pre-approved | `tests/codex/test_cx_sec_netpolicy_invariants.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CODEX-155 |
 | WO-237 | issue pending | Imani Reid | delivered for in-house review; Owen PASS; 30 passed; Ruff passed | CLAUDE-064 pre-approved | `tests/codex/test_cx_sec_redaction_fields.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CODEX-155 |
-| WO-238 | issue pending | Imani Reid | in progress | CLAUDE-064 pre-approved; started in number order | `tests/codex/test_cx_sec_wizard_post_guard.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CODEX-153 |
-| WO-239 | issue pending | Imani Reid | in progress | CLAUDE-064 pre-approved; started in number order after capacity freed | `tests/codex/test_cx_sec_wizard_headers.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CODEX-154 |
-| WO-240 | issue pending | Imani Reid | in progress | CLAUDE-064 pre-approved; started in number order after capacity freed | `tests/codex/test_cx_sec_consent_gates.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CODEX-155 |
-| WO-241 | issue pending | Ravi Menon | queued (pre-approved) | none | `src/freemyid/engine/letters.py`; `tests/codex/test_cx_letters_hostile_values.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
-| WO-242 | issue pending | Ravi Menon | queued (pre-approved) | none | `src/freemyid/engine/exposure.py`; `src/freemyid/exposure_models.py`; `tests/codex/test_cx_exposure_rate_limit.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
-| WO-243 | issue pending | Hannah Cole | queued (pre-approved) | none | `src/freemyid/engine/htmlsel.py`; `tests/codex/test_cx_htmlsel_grammar.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
-| WO-244 | issue pending | Hannah Cole | queued (pre-approved) | none | `tests/codex/test_cx_state_machine_properties.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
+| WO-238 | issue pending | Imani Reid | incomplete; pytest runner produced no result; Ruff passed | CLAUDE-064 pre-approved | `tests/codex/test_cx_sec_wizard_post_guard.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CODEX-157 |
+| WO-239 | issue pending | Imani Reid | incomplete; TestClient request hangs before response; Ruff passed | CLAUDE-064 pre-approved | `tests/codex/test_cx_sec_wizard_headers.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CODEX-157 |
+| WO-240 | issue pending | Imani Reid | incomplete; TestClient dashboard request hangs; 21 focused + 28 existing consent tests passed; Ruff passed | CLAUDE-064 pre-approved | `tests/codex/test_cx_sec_consent_gates.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CODEX-157 |
+| WO-241 | issue pending | Ravi Menon | delivered for in-house review; Owen PASS; 73 passed; Ruff passed | CLAUDE-064 pre-approved | `src/freemyid/engine/letters.py`; `tests/codex/test_cx_letters_hostile_values.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CODEX-158 |
+| WO-242 | issue pending | Ravi Menon | held; Owen review found AC6 conflict with existing test outside allowed paths; in-house clarification needed | CLAUDE-064 pre-approved; resumed under CLAUDE-065 | `src/freemyid/engine/exposure.py`; `src/freemyid/exposure_models.py`; `tests/codex/test_cx_exposure_rate_limit.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CODEX-164 |
+| WO-243 | issue pending | Hannah Cole | delivered for in-house review; Owen PASS; 26 targeted, 74 combined passed; Ruff passed | CLAUDE-064 pre-approved | `tests/codex/test_cx_htmlsel_grammar.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CODEX-165 |
+| WO-244 | issue pending | Hannah Cole | delivered for in-house review; Owen PASS; 776 passed, 2 strict xfailed, 0 skipped; Ruff passed | CLAUDE-064 pre-approved | `tests/codex/test_cx_state_machine_properties.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CODEX-167 |
 | WO-245 | issue pending | Hannah Cole | queued (pre-approved) | after WO-233 merged | `src/freemyid/engine/nicknames.py`; `tests/codex/test_cx_nickname_table.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
-| WO-246 | issue pending | Owen Park | queued (pre-approved) | none | `src/freemyid/checklists.py`; `src/freemyid/engine/law_matrix.py`; `tests/codex/test_cx_data_file_hardening.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
-| WO-247 | issue pending | Owen Park | queued (pre-approved) | none | `tests/codex/test_cx_paths_cross_platform.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
+| WO-246 | issue pending | Owen Park | delivered for in-house review; Owen PASS; 70 passed; Ruff passed | none | `src/freemyid/checklists.py`; `src/freemyid/engine/law_matrix.py`; `tests/codex/test_cx_data_file_hardening.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes); CODEX-167/168/169 |
+| WO-247 | issue pending | Owen Park | started; WIP 5/5 | none | `tests/codex/test_cx_paths_cross_platform.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes); CODEX-169 |
 | WO-248 | issue pending | Owen Park | queued (pre-approved) | none | `tests/codex/test_cx_firstrun_browser.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
 | WO-249 | issue pending | Felix Grant | queued (pre-approved) | none | `tests/codex/test_cx_draft_edit_roundtrip.py` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
 | WO-250 | issue pending | Amara Okoye | queued (pre-approved) | none | `docs/i18n/STRINGS_APP.md` (new); `VENDOR_STATUS.md` | 2026-11-09 CLAUDE-064 (appended by Morgan Reyes) |
@@ -198,3 +198,229 @@ CP-11..13 are delivered as WO-108..110; CP-14/15 queued as WO-111/112; CP-16 dec
 | WO-422 | issue pending | Ravi Menon | queued (pre-approved) | after WO-277 merged | `src/freemyid/engine/matcher.py`; `tests/codex/test_cx_matcher_phone_forms.py`; `VENDOR_STATUS.md` | 2026-11-09 E12 epic batch (appended by Morgan Reyes) |
 | WO-423 | issue pending | Felix Grant | queued (pre-approved) | after WO-402 merged | `tests/codex/test_cx_value_only_scan.py`; `VENDOR_STATUS.md` | 2026-11-09 E12 epic batch (appended by Morgan Reyes) |
 | WO-424 | issue pending | Ravi Menon | blocked: needs an owner and safety decision, a data model and a sourced data file from in-house first | after WO-246, WO-284, WO-297 merged | `src/freemyid/engine/law_matrix.py`; `tests/codex/test_cx_acp_lookup.py`; `VENDOR_STATUS.md` | 2026-11-09 E12 epic batch (appended by Morgan Reyes) |
+
+
+## Active checkpoint — 2026-11-09 / CODEX-170
+
+This checkpoint supersedes stale WIP counts above; historical rows are retained.
+Away-week rules exclude held/runtime-blocked work from active building.
+
+| Work order | Owner | Current state | Reserved paths |
+| --- | --- | --- | --- |
+| WO-238 (issue pending) | Imani Reid | Runtime-blocked; required checks incomplete; skipped | Existing WO scope only |
+| WO-239 (issue pending) | Imani Reid | Runtime-blocked; required checks incomplete; skipped | Existing WO scope only |
+| WO-240 (issue pending) | Imani Reid | Runtime-blocked; required checks incomplete; skipped | Existing WO scope only |
+| WO-242 (issue pending) | Ravi Menon | Held for in-house acceptance/test conflict; skipped | Existing WO scope only |
+| WO-245 (issue pending) | Hannah Cole | Started; predecessor WO-233 (freemyid-pm#199) delivered | `src/freemyid/engine/nicknames.py`; `tests/codex/test_cx_nickname_table.py`; worktree status |
+| WO-247 (issue pending) | Owen Brooks, reviewer | Existing implementation under independent review | `tests/codex/test_cx_paths_cross_platform.py`; worktree status |
+| WO-248 (issue pending) | Owen Park | Started | `tests/codex/test_cx_firstrun_browser.py`; worktree status |
+
+Active WIP: 3/5, including review. Prepared worktree branch pointers verified without git.
+WO-245 starts under AGENT_CHANNEL.md away-week rule 3: delivery satisfies start-after.
+WO-233 was test-only, so no predecessor product changes require copying.
+Nora owns coordination files; builders write only their WO scopes. CODEX-X-008 acknowledges
+GROK-X-006; coordination makes no shared-path changes or work assignments.
+
+
+## Dispatch checkpoint — 2026-11-09 / CODEX-171
+
+- WO-245 (issue pending): builder complete; 691 passed, Ruff clean; Owen review pending.
+- WO-247 (issue pending): review correction complete; 10 passed, Ruff clean; Owen re-review pending.
+- WO-248 (issue pending): builder complete; 20 passed, Ruff clean; Owen review pending.
+- WO-249 (issue pending): started with Felix Grant in prepared `.vendor-wt/wo-249`; reserved `tests/codex/test_cx_draft_edit_roundtrip.py` and worktree `VENDOR_STATUS.md` only.
+- WO-250 (issue pending): started with Amara Okoye in prepared `.vendor-wt/wo-250`; reserved `docs/i18n/STRINGS_APP.md` and worktree `VENDOR_STATUS.md` only.
+- Active WIP 5/5 including reviews. Earlier blocked/held orders remain skipped. No next order starts before delivery frees a slot. No overlapping writable paths.
+
+
+## Delivery checkpoint — 2026-11-09 / CODEX-172
+
+| Work order | Current state | Independent checks | Scope evidence |
+| --- | --- | --- | --- |
+| WO-245 (issue pending) | Delivered for in-house review; Owen PASS | 691 passed; Ruff clean | New nickname-table test and status; product source unchanged |
+| WO-247 (issue pending) | Delivered for in-house review; Owen PASS after AC5 correction | 10 passed; Ruff clean | Cross-platform test and status only |
+| WO-248 (issue pending) | Delivered for in-house review; Owen PASS | 20 passed; Ruff clean | First-run test and status only |
+
+Nora compared pre-dispatch and post-review SHA-256 fingerprints of visible regular files
+outside each allowed scope: unchanged (1,284 / 1,285 / 1,285 files respectively).
+This is a session scope check, not git history verification; hidden/ignored files are not
+included. No native Windows run claimed. Active WIP 2/5: WO-249 (issue pending) and
+WO-250 (issue pending). Four earlier held/runtime-blocked orders remain skipped.
+
+
+## Delivery and publishing checkpoint — 2026-11-09 / CODEX-173
+
+- WO-249 (issue pending): delivered for in-house review; Owen PASS; 734 passed, 102 strict xfailed, zero skipped; Ruff clean. Six edit-loss categories reported, no product edits.
+- WO-250 (issue pending): delivered for in-house review; Owen PASS; 14 passed; 45 citation spans manually checked, explicit guard zero findings; no source changes. CLI inventory link awaits predecessor integration.
+- Outside-scope visible-file SHA-256 fingerprints unchanged for both worktrees (1,285 files each). Active WIP 0/5. Existing held/runtime-blocked orders remain incomplete.
+- Owner explicitly authorized commits, pushes to origin and PR creation in this session, superseding the earlier vendor prohibition for publishing. Owner explicitly forbids pushing main. Nora publishes only reviewed `vendor/wo-245`, `vendor/wo-247`, `vendor/wo-248`, `vendor/wo-249`, `vendor/wo-250`; draft PRs target main, without merging. Remote confirmation pending.
+
+
+## Remote publishing confirmed — 2026-11-09 / CODEX-174
+
+All five orders are delivered for in-house review, committed and pushed to origin;
+all PRs are open drafts targeting main, with no merge. Active WIP 0/5.
+
+| Work order | Remote branch | Commit | Draft PR | Independent local checks |
+| --- | --- | --- | --- | --- |
+| WO-245 (issue pending) | `vendor/wo-245` | `6ae87e2` | https://github.com/FreeMyID/freemyid/pull/73 | 691 passed; Ruff clean |
+| WO-247 (issue pending) | `vendor/wo-247` | `3e1566a` | https://github.com/FreeMyID/freemyid/pull/74 | 10 passed; Ruff clean |
+| WO-248 (issue pending) | `vendor/wo-248` | `2affc61` | https://github.com/FreeMyID/freemyid/pull/75 | 20 passed; Ruff clean |
+| WO-249 (issue pending) | `vendor/wo-249` | `51e81a3` | https://github.com/FreeMyID/freemyid/pull/76 | 734 passed, 102 strict xfailed; Ruff clean |
+| WO-250 (issue pending) | `vendor/wo-250` | `61c526f` | https://github.com/FreeMyID/freemyid/pull/77 | 14 passed; 45 citation spans, zero findings |
+
+GitHub confirms exactly two allowed files per PR. Local worktrees are clean; each HEAD,
+upstream and PR head match. Company noreply metadata checks pass on all final heads;
+initial placeholder author emails were corrected with exact-SHA force-with-lease updates
+of our own vendor refs only, with unchanged file trees. Build CI is queued/running, not
+reported passed. Main remains `f6e75d5`; no push to main or merge was performed.
+CODEX-X-009 updates Grok; acknowledgment of CODEX-X-008/009 is still outstanding.
+Main-checkout coordination notes remain local; unrelated dirty files were not staged.
+
+
+## Team continuation — 2026-11-09 / CODEX-175
+
+Standing user authorization now permits fetch/pull, commits, vendor-branch pushes and
+PR creation/update throughout development. No push to main or PR merge is authorized.
+Fetched origin; clean prepared worktrees fast-forwarded from origin/main before dispatch.
+
+| Work order | Builder | State | Allowed writes |
+| --- | --- | --- | --- |
+| WO-251 (issue pending) | Amara Okoye | Started under away-week delivered-predecessor rule; WO-225 (freemyid-pm#207) delivered | New `tests/codex/test_cx_glossary_es_consistency.py`; worktree status |
+| WO-252 (issue pending) | Kai Nakamura | Started | New `docs/dev/STATE_MACHINE.md`; worktree status |
+| WO-253 (issue pending) | Kai Nakamura, separate session | Started | New `docs/dev/PROOF_VAULT.md`; worktree status |
+
+WIP 3/5. No concurrent shared-file edits. WO-251 will test its own base glossary and
+inspect the delivered predecessor read-only; glossary edits are outside its allowed paths.
+Earlier runtime-blocked/held orders remain skipped. Grok acknowledged CODEX-X-008/009 in
+GROK-X-007: no path concern; publishing its own delivered branches, no main push.
+Prior PRs #73..77 remain open drafts; email checks pass, build CI still queued.
+
+
+## Backend start checkpoint — 2026-11-09 / CODEX-176
+
+- WO-251 (issue pending): building. After origin/main fast-forward its glossary is byte-identical to delivered WO-225 (freemyid-pm#207), so no glossary integration limitation remains.
+- WO-252 and WO-253 (issue pending each): builder complete; independent Owen review underway. Required pytest 14 passed per worktree; new guides have 24 and 25 verified citation spans respectively.
+- WO-254 (issue pending): skipped for now because its required CLI/app inventory inputs are absent from origin/main and copying them would exceed its test-only allowed paths. Delivered predecessors WO-232 and WO-250 (issue pending each) await integration; no broad fixture substitution or out-of-path copy.
+- WO-255 (issue pending): next once its final prerequisite guide deliveries finish; generic glob guard can be implemented within its allowed test file.
+- WO-256 (issue pending): started with Imani Reid; prepared clean vendor branch refreshed from origin/main. Allowed writes `src/freemyid/monitor.py`, `tests/codex/test_cx_monitor_previous_hardening.py`, worktree status. Predecessor WO-226 (freemyid-pm#208) is delivered and its test is now in the refreshed base.
+- WIP 4/5 including review. No path collision; earlier held/runtime-blocked orders remain skipped.
+
+
+## Guide delivery and guard dispatch — 2026-11-09 / CODEX-177
+
+- WO-252 (issue pending): delivered for in-house review; Owen PASS; required pytest14passed,24citations/zero findings,24Mermaid edges exact TRANSITIONS. Visible outside-scope fingerprint unchanged (1,395 files).
+- WO-253 (issue pending): delivered for in-house review; Owen PASS; required pytest14passed,25citations/34ranges/zero findings. Visible outside-scope fingerprint unchanged (1,395 files).
+- WO-255 (issue pending): started with Hannah Cole after all named prerequisite WOs delivered under away-week rules; clean vendor branch refreshed from origin/main. Writes only `tests/codex/test_cx_dev_source_citations.py` and worktree status. Implement glob over its own docs; validate delivered predecessor docs read-only separately where useful, with integration limits explicit. No out-of-path copying.
+- WO-251 (issue pending): independent review pending; WO-256 (issue pending): backend fix building. WIP3/5 including review. WO-254 (issue pending) still skipped for absent required inventory inputs.
+
+
+## Review and publication checkpoint — 2026-11-09 / CODEX-178
+
+- WO-251 (issue pending): delivered for in-house review; Owen PASS;52passed,0skipped/xfail,Ruffclean;115glossaryrows/7guideterms checked. Outside-scope visible-file fingerprint unchanged (1,395files). Commit/push/PR next.
+- WO-252 (issue pending): pushed `vendor/wo-252`, `59a45f5`; draft PR https://github.com/FreeMyID/freemyid/pull/108.
+- WO-253 (issue pending): pushed `vendor/wo-253`, `e06f769`; draft PR https://github.com/FreeMyID/freemyid/pull/109.
+- Both guide commits passed local noreply guard and contain only their new guide/status. Remote CI verification pending.
+- WIP2/5: WO-255 and WO-256 (issue pending each), both building. No main push/PR merge.
+
+
+## Nora restart — 2026-11-10 / CODEX-179
+
+- WO-255 (issue pending): existing builder output in independent read-only Owen review; allowed test and status only.
+- WO-256 (issue pending): existing monitor fix in independent read-only Owen review; allowed monitor module, hardening test and status only.
+- WIP 2/5. Jules audits next eligible work and tracker IDs before dispatch. No duplicate builders or new scope.
+- Grok coordination posted as CODEX-X-011; acknowledgment pending, relay requested. No new GitHub/CI result claimed.
+
+
+## Reviewed deliveries and next dispatch — 2026-11-10 / CODEX-180
+
+- WO-255 (issue pending): Owen PASS; 17 passed, Ruff clean; 132 predecessor citation spans checked with zero findings. Delivered for in-house review. Five missing prerequisite docs and native Windows remain integration limits.
+- WO-256 (issue pending): Owen PASS; 89 passed, Ruff clean; monitor contracts unchanged. Delivered for in-house review. Status citation correction: validator currently monitor.py:329–337. Native Windows/full suite unverified. Reviewers lacked pre-dispatch fingerprints for whole-tree scope certification.
+- WO-271 (issue pending): Ravi started in prepared .vendor-wt/wo-271 after delivered WO-256/226/211 under away-week rules. Writes only src/freemyid/monitor.py, tests/codex/test_cx_monitor_relist.py and worktree status. Read-only predecessor monitor source may be copied into the allowed module; predecessor tests cannot be copied outside scope.
+- WO-272 (issue pending): separate Ravi session started in prepared .vendor-wt/wo-272. Writes only src/freemyid/engine/exposure_score.py, tests/codex/test_cx_exposure_score_edges.py and worktree status.
+- WIP 2/5; no path collision. WO-254,257–260 remain skipped for existing dependency/contract holds; WO-261–269 are not queue entries. WO-233 tracker correction: current map is freemyid-pm#215.
+
+
+## Partial delivery checkpoint — 2026-11-10 / CODEX-182
+
+- WO-271 (issue pending): independently reviewed partial delivery. New tests 47 passed; required monitor selection 119 passed, 1 strict XPASS failure from carried-forward WO-256 fix and old out-of-scope xfail; Ruff passed. Helper unwired, listing input source unresolved. Scope hash audit clean.
+- WO-272 (issue pending): independently reviewed partial/spec-exception delivery. New tests 28 passed; required broad selection 65 passed, 4 socket PermissionError fixture failures; Ruff passed. Literal AC3 direction conflict remains explicit. Scope hash audit clean.
+- WIP 0/5; next eligible WO-273/274 (issue pending each). In-house review/integration pending; no full-suite/native Windows claim, no publication/merge.
+- Latest Grok inbound GROK-X-008 acknowledged in CODEX-X-013; CODEX-X-014 reports this checkpoint.
+
+
+## Continued queue dispatch — 2026-11-10 / CODEX-183
+
+- WO-273 (issue pending): Hannah Cole started in prepared wo-273; allowed listing_finder.py, tests/codex/test_cx_listing_finder_errors.py, status only.
+- WO-274 (issue pending): Felix Grant started in prepared wo-274; allowed search_engines.py, tests/codex/test_cx_search_engine_links.py, status only.
+- WO-281 (issue pending): Owen Park started in prepared wo-281; allowed checklist_state.py, tests/codex/test_cx_checklist_state_recovery.py, status only (builder must confirm exact WO test path before edits).
+- WIP 3/5. WO-275 waits for 284; 276/277/278/280 wait on held chain; 279 and 283 blocked. No shared-file overlap. No git/network/install; existing worktree bases retained with limits recorded.
+
+
+## Review rotation and next dispatch — 2026-11-10 / CODEX-185
+
+- WO-273/274/281 (issue pending each): builders complete, independent Owen review. No delivery claim yet.
+- WO-282 (issue pending): Hannah, separate session, started in prepared wo-282 after delivered WO-246 under away-week rule. Exact writes checklists.py, tests/codex/test_cx_checklist_validation.py, status. Carry forward only allowed checklists.py predecessor, inspect predecessor tests read-only.
+- WIP 4/5 including reviews. WO-284 next eligible once slot frees; no shared-file collision.
+
+
+## Recovery review and lookup dispatch — 2026-11-10 / CODEX-186
+
+- WO-281 (issue pending): Owen partial review PASS;13 new/24 direct tests passed,Ruff passed; source unchanged. Required wizard-inclusive run interrupted, JSON/atomic criteria unsupported. Delivered partial for in-house review.
+- WO-284 (issue pending): Ravi started prepared wo-284 after delivered WO-246, exact law_matrix.py, tests/codex/test_cx_law_matrix_lookup.py,status. Carry forward only allowed predecessor module; no data edits or external lookup.
+- WIP 4/5:273/274 review,282 build,284 build.
+
+
+## Interactive-path partial deliveries and selector dispatch — 2026-11-10 / CODEX-187
+
+- WO-273 (issue pending): Owen partial PASS;15focused pass,Ruff clean; broader39pass/11socket failures/1browser skip. API limits explicit.
+- WO-274 (issue pending): Owen partial PASS;34new/22existing pass,Ruff clean; source unchanged; wizard-inclusive required run incomplete. Missing name-builder contract explicit.
+- WO-281 (issue pending): partial already delivered; independent review final confirms13new/24direct pass,Ruff clean.
+- WO-285 (issue pending): Owen Park started prepared wo-285 after delivered WO-243 under away-week rule. Only htmlsel.py,new tests/codex/test_cx_htmlsel_performance.py,status. Carry predecessor module only if needed, no out-of-path test copies.
+- WIP3/5:282,284,285 building. No shared-file overlap.
+
+
+## Performance queue continuation — 2026-11-10 / CODEX-188
+
+- WO-282/284/285 (issue pending each): builders complete/finalizing, independent review underway.
+- WO-286 (issue pending): Hannah started prepared wo-286 after delivered WO-245, exact nicknames.py,new tests/codex/test_cx_nickname_index.py,status. Allowed predecessor module only; table integrity tests inspect read-only if absent, no test copy.
+- WIP4/5 including reviews; no path collision. Current tracker numbers still pending.
+
+
+## Validation deliveries and pipeline documentation — 2026-11-10 / CODEX-189
+
+- WO-282 (issue pending): independent PASS;18focused/3broad/5read-only predecessor checklist cases passed,Ruff clean. Full predecessor matrix portion and native Windows not claimed. Delivered for review.
+- WO-284 (issue pending): independent code PASS, partial AC4 integration;30focused/30broad/48existing letters passed,Ruff clean. Complete predecessor246 suite absent; no out-of-path test copy. Delivered partial for review.
+- WO-288 (issue pending): Kai started prepared wo-288; only docs/dev/EXPOSURE_PIPELINE.md,status. Document actual worktree source and explicitly distinguish held future changes; no code changes.
+- WIP3/5:285review,286build,288build. WO287 skipped on held278. WO275 now dependency-delivered but cross-module lookup integration requires scope check before builder dispatch.
+
+
+## Selector delivery — 2026-11-10 / CODEX-190
+
+- WO-285 (issue pending): independent PASS;10focused/12broad/26read-only predecessor grammar cases passed,Ruff clean. Source unchanged delivered243. Scope clean. Delivered for in-house review; Windows/full combined tree unverified.
+- WIP2/5:286,288building.
+
+
+## Nickname partial delivery — 2026-11-10 / CODEX-191
+
+- WO-286 (issue pending): independent partial/spec-exception PASS;203focused,required plural selector1passed/2901deselected,Ruff clean;623read-only predecessor cases and32matcher-variant cases independently passed. Builder supplemental combined68passed.200goldens exactly match predecessor. Set iteration order AC unmet;deterministic membership/public set preserved.
+- WIP1/5:288building/review next. No new dispatch yet.
+
+
+## Remaining-time documentation dispatch — 2026-11-10 / CODEX-192
+
+- User reports about25minutes left; prioritize reviewable bounded work and handoff.
+- WO-289 (issue pending): Kai,separate session,started prepared wo-289; only docs/dev/MATCHING.md,status. Source snapshot/held age-range work explicit; exact citations and fake worked examples.
+- WIP2/5:288building/review,289building. Required broad checks bounded on known TestClient issue; no false pass claims.
+
+
+## Pipeline guide delivery — 2026-11-10 / CODEX-193
+
+- WO-288 (issue pending): independent PASS;147lines30citation spans47ranges checked manually/explicit helper zero findings,14citation tests/Ruff passed. Required selection independently201passed63Chromium TargetClosedError skips4deselected1known SEC125 xfailed,exit0. Skips/xfail notpasses. Delivered for in-house review.
+- WIP1/5:289building/review.
+
+
+## Time-limit checkpoint — 2026-11-10 / CODEX-194
+
+- WOs 273/274/281/282/284/285/286/288/289 status is in CODEX-182..193 and each worktree VENDOR_STATUS.md; 282/285/288/289 independently reviewed, 284 code review passed with integration limit; 273/274/281/286 partial/spec limits remain.
+- No push attempted: AGENTS.md prohibits vendor Git/push. Owner tooling publishes reviewed changes.
+- Resume with issue-map sync, in-house review/integration, Windows and combined-tree reruns, then remaining eligible queue.

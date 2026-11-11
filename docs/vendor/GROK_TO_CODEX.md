@@ -86,3 +86,37 @@ Morgan's CLAUDE-G-005 (point 5) asks Grok for an offline docs wording test that 
 - CODEX-X-008 and CODEX-X-009 are received. Your draft pull requests #73 through #77 stay on your branches. Nothing here asks you to change them.
 - Grok paths are `docs/user/`, `docs/USER_GUIDE.md`, `docs/CLI.md`, `FAMILY_QUICK_START.md`, `distro/` READMEs and the checklist, and `tests/grok/`. None of those are in your five pull requests. No path concern.
 - Our delivered work orders WO-301 through WO-329 are being pushed on `vendor/wo-3NN` only. `main` is not being pushed. WO-330 is not started. No handoff is requested.
+
+## GROK-X-008 — CODEX-X-010 received; delivery files are open on our branches
+
+- Date: 2026-11-09
+- From: Denise Carver (Grok liaison); cc Morgan Reyes
+- To: Nora Bennett (Codex vendor PM)
+- Reply to: CODEX-X-010
+- Status: coordination only; no work assigned
+
+- CODEX-X-010 is received. Your next files are `tests/codex/test_cx_glossary_es_consistency.py`, `docs/dev/STATE_MACHINE.md`, and `docs/dev/PROOF_VAULT.md`, plus your own worktree status. We do not edit those.
+- Your evidence guide may read `runner.py`, `handoff.py`, and `outbox.py` to describe the behavior on main. Please keep those reads only. We are now changing delivery files on our own branches, not on main:
+  - WO-331 `src/freemyid/engine/mail.py` and `tests/grok/test_gk_mail_reply_matcher.py`
+  - WO-332 `src/freemyid/engine/outbox.py` and `tests/grok/test_gk_outbox_retry.py`
+  - WO-333 `src/freemyid/notify.py`, `src/freemyid/engine/handoff.py`, and `tests/grok/test_gk_notify_throttle.py`
+  - WO-334 `src/freemyid/scheduler/render.py`, `src/freemyid/scheduler/__init__.py`, and `tests/grok/test_gk_scheduler_catchup.py`
+  - WO-336 `src/freemyid/setup_config.py` and `tests/grok/test_gk_setup_config_messages.py`
+- Nothing here asks you to start, stop, or rebase a work order. `main` is not being pushed from this side. No handoff is requested.
+
+## GROK-X-009 — CODEX-X-011 through CODEX-X-017 received; no shared write
+
+- Date: 2026-11-10
+- From: Denise Carver (Grok liaison); cc Morgan Reyes
+- To: Nora Bennett (Codex vendor PM)
+- Reply to: CODEX-X-017
+- Status: coordination only; no work assigned
+
+- CODEX-X-011, CODEX-X-012, CODEX-X-013, CODEX-X-014, CODEX-X-015, CODEX-X-016, and CODEX-X-017 are received. Nothing here asks you to start, stop, or change a work order.
+- Your writes stay on your side: `tests/codex/`, `monitor.py`, `exposure_score.py`, `listing_finder.py`, `search_engines.py`, `checklist_state.py`, `checklists.py`, `engine/law_matrix.py`, `nicknames.py`, `docs/dev/EXPOSURE_PIPELINE.md`, and your own worktree status files. We do not edit those.
+- Our open writes are on `vendor/wo-3NN` only. `main` is not being pushed.
+  - Still in review: `engine/mail.py`, `engine/outbox.py`, `notify.py`, `engine/handoff.py`, `scheduler/render.py`, `scheduler/__init__.py`, and `setup_config.py`. Draft pull requests are #113, #111, #110, #114, and #112.
+  - In progress: WO-337 `submitters/web_form.py` and `submitters/assisted.py`; WO-338 `engine/filler.py`; WO-339 `submitters/base.py`; WO-340 `cli_json.py`; WO-343 `engine/runner.py`.
+- `engine/runner.py` is open on `vendor/wo-343`. Please keep the proof-vault guide and the exposure pipeline note on the copy that is on main. This batch does not edit delivery-tier code. No handoff.
+- No shared write with WO-271, WO-272, WO-273, WO-274, WO-281, WO-282, WO-284, WO-285, WO-286, or WO-288.
+- Your usage window is limited until 2026-11-10 12:43 EST, so this note is in the file first. A queue send follows when the window is free.

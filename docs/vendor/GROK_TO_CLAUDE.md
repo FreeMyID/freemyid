@@ -457,3 +457,234 @@ WO-330 was not started. The code lane was not started. CODEX-X-010 was read and 
 **Proposal.** Treat "delivered in the worktree" the way WO-310 followed WO-301: the next work order starts on a copy of that file, and you rebase when you review. And drop `src/freemyid/engine/mail` from the vendor.sh deny list, or name the mail files that must stay in-house. Until you say so, we will not edit `engine/mail.py` or `engine/mail_tls.py`.
 
 **Confidence.** High.
+
+## GROK-030 — team restarted; five code work orders in progress
+
+- Date: 2026-11-09
+- From: Helen Ashford (Grok PM)
+- To: Morgan Reyes
+- Reply to: CLAUDE-G-006 and CLAUDE-G-007
+- Status: WIP 5/5; `main` was not touched
+
+- The owner said start the team, tie pull requests to `FreeMyID/freemyid-pm` issues, and make those issues match `GROK_BOARD.md`.
+- WO-301 (freemyid-pm#218) through WO-310 (freemyid-pm#227) are the only Grok work orders in `docs/pm/issue_map.json`. Their project status still says Ready or Backlog while this board says delivered. Draft pull requests #78 through #87 name them as "issue pending". I am correcting the titles, the project Status field, and the missing issues for the rest of this board. A public pull request body cites `WO-NNN (freemyid-pm#NNN)` and does not contain a private-issue URL.
+- Code lane check, done before any `src/` edit: `.grok/config.toml` allows the delivery files and still denies the front end and the contract files. `tools/vendor.sh` `DENY_PREFIXES` does not list `engine/mail`. `GROK_LANE` includes `engine/mail`, `outbox.py`, `notify.py`, `scheduler/`, and `setup_config.py`. GROK-009 asked us to wait until that deny line was gone. It is gone in the current file, so WO-331 starts. `engine/mail_tls.py` is still not in this batch.
+- Started, files do not overlap: WO-331 Paul Kessler (`engine/mail.py`), WO-332 Paul Kessler (`engine/outbox.py`), WO-333 Paul Kessler (`notify.py`, `engine/handoff.py`), WO-334 Derek Olsen (`scheduler/render.py`, `scheduler/__init__.py`), WO-336 Derek Olsen (`setup_config.py`). Issue numbers for these five are not in the map yet.
+- Not started: WO-330 (still waiting for your rebase note after WO-301 and WO-311..320 merge). WO-335 (same `scheduler/__init__.py` as WO-334). WO-356, WO-357, WO-505, WO-506, WO-516, WO-526, WO-527, WO-528, and WO-529 stay blocked.
+- CODEX-X-010 needs no reply. Nothing here assigns Codex work.
+
+## GROK-031 — builders restarted clean; Codex told our branches
+
+- Date: 2026-11-09
+- From: Helen Ashford (Grok PM)
+- To: Morgan Reyes
+- Reply to: none
+- Status: WIP 5/5; the first code pass committed nothing
+
+- The first pass on WO-331, WO-332, WO-333, WO-334, and WO-336 stopped before a commit. Each worktree is still at f3e50a9. The same five are running again. Allowed paths are unchanged.
+- Tracker sync reached WO-327 (freemyid-pm#247) before the stop. WO-301 (freemyid-pm#218) through WO-327 are In review on the Free My ID delivery project, matching this board's delivered rows. Draft pull requests #78 through #104 cite those issues as text, with no private-issue URL. The sync is continuing from WO-328.
+- Denise posted GROK-X-008. Codex may read runner, handoff, and outbox to describe main. Those files are now open on our branches. We did not assign Codex any work. The note was queued to Nora's channel thread. The first queue attempt hit an unloaded sub-agent and was not used.
+
+## GROK-032 — five code work orders delivered; tracker matches the board
+
+- Date: 2026-11-09
+- From: Helen Ashford (Grok PM)
+- To: Morgan Reyes
+- Reply to: none
+- Status: WIP 0/5; draft pull requests only; `main` was not pushed
+
+- Every Grok row on `GROK_BOARD.md` (WO-301 through WO-360 and WO-501 through WO-532) now has a `FreeMyID/freemyid-pm` issue. Project Status matches the board: delivered is In review, queued is Backlog, blocked is Blocked. `docs/pm/issue_map.json` has the numbers.
+- Draft pull requests #78 through #106 cite `WO-NNN (freemyid-pm#NNN)` in the title. The body does not contain a private-issue URL.
+- Delivered this session, each on its own branch:
+  - WO-331 (freemyid-pm#251) draft PR #113. Full suite 2490 passed, 206 skipped, 2 xfailed.
+  - WO-332 (freemyid-pm#252) draft PR #111. Full suite 2522 passed, 206 skipped, 2 xfailed. `queue_email` still sends at once; only `release_held` waits.
+  - WO-333 (freemyid-pm#253) draft PR #110. Full suite 2494 passed, 206 skipped, 2 xfailed. `flush()` needs a `runner.py` call. That file was not edited.
+  - WO-334 (freemyid-pm#254) draft PR #114. Full suite 2488 passed, 206 skipped, 2 xfailed. A custom data folder still does not reach a Windows task without a `cli.py` change.
+  - WO-336 (freemyid-pm#256) draft PR #112. Full suite 2493 passed, 206 skipped, 2 xfailed.
+- Not started: WO-330 (freemyid-pm#250) still waits for your rebase note. WO-335 (freemyid-pm#255) shares `scheduler/__init__.py` with WO-334. Blocked rows stay blocked.
+- GROK-X-008 is the note to Nora. No work was assigned to Codex.
+
+## GROK-033 — next five started
+
+- Date: 2026-11-09
+- From: Helen Ashford (Grok PM)
+- To: Morgan Reyes
+- Reply to: none
+- Status: WIP 5/5
+
+- Slots freed when WO-331, WO-332, WO-333, WO-334, and WO-336 were delivered. Started the next five whose files do not overlap: WO-337 (freemyid-pm#257), WO-338 (freemyid-pm#258), WO-339 (freemyid-pm#259), WO-340 (freemyid-pm#260), WO-343 (freemyid-pm#263).
+- WO-335 (freemyid-pm#255) stays queued. It edits `scheduler/__init__.py`, and WO-334's change to that file is only on `vendor/wo-334`, not on main. Rebase is not available to this vendor.
+
+## GROK-034 — Codex mail through CODEX-X-017; paths still separate
+
+- Date: 2026-11-10
+- From: Helen Ashford (Grok PM)
+- To: Morgan Reyes
+- Reply to: none
+- Status: WIP 5/5; coordination only
+
+- Denise posted GROK-X-009. It answers CODEX-X-011 through CODEX-X-017. No work was assigned to Codex.
+- Their current writes are `monitor.py`, `exposure_score.py`, `listing_finder.py`, `search_engines.py`, `checklist_state.py`, `checklists.py`, `engine/law_matrix.py`, `nicknames.py`, `docs/dev/EXPOSURE_PIPELINE.md`, and `tests/codex/`. None of those are in this batch.
+- We asked them to keep reading `engine/runner.py` from main. WO-343 is changing that file on `vendor/wo-343` only.
+- WO-337, WO-338, WO-339, WO-340, and WO-343 are still in progress. No new draft pull request yet.
+- The Codex queue is limited until 2026-11-10 12:43 EST, so GROK-X-009 is in the file and not yet in Nora's terminal. A send is set for after that time.
+
+## GROK-035 — WO-337 and WO-340 delivered; WO-341 and WO-342 started
+
+- Date: 2026-11-10
+- From: Helen Ashford (Grok PM)
+- To: Morgan Reyes
+- Reply to: none
+- Status: WIP 5/5; draft pull requests only; `main` was not pushed
+
+- WO-337 (freemyid-pm#257) draft PR #115. Full suite 2492 passed, 206 skipped, 2 xfailed. New tests 13 passed. A failed web form now names the real reason on the to-do. The new sentences are not in the string inventory. The wizard still shows the machine code at `runner.py:698`.
+- WO-340 (freemyid-pm#260) draft PR #116. Full suite 2482 passed, 206 skipped, 2 xfailed. New tests 3 passed. `cli_json.py` did not need a change. `check_url` and listing URLs stay, because the text output shows those links. A search URL from the engine can already contain a name, city, state, and ZIP.
+- Started the next two whose files do not overlap the three still open. WO-341 (freemyid-pm#261) copies `mail.py` from the delivered WO-331 worktree, then adds `classify_reply`. WO-342 (freemyid-pm#262) copies `outbox.py` from the delivered WO-332 worktree, then makes a crash between send and record skip the second send. Rebase is not available, so each pull request will contain the copied predecessor file. Please merge #113 before WO-341, and #111 before WO-342.
+- Still in progress: WO-338, WO-339, WO-343. No work was assigned to Codex.
+
+## GROK-036 — WO-339 and WO-343 delivered; WO-344 and WO-345 started
+
+- Date: 2026-11-10
+- From: Helen Ashford (Grok PM)
+- To: Morgan Reyes
+- Reply to: none
+- Status: WIP 5/5; draft pull requests only; `main` was not pushed
+
+- WO-339 (freemyid-pm#259) draft PR #117. Full suite 2529 passed, 206 skipped, 2 xfailed. New tests 50 passed. A broker gets only fields its listings already show. The removal mailbox can still be sent when the broker needs email, because `Listing.shown_fields` promises that.
+- WO-343 (freemyid-pm#263) draft PR #118. Full suite 2513 passed, 206 skipped, 5 xfailed. New tests 25 passed. Overdue is a calendar date: 45 days, or 15 for a stated shorter deadline, plus any extension. A verified window longer than 45 days still has to finish. The five xfailed marks were already in that worktree.
+- WO-335 stays queued. WO-334's `scheduler/__init__.py` calls the new `cron_lines` signature in `render.py`, and `render.py` is not in WO-335's allowed paths.
+- Started WO-344 (freemyid-pm#264) on `mail_tls.py` and WO-345 (freemyid-pm#265) on `tiers.py`. Still in progress: WO-338, WO-341, WO-342. No work was assigned to Codex.
+
+## GROK-037 — WO-338 delivered; WO-346 started
+
+- Date: 2026-11-10
+- From: Helen Ashford (Grok PM)
+- To: Morgan Reyes
+- Reply to: none
+- Status: WIP 5/5; draft pull requests only; `main` was not pushed
+
+- WO-338 (freemyid-pm#258) draft PR #119. Full suite 2594 passed, 206 skipped, 2 xfailed. New tests 115 passed. More form labels and state options map to the right field. Password, payment, and ID-number controls stay unfilled. `plan_values` and `fill_page` are unchanged.
+- Started WO-346 (freemyid-pm#266) on `engine/plugins.py`. A broken custom submitter should fall back instead of breaking the run. Still in progress: WO-341, WO-342, WO-344, WO-345. No work was assigned to Codex.
+
+## GROK-038 — WO-341 delivered; WO-347 started
+
+- Date: 2026-11-10
+- From: Helen Ashford (Grok PM)
+- To: Morgan Reyes
+- Reply to: none
+- Status: WIP 5/5; draft pull requests only; `main` was not pushed
+
+- WO-341 (freemyid-pm#261) draft PR #120. Full suite 2618 passed, 206 skipped, 5 xfailed. New tests 130 passed. `classify_reply` returns `confirmed`, `denied`, `needs_id`, `needs_more_time`, or `unknown`. Mixed wording is `unknown`. `ReplyScan` is unchanged.
+- `mail.py` was copied from the delivered WO-331 worktree because rebase is not available. Please merge #113 before #120.
+- Started WO-347 (freemyid-pm#267) on `engine/fill_for_me.py`. A timeout, a closed window, and a page that never shows success should each carry its own reason. Still in progress: WO-342, WO-344, WO-345, WO-346. No work was assigned to Codex.
+
+## GROK-039 — WO-344 delivered; WO-348 started
+
+- Date: 2026-11-10
+- From: Helen Ashford (Grok PM)
+- To: Morgan Reyes
+- Reply to: none
+- Status: WIP 5/5; draft pull requests only; `main` was not pushed
+
+- WO-344 (freemyid-pm#264) draft PR #121. Full suite 2522 passed, 206 skipped, 5 xfailed. New tests 34 passed. A mail connection failure maps to one fixed code. Host names, user names, and server banners are not copied. Certificate checks are unchanged: with no pin, the context is still `ssl.create_default_context()`.
+- Started WO-348 (freemyid-pm#268) on `submitters/email.py`. A failed send should say why through the existing result fields. A new result field would stop the work order. Still in progress: WO-342, WO-345, WO-346, WO-347. No work was assigned to Codex.
+
+## GROK-040 — WO-345 delivered; WO-350 started
+
+- Date: 2026-11-10
+- From: Helen Ashford (Grok PM)
+- To: Morgan Reyes
+- Reply to: none
+- Status: WIP 5/5; draft pull requests only; `main` was not pushed
+
+- WO-345 (freemyid-pm#265) draft PR #122. Full suite 2524 passed, 206 skipped, 5 xfailed. New tests 36 passed. `tier_reason` returns `email_ok`, `form_not_verified`, `permissions_block`, `automation_off`, or `no_email_route`. The automatic tier returns no code. `tier_for` is unchanged.
+- Started WO-350 (freemyid-pm#270) as a new file, `scheduler/pathcheck.py`. It does not edit `scheduler/__init__.py`. Still in progress: WO-342, WO-346, WO-347, WO-348. No work was assigned to Codex.
+
+## GROK-041 — WO-342 delivered; WO-349 started
+
+- Date: 2026-11-10
+- From: Helen Ashford (Grok PM)
+- To: Morgan Reyes
+- Reply to: none
+- Status: WIP 5/5; draft pull requests only; `main` was not pushed
+
+- WO-342 (freemyid-pm#262) draft PR #123. Full suite 2493 passed, 206 skipped, 5 xfailed. New tests 5 passed. After the mailer accepts a message, `email_handed` is stored before the SENT row. The next drain records it once and does not send it again. A message that never reached the mailer is still sent.
+- `outbox.py` was copied from the delivered WO-332 worktree. Please merge #111 before #123.
+- A crash after the mailer accepts the message and before `email_handed` is stored still looks like a send that never happened. Closing that gap needs a contract change.
+- Started WO-349 (freemyid-pm#269). It copies `notify.py` from the delivered WO-333 worktree. A missing notifier should stay quiet. Please merge #110 before that pull request. Still in progress: WO-346, WO-347, WO-348, WO-350. No work was assigned to Codex.
+
+## GROK-042 — WO-346 delivered; WO-351 started
+
+- Date: 2026-11-10
+- From: Helen Ashford (Grok PM)
+- To: Morgan Reyes
+- Reply to: none
+- Status: WIP 5/5; draft pull requests only; `main` was not pushed
+
+- WO-346 (freemyid-pm#266) draft PR #124. Full suite 2512 passed, 206 skipped, 5 xfailed. New tests 24 passed. A broken custom submitter falls back to the generic one. A file is imported only when it resolves inside the data folder or the repo.
+- An earlier run hit a pre-existing flake at `tests/test_qa_v03_review.py:256`. Isolated, that test failed without this change. The recorded full run did not hit it.
+- Started WO-351 (freemyid-pm#271). It copies `scheduler/render.py` from the delivered WO-334 worktree, then escapes special characters. It does not edit `scheduler/__init__.py`. Please merge #114 before that pull request. Still in progress: WO-347, WO-348, WO-349, WO-350. No work was assigned to Codex.
+
+## GROK-043 — WO-348 delivered; WO-352 started
+
+- Date: 2026-11-10
+- From: Helen Ashford (Grok PM)
+- To: Morgan Reyes
+- Reply to: none
+- Status: WIP 5/5; draft pull requests only; `main` was not pushed
+
+- WO-348 (freemyid-pm#268) draft PR #125. Full suite 2499 passed, 206 skipped, 5 xfailed. New tests 11 passed. A failed send returns `not sent: <reason>` and a to-do. It does not raise. The recipient address is not in the reason. No new result field.
+- A failed resubmit used to raise `OutboxError`. `runner.py:874` turns that into `escalation_failed`, and `runner.py:858-867` treats any other resubmit result as success. This submitter now returns, so that rung can still advance. `runner.py` was not edited.
+- Started WO-352 (freemyid-pm#272). It copies `setup_config.py` from the delivered WO-336 worktree. Please merge #112 before that pull request. Still in progress: WO-347, WO-349, WO-350, WO-351. No work was assigned to Codex.
+
+## GROK-044 — WO-347 delivered; WO-353 started
+
+- Date: 2026-11-10
+- From: Helen Ashford (Grok PM)
+- To: Morgan Reyes
+- Reply to: none
+- Status: WIP 5/5; draft pull requests only; `main` was not pushed
+
+- WO-347 (freemyid-pm#267) draft PR #126. Full suite 2509 passed, 206 skipped, 5 xfailed. New tests 21 passed. `FillResult.reason` is `timeout`, `window_closed`, or `error_page`. That field already lived in `fill_for_me.py`. A new Assisted card starts with a plain next step. An existing card is reused unchanged.
+- An error page is detected from the address only. HTTP status would need `engine/browser.py`, which was not edited. A success signal still wins when the address looks like an error page.
+- Started WO-353 (freemyid-pm#273). It copies `submitters/web_form.py` from the delivered WO-337 worktree. Please merge #115 before that pull request. Still in progress: WO-349, WO-350, WO-351, WO-352. No work was assigned to Codex.
+
+## GROK-045 — WO-350 delivered; WO-354 started
+
+- Date: 2026-11-10
+- From: Helen Ashford (Grok PM)
+- To: Morgan Reyes
+- Reply to: none
+- Status: WIP 5/5; draft pull requests only; `main` was not pushed
+
+- WO-350 (freemyid-pm#270) draft PR #127. Full suite 2517 passed, 206 skipped, 5 xfailed. New tests 29 passed. `scheduler/pathcheck.py` is new. The caller passes the OS name. An empty problem list means safe to schedule. It is not wired into install. `scheduler/__init__.py` was not edited.
+- Linux refuses an odd run of backslashes before `%` (`cron_backslash_percent`) and does not quote that command. macOS returns no command line because launchd stores an argument array.
+- Started WO-354 (freemyid-pm#274). It copies `engine/filler.py` from the delivered WO-338 worktree. An ambiguous form should be reported, not guessed. Please merge #119 before that pull request. Still in progress: WO-349, WO-351, WO-352, WO-353. No work was assigned to Codex.
+
+## GROK-046 — WO-349 delivered; WO-355 started
+
+- Date: 2026-11-10
+- From: Helen Ashford (Grok PM)
+- To: Morgan Reyes
+- Reply to: none
+- Status: WIP 5/5; draft pull requests only; `main` was not pushed
+
+- WO-349 (freemyid-pm#269) draft PR #128. Full suite 2507 passed, 206 skipped, 5 xfailed. New tests 19 passed. A missing OS notifier does nothing visible and does not raise. One non-zero exit disables OS notices for the rest of the process. Please merge #110 before #128. `handoff.py` was not copied.
+- `desktop-notifier` is no longer called. Dropping it from `pyproject.toml` is in-house work. A missing executable is checked again next time. A non-zero exit latches.
+- `tests/grok/test_gk_notify_throttle.py:188` in the WO-333 worktree still fails against this branch's `engine/handoff.py:41`, which does not wrap `ThrottledNotifier`. That file was left unchanged.
+- Started WO-355 (freemyid-pm#275). It copies `engine/handoff.py` from the delivered WO-333 worktree. Overdue, extension, and not-yet-due text only. No new automatic action. Please merge #110 before that pull request. `runner.py` stays on the WO-343 branch. Still in progress: WO-351, WO-352, WO-353, WO-354. No work was assigned to Codex.
+
+## GROK-047 — checkpoint; builders stopped
+
+- Date: 2026-11-10
+- From: Helen Ashford (Grok PM)
+- To: Morgan Reyes
+- Reply to: none
+- Status: checkpoint; draft pull requests only; `main` was not pushed
+
+- Owner asked for a checkpoint at 09:51 ET. The five open builders were stopped. Nothing new was committed or pushed.
+- Delivered and still draft, newest first: WO-349 (freemyid-pm#269) #128, WO-350 (freemyid-pm#270) #127, WO-347 (freemyid-pm#267) #126, WO-348 (freemyid-pm#268) #125, WO-346 (freemyid-pm#266) #124. Earlier drafts #110 through #123 stay open. Merge #110 before #128, #111 before #123, #112 before the WO-352 pull request, #113 before #120, #114 before the WO-351 pull request, #115 before the WO-353 pull request, and #119 before the WO-354 pull request.
+- WO-351 (freemyid-pm#271) is uncommitted. `scheduler/render.py` is copied from delivered WO-334 and edited. `tests/grok/test_gk_scheduler_render_escape.py` is present. Not reviewed.
+- WO-352 (freemyid-pm#272) is uncommitted. `setup_config.py` is copied from delivered WO-336 and edited. `tests/grok/test_gk_setup_config_helper_safety.py` is present. Not reviewed.
+- WO-353 (freemyid-pm#273), WO-354 (freemyid-pm#274), and WO-355 (freemyid-pm#275) worktrees are still clean. No files were written.
+- WO-335 stays queued. WO-356 and WO-357 stay blocked on a contract change. Codex mail is still CODEX-X-017. GROK-X-009 is written and assigns no work. The wake is waiting until 12:44 ET. No work was assigned to Codex.
