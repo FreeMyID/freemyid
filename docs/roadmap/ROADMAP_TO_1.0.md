@@ -216,6 +216,16 @@ The goal in bar 9 is an engineering problem, not a staffing one. The tracks belo
 
 **Metrics in the release gate (from 0.6).** Person actions per person per quarter; share of brokers with a fully automatic route; median days to a confirmed removal; re-listing catch time; support mails per 100 users that reached a human. Each release must not make any of them worse.
 
+## 7b. Leverage: make obstruction cost more than compliance
+
+Detail in `LEVERAGE.md` and `../EVIDENCE_ENGINE.md`. Lawful and honest only: no evasion, no false data, no load for its own sake, no unauthorized practice of law.
+
+- **0.5 Compliance-evidence engine** (WO-620 to 626): blocked lawful requests become confirmed obstruction records, tamper-evident evidence bundles and pre-filled regulator complaints the person approves.
+- **0.6 Access-then-delete audit** (WO-627/628): a right-to-know request within the legal frequency cap; the export is parsed on the person's own computer; a plain "what they held" report; a cited deletion; proof of deletion afterwards. Genuinely wrong data (mixed-up identities) is corrected with true information.
+- **0.8 Attorney handoff** (WO-629): an opt-in export of a case bundle to an attorney the person chooses. Free My ID never files claims.
+- **1.x Privacy-preserving identity proof** (WO-630): mDL / Verifiable Credentials selective disclosure, plus a machine-readable privacy-request endpoint proposal for regulators.
+- **Rejected:** synthetic "corrections" (false data, harms the person in background checks) and automated mass arbitration (no contract with the people listed; risk of unauthorized practice of law).
+
 ## 7. Cross-cutting tracks
 
 | Track | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 to 1.0 | Lead |
