@@ -465,6 +465,15 @@ def has_display(platform: str | None = None) -> bool:
     return True
 
 
+def background_supported(platform: str | None = None) -> bool:
+    """The off-screen background window runs on scheduled runs only on Windows (the
+    scheduled task runs `run --scheduled`, no --headless), where it is placed off-screen and
+    never takes focus. macOS and Linux would show a real window, so they wait for WO-616
+    (SEC-WO612-2). Attended sessions ("Look for me now") are visible on purpose and run
+    anywhere with a display."""
+    return (platform or sys.platform) == "win32"
+
+
 def profile_dir() -> Path:
     """The app's own browser profile folder (never the person's everyday profile)."""
     from .. import paths
@@ -608,6 +617,8 @@ def run_session(store: Store, profile_id: str, *, mode: Mode = "background",
         fixture = dev_fixture_base()
         if not test_headless and not has_display():
             raise SessionUnavailable("no_display")
+        if mode == "background" and not test_headless and not background_supported():
+            raise SessionUnavailable("no_display")      # would be a visible window here
         bm = BrowserManager(NetPolicy(registry), headless=False,
                             cfg=cfg.model_copy(update={"max_retries": 1}), fixture_base=fixture)
         folder = profile_dir()

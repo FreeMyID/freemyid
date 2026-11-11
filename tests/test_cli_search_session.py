@@ -65,10 +65,13 @@ def test_scan_attended_rejects_conflicting_flags(store, runner, fake_session, ex
 
 
 def test_scheduled_run_does_background_session_before_runner(store, runner, fake_session,
-                                                             fake_run):  # noqa: F811
+                                                             fake_run,  # noqa: F811
+                                                             monkeypatch):
+    """The Windows scheduled task runs `run --scheduled` (no --headless)."""
+    monkeypatch.setattr(ss, "background_supported", lambda platform=None: True)
     p = make_profile()
     store.save_profile(p)
-    res = runner.invoke(_app(), ["run", "--headless", "--scheduled"])
+    res = runner.invoke(_app(), ["run", "--scheduled"])
     assert res.exit_code == 0, res.output
     assert [c["mode"] for c in fake_session["calls"]] == ["background"]
     assert fake_session["calls"][0]["ids"] == [p.id]
@@ -84,13 +87,31 @@ def test_unscheduled_run_and_scan_never_open_session(store, runner, fake_session
 
 
 def test_scheduled_run_survives_session_failure_reason(store, runner, fake_session,
-                                                       fake_run):  # noqa: F811
+                                                       fake_run, monkeypatch):  # noqa: F811
+    monkeypatch.setattr(ss, "background_supported", lambda platform=None: True)
     store.save_profile(make_profile())
     fake_session["result"] = "error"
-    res = runner.invoke(_app(), ["run", "--headless", "--scheduled"])
+    res = runner.invoke(_app(), ["run", "--scheduled"])
     assert res.exit_code == 0, res.output
     assert fake_run["calls"]
 
 
 def test_conftest_stub_means_no_real_window(store) -> None:
     assert ss.has_display() is False      # tests never launch a real browser
+
+
+@pytest.mark.parametrize("supported,args", [
+    (False, ["run", "--scheduled"]),                 # macOS / Linux: wait for WO-616
+    (False, ["run", "--headless", "--scheduled"]),   # launchd / systemd / cron jobs
+    (True, ["run", "--headless", "--scheduled"]),    # --headless: no windows, even on Windows
+])
+def test_scheduled_session_only_on_windows_without_headless(store, runner, fake_session,
+                                                            fake_run, monkeypatch,  # noqa: F811
+                                                            supported, args):
+    """SEC-WO612-2: the background window runs only from the Windows scheduled task."""
+    monkeypatch.setattr(ss, "background_supported", lambda platform=None: supported)
+    store.save_profile(make_profile())
+    res = runner.invoke(_app(), args)
+    assert res.exit_code == 0, res.output
+    assert fake_session["calls"] == []
+    assert fake_run["calls"]

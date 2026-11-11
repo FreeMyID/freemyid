@@ -298,6 +298,7 @@ def test_run_session_builds_a_headed_window(store, monkeypatch, tmp_path) -> Non
     monkeypatch.setattr(ss, "PlaywrightWindow", Spy)
     monkeypatch.setattr(ss, "profile_dir", lambda: tmp_path / "browser_profile")
     monkeypatch.setattr(ss, "has_display", lambda platform=None: True)
+    monkeypatch.setattr(ss, "background_supported", lambda platform=None: True)  # Windows
     p = _person(store)
     rep = ss.run_session(store, p.id, mode="background", registry=_registry(), cfg=CFG,
                          notifier=Notes(), refresh=True)
@@ -471,3 +472,17 @@ def test_unknown_site_is_session_only_after_a_real_visit(store, outcome, takes_o
     assert ss.session_only(store, p.id, broker) is takes_over
     blocked = _registry(devauto="bot_blocked").get("devauto")
     assert ss.session_only(store, p.id, blocked)
+
+
+def test_background_window_is_windows_only_until_wo616(store, monkeypatch) -> None:
+    """SEC-WO612-2: off Windows a background window would be a real visible window, so the
+    engine refuses it; the attended (visible on purpose) session still runs anywhere."""
+    assert ss.background_supported("win32") is True
+    assert ss.background_supported("darwin") is False
+    assert ss.background_supported("linux") is False
+    monkeypatch.setattr(ss, "has_display", lambda platform=None: True)
+    monkeypatch.setattr(ss, "background_supported", lambda platform=None: False)
+    p = _person(store)
+    with pytest.raises(ss.SessionUnavailable, match="no_display"):
+        ss.run_session(store, p.id, mode="background", registry=_registry(), cfg=CFG,
+                       notifier=Notes())

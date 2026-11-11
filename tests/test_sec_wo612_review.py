@@ -72,9 +72,6 @@ def test_session_profile_keeps_no_plaintext_pii(store, monkeypatch, tmp_path) ->
 # --------------------------------------------------------------------------- F2 --headless
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-WO612-2: `run --headless --scheduled` (the "
-                   "macOS launchd / Linux systemd job) still opens a headed window when a "
-                   "display exists")
 def test_headless_scheduled_run_never_opens_a_window(store, monkeypatch,
                                                      fake_run) -> None:  # noqa: F811
     calls: list = []
