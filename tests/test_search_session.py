@@ -338,3 +338,61 @@ def test_rule5_no_code_path_acts_on_a_page_in_the_session() -> None:
     assert body.count("evaluate(") == 1 and "navigator.userAgent" in body
     for bad in (".click(", ".fill(", ".type(", "frame_locator", "add_init_script"):
         assert bad not in body, bad
+
+
+# --------------------------------------------------------------------------- real window
+
+
+def _browser_registry():
+    """devauto (open), devclear (interstitial that clears by itself) and dev404 (no page:
+    an HTTP error). All `bot_blocked` so the plain scan would never try them."""
+    reg = fixture_registry()
+    base = reg.get("devblocked")
+
+    def site(bid: str, prio: int):
+        return base.model_copy(update={
+            "id": bid, "name": f"Dev {bid}", "domains": [f"{bid}.example"],
+            "url": f"https://{bid}.example/", "form": [], "priority": prio,
+            "search_url_pattern": f"https://{bid}.example/name/{{first}}-{{last}}/{{state}}",
+            "opt_out_url": f"https://{bid}.example/optout", "search_access": "bot_blocked"})
+
+    auto = reg.get("devauto").model_copy(update={"search_access": "bot_blocked"})
+    return reg.model_copy(update={"brokers": [auto, site("devclear", 80),
+                                              site("dev404", 70)]})
+
+
+@pytest.mark.browser
+@pytest.mark.parametrize("mode", ["attended", "background"])
+def test_real_window_fixture_mode(store, monkeypatch, tmp_path, mode) -> None:
+    """Acceptance 1 in a real (fixture-mode) browser: 1 read, 1 challenge that resumes once
+    it clears, 1 hand-check; every request stays on the allowlist or is aborted."""
+    from freemyid.engine._dev import fixture_server
+    from freemyid.engine.browser import BrowserManager
+
+    decisions: list[tuple[str, str]] = []
+    real = BrowserManager.route_decision
+
+    def spy(self, url, **kw):
+        what = real(self, url, **kw)
+        decisions.append((urlsplit(url).hostname or url[:12], what))
+        return what
+
+    monkeypatch.setattr(BrowserManager, "route_decision", spy)
+    monkeypatch.setattr(ss, "profile_dir", lambda: tmp_path / "browser_profile")
+    p = _person(store)
+    hooks = Hooks()
+    with fixture_server():
+        rep = ss.run_session(store, p.id, mode=mode, registry=_browser_registry(),
+                             cfg=CFG, hooks=hooks, notifier=Notes(), refresh=True,
+                             test_headless=True, timeout_s=20, grace_s=20, poll_s=0.2)
+    cleared = "read_after_challenge" if mode == "attended" else "self_cleared"
+    assert rep.outcomes == {"devauto": "read", "devclear": cleared, "dev404": "hand_check"}
+    banner = ["devclear"] if mode == "attended" else []       # background: never shown
+    assert hooks.challenges == banner and hooks.cleared == banner
+    status = {e.broker_id: e.status for e in rep.result.entries}
+    assert status["devauto"] == "found"
+    assert [t.resume_token for t in store.list_todos(p.id)] == ["hand_check:dev404"]
+    allowed = {"devauto.example", "devclear.example", "dev404.example"}
+    assert ("tracker.invalid", "block") in decisions
+    assert all(h in allowed for h, what in decisions if what != "block"), decisions
+    assert (tmp_path / "browser_profile").is_dir()            # the app's own profile folder
