@@ -77,9 +77,17 @@
   function showBanner(broker) {
     const host = document.createElement("div");
     const shadow = host.attachShadow({ mode: "closed" });
-    const sheet = new CSSStyleSheet();
-    sheet.replaceSync(CSS);
-    shadow.adoptedStyleSheets = [sheet];
+    try {
+      const sheet = new CSSStyleSheet();
+      sheet.replaceSync(CSS);
+      shadow.adoptedStyleSheets = [sheet];
+    } catch {
+      // Some browsers do not let a content script share a constructed sheet with the page's
+      // document. A style element inside the closed shadow root does the same job.
+      const style = document.createElement("style");
+      style.textContent = CSS;
+      shadow.append(style);
+    }
 
     const card = make("section", "card");
     card.setAttribute("role", "region");

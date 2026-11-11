@@ -9,7 +9,7 @@ import { api } from "./browser.js";
 export const DISMISS_DAYS = 30;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const KEY_BANNER = "bannerEnabled";
+const KEY_BANNER = "showBanner";
 const KEY_DISMISSED = "dismissedUntil";
 
 /** @returns {Promise<boolean>} true unless the person turned the banner off */
