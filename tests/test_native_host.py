@@ -244,11 +244,13 @@ def test_serve_stops_on_a_broken_stream_after_answering_what_came_before() -> No
 
 def test_real_process_speaks_only_frames_on_stdout() -> None:
     """Run it the way a browser does: bytes in on stdin, frames out on stdout, nothing else."""
-    env = {**os.environ, "PYTHONPATH": str(ROOT / "src")}
+    dev_id = "abcdefghijklmnop" * 2
+    env = {**os.environ, "PYTHONPATH": str(ROOT / "src"), native_host.EXTENSION_IDS_ENV: dev_id}
     stdin = (_frame(_req("ping")) + _frame(_req("status"))
              + _frame(_req("site_check", hostname="www.spokeo.com"))
              + _frame(_req("start_removal", broker_id="spokeo")))
-    done = subprocess.run([sys.executable, "-m", "freemyid.native_host"], input=stdin,
+    done = subprocess.run([sys.executable, "-m", "freemyid.native_host",
+                           f"chrome-extension://{dev_id}/"], input=stdin,
                           capture_output=True, env=env, timeout=60, check=False)
     assert done.returncode == 0
     assert done.stderr == b""                                   # nothing logged about messages
@@ -269,6 +271,10 @@ def test_host_module_has_no_network_file_or_process_imports() -> None:
             imported.add(node.module or "")
     assert imported == {"__future__", "json", "re", "struct", "sys", "collections.abc", "typing",
                         "freemyid", "msvcrt", "os"}
+    # os is there for os.environ (the developer id list) and the Windows binary-mode switch only
+    os_uses = {node.attr for node in ast.walk(tree) if isinstance(node, ast.Attribute)
+               and isinstance(node.value, ast.Name) and node.value.id == "os"}
+    assert os_uses == {"environ", "O_BINARY"}
     names = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
     assert not names & {"open", "print", "logging", "eval", "exec"}
 

@@ -9,7 +9,9 @@ from __future__ import annotations
 import importlib.util
 import io
 import json
+import os
 import struct
+import subprocess
 import sys
 from pathlib import Path
 
@@ -237,6 +239,73 @@ def test_serve_stops_quietly_when_the_browser_closes_the_pipe() -> None:
 
     stdin = io.BytesIO(native_host.encode_message(_req("ping")))
     assert native_host.serve(stdin, ClosedPipe()) == 1
+
+
+# ------------------------------------------------------------- native host: who is calling
+
+_DEV_ID = "abcdefghijklmnop" * 2
+_OTHER_ID = "ponmlkjihgfedcba" * 2
+
+
+@pytest.mark.parametrize(("args", "allowed"), [
+    ([f"chrome-extension://{_DEV_ID}/"], True),
+    ([f"chrome-extension://{_DEV_ID}/", "--parent-window=1234"], True),          # Windows
+    (["/home/someone/.mozilla/native-messaging-hosts/org.freemyid.host.json",
+      native_host.FIREFOX_EXTENSION_ID], True),
+    ([], False),                                                                 # run by hand
+    ([f"chrome-extension://{_OTHER_ID}/"], False),
+    ([f"chrome-extension://{_DEV_ID}"], False),                                  # no slash
+    ([f"chrome-extension://{_DEV_ID}/\n"], False),
+    ([f"chrome-extension://{_DEV_ID}/extra"], False),
+    ([f"chrome-extension://{_OTHER_ID}/", f"chrome-extension://{_DEV_ID}/"], False),
+    ([f"chrome-extension://{_OTHER_ID}/", native_host.FIREFOX_EXTENSION_ID], False),
+    ([f"https://{_DEV_ID}/"], False),
+    ([native_host.FIREFOX_EXTENSION_ID], False),                                 # wrong place
+    (["/some/manifest.json", "other@example.test"], False),
+    (["/some/manifest.json", native_host.FIREFOX_EXTENSION_ID + "\n"], False),
+])
+def test_only_our_extension_may_start_the_host(args: list[str], allowed: bool) -> None:
+    assert native_host.caller_allowed(args, (_DEV_ID,)) is allowed
+
+
+def test_no_chrome_extension_is_allowed_until_an_id_is_configured() -> None:
+    assert native_host.CHROME_EXTENSION_IDS == ()      # filled in when the store ids exist
+    assert native_host.allowed_chrome_ids({}) == ()
+    assert native_host.caller_allowed([f"chrome-extension://{_DEV_ID}/"], ()) is False
+    env = {native_host.EXTENSION_IDS_ENV: f" {_DEV_ID} ,not-an-id,{_OTHER_ID}\n,*,"}
+    assert native_host.allowed_chrome_ids(env) == (_DEV_ID, _OTHER_ID)
+
+
+@pytest.mark.parametrize("args", [
+    [],
+    [f"chrome-extension://{_OTHER_ID}/"],
+    ["/tmp/Jane-Q-Testperson/manifest.json", "other@example.test"],
+])
+def test_a_refused_caller_gets_no_answer_and_is_not_quoted(args: list[str]) -> None:
+    """The real process: exit code 2, nothing on stdout, a fixed sentence on stderr."""
+    env = {**os.environ, "PYTHONPATH": str(ROOT / "src"), native_host.EXTENSION_IDS_ENV: _DEV_ID}
+    done = subprocess.run([sys.executable, "-m", "freemyid.native_host", *args],
+                          input=native_host.encode_message(_req("ping")),
+                          capture_output=True, env=env, timeout=60, check=False)
+    assert done.returncode == native_host.EXIT_CALLER_REFUSED == 2
+    assert done.stdout == b""
+    assert done.stderr.decode().strip() == ("freemyid native host: not started by the Free My ID "
+                                            "browser extension, so it will not answer.")
+
+
+def test_main_answers_firefox_and_a_configured_chrome_id(monkeypatch) -> None:
+    class Pipe:
+        def __init__(self, data: bytes) -> None:
+            self.buffer = io.BytesIO(data)
+
+    for args in ([f"chrome-extension://{_DEV_ID}/"],
+                 ["/some/manifest.json", native_host.FIREFOX_EXTENSION_ID]):
+        stdout = Pipe(b"")
+        monkeypatch.setattr(sys, "stdin", Pipe(native_host.encode_message(_req("ping"))))
+        monkeypatch.setattr(sys, "stdout", stdout)
+        monkeypatch.setenv(native_host.EXTENSION_IDS_ENV, _DEV_ID)
+        assert native_host.main(args) == 0
+        assert _replies(stdout.buffer.getvalue())[0]["pong"] is True
 
 
 # ------------------------------------------------------------------------------ build script

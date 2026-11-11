@@ -19,15 +19,22 @@ No message carries personal details, and unknown fields are refused, so none can
 Nothing about a message is logged. ``site_check`` and ``start_removal`` are stubs: wiring them to
 the store and the engine needs the change requests in docs/handoff/wizard-packager.md.
 
+The browser says who is calling on the command line, and the host checks it before it reads a
+single byte: Chrome and Edge pass ``chrome-extension://<id>/`` as the first argument, Firefox
+passes the host manifest's path and then the add-on id. A caller that is not on the list gets
+no answer at all (exit code 2). The browser already enforces the host manifest's own list; this
+is a second check that does not depend on that file.
+
 This module opens no files, no database and no network connection.
 """
 from __future__ import annotations
 
 import json
+import os
 import re
 import struct
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any, BinaryIO
 
 from freemyid import __version__
@@ -35,6 +42,13 @@ from freemyid import __version__
 HOST_NAME = "org.freemyid.host"
 PROTOCOL_VERSION = 1
 FIREFOX_EXTENSION_ID = "extension@freemyid.org"
+# Chrome Web Store and Edge Add-ons ids of the published extension. Empty until it is published
+# (docs/EXTENSION.md section 11): put the store ids here and in the host manifest together.
+CHROME_EXTENSION_IDS: tuple[str, ...] = ()
+# Developers: the id of an unpacked extension changes from machine to machine, so the launcher
+# script may name it here (comma separated). See docs/EXTENSION.md section 9.
+EXTENSION_IDS_ENV = "FREEMYID_EXTENSION_IDS"
+EXIT_CALLER_REFUSED = 2
 
 # The extension's messages are tiny. Anything bigger is not ours.
 MAX_REQUEST_BYTES = 64 * 1024
@@ -297,13 +311,42 @@ def host_manifest(browser: str, host_path: str,
     return manifest
 
 
+# ------------------------------------------------------------------------------------- caller
+
+def allowed_chrome_ids(environ: Mapping[str, str]) -> tuple[str, ...]:
+    """The built-in store ids plus any developer ids from the environment. Bad ids are dropped."""
+    extra = environ.get(EXTENSION_IDS_ENV, "").split(",")
+    return tuple(i for i in (*CHROME_EXTENSION_IDS, *(e.strip() for e in extra))
+                 if _CHROME_EXTENSION_ID.fullmatch(i))
+
+
+def caller_allowed(args: Sequence[str], chrome_ids: Sequence[str]) -> bool:
+    """Was this process started by our extension? ``args`` is the command line after the program.
+
+    Chrome and Edge: the first argument is the caller's origin, ``chrome-extension://<id>/``
+    (on Windows a ``--parent-window=...`` argument follows). Firefox: the first argument is the
+    path of the host manifest and the second is the add-on id. No arguments (started by hand or
+    by another program) is refused.
+    """
+    if not args:
+        return False
+    if args[0].startswith("chrome-extension:"):
+        return any(args[0] == f"chrome-extension://{i}/" for i in chrome_ids)
+    return len(args) >= 2 and args[1] == FIREFOX_EXTENSION_ID
+
+
 # --------------------------------------------------------------------------------------- main
 
-def main() -> int:
+def main(argv: Sequence[str] | None = None) -> int:
+    args = sys.argv[1:] if argv is None else argv
+    if not caller_allowed(args, allowed_chrome_ids(os.environ)):
+        # A fixed sentence: what was on the command line is not repeated.
+        sys.stderr.write("freemyid native host: not started by the Free My ID browser "
+                         "extension, so it will not answer.\n")
+        return EXIT_CALLER_REFUSED
     stdin, stdout = sys.stdin.buffer, sys.stdout.buffer
     if sys.platform == "win32":   # pragma: no cover - Windows only
         import msvcrt
-        import os
         msvcrt.setmode(stdin.fileno(), os.O_BINARY)
         msvcrt.setmode(stdout.fileno(), os.O_BINARY)
     # stdout belongs to the protocol: a stray print() anywhere would corrupt it.
