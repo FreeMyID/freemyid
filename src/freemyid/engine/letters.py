@@ -11,6 +11,7 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
+from unicodedata import category
 
 from jinja2 import FileSystemLoader, StrictUndefined
 from jinja2.sandbox import SandboxedEnvironment
@@ -29,6 +30,31 @@ _env = SandboxedEnvironment(loader=FileSystemLoader(str(TEMPLATES_DIR)),
                             trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
 
 
+def _safe_text(value: str, *, keep_newlines: bool = False) -> str:
+    """Replace control and Unicode line-separator characters before template output."""
+    if keep_newlines:
+        value = value.replace("\r\n", "\n")
+    safe: list[str] = []
+    for char in value:
+        if category(char) in {"Cc", "Cf", "Zl", "Zp"}:
+            safe.append("\n" if keep_newlines and char == "\n" else " ")
+        else:
+            safe.append(char)
+    return "".join(safe)
+
+
+def _safe_value(value: Any, *, keep_newlines: bool = False) -> Any:
+    if isinstance(value, str):
+        return _safe_text(value, keep_newlines=keep_newlines)
+    if isinstance(value, list):
+        return [_safe_value(item) for item in value]
+    if isinstance(value, tuple):
+        return tuple(_safe_value(item) for item in value)
+    if isinstance(value, dict):
+        return {key: _safe_value(item) for key, item in value.items()}
+    return value
+
+
 def _resolve(template: str) -> str:
     name = template.removesuffix(".j2").removesuffix(".txt")
     name = _ALIASES.get(name, name)
@@ -41,15 +67,21 @@ def render(template: str, **vars: Any) -> str:
     """Render a named template. Missing variables raise (StrictUndefined)."""
     defaults: dict[str, Any] = {
         "listing_urls": [], "city": None, "state": None, "age": None, "phone": None,
+        "broker_phone": None,
         "statute_name": None, "citation": None, "response_days": None,
         "original_request_date": None, "response_deadline": None, "reference": None,
         "reply_requested_days": None, "reply_requested_by": None,
         "broker_postal": None, "complaint_urls": [], "today": date.today().isoformat(),
-        "is_agent": False, "agent_name": None, "street_address": None, "zip": None,
+        "is_agent": False, "is_follow_up": False, "agent_name": None,
+        "street_address": None, "zip": None,
         "extension_days": None, "verification_rules": [], "state_name": None,
     }
     defaults.update(vars)
-    return _env.get_template(_resolve(template)).render(**defaults)
+    safe_defaults = {
+        key: _safe_value(value, keep_newlines=key == "broker_postal")
+        for key, value in defaults.items()
+    }
+    return _env.get_template(_resolve(template)).render(**safe_defaults)
 
 
 # Plain-words verification rules, per state, quoted in a letter ONLY when that state's law
@@ -81,7 +113,12 @@ AGENT_RULES: dict[str, str] = {
 def split_subject(text: str) -> tuple[str, str]:
     first, _, rest = text.partition("\n")
     if first.lower().startswith("subject:"):
-        return first.split(":", 1)[1].strip(), rest.lstrip("\n")
+        subject = _safe_text(first.split(":", 1)[1]).strip()
+        # Python's email headers decode RFC 2047 encoded words on assignment, so a value
+        # like "=?utf-8?q?=0D=0ABcc:...?=" would turn into a different Subject than the
+        # one the person approved. Break the "=?" opener so the subject stays literal.
+        subject = subject.replace("=?", "= ?")
+        return subject, rest.lstrip("\n")
     return "Personal data deletion request", text
 
 
@@ -141,6 +178,7 @@ def letter_vars(profile: Profile, broker: Broker, listings: list[Listing],
         "name": profile.name.full if ProfileField.MIDDLE_NAME in shown
         else f"{profile.name.first} {profile.name.last}",
         "broker_name": broker.name,
+        "broker_phone": broker.phone,
         "listing_urls": [li.url for li in listings],
         "mailbox": profile.mailbox.address if profile.mailbox else None,
         "today": today.isoformat(),

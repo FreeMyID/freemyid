@@ -78,11 +78,6 @@ def test_cli_drops_malformed_previous_entry_values_from_new_report(
     assert requester.calls == [("GET_BODY", OPT)]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=("SEC-125: malformed top-level generated_at is copied to the new report; "
-            "src/freemyid/monitor.py:379"),
-)
 def test_cli_drops_huge_previous_generated_at_instead_of_copying_it(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
@@ -97,3 +92,78 @@ def test_cli_drops_huge_previous_generated_at_instead_of_copying_it(
     assert result.exit_code == 0, result.output
     report = json.loads(result.stdout)
     assert report["previous_generated_at"] is None
+
+
+@pytest.mark.parametrize(
+    "generated_at",
+    [
+        pytest.param(None, id="null"),
+        pytest.param(True, id="boolean"),
+        pytest.param(42, id="number"),
+        pytest.param(["TIMESTAMP_LIST_MARKER"], id="list"),
+        pytest.param({"marker": "TIMESTAMP_OBJECT_MARKER"}, id="object"),
+        pytest.param("", id="empty"),
+        pytest.param("TIMESTAMP_TEXT_MARKER", id="not-a-date"),
+        pytest.param("2026-11-08", id="date-only"),
+        pytest.param("2026-02-30T12:00:00+00:00", id="impossible-calendar-date"),
+        pytest.param("2026-11-08T25:00:00+00:00", id="impossible-time"),
+        pytest.param("2026-11-08T12:00:00+25:00", id="impossible-offset"),
+        pytest.param("2026-11-08X12:00:00", id="arbitrary-separator"),
+        pytest.param("2026-11-08\n12:00:00", id="newline-separator"),
+        pytest.param("2026-11-08T12:00:00+00:00\n", id="trailing-newline"),
+        pytest.param(" 2026-11-08T12:00:00+00:00", id="leading-space"),
+        pytest.param("2026-11-08T12:00:00.123456789012345+05:30", id="41-characters"),
+        pytest.param("TIMESTAMP_PADDING_MARKER" + "x" * 1_000_000, id="one-megabyte"),
+    ],
+)
+def test_cli_drops_invalid_previous_timestamp_but_keeps_broker_comparison(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, generated_at: Any
+) -> None:
+    contents = json.dumps({
+        "schema": "monitor/1",
+        "generated_at": generated_at,
+        "unused": "UNUSED_TOP_LEVEL_MARKER",
+        "brokers": [{"broker_id": "devauto", "health": "blocked", "weeks_bad": 3}],
+    })
+
+    result, requester = _invoke_with_previous(monkeypatch, tmp_path, contents)
+
+    assert result.exit_code == 0, result.output
+    report = json.loads(result.stdout)
+    assert report["previous_generated_at"] is None
+    assert report["brokers"][0]["previous_health"] == "blocked"
+    assert report["brokers"][0]["weeks_bad"] == 4
+    assert "TIMESTAMP_" not in result.stdout
+    assert "UNUSED_TOP_LEVEL_MARKER" not in result.stdout
+    assert set(report) == {
+        "schema", "generated_at", "previous_generated_at", "counts", "changed",
+        "demote_suggested", "new_brokers", "removed_brokers", "brokers",
+    }
+    assert requester.calls == [("GET_BODY", OPT)]
+
+
+@pytest.mark.parametrize(
+    "generated_at",
+    [
+        "2026-11-08T12:00:00+00:00",
+        "2026-11-08T12:00:00Z",
+        "2026-11-08T12:00:00+05:30",
+        "2026-11-08T12:00:00-03:30",
+        "2026-11-08T12:00:00.123456+00:00",
+        "2026-11-08T12:00:00.12345678901234+05:30",
+        "2026-11-08T12:00:00",
+        "2026-11-08T12:00",
+        "2026-11-08t12:00:00",
+        "2026-11-08 12:00:00",
+    ],
+)
+def test_cli_preserves_valid_previous_date_time_text(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, generated_at: str
+) -> None:
+    contents = json.dumps({"schema": "monitor/1", "generated_at": generated_at,
+                           "brokers": []})
+
+    result, _requester = _invoke_with_previous(monkeypatch, tmp_path, contents)
+
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["previous_generated_at"] == generated_at

@@ -115,13 +115,24 @@ def _cron_printf(value: str) -> str:
     return f"\"$(printf '{octets}')\""
 
 
+# & < > stay on saxutils, so the existing &amp; &lt; &gt; bytes do not change.
+# Quotes and code points above ASCII become references the XML parser turns back.
+_XML_QUOTES = {'"': "&quot;", "'": "&apos;"}
+
+
+def _xml_text(value: str) -> str:
+    escaped = xesc(value, _XML_QUOTES)
+    return "".join(char if ord(char) < 128 else f"&#{ord(char)};" for char in escaped)
+
+
 def launchd_plist(cmd: list[str], log_path: str, env: dict[str, str] | None = None) -> str:
     envx = ""
     if env:
-        items = "".join(f"    <key>{xesc(k)}</key>\n    <string>{xesc(v)}</string>\n"
-                        for k, v in env.items())
+        items = "".join(
+            f"    <key>{_xml_text(k)}</key>\n    <string>{_xml_text(v)}</string>\n"
+            for k, v in env.items())
         envx = f"  <key>EnvironmentVariables</key>\n  <dict>\n{items}  </dict>\n"
-    args = "".join(f"    <string>{xesc(c)}</string>\n" for c in cmd)
+    args = "".join(f"    <string>{_xml_text(c)}</string>\n" for c in cmd)
     # RunAtLoad: runs when loaded (at install and at each login), so a check missed
     # while the Mac was switched off still happens.
     # The job uses --scheduled, so that login run only checks sites that are due.
@@ -135,8 +146,8 @@ def launchd_plist(cmd: list[str], log_path: str, env: dict[str, str] | None = No
             "    <key>Minute</key>\n    <integer>0</integer>\n  </dict>\n"
             "  <key>RunAtLoad</key>\n  <true/>\n"
             "  <key>ProcessType</key>\n  <string>Background</string>\n"
-            f"  <key>StandardErrorPath</key>\n  <string>{xesc(log_path)}</string>\n"
-            f"  <key>StandardOutPath</key>\n  <string>{xesc(log_path)}</string>\n"
+            f"  <key>StandardErrorPath</key>\n  <string>{_xml_text(log_path)}</string>\n"
+            f"  <key>StandardOutPath</key>\n  <string>{_xml_text(log_path)}</string>\n"
             "</dict>\n</plist>\n")
 
 
@@ -165,5 +176,6 @@ def windows_task_xml(cmd: list[str], hour: int = DAILY_HOUR) -> str:
             "    <Enabled>true</Enabled>\n"
             "    <ExecutionTimeLimit>PT2H</ExecutionTimeLimit>\n"
             "    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>\n  </Settings>\n"
-            f"  <Actions Context=\"Author\">\n    <Exec>\n      <Command>{xesc(exe)}</Command>\n"
-            f"      <Arguments>{xesc(args)}</Arguments>\n    </Exec>\n  </Actions>\n</Task>\n")
+            f"  <Actions Context=\"Author\">\n    <Exec>\n"
+            f"      <Command>{_xml_text(exe)}</Command>\n"
+            f"      <Arguments>{_xml_text(args)}</Arguments>\n    </Exec>\n  </Actions>\n</Task>\n")

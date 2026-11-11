@@ -110,7 +110,7 @@ class FindResult:
     never log it (it usually contains the person's name)."""
     status: Status
     reason: str          # this_is_me | timeout | window_closed | user_cant_find | blocked |
-    #                      browser_unavailable | error:<Type> | consent | unknown_broker | ...
+    #                      browser_unavailable | page_error | consent | unknown_broker | ...
     broker_id: str
     listing_id: str | None = None
     listing_url: str | None = None
@@ -402,14 +402,19 @@ async def find_listing(store: Store, profile_id: str, broker_id: str, *, timeout
             return fallback("browser_unavailable")
         try:
             return await _drive(store, profile, broker, bm, bctx, res, timeout_s, on_ready,
-                                close_delay_s, fallback)
+                                close_delay_s, fallback, headed=headed)
         except BlockedByPolicy:
             return fallback("blocked")
         except Exception as e:  # noqa: BLE001 - window closed mid-call, odd page, ...
             if not [p for p in bctx.pages if not p.is_closed()]:
                 return fallback("window_closed")
-            log.warning("listing_finder failed: %s", type(e).__name__)
-            return fallback(f"error:{type(e).__name__}")
+            from playwright.async_api import TimeoutError as PageTimeoutError
+            if isinstance(e, (TimeoutError, PageTimeoutError)):
+                return fallback("timeout")
+            if isinstance(e, UnicodeError):
+                return fallback("invalid_encoding")
+            log.warning("listing_finder: page operation failed")
+            return fallback("page_error")
     finally:
         if bctx is not None:
             try:
@@ -417,13 +422,19 @@ async def find_listing(store: Store, profile_id: str, broker_id: str, *, timeout
             except Exception as e:  # noqa: BLE001
                 log.debug("closing finder window failed: %s", type(e).__name__)
         if own:
-            await bm.close()
+            try:
+                await bm.close()
+            except Exception:  # noqa: BLE001 - cleanup must not replace the outcome
+                log.debug("closing finder browser failed")
+
+
+_HUMAN_PASSABLE = frozenset({403, 429, 503})
 
 
 async def _drive(store: Store, profile: Profile, broker: Broker, bm: BrowserManager,
                  bctx: BrowserContext, res: FindResult, timeout_s: int,
                  on_ready: Callable[[Page], Awaitable[Any]] | None, close_delay_s: float,
-                 fallback: Callable[[str], FindResult]) -> FindResult:
+                 fallback: Callable[[str], FindResult], *, headed: bool = True) -> FindResult:
     from ..submitters.web_form import search_url
     clicks: asyncio.Queue[tuple[str, Any]] = asyncio.Queue()
     binding = "__freemyid_" + secrets.token_hex(8)
@@ -443,7 +454,25 @@ async def _drive(store: Store, profile: Profile, broker: Broker, bm: BrowserMana
 
     surl = search_url(broker, profile)
     start = surl or str(broker.search_page_url or broker.url)
-    await bm.goto(page, start, check_challenge=False)
+    response = await bm.goto(page, start, check_challenge=False)
+    if response is not None:
+        # SEC-36: 403/429/503 is how robot checks and "slow down" pages arrive. In a
+        # visible window the person may get past it themselves (we never solve it), so
+        # only a headless window or another error status falls back here.
+        human_can_pass = headed and response.status in _HUMAN_PASSABLE
+        if response.status >= 400 and not human_can_pass:
+            # Only a fixed code reaches the result/event, never server text or a URL.
+            reason = {403: "http_403", 429: "http_429"}.get(response.status, "http_error")
+            return fallback(reason)
+        try:
+            # Raw bytes: Response.text() decodes as strict UTF-8 and would reject a
+            # legacy-encoded page the browser shows fine.
+            body = await response.body()
+        except Exception:  # noqa: BLE001 - body not kept by the browser: page is still open
+            body = None
+            log.debug("listing_finder: response body unavailable")
+        if body is not None and not body.strip():
+            return fallback("empty_body")
     lines = [MSG_FIND]
     if surl:
         res.searched_with = "search_url"
