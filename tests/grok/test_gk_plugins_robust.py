@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import logging
 import socket
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -93,6 +94,25 @@ def plugin_dir(freemyid_env: Path) -> Path:
     return folder
 
 
+@pytest.fixture
+def named_pkg(plugin_dir: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
+    """Make `freemyid.submitters.fakeplug` importable from the tmp data folder.
+
+    Stands in for an installed per-broker module; the loader itself never adds the
+    data folder to the package path."""
+    import importlib
+    import sys
+
+    import freemyid.submitters as pkg
+
+    monkeypatch.setattr(pkg, "__path__", [*pkg.__path__, str(plugin_dir)])
+    monkeypatch.delitem(sys.modules, "freemyid.submitters.fakeplug", raising=False)
+    importlib.invalidate_caches()
+    yield plugin_dir
+    sys.modules.pop("freemyid.submitters.fakeplug", None)
+    importlib.invalidate_caches()
+
+
 def _broker(**over: object) -> Broker:
     data: dict[str, object] = {
         "id": "fakeb",
@@ -136,8 +156,9 @@ def test_sockets_cannot_connect() -> None:
     ],
 )
 def test_broken_plugin_falls_back(
-    kind: str, body: str, reason: str, plugin_dir: Path,
+    kind: str, body: str, reason: str, named_pkg: Path,
 ) -> None:
+    plugin_dir = named_pkg
     path = _write(plugin_dir, body)
     if kind == "named":
         broker = _broker(submitter="freemyid.submitters.fakeplug:Submitter")
@@ -155,7 +176,8 @@ def test_broken_plugin_falls_back(
     assert not (plugin_dir / "other.ran").exists()
 
 
-def test_valid_plugin_is_used(plugin_dir: Path) -> None:
+def test_valid_plugin_is_used(named_pkg: Path) -> None:
+    plugin_dir = named_pkg
     _write(plugin_dir, _VALID)
     broker = _broker(submitter="freemyid.submitters.fakeplug:Submitter")
     loaded = plugins.load_submitter(broker, Tier.AUTOMATIC)
@@ -163,9 +185,8 @@ def test_valid_plugin_is_used(plugin_dir: Path) -> None:
     custom = plugins.custom_submitter(broker)
     assert loaded.reason is None
     assert getattr(loaded.submitter, "marker", None) == "gk346"
-    assert type(loaded.submitter).__module__.startswith("_freemyid_plugin_")
+    assert type(loaded.submitter).__module__ == "freemyid.submitters.fakeplug"
     assert getattr(got, "marker", None) == "gk346"
-    assert type(got).__module__.startswith("_freemyid_plugin_")
     assert custom is not None
     assert getattr(custom, "marker", None) == "gk346"
     assert type(got) is not _generic(Tier.AUTOMATIC)
@@ -179,6 +200,7 @@ def test_explicit_path_loads_the_same_plugin(plugin_dir: Path) -> None:
     loaded = plugins.load_submitter(_broker(), Tier.AUTOMATIC, plugin_path=path)
     assert loaded.reason is None
     assert getattr(loaded.submitter, "marker", None) == "gk346"
+    assert type(loaded.submitter).__module__.startswith("_freemyid_plugin_")
     assert not (plugin_dir / "called.txt").exists()
     assert not (plugin_dir / "other.ran").exists()
 
@@ -263,7 +285,8 @@ def test_no_custom_has_no_reason() -> None:
     assert type(plugins.get_submitter(broker, Tier.AUTOMATIC)) is _generic(Tier.AUTOMATIC)
 
 
-def test_log_is_codes_only(plugin_dir: Path, caplog: pytest.LogCaptureFixture) -> None:
+def test_log_is_codes_only(named_pkg: Path, caplog: pytest.LogCaptureFixture) -> None:
+    plugin_dir = named_pkg
     caplog.set_level(logging.WARNING)
     _write(plugin_dir, _IMPORT)
     broker = _broker(submitter="freemyid.submitters.fakeplug:Submitter")
@@ -321,3 +344,93 @@ def test_named_package_missing_class_falls_back() -> None:
     assert loaded.reason == plugins.MISSING_CLASS
     assert type(loaded.submitter) is _generic(Tier.AUTOMATIC)
     assert plugins.custom_submitter(broker) is None
+
+
+# ---------------------------------------------------------------- in-house review fixes
+
+_EXIT = "import sys\nsys.exit(3)\n"
+
+_EXIT_CONSTRUCT = """\
+import sys
+
+from freemyid.interfaces import Submitter as _Base
+
+
+class Submitter(_Base):
+    def __init__(self) -> None:
+        sys.exit(4)
+
+    async def search(self, ctx):
+        return []
+
+    async def submit(self, ctx, listings):
+        return None
+"""
+
+
+def test_data_folder_file_is_not_auto_loaded_for_a_named_module(plugin_dir: Path) -> None:
+    """Review of PR #124: a registry `submitter` string never runs a file from the
+    user's data folder. v1 ships no per-broker modules (PLAN_V1 D1)."""
+    _write(plugin_dir, _RAN, name="fakeplug.py")
+    broker = _broker(submitter="freemyid.submitters.fakeplug:Submitter")
+    loaded = plugins.load_submitter(broker, Tier.AUTOMATIC)
+    assert loaded.reason == plugins.IMPORT_ERROR
+    assert type(loaded.submitter) is _generic(Tier.AUTOMATIC)
+    assert plugins.custom_submitter(broker) is None
+    assert not (plugin_dir / "plugin.ran").exists()
+
+
+@pytest.mark.parametrize(("body", "reason"), [
+    pytest.param(_EXIT, plugins.IMPORT_ERROR, id="exit_at_import"),
+    pytest.param(_EXIT_CONSTRUCT, plugins.CONSTRUCT_ERROR, id="exit_in_constructor"),
+])
+def test_plugin_sys_exit_falls_back(plugin_dir: Path, body: str, reason: str) -> None:
+    """CodeRabbit #105: SystemExit from a plugin must not end the run either."""
+    path = _write(plugin_dir, body)
+    loaded = plugins.load_submitter(_broker(), Tier.AUTOMATIC, plugin_path=path)
+    assert loaded.reason == reason
+    assert type(loaded.submitter) is _generic(Tier.AUTOMATIC)
+
+
+def test_entry_point_sys_exit_falls_back(monkeypatch: pytest.MonkeyPatch) -> None:
+    class Quits:
+        name = "fakeb"
+
+        def load(self) -> object:
+            raise SystemExit(5)
+
+    monkeypatch.setattr(plugins, "entry_points", lambda group: [Quits()])
+    loaded = plugins.load_submitter(_broker(), Tier.AUTOMATIC)
+    assert loaded.reason == plugins.IMPORT_ERROR
+    assert plugins.custom_submitter(_broker()) is None
+
+
+def test_checked_path_is_the_loaded_path(
+    plugin_dir: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """CodeRabbit #129: the resolved path is checked once and that same path is loaded."""
+    import importlib.util
+
+    path = _write(plugin_dir, _VALID)
+    (plugin_dir / "sub").mkdir()
+    sneaky = plugin_dir / "sub" / ".." / "fakeplug.py"
+    assert sneaky != path.resolve()
+    checked: list[Path] = []
+    loaded_from: list[Path] = []
+    real_allowed = plugins.plugin_path_allowed
+    real_spec = importlib.util.spec_from_file_location
+
+    def allowed(p: Path) -> bool:
+        checked.append(p)
+        return real_allowed(p)
+
+    def spec(name: str, location: object, *a: object, **k: object) -> object:
+        loaded_from.append(Path(str(location)))
+        return real_spec(name, location, *a, **k)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(plugins, "plugin_path_allowed", allowed)
+    monkeypatch.setattr(importlib.util, "spec_from_file_location", spec)
+    loaded = plugins.load_submitter(_broker(), Tier.AUTOMATIC, plugin_path=sneaky)
+    assert loaded.reason is None
+    assert loaded_from == [path.resolve()]
+    assert checked[-1] == path.resolve()

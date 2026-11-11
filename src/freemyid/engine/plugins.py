@@ -8,8 +8,11 @@
 
 A broken custom submitter falls back to the generic one. `load_submitter` records a
 reason code (`import_error`, `missing_class`, `construct_error`, `wrong_type`,
-`path_refused`) and does not raise. Files load only from the data folder or the repo.
-A missing `freemyid.submitters.<leaf>` module may be supplied by `<data>/plugins/<leaf>.py`.
+`path_refused`) and does not raise; that includes SystemExit from plugin code.
+Scope of the path rule: an explicit `plugin_path` file, and the file behind a
+`freemyid.submitters.*` module, must resolve inside the data folder, the repo or the
+submitters package. Entry points (step 2) are installed packages and are not path-checked.
+A registry `submitter` string never makes Free My ID run a file from the data folder.
 
 v1 ships no per-broker modules (PLAN_V1 D1). Steps 1-3 stay for later exceptions.
 """
@@ -35,7 +38,6 @@ _GENERIC_NAMES = {"base", "assisted", "email", "web_form"}
 # Same shape as models._SUBMITTER_RE. Anything else is refused before import.
 _SUBMITTER_RE = re.compile(r"^freemyid\.submitters\.[a-z0-9_.]+:[A-Za-z_][A-Za-z0-9_]*$")
 _MODULE_RE = re.compile(r"^freemyid\.submitters\.[a-z0-9_.]+$")
-_LEAF_RE = re.compile(r"^freemyid\.submitters\.([a-z0-9_]+)$")
 _CLASS_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 _BROKER_ID_RE = re.compile(r"^[a-z0-9_]{1,64}$")
 
@@ -46,6 +48,8 @@ WRONG_TYPE = "wrong_type"
 PATH_REFUSED = "path_refused"
 
 _MISSING = object()
+# Plugin code may call sys.exit(); that must not end the run either.
+_PLUGIN_ERRORS = (Exception, SystemExit)
 
 
 class SubmitterLoad(NamedTuple):
@@ -121,7 +125,7 @@ def plugin_path_allowed(path: Path) -> bool:
 def _submitters_root() -> Path | None:
     try:
         import freemyid.submitters as pkg
-    except Exception as exc:  # noqa: BLE001 - a broken package must not stop the run
+    except _PLUGIN_ERRORS as exc:  # a broken package must not stop the run
         log.warning("custom submitter unavailable: %s %s", IMPORT_ERROR, type(exc).__name__)
         return None
     pkg_paths = getattr(pkg, "__path__", None)
@@ -147,25 +151,6 @@ def _origin_allowed(origin: str) -> bool:
     return any(_contained(resolved, root) for root in roots)
 
 
-def _data_plugin_file(mod_name: str) -> Path | None:
-    """`<data>/plugins/<leaf>.py` for a single-segment submitter module, if that file exists."""
-    match = _LEAF_RE.fullmatch(mod_name)
-    if match is None:
-        return None
-    leaf = match.group(1)
-    if leaf in _GENERIC_NAMES:
-        return None
-    try:
-        from .. import paths
-
-        candidate = (paths.home() / "plugins" / f"{leaf}.py").resolve()
-    except OSError:
-        return None
-    if candidate.is_file() and plugin_path_allowed(candidate):
-        return candidate
-    return None
-
-
 def _build(obj: object, broker_id: str) -> tuple[Submitter | None, str]:
     if not isinstance(obj, type):
         _fail(broker_id, WRONG_TYPE)
@@ -180,7 +165,7 @@ def _build(obj: object, broker_id: str) -> tuple[Submitter | None, str]:
         return None, WRONG_TYPE
     try:
         return obj(), ""
-    except Exception as exc:  # noqa: BLE001 - construction must not stop the run
+    except _PLUGIN_ERRORS as exc:  # construction must not stop the run
         _fail(broker_id, CONSTRUCT_ERROR, exc)
         return None, CONSTRUCT_ERROR
 
@@ -198,14 +183,14 @@ def _class_on(module: ModuleType, class_name: str, broker_id: str) -> tuple[Subm
 
 def _exec_plugin_file(path: Path, broker_id: str) -> tuple[ModuleType | None, str | None]:
     """Execute one file. The module name is private, so a sibling file is not imported."""
-    if not plugin_path_allowed(path):
-        _fail(broker_id, PATH_REFUSED)
-        return None, PATH_REFUSED
     try:
         resolved = path.resolve()
     except OSError as exc:
         _fail(broker_id, IMPORT_ERROR, exc)
         return None, IMPORT_ERROR
+    if not plugin_path_allowed(resolved):
+        _fail(broker_id, PATH_REFUSED)
+        return None, PATH_REFUSED
     if resolved.suffix.lower() != ".py" or not resolved.is_file():
         _fail(broker_id, IMPORT_ERROR)
         return None, IMPORT_ERROR
@@ -220,7 +205,7 @@ def _exec_plugin_file(path: Path, broker_id: str) -> tuple[ModuleType | None, st
     sys.modules[mod_name] = module
     try:
         exec_module(module)
-    except Exception as exc:  # noqa: BLE001 - import errors must not stop the run
+    except _PLUGIN_ERRORS as exc:  # import errors must not stop the run
         _fail(broker_id, IMPORT_ERROR, exc)
         return None, IMPORT_ERROR
     finally:
@@ -259,7 +244,7 @@ def _import_allowed_module(mod_name: str, broker_id: str) -> tuple[ModuleType | 
         return None, PATH_REFUSED
     try:
         imported = importlib.import_module(mod_name)
-    except Exception as exc:  # noqa: BLE001 - import errors must not stop the run
+    except _PLUGIN_ERRORS as exc:  # import errors must not stop the run
         _fail(broker_id, IMPORT_ERROR, exc)
         return None, IMPORT_ERROR
     if not isinstance(imported, ModuleType):
@@ -281,15 +266,8 @@ def _explicit_submitter(broker: Broker) -> tuple[Submitter | None, str | None, b
     if reason == PATH_REFUSED:
         return None, PATH_REFUSED, True
     if module is None and reason is None:
-        data_file = _data_plugin_file(mod_name)
-        if data_file is None:
-            _fail(broker.id, IMPORT_ERROR)
-            return None, IMPORT_ERROR, False
-        inst, file_reason = _load_from_path(data_file, class_name, broker.id)
-        if inst is not None:
-            return inst, None, True
-        # A wrong type is the named plugin, not a miss. Other failures can fall through.
-        return None, file_reason, file_reason == WRONG_TYPE
+        _fail(broker.id, IMPORT_ERROR)
+        return None, IMPORT_ERROR, False
     if module is None:
         return None, reason or IMPORT_ERROR, False
     inst, built = _class_on(module, class_name, broker.id)
@@ -301,7 +279,7 @@ def _explicit_submitter(broker: Broker) -> tuple[Submitter | None, str | None, b
 def _entry_point_submitter(broker: Broker) -> tuple[Submitter | None, str | None, bool]:
     try:
         found = entry_points(group="freemyid.submitters")
-    except Exception as exc:  # noqa: BLE001 - a broken plugin must not stop the run
+    except _PLUGIN_ERRORS as exc:  # a broken plugin must not stop the run
         _fail(broker.id, IMPORT_ERROR, exc)
         return None, IMPORT_ERROR, True
     try:
@@ -312,7 +290,7 @@ def _entry_point_submitter(broker: Broker) -> tuple[Submitter | None, str | None
             matched = True
             try:
                 loaded = ep.load()
-            except Exception as exc:  # noqa: BLE001 - a broken plugin must not stop the run
+            except _PLUGIN_ERRORS as exc:  # a broken plugin must not stop the run
                 _fail(broker.id, IMPORT_ERROR, exc)
                 return None, IMPORT_ERROR, True
             inst, built = _build(loaded, broker.id)
@@ -321,7 +299,7 @@ def _entry_point_submitter(broker: Broker) -> tuple[Submitter | None, str | None
             return None, built, True
         if not matched:
             return None, None, False
-    except Exception as exc:  # noqa: BLE001 - a broken plugin must not stop the run
+    except _PLUGIN_ERRORS as exc:  # a broken plugin must not stop the run
         _fail(broker.id, IMPORT_ERROR, exc)
         return None, IMPORT_ERROR, True
     return None, None, False
@@ -363,7 +341,7 @@ def _lookup_custom(broker: Broker) -> tuple[Submitter | None, str | None]:
 def custom_submitter(broker: Broker) -> Submitter | None:
     try:
         found, _reason = _lookup_custom(broker)
-    except Exception as exc:  # noqa: BLE001 - a broken plugin must not stop the run
+    except _PLUGIN_ERRORS as exc:  # a broken plugin must not stop the run
         _fail(broker.id, IMPORT_ERROR, exc)
         return None
     return found
@@ -395,7 +373,7 @@ def load_submitter(
     """
     try:
         return _load_submitter(broker, tier, plugin_path=plugin_path, plugin_class=plugin_class)
-    except Exception as exc:  # noqa: BLE001 - a broken plugin must not stop the run
+    except _PLUGIN_ERRORS as exc:  # a broken plugin must not stop the run
         _fail(broker.id, IMPORT_ERROR, exc)
         return SubmitterLoad(generic_submitter(tier), IMPORT_ERROR)
 
