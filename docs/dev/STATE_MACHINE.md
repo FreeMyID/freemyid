@@ -118,20 +118,27 @@ and `last_escalated_at`; the pure function does not itself apply its decision
 (`src/freemyid/state.py:14,119-138`).
 
 The runner performs more checks before acting. A parent's ladder covers its child broker;
-a blind broker in `CONFIRMED` does not escalate without a scan. An unsent previous rung
-blocks advancement. Legal-demand and complaint rungs also wait for the runner's legal
-window; an early follow-up drops the law citation and remains a polite reminder. A dry run
-records that escalation is due without advancing the saved level
-(`src/freemyid/engine/runner.py:823-852`).
+a blind broker in `CONFIRMED` does not escalate without a scan. The ladder also holds while
+the previous rung has not really gone out: a real (not dry-run) email request still waiting
+for approval, or an open manual-letter to-do for that broker, logs an `escalation_waiting`
+event and leaves the level unchanged. Legal-demand and complaint rungs also wait for the
+runner's legal window; an early follow-up drops the law citation and remains a polite
+reminder. A dry run records that escalation is due without advancing the saved level
+(`src/freemyid/engine/runner.py:823-852,912-924`).
 
-A legal-demand email always waits for approval, including in automatic email mode. Without
-a mailbox, the runner creates a manual-letter to-do instead
-(`src/freemyid/engine/outbox.py:285-289`; `src/freemyid/engine/runner.py:935-955`).
+A legal-demand email always waits for approval, including in automatic email mode. A
+follow-up or legal demand needs an email route for the broker (otherwise nothing is sent and
+the result is `no_email_route`). With a route but no mailbox, the runner creates a
+manual-letter to-do instead (`src/freemyid/engine/outbox.py:285-289`;
+`src/freemyid/engine/runner.py:935-955`).
 
-The runner creates the corresponding resubmit, letter or complaint to-do, then records the
-new level/time. A failed letter keeps the old level and updates the retry anchor. Its
-`_ladder_view` also accounts for a letter actually sent later than it was queued, so the
-following wait starts from that later send (`src/freemyid/engine/runner.py:853-884,912-924`).
+What each rung produces: a resubmit is dispatched through the broker's normal submission
+path and only counts as a send when its request is `SENT`; a follow-up or legal demand is a
+queued email (or the manual-letter to-do above); a complaint is only a to-do with the
+complaint links. After the action the runner records the new level and time. A failed
+letter keeps the old level and updates only the retry time. Its `_ladder_view` also accounts
+for a letter actually sent later than it was queued, so the following wait starts from that
+later send (`src/freemyid/engine/runner.py:853-884,912-924`).
 
 ## Scheduling the next check
 
