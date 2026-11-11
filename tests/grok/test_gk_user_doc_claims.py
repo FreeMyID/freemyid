@@ -347,7 +347,7 @@ def test_live_docs_have_no_unlisted_stale_claims() -> None:
 _KNOWN_REASONS: dict[tuple[str, int, str], str] = {
     ("docs/USER_GUIDE.md", 113, "coming_shipped"): (
         "docs/USER_GUIDE.md:113 says update to 0.3 when it comes out; "
-        "site_src/data/release.yaml version is 0.3.0 (published 2026-11-09). "
+        "site_src/data/release.yaml version is newer. "
         "The same guide at line 250 already describes 0.3 as current."
     ),
     ("docs/USER_GUIDE.md", 177, "nothing_sent"): (
@@ -375,27 +375,27 @@ _KNOWN_REASONS: dict[tuple[str, int, str], str] = {
     ),
     ("docs/user/GLOSSARY.md", 10, "version_pin"): (
         "docs/user/GLOSSARY.md:10 says release.yaml lists version 0.2.0. "
-        "site_src/data/release.yaml version is 0.3.0."
+        "site_src/data/release.yaml version is newer."
     ),
     ("docs/user/INSTALL.md", 12, "version_pin"): (
         "docs/user/INSTALL.md:12 says release.yaml lists version 0.2.0. "
-        "site_src/data/release.yaml version is 0.3.0 (2026-11-09)."
+        "site_src/data/release.yaml version is newer."
     ),
     ("docs/user/INSTALL.md", 16, "version_pin"): (
         "docs/user/INSTALL.md:16 says version 0.2.0 is on PyPI. "
-        "The published release record is 0.3.0, not 0.2.0."
+        "The published release record is newer, not 0.2.0."
     ),
     ("docs/user/INSTALL.md", 48, "version_pin"): (
         "docs/user/INSTALL.md:48 says Version 0.2.0 is about 64.4 MB. "
-        "site_src/data/release.yaml says 0.3.0 and size_mb 64.5."
+        "site_src/data/release.yaml has a newer version and size_mb."
     ),
     ("docs/user/INSTALL.md", 72, "version_pin"): (
         "docs/user/INSTALL.md:72 says version 0.2.0 is in release.yaml. "
-        "That file's version is 0.3.0."
+        "That file's version is newer."
     ),
     ("docs/user/INSTALL.md", 78, "version_pin"): (
         "docs/user/INSTALL.md:78 says the command-line tool is version 0.2.0 from PyPI. "
-        "The published release record is 0.3.0."
+        "The published release record is newer."
     ),
 }
 
@@ -405,7 +405,9 @@ def _known_params() -> list[pytest.ParameterSet]:
     for (rel, line, kind), reason in _KNOWN_REASONS.items():
         params.append(pytest.param(
             rel, line, kind,
-            marks=pytest.mark.xfail(strict=True, reason=reason),
+            marks=pytest.mark.xfail(
+                strict=True, reason=f"WO-305 (freemyid-pm#222) stale claim, fix the doc: {reason}"
+            ),
             id=f"{rel}:{line}:{kind}",
         ))
     return params
