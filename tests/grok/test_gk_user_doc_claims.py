@@ -344,22 +344,8 @@ def test_live_docs_have_no_unlisted_stale_claims() -> None:
     assert sorted(found - set(_KNOWN_REASONS)) == []
 
 
+# The Grok user-doc PRs (#78-#106) fixed the USER_GUIDE, GLOSSARY and INSTALL rows; HELPER_GUIDE is still open.
 _KNOWN_REASONS: dict[tuple[str, int, str], str] = {
-    ("docs/USER_GUIDE.md", 113, "coming_shipped"): (
-        "docs/USER_GUIDE.md:113 says update to 0.3 when it comes out; "
-        "site_src/data/release.yaml version is newer. "
-        "The same guide at line 250 already describes 0.3 as current."
-    ),
-    ("docs/USER_GUIDE.md", 177, "nothing_sent"): (
-        "docs/USER_GUIDE.md:177 says nothing is actually sent in practice mode. "
-        "Practice mode still searches people-search sites (docs/USER_GUIDE.md:99). "
-        "The app says no removal requests go out (src/freemyid/wizard/dashboard.py:131)."
-    ),
-    ("docs/USER_GUIDE.md", 180, "nothing_sent"): (
-        "docs/USER_GUIDE.md:180 says nothing is sent until the next check. "
-        "That is the unqualified phrase; the lookup has already gone out "
-        "(docs/USER_GUIDE.md:99). Allowed form is about removal requests, or to us."
-    ),
     ("docs/HELPER_GUIDE.md", 53, "nothing_sent"): (
         "docs/HELPER_GUIDE.md:53 says nothing is sent except in a request you approve. "
         "Name and city searches go out before any removal request (docs/USER_GUIDE.md:99)."
@@ -372,30 +358,6 @@ _KNOWN_REASONS: dict[tuple[str, int, str], str] = {
     ("docs/HELPER_GUIDE.md", 72, "nothing_sent"): (
         "docs/HELPER_GUIDE.md:72 says nothing is sent until they press OK. "
         "Automatic sending can send without that OK; the website no longer uses this line."
-    ),
-    ("docs/user/GLOSSARY.md", 10, "version_pin"): (
-        "docs/user/GLOSSARY.md:10 says release.yaml lists version 0.2.0. "
-        "site_src/data/release.yaml version is newer."
-    ),
-    ("docs/user/INSTALL.md", 12, "version_pin"): (
-        "docs/user/INSTALL.md:12 says release.yaml lists version 0.2.0. "
-        "site_src/data/release.yaml version is newer."
-    ),
-    ("docs/user/INSTALL.md", 16, "version_pin"): (
-        "docs/user/INSTALL.md:16 says version 0.2.0 is on PyPI. "
-        "The published release record is newer, not 0.2.0."
-    ),
-    ("docs/user/INSTALL.md", 48, "version_pin"): (
-        "docs/user/INSTALL.md:48 says Version 0.2.0 is about 64.4 MB. "
-        "site_src/data/release.yaml has a newer version and size_mb."
-    ),
-    ("docs/user/INSTALL.md", 72, "version_pin"): (
-        "docs/user/INSTALL.md:72 says version 0.2.0 is in release.yaml. "
-        "That file's version is newer."
-    ),
-    ("docs/user/INSTALL.md", 78, "version_pin"): (
-        "docs/user/INSTALL.md:78 says the command-line tool is version 0.2.0 from PyPI. "
-        "The published release record is newer."
     ),
 }
 

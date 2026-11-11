@@ -22,11 +22,7 @@ _UI_SUFFIXES = {".py", ".js", ".html", ".css", ".svg"}
 
 # (repo-relative path, label) -> why it is not a wizard control.
 # Line numbers are not part of the key. A later edit can move the sentence.
-WEBSITE_ONLY: dict[tuple[str, str], str] = {
-    ("FAMILY_QUICK_START.md", "Download Free My ID"): (
-        "Website-only: the freemyid.org download button, not a wizard control."
-    ),
-}
+WEBSITE_ONLY: dict[tuple[str, str], str] = {}
 
 # Live doc/app gaps, matched by file and label, not by line number.
 # A strict xfail stays until that label is gone. Removing the label makes the
@@ -35,15 +31,6 @@ KNOWN_MISMATCHES: dict[tuple[str, str], str] = {
     ("docs/USER_GUIDE.md", "confirm your request"): (
         "docs/USER_GUIDE.md:36 quotes 'confirm your request' links that sites send; "
         "that phrase is not in src/freemyid/wizard/"
-    ),
-    ("FAMILY_QUICK_START.md", "Run anyway"): (
-        "FAMILY_QUICK_START.md:24 quotes the Windows SmartScreen button 'Run anyway', "
-        "which is not in src/freemyid/wizard/"
-    ),
-    ("FAMILY_QUICK_START.md", "Open in Gmail / Outlook / Yahoo"): (
-        "FAMILY_QUICK_START.md:65 quotes one button 'Open in Gmail / Outlook / Yahoo'; "
-        "src/freemyid/wizard/dashboard.py:171 builds separate Open in Gmail, "
-        "Open in Outlook, and Open in Yahoo Mail buttons"
     ),
 }
 

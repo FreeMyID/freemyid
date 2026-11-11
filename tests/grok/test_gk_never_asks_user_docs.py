@@ -264,14 +264,6 @@ def test_user_page_does_not_say_it_will_ask_for_secrets(page: Path) -> None:
     assert not hits, f"{page.relative_to(ROOT).as_posix()}: " + "; ".join(hits)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "WO-324 (freemyid-pm#244): main's docs/user pages (GLOSSARY, HELPING, INSTALL) "
-        "make no never-asks promise. Drop this marker once the Grok user-doc PRs "
-        "(#78-#106) land; strict xfail reports XPASS then."
-    ),
-)
 def test_at_least_one_user_page_makes_the_promise() -> None:
     assert any(
         _never_asks_units(page.read_text(encoding="utf-8")) for page in _user_pages()
