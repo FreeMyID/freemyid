@@ -47,7 +47,8 @@ KNOWN_MISMATCHES: dict[tuple[str, str], str] = {
     ),
 }
 
-_FENCE = re.compile(r"```.*?```", re.DOTALL)
+_FENCE_OPEN = re.compile(r"^ {0,3}(?P<mark>`{3,}|~{3,})(?P<info>.*)$")
+_FENCE_CLOSE = re.compile(r"^ {0,3}(?P<mark>`{3,}|~{3,})[ \t]*$")
 _COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
 _CODE = re.compile(r"`[^`\n]*`")
 _SPAN = re.compile(
@@ -81,13 +82,33 @@ class QuotedLabel:
     label: str
 
 
+def _mask_fences(text: str) -> str:
+    """Blank fenced code lines using the CommonMark opening and closing rules."""
+    out: list[str] = []
+    mark = ""
+    for raw in text.split("\n"):
+        if mark:
+            closer = _FENCE_CLOSE.match(raw)
+            if closer and closer.group("mark")[0] == mark[0] and len(closer.group("mark")) >= len(mark):
+                mark = ""
+            out.append(" " * len(raw))
+            continue
+        opener = _FENCE_OPEN.match(raw)
+        if opener and not (opener.group("mark")[0] == "`" and "`" in opener.group("info")):
+            mark = opener.group("mark")
+            out.append(" " * len(raw))
+            continue
+        out.append(raw)
+    return "\n".join(out)
+
+
 def _mask(text: str) -> str:
     """Blank fenced code, HTML comments, and inline code without moving line numbers."""
 
     def blanks(match: re.Match[str]) -> str:
         return re.sub(r"[^\n]", " ", match.group(0))
 
-    text = _FENCE.sub(blanks, text)
+    text = _mask_fences(text)
     text = _COMMENT.sub(blanks, text)
     return _CODE.sub(lambda match: " " * len(match.group(0)), text)
 
@@ -322,3 +343,23 @@ def test_quoted_button_or_link_is_in_the_wizard(hit: QuotedLabel) -> None:
         f"{hit.path}:{hit.line}: {hit.label!r} is called a button or link "
         "and is not in src/freemyid/wizard/"
     )
+
+
+def test_fence_masking_follows_closing_rules() -> None:
+    text = (
+        "````\n"
+        "```\n"
+        "click the **Inside** button\n"
+        "````\n"
+        "click the **After** button\n"
+        "~~~\n"
+        "click the **Tilde** button\n"
+        "```\n"
+        "click the **StillTilde** button\n"
+        "~~~\n"
+    )
+    assert [label for _line, label in extract_labels(text)] == ["After"]
+
+
+def test_unclosed_fence_masks_the_rest() -> None:
+    assert extract_labels("click the **A** button\n```\nclick the **B** button\n") == [(1, "A")]
