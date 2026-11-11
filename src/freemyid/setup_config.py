@@ -11,10 +11,13 @@ shows what will happen and needs ``--yes`` or an interactive confirm.
 """
 from __future__ import annotations
 
+import difflib
 import os
+import re
 from datetime import date
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from types import UnionType
+from typing import TYPE_CHECKING, Any, Literal, Union, get_args, get_origin
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
@@ -141,6 +144,280 @@ class SetupFileError(ValueError):
         self.problems = problems
 
 
+# Distant difflib hits are wrong often enough to skip. A guess has to be close.
+_SUGGEST_CUTOFF = 0.65
+_SUGGEST_GAP = 0.08
+
+_TYPE_PHRASE = {
+    "string_type": "text",
+    "string_unicode": "text",
+    "bool_type": "yes or no",
+    "bool_parsing": "yes or no",
+    "int_type": "a number",
+    "int_parsing": "a number",
+    "int_from_float": "a number",
+    "float_type": "a number",
+    "float_parsing": "a number",
+    "decimal_type": "a number",
+    "decimal_parsing": "a number",
+}
+
+_CONTAINER_PHRASE = {
+    "model_type": "a group of settings",
+    "model_attributes_type": "a group of settings",
+    "dict_type": "a group of settings",
+    "list_type": "a list",
+    "tuple_type": "a list",
+    "set_type": "a list",
+}
+
+
+def _unwrap_optional(ann: Any) -> Any:
+    origin = get_origin(ann)
+    if origin is not Union and origin is not UnionType:
+        return ann
+    args = [arg for arg in get_args(ann) if arg is not type(None)]
+    return args[0] if len(args) == 1 else ann
+
+
+def _model_type(ann: Any) -> type[BaseModel] | None:
+    ann = _unwrap_optional(ann)
+    if isinstance(ann, type) and issubclass(ann, BaseModel):
+        return ann
+    return None
+
+
+def _list_item(ann: Any) -> Any:
+    ann = _unwrap_optional(ann)
+    if get_origin(ann) is list:
+        args = get_args(ann)
+        return args[0] if args else None
+    return None
+
+
+def _annotation_at(parts: tuple[Any, ...]) -> Any:
+    ann: Any = SetupConfig
+    for part in parts:
+        if isinstance(part, int):
+            ann = _list_item(ann)
+        else:
+            model = _model_type(ann)
+            if model is None:
+                return None
+            field = model.model_fields.get(str(part))
+            if field is None:
+                return None
+            ann = field.annotation
+        if ann is None:
+            return None
+    return ann
+
+
+def _known_keys(parts: tuple[Any, ...]) -> list[str]:
+    ann = SetupConfig if not parts else _annotation_at(parts)
+    model = _model_type(ann)
+    return list(model.model_fields) if model is not None else []
+
+
+def _field(parts: tuple[Any, ...]) -> Any:
+    if not parts or not isinstance(parts[-1], str):
+        return None
+    model = _model_type(SetupConfig if len(parts) == 1 else _annotation_at(parts[:-1]))
+    if model is None:
+        return None
+    return model.model_fields.get(parts[-1])
+
+
+def _close_keys(bad: str, known: list[str]) -> list[str]:
+    folded = {name.casefold(): name for name in known}
+    found = difflib.get_close_matches(bad.casefold(), list(folded), n=2, cutoff=_SUGGEST_CUTOFF)
+    if not found:
+        return []
+    best = difflib.SequenceMatcher(a=bad.casefold(), b=found[0]).ratio()
+    picks: list[str] = []
+    for key in found:
+        score = difflib.SequenceMatcher(a=bad.casefold(), b=key).ratio()
+        if best - score <= _SUGGEST_GAP:
+            picks.append(folded[key])
+    return picks
+
+
+def _unknown_message(err: Any) -> str:
+    loc = tuple(err.get("loc") or ())
+    base = "is not a setting Free My ID knows"
+    if not loc or not isinstance(loc[-1], str):
+        return base
+    picks = _close_keys(loc[-1], _known_keys(loc[:-1]))
+    if not picks:
+        return base
+    hint = picks[0] if len(picks) == 1 else f"{picks[0]} or {picks[1]}"
+    return f"{base}; did you mean {hint}?"
+
+
+def _literal_values(ann: Any) -> tuple[Any, ...] | None:
+    ann = _unwrap_optional(ann)
+    if get_origin(ann) is Literal:
+        return get_args(ann)
+    return None
+
+
+def _kind_phrase(values: tuple[Any, ...]) -> str | None:
+    if not values:
+        return None
+    if all(isinstance(value, bool) for value in values):
+        return "yes or no"
+    if all(isinstance(value, (int, float)) and not isinstance(value, bool) for value in values):
+        return "a number"
+    if all(isinstance(value, str) for value in values):
+        return "text"
+    return None
+
+
+def _input_is_kind(value: Any, phrase: str) -> bool:
+    if phrase == "yes or no":
+        return isinstance(value, bool)
+    if phrase == "a number":
+        return isinstance(value, (int, float)) and not isinstance(value, bool)
+    if phrase == "text":
+        return isinstance(value, str)
+    return False
+
+
+def _choice_phrase(values: tuple[Any, ...]) -> str:
+    shown = [str(value) for value in values]
+    if len(shown) == 1:
+        return shown[0]
+    if len(shown) == 2:
+        return f"{shown[0]} or {shown[1]}"
+    return ", ".join(shown[:-1]) + ", or " + shown[-1]
+
+
+def _literal_message(err: Any) -> str:
+    values = _literal_values(_annotation_at(tuple(err.get("loc") or ())))
+    if values:
+        phrase = _kind_phrase(values)
+        if phrase is not None and not _input_is_kind(err.get("input"), phrase):
+            return f"should be {phrase}"
+        return f"should be {_choice_phrase(values)}"
+    expected = str((err.get("ctx") or {}).get("expected") or "").replace("'", "")
+    if expected:
+        return f"should be {expected}"
+    return "is not one of the choices"
+
+
+def _value_error_message(err: Any) -> str | None:
+    if err.get("type") != "value_error":
+        return None
+    inner = (err.get("ctx") or {}).get("error")
+    if isinstance(inner, ValueError):
+        return str(inner)
+    msg = str(err.get("msg") or "")
+    return msg.removeprefix("Value error, ")
+
+
+def _inclusive_bounds(field: Any) -> tuple[Any, Any]:
+    low = high = None
+    if field is None:
+        return None, None
+    for item in field.metadata:
+        if type(item).__name__ == "Ge":
+            low = item.ge
+        elif type(item).__name__ == "Le":
+            high = item.le
+    return low, high
+
+
+def _bound_message(err: Any) -> str | None:
+    kind = err.get("type")
+    if kind not in {"greater_than_equal", "less_than_equal", "greater_than", "less_than"}:
+        return None
+    low, high = _inclusive_bounds(_field(tuple(err.get("loc") or ())))
+    if low is not None and high is not None:
+        return f"should be a number from {low} to {high}"
+    ctx = err.get("ctx") or {}
+    if kind == "greater_than_equal":
+        return f"should be a number at least {ctx.get('ge', low)}"
+    if kind == "less_than_equal":
+        return f"should be a number at most {ctx.get('le', high)}"
+    if kind == "greater_than":
+        return f"should be a number greater than {ctx.get('gt')}"
+    return f"should be a number less than {ctx.get('lt')}"
+
+
+def _length_message(err: Any) -> str | None:
+    kind = err.get("type")
+    ctx = err.get("ctx") or {}
+    if kind == "string_too_short":
+        if ctx.get("min_length", 1) == 1:
+            return "cannot be blank"
+        return f"should have at least {ctx['min_length']} characters"
+    if kind == "string_too_long":
+        return f"should have at most {ctx['max_length']} characters"
+    if kind == "too_short":
+        count = ctx.get("min_length")
+        word = "item" if count == 1 else "items"
+        return f"should have at least {count} {word}"
+    if kind == "too_long":
+        count = ctx.get("max_length")
+        word = "item" if count == 1 else "items"
+        return f"should have at most {count} {word}"
+    return None
+
+
+def _pattern_message(err: Any) -> str | None:
+    if err.get("type") != "string_pattern_mismatch":
+        return None
+    loc = tuple(err.get("loc") or ())
+    name = next((part for part in reversed(loc) if isinstance(part, str)), "")
+    if name == "state":
+        return "should be a 2-letter state, such as IL"
+    if name == "tls_cert_sha256":
+        return "should be the certificate fingerprint you approved"
+    return "is not in the right form"
+
+
+def _plain_message(err: Any) -> str:
+    kind = str(err.get("type") or "")
+    if kind == "missing":
+        return "is missing; add it"
+    if kind == "extra_forbidden":
+        return _unknown_message(err)
+    value_error = _value_error_message(err)
+    if value_error is not None:
+        return value_error
+    if kind in _TYPE_PHRASE:
+        return f"should be {_TYPE_PHRASE[kind]}"
+    if kind == "literal_error":
+        return _literal_message(err)
+    if kind in _CONTAINER_PHRASE:
+        return f"should be {_CONTAINER_PHRASE[kind]}"
+    for builder in (_bound_message, _length_message, _pattern_message):
+        text = builder(err)
+        if text:
+            return text
+    return "is not a value this file can use"
+
+
+# A key that looks like a setting name. Anything else (spaces, @, digits first, not text)
+# is likely a value that a misplaced colon turned into a key, so it is not repeated.
+_SETTING_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]{0,39}")
+_HIDDEN_KEY = "has a line that is not a setting Free My ID knows; check the colons and spaces"
+
+
+def _plain_problems(exc: ValidationError) -> list[str]:
+    problems: list[str] = []
+    for err in exc.errors():   # input is read only to pick a phrase, never shown
+        loc = tuple(err.get("loc") or ())
+        if err.get("type") in {"extra_forbidden", "invalid_key"} and loc and not (
+                isinstance(loc[-1], str) and _SETTING_NAME.fullmatch(loc[-1])):
+            parent = ".".join(str(part) for part in loc[:-1]) or "file"
+            problems.append(f"{parent}: {_HIDDEN_KEY}")
+            continue
+        path = ".".join(str(part) for part in loc) or "file"
+        problems.append(f"{path}: {_plain_message(err)}")
+    return problems
+
+
 def load(path: Path) -> SetupConfig:
     path = Path(path)
     try:
@@ -156,9 +433,8 @@ def load(path: Path) -> SetupConfig:
     try:
         return SetupConfig.model_validate(raw)
     except ValidationError as e:
-        # field paths and messages only: never echo the values (they are PII)
-        raise SetupFileError([f"{'.'.join(str(x) for x in err['loc']) or 'file'}: {err['msg']}"
-                              for err in e.errors(include_input=False)]) from e
+        # Path plus a plain sentence. Never repeat what was typed.
+        raise SetupFileError(_plain_problems(e)) from e
 
 
 def _resolve(base: Path, p: str) -> Path:
