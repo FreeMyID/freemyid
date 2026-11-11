@@ -1213,3 +1213,12 @@ minimise-after-launch step is wanted (CDP `Browser.setWindowBounds` windowState
 run in scheduled practice-mode runs? I assumed yes (scanning is free). (c) Nina: the wizard
 banner + "Skip this site" button = a `SessionHooks` subclass; `pending_sites()` feeds the
 "Look for me now" badge.
+
+## 2026-11-11 WO-612 security fixes SEC-WO612-1..7 (Theo Park, branch integrate/wave-1111c, not pushed)
+All five strict xfails in `tests/test_sec_wo612_review.py` now pass; their markers are removed. The per-finding disposition is in `docs/SECURITY_REVIEW.md` ("WO-612 search session: fixes").
+- Contract edits Morgan authorised: `paths.OWNED_ENTRIES` + `browser_profile`, `browser_profile.lock`. `cli._do_run` runs the session only when `scheduled and not headless and ss.background_supported()` (win32).
+- Cookie state is per person at `evidence/<id>/browser_session.enc`, not under `browser_profile/`. That way `Store.delete_profile` removes it with the person and no new contract hook is needed. wipe covers it through `evidence`.
+- New knobs: `run_session(step_s, look_s, session_s)`. `SessionFetcher(site_s, session_s, heartbeat)`. `SESSION_BUDGET_S` is 60 min for background and 90 min for attended. `STEP_S` is 90 s and `LOOK_S` is 15 s.
+- `BrowserManager.retarget` now returns the escapes it dropped. `BrowserManager.kill()` is the fallback for a hung close.
+- Wizard (Nina): the "Look for me now" button is unchanged. A `SessionUnavailable("no_display")` now also means "background not supported on this platform", which the attended path never hits.
+- New tests: `tests/test_search_page_crc.py` (CR-C raise) and session tests for budgets, temp folder, cookie jar, sweep, leave/retarget, session_only outcomes and the Windows-only gate. `tests/conftest.py` makes `persistent_context` refuse unless `test_headless` is set.
