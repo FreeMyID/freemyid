@@ -1,0 +1,11 @@
+---
+// Decorative row of small stars (owner 2026-11-11, "more patriotic"). Drawn as SVG, not the star glyph: the
+// content check bans text stars so nothing on the site can read as a review rating (D8). Always aria-hidden.
+interface Props { count?: number; class?: string }
+const { count = 3, class: cls = "" } = Astro.props;
+---
+<span class:list={["stars", cls]} aria-hidden="true">
+  {Array.from({ length: count }, () => (
+    <svg viewBox="0 0 24 24" width="0.9em" height="0.9em" focusable="false"><path fill="currentColor" d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg>
+  ))}
+</span>

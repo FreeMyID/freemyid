@@ -95,10 +95,21 @@
   .site-footer .bm-star { fill: #0f1520; }
   .site-footer .bm-bar { fill: #f5a3ab; }
 
-  .flagbar { display: grid; grid-template-columns: 1fr 1fr 1fr; height: 4px; }
-  .flagbar span:nth-child(1) { background: var(--fmi-color-band-brand); }
-  .flagbar span:nth-child(2) { background: var(--fmi-color-flag-white); }
-  .flagbar span:nth-child(3) { background: var(--fmi-color-accent); }
+  /* Owner 2026-11-11 ("more patriotic"): the thin bar becomes a small flag rule. Blue canton with a row of
+     stars, then 5 red/white stripes. Pure CSS (no images, CSP unchanged); decorative, aria-hidden in Header. */
+  .flagbar { display: grid; grid-template-columns: minmax(7rem, 28%) 1fr; height: 10px; }
+  .flagbar span:nth-child(1) {
+    background: var(--fmi-color-band-brand); color: #fff; overflow: hidden; white-space: nowrap;
+    font-size: 8px; line-height: 10px; letter-spacing: 0.55em; text-align: center;
+  }
+  .flagbar span:nth-child(1)::before { content: "\2605\2605\2605\2605\2605\2605\2605\2605\2605\2605\2605\2605\2605"; }
+  .flagbar span:nth-child(2) {
+    background: repeating-linear-gradient(180deg, var(--fmi-color-accent) 0 2px, var(--fmi-color-flag-white) 2px 4px);
+  }
+  .flagbar span:nth-child(3) { display: none; }
+  /* Star ornament above patriotic headings (decorative; aria-hidden in markup). */
+  .stars { display: inline-flex; gap: 0.45em; color: var(--fmi-color-accent); font-size: 0.9rem; line-height: 1; vertical-align: -0.1em; }
+  .on-brand .stars, .stars--light { color: #fff; }
 
   /* No-JS mobile menu: popover button, or <details> where popover isn't supported (rules at the end). */
   .menu-fallback > summary { list-style: none; }

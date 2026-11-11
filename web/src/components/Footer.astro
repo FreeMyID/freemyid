@@ -3,6 +3,7 @@
 // site_src/templates/partials/footer.html (teardown section 3); page links only if the page exists.
 import { pages, site, url } from "@/lib/site";
 import BrandMark from "./BrandMark.astro";
+import Stars from "./Stars.astro";
 import CtaDownload from "./CtaDownload.astro";
 import Icon from "./Icon.astro";
 type L = [string, string, boolean?];
@@ -50,6 +51,7 @@ const link = "inline-flex min-h-tap items-center text-footer-text decoration-foo
           <BrandMark /><span>Free My ID<span class="visually-hidden">, home page</span></span>
         </a>
         <p class="mt-3xs">Take your name off the websites that sell it.</p>
+        <p class="mt-3xs text-small"><Stars class="stars--light" /> Built for American families who value their privacy.</p>
       </div>
       <CtaDownload look="onBrand" size="md" class="no-print" />
     </div>

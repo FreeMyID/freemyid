@@ -7,6 +7,7 @@ import Base from "@/layouts/Base.astro";
 import Section from "@/components/Section.astro";
 import CtaDownload from "@/components/CtaDownload.astro";
 import Icon from "@/components/Icon.astro";
+import Stars from "@/components/Stars.astro";
 import Art from "@/components/Art.astro";
 import Card from "@/components/ui/Card.astro";
 import Alert from "@/components/ui/Alert.astro";
@@ -38,7 +39,7 @@ const cardIcon = "inline-flex size-12 items-center justify-center rounded-lg bg-
   <div class="wrap grid items-center gap-xl min-[56.25em]:grid-cols-[1.3fr_1fr]">
     <div>
       {/* source: teardown 4.1; LICENSE (AGPL); Windows-only v1 (docs/PLAN_V1.md) */}
-      <p class="mb-s"><AnimatedGradientText pill icon="shield">Free. Open source. For Windows.</AnimatedGradientText></p>
+      <p class="mb-s"><AnimatedGradientText pill icon="shield">Free. Open source. For American families on Windows.</AnimatedGradientText></p>
       <h1 id="hero-title" class="text-hero">Take your name off the websites that sell it.</h1>
       {/* source: teardown 4.1; "runs on your own computer, no account, no cloud" = D8 / netpolicy.py */}
       <p class="mt-s max-w-measure text-lead text-muted min-[40em]:mt-m">Free My ID asks the people-search and data-broker sites that list your name, address and phone number to remove them, then keeps checking. It runs on your own computer. No account. No cloud.</p>
@@ -110,6 +111,34 @@ const cardIcon = "inline-flex size-12 items-center justify-center rounded-lg bg-
     ))}
   </ul>
 </Section>
+
+{/* 2b. American values band (owner 2026-11-11: "more patriotic"; audience = docs/POSITIONING.md patriotic/traditional
+     segment). Rules kept: patriotic, not partisan (no party, candidate or network); no "Made in USA"/"American-made";
+     no fear selling. The law line is the verified POSITIONING claim word for word, with its required caveat:
+     never imply Free My ID stops overseas access. "Nothing about you is sent to us" = D8 (netpolicy.py). */}
+<section class="on-brand bg-band-brand py-xl text-band-brand-ink" aria-labelledby="values-title">
+  <div class="wrap grid gap-l">
+    <div class="grid justify-items-center gap-2xs text-center">
+      <Stars class="stars--light" />
+      <h2 id="values-title" class="text-band-brand-ink">Your name. Your address. Your say.</h2>
+      <p class="max-w-measure text-lead">Americans have a right to be left alone. Free My ID puts that right to work, one request at a time.</p>
+    </div>
+    <ul class="grid gap-m min-[56.25em]:grid-cols-3" role="list">
+      <li class="rounded-xl border border-band-brand-ink/25 border-t-4 border-t-[#c8313f] p-m">
+        <h3 class="text-band-brand-ink">Your information belongs to you</h3>
+        <p class="mt-2xs">Your name, home address and phone number are not a product. Free My ID asks the sites selling them to take them down.</p>
+      </li>
+      <li class="rounded-xl border border-band-brand-ink/25 border-t-4 border-t-[#c8313f] p-m">
+        <h3 class="text-band-brand-ink">Runs on your computer. Answers to you.</h3>
+        <p class="mt-2xs">No account, no cloud, and nothing about you is sent to us. It works for you and no one else.</p>
+      </li>
+      <li class="rounded-xl border border-band-brand-ink/25 border-t-4 border-t-[#c8313f] p-m">
+        <h3 class="text-band-brand-ink">The law is on your side</h3>
+        <p class="mt-2xs">A 2024 federal law bars data brokers from selling Americans' sensitive data to foreign adversaries. Free My ID takes your details off the people-search sites that list them here at home. It can't recall data that was already sold.</p>
+      </li>
+    </ul>
+  </div>
+</section>
 
 {/* 3. The post */}
 <Section title={'You said "I do not consent." Here is how to make it count.'} titleId="post-title">
@@ -336,6 +365,7 @@ const cardIcon = "inline-flex size-12 items-center justify-center rounded-lg bg-
 {/* 13. Final CTA */}
 <section class="bg-band-brand py-2xl text-center text-band-brand-ink" aria-labelledby="cta-title">
   <div class="wrap-narrow grid justify-items-center gap-m">
+    <Stars class="stars--light" />
     <h2 id="cta-title" class="text-band-brand-ink">Your information. Off the market.</h2>
     {/* source: old home final CTA (approved copy); once a day = D8; WR-8 source link (repo public) */}
     <p class="text-lead">Free, open source, and it runs on your own computer, checking once a day. <a class="text-band-brand-ink" href={url("safety/#open-source")}>How you can check our work</a>.</p>
