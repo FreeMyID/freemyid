@@ -169,6 +169,10 @@ def _systemd_argv(text: str) -> list[str]:
         assert index < length and raw[index] == '"'
         index += 1
         args.append("".join(current))
+    # ExecStart substitutes $NAME in arguments (not the program); $$ is a literal $.
+    for pos in range(1, len(args)):
+        assert "$" not in args[pos].replace("$$", ""), "unescaped $ in an ExecStart argument"
+        args[pos] = args[pos].replace("$$", "$")
     return args
 
 

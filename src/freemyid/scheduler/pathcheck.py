@@ -12,6 +12,7 @@ may use either scheduler. Neither is set when ``problems`` is not empty.
 """
 from __future__ import annotations
 
+import re
 import shlex
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -32,6 +33,7 @@ Code = Literal[
     "control",
     "invalid_char",
     "cron_backslash_percent",
+    "windows_env_ref",
 ]
 
 CODE_UNKNOWN_OS: Code = "unknown_os"
@@ -47,6 +49,9 @@ CODE_INVALID_CHAR: Code = "invalid_char"
 # % cannot be written so the shell still sees that same run. Linux install
 # may fall back to cron, so the command is not safe to schedule.
 CODE_CRON_BACKSLASH_PERCENT: Code = "cron_backslash_percent"
+# Task Scheduler expands %NAME% in the Exec Command and Arguments; % has no escape.
+CODE_WINDOWS_ENV_REF: Code = "windows_env_ref"
+_ENV_REF = re.compile(r"%[^%]+%")
 
 
 @dataclass(frozen=True)
@@ -93,8 +98,12 @@ def check_path(argv: Sequence[object], os_name: str) -> PathCheck:
     if os_name == OS_MACOS:
         return PathCheck([], None, None)
     if os_name == OS_WINDOWS:
+        env_ref = _windows_env_ref(text_args)
+        if env_ref is not None:
+            return _refuse(CODE_WINDOWS_ENV_REF, env_ref)
         return PathCheck([], _windows_cmdline(text_args), None)
-    systemd = " ".join(_systemd_quote(arg) for arg in text_args)
+    systemd = " ".join(_systemd_quote(arg, program=index == 0)
+                       for index, arg in enumerate(text_args))
     cron = " ".join(_cron_quote(arg) for arg in text_args)
     return PathCheck([], systemd, cron)
 
@@ -157,14 +166,40 @@ def _odd_backslash_before_percent(text: str) -> bool:
         start = found + 1
 
 
-def _systemd_quote(text: str) -> str:
+def _systemd_quote(text: str, program: bool = False) -> str:
     """One systemd word. Backslash first, so a quote's escape is not doubled again.
 
     ``%`` is doubled because unit specifiers expand ``%`` even inside quotes.
-    ``$`` is left as itself: ExecStart does not expand shell variables.
+    In arguments ``$`` is doubled too: ExecStart substitutes ``$NAME`` and
+    ``${NAME}`` (systemd.service(5), "Command lines") and ``$$`` is a literal
+    dollar. The program word is not substituted, so it keeps its ``$``.
+    Matches ``render.systemd_service``.
     """
     escaped = text.replace("\\", "\\\\").replace('"', '\\"').replace("%", "%%")
+    if not program:
+        escaped = escaped.replace("$", "$$")
     return f'"{escaped}"'
+
+
+def _windows_env_ref(argv: Sequence[str]) -> int | None:
+    """Index of the first word in a ``%NAME%`` pair, or None.
+
+    Task Scheduler expands ``%NAME%`` in the Exec Command and in the Arguments
+    line, and there is no escape for ``%``. Arguments are one line, so a pair
+    can span two words. A single ``%`` is safe.
+    """
+    if _ENV_REF.search(argv[0]):
+        return 0
+    line = _windows_cmdline(argv[1:])
+    found = _ENV_REF.search(line)
+    if found is None:
+        return None
+    offset = 0
+    for index, arg in enumerate(argv[1:], start=1):
+        offset += len(_windows_cmdline([arg])) + 1
+        if found.start() < offset:
+            return index
+    return len(argv) - 1
 
 
 def _cron_quote(text: str) -> str:
@@ -181,8 +216,9 @@ def _windows_cmdline(argv: Sequence[str]) -> str:
     """CommandLineToArgvW quoting (the MS C runtime rules). No process is started.
 
     A trailing backslash inside quotes is doubled so it does not escape the
-    closing quote. ``%`` and ``$`` are kept: a Task Scheduler Exec action does
-    not run the command through cmd.exe.
+    closing quote. ``$`` and a single ``%`` are kept: a Task Scheduler Exec
+    action does not run the command through cmd.exe. A ``%NAME%`` pair is
+    refused before this (``windows_env_ref``), because Task Scheduler expands it.
     """
     result: list[str] = []
     for arg in argv:
