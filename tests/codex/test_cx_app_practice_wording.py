@@ -15,7 +15,15 @@ BAD = re.compile(
     r"|\bsends\s+nothing\b(?!\s+to\s+us\b)"
     # 0.3.1: dashboard banner said "is looking but is not sending anything yet".
     r"|\b(?:is\s+not|isn't|not)\s+sending\s+anything\b(?!\s+to\s+us\b)"
-    r"|\b(?:does\s+not|doesn't|will\s+not|won't)\s+send\s+anything\b(?!\s+to\s+us\b)",
+    r"|\b(?:does\s+not|doesn't|will\s+not|won't)\s+send\s+anything\b(?!\s+to\s+us\b)"
+    # Practice mode still contacts people-search sites while it looks for listings.
+    r"|\b(?:your\s+)?(?:information|data|details)\s+"
+    r"(?:stays?|remains?)\s+on\s+(?:this|your)\s+(?:computer|device)\b"
+    r"|\bnone\s+of\s+your\s+(?:information|data|details)\s+"
+    r"leaves\s+(?:this|your)\s+(?:computer|device)\b"
+    r"|\bnothing\s+(?:leaves|goes\s+off)\s+(?:this|your)\s+(?:computer|device)\b"
+    r"|\b(?:never|does\s+not|doesn't|will\s+not|won't)\s+"
+    r"contact(?:s)?\s+(?:any\s+)?(?:people-search\s+)?(?:sites?|websites?)\b",
     re.IGNORECASE,
 )
 # Preserve quoted JS strings while discarding comments.
@@ -104,6 +112,12 @@ def app_paths(root: Path) -> list[Path]:
 @pytest.mark.parametrize("text", [
     "Practice mode: nothing is sent.", "In practice mode nothing goes out until you say so.",
     "Practice mode sends nothing.", "PRACTICE MODE. Nothing IS sent.",
+    "Practice mode: your information stays on this computer while we search.",
+    "In practice mode, your details stay on this device.",
+    "Practice mode: none of your information leaves this device.",
+    "In practice mode, nothing leaves your computer.",
+    "Practice mode never contacts any site.",
+    "In practice mode, the search doesn't contact any website.",
 ])
 def test_rejects_overbroad_practice_promises(text: str) -> None:
     assert misleading(text)
@@ -116,6 +130,9 @@ def test_rejects_overbroad_practice_promises(text: str) -> None:
     "Practice mode still searches sites; no removal requests are sent.",
     "Nothing is sent until you approve this email.",
     "If you press No, nothing will be sent for this listing.",
+    "Nothing is sent to us while practice mode searches sites.",
+    "Practice mode: your details are stored on your computer, encrypted.",
+    "Your information stays on this computer when you review the results.",
 ])
 def test_allows_qualified_and_unrelated_copy(text: str) -> None:
     assert not misleading(text)
