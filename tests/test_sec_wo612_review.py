@@ -136,8 +136,6 @@ def test_hung_page_cannot_hang_the_session() -> None:
 # --------------------------------------------------------------------------- F4 lock
 
 
-@pytest.mark.xfail(strict=True, reason="SEC-WO612-4: the lock is never refreshed and holds "
-                   "no PID, so a live session older than 3 h is taken over")
 def test_live_session_lock_is_not_taken_over(tmp_path: Path) -> None:
     folder = tmp_path / "browser_profile"
     lock = folder.parent / "browser_profile.lock"
@@ -146,6 +144,42 @@ def test_live_session_lock_is_not_taken_over(tmp_path: Path) -> None:
         os.utime(lock, (old, old))
         with pytest.raises(ss.SessionUnavailable, match="busy"), ss._session_lock(folder):
             pass
+
+
+def test_session_lock_holds_pid_and_a_dead_holders_lock_is_taken(tmp_path: Path) -> None:
+    """SEC-WO612-4 fix: the OS lock dies with its holder; a leftover file (a crash, or an
+    older version's lock) never blocks the next session, and the file names the holder."""
+    folder = tmp_path / "browser_profile"
+    lock = folder.parent / "browser_profile.lock"
+    lock.write_text("999999999\n")                 # nobody holds an OS lock on it
+    with ss._session_lock(folder) as held:
+        assert lock.read_text().strip() == str(os.getpid())
+        held.refresh()
+        assert lock.read_text().strip() == str(os.getpid())
+    assert not lock.exists()
+    with ss._session_lock(folder):                  # released: free again
+        pass
+
+
+def test_session_lock_race_on_an_unlinked_file_is_busy(tmp_path: Path, monkeypatch) -> None:
+    """Two processes: the second locked the file the first had just unlinked. The inode
+    check reports busy instead of both holding a lock."""
+    folder = tmp_path / "browser_profile"
+    lock = ss.SessionLock(folder.parent / "browser_profile.lock")
+    real_stat = os.stat
+
+    def moved(path, *a, **k):
+        st = real_stat(path, *a, **k)
+        if Path(path) == lock.path:
+            return os.stat_result((st.st_mode, st.st_ino + 1, *tuple(st)[2:]))
+        return st
+
+    monkeypatch.setattr(ss.os, "stat", moved)
+    with pytest.raises(ss.SessionUnavailable, match="busy"):
+        lock.acquire()
+    monkeypatch.undo()
+    lock.acquire()
+    lock.release()
 
 
 # --------------------------------------------------------------------------- CR-C/D parity

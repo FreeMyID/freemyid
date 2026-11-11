@@ -70,7 +70,6 @@ NOTICE_MAX_WAIT = timedelta(days=14)
 CHALLENGE_TIMEOUT_S = 600            # attended: how long the window waits for the person
 BACKGROUND_GRACE_S = 20              # background: a site's own interstitial may clear itself
 POLL_S = 1.0
-LOCK_STALE = timedelta(hours=3)
 
 
 class Outcome(StrEnum):
@@ -467,24 +466,98 @@ def profile_dir() -> Path:
     return paths.home() / "browser_profile"
 
 
-@contextlib.contextmanager
-def _session_lock(folder: Path) -> Iterator[None]:
-    """One session at a time (a browser profile folder can be open only once)."""
-    folder.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-    lock = folder.parent / "browser_profile.lock"
-    try:
-        if lock.exists() and datetime.now().timestamp() - lock.stat().st_mtime < \
-                LOCK_STALE.total_seconds():
+class SessionLock:
+    """One session at a time (WO-612, SEC-WO612-4).
+
+    An OS lock on `browser_profile.lock` (flock on POSIX, an msvcrt byte lock on Windows)
+    held for the whole session: the kernel drops it when the holder exits, so a crashed
+    session never blocks the next one and a live one is never taken over, however long it
+    runs. The file holds the holder's PID (diagnostics), refreshed per site. Lock files
+    from older versions (no OS lock held) are simply taken. Two processes racing: the
+    second's non-blocking lock fails ("busy"); one that locked a file the first had just
+    unlinked notices the changed inode and reports "busy" too."""
+
+    def __init__(self, path: Path) -> None:
+        self.path = path
+        self._fd: int | None = None
+
+    @staticmethod
+    def _try_lock(fd: int) -> None:
+        if sys.platform == "win32":
+            import msvcrt
+            msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+    @staticmethod
+    def _unlock(fd: int) -> None:
+        if sys.platform == "win32":
+            import msvcrt
+            os.lseek(fd, 0, os.SEEK_SET)
+            msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(fd, fcntl.LOCK_UN)
+
+    def acquire(self) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        fd = os.open(self.path, os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0), 0o600)
+        try:
+            self._try_lock(fd)
+        except OSError:
+            os.close(fd)
+            raise SessionUnavailable("busy") from None
+        try:
+            same = os.path.samestat(os.fstat(fd), os.stat(self.path))
+        except OSError:
+            same = False
+        if not same:              # the previous holder unlinked it under us: it was busy
+            self._unlock(fd)
+            os.close(fd)
             raise SessionUnavailable("busy")
-        lock.unlink(missing_ok=True)
-        fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
-    except FileExistsError as e:
-        raise SessionUnavailable("busy") from e
-    os.close(fd)
+        self._fd = fd
+        self.refresh()
+
+    def refresh(self) -> None:
+        """Rewrite the holder's PID and touch the file (once per site)."""
+        if self._fd is None:
+            return
+        try:
+            os.lseek(self._fd, 0, os.SEEK_SET)
+            os.ftruncate(self._fd, 0)
+            os.write(self._fd, f"{os.getpid()}\n".encode())
+            os.utime(self.path)
+        except OSError as e:
+            log.debug("session lock refresh failed (%s)", type(e).__name__)
+
+    def release(self) -> None:
+        fd, self._fd = self._fd, None
+        if fd is None:
+            return
+        if sys.platform != "win32":
+            # unlink while still holding it: a process that opened the old file then fails
+            # the inode check above instead of sharing the lock with a newcomer
+            with contextlib.suppress(OSError):
+                self.path.unlink()
+        try:
+            self._unlock(fd)
+        finally:
+            os.close(fd)
+        if sys.platform == "win32":
+            with contextlib.suppress(OSError):   # another process may have it open
+                self.path.unlink()
+
+
+@contextlib.contextmanager
+def _session_lock(folder: Path) -> Iterator[SessionLock]:
+    """Hold `SessionLock` on `<folder>.lock` (next to the browser profile folder)."""
+    lock = SessionLock(folder.parent / f"{folder.name}.lock")
+    lock.acquire()
     try:
-        yield
+        yield lock
     finally:
-        lock.unlink(missing_ok=True)
+        lock.release()
 
 
 def session_brokers(registry: Registry, profile: Any,
