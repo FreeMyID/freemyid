@@ -145,6 +145,22 @@ class SecretBackend(Protocol):
 
 # ------------------------------------------------------------------------------ keyring
 
+_KEYCHAIN_LOCKED_HELP = (
+    "the system keychain can't be read right now (it may be locked); unlock it and try again"
+)
+_UNPROVEN_ENTRY_HELP = (
+    "the system keychain already holds a different Free My ID key under this folder's "
+    "name, and Free My ID can't prove which key is right, so it left both keys alone. Your "
+    "saved data is not changed. To keep this folder's key safe, store it in this folder "
+    "with a passphrase instead: freemyid secrets migrate --to passphrase"
+)
+_NOT_YET_CHECKED_HELP = (
+    "this folder's saved data comes from an older version and hasn't been checked against "
+    "its key yet. Open it once (for example run: freemyid status), then try again. To "
+    "keep its key in this folder instead, run: freemyid secrets migrate --to passphrase"
+)
+
+
 class KeyringBackend:
     """The OS keychain. Behaviour is exactly the pre-0.2 code path."""
 
@@ -185,10 +201,11 @@ class KeyringBackend:
     def entry_status(self) -> str:
         """Read-only, for `doctor`: "own" (this folder's entry), "shared" (a non-default
         folder still reading the legacy entry), "none" (no key and no data yet), "lost"
-        (data but no key opens it) or "unreadable" (keychain locked/unavailable)."""
+        (data but no key opens it) or "unreadable" (keychain locked/unavailable, or the
+        DB can't be read right now)."""
         name = self.entry_name()
-        has_data, kc = crypto.db_key_check()
         try:
+            has_data, kc = crypto.db_key_check()   # an unreadable DB: "unreadable" (F2)
             crypto._check_backend()
             own = crypto._decode_or_none(keyring.get_password(crypto.SERVICE, name))
             if own is not None and (kc is None or crypto._opens(own, kc)):
@@ -202,14 +219,37 @@ class KeyringBackend:
 
     def adopt_own_entry(self) -> bool:
         """`secrets migrate --to keyring` in a non-default folder that still reads the
-        shared legacy entry: copy the (proven) key into this folder's own entry and read it
-        back. The shared entry is left in place for the other folders. True if copied."""
+        shared legacy entry: copy the key into this folder's own entry and read it back.
+        The shared entry is never changed. The copy needs the DB key_check to prove the
+        shared key. An existing own entry is overwritten only when its key provably fails
+        that key_check (a stale entry from an older folder at this path) and the shared key
+        provably passes it (WO-605 review F3). True if copied."""
         if self.entry_status() != "shared":
             return False
-        key = self.load_data_key(create=False)
-        self.store_data_key(key)
+        _, kc = crypto.db_key_check()
+        own = self._stored()
+        if own is READ_FAILED:
+            raise crypto.KeyUnavailable(_KEYCHAIN_LOCKED_HELP)
+        try:
+            shared = crypto._decode_or_none(keyring.get_password(crypto.SERVICE,
+                                                                 crypto.KEY_NAME))
+        except keyring.errors.KeyringError as e:
+            raise crypto.KeyUnavailable(_KEYCHAIN_LOCKED_HELP) from e
+        if kc is None:
+            raise crypto.KeyUnavailable(_NOT_YET_CHECKED_HELP)
+        if shared is None or not crypto._opens(shared, kc):
+            raise crypto.KeyUnavailable(_UNPROVEN_ENTRY_HELP)
+        if isinstance(own, bytes) and crypto._opens(own, kc):
+            return False   # already this folder's own key (entry_status raced)
+        # own is None (absent), False (damaged) or a key that provably fails key_check.
+        try:
+            crypto._check_backend()
+            keyring.set_password(crypto.SERVICE, self.entry_name(),
+                                 base64.b64encode(shared).decode())
+        except keyring.errors.KeyringError as e:
+            raise crypto.KeyUnavailable(str(e)) from e
         stored = self._stored()
-        if not isinstance(stored, bytes) or not hmac.compare_digest(stored, key):
+        if not isinstance(stored, bytes) or not hmac.compare_digest(stored, shared):
             raise crypto.KeyUnavailable("the keychain did not keep this folder's own key")
         return True
 
@@ -219,17 +259,11 @@ class KeyringBackend:
         folder's legacy entry) or a moved folder's."""
         existing = self._stored()
         if existing is READ_FAILED:
-            raise crypto.KeyUnavailable(
-                "the system keychain can't be read right now (it may be locked); unlock it "
-                "and try again"
-            )
+            raise crypto.KeyUnavailable(_KEYCHAIN_LOCKED_HELP)
         if isinstance(existing, bytes):
             if hmac.compare_digest(existing, key):
                 return
-            raise crypto.KeyUnavailable(
-                "the system keychain already holds a different Free My ID key (another data "
-                "folder on this computer uses it); this folder can't move its key there"
-            )
+            raise crypto.KeyUnavailable(_UNPROVEN_ENTRY_HELP)
         try:
             crypto._check_backend()
             keyring.set_password(crypto.SERVICE, self.entry_name(),
@@ -721,8 +755,9 @@ def select() -> SecretBackend:
 # ------------------------------------------------------------------------------ wipe
 
 def _db_key_check() -> str | None:
-    """The DB's key_check value, read straight from sqlite (no key needed)."""
-    return crypto.db_key_check()[1]
+    """The DB's key_check value, read straight from sqlite (no key needed). Wipe must go on
+    with an unreadable DB, so it reads as "no key_check" here (strict=False)."""
+    return crypto.db_key_check(strict=False)[1]
 
 
 def _keychain_key_is_ours(kc_key: bytes) -> bool:

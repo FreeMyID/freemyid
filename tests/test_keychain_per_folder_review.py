@@ -1,8 +1,8 @@
 """qa-security review of WO-605 (per-folder keychain entries). Fake in-memory keyring only
 (conftest MemoryKeyring), never the real system keychain. Fake people only.
 
-Strict xfails mark findings that are still open on integrate/crypto-folder-key: each one
-flips to XPASS (and fails the suite) once fixed, so the marker must then be removed."""
+F1-F3 were strict xfails while open; they are fixed on integrate/crypto-folder-key (Theo
+Park), so they now run as plain regression tests."""
 from __future__ import annotations
 
 import base64
@@ -67,9 +67,6 @@ def _old_style_folder(home: Path, key: bytes) -> str:
 
 # ---------------------------------------------------------------- finding 1 (MED)
 
-@pytest.mark.xfail(strict=True, reason="WO-605 review F1: an old-style non-default folder is "
-                   "never given its own entry automatically, so wiping the default folder "
-                   "still deletes the only copy of its key (the reverse of the Goal sequence)")
 def test_f1_wipe_default_keeps_old_style_second_folder_readable(homes, monkeypatch,
                                                                 memkeyring):
     main, second = homes
@@ -87,9 +84,6 @@ def test_f1_wipe_default_keeps_old_style_second_folder_readable(homes, monkeypat
 
 # ---------------------------------------------------------------- finding 2 (LOW-MED)
 
-@pytest.mark.xfail(strict=True, reason="WO-605 review F2: an unreadable DB counts as "
-                   "has_data with key_check None, and _keyring_shared_legacy_key then hands "
-                   "out the shared key with no proof")
 def test_f2_unreadable_db_never_adopts_shared_key(homes, monkeypatch, memkeyring):
     _, second = homes
     k1 = os.urandom(32)
@@ -105,9 +99,6 @@ def test_f2_unreadable_db_never_adopts_shared_key(homes, monkeypatch, memkeyring
 
 # ---------------------------------------------------------------- finding 3 (LOW)
 
-@pytest.mark.xfail(strict=True, reason="WO-605 review F3: the doctor-recommended "
-                   "`secrets migrate --to keyring` fails when this path already has a stale "
-                   "own entry (store_data_key refuses a different key)")
 def test_f3_migrate_to_keyring_with_stale_own_entry(homes, monkeypatch, memkeyring):
     _, second = homes
     k1 = os.urandom(32)

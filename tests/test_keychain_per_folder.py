@@ -232,19 +232,18 @@ def test_wipe_old_style_second_folder_never_deletes_shared_entry(homes, monkeypa
 
 # ---------------------------------------------------------------- existing non-default folders
 
-def test_old_style_second_folder_keeps_working_and_doctor_warns(homes, monkeypatch,
-                                                                memkeyring):
+def test_old_style_second_folder_doctor_warns_then_migrate_gives_own_entry(
+        homes, monkeypatch, memkeyring):
     _, second = homes
     k1 = os.urandom(32)
     _set_legacy(memkeyring, k1)
     pid = _old_style_folder(second, k1)
     _use(monkeypatch, second)
-    assert _opens(pid)                                       # still reads the shared entry
-    assert set(_key_entries(memkeyring)) == {crypto.KEY_NAME}   # nothing moved silently
-    assert secret_backends.KeyringBackend().entry_status() == "shared"
+    assert secret_backends.KeyringBackend().entry_status() == "shared"   # not opened yet
     c = doctor.check_secrets()
     assert c.status == "warn"
     assert "secrets migrate --to keyring" in c.fix and "--to passphrase" in c.fix
+    assert set(_key_entries(memkeyring)) == {crypto.KEY_NAME}   # doctor is read-only
 
     r = secret_backends.migrate("keyring")                   # the per-folder rename
     assert r.changed and "own entry" in r.notice
@@ -254,6 +253,23 @@ def test_old_style_second_folder_keeps_working_and_doctor_warns(homes, monkeypat
     assert secret_backends.KeyringBackend().entry_status() == "own"
     assert doctor.check_secrets().status == "ok"
     assert _opens(pid)
+
+
+def test_old_style_second_folder_gets_own_entry_on_first_use(homes, monkeypatch,
+                                                             memkeyring):
+    """WO-605 review F1 (owner decision: auto-copy): the first open copies the proven
+    shared key into the folder's own entry; the shared entry is left exactly as it was."""
+    _, second = homes
+    k1 = os.urandom(32)
+    _set_legacy(memkeyring, k1)
+    pid = _old_style_folder(second, k1)
+    _use(monkeypatch, second)
+    assert _opens(pid)
+    b64 = base64.b64encode(k1).decode()
+    assert _key_entries(memkeyring) == {crypto.KEY_NAME: b64,
+                                        crypto.folder_key_name(second): b64}
+    assert secret_backends.KeyringBackend().entry_status() == "own"
+    assert doctor.check_secrets().status == "ok"
 
 
 @posix_only
@@ -269,7 +285,9 @@ def test_migrate_old_style_second_folder_to_passphrase_leaves_shared_entry(
     f.chmod(0o600)
     monkeypatch.setenv("FREEMYID_PASSPHRASE_FILE", str(f))
     r = secret_backends.migrate("passphrase", remove_keychain_key=True)
-    assert r.changed and "main Free My ID folder" in r.notice
+    # Reading the key gave the folder its own entry (F1); the move removes that copy (it
+    # is this folder's alone) and the shared entry stays for the main folder.
+    assert r.changed and r.notice == ""
     assert set(_key_entries(memkeyring)) == {crypto.KEY_NAME}
     secret_backends.clear_cache()
     assert _opens(pid)

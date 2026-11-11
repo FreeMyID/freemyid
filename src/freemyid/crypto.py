@@ -23,10 +23,12 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import hmac
 import logging
 import os
 import sys
 from pathlib import Path
+from typing import NamedTuple
 
 import keyring
 import keyring.errors
@@ -101,15 +103,26 @@ def folder_key_name(home: Path | None = None) -> str:
     return f"{KEY_NAME}:{hashlib.sha256(_norm(h).encode()).hexdigest()[:16]}"
 
 
-def db_key_check(db: Path | None = None) -> tuple[bool, str | None]:
-    """(has_data, key_check) of a data folder's DB, read with sqlite in ro mode (no key).
+DB_UNREADABLE_HELP = (
+    "Free My ID couldn't read its saved data just now (another Free My ID window may be "
+    "busy with it, or the file may be damaged), so it stopped without changing anything. "
+    "Close other Free My ID windows and try again later."
+)
 
-    has_data is True when the DB holds a key_check value or a saved person, i.e. a new key
-    must never be made for it. A DB that exists but can't be read counts as holding data
-    (fail closed)."""
+
+class DbState(NamedTuple):
+    """What the data folder's DB shows without a key (WO-605 review F2)."""
+    readable: bool          # False: the file exists but sqlite couldn't read it
+    has_data: bool          # a key_check value or a saved person: never make a new key
+    key_check: str | None
+
+
+def db_state(db: Path | None = None) -> DbState:
+    """Read a data folder's DB with sqlite in ro mode (no key). An unreadable DB is reported
+    as such, never as "has data, no key_check": that case alone may use an unproven key."""
     db = db if db is not None else paths.db_path()
     if not db.exists():
-        return False, None
+        return DbState(True, False, None)
     import sqlite3
     try:
         con = sqlite3.connect(f"{db.as_uri()}?mode=ro", uri=True)
@@ -119,15 +132,29 @@ def db_key_check(db: Path | None = None) -> tuple[bool, str | None]:
             if "meta" in tables:
                 row = con.execute("SELECT v FROM meta WHERE k='key_check'").fetchone()
                 if row is not None:
-                    return True, str(row[0])
+                    return DbState(True, True, str(row[0]))
             if "profiles" in tables and con.execute(
                     "SELECT 1 FROM profiles LIMIT 1").fetchone() is not None:
-                return True, None
+                return DbState(True, True, None)
         finally:
             con.close()
     except sqlite3.Error:
+        return DbState(False, True, None)
+    return DbState(True, False, None)
+
+
+def db_key_check(db: Path | None = None, *, strict: bool = True) -> tuple[bool, str | None]:
+    """(has_data, key_check) of a data folder's DB, read with sqlite in ro mode (no key).
+
+    has_data is True when the DB holds a key_check value or a saved person, i.e. a new key
+    must never be made for it. A DB that exists but can't be read raises `KeyUnavailable`
+    (try again later); with strict=False (wipe) it counts as holding data (fail closed)."""
+    st = db_state(db)
+    if not st.readable:
+        if strict:
+            raise KeyUnavailable(DB_UNREADABLE_HELP)
         return True, None
-    return False, None
+    return st.has_data, st.key_check
 
 
 def _opens(key: bytes, key_check: str) -> bool:
@@ -199,8 +226,10 @@ def _get_or_create_key() -> bytes:
 
 def _keyring_shared_legacy_key(key_check: str | None) -> bytes | None:
     """For a non-default folder made before per-folder names: the shared legacy entry's
-    key, but only when this folder's DB key_check proves it is this folder's key (or the
-    DB is too old to have a key_check; Store then proves it by decrypting)."""
+    key, but only when this folder's DB key_check proves it is this folder's key, or the DB
+    was read and holds saved people but is too old to have a key_check (Store then proves
+    the key by decrypting before it writes one). Callers get `key_check` from a strict
+    `db_key_check`, so an unreadable DB never gets here (WO-605 review F2)."""
     legacy = _decode_or_none(keyring.get_password(SERVICE, KEY_NAME))
     if legacy is None:
         return None
@@ -209,10 +238,31 @@ def _keyring_shared_legacy_key(key_check: str | None) -> bytes | None:
     return None
 
 
+def _copy_shared_to_own_entry(name: str, key: bytes) -> bool:
+    """WO-605 review F1: copy the proven shared legacy key into this folder's own (absent)
+    entry and read it back, so wiping the default folder can't lock this folder. The shared
+    entry is never changed or deleted. A failed copy is logged; the caller still uses the
+    proven shared key and `doctor` keeps warning. True if the copy was confirmed."""
+    try:
+        keyring.set_password(SERVICE, name, base64.b64encode(key).decode())
+        back = _decode_or_none(keyring.get_password(SERVICE, name))
+    except keyring.errors.KeyringError:
+        log.warning("keychain: could not give this data folder its own key entry; "
+                    "still using the shared entry")
+        return False
+    if back is None or not hmac.compare_digest(back, key):
+        log.warning("keychain: this data folder's own key entry did not read back; "
+                    "still using the shared entry")
+        return False
+    log.info("keychain: this data folder now has its own key entry (the shared one is kept)")
+    return True
+
+
 def _keyring_get_or_create_key(create: bool = True) -> bytes:
     """The OS keychain path (default backend). Reads this folder's own entry (see
     `folder_key_name`). Creates a key only for a folder with no saved data, and never
-    adopts another folder's entry (WO-605)."""
+    adopts another folder's entry (WO-605). A DB that can't be read raises
+    `KeyUnavailable` (try again later) before any key is chosen."""
     try:
         _check_backend()
         name = folder_key_name()
@@ -226,6 +276,8 @@ def _keyring_get_or_create_key(create: bool = True) -> bytes:
             # No own key that opens the data. A non-default folder made before per-folder
             # names may still be on the shared legacy entry (proven by key_check).
             if name != KEY_NAME and (legacy := _keyring_shared_legacy_key(kc)) is not None:
+                if stored is None and kc is not None:   # proven, and nothing to overwrite
+                    _copy_shared_to_own_entry(name, legacy)
                 return legacy
             raise KeyMismatch()   # never a new key over saved data
         if not create:
