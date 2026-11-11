@@ -2,7 +2,7 @@
 
 Only Profile id/created_at/updated_at are omitted from the aggregate: ids are checked
 separately, while save_draft (outside this test) owns persisted creation/update times.
-Known losses have independent strict per-leaf xfails; all other dump leaves are compared.
+Every other dump leaf is compared, so a field the edit draft drops fails here.
 All names, contact details, mailbox settings and consent records below are synthetic.
 """
 from __future__ import annotations
@@ -109,28 +109,11 @@ def _leaves(value: Any, path: Path = ()) -> dict[Path, Any]:
     return {path: value}
 
 
-def _loss(path: Path, value: Any) -> str | None:
-    if path == ("removal_scope",) and value != RemovalScope.FULL:
-        return "src/freemyid/wizard/draft.py:527 omits removal_scope; rebuild defaults to full"
-    if path == ("permissions", "allow_email_disclosure") and value:
-        return "src/freemyid/wizard/draft.py:539-541 omits allow_email_disclosure; defaults False"
-    if path == ("schedule", "respect_broker_intervals") and not value:
-        return "src/freemyid/wizard/draft.py:542-543 omits respect_broker_intervals; defaults True"
-    if path[0] == "previous_names" and path[-1] == "suffix" and value is not None:
-        return "src/freemyid/wizard/draft.py:610-611 omits previous-name suffixes; rebuild is None"
-    if path[0] == "addresses" and path[-1] in {"from_year", "to_year"} and value is not None:
-        return f"src/freemyid/wizard/draft.py:612-613 omits address {path[-1]}; rebuild is None"
-    return None
-
-
 def _field_cases() -> list[Any]:
     cases = []
     for index, profile in enumerate(PROFILES):
         for path, expected in _leaves(_dump(profile)).items():
-            reason = _loss(path, expected)
-            marks = [pytest.mark.xfail(strict=True, raises=AssertionError, reason=reason)] \
-                if reason else []
-            cases.append(pytest.param(index, path, expected, marks=marks,
+            cases.append(pytest.param(index, path, expected,
                                       id=f"profile-{index}." + ".".join(map(str, path))))
     return cases
 
@@ -143,15 +126,9 @@ def test_each_edit_field_round_trips(index: int, path: Path, expected: Any) -> N
 
 
 @pytest.mark.parametrize("profile", PROFILES, ids=lambda p: p.id)
-def test_complete_dump_except_independently_guarded_losses(profile: Profile) -> None:
+def test_complete_dump_round_trips(profile: Profile) -> None:
     rebuilt = dr.build_profile(dr.draft_from_profile(profile))
-    expected = _leaves(_dump(profile))
-    actual = _leaves(_dump(rebuilt))
-    assert actual.keys() == expected.keys()  # catches dropped or extra list items/fields too
-    losses = {path for path, value in expected.items() if _loss(path, value)}
-    assert {path: value for path, value in actual.items() if path not in losses} == {
-        path: value for path, value in expected.items() if path not in losses
-    }
+    assert _leaves(_dump(rebuilt)) == _leaves(_dump(profile))  # also catches dropped items
     assert rebuilt.id == profile.id
 
 
@@ -185,3 +162,15 @@ def test_mailbox_edit_holds_no_secret(monkeypatch: pytest.MonkeyPatch, saved: bo
     assert profile.mailbox is not None
     assert draft.mailbox == profile.mailbox.model_dump(exclude={"keyring_service"})
     assert draft.tls_pin == profile.mailbox.tls_cert_sha256
+
+
+def test_address_step_edit_keeps_years_of_the_edited_row() -> None:
+    draft = dr.draft_from_profile(PROFILES[0])
+
+    class _Form(dict):
+        def getlist(self, key: str) -> list[Any]:
+            return [self[key]] if key in self else []
+
+    form = _Form(city1="Springfield", state1="IL", zip1="62799", current="0")
+    assert dr.apply_step(draft, "addresses", form) == []
+    assert (draft.addresses[1]["from_year"], draft.addresses[1]["to_year"]) == (2018, 2019)
