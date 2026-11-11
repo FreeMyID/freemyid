@@ -23,14 +23,18 @@ the ``keyring`` backend (Credential Manager); if you point it at a passphrase fi
 keep the file inside your own user profile folder.
 
 Keychain entry name (WO-605, replaces the SEC-72 decision): the default data folder keeps
-the legacy ``freemyid``/``db-key-v1`` entry (Windows installs depend on it; never moved).
+the legacy ``freemyid``/``db-key-v1`` entry (Windows installs depend on it; not moved by
+Free My ID, though keyring's WinVault backend may re-save it under the Credential Manager
+target ``db-key-v1@freemyid`` when another entry takes the ``freemyid`` target).
 Every other FREEMYID_HOME owns ``db-key-v1:<sha256(resolved folder)[:16]>`` (see
 ``crypto.folder_key_name``), so a new folder never adopts another folder's key. Store,
 migrate and wipe touch only this folder's own entry; the legacy entry is deleted only when
 wiping the default folder and its DB key_check proves the key is that folder's. A
-non-default folder made before per-folder names keeps reading the shared legacy entry once
-its key_check proves it; ``doctor`` warns and ``secrets migrate --to keyring`` copies it
-into the folder's own entry (the shared entry is left for the other folders).
+non-default folder made before per-folder names reads the shared legacy entry once its
+key_check proves it, and copies it into its own entry on that first read (WO-605 review F1;
+the shared entry is left for the other folders). Until then ``doctor`` warns and ``secrets
+migrate --to keyring`` makes the same copy; it replaces an existing own entry only when that
+entry provably fails the key_check and the shared key provably passes it (F3).
 Residual: the per-folder name follows the folder's path, so a moved non-default keyring
 folder no longer finds its key (it fails closed; move it back, or use a passphrase backup).
 """

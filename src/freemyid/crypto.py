@@ -11,13 +11,23 @@ cannot be swapped between profiles/brokers. Store a `key_check()` value in the D
 table on first use and `verify_key_check()` it on open to detect a wrong/lost key early.
 
 Keychain entry names (WO-605): the default data folder keeps the legacy entry
-``freemyid``/``db-key-v1`` (Windows installs depend on it; it is never moved). Any other
-FREEMYID_HOME gets its own entry ``db-key-v1:<sha256(resolved folder)[:16]>``, so a new
-folder never adopts another folder's key and wiping it can't delete another folder's key.
-A non-default folder made before per-folder names keeps reading the shared legacy entry,
-but only after the DB key_check proves that key is its own (``doctor`` warns; ``secrets
-migrate --to keyring`` gives it its own entry). A folder whose DB holds data but whose key
-is missing or wrong fails closed with `KeyMismatch`; a new key is never made over it.
+``freemyid``/``db-key-v1`` (Windows installs depend on it; it is not moved by Free My ID).
+Any other FREEMYID_HOME gets its own entry ``db-key-v1:<sha256(resolved folder)[:16]>``,
+so a new folder never adopts another folder's key and wiping it can't delete another
+folder's key. The path is case-folded on macOS (`_norm`). A non-default folder made before
+per-folder names reads the shared legacy entry only when the DB key_check proves that key
+is its own, and then copies it into its own entry (read back to confirm), so a later wipe
+of the default folder can't lock it. The shared entry is never changed or deleted by that
+copy, and nothing is copied without a key_check. A DB that can't be read raises
+`KeyUnavailable` (try again later), never an unproven key. A folder whose DB holds data but
+whose key is missing or wrong fails closed with `KeyMismatch`; a new key is never made over
+it.
+
+Windows Credential Manager (keyring's WinVault backend): Credential Manager has one
+credential per target name, so keyring stores the newest ``freemyid`` entry under the
+target ``freemyid`` and re-saves the one already there under ``<user>@freemyid`` (e.g.
+``db-key-v1@freemyid``). keyring finds both by name, so Free My ID reads and deletes them
+the same way; only the target shown in Credential Manager changes.
 """
 from __future__ import annotations
 
