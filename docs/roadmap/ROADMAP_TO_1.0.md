@@ -27,7 +27,7 @@ Tray icon code exists (`wizard/tray.py`) but is off by default and needs the opt
 
 ## 2. What "1.0" means
 
-1.0 is the first release we would hand to a stranger's grandmother without a family member standing by. All eight bars must be met.
+1.0 is the first release we would hand to a stranger's grandmother without a family member standing by. All nine bars must be met.
 
 | # | Bar | Test |
 |---|---|---|
@@ -37,7 +37,8 @@ Tray icon code exists (`wizard/tray.py`) but is off by default and needs the opt
 | 4 | **Stability.** No open P1 bug. No data-loss bug in the two releases before 1.0. In-place upgrade from every stable release since 0.3 is tested. A release candidate has run for at least 30 days with family and beta testers. | Upgrade matrix and soak log in `docs/RELEASE_v1.0.md`. |
 | 5 | **Security and privacy.** Independent audit done, every high and critical finding fixed, report published. No open MED+ item in `docs/SECURITY_REVIEW.md`. The privacy-proof test suite (epic E7) is green. Threat model published. | Audit report linked from the site's trust page. |
 | 6 | **Sustainable.** Plus and Family can be bought without an account, the signed feed is live, refunds and renewals work. | End-to-end purchase test in the processor's live mode. |
-| 7 | **Docs and support.** User guide per OS, help centre on the site, Spanish UI and guide, CLI and config reference. Support mail answered within two business days for paid users by a named person or process. | Help centre covers the 15 most common problems; support process written down. |
+| 7 | **Docs and support.** User guide per OS, help centre on the site, Spanish UI and guide, CLI and config reference. Support mail answered within two business days for paid users by an automated process (no staff, see bar 9); only what automation cannot answer reaches the owner. | Help centre covers the 15 most common problems; support process written down. |
+| 9 | **Hands-off, no staff (paid 1.0 goal, owner 2026-11-11).** After setup, a paid user never has to act: the app finds listings, sends removals end to end, follows up, re-checks on a schedule, catches re-listings, tracks every legal deadline and keeps proof, on its own. There are no human operators behind the product: no support desk, no removal agents. Everything a competitor does with staff, we engineer (section 7a). Shared rule 5 still stands: we route around human checks, we never break them. | Owner stage-2 test plus beta: median **0** person actions per person per quarter after setup; worst case at most **1 batched click per quarter**; every remaining human-only step listed by broker on the transparency page with the plan to remove it. No support ticket that a self-repair or automated answer could have closed. |
 | 8 | **Stable contracts.** CLI verbs, exit codes, `--json` documents, the config schema and the registry schema are versioned and frozen. From 1.0 we follow semantic versioning. | Contract tests; a written deprecation policy. |
 
 **Not in 1.0** (recommended, see decision D8): Business/Partner edition (white-label build, MSI, partner portal), the community plugin API, mobile apps, languages beyond Spanish. They follow in 1.x.
@@ -156,7 +157,7 @@ Detail in `DESKTOP.md`.
 - **Owner decisions:** D18 (audit firm and budget; book it during 0.7).
 
 ### 1.0: sustainable
-All eight bars in section 2 met. The owner tags. The site moves to its 1.0 state (`WEBSITE.md`).
+All nine bars in section 2 met. The owner tags. The site moves to its 1.0 state (`WEBSITE.md`).
 
 ---
 
@@ -180,6 +181,40 @@ Items from `docs/ROADMAP.md` section 3 that are not named above.
 | Alias addresses, photo check, breach check (3.2, 3.10) | Later | no |
 
 ---
+
+## 7a. Zero-touch engine: how we remove the person and the staff
+
+The goal in bar 9 is an engineering problem, not a staffing one. The tracks below are how we get there. Each becomes work orders; the lead is Morgan unless noted.
+
+**Pick the route a machine can finish (route planner).** For every broker and person, the engine chooses the most automatable lawful route and falls back in order:
+1. **Email from the person's own mailbox** (Email tier). The engine reads the reply in the same mailbox, follows the broker's confirmation link only when it is on that broker's allowlisted domain, and answers routine follow-ups from templates.
+2. **Search-free forms** that take name and state instead of a listing URL (WO-614: PeopleSearchNow's state-law form and others).
+3. **Parent-company requests.** One request to the owner of a site family (for example the nine Tornado Alley sites) covers its sister sites; re-scans prove which ones it really cleared (WO-616).
+4. **State-law requests** (deletion and opt-out of sale) under the person's state law, sent by email or postal letter, with the statutory clock tracked.
+5. **Postal letters sent by a print-and-mail API** for brokers that accept only mail. The paid plan covers postage; nobody prints or posts anything.
+6. **One-request platforms** where the person qualifies (California DROP today; Connecticut's when it opens), filed automatically.
+7. **The background home-browser session** (WO-612) for brokers whose pages only open in a real browser: off-screen, read-only.
+8. **A batched human click** only for a step a site reserves for people (CAPTCHA, phone call). That residual is counted, published, and attacked broker by broker by moving the broker up this list.
+
+**Close the loop without anyone watching.**
+- Scheduled re-checks prove each removal: a confirmed removal, a re-listing (resubmitted automatically), or no answer.
+- Escalation ladder with the legal clock: polite follow-up, then a statutory-deadline letter, then a pre-filled state attorney-general complaint sent where the AG takes it without a human check.
+- A per-request timeline with proof (sent mail, replies, page snapshots) and a plain monthly report.
+- The scheduler catches up after sleep, missed days or a reboot, runs when on battery only if the user allows it, and reports itself broken before the user notices.
+
+**Read broker replies like a person would.** A local reply classifier sorts each answer (done / needs more info / verify identity / refused / auto-reply). It uses rules first, with an optional on-device model later, and never a cloud call with PII. "Verify identity" requests get a template answer that cites the statute and offers only the fields the person allowed (rule 6); handing over an ID document is never automatic.
+
+**A registry that heals itself (no staff curating it).**
+- Nightly canary searches with fake names on each broker, from in-house home machines, detect layout drift.
+- Drift opens a work order automatically. Agents patch the spec, qa reviews it, and the signed feed (0.7) ships the fix to every install within a day.
+- Opt-in, PII-free outcome counts (route, broker, result; no names, no addresses) tell us which routes stopped working. Off by default; the site stays script-free.
+
+**Support without a desk.**
+- `doctor --fix` self-repair for the known failure classes (keyring, scheduler, mailbox login, browser missing).
+- In-app answers drawn from the help centre.
+- Inbound support mail classified and answered from tested templates by the mail gateway. Only what automation cannot answer reaches the owner, and each such case becomes a template, a self-repair or a bug fix, so the owner queue shrinks every release.
+
+**Metrics in the release gate (from 0.6).** Person actions per person per quarter; share of brokers with a fully automatic route; median days to a confirmed removal; re-listing catch time; support mails per 100 users that reached a human. Each release must not make any of them worse.
 
 ## 7. Cross-cutting tracks
 
