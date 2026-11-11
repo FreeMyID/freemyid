@@ -589,16 +589,9 @@ def wipe(yes: Annotated[bool, typer.Option("--yes")] = False):
     if not paths.is_safe_wipe_target(target):
         con.print(f"[red]Refusing to wipe {target}:[/] it doesn't look like a Free My ID data folder.")
         raise typer.Exit(2)
-    if crypto.is_default_home(target):
-        # Only the main folder's key can be shared (WO-605): older extra folders may use it.
-        question = ("Delete ALL your Free My ID information from this computer? This can't "
-                    "be undone. If someone also set up an extra Free My ID folder on this "
-                    "computer (most people haven't), it may stop opening too.")
-    else:
-        question = (f"Delete ALL Free My ID information in this folder ({target})? This "
-                    "can't be undone. Your main Free My ID folder and any other folders "
-                    "are not affected.")
-    if not yes and not typer.confirm(question):
+    # Only the main folder's key can be shared with older extra folders (WO-605 review F5),
+    # so only wiping the main folder warns about other folders. Text: _wipe_question below.
+    if not yes and not typer.confirm(_wipe_question(target)):
         raise typer.Exit()
     try:
         from .scheduler import remove as sched_remove
@@ -1113,6 +1106,19 @@ def monitor(registry: Annotated[Path | None, typer.Option(
         if doc[key]:
             con.print(f"  {label}: " + ", ".join(doc[key]), markup=False, highlight=False,
                       soft_wrap=True)
+
+
+
+def _wipe_question(target: Path) -> str:
+    """The `wipe` confirm question, in plain words (WO-605 review F5). Kept at the end of the
+    file so command line numbers in the CLI reference page don't move."""
+    from . import crypto
+    if crypto.is_default_home(target):
+        return ("Delete ALL your Free My ID information from this computer? This can't be "
+                "undone. If someone also set up an extra Free My ID folder on this computer "
+                "(most people haven't), it may stop opening too.")
+    return (f"Delete ALL Free My ID information in this folder ({target})? This can't be "
+            "undone. Your main Free My ID folder and any other folders are not affected.")
 
 
 if __name__ == "__main__":
