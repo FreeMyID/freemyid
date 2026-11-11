@@ -884,12 +884,19 @@ class Runner:
         if (not shorter and window_end is not None and due_on is not None
                 and window_end.date() > due_on):
             due_on = window_end.date()
-        overdue = due_on is not None and _calendar_date(self.now) >= due_on
-        early = window_end is not None and not overdue
-        if window_end is not None and early and \
+        # Legal rungs never go out before the full verified statutory window, even when
+        # the shorter 15-day clock already made the follow-up a law-citing one.
+        legal_due = due_on
+        if window_end is not None and (legal_due is None or window_end.date() > legal_due):
+            legal_due = window_end.date()
+        today = _calendar_date(self.now)
+        early = window_end is not None and not (due_on is not None and today >= due_on)
+        legal_early = window_end is not None and not (legal_due is not None
+                                                      and today >= legal_due)
+        if legal_early and legal_due is not None and \
                 dec.action in (Escalation.LEGAL_DEMAND, Escalation.COMPLAINT):
             # BL-IN-10: no legal demand (or complaint hand-off) before the due day
-            until = due_on if due_on is not None else window_end.date()
+            until = legal_due
             self._event(profile, broker.id, "escalation_waiting", rung=dec.action.value,
                         why="legal_window", until=until.isoformat())
             return st

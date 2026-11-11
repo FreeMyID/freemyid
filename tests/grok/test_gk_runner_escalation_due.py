@@ -332,3 +332,65 @@ def test_stated_shorter_deadline_is_fifteen_days(
     assert seen == [law]
     events = [e for e in store.events(profile.id, B.id) if e.action == "escalated"]
     assert events and events[0].detail["reminder"] is False
+
+
+def _fixed_law(monkeypatch: pytest.MonkeyPatch, days: int) -> StateLaw:
+    law = StateLaw(state="IL", statute_name="Fake Act", citation="Fake 1", response_days=days,
+                   rights=["deletion"])
+
+    def fake_effective(*_args: object, **_kwargs: object) -> StateLaw:
+        return law
+
+    monkeypatch.setattr(outbox, "effective_law", fake_effective)
+    return law
+
+
+@pytest.mark.parametrize("level,kind", [(2, "demand"), (3, "complaint")])
+def test_shorter_clock_never_brings_legal_rungs_before_the_statute(
+    store: Store, monkeypatch: pytest.MonkeyPatch, level: int, kind: str,
+) -> None:
+    """CodeRabbit #106: the 15-day clock is for the follow-up only. A legal demand or a
+    complaint hand-off still waits out the full verified window (30 days here)."""
+    law = _fixed_law(monkeypatch, 30)
+    profile = _person(store)
+    sent = datetime(2026, 6, 1, 12, 0, tzinfo=UTC)
+    _save_sent(store, profile, sent)
+    day20 = sent + timedelta(days=20)
+    held = _escalate(_runner(store, day20, {"IL": law}), profile,
+                     _status(profile, level, sent, day20 - LADDER))
+    assert held.escalation_level == level
+    assert not any(r.kind == RequestKind.LEGAL_DEMAND
+                   for r in store.list_requests(profile.id, B.id))
+    assert not [t for t in store.list_todos(profile.id) if t.kind == TodoKind.COMPLAINT]
+    waiting = [e for e in store.events(profile.id, B.id) if e.action == "escalation_waiting"]
+    assert waiting[-1].detail["until"] == (sent.date() + timedelta(days=30)).isoformat()
+
+    day30 = sent + timedelta(days=30)
+    new = _escalate(_runner(store, day30, {"IL": law}), profile,
+                    _status(profile, level, sent, day30 - LADDER))
+    assert new.escalation_level == level + 1
+    if kind == "demand":
+        assert [r for r in store.list_requests(profile.id, B.id)
+                if r.kind == RequestKind.LEGAL_DEMAND]
+    else:
+        assert [t for t in store.list_todos(profile.id) if t.kind == TodoKind.COMPLAINT]
+
+
+def test_runner_waits_out_a_verified_window_over_45_days(
+    store: Store, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """CodeRabbit #140: a 90-day verified window holds the demand past day 45."""
+    law = _fixed_law(monkeypatch, 90)
+    profile = _person(store)
+    sent = datetime(2026, 6, 1, 12, 0, tzinfo=UTC)
+    _save_sent(store, profile, sent)
+    day60 = sent + timedelta(days=60)
+    held = _escalate(_runner(store, day60, {"IL": law}), profile,
+                     _status(profile, 2, sent, day60 - LADDER))
+    assert held.escalation_level == 2
+    waiting = [e for e in store.events(profile.id, B.id) if e.action == "escalation_waiting"]
+    assert waiting[-1].detail["until"] == (sent.date() + timedelta(days=90)).isoformat()
+    day90 = sent + timedelta(days=90)
+    new = _escalate(_runner(store, day90, {"IL": law}), profile,
+                    _status(profile, 2, sent, day90 - LADDER))
+    assert new.escalation_level == 3
