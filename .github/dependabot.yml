@@ -30,3 +30,8 @@ updates:
   - package-ecosystem: docker
     directory: /packaging/docker
     schedule: {interval: weekly}
+    # The image Python follows the tested range (CI runs 3.12; pyproject classifiers 3.11/3.12).
+    # Move it by hand after a CI matrix run on the new version; take patch rebuilds only.
+    ignore:
+      - dependency-name: python
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
