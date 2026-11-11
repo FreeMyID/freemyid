@@ -33,6 +33,29 @@ MAX_BYTES = 256 * 1024
 VERIFIED = "statute_text"
 EVIDENCE_VALUES = {"statute_text", "background", "limited", "not_yet"}
 
+# Reuse the product's state names. Only this explicitly documented alias is admitted.
+_STATE_CODES = {name.casefold(): code for code, name in STATE_NAMES.items()}
+_STATE_CODES.update({code.casefold(): code for code in STATE_NAMES})
+_STATE_CODES["calif."] = "CA"
+
+
+def resolve_state(value: str | None) -> str | None:
+    """Resolve a state name/code, ``calif.`` or a supported three-digit ZIP prefix.
+
+    Names are case-insensitive with surrounding/repeated whitespace ignored. ZIP
+    support is deliberately limited to the WO-284 specified 900–961 range (CA).
+    Other prefixes, full ZIP codes and undocumented aliases are unknown; never infer
+    a state from part of a longer value. This only identifies a state, not a legal right.
+    """
+    if not isinstance(value, str):
+        return None
+    value = " ".join(value.split()).casefold()
+    if value in _STATE_CODES:
+        return _STATE_CODES[value]
+    if len(value) == 3 and value.isascii() and value.isdigit():
+        return "CA" if 900 <= int(value) <= 961 else None
+    return None
+
 
 class MatrixEntry(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -83,6 +106,11 @@ class Matrix(BaseModel):
 
     def get(self, state: str | None) -> MatrixEntry | None:
         return self.states.get((state or "").upper())
+
+    def lookup(self, state: str | None) -> MatrixEntry | None:
+        """Tolerant lookup; return an existing entry without changing citation rules."""
+        code = resolve_state(state)
+        return self.states.get(code) if code is not None else None
 
 
 EMPTY = Matrix(version="none")
