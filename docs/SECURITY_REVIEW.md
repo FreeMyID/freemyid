@@ -881,3 +881,25 @@ Checked and OK: the Yes text says that in practice mode nothing is sent, and tha
 |---|---|---|---|---|---|
 | SEC-125 | LOW, Fixed on inhouse/gate-030-fixes | automation-engineer | src/freemyid/monitor.py `compare()` | A malformed `--previous` file (e.g. `weeks_bad: "x"`, a list `broker_id`, `1e400`) crashed the command with a traceback after every broker had been fetched, and any value in `first_seen_bad` was copied into the new report unchecked. Maintainer-only input, so LOW. | `_clean_prev()` type-checks each entry (health from the known set, string fingerprint, int weeks_bad, ISO date first_seen_bad) and drops bad values. tests/test_monitor.py `test_sec125_*` (6 cases; old code crashes on 4). |
 | SEC-126 | LOW, Fixed on inhouse/gate-030-fixes | devops-engineer | tools/cloudflare_waf_probes.py `main` | A failed read of the custom-rules entrypoint (HTTP 5xx, token scope) was treated as "no rules", so `--apply` would PUT a ruleset with only our rule, deleting every other custom WAF rule in the zone. The backup was also written world-readable before the chmod. Not applied anywhere yet. | Refuse `--apply`/`--rollback` when the read fails unless `--create` is passed (zone has no entrypoint yet); write the backup with O_EXCL and mode 0600 like the sibling tools. tests/test_cloudflare_waf_probes.py `test_sec126_*` (fails on old code). |
+
+## WO-605: one keychain entry per data folder (integrate/crypto-folder-key), 2026-11-11, Theo Park
+
+Fix for the SEC-72 residual. Every data folder used to share the keychain entry `freemyid`/`db-key-v1`. A second folder adopted the main folder's key on its first run, and `freemyid wipe` on that second folder then deleted it. Awaiting qa-security review.
+
+- **Naming.** The default folder (`~/.freemyid`, or `%APPDATA%\FreeMyID` on Windows) keeps `db-key-v1`, unchanged and never moved. Any other `FREEMYID_HOME` owns `db-key-v1:<first 16 hex of sha256(resolved folder path)>` (`crypto.folder_key_name`). A new folder never reads another folder's entry.
+- **Existing non-default folders.** A folder made before this change keeps reading the shared `db-key-v1`, but only when its DB key_check proves the key is its own. Nothing is copied or moved automatically. `freemyid doctor` warns and offers two fixes. `freemyid secrets migrate --to keyring` copies the key into the folder's own entry and leaves the shared one alone. `freemyid secrets migrate --to passphrase` moves the key into the folder.
+- **Wipe and migrate** delete only this folder's own entry. The shared `db-key-v1` is deleted only when wiping the default folder and its key_check matches. A non-default folder never deletes it.
+- **Fail closed.** If the DB holds data but no reachable key opens it, the app raises `KeyMismatch` with recovery steps. It never creates a new key over that data, on either the keychain or the passphrase backend.
+- **Residual.** The per-folder name follows the folder's path. A non-default keyring folder that is moved or renamed no longer finds its key, so it fails closed and loses no data: move it back to recover. Before moving a folder, run `freemyid secrets migrate --to passphrase`, because the wrapped key travels with the folder.
+
+### Recovery note: a folder that lost its key
+
+**How to tell.** `freemyid doctor` shows **Secrets backend: fail**, "no key in the keychain opens this folder's saved data", and any command that opens the data stops with "The encryption key for this data folder is missing or does not match the saved data". Older versions said "encryption key does not match this database". Nothing is changed or deleted when this happens.
+
+**What restores it.**
+1. **The folder was moved or renamed.** Move it back to its old path. Its keychain entry is named after that path.
+2. **A passphrase backup.** `datakey.wrapped.json` is written in the folder by `secrets migrate --to passphrase`. Put that file back into the folder; the passphrase opens it. A backup copy of the *whole* folder that includes this file restores everything.
+3. **The key is still in the keychain under another entry.** This happens with a folder that was the default home and became non-default, or the reverse. Only a person who knows which folder it was should copy that entry back. Ask for help, and don't delete anything.
+4. **Nothing else.** If the key was deleted and no passphrase backup exists, the encrypted data can't be read. The data is AES-256-GCM and has no back door. The only remaining options are to set the folder up again or to restore an older backup that has its key with it.
+
+Do not delete the data folder or keychain entries while recovering: a later step may still need them. No tool or agent should repair an owner's folder on its own; recovery is the owner's decision.
