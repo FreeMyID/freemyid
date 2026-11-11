@@ -8,6 +8,10 @@ trust to look with you.
 [Starting and updating](#starting-and-updating) is not an error. That part is
 normal.
 
+[The blue Windows box](#the-blue-windows-box) is about the installer, before
+Free My ID is open. A certificate warning on the download page, at work or at
+school, is in that same part. Those are not messages from inside Free My ID.
+
 Example person used below: Jane Q Testperson, Springfield IL.
 
 ## Sending email
@@ -120,3 +124,91 @@ The app may need reopening after an update.
 
 **Do this:** if you do not see the window, open Free My ID from the Desktop icon or the Start Menu.
 <!-- packaging/windows/freemyid.iss:53 -->
+
+## The blue Windows box
+
+This part is for the Windows installer, before Free My ID is open. Jane Q
+Testperson in Springfield IL might see it the first time she opens the file
+she downloaded.
+
+### The blue box says "Windows protected your PC"
+
+A blue box may say **Windows protected your PC**. If you click the small
+words **More info**, it can say **Unknown publisher**.
+
+The installer is not code-signed yet. Windows does not yet have a publisher
+certificate for this file, so it does not show a company name. The box can
+still appear when the file came from the download page.
+
+Do not turn off Windows security to get past this box. Leave your virus
+protection on.
+
+If that box is already open, click **Don't run**. That closes the box. It
+does not change your security settings. Check the file next. Open the file
+again only if the codes match.
+
+### Check the file against the SHA-256 on the download page
+
+SHA-256 is a long code for this one file. The download page shows that code.
+The file on your computer should show the same code. You do not type it into
+Free My ID. It is not a password.
+
+A helper can sit with you. On the download page, open **For helpers: check
+the download is genuine**.
+
+1. Open the download page and leave it open:
+   [freemyid.org/download](https://freemyid.org/download/#checksum).
+   Read the long code next to the version name. That code is the SHA-256.
+2. Click the Start button. Type PowerShell. Open **Windows PowerShell**. A
+   dark window opens. This is not the blue box.
+3. Click in that window. Copy the line below and paste it, then press Enter.
+   To paste, press Ctrl and V together. If that does nothing, right-click in
+   the window.
+
+   ```
+   Get-FileHash -Path "$env:USERPROFILE\Downloads\FreeMyIDSetup.exe" -Algorithm SHA256
+   ```
+
+   The download page writes the same check as `Get-FileHash .\FreeMyIDSetup.exe`
+   once you are in the Downloads folder. The line above already includes that
+   folder, so one paste is enough.
+
+4. The window shows a long code on the Hash line. Read it beside the code on
+   the download page, from the start through the end. Small letters and
+   capital letters are the same letter. Every letter and number should match.
+5. If the window says it cannot find the file, look in Downloads for
+   **FreeMyIDSetup.exe**. If the name is different, stop and ask a helper.
+   Do not open some other file.
+
+<!-- site_src/data/release.yaml:8 sha256 for version 0.3.0: a234c8cd560e436c81f48aacffb91da6408618d979f039bf2f5612de57ccfe9c -->
+
+**Do this:** if the codes match, open **FreeMyIDSetup.exe** again. When the
+blue box comes back, click **More info**. Check that the app name is
+**FreeMyIDSetup.exe**. It will say **Unknown publisher**. That is expected,
+because the installer is not code-signed yet. Then click **Run anyway**. Do
+that only when this file came from the download page, and only after the
+codes match.
+
+If the codes do not match, do not open the file. Stop and ask someone you
+trust.
+
+### The download page shows a certificate warning at work or school
+
+At work or at school, the download page may show a certificate warning. A
+network filter is checking web traffic. The work or school network is looking
+at the sites you open. That check can make the browser warn about the
+certificate.
+
+You might see "Your connection is not private", the word certificate, or a
+padlock with a line through it.
+
+**Do this:** try another network. Use the internet at home, or a phone's own
+hotspot, and open the download page again. Jane Q Testperson would do this
+at home in Springfield IL.
+
+Do not click past the warning.
+
+Never ignore a certificate warning on other sites. If a bank, a shop, or your
+email shows that warning, stop. Ask someone you trust to look with you.
+
+If the same warning is there on your home network too, stop. Do not go on.
