@@ -589,9 +589,16 @@ def wipe(yes: Annotated[bool, typer.Option("--yes")] = False):
     if not paths.is_safe_wipe_target(target):
         con.print(f"[red]Refusing to wipe {target}:[/] it doesn't look like a Free My ID data folder.")
         raise typer.Exit(2)
-    if not yes and not typer.confirm(
-            "Delete ALL Free My ID data on this computer? If you keep other Free My ID data "
-            "folders on this computer that use the system keychain, they will stop working too."):
+    if crypto.is_default_home(target):
+        # Only the main folder's key can be shared (WO-605): older extra folders may use it.
+        question = ("Delete ALL your Free My ID information from this computer? This can't "
+                    "be undone. If someone also set up an extra Free My ID folder on this "
+                    "computer (most people haven't), it may stop opening too.")
+    else:
+        question = (f"Delete ALL Free My ID information in this folder ({target})? This "
+                    "can't be undone. Your main Free My ID folder and any other folders "
+                    "are not affected.")
+    if not yes and not typer.confirm(question):
         raise typer.Exit()
     try:
         from .scheduler import remove as sched_remove
