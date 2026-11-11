@@ -1,5 +1,9 @@
 """WO-340: every CLI JSON document stays free of personal details.
 
+One documented exception: exposure/1 ``check_url`` and listing ``url`` carry the search
+link the text output also shows, which the engine builds from the name, city, state and
+ZIP. The last test pins that those keys are the only place a profile detail can appear.
+
 Existing guards, left unchanged:
 * ``tests/test_cli_json_serialization_edges.py`` covers status, todos, outbox and reports
   with the stock fake profile, not these markers, and not exposure, registry, schedule,
@@ -353,3 +357,47 @@ def test_emit_writes_one_json_object(tmp_path: Path, capsys: pytest.CaptureFixtu
     assert parsed["schema"] == "exposure/1"
     for marker in _MARKERS:
         assert marker not in captured.out
+
+
+# qa-security review (CodeRabbit #132): check_url and listing url are the documented
+# exception. The engine builds check_url from the name, city, state and ZIP (docs/CLI.md:
+# the text output shows the same link). Pin that, with the real builder, those two keys
+# are the only places a profile detail can appear, and that the street, mailbox, password,
+# copy-fields, letter and date of birth never appear even there.
+_URL_KEYS = (".check_url", ".url")
+_NEVER_IN_URL: tuple[str, ...] = (_STREET, _MAILBOX, _PASSWORD, _LETTER, _COPY,
+                                  "MARKER-NICKNAME", "MARKER-IMAP-HOST", "MARKER-SMTP-HOST",
+                                  _DOB.isoformat(), "217-555-0142", "freemyid-mailbox")
+
+
+def test_exposure_urls_built_by_the_engine_are_the_only_profile_detail() -> None:
+    from freemyid.engine.exposure import _hand_check_url
+
+    person = _person()
+    broker = Broker.model_construct(
+        id="fake_broker", name="Fake Broker", url="https://fake-broker.example/",
+        domains=["fake-broker.example"],
+        category=BrokerCategory.PEOPLE_SEARCH, method=Method.EMAIL, enabled=True,
+        search_url_pattern="https://fake-broker.example/name/{first}-{last}/{city}-{state}"
+                           "/{zip}",
+        slug_case="title")
+    url = _hand_check_url(broker, person)
+    assert "Testperson" in url and "62704" in url   # a real, profile-built link
+    entry = ExposureEntry(broker_id="fake_broker", broker_name="Fake Broker",
+                          status="check_by_hand", reason="bot_blocked", checked_at=_STAMP,
+                          check_url=url)
+    result = ExposureResult(profile_id=person.id, created_at=_STAMP, offline=True,
+                            practice_mode=True, score=0, explanation=[], entries=[entry],
+                            drop_first=False, drivers=[])
+    doc = cj.exposure_doc([(person, result)], offline=True, headless=True,
+                          exit_code=cj.EXIT_OK, skipped=[], trends={})
+    assert doc["profiles"][0]["entries"][0]["check_url"] == url
+    hits: list[str] = []
+    _walk(doc, "exposure", hits)
+    assert hits, "the profile-built link should carry name/city/ZIP markers"
+    for hit in hits:
+        where = hit.split(" contains ")[0]
+        assert where.endswith(_URL_KEYS), hit
+    wire = json.dumps(doc, ensure_ascii=False)
+    for marker in _NEVER_IN_URL:
+        assert marker not in wire, marker
