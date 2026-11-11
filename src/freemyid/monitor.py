@@ -323,6 +323,18 @@ def compare(current: list[BrokerHealth], previous: dict[str, Any] | None,
 
 _HEALTHS = frozenset({"ok", "moved", "form_changed", "blocked", "unreachable", "unknown"})
 _DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+_DATE_TIME = re.compile(r"^\d{4}-\d{2}-\d{2}[Tt ]\d{2}:\d{2}")
+
+
+def _clean_prev_generated_at(value: Any) -> str | None:
+    """Keep only bounded extended ISO date-times from the untrusted previous file."""
+    if not isinstance(value, str) or len(value) > 40 or not _DATE_TIME.match(value):
+        return None
+    try:
+        datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    return value
 
 
 def _clean_prev(b: dict[str, Any]) -> dict[str, Any]:
@@ -376,7 +388,9 @@ def run_monitor(registry: Any, *, requester: Requester | None = None,
     return {
         "schema": SCHEMA,
         "generated_at": now.isoformat(timespec="seconds"),
-        "previous_generated_at": (previous or {}).get("generated_at") if prev_ok else None,
+        "previous_generated_at": (
+            _clean_prev_generated_at((previous or {}).get("generated_at")) if prev_ok else None
+        ),
         "counts": counts,
         "changed": [h.broker_id for h in out if h.changed],
         "demote_suggested": [h.broker_id for h in out if h.demote_suggested],
