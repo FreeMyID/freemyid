@@ -582,3 +582,29 @@ def _settle(store: Store, profile_id: str, broker: Broker, outcome: str, mode: M
         _close(store, profile_id, QUEUE_TOKEN + broker.id)
         _hand_check(store, profile_id, broker, reason, check_url)
     return outcome
+
+
+def run_for_profiles(store: Store, profile_ids: list[str], *, mode: Mode = "background",
+                     registry: Registry | None = None, cfg: Config | None = None,
+                     hooks: SessionHooks | None = None, notifier: Notifier | None = None,
+                     window_factory: Callable[[], SiteWindow] | None = None
+                     ) -> dict[str, SessionReport | str]:
+    """The CLI / scheduler entry point: one session per person, never raising. Value per
+    profile id: its `SessionReport`, or a short PII-free reason ("no_consent",
+    "no_display", "busy", "error") when no session ran. Run it BEFORE `runner.run` so the
+    runner finds today's reads (`fresh_read`)."""
+    from .exposure import ExposureRefused
+    out: dict[str, SessionReport | str] = {}
+    for pid in profile_ids:
+        try:
+            out[pid] = run_session(store, pid, mode=mode, registry=registry, cfg=cfg,
+                                   hooks=hooks, notifier=notifier,
+                                   window=window_factory() if window_factory else None)
+        except ExposureRefused:
+            out[pid] = "no_consent"
+        except SessionUnavailable as e:
+            out[pid] = e.reason
+        except Exception as e:  # noqa: BLE001 - one person's session never stops the run
+            log.warning("search session failed (%s)", type(e).__name__)
+            out[pid] = "error"
+    return out

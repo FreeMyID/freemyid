@@ -434,3 +434,19 @@ def test_runner_never_searches_session_only_sites_headless(store, access) -> Non
     assert st.state.value == "found" and st.last_scan_at is not None
     later = utcnow() + timedelta(days=2)
     assert not ss.fresh_read(store, p.id, "devauto", later)          # stale after a day
+
+
+def test_run_for_profiles_never_raises(store, monkeypatch) -> None:
+    from freemyid.models import Consent, ConsentBasis
+    ok = _person(store)
+    no = make_profile(consent=Consent(basis=ConsentBasis.SELF, attested_by="Pat Testperson",
+                                      text_version="0"))
+    store.save_profile(no)
+    out = ss.run_for_profiles(store, [ok.id, no.id, "f" * 32], registry=_registry(),
+                              cfg=CFG, notifier=Notes(),
+                              window_factory=lambda: FakeWindow(SCRIPT))
+    assert isinstance(out[ok.id], ss.SessionReport)
+    assert out[no.id] == "no_consent" and out["f" * 32] == "no_consent"
+    monkeypatch.setattr(ss, "has_display", lambda platform=None: False)
+    assert ss.run_for_profiles(store, [ok.id], registry=_registry(), cfg=CFG) == \
+        {ok.id: "no_display"}
