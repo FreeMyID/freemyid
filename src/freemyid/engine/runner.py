@@ -63,6 +63,7 @@ from ..state import (
 )
 from ..submitters import assisted
 from ..submitters import base as sbase
+from ..submitters.email import NOT_SENT
 from . import handoff as hmod
 from . import matcher, plugins, tiers
 from .mail import DATE_SLACK, ReplyScan
@@ -397,23 +398,29 @@ class Runner:
 
     # ------------------------------------------------------------------ main loop
     async def run(self, profiles: list[Profile]) -> RunReport:
+        finished = False
         try:
-            for p in profiles:
-                ok, _why = consent_ok(p, self.store)
-                if not ok:
-                    self.report.skipped_profiles += 1
-                    self.store.log(Event(profile_id=p.id, actor=Actor.ENGINE,
-                                         action="profile_skipped_consent"))
-                    continue
-                self.report.labels[p.id] = p.label
-                await self.run_profile(p)
+            try:
+                for p in profiles:
+                    ok, _why = consent_ok(p, self.store)
+                    if not ok:
+                        self.report.skipped_profiles += 1
+                        self.store.log(Event(profile_id=p.id, actor=Actor.ENGINE,
+                                             action="profile_skipped_consent"))
+                        continue
+                    self.report.labels[p.id] = p.label
+                    await self.run_profile(p)
+            finally:
+                if self._browser is not None and self._own_browser:
+                    try:
+                        await self._browser.close()
+                    except Exception as e:  # noqa: BLE001
+                        log.debug("browser close failed: %s", type(e).__name__)
+            self._finish(profiles)
+            finished = True
         finally:
-            if self._browser is not None and self._own_browser:
-                try:
-                    await self._browser.close()
-                except Exception as e:  # noqa: BLE001
-                    log.debug("browser close failed: %s", type(e).__name__)
-        self._finish(profiles)
+            if not finished:    # a failed run still shows the count it held back (WO-333)
+                self._close_notices()
         return self.report
 
     def brokers(self) -> list[Broker]:
@@ -916,7 +923,10 @@ class Runner:
                                            kind=RequestKind.RESUBMIT, again=True)
                 for t in out.todos:
                     hmod.persist_todo(self.store, t)
-                if out.request is not None and out.request.status == RequestStatus.SENT:
+                if out.request is None and out.message.startswith(NOT_SENT):
+                    # WO-348: the email submitter reports a failed send instead of raising
+                    done = f"failed:{out.message[:40]}"
+                elif out.request is not None and out.request.status == RequestStatus.SENT:
                     st = mark_submitted(st, self.now)
                     self.report.submitted += 1
                 elif out.request is not None:
@@ -1050,12 +1060,31 @@ class Runner:
         self.report.open_todos = len(todos)
         n = len(todos) + len(queued)
         if n == 0:
+            self._close_notices(discard=True)   # nothing open: a held count would be stale
             return
+        # SEC-28: no URL (a bare dashboard URL has no session token and lands on 403);
+        # the notifier's click handler opens the app itself.
+        body = (f"{n} thing{'s' if n != 1 else ''} need{'s' if n == 1 else ''} you. "
+                f"Open Free My ID to see {'it' if n == 1 else 'them'}.")
+        self._close_notices(("Free My ID needs 5 minutes of your help", body))
+
+    def _close_notices(self, summary: tuple[str, str] | None = None, *,
+                       discard: bool = False) -> None:
+        """End the run's notices. A throttled notifier (WO-333) gets one closing notice: the
+        summary when given, else its own held count; a plain notifier just gets the summary.
+        Never builds a notifier unless there is a summary to show. A toast never fails a run."""
+        from ..notify import ThrottledNotifier
         try:
-            # SEC-28: no URL (a bare dashboard URL has no session token and lands on 403);
-            # the notifier's click handler opens the app itself.
-            body = f"{n} thing{'s' if n != 1 else ''} need you. Open Free My ID to see them."
-            self._notifier().notify("Free My ID needs 5 minutes of your help", body, None)
+            nt = self._notifier() if summary is not None else self.notifier
+            if isinstance(nt, ThrottledNotifier):
+                if discard:
+                    nt.discard()
+                elif summary is not None:
+                    nt.flush(*summary)
+                else:
+                    nt.flush()
+            elif nt is not None and summary is not None:
+                nt.notify(summary[0], summary[1], None)
         except Exception as e:  # noqa: BLE001
             log.info("notification failed: %s", type(e).__name__)
 

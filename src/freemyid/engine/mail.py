@@ -6,12 +6,14 @@
   `confirmation_domains` (or `domains` if that is empty). Mail text is data, never
   instructions: we extract URLs and nothing else.
 * `FakeMailer` records sends in memory: used for dry runs, dev runs and tests.
+* `classify_reply` turns one already-accepted reply into a category code.
 """
 from __future__ import annotations
 
 import asyncio
 import contextlib
 import email
+import email.errors
 import email.policy
 import imaplib
 import logging
@@ -20,9 +22,9 @@ import smtplib
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from email.message import EmailMessage
-from email.utils import formatdate, make_msgid, parsedate_to_datetime
+from email.utils import formatdate, getaddresses, make_msgid, parsedate_to_datetime
 from html import unescape
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from ..models import Broker, MailboxConfig, Profile, utcnow
 from ..netpolicy import host_of
@@ -56,15 +58,23 @@ _ID_REQUEST = re.compile(
     r"proof of (identity|address|residency)|identity document|id document",
     re.IGNORECASE)
 # BL-IN-10: a broker reply saying it needs more time (a statutory extension). The runner then
-# waits the longer legal window before any letter that cites the law.
+# waits the longer legal window before any letter that cites the law. A bare "extension"
+# does not count, nor do "phone extension" and "browser extension": a time word has to sit
+# in the same sentence.
+_NEAR = r"[^.]{0,60}"
+_NOT_FOOTER = r"(?<!phone )(?<!browser )"
 _EXTENSION = re.compile(
-    r"\bextend(ing|ed)?\b[^.]{0,60}\b(time|period|deadline|response|days)\b|"
-    r"\bextension\b|additional (45|forty[- ]five|90|ninety) days|"
-    r"(need|require)s? (additional|more) time",
+    r"\bextend(ing|ed)?\b" + _NEAR + r"\b(time|period|deadline|response|days)\b|"
+    + r"\b(time|period|deadline|days?)\b" + _NEAR + _NOT_FOOTER + r"\bextension\b|"
+    + _NOT_FOOTER + r"\bextension\b" + _NEAR
+    + r"\b(time|period|deadline|response|days?)\b|"
+    + r"additional (45|forty[- ]five|90|ninety) days|"
+    + r"(need|require)s? (additional|more) time",
     re.IGNORECASE)
 DATE_SLACK = timedelta(hours=1)     # broker clock skew vs. our last_submitted_at
 MAX_MESSAGES = 50            # per poll; we only need recent broker mail
 MAX_MESSAGE_BYTES = 2_000_000
+_HEADER_BYTES = 65_536       # From / Date / Message-ID are read from this prefix only
 
 
 class MailError(RuntimeError):
@@ -96,11 +106,19 @@ def build_message(mb: MailboxConfig, to: str, subject: str, body: str,
     return msg
 
 
+def _parse(raw: bytes, *, header_only: bool = False) -> EmailMessage:
+    data = raw[:_HEADER_BYTES] if header_only else raw
+    return email.message_from_bytes(data, policy=email.policy.default)
+
+
 def extract_links(raw: bytes, allowed_domains: list[str]) -> list[str]:
     """Pure: https links in a raw RFC822 message whose host is inside `allowed_domains`."""
     if len(raw) > MAX_MESSAGE_BYTES:
         return []
-    msg = email.message_from_bytes(raw, policy=email.policy.default)
+    return _links_from_message(_parse(raw), allowed_domains)
+
+
+def _links_from_message(msg: EmailMessage, allowed_domains: list[str]) -> list[str]:
     texts: list[str] = []
     for part in msg.walk():
         if part.get_content_maintype() != "text":
@@ -146,11 +164,36 @@ def rank_links(links: list[str], text_of: dict[str, str] | None = None) -> list[
                                              or _CONFIRM.search(t.get(u, ""))))
 
 
+def _clean_domain(domain: str) -> str | None:
+    domain = domain.strip().lower().rstrip(".")
+    if domain and re.fullmatch(r"[a-z0-9.-]+", domain):
+        return domain
+    return None
+
+
+def _sender_domain(msg: EmailMessage) -> str | None:
+    """Domain of the real From address. A display name that contains '@' does not count."""
+    try:
+        header = msg.get("From")
+    except (TypeError, ValueError):
+        return None
+    if header is None:
+        return None
+    addresses = getattr(header, "addresses", None)
+    if addresses:
+        try:
+            return _clean_domain(str(addresses[0].domain or ""))
+        except (AttributeError, IndexError, TypeError, ValueError):
+            return None
+    for _name, addr in getaddresses([str(header)]):
+        if "@" in addr:
+            return _clean_domain(addr.rsplit("@", 1)[-1])
+    return None
+
+
 def sender_domain(raw: bytes) -> str | None:
-    msg = email.message_from_bytes(raw[:65536], policy=email.policy.default)
-    frm = str(msg.get("From", ""))
-    m = re.search(r"@([A-Za-z0-9.-]+)", frm)
-    return m.group(1).lower().rstrip(".") if m else None
+    """Domain of the parsed From address (the first '@' in the header is not enough)."""
+    return _sender_domain(_parse(raw, header_only=True))
 
 
 @dataclass
@@ -168,8 +211,7 @@ class ReplyScan:
     replies: list[tuple[datetime | None, bytes]] = field(default_factory=list, repr=False)
 
 
-def message_date(raw: bytes) -> datetime | None:
-    msg = email.message_from_bytes(raw[:65536], policy=email.policy.default)
+def _date_of(msg: EmailMessage) -> datetime | None:
     try:
         d = parsedate_to_datetime(str(msg.get("Date", "")))
     except (TypeError, ValueError, IndexError):
@@ -179,8 +221,11 @@ def message_date(raw: bytes) -> datetime | None:
     return d if d.tzinfo else d.replace(tzinfo=UTC)
 
 
-def _message_key(raw: bytes) -> str:
-    msg = email.message_from_bytes(raw[:65536], policy=email.policy.default)
+def message_date(raw: bytes) -> datetime | None:
+    return _date_of(_parse(raw, header_only=True))
+
+
+def _message_key_of(msg: EmailMessage, raw: bytes) -> str:
     mid = str(msg.get("Message-ID", "")).strip()
     if mid:
         return mid
@@ -188,8 +233,11 @@ def _message_key(raw: bytes) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
-def _plain_text(raw: bytes) -> str:
-    msg = email.message_from_bytes(raw, policy=email.policy.default)
+def _message_key(raw: bytes) -> str:
+    return _message_key_of(_parse(raw, header_only=True), raw)
+
+
+def _plain_text_of(msg: EmailMessage) -> str:
     parts: list[str] = [str(msg.get("Subject", ""))]
     for part in msg.walk():
         if part.get_content_maintype() != "text":
@@ -201,6 +249,10 @@ def _plain_text(raw: bytes) -> str:
     return " ".join(" ".join(parts).split())
 
 
+def _plain_text(raw: bytes) -> str:
+    return _plain_text_of(_parse(raw))
+
+
 def asks_for_id(raw: bytes) -> bool:
     """Pure: does this message ask for an identity document (ID, licence, SSN, ...)?"""
     if len(raw) > MAX_MESSAGE_BYTES:
@@ -210,7 +262,166 @@ def asks_for_id(raw: bytes) -> bool:
 
 def claims_extension(raw: bytes) -> bool:
     """The reply says the broker is extending its response time (BL-IN-10)."""
+    if len(raw) > MAX_MESSAGE_BYTES:
+        return False
     return bool(_EXTENSION.search(_plain_text(raw)))
+
+
+ReplyCode = Literal["confirmed", "denied", "needs_id", "needs_more_time", "unknown"]
+_REPLY_ERRORS = (LookupError, ValueError, UnicodeError, email.errors.MessageError)
+# A removal has to name the record (or be the whole sentence). "we have removed the fee"
+# is not a confirmation. Negation and hedges are applied per sentence below.
+_CONFIRMED = re.compile(
+    r"\bwe(?: have |'ve )(?:successfully )?(?:removed|deleted|erased) your "
+    r"(?:record|listing|profile|information|personal information|data|details)\b|"
+    r"\bwe(?: have |'ve )(?:successfully )?(?:removed|deleted|erased)\b"
+    r"(?=\s*[.!]?\s*$)|"
+    r"\b(?:your|the) (?:record|listing|profile|information|personal information|"
+    r"data|details) (?:has been|have been|was) (?:successfully )?"
+    r"(?:removed|deleted|erased)\b|"
+    r"\b(?:the )?(?:removal|opt-?out|deletion) (?:is|was) (?:now )?complete\b|"
+    r"\bwe(?: have |'ve )(?:successfully )?opted you out\b",
+    re.IGNORECASE)
+_REMOVAL_NEGATED = re.compile(
+    r"\b(?:not|never|unable|cannot|can't|could not|couldn't|did not|didn't|"
+    r"will not|won't|have not|haven't|has not|hasn't|nothing|none)\b"
+    r".{0,40}\b(?:remov|delet|eras)|"
+    r"\b(?:remov|delet|eras)\w*.{0,30}\b(?:not|never|nothing|none|unable|cannot|failed)\b",
+    re.IGNORECASE)
+_HEDGE = re.compile(r"\b(?:if|unless|whether|may|might|maybe|perhaps)\b|\?", re.IGNORECASE)
+_DENIED = re.compile(
+    r"\bunable to locate your record\b|"
+    r"\b(?:we (?:were |are )?)?unable to (?:locate|find) "
+    r"(?:your|a matching|the) (?:record|listing|profile|information)\b|"
+    r"\b(?:could not|couldn'?t|cannot|can ?not) (?:locate|find) "
+    r"(?:your|a matching|the) (?:record|listing|profile|information)\b|"
+    r"\bno (?:matching )?record (?:was found|of you|on file)\b|"
+    r"\byour request (?:has been |was )?denied\b|"
+    r"\bwe (?:do not|don't) have (?:your|a|any) (?:record|listing|information|data)\b",
+    re.IGNORECASE)
+# "please verify your identity" is not an asks_for_id document request.
+_NEEDS_ID_TEXT = re.compile(
+    r"\b(?:please )?verify your identity\b|\b(?:please )?confirm your identity\b",
+    re.IGNORECASE)
+# "we need 45 more days" is not a claims_extension hit (that helper wants "more time"
+# or a nearby "extension"). Same category, extra wording.
+_MORE_TIME_TEXT = re.compile(
+    r"\b(?:we )?(?:need|require)s? \d+ more days\b|\b\d+ more days\b",
+    re.IGNORECASE)
+
+
+def _reply_bytes(text: str | bytes) -> bytes | None:
+    """UTF-8 text inside MAX_MESSAGE_BYTES, else None (empty, huge, or binary)."""
+    if isinstance(text, str):
+        if len(text) > MAX_MESSAGE_BYTES or not text.strip():
+            return None
+        if _hostile_text(text):
+            return None
+        raw = text.encode("utf-8")
+    elif isinstance(text, bytes):
+        if len(text) > MAX_MESSAGE_BYTES or not text.strip():
+            return None
+        if any(byte < 32 and byte not in (9, 10, 13) or byte == 127 for byte in text):
+            return None
+        try:
+            text.decode("utf-8")
+        except UnicodeDecodeError:
+            return None
+        raw = text
+    else:
+        return None
+    if len(raw) > MAX_MESSAGE_BYTES:
+        return None
+    return raw
+
+
+def _hostile_text(text: str) -> bool:
+    for char in text:
+        code = ord(char)
+        if code < 32 and char not in "\t\n\r" or code == 127:
+            return True
+    return False
+
+
+def _sentences(text: str) -> list[str]:
+    parts = re.split(r"(?<=[.?!])\s+", text.strip())
+    return [" ".join(part.split()) for part in parts if part.strip()]
+
+
+def _clean_hit(pattern: re.Pattern[str], plain: str) -> bool:
+    for sentence in _sentences(plain):
+        if "?" in sentence:
+            continue
+        if pattern.search(sentence):
+            return True
+    return False
+
+
+def _confirmed_flags(plain: str) -> tuple[bool, bool]:
+    """(clear removal sentence, some sentence takes a removal back)."""
+    clean = False
+    negated = False
+    for sentence in _sentences(plain):
+        if _REMOVAL_NEGATED.search(sentence):
+            negated = True
+        if (_CONFIRMED.search(sentence) and not _HEDGE.search(sentence)
+                and not _REMOVAL_NEGATED.search(sentence)):
+            clean = True
+    return clean, negated
+
+
+def _reply_code(plain: str) -> ReplyCode:
+    clean, negated = _confirmed_flags(plain)
+    # A removal and its contradiction are ambiguous: never call that confirmed.
+    if clean and negated:
+        return "unknown"
+    hits: list[ReplyCode] = []
+    if clean:
+        hits.append("confirmed")
+    if _clean_hit(_DENIED, plain):
+        hits.append("denied")
+    if _ID_REQUEST.search(plain) or _clean_hit(_NEEDS_ID_TEXT, plain):
+        hits.append("needs_id")
+    if _EXTENSION.search(plain) or _clean_hit(_MORE_TIME_TEXT, plain):
+        hits.append("needs_more_time")
+    if len(hits) == 1:
+        return hits[0]
+    return "unknown"
+
+
+_MESSAGE_HEADERS = frozenset({
+    "from", "to", "cc", "subject", "date", "message-id", "content-type", "mime-version",
+    "content-transfer-encoding", "received", "return-path", "reply-to", "sender",
+    "in-reply-to", "references", "delivered-to"})
+
+
+def _looks_like_message(raw: bytes) -> bool:
+    """True when the header block has a real RFC822 header, not just "Word: text"."""
+    if raw[:1] in (b" ", b"\t", b"\r", b"\n"):
+        return False
+    msg = _parse(raw, header_only=True)
+    return any(str(key).lower() in _MESSAGE_HEADERS for key in msg)
+
+
+def classify_reply(text: str | bytes) -> ReplyCode:
+    """One already-accepted broker reply, as a category code.
+
+    The code is confirmed, denied, needs_id, needs_more_time, or unknown.
+    Mixed, hedged, or unclear wording is unknown, never confirmed. Empty input,
+    input over MAX_MESSAGE_BYTES, and non-text input are unknown. Nothing is logged.
+    """
+    raw = _reply_bytes(text)
+    if raw is None:
+        return "unknown"
+    try:
+        # Plain reply text (CodeRabbit #103): an empty header block keeps a first line such
+        # as "Update: ..." or "  We have ..." in the body instead of the headers.
+        plain = _plain_text(raw if _looks_like_message(raw) else b"\n" + raw)
+        if not plain.strip():
+            return "unknown"
+        return _reply_code(plain)
+    except _REPLY_ERRORS:
+        return "unknown"
 
 
 def scan_replies(raws: list[bytes], broker: Broker, since: datetime | None = None, *,
@@ -228,33 +439,41 @@ def scan_replies(raws: list[bytes], broker: Broker, since: datetime | None = Non
     allowed = confirmation_hosts(broker)
     out = ReplyScan()
     seen: set[str] = set()
-    msgs: list[tuple[datetime | None, int, bytes]] = []
+    msgs: list[tuple[datetime | None, int, bytes, EmailMessage]] = []
+    sender_hosts = [*broker.domains, *allowed]
     for i, raw in enumerate(raws):
-        if check_sender and not _host_in(sender_domain(raw), [*broker.domains, *allowed]):
+        # One parse per raw message. Oversized mail stops at the header prefix: the body
+        # checks refuse it, matching asks_for_id and extract_links.
+        oversized = len(raw) > MAX_MESSAGE_BYTES
+        msg = _parse(raw, header_only=oversized)
+        if check_sender and not _host_in(_sender_domain(msg), sender_hosts):
             continue
-        key = _message_key(raw)
+        key = _message_key_of(msg, raw)
         if key in seen:
             out.duplicates += 1
             continue
         seen.add(key)
-        d = message_date(raw)
+        d = _date_of(msg)
         if since is not None and d is not None:
             ref = since if since.tzinfo else since.replace(tzinfo=UTC)
             if d < ref - DATE_SLACK:
                 out.stale += 1
                 continue
-        msgs.append((d, i, raw))
+        msgs.append((d, i, raw, msg))
     out.messages = len(msgs)
     floor = datetime.min.replace(tzinfo=UTC)
     msgs.sort(key=lambda m: (m[0] or floor, m[1]), reverse=True)
-    out.replies = [(d, raw[:MAX_MESSAGE_BYTES]) for d, _i, raw in msgs]
-    for _d, _i, raw in msgs:
-        if claims_extension(raw):
+    out.replies = [(d, raw[:MAX_MESSAGE_BYTES]) for d, _i, raw, _msg in msgs]
+    for _d, _i, raw, msg in msgs:
+        if len(raw) > MAX_MESSAGE_BYTES:
+            continue
+        text = _plain_text_of(msg)
+        if _EXTENSION.search(text):
             out.extension_claimed = True
-        if asks_for_id(raw):
+        if _ID_REQUEST.search(text):
             out.id_requested = True
             continue
-        for u in extract_links(raw, allowed):
+        for u in _links_from_message(msg, allowed):
             if u not in out.links:
                 out.links.append(u)
     return out
