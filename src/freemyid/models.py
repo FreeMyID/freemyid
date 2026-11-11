@@ -215,6 +215,28 @@ class EvidenceKind(StrEnum):
     USER_ATTESTATION = "user_attestation"   # the person's "I did it" (what, when, how)
     PHONE_CALL_NOTE = "phone_call_note"     # the call script plus the person's note
     POSTAL_RECEIPT = "postal_receipt"       # a photo/scan of a mailing receipt they attach
+    BLOCK_CAPTURE = "block_capture"         # JSON facts of an obstruction (EVIDENCE_ENGINE.md)
+    RESPONSE_TIMELINE = "response_timeline"  # dated list of request, replies and clock events
+
+
+class ObstructionKind(StrEnum):
+    """How a broker obstructed a lawful request (docs/EVIDENCE_ENGINE.md section 4)."""
+    CAPTCHA_ON_REQUEST = "captcha_on_request"
+    BLOCKED_REQUEST = "blocked_request"
+    ACCOUNT_REQUIRED = "account_required"
+    PHONE_REQUIRED = "phone_required"
+    EXCESS_VERIFICATION = "excess_verification"
+    AGENT_REFUSED = "agent_refused"
+    REQUEST_DENIED = "request_denied"
+    DEADLINE_MISSED = "deadline_missed"
+    UNAVAILABLE = "unavailable"
+
+
+# Seen on a page, so they need a second sighting on another day before they count.
+TECHNICAL_OBSTRUCTIONS = frozenset({
+    ObstructionKind.CAPTCHA_ON_REQUEST, ObstructionKind.BLOCKED_REQUEST,
+    ObstructionKind.UNAVAILABLE,
+})
 
 
 # --------------------------------------------------------------------------- profile
@@ -719,6 +741,83 @@ class Evidence(_Base):
     caption: str | None = None
 
     _relpath_ok = field_validator("relpath")(classmethod(lambda cls, v: _safe_relpath(v)))
+
+
+RequestSurface = Literal["optout_form", "deletion_form", "email", "postal", "confirmation_link"]
+
+
+class ObstructionRecord(_Base):
+    """A broker obstructing one lawful request (docs/EVIDENCE_ENGINE.md section 4).
+
+    PII-free by construction: ids, enums, a vendor name, an HTTP status and dates. The proof
+    itself lives in encrypted Evidence rows (`evidence_ids`). Only request surfaces count: a
+    CAPTCHA on a search page is never an obstruction, so there is no "search" surface here.
+    """
+    id: Id = Field(default_factory=new_id)
+    profile_id: Id
+    broker_id: BrokerId
+    request_id: Id | None = None
+    surface: RequestSurface
+    kind: ObstructionKind
+    vendor: str | None = Field(default=None, pattern=r"^[a-z0-9][a-z0-9._-]{0,63}$")
+    http_status: int | None = Field(default=None, ge=100, le=599)
+    observed_at: list[datetime] = Field(min_length=1)
+    request_sent_at: datetime | None = None
+    legal_due_on: date | None = None
+    state: str = Field(min_length=2, max_length=2, description="The person's USPS state")
+    statute_ids: list[str] = []
+    evidence_ids: list[Id] = []
+    confidence: Literal["observed", "confirmed"] = "observed"
+
+    @field_validator("state")
+    @classmethod
+    def _state_upper(cls, v: str) -> str:
+        return v.upper()
+
+    @model_validator(mode="after")
+    def _confirmed_needs_two_days(self) -> ObstructionRecord:
+        if self.confidence == "confirmed" and self.kind in TECHNICAL_OBSTRUCTIONS:
+            days = {t.date() for t in self.observed_at}
+            if len(days) < 2:
+                raise ValueError("a technical obstruction is confirmed only after sightings "
+                                 "on two different days")
+        return self
+
+
+_SHA256 = Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
+
+
+class BundleEntry(_Base):
+    """One item in a tamper-evident evidence bundle. `prev_hash` chains the entries."""
+    seq: int = Field(ge=0)
+    evidence_id: Id
+    kind: EvidenceKind
+    created_at: datetime
+    sha256: _SHA256
+    prev_hash: _SHA256
+
+
+class BundleManifest(_Base):
+    """The manifest of an evidence bundle (docs/EVIDENCE_ENGINE.md section 4).
+
+    `chain_head` is the last entry's chained hash; `manifest_sha256` covers the canonical
+    manifest without that field. `timestamp_token` is an optional RFC 3161 token (decision E2).
+    """
+    version: Literal[1] = 1
+    bundle_id: Id = Field(default_factory=new_id)
+    obstruction_id: Id
+    created_at: datetime = Field(default_factory=utcnow)
+    app_version: str
+    entries: list[BundleEntry] = Field(min_length=1)
+    chain_head: _SHA256
+    manifest_sha256: _SHA256
+    timestamp_token: str | None = None
+
+    @model_validator(mode="after")
+    def _ordered(self) -> BundleManifest:
+        if [e.seq for e in self.entries] != list(range(len(self.entries))):
+            raise ValueError("bundle entries must be numbered 0..n-1 in order")
+        return self
 
 
 class Event(_Base):
