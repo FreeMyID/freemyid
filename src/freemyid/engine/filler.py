@@ -6,8 +6,9 @@ fixed synonym table; `fill_page()` fills only the values `plan_values()` allows.
 
 Never touched, whatever the labels say:
   * anything inside a CAPTCHA / challenge widget (recaptcha, hcaptcha, turnstile, ...);
-  * password, file, hidden, checkbox, radio, button-like inputs (nothing gets ticked,
-    except `tick_safe_checkboxes` for the registry's `Broker.safe_checkboxes`);
+  * password, payment, and ID-number fields, plus file, hidden, checkbox, radio and
+    button-like inputs (nothing gets ticked, except `tick_safe_checkboxes` for the
+    registry's `Broker.safe_checkboxes`);
   * invisible / off-screen / aria-hidden controls (bot "honeypots": filling them marks the
     request as a bot) and disabled / read-only ones;
   * phone, birth date, age, middle name, company, search boxes and anything unrecognised.
@@ -39,29 +40,49 @@ if TYPE_CHECKING:
 KEYS = ("email", "listing_url", "first_name", "last_name", "full_name", "zip", "state",
         "city", "street")
 
+# Payment instruments and government ID numbers. Checked on every descriptor, not just the
+# visible label, and treated as protected so a friendly label cannot make them fillable.
+_PAYMENT_RE = (
+    r"card|cardholder|cardnumber|creditcard|debitcard|cvv|cvc|cvc2|ccv|"
+    r"ccnumber|ccnum|cc number|cc num|cc name|cc exp|cc csc"
+)
+_ID_RE = (
+    r"ssn|social security|passport|itin|"
+    r"drivers? licen[cs]e|driver s licen[cs]e|driving licen[cs]e|"
+    r"id number|identity number|identification number|national id|tax id"
+)
+_PAYMENT = re.compile(rf"\b(?:{_PAYMENT_RE})\b")
+_ID_NUMBER = re.compile(rf"\b(?:{_ID_RE})\b")
+
 _NEGATIVE = re.compile(
-    r"\b(middle|maiden|nick ?name|user ?name|username|login|company|business|organi[sz]ation|"
-    r"employer|card|cvv|cvc|search|query|coupon|promo|phone|tel|telephone|mobile|cell|fax|"
-    r"password|passcode|captcha|recaptcha|robot|human|comment|comments|message|subject|"
-    r"reason|age|birth|birthday|dob|ssn|social security|country|line 2|address 2|apt|"
-    r"apartment|suite|unit|honeypot|leave (this )?blank|confirm(ation)? code|otp|verification)\b")
+    rf"\b(?:middle|maiden|nick ?name|user ?name|username|login|company|business|"
+    rf"organi[sz]ation|employer|search|query|coupon|promo|phone|tel|telephone|mobile|cell|fax|"
+    rf"password|passcode|captcha|recaptcha|robot|human|comment|comments|message|subject|"
+    rf"reason|age|birth|birthday|dob|country|line 2|address 2|apt|apartment|suite|unit|"
+    rf"honeypot|leave (this )?blank|confirm(?:ation)? code|otp|verification|"
+    rf"{_PAYMENT_RE}|{_ID_RE})\b")
 
 # A box whose whole label / name is one of these is a typical honeypot ("leave this empty")
 # and is skipped even when visible (a "Website" box would otherwise get the listing URL).
 _HONEYPOT = re.compile(r"(your )?(website|web site|homepage|home page|hp|trap|honey ?pot)( url)?")
 
 _PATTERNS: dict[str, re.Pattern[str]] = {
-    "email": re.compile(r"\b(e ?mail|email address|e mail address)\b"),
+    "email": re.compile(r"\b(e ?mail ?address|e ?mail)\b"),
     "listing_url": re.compile(
         r"\b(url|uri|link|web ?address|web ?page|profile (address|page)|listing "
         r"(address|page)|record (address|page))\b"),
-    "first_name": re.compile(r"\b((first|given|fore) ?name|fname|first|given)\b"),
+    "first_name": re.compile(r"\b((first|given|fore|christian) ?name|fname|first|given)\b"),
     "last_name": re.compile(r"\b((last|family|sur) ?name|surname|lname|last|family)\b"),
     "full_name": re.compile(r"\b(full ?name|your name|name)\b"),
-    "zip": re.compile(r"\b(zip|zipcode|zip ?code|postal|post ?code|postcode)\b"),
+    # "postal address" is a street; bare "postal" / "postal code" is the ZIP.
+    "zip": re.compile(
+        r"\b(zipcode|zip ?code|postal ?code|postcode|post ?code|zip\d?)\b|"
+        r"\bpostal\b(?! address)"),
     "state": re.compile(r"\b(state|province)\b"),
-    "city": re.compile(r"\b(city|town|locality)\b"),
-    "street": re.compile(r"\b(street|address ?line ?1?|address 1|addr|address|street address)\b"),
+    "city": re.compile(r"\b(city|town|locality|municipality)\b"),
+    "street": re.compile(
+        r"\b(street ?address|street\d+|address ?line ?1|address\d+|addr\d+|"
+        r"street|address|addr)\b"),
 }
 
 _AUTOCOMPLETE = {
@@ -113,13 +134,18 @@ class Control:
         return cls(**{k: v for k, v in d.items() if k in names})
 
     def protected(self) -> bool:
-        """Must never be touched (CAPTCHA, password, file, checkbox, honeypot, ...)."""
+        """Must never be touched (CAPTCHA, password, payment, ID number, ...)."""
         if self.in_captcha or self.disabled or not self.visible:
             return True
         if self.tag == "input" and self.type in _PROTECTED_TYPES:
             return True
-        blob = _norm(f"{self.name} {self.id}")
-        return bool(re.search(r"\b(g recaptcha|h captcha|cf turnstile|captcha)\b", blob))
+        ac = (self.autocomplete or "").strip().lower()
+        if ac.startswith("cc-"):
+            return True
+        blob = _norm(" ".join([*self.sources(), self.name, self.id, self.autocomplete]))
+        if re.search(r"\b(g recaptcha|h captcha|cf turnstile|captcha)\b", blob):
+            return True
+        return bool(_PAYMENT.search(blob) or _ID_NUMBER.search(blob))
 
     def fillable(self) -> bool:
         if self.protected():
@@ -138,12 +164,12 @@ def classify(c: Control) -> str | None:
     """Canonical key for a control, or None (unknown / deliberately skipped)."""
     if not c.fillable():
         return None
-    for src in c.sources():
-        t = _norm(src)
-        if not t:
-            continue
+    # A payment, ID, phone or honeypot word on any descriptor blocks a friendly label.
+    texts = [t for t in (_norm(src) for src in c.sources()) if t]
+    for t in texts:
         if _NEGATIVE.search(t) or _HONEYPOT.fullmatch(t):
             return None
+    for t in texts:
         for k in KEYS:
             if _PATTERNS[k].search(t):
                 return k
@@ -158,20 +184,157 @@ def classify(c: Control) -> str | None:
     return None
 
 
+# Territories matcher.STATE_NAMES does not carry. Kept here so the state list stays a
+# contract of the matcher (this file only reads it).
+_TERRITORY_NAMES: dict[str, str] = {
+    "AS": "American Samoa",
+    "GU": "Guam",
+    "MP": "Northern Mariana Islands",
+    "PR": "Puerto Rico",
+    "VI": "Virgin Islands",
+}
+# Whole-option abbreviations after _norm (punctuation already spaces). "calif" is "Calif.".
+_STATE_ALIASES: dict[str, str] = {
+    "ala": "AL", "ariz": "AZ", "ark": "AR", "cal": "CA", "calif": "CA", "colo": "CO",
+    "conn": "CT", "del": "DE", "fla": "FL", "ill": "IL", "ind": "IN", "kan": "KS",
+    "kans": "KS", "mass": "MA", "mich": "MI", "minn": "MN", "miss": "MS", "mont": "MT",
+    "neb": "NE", "nebr": "NE", "nev": "NV", "okla": "OK", "ore": "OR", "oreg": "OR",
+    "penn": "PA", "penna": "PA", "tenn": "TN", "tex": "TX", "wash": "WA", "wis": "WI",
+    "wisc": "WI", "wyo": "WY", "w va": "WV", "n car": "NC", "s car": "SC", "n dak": "ND",
+    "s dak": "SD", "n mex": "NM", "washington dc": "DC", "us virgin islands": "VI",
+    "virgin islands us": "VI",
+}
+_PLACEHOLDER_TOKENS = frozenset({
+    "a", "an", "choose", "n", "na", "none", "one", "option", "options", "pick", "please",
+    "province", "region", "select", "state", "territory", "the", "your",
+})
+_STATE_FILLER = _PLACEHOLDER_TOKENS | frozenset({
+    "and", "commonwealth", "of", "states", "united", "us", "usa",
+})
+
+
+def _build_name_to_code() -> dict[str, str]:
+    names = dict(_STATE_ALIASES)
+    for code, name in (*STATE_NAMES.items(), *_TERRITORY_NAMES.items()):
+        names[name.lower()] = code
+    return names
+
+
+_NAME_TO_CODE = _build_name_to_code()
+_CODES = frozenset(STATE_NAMES) | frozenset(_TERRITORY_NAMES)
+
+
+def _collapse_initials(text: str) -> str:
+    """Join runs of single letters so "D. C." and "C. A." become "dc" and "ca"."""
+    parts = text.split()
+    out: list[str] = []
+    buf: list[str] = []
+
+    def flush() -> None:
+        if buf:
+            out.append("".join(buf))
+            buf.clear()
+
+    for part in parts:
+        if len(part) == 1 and part.isalpha():
+            buf.append(part)
+        else:
+            flush()
+            out.append(part)
+    flush()
+    return " ".join(out)
+
+
+def _is_placeholder(raw: str) -> bool:
+    text = _collapse_initials(_norm(raw))
+    return bool(text) and all(part in _PLACEHOLDER_TOKENS for part in text.split())
+
+
+def _named(text: str) -> str | None:
+    """Code when `text` is a state name or abbreviation, filler words aside."""
+    if not text:
+        return None
+    hit = _NAME_TO_CODE.get(text)
+    if hit:
+        return hit
+    core = " ".join(part for part in text.split() if part not in _STATE_FILLER)
+    if core and core != text:
+        return _NAME_TO_CODE.get(core)
+    return None
+
+
+def _one_name(text: str) -> str | None:
+    """The one state named in `text`, or None when it is ambiguous or leftover junk.
+
+    Longest name wins, so "west virginia" is not Virginia and "arkansas" is not Kansas.
+    """
+    found: list[tuple[int, str, str]] = []
+    for name, code in _NAME_TO_CODE.items():
+        if re.search(rf"(?<![a-z0-9]){re.escape(name)}(?![a-z0-9])", text):
+            found.append((len(name), name, code))
+    if not found:
+        return None
+    best = max(length for length, _name, _code in found)
+    top = [(name, code) for length, name, code in found if length == best]
+    codes = {code for _name, code in top}
+    if len(codes) != 1:
+        return None
+    code = codes.pop()
+    rest = text
+    for name, _code in top:
+        rest = re.sub(rf"(?<![a-z0-9]){re.escape(name)}(?![a-z0-9])", " ", rest)
+    for tok in rest.split():
+        if tok in _STATE_FILLER or tok.upper() == code:
+            continue
+        return None
+    return code
+
+
+def _state_of_text(raw: str | None) -> str | None:
+    """2-letter code denoted by one option string, or None if it is not one state."""
+    if not raw or not raw.strip():
+        return None
+    text = _collapse_initials(_norm(raw))
+    if not text or _is_placeholder(raw):
+        return None
+    if text.upper() in _CODES:
+        return text.upper()
+    named = _NAME_TO_CODE.get(text)
+    if named:
+        return named
+    parts = text.split()
+    if len(parts) >= 2:
+        head, tail = parts[0].upper(), parts[-1].upper()
+        if head in _CODES and _named(" ".join(parts[1:])) == head:
+            return head
+        if tail in _CODES and _named(" ".join(parts[:-1])) == tail:
+            return tail
+    return _one_name(text)
+
+
 def choose_state_option(options: list[dict[str, str]], code: str) -> str | None:
-    """The <option> value for a 2-letter state code. Accepts "NC", "North Carolina",
-    "NC - North Carolina" style options (case-insensitive)."""
-    code = code.upper()
-    full = STATE_NAMES.get(code, "").lower()
-    for o in options:
-        v, t = (o.get("value") or "").strip(), (o.get("text") or "").strip()
-        if v.upper() == code or t.upper() == code or (full and (v.lower() == full or
-                                                              t.lower() == full)):
-            return o.get("value") or t
-    for o in options:      # "NC - North Carolina", "North Carolina (NC)"
-        t = _norm(o.get("text"))
-        if full and full in t and re.search(rf"\b{code.lower()}\b", t):
-            return o.get("value") or o.get("text")
+    """The <option> value for a 2-letter state code.
+
+    Accepts "NC", "North Carolina", "CA - California", "California (CA)", "Calif.",
+    lower-case and dotted codes ("ca", "D.C."), and territories (PR, DC). A leading
+    "Select..." is ignored. When the value and the text name different states, the
+    option is skipped so a mismatched value can never select the wrong state.
+    """
+    want = code.strip().upper()
+    if want not in _CODES:
+        return None
+    for opt in options:
+        value = opt.get("value") or ""
+        text = opt.get("text") or ""
+        if _is_placeholder(text) or _is_placeholder(value):
+            continue
+        v_code = _state_of_text(value)
+        t_code = _state_of_text(text)
+        # "SC" / "North Carolina" would submit the wrong state. Skip it.
+        if v_code and t_code and v_code != t_code:
+            continue
+        if (v_code or t_code) == want:
+            return value if value.strip() else text.strip()
     return None
 
 
