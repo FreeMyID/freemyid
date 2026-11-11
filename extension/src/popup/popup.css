@@ -1,0 +1,39 @@
+/* Toolbar popup. */
+
+body {
+  width: 380px;
+}
+
+main {
+  padding: 20px;
+}
+
+dl {
+  margin: 0 0 16px;
+}
+
+.row {
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+
+dt {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+dd {
+  margin: 4px 0 0;
+}
+
+#result:empty {
+  display: none;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}

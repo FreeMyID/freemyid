@@ -1,0 +1,8 @@
+{
+  "//": "Google Chrome: the background is a service worker (ES module).",
+  "minimum_chrome_version": "120",
+  "background": {
+    "service_worker": "src/background/main.js",
+    "type": "module"
+  }
+}

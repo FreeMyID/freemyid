@@ -1,0 +1,36 @@
+/* Options page (opens in a tab). */
+
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin: 16px 0 24px;
+  cursor: pointer;
+}
+
+.check input {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  accent-color: var(--brand);
+}
+
+#result:empty {
+  display: none;
+}
+
+ul {
+  margin: 0;
+  padding-left: 24px;
+}
+
+li {
+  margin-bottom: 10px;
+}

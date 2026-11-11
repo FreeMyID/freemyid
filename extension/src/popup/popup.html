@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Free My ID</title>
+  <link rel="stylesheet" href="../lib/theme.css">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main>
+    <h1 data-i18n="popupTitle">Free My ID</h1>
+
+    <dl>
+      <div class="row">
+        <dt data-i18n="popupAppLabel">Free My ID app</dt>
+        <dd id="app-status" data-i18n="popupChecking">Checking...</dd>
+      </div>
+      <div class="row">
+        <dt data-i18n="popupSiteLabel">This site</dt>
+        <dd id="site-status" data-i18n="popupChecking">Checking...</dd>
+      </div>
+      <div class="row" id="state-row" hidden>
+        <dt data-i18n="popupStateLabel">Your status on this site</dt>
+        <dd id="state-status"></dd>
+      </div>
+    </dl>
+
+    <p id="result" role="status"></p>
+
+    <div class="buttons">
+      <button type="button" id="remove" class="primary" data-i18n="popupRemove" hidden>Remove me</button>
+      <button type="button" id="open-options" data-i18n="popupOptions">Settings</button>
+    </div>
+
+    <p class="small" data-i18n="popupPrivacy">This add-on sends nothing over the internet. It only talks to the Free My ID app on this computer.</p>
+  </main>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
