@@ -1,10 +1,9 @@
 # App string inventory: broker pages, protection steps and reports
 
 This inventory adds fixed English copy to [STRINGS.md](STRINGS.md) and
-[STRINGS_CLI.md](STRINGS_CLI.md). It records current source wording, not a translation.
+`STRINGS_CLI.md` (not linked: it is delivered separately in WO-232 and may not be in this tree yet). It records current source wording, not a translation.
 No Spanish interface ships yet; Spanish UI is coming in the roadmap
-(`docs/ROADMAP.md:70,208`). The CLI inventory is delivered in WO-232 (issue pending)
-and may be absent until the in-house team integrates that work.
+(`docs/ROADMAP.md:70,208`).
 
 Braces such as `{person}`, `{date}` and `{count}` name runtime placeholders, never
 example personal values. Keep whole sentences together when translating count-dependent
@@ -24,7 +23,7 @@ privacy and security meaning; recording the English does not approve a translati
 | `src/freemyid/wizard/views.py:112-121` | “Name: {name}”; “Age: {age}”; “Places: {places}”; “Relatives listed: {count}”; “First seen {date}.”; “ Gone since {date}.” | Labels around saved listing values | Values are dynamic and not copied into this inventory. The optional gone-since sentence begins with a space. Dates use the page's formatter. |
 | `src/freemyid/wizard/views.py:122-123` | “This is only what the site itself shows. Free My ID sends a site nothing more than that.” | Listing-disclosure note | This is the current source claim, not newly approved wording; **owner review before translation**. |
 | `src/freemyid/wizard/views.py:125-129` | “What we sent”; “No request has gone to this site yet.”; “When”; “What”; “How” | Request history heading, empty state and new column labels | The remaining shared column label is already inventoried in STRINGS.md. Preserve the individual-site/no-request scope; **owner review before translation**. |
-| `src/freemyid/wizard/views.py:133-134` | “ (practice)”; “Reference {reference}” | Optional request-history suffix and reference | Request method/status values are dynamic interface data. The practice suffix starts with a space; **owner review before translation**. |
+| `src/freemyid/wizard/views.py:133-134` | “ (practice)”; “Reference {reference}” | Optional request-history suffix and reference | The practice suffix starts with a space; **owner review before translation**. The “How” and “State” cells show enum values with underscores turned into spaces, so they are English fixed strings, not data: How = “web form”, “email”, “postal”, “phone”, “account required”; State = “draft”, “queued for approval”, “sent”, “failed”, “cancelled” (`src/freemyid/models.py:88-93,151-156`). “Sent” is a recorded send, not a confirmed removal. |
 | `src/freemyid/wizard/views.py:141,145,147` | “What came back”; “Reply received {date}”; “No reply yet. Many sites never reply. Free My ID checks the listing itself.” | Reply history and empty state | A reply is distinct from a confirmed removal. |
 | `src/freemyid/wizard/views.py:150,152-154` | “not planned yet”; “Last checked {date}. Last request {date}. Sites can put details back up, so Free My ID looks again.” | Next-check fallback and history note | The two `{date}` values come from different timestamps; preserve that distinction. The shared section heading is already inventoried. |
 | `src/freemyid/wizard/views.py:160-161` | “What the site showed and replied, kept encrypted on this computer.” | Receipt gallery note | Fixed privacy statement; **owner review before translation**. Captions and dates are dynamic. |
