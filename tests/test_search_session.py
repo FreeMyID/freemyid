@@ -396,3 +396,41 @@ def test_real_window_fixture_mode(store, monkeypatch, tmp_path, mode) -> None:
     assert ("tracker.invalid", "block") in decisions
     assert all(h in allowed for h, what in decisions if what != "block"), decisions
     assert (tmp_path / "browser_profile").is_dir()            # the app's own profile folder
+
+
+# --------------------------------------------------------------------------- the runner
+
+
+class NoBrowser:
+    """A runner browser that fails the test if anything uses it."""
+
+    def __getattr__(self, name):
+        raise AssertionError(f"headless browser used for a session-only site ({name})")
+
+
+@pytest.mark.parametrize("access", ["bot_blocked", "unknown"])
+def test_runner_never_searches_session_only_sites_headless(store, access) -> None:
+    """Acceptance 2: the runner's headless browser never tries a bot_blocked site (blind
+    until the home-browser session reads it), nor an unknown one the session has taken
+    over; the session's listings count instead."""
+    from freemyid.engine import runner
+    reg = _registry(devauto=access)
+
+    def scan(p):
+        runner.run(store, reg, [p], scan_only=True, dry_run=True, interactive=False,
+                   broker_ids=["devauto"], browser=NoBrowser(), cfg=CFG)
+        return [e.action for e in store.events(p.id, "devauto", limit=20)]
+
+    if access == "bot_blocked":
+        blind = _person(store)
+        assert "presumed_listed" in scan(blind)                      # never read: blind
+        assert store.get_status(blind.id, "devauto").last_scan_at is None
+    p = _person(store)
+    _run(store, p, FakeWindow({"devauto.example": "open"}), broker_ids=["devauto"])
+    assert ss.fresh_read(store, p.id, "devauto")
+    acts = scan(p)
+    assert "scanned" in acts and "scan_failed" not in acts          # the session's read
+    st = store.get_status(p.id, "devauto")
+    assert st.state.value == "found" and st.last_scan_at is not None
+    later = utcnow() + timedelta(days=2)
+    assert not ss.fresh_read(store, p.id, "devauto", later)          # stale after a day

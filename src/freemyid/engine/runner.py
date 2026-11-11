@@ -669,6 +669,10 @@ class Runner:
                      if ctx.profile.value_only else tiers.can_scan(ctx.broker, self.cfg))
         if not scannable:
             return [], False
+        from .search_session import session_only
+        if session_only(self.store, ctx.profile.id, ctx.broker):
+            # WO-612: never searched headless; the home-browser session's read stands in
+            return self._session_listings(ctx.profile, ctx.broker)
         bm = await self.browser()
         if bm is None:
             return [], False
@@ -686,6 +690,16 @@ class Runner:
                                 listing_id=listings[0].id, caption="search results")
             self.store.save_evidence(ev, shot)
         return listings, True
+
+    def _session_listings(self, profile: Profile,
+                          broker: Broker) -> tuple[list[Listing], bool]:
+        """A session-only site (WO-612): scanned when the home-browser window read it in
+        the last day (its listings are already merged), blind otherwise."""
+        from .search_session import fresh_read
+        if not fresh_read(self.store, profile.id, broker.id, self.now):
+            return [], False
+        return [li for li in self.store.list_listings(profile.id, broker.id)
+                if li.gone_since is None and li.match_level != MatchLevel.NO_MATCH], True
 
     def _merge_listings(self, profile: Profile, broker: Broker,
                         found: list[Listing]) -> list[Listing]:

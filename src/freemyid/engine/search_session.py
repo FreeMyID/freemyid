@@ -371,6 +371,40 @@ def _previous_outcome(store: Store, profile_id: str, broker_id: str) -> str | No
     return None
 
 
+#: Access values the home-browser window takes over from the runner's headless browser
+#: (headless is what these sites flag, WO-612 acceptance 2). See `session_only`.
+SESSION_ONLY_ACCESS = ("bot_blocked", "unknown")
+FRESH_FOR = timedelta(hours=24)
+_READ_NOW = {Outcome.READ, Outcome.SELF_CLEARED, Outcome.READ_AFTER_CHALLENGE}
+
+
+def fresh_read(store: Store, profile_id: str, broker_id: str,
+               now: datetime | None = None) -> bool:
+    """True when this site's latest decisive session visit read the page, within the last
+    day. The runner then trusts the listings that visit stored (exposure.merge_listings)."""
+    now = now or utcnow()
+    skip = {Outcome.ERROR, Outcome.NO_BROWSER, Outcome.CACHED, Outcome.NOT_TRIED}
+    for ev in store.events(profile_id, broker_id, limit=50):
+        if ev.action != EVENT_ACTION or ev.detail.get("outcome") in skip:
+            continue
+        return ev.detail.get("outcome") in _READ_NOW and now - ev.ts < FRESH_FOR
+    return False
+
+
+def session_only(store: Store, profile_id: str, broker: Broker) -> bool:
+    """True when the runner must not search this site with its headless browser.
+
+    `bot_blocked`: always. `unknown`: once the home-browser session has visited the site for
+    this person. (`unknown` is also the model default for a site nobody has researched, so
+    a person who never runs a session keeps today's behaviour.)"""
+    if broker.search_access == "bot_blocked":
+        return True
+    if broker.search_access not in SESSION_ONLY_ACCESS:
+        return False
+    return any(ev.action == EVENT_ACTION
+               for ev in store.events(profile_id, broker.id, limit=200))
+
+
 def notice_text(n: int) -> str:
     """Lock-screen safe (SEC-28): a count, never a site or a name."""
     return (f"{n} sites need one click from you, about a minute." if n != 1 else
