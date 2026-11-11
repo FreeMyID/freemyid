@@ -22,14 +22,17 @@ bits and uid, so on Windows the file gets no ACL or owner check. Windows users n
 the ``keyring`` backend (Credential Manager); if you point it at a passphrase file there,
 keep the file inside your own user profile folder.
 
-Keychain entry name (SEC-72 decision): the entry stays the global ``freemyid``/``db-key-v1``
-for every data folder. Per-folder names were considered and deferred: the default home on
-Windows must keep ``db-key-v1`` and must never be moved silently, and a per-home name for
-other folders needs a key_check probe to tell a new folder from an existing one that already
-uses the legacy entry. Instead the keyring backend refuses to overwrite a different key, and
-migrate/wipe delete the entry only when it is this folder's key (DB key_check or the same
-wrapped key). Residual: two folders that really share one keychain key can't be told apart,
-so wiping one removes the key the other uses.
+Keychain entry name (WO-605, replaces the SEC-72 decision): the default data folder keeps
+the legacy ``freemyid``/``db-key-v1`` entry (Windows installs depend on it; never moved).
+Every other FREEMYID_HOME owns ``db-key-v1:<sha256(resolved folder)[:16]>`` (see
+``crypto.folder_key_name``), so a new folder never adopts another folder's key. Store,
+migrate and wipe touch only this folder's own entry; the legacy entry is deleted only when
+wiping the default folder and its DB key_check proves the key is that folder's. A
+non-default folder made before per-folder names keeps reading the shared legacy entry once
+its key_check proves it; ``doctor`` warns and ``secrets migrate --to keyring`` copies it
+into the folder's own entry (the shared entry is left for the other folders).
+Residual: the per-folder name follows the folder's path, so a moved non-default keyring
+folder no longer finds its key (it fails closed; move it back, or use a passphrase backup).
 """
 from __future__ import annotations
 
@@ -155,25 +158,21 @@ class KeyringBackend:
         return True
 
     def load_data_key(self, create: bool = True) -> bytes:
-        if create:
-            return crypto._keyring_get_or_create_key()
-        try:
-            crypto._check_backend()
-            stored = keyring.get_password(crypto.SERVICE, crypto.KEY_NAME)
-        except keyring.errors.KeyringError as e:
-            raise crypto.KeyUnavailable(str(e)) from e
-        if stored is None:
-            raise crypto.KeyUnavailable("no data key in the OS keychain")
-        return crypto._decode_key(stored)
+        return crypto._keyring_get_or_create_key(create=create)
+
+    @staticmethod
+    def entry_name() -> str:
+        """This folder's own keychain entry (WO-605)."""
+        return crypto.folder_key_name()
 
     @staticmethod
     def _stored() -> bytes | None | bool | _ReadFailed:
-        """The keychain's data key: bytes, None if absent, False if the entry is damaged
-        (not a 32-byte key, so no data folder can be using it), READ_FAILED if the keychain
+        """This folder's own keychain entry: bytes, None if absent, False if damaged (not a
+        32-byte key, so no data folder can be using it), READ_FAILED if the keychain
         couldn't be read (SEC-84: treat as "maybe another folder's key")."""
         try:
             crypto._check_backend()
-            stored = keyring.get_password(crypto.SERVICE, crypto.KEY_NAME)
+            stored = keyring.get_password(crypto.SERVICE, KeyringBackend.entry_name())
         except (keyring.errors.KeyringError, crypto.KeyUnavailable):
             return READ_FAILED
         if stored is None:
@@ -183,9 +182,41 @@ class KeyringBackend:
         except crypto.KeyUnavailable:
             return False
 
+    def entry_status(self) -> str:
+        """Read-only, for `doctor`: "own" (this folder's entry), "shared" (a non-default
+        folder still reading the legacy entry), "none" (no key and no data yet), "lost"
+        (data but no key opens it) or "unreadable" (keychain locked/unavailable)."""
+        name = self.entry_name()
+        has_data, kc = crypto.db_key_check()
+        try:
+            crypto._check_backend()
+            own = crypto._decode_or_none(keyring.get_password(crypto.SERVICE, name))
+            if own is not None and (kc is None or crypto._opens(own, kc)):
+                return "own"
+            if (name != crypto.KEY_NAME and has_data
+                    and crypto._keyring_shared_legacy_key(kc) is not None):
+                return "shared"
+        except (keyring.errors.KeyringError, crypto.KeyUnavailable):
+            return "unreadable"
+        return "lost" if has_data else "none"
+
+    def adopt_own_entry(self) -> bool:
+        """`secrets migrate --to keyring` in a non-default folder that still reads the
+        shared legacy entry: copy the (proven) key into this folder's own entry and read it
+        back. The shared entry is left in place for the other folders. True if copied."""
+        if self.entry_status() != "shared":
+            return False
+        key = self.load_data_key(create=False)
+        self.store_data_key(key)
+        stored = self._stored()
+        if not isinstance(stored, bytes) or not hmac.compare_digest(stored, key):
+            raise crypto.KeyUnavailable("the keychain did not keep this folder's own key")
+        return True
+
     def store_data_key(self, key: bytes) -> None:
-        """Put `key` in the keychain. The entry is global (not per data folder), so an
-        entry holding a different valid key belongs to another folder: refuse (SEC-72)."""
+        """Put `key` in this folder's own keychain entry. An entry already holding a
+        different valid key is refused (SEC-72): it may be another folder's (the default
+        folder's legacy entry) or a moved folder's."""
         existing = self._stored()
         if existing is READ_FAILED:
             raise crypto.KeyUnavailable(
@@ -201,14 +232,15 @@ class KeyringBackend:
             )
         try:
             crypto._check_backend()
-            keyring.set_password(crypto.SERVICE, crypto.KEY_NAME, base64.b64encode(key).decode())
+            keyring.set_password(crypto.SERVICE, self.entry_name(),
+                                 base64.b64encode(key).decode())
         except keyring.errors.KeyringError as e:
             raise crypto.KeyUnavailable(str(e)) from e
 
     def delete_data_key(self, expected: bytes | None = None) -> None:
-        """Delete the keychain key. With `expected`, only if it holds exactly that key (or
-        a damaged entry): another folder's key is left alone (SEC-72). None = the caller
-        has already proven the entry belongs to this folder."""
+        """Delete this folder's own keychain entry (never the shared legacy entry from a
+        non-default folder, WO-605). With `expected`, only if it holds exactly that key (or
+        a damaged entry). None = the caller has already proven the entry is this folder's."""
         if expected is not None:
             existing = self._stored()
             if existing is None or existing is READ_FAILED:   # absent, or not provably ours
@@ -217,7 +249,7 @@ class KeyringBackend:
                 log.info("keychain holds another folder's key; left in place")
                 return
         try:
-            keyring.delete_password(crypto.SERVICE, crypto.KEY_NAME)
+            keyring.delete_password(crypto.SERVICE, self.entry_name())
         except keyring.errors.KeyringError:   # missing key or no keychain at all: fine
             pass
 
@@ -512,6 +544,8 @@ class PassphraseBackend:
         if not wp.exists():
             if not create:
                 raise crypto.KeyUnavailable("no passphrase-protected key in this data folder")
+            if crypto.db_key_check()[0]:   # saved data but its key file is gone (WO-605)
+                raise crypto.KeyMismatch()
             pw = self._passphrase(confirm=True)
             key = AESGCM.generate_key(bit_length=256)
             try:
@@ -688,23 +722,11 @@ def select() -> SecretBackend:
 
 def _db_key_check() -> str | None:
     """The DB's key_check value, read straight from sqlite (no key needed)."""
-    db = paths.db_path()
-    if not db.exists():
-        return None
-    import sqlite3
-    try:
-        con = sqlite3.connect(f"{db.as_uri()}?mode=ro", uri=True)
-        try:
-            row = con.execute("SELECT v FROM meta WHERE k='key_check'").fetchone()
-        finally:
-            con.close()
-    except sqlite3.Error:
-        return None
-    return row[0] if row else None
+    return crypto.db_key_check()[1]
 
 
 def _keychain_key_is_ours(kc_key: bytes) -> bool:
-    """Does the (global) keychain key belong to this data folder? Proven by the DB's
+    """Does this folder's keychain entry hold this folder's key? Proven by the DB's
     key_check, else by this folder's wrap holding the same key. Unproven = not ours."""
     if (kc := _db_key_check()) is not None:
         return crypto.Cipher(kc_key).verify_key_check(kc)
@@ -717,10 +739,23 @@ def _keychain_key_is_ours(kc_key: bytes) -> bool:
     return False
 
 
+def _own_entry_deletable(kc_key: bytes) -> bool:
+    """Wipe rule for this folder's own entry. The default folder's legacy entry is shared
+    by older non-default folders, so it goes only when proven (SEC-72). A per-folder entry
+    is named for this folder alone: it goes unless the DB's key_check or wrap shows it
+    holds some other key (a folder that used to live at this path, WO-605)."""
+    if crypto.is_default_home():
+        return _keychain_key_is_ours(kc_key)
+    if _db_key_check() is not None or PassphraseBackend.wrap_path().exists():
+        return _keychain_key_is_ours(kc_key)
+    return True
+
+
 def wipe_data_keys() -> None:
-    """`freemyid wipe`: remove this folder's wrap and secrets file, and the keychain key
-    only when it is this folder's key or a damaged entry (SEC-72). Never raises for a
-    missing key or a missing keychain."""
+    """`freemyid wipe`: remove this folder's wrap and secrets file, and this folder's own
+    keychain entry when it holds this folder's key or is damaged (SEC-72, WO-605). A
+    non-default folder never deletes the shared legacy entry, even if it reads it. Never
+    raises for a missing key or a missing keychain."""
     kr = KeyringBackend()
     stored = kr._stored()
     if stored is READ_FAILED:
@@ -728,10 +763,13 @@ def wipe_data_keys() -> None:
     elif stored is False:
         kr.delete_data_key()
     elif isinstance(stored, bytes):
-        if _keychain_key_is_ours(stored):
+        if _own_entry_deletable(stored):
             kr.delete_data_key(expected=stored)
         else:
             log.info("wipe: the keychain key isn't this folder's; left in place")
+    if not crypto.is_default_home():
+        log.info("wipe: the shared keychain entry (if any) belongs to the default folder; "
+                 "left in place")
     PassphraseBackend().delete_data_key()
     (paths.home() / PENDING_FILE).unlink(missing_ok=True)
     (paths.home() / LOCK_FILE).unlink(missing_ok=True)   # wipe ends the folder's use
@@ -746,6 +784,12 @@ class MigrateResult:
     secrets_moved: int
     changed: bool
     notice: str = ""   # plain text for the user (e.g. the keychain key was left, SEC-82)
+
+
+def _shared_entry_left_notice() -> str:
+    return ("The shared copy of the encryption key stays in the system keychain: it belongs "
+            "to the main Free My ID folder on this computer, and this folder no longer "
+            "needs it.")
 
 
 def _keychain_key_left_notice(target: str) -> str:
@@ -860,6 +904,12 @@ def _cleanup_source(source: SecretBackend, key: bytes, ids: list[tuple[str, str]
     if not isinstance(source, KeyringBackend):
         source.delete_data_key(expected=key)
         return ""
+    if not crypto.is_default_home():
+        # This folder's own entry is its alone (WO-605): remove it. The shared legacy entry
+        # this folder may have been reading belongs to the default folder: never touched.
+        own = source._stored()
+        source.delete_data_key(expected=key)
+        return "" if isinstance(own, bytes) else _shared_entry_left_notice()
     if remove_keychain_key:
         source.delete_data_key(expected=key)   # never another folder's key (SEC-72)
         return "Removed the old copy of the encryption key from the system keychain."
@@ -938,10 +988,18 @@ def migrate(to: str, remove_keychain_key: bool = False) -> MigrateResult:
                 cfg.secrets_backend = target.name  # type: ignore[assignment]
                 config.save(cfg)
             notice = ""
+            if isinstance(target, KeyringBackend) and target.adopt_own_entry():
+                return MigrateResult(source.name, target.name, 0, True,
+                                     "This folder now has its own entry in the system "
+                                     "keychain. " + _shared_entry_left_notice())
             if remove_keychain_key:   # a finished move off the keychain: drop the old copy
                 own = target.load_data_key(create=False)
-                KeyringBackend().delete_data_key(expected=own)
-                notice = "Removed the old copy of the encryption key from the system keychain."
+                kr = KeyringBackend()
+                had_own = isinstance(kr._stored(), bytes)
+                kr.delete_data_key(expected=own)
+                notice = ("Removed the old copy of the encryption key from the system keychain."
+                          if had_own or crypto.is_default_home()
+                          else _shared_entry_left_notice())
             return MigrateResult(source.name, target.name, 0, changed, notice)
         pend = {"from": source.name, "to": target.name, "orig": cfg.secrets_backend,
                 "target_existed": _has_data_key(target), "phase": "copy"}

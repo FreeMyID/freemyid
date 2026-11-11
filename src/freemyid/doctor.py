@@ -113,6 +113,21 @@ def check_secrets() -> Check:
                          f"Scheduled and headless runs can't type it: set "
                          f"{sb.PASSPHRASE_FILE_ENV} to a file only you can read (chmod 600), "
                          "or use systemd credentials.")
+        if isinstance(be, sb.KeyringBackend):
+            entry = be.entry_status()
+            if entry == "shared":
+                return Check("secrets", title, "warn",
+                             "keyring: this data folder still uses the keychain entry it "
+                             "shares with the main Free My ID folder, so wiping the main "
+                             "folder would also lock this one",
+                             "Give this folder its own key: `freemyid secrets migrate --to "
+                             "keyring` (keeps the keychain) or `freemyid secrets migrate --to "
+                             "passphrase` (key protected by a passphrase, kept in this folder).")
+            if entry == "lost":
+                from .crypto import KEY_RECOVERY_HELP
+                return Check("secrets", title, "fail",
+                             "keyring: no key in the keychain opens this folder's saved data",
+                             KEY_RECOVERY_HELP)
         return Check("secrets", title, "ok", f"{be.name}{extra}")
     fixes = {
         "keyring": "Install and unlock a keychain (GNOME Keyring or KWallet), or run "
