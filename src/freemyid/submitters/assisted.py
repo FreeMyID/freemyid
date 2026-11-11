@@ -52,13 +52,35 @@ def no_mailbox_step(step: str) -> str:
     return _REMOVAL_EMAIL.sub(OWN_EMAIL, step)
 
 
+# One calm line per web-form fallback, above the steps. The person never reads "error" or
+# "failed". challenge and error keep the sentences they already had.
+_REASON_LINES: dict[str, str] = {
+    "challenge": (
+        "Free My ID stopped because the site asked for a human check. "
+        "Please finish it yourself."
+    ),
+    "human_step": "The site asked for a step only a person can do.",
+    "no_confirmed_listing": (
+        "Free My ID is not sure a listing here is yours, so this one needs you."
+    ),
+    "timeout": "The site took too long to answer. Please try this one yourself.",
+    "blocked_by_policy": (
+        "The site tried to open a page Free My ID does not open. "
+        "Please do this one yourself."
+    ),
+    "unexpected_page": (
+        "The page did not look like the one Free My ID expected. "
+        "Please do this one yourself."
+    ),
+    "error": "Free My ID could not finish this one automatically. Please do it yourself.",
+}
+
+
 def _steps(broker: Broker, reason: str | None, has_mailbox: bool = True) -> str:
     lines: list[str] = []
-    if reason == "challenge":
-        lines.append("Free My ID stopped because the site asked for a human check. "
-                     "Please finish it yourself.")
-    elif reason == "error":
-        lines.append("Free My ID could not finish this one automatically. Please do it yourself.")
+    note = _REASON_LINES.get(reason or "")
+    if note:
+        lines.append(note)
     steps = broker.steps or [
         "Open the opt-out page with the button below.",
         "Find your listing and follow the site's removal steps.",

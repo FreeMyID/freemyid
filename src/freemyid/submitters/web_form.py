@@ -61,6 +61,11 @@ class HumanStep(Exception):
     """A `human` form step: a person has to do this part."""
 
 
+def _is_timeout(exc: BaseException) -> bool:
+    """Playwright's TimeoutError is not asyncio's. Both classes are named TimeoutError."""
+    return type(exc).__name__ == "TimeoutError"
+
+
 # --------------------------------------------------------------------------- search
 
 
@@ -359,10 +364,13 @@ class WebFormSubmitter(Submitter):
             return self._fallback(ctx, listings, "challenge", detail=e.kind)
         except HumanStep:
             return self._fallback(ctx, listings, "human_step")
-        except (UnexpectedPage, BlockedByPolicy) as e:
-            return self._fallback(ctx, listings, "error", detail=type(e).__name__)
+        except UnexpectedPage as e:
+            return self._fallback(ctx, listings, "unexpected_page", detail=type(e).__name__)
+        except BlockedByPolicy as e:
+            return self._fallback(ctx, listings, "blocked_by_policy", detail=type(e).__name__)
         except Exception as e:  # noqa: BLE001 - any error drops to Assisted (D1)
-            return self._fallback(ctx, listings, "error", detail=type(e).__name__)
+            reason = "timeout" if _is_timeout(e) else "error"
+            return self._fallback(ctx, listings, reason, detail=type(e).__name__)
         req = req.model_copy(update={"status": RequestStatus.SENT, "sent_at": now})
         ctx.store.save_request(req)
         new = (ListingState.AWAITING_VERIFICATION if ctx.broker.needs_email_verification
@@ -400,8 +408,7 @@ class WebFormSubmitter(Submitter):
     def _fallback(self, ctx: RunContext, listings: list[Listing], reason: str,
                   detail: str | None = None) -> SubmitOutcome:
         from ..engine.outbox import record_manual_letter
-        todo = assisted.todo_for(ctx.profile, ctx.broker, listings, ctx.state_law,
-                                 reason="challenge" if reason == "challenge" else "error")
+        todo = assisted.todo_for(ctx.profile, ctx.broker, listings, ctx.state_law, reason=reason)
         todo = record_manual_letter(ctx.store, todo, listings,
                                     kind=ctx.scratch.get("kind", RequestKind.OPT_OUT),
                                     dry_run=ctx.dry_run, now=ctx.now)
