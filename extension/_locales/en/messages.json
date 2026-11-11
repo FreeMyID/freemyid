@@ -11,7 +11,6 @@
     "message": "Free My ID",
     "description": "Tooltip on the toolbar button."
   },
-
   "bannerLabel": {
     "message": "Message from Free My ID",
     "description": "Screen-reader name of the banner shown on a people-search site."
@@ -48,7 +47,6 @@
     "message": "This button is not ready yet. Please open the Free My ID app and start the removal there.",
     "description": "Shown when the app answered but cannot start the removal from the browser."
   },
-
   "popupTitle": {
     "message": "Free My ID",
     "description": "Heading of the toolbar popup."
@@ -61,7 +59,10 @@
     "message": "Connected (version $VERSION$)",
     "description": "The desktop app answered.",
     "placeholders": {
-      "version": { "content": "$1", "example": "0.4.0" }
+      "version": {
+        "content": "$1",
+        "example": "0.4.0"
+      }
     }
   },
   "popupAppNotConnected": {
@@ -76,7 +77,10 @@
     "message": "$NAME$ is on our list of companies that sell people's information.",
     "description": "The current site is a known broker.",
     "placeholders": {
-      "name": { "content": "$1", "example": "Spokeo" }
+      "name": {
+        "content": "$1",
+        "example": "Spokeo"
+      }
     }
   },
   "popupSiteNotBroker": {
@@ -107,7 +111,6 @@
     "message": "This add-on sends nothing over the internet. It only talks to the Free My ID app on this computer.",
     "description": "Short privacy line at the bottom of the popup."
   },
-
   "state_unknown": {
     "message": "Not checked yet. Open the Free My ID app to check.",
     "description": "Listing state: never scanned."
@@ -148,7 +151,6 @@
     "message": "Something went wrong. Open the Free My ID app to see more.",
     "description": "Listing state."
   },
-
   "optionsTitle": {
     "message": "Free My ID settings",
     "description": "Heading of the options page."
@@ -173,6 +175,42 @@
     "message": "Done. The message can show again on those sites.",
     "description": "Shown after the forget button was pressed."
   },
+  "optionsGpcTitle": {
+    "message": "Tell websites not to sell or share my information",
+    "description": "Heading of the Global Privacy Control section on the options page."
+  },
+  "optionsGpcLabel": {
+    "message": "Send the Global Privacy Control signal to every website I visit",
+    "description": "Checkbox label. Off by default."
+  },
+  "optionsGpcHint": {
+    "message": "This is a standard \"do not sell or share\" message. Some state laws make websites honor it; in other places a site may ignore it. It does not remove a listing. This setting is new and still being tested.",
+    "description": "Honest limits of the signal. Do not promise that sites obey it."
+  },
+  "optionsGpcPermission": {
+    "message": "When you turn this on, your browser will ask if Free My ID may \"read and change your data on all websites\". That is the browser's wording for any add-on that adds something to what your browser sends. Free My ID adds this one message and does not read your pages.",
+    "description": "Explains the browser permission question before it appears."
+  },
+  "optionsGpcOn": {
+    "message": "On. Your browser now sends the signal.",
+    "description": "Shown after the signal was switched on."
+  },
+  "optionsGpcOff": {
+    "message": "Off. The signal is no longer sent.",
+    "description": "Shown after the signal was switched off."
+  },
+  "optionsGpcDeclined": {
+    "message": "Not turned on. Your browser did not give permission.",
+    "description": "Shown when the person or the browser said no to the permission question."
+  },
+  "optionsGpcAlready": {
+    "message": "Your browser already sends this signal. There is nothing to turn on here.",
+    "description": "Shown when the browser itself sends GPC (Firefox or Brave with the setting on)."
+  },
+  "optionsGpcBrowser": {
+    "message": "This browser has its own switch for this. In Firefox: open Settings, choose Privacy & Security, and tick \"Tell websites not to sell or share my data\".",
+    "description": "Shown in browsers where the extension does not send GPC itself."
+  },
   "optionsPrivacyTitle": {
     "message": "What this add-on does and does not do",
     "description": "Heading of the privacy list on the options page."
@@ -186,7 +224,7 @@
     "description": "Privacy list item."
   },
   "optionsPrivacy3": {
-    "message": "On the sites in its list it looks at the site's address only. It does not read the page, and it does nothing on other sites.",
+    "message": "On the sites in its list it looks at the site's address only. It does not read the page. On other sites it does nothing, unless you turn on the \"do not sell or share\" signal above, which only adds that signal.",
     "description": "Privacy list item."
   },
   "optionsPrivacy4": {

@@ -22,7 +22,8 @@ main {
   accent-color: var(--brand);
 }
 
-#result:empty {
+#result:empty,
+#gpc-result:empty {
   display: none;
 }
 

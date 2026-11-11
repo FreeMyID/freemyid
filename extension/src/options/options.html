@@ -21,11 +21,22 @@
 
     <p id="result" role="status"></p>
 
+    <h2 data-i18n="optionsGpcTitle">Tell websites not to sell or share my information</h2>
+    <div id="gpc-control">
+      <label class="check">
+        <input type="checkbox" id="gpc-enabled">
+        <span data-i18n="optionsGpcLabel">Send the Global Privacy Control signal to every website I visit</span>
+      </label>
+      <p class="small" data-i18n="optionsGpcPermission">When you turn this on, your browser will ask if Free My ID may "read and change your data on all websites". That is the browser's wording for any add-on that adds something to what your browser sends. Free My ID adds this one message and does not read your pages.</p>
+    </div>
+    <p class="small" data-i18n="optionsGpcHint">This is a standard "do not sell or share" message. Some state laws make websites honor it; in other places a site may ignore it. It does not remove a listing. This setting is new and still being tested.</p>
+    <p id="gpc-result" role="status"></p>
+
     <h2 data-i18n="optionsPrivacyTitle">What this add-on does and does not do</h2>
     <ul>
       <li data-i18n="optionsPrivacy1">It sends nothing over the internet. No tracking, no statistics, no account.</li>
       <li data-i18n="optionsPrivacy2">It only talks to the Free My ID app on this computer. Your name and other details stay in the app; they are never given to this add-on.</li>
-      <li data-i18n="optionsPrivacy3">On the sites in its list it looks at the site's address only. It does not read the page, and it does nothing on other sites.</li>
+      <li data-i18n="optionsPrivacy3">On the sites in its list it looks at the site's address only. It does not read the page. On other sites it does nothing, unless you turn on the "do not sell or share" signal above, which only adds that signal.</li>
       <li data-i18n="optionsPrivacy4">It never fills in or clicks through "I am not a robot" checks. Those are always yours to do.</li>
       <li data-i18n="optionsPrivacy5">Some sites need steps only you can do, and a removed listing can come back. "Removed" always means removed from that one site.</li>
     </ul>

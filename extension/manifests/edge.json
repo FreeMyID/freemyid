@@ -1,8 +1,20 @@
 {
-  "//": "Microsoft Edge: same engine as Chrome. Kept as its own file because the Edge Add-ons store gives the extension a different id and may need its own keys later.",
+  "//": "Microsoft Edge: same engine as Chrome. Kept as its own file because the Edge Add-ons store gives the extension a different id and may need its own keys later. The declarativeNetRequest, scripting and optional host entries exist only for the Global Privacy Control stub (off by default).",
   "minimum_chrome_version": "120",
   "background": {
     "service_worker": "src/background/main.js",
     "type": "module"
+  },
+  "permissions": ["activeTab", "declarativeNetRequestWithHostAccess", "nativeMessaging", "storage"],
+  "optional_permissions": ["scripting"],
+  "optional_host_permissions": ["*://*/*"],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "gpc",
+        "enabled": false,
+        "path": "rules/gpc.json"
+      }
+    ]
   }
 }

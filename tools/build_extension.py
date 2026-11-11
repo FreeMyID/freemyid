@@ -10,6 +10,8 @@ What it does, per browser:
   2. writes data/broker_domains.json from the PUBLIC sample registry,
   3. fills content_scripts[0].matches from that list (https, exact hosts, no wildcards),
   4. copies the extension files and writes a zip.
+Chrome and Edge also get rules/gpc.json and the page script for the Global Privacy Control
+stub; the Firefox package does not (Firefox has that switch built in).
 
 Data: only brokers/registry.sample.yaml (CC BY-NC 4.0) is read. Never point this at
 brokers/registry.yaml: the full registry is private and must not ship inside a public extension.
@@ -35,6 +37,15 @@ SAMPLE_REGISTRY_REL = "brokers/registry.sample.yaml"   # public sample ONLY
 
 # The complete permission list. Adding one needs a rationale in docs/EXTENSION.md and review.
 ALLOWED_PERMISSIONS = frozenset({"activeTab", "nativeMessaging", "storage"})
+# Chrome and Edge only, for the Global Privacy Control stub (off until the person turns it on).
+# Firefox has GPC built in, so its package gets none of this.
+GPC_BROWSERS = frozenset({"chrome", "edge"})
+GPC_PERMISSIONS = frozenset({"declarativeNetRequestWithHostAccess"})
+GPC_OPTIONAL_PERMISSIONS = ["scripting"]            # asked for at the moment GPC is switched on
+GPC_OPTIONAL_HOSTS = ["*://*/*"]                    # same: never granted at install time
+GPC_RULES_PATH = "rules/gpc.json"
+GPC_RULE_RESOURCES = [{"id": "gpc", "enabled": False, "path": GPC_RULES_PATH}]
+GPC_PAGE_SCRIPT = "src/content/gpc.js"
 # Categories whose own website shows people's details to the public: the banner may appear there.
 BANNER_CATEGORIES = frozenset({"people_search", "background_check", "phone_lookup", "family_tree"})
 # Categories the popup may name as "a company that sells people's information" (no banner).
@@ -45,6 +56,9 @@ EXCLUDED_FILES = frozenset({"src/content/assisted-fill.js"})
 PACKAGE_DIRS = ("_locales", "assets/icons", "src")
 PACKAGE_SUFFIXES = frozenset({".css", ".html", ".js", ".json", ".png"})
 DOMAINS_PATH = "data/broker_domains.json"
+_RESOURCE_TYPES = frozenset({"main_frame", "sub_frame", "stylesheet", "script", "image", "font",
+                             "object", "xmlhttprequest", "ping", "csp_report", "media", "websocket",
+                             "other"})
 FIREFOX_ID = "extension@freemyid.org"
 
 _HOST = re.compile(r"^(?=.{4,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$")
@@ -215,6 +229,31 @@ def build_manifest(browser: str, domains: dict, root: Path = ROOT) -> dict:
     return manifest
 
 
+def allowed_permissions(browser: str) -> frozenset[str]:
+    """Every install-time permission this browser's package may ask for."""
+    return ALLOWED_PERMISSIONS | (GPC_PERMISSIONS if browser in GPC_BROWSERS else frozenset())
+
+
+def validate_gpc_rules(rules: object) -> list[str]:
+    """rules/gpc.json may do one thing only: add the request header 'Sec-GPC: 1'."""
+    if not isinstance(rules, list) or len(rules) != 1 or not isinstance(rules[0], dict):
+        return ["gpc rules: exactly one rule is expected"]
+    rule = rules[0]
+    errors: list[str] = []
+    if set(rule) != {"id", "priority", "action", "condition"}:
+        errors.append("gpc rule: unexpected keys")
+    if rule.get("action") != {"type": "modifyHeaders", "requestHeaders": [
+            {"header": "Sec-GPC", "operation": "set", "value": "1"}]}:
+        errors.append("gpc rule: the action must only set the request header Sec-GPC: 1")
+    condition = rule.get("condition")
+    types = condition.get("resourceTypes") if isinstance(condition, dict) else None
+    if (not isinstance(condition, dict) or set(condition) != {"resourceTypes"}
+            or not isinstance(types, list) or not set(types) <= _RESOURCE_TYPES
+            or "main_frame" not in types):
+        errors.append("gpc rule: the condition may only list resource types (with main_frame)")
+    return errors
+
+
 def validate_manifest(manifest: dict, browser: str) -> list[str]:
     """Rules every build must pass. Returns a list of problems (empty = fine)."""
     errors: list[str] = []
@@ -225,15 +264,24 @@ def validate_manifest(manifest: dict, browser: str) -> list[str]:
     for key in ("name", "description", "default_locale", "icons", "action", "background"):
         if not manifest.get(key):
             errors.append(f"missing {key}")
-    extra = set(manifest.get("permissions", [])) - ALLOWED_PERMISSIONS
+    extra = set(manifest.get("permissions", [])) - allowed_permissions(browser)
     if extra:
         errors.append(f"permissions not allowed: {sorted(extra)}")
-    for key in ("host_permissions", "optional_permissions", "optional_host_permissions",
-                "externally_connectable", "web_accessible_resources", "update_url",
-                "content_security_policy_report_only", "sandbox", "devtools_page",
-                "chrome_url_overrides", "declarative_net_request"):
+    for key in ("host_permissions", "externally_connectable", "web_accessible_resources",
+                "update_url", "content_security_policy_report_only", "sandbox", "devtools_page",
+                "chrome_url_overrides"):
         if key in manifest:
             errors.append(f"{key} is not allowed")
+    # Global Privacy Control stub: exactly this shape on Chrome and Edge, nothing on Firefox.
+    gpc = browser in GPC_BROWSERS
+    expected = {
+        "optional_permissions": GPC_OPTIONAL_PERMISSIONS if gpc else None,
+        "optional_host_permissions": GPC_OPTIONAL_HOSTS if gpc else None,
+        "declarative_net_request": {"rule_resources": GPC_RULE_RESOURCES} if gpc else None,
+    }
+    for key, want in expected.items():
+        if manifest.get(key) != want:
+            errors.append(f"{key} must be {want!r}" if gpc else f"{key} is not allowed on {browser}")
     scripts = manifest.get("content_scripts", [])
     if len(scripts) != 1:
         errors.append("exactly one content_scripts entry is expected")
@@ -278,16 +326,23 @@ def _dump(obj: dict) -> bytes:
     return (json.dumps(obj, indent=2, sort_keys=True, ensure_ascii=False) + "\n").encode("utf-8")
 
 
-def package_files(root: Path = ROOT) -> dict[str, bytes]:
-    """The static files that ship, as {relative posix path: bytes}, sorted."""
+def package_files(browser: str, root: Path = ROOT) -> dict[str, bytes]:
+    """The static files that ship for one browser, as {relative posix path: bytes}, sorted."""
     ext = root / "extension"
     files: dict[str, bytes] = {}
+    excluded = EXCLUDED_FILES if browser in GPC_BROWSERS else EXCLUDED_FILES | {GPC_PAGE_SCRIPT}
+    if browser in GPC_BROWSERS:
+        raw = (ext / GPC_RULES_PATH).read_bytes()
+        errors = validate_gpc_rules(json.loads(raw))
+        if errors:
+            raise BuildError("; ".join(errors))
+        files[GPC_RULES_PATH] = raw
     for top in PACKAGE_DIRS:
         for path in sorted((ext / top).rglob("*")):
             rel = path.relative_to(ext).as_posix()
             if path.is_symlink():
                 raise BuildError(f"{rel}: symlinks are not packaged")
-            if path.is_file() and path.suffix in PACKAGE_SUFFIXES and rel not in EXCLUDED_FILES:
+            if path.is_file() and path.suffix in PACKAGE_SUFFIXES and rel not in excluded:
                 files[rel] = path.read_bytes()
     return dict(sorted(files.items()))
 
@@ -302,6 +357,8 @@ def referenced_files(manifest: dict) -> list[str]:
            background.get("service_worker", ""), *background.get("scripts", [])]
     for cs in manifest.get("content_scripts", []):
         out += cs.get("js", []) + cs.get("css", [])
+    out += [r.get("path", "") for r in
+            manifest.get("declarative_net_request", {}).get("rule_resources", [])]
     return sorted({p for p in out if p})
 
 
@@ -309,7 +366,7 @@ def build_tree(browser: str, root: Path = ROOT, registry: Path | None = None) ->
     """All files of one browser's package, in memory."""
     domains = load_domain_list(root, registry)
     manifest = build_manifest(browser, domains, root)
-    files = package_files(root)
+    files = package_files(browser, root)
     files[DOMAINS_PATH] = _dump(domains)
     files["manifest.json"] = _dump(manifest)
     missing = [p for p in referenced_files(manifest) if p not in files]
