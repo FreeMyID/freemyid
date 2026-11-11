@@ -1,0 +1,29 @@
+{
+  "//": "Where each browser looks for the native messaging host manifest, per user (no admin). One source for the installer, the docs and the tests. Nothing in this repository installs these yet; see docs/EXTENSION.md.",
+  "host_name": "org.freemyid.host",
+  "placeholders": {
+    "HOST_PATH": "Full path of the host program. Must be absolute on macOS and Linux.",
+    "CHROME_EXTENSION_ID": "The 32-letter id the Chrome Web Store or Edge Add-ons gives the extension. One allowed_origins line per store id.",
+    "CHROMIUM_MANIFEST_PATH": "Windows only: full path of the Chrome/Edge host manifest file, backslashes doubled.",
+    "FIREFOX_MANIFEST_PATH": "Windows only: full path of the Firefox host manifest file, backslashes doubled."
+  },
+  "windows": {
+    "how": "registry key whose default value is the full path of the manifest file",
+    "template": "windows-registry.reg.template",
+    "chrome": { "manifest": "org.freemyid.host.chromium.json.template", "registry_key": "HKEY_CURRENT_USER\\Software\\Google\\Chrome\\NativeMessagingHosts\\org.freemyid.host" },
+    "edge": { "manifest": "org.freemyid.host.chromium.json.template", "registry_key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Edge\\NativeMessagingHosts\\org.freemyid.host" },
+    "firefox": { "manifest": "org.freemyid.host.firefox.json.template", "registry_key": "HKEY_CURRENT_USER\\Software\\Mozilla\\NativeMessagingHosts\\org.freemyid.host" }
+  },
+  "macos": {
+    "how": "manifest file at a fixed path under the user's home folder",
+    "chrome": { "manifest": "org.freemyid.host.chromium.json.template", "path": "~/Library/Application Support/Google/Chrome/NativeMessagingHosts/org.freemyid.host.json" },
+    "edge": { "manifest": "org.freemyid.host.chromium.json.template", "path": "~/Library/Application Support/Microsoft Edge/NativeMessagingHosts/org.freemyid.host.json" },
+    "firefox": { "manifest": "org.freemyid.host.firefox.json.template", "path": "~/Library/Application Support/Mozilla/NativeMessagingHosts/org.freemyid.host.json" }
+  },
+  "linux": {
+    "how": "manifest file at a fixed path under the user's home folder",
+    "chrome": { "manifest": "org.freemyid.host.chromium.json.template", "path": "~/.config/google-chrome/NativeMessagingHosts/org.freemyid.host.json" },
+    "edge": { "manifest": "org.freemyid.host.chromium.json.template", "path": "~/.config/microsoft-edge/NativeMessagingHosts/org.freemyid.host.json" },
+    "firefox": { "manifest": "org.freemyid.host.firefox.json.template", "path": "~/.mozilla/native-messaging-hosts/org.freemyid.host.json" }
+  }
+}

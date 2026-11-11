@@ -1,0 +1,7 @@
+{
+  "name": "org.freemyid.host",
+  "description": "Free My ID: lets the Free My ID browser extension talk to the app on this computer.",
+  "path": "{{HOST_PATH}}",
+  "type": "stdio",
+  "allowed_origins": ["chrome-extension://{{CHROME_EXTENSION_ID}}/"]
+}
