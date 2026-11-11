@@ -323,10 +323,11 @@ class BrowserFetcher:
 
 
 def _split(t: str | None) -> list[str]:
+    """Lines / ";" / "|" / " - " separate values ("Age 60 - City, ST" is two, CR-A)."""
     import re
     if not t:
         return []
-    return [p.strip() for p in re.split(r"[\n;|]+", t) if p.strip()][:20]
+    return [p.strip() for p in re.split(r"[\n;|]+|\s+-\s+", t) if p.strip()][:20]
 
 
 def parse_candidates(broker: Broker, page_url: str, html: str) -> list[matcher.Candidate]:
@@ -345,6 +346,13 @@ def parse_candidates(broker: Broker, page_url: str, html: str) -> list[matcher.C
         t = sub.text().strip() if sub is not None else ""
         return t[:500] or None
 
+    def txts(el: htmlsel.Node, sel: str | None) -> str | None:
+        # CR-D: every match in the card (a site lists relatives / past places as siblings)
+        if not sel:
+            return None
+        parts = [t for t in (s.text().strip() for s in el.select(sel)[:20]) if t]
+        return "\n".join(parts)[:1000] or None
+
     out: list[matcher.Candidate] = []
     for el in root.select(spec.result_selector)[:_MAX_RESULTS]:
         href = None
@@ -357,8 +365,8 @@ def parse_candidates(broker: Broker, page_url: str, html: str) -> list[matcher.C
         out.append(matcher.Candidate(
             url=url, name=txt(el, spec.name_selector),
             age=matcher.parse_age(txt(el, spec.age_selector)),
-            locations=_split(txt(el, spec.location_selector)),
-            relatives=_split(txt(el, spec.relatives_selector))))
+            locations=_split(txts(el, spec.location_selector)),
+            relatives=_split(txts(el, spec.relatives_selector))))
     return out
 
 
@@ -425,11 +433,19 @@ def _hand_check_url(broker: Broker, profile: Profile) -> str:
     return urls[0] if urls else str(broker.search_page_url or broker.url)
 
 
+def has_parser(broker: Broker) -> bool:
+    """WO-604: a search page we can read. Without one, fetching it only tells the broker that
+    someone is looking this person up (name + city in the URL) for no possible benefit."""
+    return broker.search is not None and bool(broker.search.result_selector)
+
+
 def _read(profile: Profile, broker: Broker, url: str, fetch: Fetcher,
           now: datetime) -> list[Listing]:
     """Fetch one search page and score what it shows (a value-only person's lookup page is
-    scored by value, BL-IN-08). Raises FetchFailed."""
+    scored by value, BL-IN-08). Raises FetchFailed; "no_parser" before any fetch."""
     from .browser import detect_challenge
+    if not has_parser(broker):
+        raise FetchFailed("no_parser")          # WO-604: never fetch a page we can't read
     page = fetch(broker, url)
     if detect_challenge(page.html, status=page.status):
         raise FetchFailed("challenge")
@@ -444,7 +460,9 @@ def _read(profile: Profile, broker: Broker, url: str, fetch: Fetcher,
         cands = parse_candidates(broker, page.url, page.html)
     except htmlsel.UnsupportedSelector as e:
         raise FetchFailed("no_parser") from e
-    if not cands and spec.no_results_text:
+    if not cands:
+        # CR-C: only the site's own "no results" text proves absence; zero cards without
+        # it is a changed layout, never "not found"
         raise FetchFailed("page_unrecognized")
     kind = _lookup(profile)
     if kind:
@@ -563,9 +581,14 @@ def scan_exposure(store: Store, profile_id: str, *, registry: Registry | None = 
                   broker_ids: list[str] | None = None, now: datetime | None = None,
                   sleep: Callable[[float], None] = time.sleep,
                   old_addresses: bool | None = None,
-                  previous_names: bool | None = None) -> ExposureResult:
+                  previous_names: bool | None = None,
+                  site_fetch: Fetcher | None = None) -> ExposureResult:
     """Run the exposure scan for one person and store it. Never raises for a broker's
     failure (that broker becomes "check by hand"). Raises ExposureRefused without consent.
+
+    `site_fetch` (WO-612, `engine.search_session`): the home-browser window. When given it
+    reads every broker that has a parser, whatever its `search_access` (bot_blocked and
+    unknown included); challenge handling is the window's job, never a workaround.
 
     `fetch` / `browser_fetch` are injectable for tests. Fresh results from the last
     `CACHE_HOURS` are reused unless `refresh`. `old_addresses` (default: the config flag
@@ -609,7 +632,7 @@ def scan_exposure(store: Store, profile_id: str, *, registry: Registry | None = 
                 continue
             entry = _scan_broker(store, profile, broker, now, offline, prev.get(broker.id),
                                  fetch, browser_fetch, cfg, fast, sleep, pace, old_addresses,
-                                 previous_names)
+                                 previous_names, site_fetch)
             entry.category = broker.category
             entries.append(entry)
     finally:
@@ -629,7 +652,8 @@ def _scan_broker(store: Store, profile: Profile, broker: Broker, now: datetime, 
                  browser_fetch: Fetcher | None, cfg: cfgmod.Config, fast: bool,
                  sleep: Callable[[float], None], pace: dict[str, bool],
                  old_addresses: bool = False,
-                 previous_names: bool = False) -> ExposureEntry:
+                 previous_names: bool = False,
+                 site_fetch: Fetcher | None = None) -> ExposureEntry:
     urls = _main_urls(broker, profile)
     url = urls[0] if urls else None
 
@@ -654,13 +678,22 @@ def _scan_broker(store: Store, profile: Profile, broker: Broker, now: datetime, 
                                     "check_url": url})
         return _fill(e, store.list_listings(profile.id, broker.id))
     access = broker.search_access
-    if access == "bot_blocked":
+    fetcher: Fetcher | None
+    if site_fetch is not None and has_parser(broker):
+        fetcher = site_fetch              # WO-612: the person's own browser, never headless
+    elif access == "bot_blocked":
         return hand("bot_blocked")
-    if access == "unknown":
+    elif access == "unknown":
         return hand("unknown_access")
-    fetcher = fetch if access == "open" else browser_fetch
+    else:
+        fetcher = fetch if access == "open" else browser_fetch
     if fetcher is None:
         return hand("needs_browser")
+    if not has_parser(broker):
+        # WO-604: no fetch (main or extra pages) and no polite gap spent on it
+        entry = hand("no_parser")
+        _check_event(store, profile, broker, entry)
+        return entry
 
     def gap() -> None:                    # polite gap between requests
         if not fast:
@@ -684,6 +717,12 @@ def _scan_broker(store: Store, profile: Profile, broker: Broker, now: datetime, 
     except Exception as e:  # noqa: BLE001 - one broker never stops the scan
         log.warning("exposure: %s failed (%s)", broker.id, type(e).__name__)
         entry = hand("network")
+    _check_event(store, profile, broker, entry)
+    return entry
+
+
+def _check_event(store: Store, profile: Profile, broker: Broker, entry: ExposureEntry) -> None:
+    """One PII-free Event per broker check: ids, enums and counts only."""
     store.log(Event(profile_id=profile.id, broker_id=broker.id, actor=Actor.ENGINE,
                     action=CHECK_ACTION, detail={
                         "status": entry.status, "reason": entry.reason,
@@ -691,7 +730,6 @@ def _scan_broker(store: Store, profile: Profile, broker: Broker, now: datetime, 
                         "listings": len(entry.listings),
                         "old_address": entry.old_address_checked,
                         "previous_name": entry.previous_name_checked}))
-    return entry
 
 
 # --------------------------------------------------------------------------- storage

@@ -31,7 +31,10 @@ MARKER = ".freemyid-home"
 # Every top-level entry Free My ID may create in home(); `freemyid wipe` deletes only these.
 OWNED_ENTRIES = ("freemyid.db", "freemyid.db-wal", "freemyid.db-shm", "evidence", "artifacts", "logs",
                  "config.yaml", "registry.yaml", "app-instance.json", "freemyid-task.xml", ".fill-confirmed",
-                 "datakey.wrapped.json", "secrets.enc", "secrets.enc.lock", "migrate.pending", MARKER)
+                 "datakey.wrapped.json", "secrets.enc", "secrets.enc.lock", "migrate.pending",
+                 # WO-612 search window: temp browser folders + the one-session lock. The
+                 # person's encrypted cookies live in evidence/<id>/ (SEC-WO612-1).
+                 "browser_profile", "browser_profile.lock", MARKER)
 
 
 def is_safe_wipe_target(p: Path) -> bool:

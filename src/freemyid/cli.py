@@ -305,6 +305,13 @@ def _do_run(profile, broker, scan_only, dry_run, scheduled, headless: bool = Fal
                   "`freemyid setup` or `freemyid setup --from config.yaml`")
         _fail(cj.EXIT_NEEDS_HUMAN, f"needs a person: no profile has valid permission "
               f"({len(skipped)} skipped); open Free My ID to give permission")
+    from .engine import search_session as ss
+    if scheduled and people and not headless and ss.background_supported():
+        # WO-612: home browser first, off-screen, never raises, so the runner finds today's
+        # reads (practice mode too). Windows task only until WO-616 checks macOS/Linux, and
+        # never with --headless (cron/launchd/systemd/Docker): SEC-WO612-2.
+        ss.run_for_profiles(store, [p.id for p in people], mode="background",
+                            registry=_registry(), cfg=cfg)
     rep = engine_run(store, _registry(), people, scan_only=scan_only,
                      dry_run=dry_run, interactive=not (scheduled or headless),
                      broker_ids=broker or None, only_due=scheduled)
@@ -332,13 +339,55 @@ def _do_run(profile, broker, scan_only, dry_run, scheduled, headless: bool = Fal
         raise typer.Exit(code)
 
 
+_SESSION_REASONS = {
+    "no_consent": "skipped: permission to search is not given",
+    "no_display": "skipped: no screen to open a browser window on",
+    "busy": "skipped: another search window is already open",
+    "error": "could not finish this time; the next run tries again",
+}
+
+
+def _attended_scan(profile: str | None) -> None:
+    """`scan --attended` (WO-612): one visible window of the person's own browser; the
+    wizard's "Look for me now" button calls the same engine entry point."""
+    from .engine import search_session as ss
+    store = _open_store_or_fail()
+    people = _select(store, profile)
+    if not people:
+        con.print("Nobody with permission to search is set up yet.")
+        raise typer.Exit(cj.EXIT_NEEDS_HUMAN)
+    out = ss.run_for_profiles(store, [p.id for p in people], mode="attended",
+                              registry=_registry())
+    for p in people:
+        res = out.get(p.id, "error")
+        if isinstance(res, str):
+            con.print(f"{p.label}: {_SESSION_REASONS.get(res, res)}")
+            continue
+        read = res.count(ss.Outcome.READ, ss.Outcome.SELF_CLEARED,
+                         ss.Outcome.READ_AFTER_CHALLENGE, ss.Outcome.CACHED)
+        by_hand = res.count(ss.Outcome.TIMED_OUT, ss.Outcome.SKIPPED, ss.Outcome.HAND_CHECK)
+        line = f"{p.label}: checked {read} site{'s' if read != 1 else ''}"
+        if by_hand:
+            line += f"; {by_hand} to check yourself (see `freemyid todo`)"
+        con.print(line)
+
+
 @app.command()
 def scan(profile: Annotated[str | None, typer.Option("--profile", "-p")] = None,
          broker: Annotated[list[str] | None, typer.Option("--broker", "-b")] = None,
          headless: Annotated[bool, typer.Option(
              "--headless", help="No prompts or windows; fail closed (cron/Docker)")] = False,
+         attended: Annotated[bool, typer.Option(
+             "--attended", help="Open your browser and look for you now; a site may ask you "
+                                "to tick a box.")] = False,
          as_json: JsonOpt = False):
     """Search brokers for listings. Never submits anything."""
+    if attended:
+        if headless or as_json or broker:
+            _fail(cj.EXIT_USAGE, "--attended cannot be combined with --headless, --json or "
+                  "--broker")
+        _attended_scan(profile)
+        return
     _do_run(profile, broker or [], scan_only=True, dry_run=True, scheduled=False,
             headless=headless, as_json=as_json)
 
@@ -589,9 +638,9 @@ def wipe(yes: Annotated[bool, typer.Option("--yes")] = False):
     if not paths.is_safe_wipe_target(target):
         con.print(f"[red]Refusing to wipe {target}:[/] it doesn't look like a Free My ID data folder.")
         raise typer.Exit(2)
-    if not yes and not typer.confirm(
-            "Delete ALL Free My ID data on this computer? If you keep other Free My ID data "
-            "folders on this computer that use the system keychain, they will stop working too."):
+    # Only the main folder's key can be shared with older extra folders (WO-605 review F5),
+    # so only wiping the main folder warns about other folders. Text: _wipe_question below.
+    if not yes and not typer.confirm(_wipe_question(target)):
         raise typer.Exit()
     try:
         from .scheduler import remove as sched_remove
@@ -1106,6 +1155,19 @@ def monitor(registry: Annotated[Path | None, typer.Option(
         if doc[key]:
             con.print(f"  {label}: " + ", ".join(doc[key]), markup=False, highlight=False,
                       soft_wrap=True)
+
+
+
+def _wipe_question(target: Path) -> str:
+    """The `wipe` confirm question, in plain words (WO-605 review F5). Kept at the end of the
+    file so command line numbers in the CLI reference page don't move."""
+    from . import crypto
+    if crypto.is_default_home(target):
+        return ("Delete ALL your Free My ID information from this computer? This can't be "
+                "undone. If someone also set up an extra Free My ID folder on this computer "
+                "(most people haven't), it may stop opening too.")
+    return (f"Delete ALL Free My ID information in this folder ({target})? This can't be "
+            "undone. Your main Free My ID folder and any other folders are not affected.")
 
 
 if __name__ == "__main__":
