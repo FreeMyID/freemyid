@@ -10,7 +10,8 @@ to the request, so what the user approves is exactly what gets sent.
 * after a send               -> EMAIL_SENT evidence (the raw message), Request SENT.
 * transient mail error       -> status stays; FAILED on the 3rd, or on a permanent error.
 * crash after the mailer accepts -> email_handed is stored first; the next drain
-  records SENT once and does not send that message again.
+  records SENT once and does not send that message again. Not covered: a crash inside
+  mailer.send, or a timeout after the server already took the message, can send it twice.
 
 `approve_and_send(store, request_id)` is the user-approved send (CLI `outbox approve`,
 dashboard). It refuses unless `config.real_submissions_enabled` (or a mailer is injected,
@@ -637,12 +638,24 @@ def _broker_from(registry: Registry | None, broker_id: str) -> Broker | None:
         return None
 
 
+def _bump(counts: dict[str, int], key: str) -> None:
+    """``deferred`` is added only when used: older release events are exactly {sent, failed}."""
+    counts[key] = counts.get(key, 0) + 1
+
+
 def _finish_send(store, profile: Profile, req: Request, mailer, registry: Registry | None,
                  now: datetime) -> str:
-    """Send or, if the mailer already accepted it, only record. ``sent`` or ``failed``."""
+    """Send or, if the mailer already accepted it, only record.
+
+    ``sent``, ``failed`` (the request is FAILED for good) or ``deferred`` (a 1st or 2nd
+    transient failure: the request stays queued and is tried again after its backoff).
+    """
     try:
         sent = send_request(store, req, profile, mailer, now=now)
     except OutboxError:
+        current = store.get_request(req.id)
+        if current is not None and current.status != RequestStatus.FAILED:
+            return "deferred"
         return "failed"
     apply_sent(store, sent, _broker_from(registry, req.broker_id), now)
     return "sent"
@@ -674,13 +687,13 @@ def release_held(store, profile: Profile, *, mailer, registry: Registry | None =
             continue
         # Already accepted: do not wait out backoff, and do not hand it to the mailer.
         if _handed_off(store, r):
-            counts[_finish_send(store, profile, r, mailer, registry, now)] += 1
+            _bump(counts, _finish_send(store, profile, r, mailer, registry, now))
             continue
         # Omitted when zero: existing release events are exactly {sent, failed}.
         if _retry_waiting(store, r, now):
-            counts["deferred"] = counts.get("deferred", 0) + 1
+            _bump(counts, "deferred")
             continue
-        counts[_finish_send(store, profile, r, mailer, registry, now)] += 1
+        _bump(counts, _finish_send(store, profile, r, mailer, registry, now))
     if counts["sent"] or counts["failed"] or counts.get("deferred"):
         store.log(Event(profile_id=profile.id, actor=Actor.ENGINE, action=RELEASE_ACTION,
                         detail=dict(counts)))
@@ -714,7 +727,7 @@ def drain(store, profile: Profile, mailer, *, registry: Registry | None = None,
             counts["deferred"] += 1
             continue
         outcome = _finish_send(store, profile, req, mailer, registry, now)
-        counts["sent" if outcome == "sent" else "failed"] += 1
+        counts[outcome] += 1
     log.info("outbox drain sent=%s recorded=%s failed=%s deferred=%s",
              counts["sent"], counts["recorded"], counts["failed"], counts["deferred"])
     return counts

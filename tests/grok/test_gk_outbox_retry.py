@@ -383,3 +383,14 @@ def test_second_transient_failure_waits_an_hour(store):
     assert got_req is not None and got_req.status == RequestStatus.FAILED
     assert _failed(store, p.id, req.broker_id)[0].detail["attempt"] == 3
     _codes_only(store, p.id)
+
+
+def test_release_held_counts_a_retryable_failure_as_deferred_not_failed(store):
+    """CodeRabbit #104 (PR #111): a 1st or 2nd transient failure leaves the request queued for
+    a retry, so the release event must not report it as failed."""
+    p, (req,) = _held(store, "fakeb")
+    got = outbox.release_held(store, p, mailer=RaisingMailer(TimeoutError(), failures=1))
+    assert got == {"sent": 0, "failed": 0, "deferred": 1}
+    assert store.get_request(req.id).status == RequestStatus.QUEUED_FOR_APPROVAL
+    rel = [e for e in store.events(p.id) if e.action == outbox.RELEASE_ACTION]
+    assert rel[0].detail == {"sent": 0, "failed": 0, "deferred": 1}

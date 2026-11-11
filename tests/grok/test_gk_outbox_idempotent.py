@@ -238,7 +238,8 @@ def test_message_that_never_reached_the_mailer_is_sent_next_run(store, caplog):
     boom = Boom()
     failed = outbox.drain(store, profile, boom)
     assert boom.calls == 1
-    assert failed["sent"] == 0 and failed["recorded"] == 0 and failed["failed"] == 1
+    # A 1st transient failure stays queued for a retry: deferred, not failed (CodeRabbit #104).
+    assert failed == {"sent": 0, "recorded": 0, "failed": 0, "deferred": 1}
     assert store.get_request(req.id).status == RequestStatus.QUEUED_FOR_APPROVAL
     assert _rows(store, profile.id, req.broker_id, outbox.HANDOFF_ACTION) == []
     anchor = utcnow()
