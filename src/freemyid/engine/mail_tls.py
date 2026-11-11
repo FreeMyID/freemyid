@@ -11,6 +11,9 @@ fingerprint is saved in `MailboxConfig.tls_cert_sha256`. On every connection:
                       a mismatch aborts the connection;
 * pin + any other host -> refused with a clear error (pins are only for local bridges;
                       a real mail provider must pass normal verification).
+
+`connection_failure_reason` maps a connection or login exception to a short code.
+The code is a fixed word. Host names, user names and server banners are left out.
 """
 from __future__ import annotations
 
@@ -200,3 +203,143 @@ def trust_on_first_use(mb: MailboxConfig, timeout_s: float = 10.0, *,
            "trust it. Free My ID will remember this code and refuse to sign in if it "
            "ever changes.")
     return TrustResult(imap_fp, shown, msg)
+
+
+# ------------------------------------------------------------------ failure reasons
+# X509_V_ERR_* from OpenSSL. The ssl module does not export them. Only the number is
+# used: on a hostname mismatch, verify_message includes the server name.
+_X509_HAS_EXPIRED = 10
+_X509_NAME_MISMATCH = frozenset({62, 63, 64})  # hostname, email, IP
+
+MailConnectReason = Literal[
+    "cert_expired",
+    "cert_untrusted",
+    "hostname_mismatch",
+    "timeout",
+    "refused",
+    "auth_failed",
+    "starttls_not_offered",
+    "unknown",
+]
+
+REASON_CERT_EXPIRED: MailConnectReason = "cert_expired"
+REASON_CERT_UNTRUSTED: MailConnectReason = "cert_untrusted"
+REASON_HOSTNAME_MISMATCH: MailConnectReason = "hostname_mismatch"
+REASON_TIMEOUT: MailConnectReason = "timeout"
+REASON_REFUSED: MailConnectReason = "refused"
+REASON_AUTH_FAILED: MailConnectReason = "auth_failed"
+REASON_STARTTLS_NOT_OFFERED: MailConnectReason = "starttls_not_offered"
+REASON_UNKNOWN: MailConnectReason = "unknown"
+
+_AUTH_MARKERS = (
+    "authenticationfailed",
+    "invalidcredentials",
+    "loginfailed",
+    "badcredentials",
+    "passwordnotaccepted",
+)
+_STARTTLS_ABSENT = ("not supported", "not offered", "not available", "unknown command")
+
+
+def _text(exc: BaseException) -> str:
+    """Lowercased text of an exception. Never returned to a caller."""
+    parts: list[str] = []
+    for arg in exc.args:
+        values: list[object] = list(arg) if isinstance(arg, (tuple, list)) else [arg]
+        for value in values:
+            if isinstance(value, str):
+                parts.append(value)
+            elif isinstance(value, bytes):
+                parts.append(value.decode("utf-8", "replace"))
+            elif isinstance(value, (tuple, list)):
+                for inner in value:
+                    if isinstance(inner, str):
+                        parts.append(inner)
+                    elif isinstance(inner, bytes):
+                        parts.append(inner.decode("utf-8", "replace"))
+    message = getattr(exc, "verify_message", None)
+    if isinstance(message, str):
+        parts.append(message)
+    return " ".join(parts).casefold()
+
+
+def _reason_for_verify_code(exc: ssl.SSLCertVerificationError) -> MailConnectReason | None:
+    code = getattr(exc, "verify_code", None)
+    if not isinstance(code, int):
+        return None
+    if code in _X509_NAME_MISMATCH:
+        return REASON_HOSTNAME_MISMATCH
+    if code == _X509_HAS_EXPIRED:
+        return REASON_CERT_EXPIRED
+    return REASON_CERT_UNTRUSTED
+
+
+def _reason_for_cert_text(text: str) -> MailConnectReason | None:
+    if ("hostname mismatch" in text or "ip address mismatch" in text
+            or "email address mismatch" in text):
+        return REASON_HOSTNAME_MISMATCH
+    if "certificate has expired" in text:
+        return REASON_CERT_EXPIRED
+    if ("self-signed" in text or "self signed" in text
+            or "unable to get local issuer" in text
+            or "unable to get issuer certificate" in text
+            or "certificate untrusted" in text or "unknown ca" in text
+            or "certificate verify failed" in text or "not yet valid" in text):
+        return REASON_CERT_UNTRUSTED
+    return None
+
+
+def _auth_failed(text: str) -> bool:
+    compact = "".join(ch for ch in text if ch.isalnum())
+    return any(marker in compact for marker in _AUTH_MARKERS)
+
+
+def _starttls_missing(text: str) -> bool:
+    return "starttls" in text and any(phrase in text for phrase in _STARTTLS_ABSENT)
+
+
+def _ssl_reason(exc: ssl.SSLError) -> MailConnectReason:
+    if isinstance(exc, ssl.SSLCertVerificationError):
+        coded = _reason_for_verify_code(exc)
+        if coded is not None:
+            return coded
+    text = _text(exc)
+    named = _reason_for_cert_text(text)
+    if named is not None:
+        return named
+    if isinstance(exc, ssl.SSLCertVerificationError):
+        return REASON_CERT_UNTRUSTED
+    if "timed out" in text:
+        return REASON_TIMEOUT
+    return REASON_UNKNOWN
+
+
+def connection_failure_reason(exc: BaseException) -> MailConnectReason:
+    """Map one mail-connection exception to a short reason code.
+
+    Codes: cert_expired, cert_untrusted, hostname_mismatch, timeout, refused,
+    auth_failed, starttls_not_offered. Anything else is unknown.
+
+    The return value is only that word. Exception text is not copied, because a
+    server banner can include the mailbox name or the server name.
+    """
+    if isinstance(exc, ssl.SSLError):
+        return _ssl_reason(exc)
+    if isinstance(exc, TimeoutError):
+        return REASON_TIMEOUT
+    if isinstance(exc, ConnectionRefusedError):
+        return REASON_REFUSED
+    if isinstance(exc, smtplib.SMTPAuthenticationError):
+        return REASON_AUTH_FAILED
+    text = _text(exc)
+    if isinstance(exc, smtplib.SMTPNotSupportedError):
+        if _starttls_missing(text):
+            return REASON_STARTTLS_NOT_OFFERED
+        return REASON_UNKNOWN
+    if isinstance(exc, imaplib.IMAP4.error):
+        if _starttls_missing(text):
+            return REASON_STARTTLS_NOT_OFFERED
+        if _auth_failed(text):
+            return REASON_AUTH_FAILED
+        return REASON_UNKNOWN
+    return REASON_UNKNOWN
