@@ -105,16 +105,28 @@ class ThrottledNotifier:
         ThrottledNotifier._shared_started_at = now
         self._run_open = True
 
-    def flush(self) -> None:
-        """Send one closing summary when notices were held back. Safe to repeat."""
+    def flush(self, title: str | None = None, body: str | None = None) -> None:
+        """Close the run with one notice. Safe to repeat.
+
+        With ``title`` and ``body`` (the runner's PII-free end-of-run summary, which has the
+        real count) that notice is sent and replaces the held count. Without them a count-only
+        summary goes out when notices were held back, and nothing otherwise.
+        """
         held = self._held
+        self._held = 0
+        self._run_open = False
+        if title is not None and body is not None:
+            self._inner.notify(title, body, None)
+            return
         if held <= 0:
-            self._run_open = False
             return
         phrase = _things_need_you(held)
         seen = "it" if held == 1 else "them"
         self._inner.notify(f"Free My ID: {phrase}",
                            f"{phrase}. Open Free My ID to see {seen}.", None)
+
+    def discard(self) -> None:
+        """Close the run without a summary (nothing is left open, so nothing needs you)."""
         self._held = 0
         self._run_open = False
 
