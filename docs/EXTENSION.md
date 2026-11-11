@@ -392,9 +392,25 @@ Not started. Nothing has been submitted anywhere.
 
 ## 12. Roadmap phase (proposal, for Morgan and the owner)
 
-The extension was a dream-list item (`docs/ROADMAP.md`, section 7). It serves the hands-off goal
-by removing a step: the person does not have to open the app and find the site. It is not needed
-for any current release gate. Proposed phases:
+The extension was a dream-list item (`docs/ROADMAP.md`, section 7). It is not needed for any
+current release gate.
+
+Where it fits the hands-off goal (`docs/roadmap/ROADMAP_TO_1.0.md`, bar 9 and section 7a: no
+person actions after setup, no staff). Be plain about this: the zero-touch engine does not need
+an extension, and a banner that asks for a click is itself a person action. The extension earns
+its place in three narrower ways:
+
+- **The residual human step gets cheaper.** Section 7a ends with "a batched human click" for
+  steps a site reserves for people. Those happen in the person's own browser, which is where
+  the extension lives. Phase 3 lets the app pre-fill what the person allowed, so the click
+  costs seconds. The human check itself stays with the person (rule 5).
+- **Sites met outside the schedule.** When a person runs into a listed site on their own, one
+  click hands the broker id to the app instead of "open the app and find it".
+- **Set once, then silent.** Global Privacy Control is a signal the person switches on once.
+
+It adds no staff and no server: nothing here needs a human operator or a service of ours.
+
+Proposed phases:
 
 | Phase | What | When (proposed) |
 |---|---|---|
