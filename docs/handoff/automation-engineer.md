@@ -1100,3 +1100,125 @@ The 30 s budget is checked before each request and also cuts off a slow page bod
 (`httpx_requester`'s `read_budget`): a trickling body is reported `unreachable`, never checked
 half-read (docs/MONITOR.md, module docstring). Not done: search pages aren't monitored, because they need a person's name and CI has
 no person.
+
+## 2026-11-11 WO-602 "not checked" instead of "found" (Theo Park, not pushed)
+`engine/runner.py`: `RunReport` gains per-profile `presumed` (FOUND sites never searched;
+still inside per_profile's FOUND count, the state machine is unchanged), `searched` and
+`blind` (sites searched / not searchable this run). `summary_lines()` uses plain words
+(`_PLAIN`, no state names), splits FOUND into "found on the site: N" and "not checked, we
+will ask anyway: N", and adds `NO_SEARCH_LINE` when the run searched no site. New helper
+`presumed_listed(store, status)`: FOUND with no still-shown CONFIRMED listing stored; meant
+for `status`/dashboard (CHANGE REQUESTS: Morgan for cli.py/cli_json.py run/1 `presumed` +
+docs/CLI.md; wizard-packager for the dashboard chip). Tests: tests/test_runner_presumed.py.
+
+## 2026-11-11 WO-604 no fetch without a parser (Theo Park, not pushed)
+`engine/exposure.py`: new `has_parser(broker)` (search spec with a result_selector).
+`_read` raises FetchFailed("no_parser") BEFORE fetching (covers the main page and every
+old-address / previous-name / other-value page), and `_scan_broker` returns "check by hand"
+/ `no_parser` before the polite gap, so no request and no delay. The per-broker check Event
+moved into `_check_event` (same ids/enums/counts detail). Tests:
+tests/test_exposure_no_parser.py (must-not-be-called fetcher, two brokers, sleep recorder).
+For Morgan: tell the Codex lead in docs/vendor/CLAUDE_TO_CODEX.md that exposure.py changed
+in-house (not in my allowed paths).
+
+## 2026-11-11 WO-609 practice-run notices, scaled wording, letter count (Theo Park, not pushed)
+Choice for AC1: dry runs still notify, titled "Practice run: ..." (practice-mode scheduled
+runs are dry runs and their to-dos are real, so silence would hide them). `run()` passes
+`Runner(practice_notices=dry_run)`; `notify.practice()` / `PracticeNotifier` add the prefix
+once (for a ThrottledNotifier the label goes on its inner notifier, so its held-count summary
+is labelled too). Runner(...) built directly defaults to unlabelled. `runner.end_notice(n,
+letters_need_mailbox)`: up to SMALL_NOTICE_MAX (10) items keep the friendly line; more items
+name the next step (set up a removal mailbox when > MAILBOX_HINT_MIN letters wait, else
+"start with the first one"), never a time or the big count. `RunReport.drafted_letters`
+(send-it-yourself letters made this run, dry or real; separate from drafted_emails) and
+`letters_need_mailbox` (open letters for people with no mailbox) -> the summary leads with
+MAILBOX_LINE above 10. CHANGE REQUEST (Morgan): run/1 `drafted_letters` + docs/CLI.md.
+Tests: tests/test_runner_notify.py.
+
+## 2026-11-11 WO-601 part 2 wiring + CR-A/C/D (Theo Park, branch integrate/search-specs, not pushed)
+- CR-A (ba8c085): search values also split on " - " ("Age 64 - City, ST"), static + browser paths.
+- CR-C (42bf486): zero result cards without the site's own no_results_text is now
+  FetchFailed("page_unrecognized") / UnexpectedPage("search_page_unrecognized"), never
+  "not found". Any wired spec without no_results_text can therefore no longer report
+  not_found, only found or check-by-hand. Dev fixture devblocked gained its no-results text.
+- CR-D (b7fe232): location_selector and relatives_selector read every match in the card
+  (max 20, one per line), static + browser paths.
+- Registry: fastpeoplesearch in the sample (85c0591); usphonebook, fastpeoplesearch and
+  smartbackgroundchecks wired in the PRIVATE registry (backup
+  ~/.local/share/freemyid-owner-test-results/registry.yaml.bak-1111). The branch sample and
+  the private registry are consistent (test_sample_is_a_subset_of_full_when_present passes with
+  the private file linked in). On main it fails until this branch merges, because main's
+  sample predates 85c0591.
+- searchpeoplefree stays unwired (js_required, no spec) until CR-B (Morgan: SearchSpec
+  own-text flag + htmlsel own_text + parse_location dropping a leading "in "/"Lives in:").
+- Tests: tests/test_search_specs_wo601.py (fixture-backed), tests/test_exposure.py
+  (bare-spec zero-cards case).
+||||||| merged common ancestors
+
+
+## 2026-11-11 WO-612 unattended home-browser search session (Theo Park, not pushed)
+New `engine/search_session.py`. `run_session(store, pid, mode="background"|"attended")`
+searches every enabled broker with a `search:` spec (bot_blocked / unknown included) in ONE
+headed window of the installed browser (`BrowserManager.persistent_context`: Edge first on
+Windows, Playwright CDP, real UA + suffix, dedicated profile folder `paths.home()/
+browser_profile`, never the everyday profile; one session at a time via a lock file).
+"background" places the window off-screen (`--window-position=-32000,-32000`) and never
+calls bring_to_front; "attended" is visible and shows the banner through `SessionHooks`
+(console by default; the wizard subclasses it). Pages are parsed by
+`exposure.scan_exposure(site_fetch=...)` -> matcher / review flow / merge_listings as today.
+Challenge: Free My ID only READS the page (content, frame URLs) until it is gone. Background:
+20 s grace for a self-clearing interstitial, then CHALLENGE_RETRY; the next challenged run
+QUEUES the site (CAPTCHA to-do, token `search_session:<id>`); ONE notice ("N sites need one
+click from you, about a minute.", count only) at >= 3 queued or 14 days, repeated only when
+the queue grows or 14 days pass. Attended: timeout (600 s) / "Skip this site" -> hand-check
+to-do (`hand_check:<id>`); a read closes both kinds. Events `search_session`: broker id,
+outcome enum, mode, elapsed_ms, waited_ms only. `browser.py`: `persistent_launch_kwargs`
+(pure; headless only in dev fixture mode, else ValueError), `persistent_context`,
+`retarget` (per-broker allowlist swap in place). `runner._scan`: `session_only` sites
+(bot_blocked always; unknown once a session has visited it for that person, since
+`unknown` is also the model default) are never searched by the headless runner; it uses the
+session's fresh (< 24 h) read via `fresh_read`, else stays blind (presumed listed).
+`run_for_profiles(...)`: the non-raising CLI / scheduler entry point.
+Tests: tests/test_search_session.py (fake windows for every outcome, a real fixture-mode
+window in both modes with an allowlist spy, rule-5 grep, PII-free events, runner).
+Fixture page: engine/_dev/site/devclear.example (self-clearing interstitial).
+
+CHANGE REQUEST (Morgan, cli.py = contract):
+1. `freemyid scan --attended` (the wizard's "Look for me now" calls the same):
+   ```python
+   attended: Annotated[bool, typer.Option("--attended",
+       help="Open your browser and look for you now; you may be asked to tick a box.")] = False
+   ...
+   if attended:
+       from .engine import search_session as ss
+       out = ss.run_for_profiles(store, [p.id for p in profiles], mode="attended",
+                                 registry=_registry())
+       # print per person: count of read / hand-check outcomes, or the reason string
+       return
+   ```
+2. Scheduled runs: in `_do_run`, when `scheduled` (practice mode too: searching is free,
+   see open question b), BEFORE `runner.run(...)`:
+   ```python
+   from .engine import search_session as ss
+   ss.run_for_profiles(store, [p.id for p in profiles], mode="background",
+                       registry=reg, cfg=cfg, notifier=notifier)
+   ```
+   It never raises and never opens a visible window; "no_display" / "busy" just skip it.
+3. docs/CLI.md: document `scan --attended`.
+
+Open questions: (a) Windows may still flash the off-screen window in the taskbar at launch;
+WO-616 should check on the owner's PC whether `--window-position` is enough or a
+minimise-after-launch step is wanted (CDP `Browser.setWindowBounds` windowState
+"minimized" is plain window management, not page interaction). (b) Should the session also
+run in scheduled practice-mode runs? I assumed yes (scanning is free). (c) Nina: the wizard
+banner + "Skip this site" button = a `SessionHooks` subclass; `pending_sites()` feeds the
+"Look for me now" badge.
+
+## 2026-11-11 WO-612 security fixes SEC-WO612-1..7 (Theo Park, branch integrate/wave-1111c, not pushed)
+All five strict xfails in `tests/test_sec_wo612_review.py` now pass; their markers are removed. The per-finding disposition is in `docs/SECURITY_REVIEW.md` ("WO-612 search session: fixes").
+- Contract edits Morgan authorised: `paths.OWNED_ENTRIES` + `browser_profile`, `browser_profile.lock`. `cli._do_run` runs the session only when `scheduled and not headless and ss.background_supported()` (win32).
+- Cookie state is per person at `evidence/<id>/browser_session.enc`, not under `browser_profile/`. That way `Store.delete_profile` removes it with the person and no new contract hook is needed. wipe covers it through `evidence`.
+- New knobs: `run_session(step_s, look_s, session_s)`. `SessionFetcher(site_s, session_s, heartbeat)`. `SESSION_BUDGET_S` is 60 min for background and 90 min for attended. `STEP_S` is 90 s and `LOOK_S` is 15 s.
+- `BrowserManager.retarget` now returns the escapes it dropped. `BrowserManager.kill()` is the fallback for a hung close.
+- Wizard (Nina): the "Look for me now" button is unchanged. A `SessionUnavailable("no_display")` now also means "background not supported on this platform", which the attended path never hits.
+- New tests: `tests/test_search_page_crc.py` (CR-C raise) and session tests for budgets, temp folder, cookie jar, sweep, leave/retarget, session_only outcomes and the Windows-only gate. `tests/conftest.py` makes `persistent_context` refuse unless `test_headless` is set.

@@ -368,6 +368,34 @@ class ThrottledNotifier:
         return started is not None and now - started < ThrottledNotifier.window
 
 
+PRACTICE_PREFIX = "Practice run: "
+
+
+class PracticeNotifier:
+    """WO-609: every notice from a practice (dry) run says so in its title."""
+
+    def __init__(self, inner: _SupportsNotify) -> None:
+        self.inner = inner
+
+    def notify(self, title: str, body: str, url: str | None = None) -> None:
+        if not title.startswith(PRACTICE_PREFIX):
+            title = PRACTICE_PREFIX + title
+        self.inner.notify(title, body, url)
+
+
+def practice(notifier: Any) -> Any:
+    """Label every notice `notifier` sends as practice. A ThrottledNotifier keeps its type
+    (the runner flushes it at the end of a run): the label goes on its inner notifier, so its
+    own count-only summary is labelled too."""
+    if isinstance(notifier, PracticeNotifier):
+        return notifier
+    if isinstance(notifier, ThrottledNotifier):
+        if not isinstance(notifier._inner, PracticeNotifier):
+            notifier._inner = PracticeNotifier(notifier._inner)
+        return notifier
+    return PracticeNotifier(notifier)
+
+
 # --------------------------------------------------------------------------- monthly update
 
 PROGRESS_MARKER = ".last-progress-summary"

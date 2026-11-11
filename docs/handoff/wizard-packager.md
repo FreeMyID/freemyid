@@ -162,3 +162,19 @@ Installer artifact is FreeMyIDSetup-0.1.1 (pyproject still says 0.1.1, so this i
 - Receipt rules: PDF, JPG or PNG only, decided by the file's first bytes (name and browser type ignored), max 10 MB. A bad file does NOT complete the to-do: back to Today with "That file can't be used... Nothing was changed." A failing save never blocks "I did it" (logged by type).
 - Cards use one form per card (opener button sits outside it: no nested forms); fields have labels, 44px targets, hint text; no inline script/style.
 - Tests: tests/test_wizard_proof_input.py (7), plus a 320/640px large-text browser test in tests/test_wizard_large_text.py. Not done: showing a "receipt attached" tick on the broker page (the Receipts section lists evidence already).
+
+## WO-603 report said "asked" when nothing was sent (Nina, 2026-11-11) DONE
+- `wizard/report.py`: "asked" is now evidence of a real send, not a state: `BrokerStatus.last_submitted_at` set, or a `RequestStatus.SENT` request with `dry_run=False`. NEEDS_HUMAN and dry-run letters never count. New `report_counts(store, registry, profile_id) -> ReportCounts` (sites, asked, good, waiting, reappeared, need_you, other_steps, people_search_only); HTML and PDF are rendered from the same counts.
+- "Need you" = sites in NEEDS_HUMAN plus sites with an open to-do (a site can be both asked and need you). Good / waiting / reappeared count only sites that were asked.
+- Opening sentence, fake profile "Gran", 3 fake sites after scan + dry run (0 sent):
+  - Before: "As of 2026-11-11, Free My ID has asked 3 people-search sites to delete this person's details. 0 have confirmed or no longer list them. 0 are still waiting. 3 need a person to do one step. Sites can put details back up, so Free My ID checks again."
+  - After: "Nothing has been sent yet. 3 data broker sites need a step from you." then "This report was made on 2026-11-11. That means no site has received a request to delete this person's details so far. Open Free My ID to see the steps waiting for you. A data broker is a company that collects details about people and sells or shares them. People-search sites are one kind."
+  - After one real send: "1 data broker site has been asked to delete this person's details. So far 0 have confirmed or no longer list them, and 1 has not replied yet. 1 site needs a step from you."
+- Heading was "<label>: what Free My ID has asked, and what came back" (claims asking); now "<label>: Free My ID progress report".
+- Wording: "data broker sites" unless every site in the report is category `people_search` (a site missing from the registry is not assumed to be one). The term is explained once. "a step", not "one step": a site can have more than one open to-do. "One step can cover several sites." appears when a `via:<parent>` reason exists.
+- Table: "Last request" shows the real send date only (never a dry run). A FOUND row with no `last_scan_at` and no send reads "not checked yet" instead of "your details are listed" (the blind/presumed case from WO-602; uses the existing field, needs nothing new from runner.py). A site with an open to-do that is not NEEDS_HUMAN reads "<status> (needs you)". Internal `_...` ids are not listed.
+- Tests: `tests/test_report_counts.py` (20).
+- Not changed (outside WO-603 paths), same problem elsewhere:
+  - `wizard/views.py` `summary_page` ("What Free My ID did for <label>") still says "people-search sites" for every registry and counts waiting / confirmed by state.
+  - `wizard/ui.py` `HONESTY` ends "Free My ID works on people-search sites", printed at the foot of this report too.
+  - A row whose state is SUBMITTED but has no submission time and no SENT request still reads "asked" (`CHIP_LABEL`). `state.transition` always stamps the time, so only hand-built rows hit this.

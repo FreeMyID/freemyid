@@ -1,0 +1,12 @@
+<!doctype html><html><head><title>Just a moment</title></head><body>
+<!-- WO-612 dev fixture: a site's own "checking your browser" interstitial that clears by
+     itself after a moment (nobody touches it). Fake person only. -->
+<div id="gate"><h1>Just a moment...</h1><p>Checking your browser before you continue.</p></div>
+<img src="https://tracker.invalid/pixel.png" alt="">
+<script>
+setTimeout(function () {
+  document.body.innerHTML = '<div class="result"><a class="view" href="/person/jane-q-testperson">View</a>' +
+    '<span class="name">Jane Q Testperson</span></div>';
+}, 700);
+</script>
+</body></html>

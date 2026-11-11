@@ -369,7 +369,32 @@ def freemyid_env(tmp_path, monkeypatch):
     home = tmp_path / "vhome"
     monkeypatch.setenv("FREEMYID_HOME", str(home))
     monkeypatch.setenv("FREEMYID_TEST_KEY", "unit-test-key-not-secret")
+    from freemyid import crypto
+    # The throwaway home counts as the default folder (legacy db-key-v1 entry), so older
+    # keychain tests keep their meaning; tests/test_keychain_per_folder.py overrides it (WO-605).
+    monkeypatch.setattr(crypto, "default_home", lambda: home)
     monkeypatch.setattr(socket.socket, "connect", _guarded_connect)
+    # WO-612: scheduled runs now open the home-browser search session first. No test may
+    # launch a real browser window, so the session sees "no display" unless a test injects a
+    # window or passes test_headless (tests/test_search_session.py).
+    from freemyid.engine import search_session
+    monkeypatch.setattr(search_session, "real_has_display", search_session.has_display,
+                        raising=False)
+    monkeypatch.setattr(search_session, "has_display", lambda platform=None: False)
+    # ...and even past that stub, the session window itself refuses to open in tests
+    # unless a test asks for the dev-fixture headless mode (SEC-WO612 review).
+    from freemyid.engine.browser import BrowserManager
+    real_persistent = BrowserManager.persistent_context
+
+    async def _no_real_window(self, user_data_dir, *, window="background",
+                              test_headless=False):
+        if not test_headless:
+            raise RuntimeError("tests never open a real browser window "
+                               "(pass test_headless=True in dev fixture mode)")
+        return await real_persistent(self, user_data_dir, window=window,
+                                     test_headless=test_headless)
+
+    monkeypatch.setattr(BrowserManager, "persistent_context", _no_real_window)
     from freemyid import registry
     monkeypatch.setattr(registry, "_loaded", None)        # no fallback state across tests
     monkeypatch.setattr(registry, "load_warnings", [])
