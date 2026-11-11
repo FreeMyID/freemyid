@@ -12,6 +12,7 @@ This guide is for the person using Free My ID. You don't need to be technical. I
 2. [Before you start: a separate email address for removals](#2-before-you-start-a-separate-email-address-for-removals)
 3. [Setting up](#3-setting-up)
 4. [Your first run](#4-your-first-run)
+   - [The app window in version 0.3](#the-app-window-in-version-03)
 5. [What each status means](#5-what-each-status-means)
 6. ["Needs you" items](#6-needs-you-items)
 7. [Approving emails](#7-approving-emails)
@@ -110,7 +111,7 @@ The setup has **six screens**. Each asks one thing. Press **Next** to go on, or 
    Type your full name to sign, and tick the box. Free My ID won't work on anyone without this step.
 2. **Name.** Full name, plus any nicknames or maiden or earlier names. Example: *Jane Q Testperson*, nickname *Janie*, earlier name *Jane Q Example*.
 3. **Address.** The city and state where you live now (for example *Springfield, IL*). Add past cities if you like. They help Free My ID recognize *your* listing among people with the same name.
-4. **A few details.** Birth year, a phone number and an email. These are **only used on this computer to tell you apart from other people with your name.** Birth year and relatives are never sent to a site. From version 0.3: if a site's form asks for an age, it gets only the age that site's own listing already shows, never one worked out from your birth year. In version 0.2.0 an age worked out from your birth year can still be sent when a form asks for one; update to 0.3 when it comes out. A phone number goes to a site only if you switch that on.
+4. **A few details.** Birth year, a phone number and an email. These are **only used on this computer to tell you apart from other people with your name.** Birth year and relatives are never sent to a site. If a site's form asks for an age, it gets only the age that site's own listing already shows, never one worked out from your birth year. That is how the current version works. A phone number goes to a site only if you switch that on.
 5. **Email for removals.** The separate mailbox from [section 2](#2-before-you-start-a-separate-email-address-for-removals). Pick your email company and follow the short steps on screen, **or** choose **Skip, I'll do these by hand**. Skipping is fine. Permissions for ID, accounts and phone numbers stay **off** unless you turn them on later in Settings.
 6. **Run automatically?** Leave the box ticked so Free My ID keeps checking by itself. Click **Finish**.
 
@@ -120,10 +121,12 @@ The setup has **six screens**. Each asks one thing. Press **Next** to go on, or 
 
 ## 4. Your first run
 
-1. **Practice first (no removal requests).** Free My ID starts in practice mode. It looks for your details on each site and shows what it found and what it *would* do.
-2. **Look at the results** on the Home page.
-3. **Turn on real requests (one time only).** Open **Settings** and click **Start sending real requests**. Free My ID explains what will happen and asks you to confirm.
-4. **Let it work.** You can close the window. If a site needs you, a card appears on the Home page with one big button. Do the step, then click **I did it**.
+Version **0.3.1** opens on **Today**. You see one card. The rest of the list is behind **More: safety steps and details**. The buttons, in the app's own words, are in [The app window in version 0.3](#the-app-window-in-version-03).
+
+1. **Practice first.** Free My ID starts in practice mode. It looks for your listings. No removal requests go out until you say so.
+2. **Look at Today.** One card is the next step.
+3. **Turn on real requests (one time only).** Open **Settings** and click **Start sending real requests**. The next screen lists who it is for and asks **Yes, start sending real requests** or **No, stay in practice mode**. Read it, then choose. Emails for people who chose "approve each" wait for your OK, and the first email for every person always waits for your OK. Requests that are already sent cannot be taken back.
+4. **Let it work.** You can close the window. If a site needs you, a card appears on Today.
 
 ## For helpers: the command line
 
@@ -136,6 +139,379 @@ Helpers and developers can do the same things in a terminal. Normal users can sk
 - `freemyid status`, `freemyid dashboard`, `freemyid todo list`, `freemyid outbox list`, `freemyid report`.
 - Full command reference: [CLI.md](CLI.md).
 - Mail server details for the presets: Gmail `imap.gmail.com` and `smtp.gmail.com`; Proton Bridge `127.0.0.1` ports 1143 (IMAP) and 1025 (SMTP) with STARTTLS.
+
+## The app window in version 0.3
+
+This page is for the person using Free My ID on their own computer. You do not need to be technical. A family member can read it with you.
+
+The name in the examples is **Jane Q Testperson**, who lives in **Springfield, IL**. That person is made up. Use your own name in the app.
+
+This matches Free My ID **0.3.1**, the app this guide was checked against. The window is the 0.3 app: one next step on **Today**, the rest behind **More**.
+
+<!-- version: src/freemyid/__init__.py:2 -->
+
+## Today: one card, then More
+
+Open Free My ID. The top of the window has four words:
+
+- **Today**
+- **Protect yourself**
+- **Emails**
+- **Settings**
+
+**Today** is the first page. It shows **one** big card. That card is the next thing for you. It does not list every site on this page.
+
+Above the card you may see the small words **Next for you**.
+
+<!-- nav: src/freemyid/wizard/ui.py:43-44 -->
+<!-- one card: src/freemyid/wizard/dashboard.py:225-278 -->
+<!-- kicker "Next for you": src/freemyid/wizard/dashboard.py:220-222 -->
+
+Under the card is one line of numbers. It looks like this:
+
+**3 requests sent, 1 confirmed, 2 need you**
+
+The numbers change. Here is what the words mean:
+
+- **requests sent** means a removal was requested. The app's own word on a person's site list is **asked**. On the printable page the words are **We asked them to delete it**.
+- **confirmed** on this line counts two good outcomes together: the site confirmed, or the site no longer lists you. It does not mean every site on the internet is done.
+- **need you** means a card is waiting for a person.
+
+<!-- progress line: src/freemyid/wizard/dashboard.py:213-217 -->
+<!-- "confirmed" on that line includes site confirmed and no longer listed: src/freemyid/wizard/dashboard.py:27-28 -->
+<!-- chip "asked" and "site confirmed": src/freemyid/wizard/ui.py:24-31 -->
+<!-- printable words: src/freemyid/wizard/views.py:26-37 -->
+
+Under that line you always get a button:
+
+**More: safety steps and details**
+
+If more than one thing is waiting, you also get a button like:
+
+**See the full list (3 waiting)**
+
+The number is how many are waiting. One waiting thing does not show **See the full list**. **More** is still there.
+
+<!-- More and the full list: src/freemyid/wizard/dashboard.py:271-275 -->
+
+A short note under the buttons says a site that deleted you has done that for **that one site only**. Details can come back. That is why Free My ID keeps checking.
+
+<!-- src/freemyid/wizard/dashboard.py:276-277 -->
+
+### What the one card can say
+
+The card is whichever of these comes first.
+
+1. **Emails waiting for your OK.** The heading looks like **2 emails waiting for your OK** (or **1 email**). The words under it say: look at each one, then press Approve. The button on this card is **Look at them**. That opens **Emails**. On the Emails page the buttons are **Approve and send** and **Cancel it**. Press **Approve and send** when you want that request to go out. Emails for a person who did not choose "approve each" can go out without waiting here, once real requests are on. The first email for each person always waits. The screen says "press Approve". The button you actually press is **Approve and send**.
+
+2. **One task**, such as "Is this you?" or a phone call. That task fills the card. Any other tasks stay on **More**.
+
+3. **Free My ID is checking now.** The card says this takes about a minute, and the page updates by itself.
+
+4. **Nothing needs you today.** You can close the window. Free My ID keeps checking and will tell you if that changes.
+
+<!-- email card and "Look at them": src/freemyid/wizard/dashboard.py:250-255 -->
+<!-- Emails buttons: src/freemyid/wizard/dashboard.py:471-475 -->
+<!-- checking and calm cards: src/freemyid/wizard/dashboard.py:261-269 -->
+
+### Practice mode
+
+At the start, a yellow note can say:
+
+**Practice mode:** Free My ID is looking for your listings, but no removal requests go out until you say so.
+
+The note links to **Change this in Settings**. When you are ready, Settings has **Start sending real requests**. The next screen asks **Yes, start sending real requests** or **No, stay in practice mode**.
+
+While practice mode is on, a "yes, this is me" answer still does not send a removal request. The card says: in practice mode no removal requests go out.
+
+<!-- practice banner: src/freemyid/wizard/dashboard.py:236-239 -->
+<!-- Settings buttons: src/freemyid/wizard/dashboard.py:509-520 -->
+<!-- confirm screen: src/freemyid/wizard/dashboard.py:479-495 -->
+
+### The More page
+
+**More: safety steps and details** opens a page titled **Everything**.
+
+At the top is **Back to Today**.
+
+Then **Waiting for you**, with every card that was not on Today. If the list is empty, it says **Nothing is waiting for you.**
+
+Then **Protect yourself**, with **Steps for** the person's name, and a count of how many safety steps are done. If Google or Bing still needs you, you also see a line like **Google and Bing: 2 steps to do**. That line is gone when both of those steps are done.
+
+Then links for each person: **All the details for** the name, and **What we did for** the name. **Add a person** is there too.
+
+The page says: Free My ID does not change anything on Facebook or Google.
+
+<!-- More page: src/freemyid/wizard/dashboard.py:281-318 -->
+<!-- Google and Bing count on More: src/freemyid/wizard/dashboard.py:304-307 and src/freemyid/wizard/server.py:259 -->
+
+## "Is this you?"
+
+Sometimes Free My ID finds a page that **might** be you. The name matches, but that is not enough to be sure. Today shows one card and asks you.
+
+For a person whose short name is Jane, the title looks like:
+
+**Is this Jane? (the site name)**
+
+If the hit was a phone number Jane asked to remove, the title looks like **Is this Jane's phone number? (the site name)**. The same idea is used for an email address.
+
+Jane Q Testperson in Springfield, IL is only the example. Your card uses your short name and the real site name.
+
+<!-- titles: src/freemyid/engine/runner.py:990-1005 -->
+
+The card says why it is only a possible match. If the extra detail is the city, it says the name is the same, and so is the city. It also says: open the page first if you want to look. Only you can say whether it is you.
+
+<!-- why text and "Only you": src/freemyid/wizard/dashboard.py:125 -->
+
+### The buttons
+
+The app uses these words. They match the labels below.
+
+- **Open the page** — look at the listing first. This button is there when the card has a web page to open. After it opens, the app says: **Opened in your web browser. Come back here when you are finished.**
+- **Yes, this is me**
+- **No, this is not me**
+
+There is no other yes or no button.
+
+<!-- button labels: src/freemyid/wizard/dashboard.py:121-123 -->
+<!-- opened message: src/freemyid/wizard/server.py:52 -->
+
+### What "Yes, this is me" does
+
+Press this only if the page is you.
+
+The card says:
+
+**If you press Yes:** Free My ID will ask this site to take the listing down on its next check. Free My ID may send the request by itself, or ask you to approve an email or do a step, depending on the site and your settings. If a site wants a photo ID, an account or your phone number, Free My ID stops and asks, unless you allowed that in Settings. In practice mode no removal requests go out.
+
+What that means, in order:
+
+1. Free My ID marks the listing as you. That is **your** confirmation. It is not the same as **site confirmed**, which comes later, if the site agrees.
+2. The question closes. It leaves Today.
+3. On the next check, Free My ID requests removal, if your settings allow it. The thank-you line says: **Thank you. Free My ID will ask that site to remove the listing on its next check, if your settings allow it.**
+4. The request might go out by itself, or you might be asked to approve an email, or to do one step on the site.
+5. A photo ID, a new account, or your phone number is not shared unless you already allowed that in **Settings**.
+6. In practice mode, no removal request goes out.
+
+Your answer stays if Free My ID looks at that site again. Pressing **No, this is not me** afterwards does not undo a yes.
+
+<!-- card text: src/freemyid/wizard/dashboard.py:127-131 -->
+<!-- yes marks the listing confirmed as you, and schedules another check: src/freemyid/engine/handoff.py:157-175 and src/freemyid/wizard/server.py:517-548 -->
+<!-- thank-you line: src/freemyid/wizard/server.py:60-61 -->
+<!-- a later search keeps your yes: src/freemyid/engine/runner.py:169-173 -->
+
+### What "No, this is not me" does
+
+Press this if the page is someone else.
+
+The card tells you the result in its own sentence. In plain words: Free My ID will not request removal for this listing, and it will not ask you about this listing again.
+
+Then:
+
+1. Free My ID marks the listing as not you.
+2. The question closes.
+3. The thank-you line tells you no request will go out for that listing.
+4. A later search keeps your no. The app will not ask about that same listing again.
+
+<!-- No result: src/freemyid/wizard/dashboard.py:132-133 and src/freemyid/engine/handoff.py:167-169 -->
+<!-- thank-you is review_no: src/freemyid/wizard/server.py:62 -->
+<!-- a later search keeps your no: src/freemyid/engine/runner.py:172-173 -->
+
+### If you press twice
+
+The first answer is the one that counts. A second press does not flip it. The app says:
+
+**That question was already answered. Nothing was changed.**
+
+If you are not sure, press **Open the page** before you press yes or no. There is no button on the card to take an answer back. If you already pressed the wrong one, do not press again: it will not change. Note which site and page it was, and ask the person who set Free My ID up for you before the next check.
+
+<!-- second press: src/freemyid/wizard/server.py:539-547 -->
+
+## A phone call, and the optional note
+
+A few sites only take a request by phone. The card title looks like **Call (the site) to remove Jane**. The card shows a short script. Read it before you dial.
+
+The script tells you to say you are calling to have your information removed, and to opt out of sale or sharing. If they ask who you are, give only what their listing already shows: your name, city and state if those are on the listing, the age the listing shows if it shows one, the listing page, and the removal email if you set one up.
+
+The script tells you **not** to give your date of birth, Social Security number, payment details, or relatives' names. If sharing a phone number is turned off, it also tells you not to give a phone number. It tells you to ask for a reference number, to write down the date, and never to agree to pay.
+
+<!-- phone card is built from the script: src/freemyid/submitters/assisted.py:133-142 -->
+<!-- script text: src/freemyid/templates/phone_script.txt.j2:1-22 -->
+<!-- the script is the hint under the title: src/freemyid/wizard/dashboard.py:209-210 -->
+
+You do the call yourself. Free My ID does not place the call.
+
+### The note
+
+Under the script is a box you may leave empty. The label is:
+
+**A short note about the call (optional)**
+
+Under the box:
+
+**Only kept on this computer, as your own record. Please do not write passwords or ID numbers.**
+
+The note can be up to 1000 characters. A reference number and the date are enough. You do not have to type anything.
+
+The note is stored on this computer with your other records. It is your copy of what happened. It is not typed into the phone call for you.
+
+<!-- label, box, and hint: src/freemyid/wizard/dashboard.py:188-192 -->
+<!-- length and save: src/freemyid/wizard/proof_input.py:15 and src/freemyid/wizard/proof_input.py:46-56 -->
+<!-- a blank note is fine; a save problem does not block the button: src/freemyid/wizard/server.py:373-383 -->
+
+### The button on a phone card
+
+The button is **I finished it**.
+
+If the card has a web page, **Open the page** is there too. A phone card does not show **I couldn't**.
+
+Press **I finished it** after the call, even if the note box is empty. The app says:
+
+**Thank you. Free My ID will carry on.**
+
+That marks the call as done. When the site had a listing to remove, Free My ID records that a removal was requested (the site list shows **asked**). **Site confirmed** is a later step, after the site agrees or the listing is gone. It is not what this button means.
+
+<!-- "I finished it" because the phone task has a resume token: src/freemyid/wizard/dashboard.py:185 -->
+<!-- the phone token is set at src/freemyid/submitters/assisted.py:142 -->
+<!-- thank-you: src/freemyid/wizard/server.py:50 and src/freemyid/wizard/server.py:550-567 -->
+<!-- phone calls count as requested (asked), not as site confirmed: src/freemyid/engine/handoff.py:193-201 and src/freemyid/engine/handoff.py:224-254 -->
+<!-- "asked" vs "site confirmed": src/freemyid/wizard/ui.py:27-28 -->
+
+## Google and Bing
+
+Free My ID does not search Google or Bing for you. Their rules do not allow an automatic search. The app opens their own official page. You do the steps there.
+
+This does not change your Google or Facebook account. It is a separate step, after a people-search site is asked to take a page down.
+
+### Where to find the steps
+
+1. On **More**, look for **Google and Bing: 2 steps to do** (the number can be 1). That link is for one person, such as Jane. If Free My ID is set up for more than one person, choose that person's name at the top of **Protect yourself** first.
+2. Or open **Protect yourself** from the top of the window.
+
+The first block on **Protect yourself** is titled **Google and Bing**. The words under the title are:
+
+Google and Bing can show pages about you, even after a people-search site removes your listing. Free My ID does not search Google or Bing for you: their rules do not allow automatic searches. We open their own official page, and you do the steps there. When you have finished, tick "I did this" so we remember the date.
+
+<!-- intro and the top block: src/freemyid/engine/search_engines.py:33-36 and src/freemyid/wizard/views.py:222-228 -->
+
+Two short cards sit in that block.
+
+**Google:** **Ask Google to hide your phone, address or email from search results**
+
+The line under it says: Google's free tool watches for your phone number, home address and email, and lets you ask Google to stop showing those results.
+
+**Bing:** **Ask Bing to drop old copies of pages that were removed**
+
+The line under it says: After a people-search site removes your page, Bing can keep showing the old copy for a while. Bing's form asks Bing to look at the page again and drop the old copy.
+
+<!-- the two steps and those sentences: src/freemyid/engine/search_engines.py:48-61 -->
+<!-- titles come from the checklist: brokers/checklists.yaml:319-320 and brokers/checklists.yaml:342-343 -->
+<!-- how the card is drawn: src/freemyid/wizard/views.py:229-247 -->
+
+### Buttons on those two cards
+
+Each card has:
+
+- **Open the page for me** — opens the official page in your browser, and the app remembers that you opened it.
+- **Or open the link yourself** — opens the same kind of page, but you opened it. The status can stay **Not done yet** until you press **I did this**.
+- **I did this** — press this when you have finished. The status becomes **Done.** and shows **Done on** a date.
+- After that, the last button changes to **I have not done this** if you need to undo the tick.
+
+Status words you may see:
+
+- **Not done yet.**
+- **You opened the page. Tick "I did this" when you have finished.** Then **Opened on** a date, if you used **Open the page for me**.
+- **Done.**
+
+Bing only: if a people-search site removes a listing after you already ticked Bing, the card can ask you to do Bing again. The words are: **A site removed your listing since you last did this. Please do it again so the search engine drops the old page.** The button goes back to **I did this**. Google does not ask you to repeat its step for that reason. Google's tool keeps watching on its own.
+
+When both are done, the **Google and Bing:** line on **More** goes away. If Bing asks you to do it again, that line can come back.
+
+<!-- buttons and status lines: src/freemyid/wizard/views.py:231-247 and src/freemyid/engine/search_engines.py:64-71 -->
+<!-- open records the date; a bad or unknown page is not opened: src/freemyid/engine/search_engines.py:141-157 and src/freemyid/wizard/server.py:309-318 -->
+<!-- Bing repeat, Google does not: src/freemyid/engine/search_engines.py:45 and src/freemyid/engine/search_engines.py:54 and src/freemyid/engine/search_engines.py:131-134 -->
+
+### The same two topics, lower on the page
+
+Further down **Protect yourself**, the full list repeats Google and Bing, with the steps written out. You can use either place. **I did this** in either place ticks the same step.
+
+To reach the longer cards, scroll down on **Protect yourself**, below the **Google and Bing** block, to the full list. On the longer card the open button says **Open the web page**, not **Open the page for me**. The done button is still **I did this**, and later **I have not done this**.
+
+Those longer cards can also say:
+
+**We could not read this company's own page when we prepared these steps, so some details come from trusted consumer-help sites. This is still a good thing to do. Before you type anything in or call a number, check the address and the phone number on the company's own page.**
+
+Read that note. Then check the address on the company's own page before you type anything.
+
+<!-- full cards and the two button labels: src/freemyid/wizard/views.py:191-219 and src/freemyid/wizard/views.py:265-272 -->
+<!-- the caution note, shown because these two are marked partial: src/freemyid/wizard/views.py:185-200 and brokers/checklists.yaml:339 and brokers/checklists.yaml:361 -->
+
+**Google, have these ready:** a Google account, and the name, phone number, home address, and email you want Google to watch for. Cost: free. About 10 minutes to set up, then a few minutes per result.
+
+Steps the longer card lists:
+
+1. Open the web address, or open the Google app and tap your picture, then **Results about you**. Come back to Free My ID when you have finished and tick **I did this**.
+2. Sign in and type the details you want watched (name, address, phone, email).
+3. Google lists results that match. Open one and choose **Request to remove**.
+4. Type your contact info exactly as it shows on that page when asked.
+5. Turn on notifications so Google tells you when new matches appear.
+6. Check the status later on the same page. The card lists: in progress, approved, denied, or undone.
+
+The card also says Google hides the result from Search only. The page can stay on the other website, so you still ask that site to remove it. Google rarely removes results from government, school, or news sites.
+
+To undo: in Settings, choose **Remove all personal info** to stop watching and delete what you entered. That is Google's own step, as the card states it.
+
+<!-- Google steps shown on the longer card: brokers/checklists.yaml:319-336 rendered by src/freemyid/wizard/views.py:196-218 -->
+
+**Bing, have these ready:** the web address of the page that was removed (copy it from the Bing result), and a Microsoft, Google, or Facebook account to sign in with. Cost: free. A few minutes per page. Bing can take days or weeks to act.
+
+Steps the longer card lists:
+
+1. First make sure the people-search site has removed your page. Open the page. It should be gone, or it should no longer show you.
+2. Open the Bing web address. Bing asks you to sign in with a Microsoft, Google, or Facebook account.
+3. Follow the form. Paste the web address of the page, then choose whether you are asking Bing to remove the page or to update its old saved copy (the card calls that the cache).
+4. If that is not working, or you do not want to sign in, the card points you to Microsoft's **Report a Concern to Bing** page.
+5. Come back to Free My ID and tick **I did this**.
+
+The card also says Bing does not control what other websites publish, and that reporting a concern will not necessarily remove a result. It says Bing will not remove a page that is still live just because you ask, so ask the people-search site first. If you live in Europe or the UK, the card says Microsoft also has a separate form to block results shown for searches on your name.
+
+To undo: the card says there is nothing to undo. Bing only refreshes or drops its own copy. The page is not changed anywhere else.
+
+<!-- Bing steps shown on the longer card: brokers/checklists.yaml:342-359 rendered by src/freemyid/wizard/views.py:196-218 -->
+
+## Larger text
+
+At the top of the window, beside the **Dark** or **Light** button, there is a button labeled:
+
+**Larger text**
+
+Press it. The words in the whole app get bigger, about one quarter larger than before. The button then says:
+
+**Normal text**
+
+Press **Normal text** to go back.
+
+Free My ID remembers the choice on this computer. It stays when you open **Today**, **More**, **Protect yourself**, **Emails**, or **Settings**. You can change it any time.
+
+Your computer's own text size still applies. This button is only for the Free My ID window.
+
+<!-- button starts as "Larger text": src/freemyid/wizard/ui.py:59-61 -->
+<!-- it switches to "Normal text", and is remembered: src/freemyid/wizard/static/app.js:123-139 and src/freemyid/wizard/static/theme.js:7-9 -->
+<!-- size: src/freemyid/wizard/static/style.css:5 -->
+
+## A few words you will see
+
+| The app says | It means |
+|---|---|
+| **asked**, or **requests sent** | A removal was requested. The site has not necessarily finished. |
+| **site confirmed**, or **They confirmed** on the printable page | The site confirmed the request. |
+| **not listed now**, or **No longer listed** | A later check did not find the listing on that one site. |
+| **confirmed** on the Today number line | Sites that confirmed, plus sites that no longer list you. |
+| **needs you** | A person has to do a step. |
+
+A request can be asked and still come back later. Free My ID keeps checking. When a site says it deleted you, that is for that one site only. Free My ID works on people-search sites. It does not change your Facebook account, and the Google and Bing steps above are ones you do yourself on their pages.
+
+<!-- honesty line used in the app: src/freemyid/wizard/ui.py:19-22 -->
 
 ## 5. What each status means
 
@@ -171,13 +547,13 @@ Free My ID **never** tries to get around these. It opens the page for you. Tick 
 
 ### Possible match: "Is this you?"
 
-Free My ID found a listing that *might* be you: the name matches, but only one other detail does (the card says which, such as the city). That is not enough for Free My ID to be sure, so it asks you. The card has three buttons:
+The card, the exact buttons, and what each press does are in ["Is this you?"](#is-this-you). Short version:
 
 - **Open the page** lets you look at the listing first.
-- **Yes, this is me** tells Free My ID the listing is yours. On its next check it will ask that site to remove it, the same as any other listing it is sure about. Free My ID may send the request by itself, or it may ask you to approve an email or do a step, depending on the site and your settings. If the site wants a photo ID, an account or your phone number, Free My ID stops and asks unless you turned that permission on in **Settings**. While practice mode is on, nothing is actually sent.
-- **No, this is not me** tells Free My ID to leave the listing alone. Nothing will be sent for it, and Free My ID will not ask about that listing again.
+- **Yes, this is me** marks the listing as you. On the next check, Free My ID requests removal if your settings allow it. In practice mode, no removal request goes out.
+- **No, this is not me** means no removal is requested for that listing, and Free My ID does not ask about it again.
 
-Either answer closes the to-do. If you pressed the wrong one by accident, nothing is sent until the next check, so you can ask a family member to help; once a request has gone out it cannot be called back.
+The first answer is the one that counts. A second press says **That question was already answered. Nothing was changed.** There is no button on the card to take an answer back.
 
 ### ID requests and permission needed
 
@@ -193,7 +569,9 @@ Some companies only accept requests by post. Free My ID writes the letter for yo
 
 ### Phone calls
 
-A few sites only take requests by phone. Free My ID gives you a short script listing what to say and which details the site already shows (only give those). Note the date and any reference number, then mark the to-do done. Don't give a phone number or other details the site doesn't already have.
+A few sites only take requests by phone. The card shows a short script. You make the call. Free My ID does not place it. The full script rules and the note box are in [A phone call, and the optional note](#a-phone-call-and-the-optional-note).
+
+Under the script, the box is labeled **A short note about the call (optional)**. You may leave it empty. It stays on this computer. Do not write passwords or ID numbers. The button is **I finished it**.
 
 ### Sites that need an account
 
