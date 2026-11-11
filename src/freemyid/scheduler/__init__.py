@@ -146,8 +146,9 @@ def install() -> str:
         _run(["launchctl", "bootout", f"{_launchd_domain()}/{render.LABEL}"])  # ok if absent
         if _run(["launchctl", "bootstrap", _launchd_domain(), str(p)]).returncode != 0:
             raise RuntimeError("Could not load the launchd agent.")
-        return ("Installed a daily launchd agent. A check missed while the Mac was "
-                "switched off runs at the next login.")
+        return ("Installed a daily launchd agent. It also runs now and each time you log in, "
+                "but only checks sites that are due, so a check missed while the Mac was "
+                "switched off still happens.")
     xml = paths.home() / "freemyid-task.xml"
     xml.write_text(render.windows_task_xml(cmd), encoding="utf-16")
     try:   # /F replaces an existing task, so installing twice is harmless

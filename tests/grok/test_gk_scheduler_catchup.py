@@ -208,8 +208,9 @@ def test_macos_install_says_switched_off_runs_at_next_login(
         scheduler, "_run", lambda *_a, **_k: SimpleNamespace(returncode=0, stdout=""))
     message = scheduler.install()
     assert message == (
-        "Installed a daily launchd agent. A check missed while the Mac was "
-        "switched off runs at the next login."
+        "Installed a daily launchd agent. It also runs now and each time you log in, "
+        "but only checks sites that are due, so a check missed while the Mac was "
+        "switched off still happens."
     )
     plist_path = tmp_path / "Library" / "LaunchAgents" / f"{render.LABEL}.plist"
     data = plistlib.loads(plist_path.read_bytes())

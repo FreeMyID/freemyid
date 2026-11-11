@@ -19,13 +19,23 @@ def systemd_service(cmd: list[str], env: dict[str, str] | None = None) -> str:
     envs = "".join(f"Environment={_sd_quote(f'{k}={v}')}\n" for k, v in (env or {}).items())
     return ("[Unit]\nDescription=Free My ID scheduled re-check (no UI, no email without approval)\n\n"
             f"[Service]\nType=oneshot\nNice=10\n{envs}"
-            f"ExecStart={' '.join(_sd_quote(c) for c in cmd)}\n"
+            f"ExecStart={_sd_exec(cmd)}\n"
             # exit 3 = "something needs you" (docs/CLI.md): a normal outcome, not a unit failure
             "SuccessExitStatus=3\n")
 
 
 def _sd_quote(s: str) -> str:
     return '"' + s.replace("\\", "\\\\").replace('"', '\\"').replace("%", "%%") + '"'
+
+
+def _sd_exec(cmd: list[str]) -> str:
+    """ExecStart words. Arguments also get $ doubled: systemd substitutes $NAME and
+    ${NAME} in ExecStart arguments (systemd.service(5), "Command lines") and $$ is a
+    literal dollar. The program word is not substituted, so it keeps its $.
+    Environment= does no substitution, so _sd_quote alone is right there.
+    """
+    return " ".join(_sd_quote(c) if i == 0 else _sd_quote(c).replace("$", "$$")
+                    for i, c in enumerate(cmd))
 
 
 def systemd_timer() -> str:
@@ -48,10 +58,18 @@ def cron_lines(cmd: list[str], env: dict[str, str] | None = None) -> str:
     (and after ``sleep`` on @reboot, so the shell applies them to the command
     rather than only to sleep).
     """
-    command = " ".join(shlex.quote(part) for part in cmd).replace("%", "\\%")
+    command = " ".join(_cron_word(part) for part in cmd)
     prefix = _cron_env_prefix(env)
     return (f"0 {DAILY_HOUR} * * * {prefix}{command} {CRON_MARK}\n"
             f"@reboot sleep 120 && {prefix}{command} {CRON_MARK}\n")
+
+
+def _cron_word(part: str) -> str:
+    """One command word: shell-quoted with % escaped for cron, or printf when an odd
+    run of backslashes sits right before a % (see _cron_quote)."""
+    if _cron_percent_needs_printf(part):
+        return _cron_printf(part)
+    return shlex.quote(part).replace("%", "\\%")
 
 
 def _cron_env_prefix(env: dict[str, str] | None) -> str:
@@ -104,7 +122,8 @@ def launchd_plist(cmd: list[str], log_path: str, env: dict[str, str] | None = No
                         for k, v in env.items())
         envx = f"  <key>EnvironmentVariables</key>\n  <dict>\n{items}  </dict>\n"
     args = "".join(f"    <string>{xesc(c)}</string>\n" for c in cmd)
-    # RunAtLoad: a check missed while the Mac was switched off runs at next login.
+    # RunAtLoad: runs when loaded (at install and at each login), so a check missed
+    # while the Mac was switched off still happens.
     # The job uses --scheduled, so that login run only checks sites that are due.
     return ('<?xml version="1.0" encoding="UTF-8"?>\n'
             '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" '
