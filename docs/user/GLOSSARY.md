@@ -24,7 +24,8 @@ The page on a site that shows your details. The screen can say "Found a listing"
 Source: `docs/USER_GUIDE.md:42`, `docs/USER_GUIDE.md:146`.
 
 ### Practice mode (practice run)
-Free My ID starts here. It still searches people-search sites, and no removal requests go out until you say so in Settings ("Practice mode"). One exception: on a "Do it with me" step, if you choose "Fill it in for me" and press Submit on the site, that request is real. <!-- src/freemyid/wizard/dashboard.py:237, :347-350 -->
+Free My ID starts here. It still searches people-search sites, and no removal requests go out until you say so in Settings ("Practice mode"). <!-- src/freemyid/wizard/dashboard.py:237 -->
+One exception: if you choose a step that fills in a form for you and press Submit on the site, that request is real, even in practice mode. <!-- src/freemyid/wizard/dashboard.py:347-350 -->
 <!-- src/freemyid/wizard/dashboard.py:237-238 -->
 <!-- src/freemyid/engine/runner.py:270-271 -->
 Source: `src/freemyid/wizard/dashboard.py:237-238`, `src/freemyid/engine/runner.py:270-271`.
