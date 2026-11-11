@@ -120,9 +120,17 @@ def test_is_safe_wipe_target_refuses_filesystem_anchor_and_shallow_paths(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _fake_home(monkeypatch, tmp_path / "fake-user-home")
+    anchor = Path(tmp_path.anchor)
+    # Pretend a marker exists everywhere, so only the depth/anchor guards can refuse.
+    real_exists = Path.exists
+    monkeypatch.setattr(
+        Path, "exists", lambda p: p.name in {paths.MARKER, "freemyid.db"} or real_exists(p)
+    )
 
-    assert not paths.is_safe_wipe_target(Path(tmp_path.anchor))
-    assert not paths.is_safe_wipe_target(Path(tmp_path.anchor) / "one")
+    assert not paths.is_safe_wipe_target(anchor)
+    assert not paths.is_safe_wipe_target(anchor / "one")
+    # Control: the same fake marker is accepted one level deeper than the guard.
+    assert paths.is_safe_wipe_target(anchor / "one" / "two")
 
 
 def test_is_safe_wipe_target_refuses_unmarked_folder_and_accepts_marked_folder(
