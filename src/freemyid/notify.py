@@ -4,12 +4,14 @@ A missing OS notifier, or one that exits non-zero, does nothing visible and does
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 from collections.abc import Callable, Sequence
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -18,6 +20,7 @@ from typing import Any, ClassVar, Protocol
 log = logging.getLogger(__name__)
 
 _NOTICE_TIMEOUT_S = 10
+_TIMEOUT_EXIT = 124   # a slow start (cold PowerShell under antivirus): skip, do not latch
 
 
 class _OsGate:
@@ -103,7 +106,7 @@ def _subprocess_runner(argv: Sequence[str]) -> int:
                 args, check=False, capture_output=True, stdin=subprocess.DEVNULL,
                 timeout=_NOTICE_TIMEOUT_S)
     except subprocess.TimeoutExpired:
-        return 124
+        return _TIMEOUT_EXIT
     except OSError:
         return 127
     return int(done.returncode)
@@ -131,8 +134,15 @@ def _xml_escape(value: str) -> str:
             .replace(">", "&gt;").replace('"', "&quot;"))
 
 
+# PowerShell ends a single-quoted literal at the curly quotes too, not only at '.
+_PS_SINGLE_QUOTES = ("'", "\u2018", "\u2019", "\u201a", "\u201b")
+
+
 def _ps_quote(value: str) -> str:
-    return "'" + value.replace("'", "''") + "'"
+    """A PowerShell single-quoted literal: every quote character PowerShell accepts is doubled."""
+    for q in _PS_SINGLE_QUOTES:
+        value = value.replace(q, q + q)
+    return "'" + value + "'"
 
 
 def _powershell_script(title: str, body: str) -> str:
@@ -223,6 +233,8 @@ def _send_os_notice(
     except OSError as exc:
         return _mark_down(type(exc).__name__)
     code = _exit_code(result)
+    if code == _TIMEOUT_EXIT:
+        return False   # this notice is skipped; the next one tries again
     if code is None or code != 0:
         reason = "bad exit" if code is None else f"exit {code}"
         return _mark_down(reason)
@@ -261,7 +273,17 @@ class DesktopNotifier:
     def notify(self, title: str, body: str, url: str | None = None) -> None:
         self._fallback.notify(title, body, url)
         # url is a link. It stays off the lock screen.
-        _deliver_os_notice(title, body, icon=self._icon)
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            _deliver_os_notice(title, body, icon=self._icon)
+            return
+        # Called from async code (QueuedHandoff.request): the tool can take seconds to start, so
+        # it runs on its own thread. Not a daemon, so the process waits for it (bounded by the
+        # tool timeout) and an end-of-run notice is not lost at exit.
+        threading.Thread(target=_deliver_os_notice, args=(title, body),
+                         kwargs={"icon": self._icon}, name="freemyid-notice",
+                         daemon=False).start()
 
 
 def get_notifier() -> LogNotifier | DesktopNotifier:

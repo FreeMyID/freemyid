@@ -357,6 +357,14 @@ def _no_real_scheduler(request, monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def _no_real_os_notice(monkeypatch):
+    """No test pops a real desktop notice (notify-send/osascript/powershell). The OS tool is
+    'not found' unless a test fakes notify._finder and notify._runner itself."""
+    from freemyid import notify
+    monkeypatch.setattr(notify, "_finder", lambda name: None)
+
+
+@pytest.fixture(autouse=True)
 def freemyid_env(tmp_path, monkeypatch):
     home = tmp_path / "vhome"
     monkeypatch.setenv("FREEMYID_HOME", str(home))
