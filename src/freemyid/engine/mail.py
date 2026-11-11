@@ -370,7 +370,7 @@ def _confirmed_flags(plain: str) -> tuple[bool, bool]:
     return clean, negated
 
 
-def _reply_code(raw: bytes, plain: str) -> ReplyCode:
+def _reply_code(plain: str) -> ReplyCode:
     clean, negated = _confirmed_flags(plain)
     # A removal and its contradiction are ambiguous: never call that confirmed.
     if clean and negated:
@@ -380,13 +380,27 @@ def _reply_code(raw: bytes, plain: str) -> ReplyCode:
         hits.append("confirmed")
     if _clean_hit(_DENIED, plain):
         hits.append("denied")
-    if asks_for_id(raw) or _clean_hit(_NEEDS_ID_TEXT, plain):
+    if _ID_REQUEST.search(plain) or _clean_hit(_NEEDS_ID_TEXT, plain):
         hits.append("needs_id")
-    if claims_extension(raw) or _clean_hit(_MORE_TIME_TEXT, plain):
+    if _EXTENSION.search(plain) or _clean_hit(_MORE_TIME_TEXT, plain):
         hits.append("needs_more_time")
     if len(hits) == 1:
         return hits[0]
     return "unknown"
+
+
+_MESSAGE_HEADERS = frozenset({
+    "from", "to", "cc", "subject", "date", "message-id", "content-type", "mime-version",
+    "content-transfer-encoding", "received", "return-path", "reply-to", "sender",
+    "in-reply-to", "references", "delivered-to"})
+
+
+def _looks_like_message(raw: bytes) -> bool:
+    """True when the header block has a real RFC822 header, not just "Word: text"."""
+    if raw[:1] in (b" ", b"\t", b"\r", b"\n"):
+        return False
+    msg = _parse(raw, header_only=True)
+    return any(str(key).lower() in _MESSAGE_HEADERS for key in msg)
 
 
 def classify_reply(text: str | bytes) -> ReplyCode:
@@ -400,10 +414,12 @@ def classify_reply(text: str | bytes) -> ReplyCode:
     if raw is None:
         return "unknown"
     try:
-        plain = _plain_text(raw)
+        # Plain reply text (CodeRabbit #103): an empty header block keeps a first line such
+        # as "Update: ..." or "  We have ..." in the body instead of the headers.
+        plain = _plain_text(raw if _looks_like_message(raw) else b"\n" + raw)
         if not plain.strip():
             return "unknown"
-        return _reply_code(raw, plain)
+        return _reply_code(plain)
     except _REPLY_ERRORS:
         return "unknown"
 

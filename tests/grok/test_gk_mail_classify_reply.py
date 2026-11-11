@@ -61,6 +61,12 @@ _CASES = [
     ("We have removed your listing. We were unable to locate your record.", "unknown"),
     ("We have removed your listing. We have not removed the copies.", "unknown"),
     ("   ", "unknown"),
+    # CodeRabbit #103/#134 (PR #120): plain text the RFC822 parser would misread as headers.
+    ("  We have removed your listing.", "confirmed"),
+    ("Update: we have removed your listing.", "confirmed"),
+    ("Update: We have not removed your listing.\n\nWe have removed your listing.", "unknown"),
+    ("Note: we have removed your listing.\nStatus: we have not removed the copies.",
+     "unknown"),
 ]
 
 
