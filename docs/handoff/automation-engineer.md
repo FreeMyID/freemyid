@@ -1134,3 +1134,22 @@ name the next step (set up a removal mailbox when > MAILBOX_HINT_MIN letters wai
 `letters_need_mailbox` (open letters for people with no mailbox) -> the summary leads with
 MAILBOX_LINE above 10. CHANGE REQUEST (Morgan): run/1 `drafted_letters` + docs/CLI.md.
 Tests: tests/test_runner_notify.py.
+
+## 2026-11-11 WO-601 part 2 wiring + CR-A/C/D (Theo Park, branch integrate/search-specs, not pushed)
+- CR-A (ba8c085): search values also split on " - " ("Age 64 - City, ST"), static + browser paths.
+- CR-C (42bf486): zero result cards without the site's own no_results_text is now
+  FetchFailed("page_unrecognized") / UnexpectedPage("search_page_unrecognized"), never
+  "not found". Any wired spec without no_results_text can therefore no longer report
+  not_found, only found or check-by-hand. Dev fixture devblocked gained its no-results text.
+- CR-D (b7fe232): location_selector and relatives_selector read every match in the card
+  (max 20, one per line), static + browser paths.
+- Registry: fastpeoplesearch in the sample (85c0591); usphonebook, fastpeoplesearch and
+  smartbackgroundchecks wired in the PRIVATE registry (backup
+  ~/.local/share/freemyid-owner-test-results/registry.yaml.bak-1111). The branch sample and
+  the private registry are consistent (test_sample_is_a_subset_of_full_when_present passes with
+  the private file linked in). On main it fails until this branch merges, because main's
+  sample predates 85c0591.
+- searchpeoplefree stays unwired (js_required, no spec) until CR-B (Morgan: SearchSpec
+  own-text flag + htmlsel own_text + parse_location dropping a leading "in "/"Lives in:").
+- Tests: tests/test_search_specs_wo601.py (fixture-backed), tests/test_exposure.py
+  (bare-spec zero-cards case).
