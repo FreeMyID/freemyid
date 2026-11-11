@@ -99,25 +99,25 @@ Codes are stable: a number never changes meaning.
 
 ### Where this table comes from
 
-Each statement above was checked against `src/freemyid/cli.py` (unless another file is named):
+Each statement above was checked against src/freemyid/cli.py (unless another file is named):
 
-* `setup` options and the `--prefill` rules: `cli.py:147-176`. With `--prefill` alone the terminal
-  prompts are used (`cli.py:168-169`). `--web --prefill` prints a pointer to `/wizard/import`
-  and exits 2 (`cli.py:164-167`). `--from` is handled first (`cli.py:161-163`).
-* `profile add [--prefill]`: `cli.py:536-538` (calls `setup` with the terminal path when a bundle
+* setup options and the --prefill rules: `cli.py:147-176`. With --prefill alone the terminal
+  prompts are used (`cli.py:168-169`). --web --prefill prints a pointer to /wizard/import
+  and exits 2 (`cli.py:164-167`). --from is handled first (`cli.py:161-163`).
+* profile add [--prefill]: `cli.py:536-538` (calls setup with the terminal path when a bundle
   is given).
-* `search-engines`: the three words `open`, `done`, `undo` are `cli.py:895`. The command is
+* search-engines: the three words open, done, undo are `cli.py:895`. The command is
   `cli.py:903-966`. A missing, unknown or misplaced word or id exits 2 (`cli.py:916-921`; an
   unknown id also exits 2 from `cli.py:88-94`). The page could not be opened or recorded exits 1
   (`cli.py:932-933`, `cli.py:937-938`). With no word it lists the steps (`cli.py:946-966`).
 * Exit code numbers: `src/freemyid/cli_json.py:25-29`.
-* Option lists checked against `--help`: `scan` `cli.py:335-343`, `run` `cli.py:346-358`
-  (`--scheduled` is hidden and is not in `--help`), `exposure` `cli.py:409-422`, `status`
-  `cli.py:379-381`, `report` `cli.py:512-515`, `wipe` `cli.py:581-584`, `fill --timeout`
-  `cli.py:364`, `monitor` `cli.py:1052-1062`, `secrets migrate` `cli.py:988-995`.
-* `checklist` group and `-p/--profile`: `cli.py:775-779`. `list` / `show` / `done` / `undo`:
+* Option lists checked against --help: scan `cli.py:335-343`, run `cli.py:346-358`
+  (--scheduled is hidden and is not in --help), exposure `cli.py:409-422`, status
+  `cli.py:379-381`, report `cli.py:512-515`, wipe `cli.py:581-584`, fill --timeout
+  `cli.py:364`, monitor `cli.py:1052-1062`, secrets migrate `cli.py:988-995`.
+* checklist group and -p/--profile: `cli.py:775-779`. list / show / done / undo:
   `cli.py:815-890`.
-* `doctor --offline`; Python 3.12 or newer: `cli.py:179-181`, `src/freemyid/doctor.py:55-64`.
+* doctor --offline; Python 3.12 or newer: `cli.py:179-181`, `src/freemyid/doctor.py:55-64`.
 * Exposure text order, coverage wording and the score-change line: `cli.py:458-463`,
   `src/freemyid/engine/exposure.py:847-865` and `src/freemyid/engine/exposure.py:896-903`,
   `src/freemyid/engine/exposure_score.py:185-215`, `src/freemyid/exposure_models.py:81-114`.
@@ -388,11 +388,12 @@ undo ID (leave out to list the steps)".
 With no action and no `--json`, the text is the intro, then one block per step: `[x]` or
 `[ ]`, the step id, the engine and the title, why it matters now, a status line, the https
 address, and the numbered steps. A done step adds `(done DATE)`; an opened step adds
-`(opened DATE)`. It ends with "{label}: N of M to do. Open one with: freemyid search-engines
-open ID, then: freemyid search-engines done ID". If no step is available it prints "No Google
-or Bing steps are available right now." (`cli.py:946-966`). `open` prints "Opened {engine}'s
-page in your browser. If nothing opened, copy this address: {url}". `done` prints "Done:
-{title}". `undo` prints "Not done: {title}". Those three do not print the list again. With
+`(opened DATE)`. It ends with
+"{label}: N of M to do. Open one with: freemyid search-engines open ID, then: freemyid search-engines done ID".
+If no step is available it prints
+"No Google or Bing steps are available right now." (`cli.py:946-966`). open prints
+"Opened {engine}'s page in your browser. If nothing opened, copy this address: {url}".
+done prints "Done: {title}". undo prints "Not done: {title}". Those three do not print the list again. With
 `--json` the same line goes to stderr and stdout is the document below (`cli.py:931-945`).
 
 `freemyid search-engines --json` (also returned by `open`, `done` and `undo` with `--json`,
