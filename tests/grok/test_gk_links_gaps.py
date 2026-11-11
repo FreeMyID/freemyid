@@ -23,19 +23,17 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 
-_FENCE = re.compile(r"^\s*(```|~~~)")
+_FENCE_OPEN = re.compile(r"^ {0,3}(?P<mark>`{3,}|~{3,})(?P<info>.*)$")
+_FENCE_CLOSE = re.compile(r"^ {0,3}(?P<mark>`{3,}|~{3,})[ \t]*$")
+_DEST = r"(?:<(?P<angle>[^>\n]*)>|(?P<bare>[^)\s>]+))"
 _CODE_SPAN = re.compile(r"`[^`\n]*`")
 _HEADING = re.compile(r"^\s{0,3}(#{1,6})\s+(.*?)\s*#*\s*$")
 _HTML_ID = re.compile(r"""<a\s[^>]*\b(?:name|id)=["']([^"']+)["']""")
-_IMAGE = re.compile(
-    r"!\[(?P<alt>[^\]]*)\]\(\s*<?(?P<target>[^)\s>]+)>?(?:\s+(?:\"[^\"]*\"|'[^']*'))?\s*\)"
-)
-_LINK = re.compile(
-    r"(?<!!)\[(?P<text>[^\]]*)\]\(\s*<?(?P<target>[^)\s>]+)>?"
-    r"(?:\s+(?:\"[^\"]*\"|'[^']*'))?\s*\)"
-)
+_TITLE = r"(?:\s+(?:\"[^\"]*\"|'[^']*'))?"
+_IMAGE = re.compile(r"!\[(?P<alt>[^\]]*)\]\(\s*" + _DEST + _TITLE + r"\s*\)")
+_LINK = re.compile(r"(?<!!)\[(?P<text>[^\]]*)\]\(\s*" + _DEST + _TITLE + r"\s*\)")
 _REF_DEF = re.compile(
-    r"^[ ]{0,3}\[[^\]]+\]:[ \t]*<?(?P<target>[^>\s]+)>?"
+    r"^[ ]{0,3}\[[^\]]+\]:[ \t]*(?:<(?P<angle>[^>\n]*)>|(?P<bare>[^>\s]+))"
     r"(?:[ \t]+(?:\"[^\"]*\"|'[^']*'|\([^)]*\)))?[ \t]*$"
 )
 _AUTOLINK = re.compile(r"<((?:https?://|mailto:)[^>\s]+)>", re.IGNORECASE)
@@ -74,15 +72,31 @@ def _lane_id(path: Path) -> str:
     return path.relative_to(ROOT).as_posix()
 
 
+def _dest(match: re.Match[str]) -> str:
+    """The link destination, from angle brackets (spaces allowed) or bare."""
+    angle = match.group("angle")
+    return angle if angle is not None else match.group("bare")
+
+
 def _outside_fences(path: Path) -> list[tuple[int, str]]:
+    """Lines outside fenced code, using the CommonMark opening and closing rules."""
+    return _outside_fences_text(path.read_text(encoding="utf-8"))
+
+
+def _outside_fences_text(text: str) -> list[tuple[int, str]]:
     lines: list[tuple[int, str]] = []
-    fenced = False
-    for number, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
-        if _FENCE.match(raw):
-            fenced = not fenced
+    mark = ""
+    for number, raw in enumerate(text.splitlines(), start=1):
+        if mark:
+            closer = _FENCE_CLOSE.match(raw)
+            if closer and closer.group("mark")[0] == mark[0] and len(closer.group("mark")) >= len(mark):
+                mark = ""
             continue
-        if not fenced:
-            lines.append((number, raw))
+        opener = _FENCE_OPEN.match(raw)
+        if opener and not (opener.group("mark")[0] == "`" and "`" in opener.group("info")):
+            mark = opener.group("mark")
+            continue
+        lines.append((number, raw))
     return lines
 
 
@@ -119,11 +133,11 @@ def _scan(path: Path) -> tuple[list[_Hit], list[tuple[int, str]]]:
     for number, raw in _outside_fences(path):
         visible = _CODE_SPAN.sub("", raw)
         for match in _IMAGE.finditer(visible):
-            target = match.group("target")
+            target = _dest(match)
             hits.append(_Hit(number, target, "image", match.group("alt")))
             _note_web(target, number, webs)
         for match in _LINK.finditer(visible):
-            target = match.group("target")
+            target = _dest(match)
             hits.append(_Hit(number, target, "link", ""))
             _note_web(target, number, webs)
         for match in _AUTOLINK.finditer(visible):
@@ -134,7 +148,7 @@ def _scan(path: Path) -> tuple[list[_Hit], list[tuple[int, str]]]:
             _note_web(target, number, webs)
         ref = _REF_DEF.match(visible)
         if ref is not None:
-            target = ref.group("target")
+            target = _dest(ref)
             hits.append(_Hit(number, target, "link", ""))
             _note_web(target, number, webs)
     return hits, webs
@@ -376,3 +390,42 @@ def test_http_https_and_mailto_are_listed_not_fetched(
         "https://example.invalid/b",
         "mailto:jane.q.testperson@example.com",
     ]
+
+
+def test_fence_closes_only_on_a_matching_fence() -> None:
+    text = (
+        "````\n"
+        "```\n"
+        "[inside](missing.md)\n"
+        "````\n"
+        "[after](after.md)\n"
+        "~~~\n"
+        "```\n"
+        "[tilde](missing.md)\n"
+        "~~~\n"
+        "[end](end.md)\n"
+    )
+    assert [raw for _n, raw in _outside_fences_text(text)] == ["[after](after.md)", "[end](end.md)"]
+
+
+def test_unclosed_fence_hides_the_rest() -> None:
+    assert _outside_fences_text("a\n```\nb\nc\n") == [(1, "a")]
+
+
+def test_destinations_with_spaces_in_angle_brackets_are_checked(tmp_path: Path) -> None:
+    _write(tmp_path / "my guide.md", "# Guide\n")
+    _write(tmp_path / "pic one.png", "png")
+    page = _write(
+        tmp_path / "page.md",
+        "# Page\n\n"
+        "[ok](<my guide.md>)\n"
+        "[bad](<no such.md>)\n"
+        "![Steps](<pic one.png>)\n"
+        "![Gone](<gone pic.png> \"title\")\n"
+        "[ref]\n\n"
+        "[ref]: <no ref.md>\n",
+    )
+    found = _problems(page, tmp_path)
+    assert len(found) == 3, found
+    joined = "\n".join(found)
+    assert "no such.md" in joined and "gone pic.png" in joined and "no ref.md" in joined
