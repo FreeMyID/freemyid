@@ -33,7 +33,7 @@ kinds:
   docs:
     tier: light
     agent: brand-marketing
-    read_first: [docs/POSITIONING.md]
+    read_first: [docs/BRAND.md, docs/POSITIONING.md]
   i18n:
     tier: light
     agent: brand-marketing
@@ -50,15 +50,24 @@ kinds:
     tier: standard
     agent: qa-security
     read_first: [docs/dev/TESTING.md]
+  # Front-end UI/UX and graphic design run on "max" (Fable) for the best-looking results (owner, 2026-11-11).
   web:
-    tier: standard
+    tier: max
     agent: web-developer
     skills: [cloudflare:web-perf]
     read_first: [docs/WEBSITE.md, docs/POSITIONING.md]
   wizard:
-    tier: standard
+    tier: max
     agent: wizard-packager
     read_first: [docs/PLAN_V1.md, src/freemyid/interfaces.py]
+  packaging:
+    tier: standard
+    agent: wizard-packager
+    read_first: [docs/PLAN_V1.md]
+  design:
+    tier: max
+    agent: graphic-designer
+    read_first: [docs/BRAND.md, docs/POSITIONING.md]
   research:
     tier: standard
     agent: broker-researcher
@@ -69,7 +78,7 @@ kinds:
     skills: [cloudflare:cf-cli]
     read_first: [docs/AUTONOMY.md]
   dataviz:
-    tier: standard
+    tier: max
     agent: web-developer
     skills: [dataviz]
   engine:
@@ -102,7 +111,8 @@ infer_kind:
   - {prefix: web/, kind: web}
   - {prefix: site_src/, kind: web}
   - {prefix: src/freemyid/wizard/, kind: wizard}
-  - {prefix: packaging/, kind: wizard}
+  - {prefix: packaging/, kind: packaging}
+  - {prefix: brand/, kind: design}
   - {prefix: brokers/, kind: research}
   - {prefix: .github/workflows/, kind: release}
   - {prefix: src/, kind: engine}

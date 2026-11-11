@@ -30,7 +30,9 @@ Run `tools/route.py table` for the full kind × vendor matrix.
    ```
    Use them sparingly. If the same override keeps coming up, change the table instead.
 
-Kinds: docs, i18n, marketing, release, tests, web, wizard, research, infra, dataviz, engine, security, review, architecture.
+Kinds: docs, i18n, marketing, release, tests, web, wizard, packaging, design, research, infra, dataviz, engine, security, review, architecture.
+
+**Front end and design on Fable** (owner, 2026-11-11): `web`, `wizard` (UI/UX), `dataviz` and `design` (graphic-designer, `brand/`) run on the `max` tier, so in-house Claude agents use Fable for the best-looking results. Installer work (`packaging/`) is its own `packaging` kind at `standard`.
 
 ## Using it
 
