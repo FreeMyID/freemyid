@@ -123,6 +123,12 @@ def check_secrets() -> Check:
                              "Give this folder its own key: `freemyid secrets migrate --to "
                              "keyring` (keeps the keychain) or `freemyid secrets migrate --to "
                              "passphrase` (key protected by a passphrase, kept in this folder).")
+            if entry == "unreadable":
+                return Check("secrets", title, "warn",
+                             "keyring: this folder's saved data could not be read just now, "
+                             "so the key could not be checked",
+                             "Close other Free My ID windows and try again in a minute. If it "
+                             "keeps happening, check that you can open this data folder.")
             if entry == "lost":
                 from .crypto import KEY_RECOVERY_HELP
                 return Check("secrets", title, "fail",

@@ -330,3 +330,15 @@ def test_f5_non_default_folder_keyring_round_trip_via_freemyid_env(freemyid_env,
     assert _opens(p.id)
     crypto.delete_key()
     assert _entries(memkeyring) == {crypto.KEY_NAME: k_main}
+
+
+def test_doctor_warns_when_db_unreadable_instead_of_ok(monkeypatch):
+    """WO-605 F2 follow-up: an unreadable DB is a 'try again' warning, never 'ok'."""
+    from freemyid import doctor
+    kb = secret_backends.KeyringBackend
+    monkeypatch.setattr(kb, "usable", lambda self: True)
+    monkeypatch.setattr(kb, "entry_status", lambda self: "unreadable")
+    monkeypatch.setattr(secret_backends, "select", lambda *a, **k: kb())
+    c = doctor.check_secrets()
+    assert c.status == "warn"
+    assert "try again" in c.fix.lower()
