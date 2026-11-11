@@ -139,6 +139,13 @@ _PLAIN: dict[ListingState, str] = {
 }
 PRESUMED_WORDS = "not checked, we will ask anyway"
 NO_SEARCH_LINE = "No site could be searched automatically; requests will still be sent."
+#: WO-609: more open "send it yourself" letters than this (no removal mailbox) -> the run
+#: summary leads with MAILBOX_LINE and the end-of-run notice names that one next step
+MAILBOX_HINT_MIN = 10
+MAILBOX_LINE = ("Add a removal mailbox: then Free My ID can send the {n} letters for you, "
+                "instead of you sending each one yourself.")
+#: WO-609: up to this many open items the end-of-run notice keeps its friendly line
+SMALL_NOTICE_MAX = 10
 
 
 def presumed_listed(store: Store, st: Any) -> bool:
@@ -170,6 +177,12 @@ class RunReport:
     presumed: dict[str, int] = field(default_factory=dict)
     searched: dict[str, int] = field(default_factory=dict)
     blind: dict[str, int] = field(default_factory=dict)
+    #: WO-609: "send it yourself" letters made this run (no removal mailbox; dry or real).
+    #: Not in drafted_emails, which counts dry-run copies of emails Free My ID would send.
+    drafted_letters: int = 0
+    #: WO-609: open "send it yourself" letters for people with no removal mailbox (set at
+    #: the end of the run); above MAILBOX_HINT_MIN the summary leads with MAILBOX_LINE
+    letters_need_mailbox: int = 0
 
     def _profile_parts(self, pid: str, counts: dict[ListingState, int]) -> list[str]:
         presumed = min(self.presumed.get(pid, 0), counts.get(S.FOUND, 0))
@@ -186,6 +199,8 @@ class RunReport:
         """PII-free (profile labels like 'Mom' are user-chosen display names). Plain words,
         no state names; never-searched sites are not called "found" (WO-602)."""
         out = ["Dry run: nothing was sent or submitted." if self.dry_run else "Run finished."]
+        if self.letters_need_mailbox > MAILBOX_HINT_MIN:
+            out.insert(0, MAILBOX_LINE.format(n=self.letters_need_mailbox))
         if sum(self.blind.values()) and not sum(self.searched.values()):
             out.append(NO_SEARCH_LINE)
         for pid, counts in self.per_profile.items():
@@ -206,6 +221,8 @@ class RunReport:
             out.append(f"{self.queued_emails} email(s) waiting for your approval.")
         if self.drafted_emails:
             out.append(f"{self.drafted_emails} email(s) drafted (dry run, not sent).")
+        if self.drafted_letters:
+            out.append(f"{self.drafted_letters} letter(s) written for you to send yourself.")
         if self.open_todos:
             out.append(f"{self.open_todos} thing(s) need you. Open the dashboard to see them.")
         if self.errors:
@@ -227,12 +244,14 @@ def run(store: Store, registry: Registry, profiles: list[Profile], *, scan_only:
         notifier: Any = None, browser: BrowserManager | None = None,
         state_laws: dict[str, StateLaw] | None = None, now: datetime | None = None,
         cfg: cfgmod.Config | None = None) -> RunReport:
-    """Run the loop. `scheduled=True` == quiet, headless, non-blocking, only_due."""
+    """Run the loop. `scheduled=True` == quiet, headless, non-blocking, only_due.
+    A dry run's notices are titled "Practice run: ..." (WO-609)."""
     if scheduled:
         interactive, only_due = False, True
     r = Runner(store, registry, scan_only=scan_only, dry_run=dry_run, interactive=interactive,
                broker_ids=broker_ids, only_due=only_due, mailer=mailer, notifier=notifier,
-               browser=browser, state_laws=state_laws, now=now, cfg=cfg)
+               browser=browser, state_laws=state_laws, now=now, cfg=cfg,
+               practice_notices=dry_run)
     return asyncio.run(r.run(profiles))
 
 
@@ -345,8 +364,13 @@ class Runner:
                  mailer: Any = None, notifier: Any = None,
                  browser: BrowserManager | None = None,
                  state_laws: dict[str, StateLaw] | None = None, now: datetime | None = None,
-                 cfg: cfgmod.Config | None = None) -> None:
+                 cfg: cfgmod.Config | None = None, practice_notices: bool = False) -> None:
         self.store, self.registry = store, registry
+        #: WO-609: label every notice "Practice run: ..." (run() sets it for dry runs)
+        self.practice_notices = practice_notices
+        if practice_notices and notifier is not None:
+            from ..notify import practice
+            notifier = practice(notifier)
         self.cfg = cfg or cfgmod.load()
         self.fixture_base = dev_fixture_base()
         # defence in depth: the CLI also refuses, but never submit for real unless enabled
@@ -425,6 +449,9 @@ class Runner:
     def _notifier(self) -> Any:
         if self.notifier is None:
             self.notifier = hmod.get_notifier()
+            if self.practice_notices:
+                from ..notify import practice
+                self.notifier = practice(self.notifier)
         return self.notifier
 
     def _handoff(self, profile: Profile) -> Any:
@@ -769,6 +796,8 @@ class Runner:
         for t in out.todos:
             hmod.persist_todo(self.store, t)
             self._event(profile, t.broker_id, "todo_created", todo_kind=t.kind.value)
+            if t.kind == TodoKind.SEND_EMAIL_MANUALLY:
+                self.report.drafted_letters += 1
         req = out.request
         if req is not None and req.status == RequestStatus.SENT:
             self._target_outcome[key] = "sent"
@@ -1080,6 +1109,7 @@ class Runner:
                     update={"resume_token": assisted.manual_email_token(broker.id, kind.value)})
             hmod.persist_todo(self.store, record_manual_letter(
                 self.store, todo, listings, kind=kind, original=original, now=self.now))
+            self.report.drafted_letters += 1
             return "manual_todo"
         req = queue_email(self.store, profile, broker, listings, kind=kind, state_law=law,
                           dry_run=False, mailer=self.mailer_for(profile), original=original,
@@ -1109,15 +1139,17 @@ class Runner:
         queued = [r for r in self.store.list_requests(status=RequestStatus.QUEUED_FOR_APPROVAL)
                   if r.profile_id in ids]
         self.report.open_todos = len(todos)
+        no_mailbox = {p.id for p in profiles if p.mailbox is None}
+        self.report.letters_need_mailbox = sum(
+            1 for t in todos if t.kind == TodoKind.SEND_EMAIL_MANUALLY
+            and t.profile_id in no_mailbox)
         n = len(todos) + len(queued)
         if n == 0:
             self._close_notices(discard=True)   # nothing open: a held count would be stale
             return
         # SEC-28: no URL (a bare dashboard URL has no session token and lands on 403);
         # the notifier's click handler opens the app itself.
-        body = (f"{n} thing{'s' if n != 1 else ''} need{'s' if n == 1 else ''} you. "
-                f"Open Free My ID to see {'it' if n == 1 else 'them'}.")
-        self._close_notices(("Free My ID needs 5 minutes of your help", body))
+        self._close_notices(end_notice(n, self.report.letters_need_mailbox))
 
     def _close_notices(self, summary: tuple[str, str] | None = None, *,
                        discard: bool = False) -> None:
@@ -1138,6 +1170,21 @@ class Runner:
                 nt.notify(summary[0], summary[1], None)
         except Exception as e:  # noqa: BLE001
             log.info("notification failed: %s", type(e).__name__)
+
+
+def end_notice(n: int, letters_need_mailbox: int = 0) -> tuple[str, str]:
+    """The PII-free end-of-run notice (title, body) for `n` open items (WO-609). A few items
+    keep the friendly line; many items name the one next step, never a time estimate."""
+    if n <= SMALL_NOTICE_MAX:
+        body = (f"{n} thing{'s' if n != 1 else ''} need{'s' if n == 1 else ''} you. "
+                f"Open Free My ID to see {'it' if n == 1 else 'them'}.")
+        return "Free My ID needs 5 minutes of your help", body
+    if letters_need_mailbox > MAILBOX_HINT_MIN:
+        body = ("Set up a removal mailbox so Free My ID can send these for you. "
+                "Open Free My ID to start.")
+        return "Free My ID: one step first", body
+    return ("Free My ID has a list for you",
+            "Open Free My ID and start with the first one. A few at a time is fine.")
 
 
 def review_todo(store: Store, profile: Profile, broker: Broker, li: Listing, n: int) -> None:

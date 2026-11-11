@@ -1120,3 +1120,17 @@ moved into `_check_event` (same ids/enums/counts detail). Tests:
 tests/test_exposure_no_parser.py (must-not-be-called fetcher, two brokers, sleep recorder).
 For Morgan: tell the Codex lead in docs/vendor/CLAUDE_TO_CODEX.md that exposure.py changed
 in-house (not in my allowed paths).
+
+## 2026-11-11 WO-609 practice-run notices, scaled wording, letter count (Theo Park, not pushed)
+Choice for AC1: dry runs still notify, titled "Practice run: ..." (practice-mode scheduled
+runs are dry runs and their to-dos are real, so silence would hide them). `run()` passes
+`Runner(practice_notices=dry_run)`; `notify.practice()` / `PracticeNotifier` add the prefix
+once (for a ThrottledNotifier the label goes on its inner notifier, so its held-count summary
+is labelled too). Runner(...) built directly defaults to unlabelled. `runner.end_notice(n,
+letters_need_mailbox)`: up to SMALL_NOTICE_MAX (10) items keep the friendly line; more items
+name the next step (set up a removal mailbox when > MAILBOX_HINT_MIN letters wait, else
+"start with the first one"), never a time or the big count. `RunReport.drafted_letters`
+(send-it-yourself letters made this run, dry or real; separate from drafted_emails) and
+`letters_need_mailbox` (open letters for people with no mailbox) -> the summary leads with
+MAILBOX_LINE above 10. CHANGE REQUEST (Morgan): run/1 `drafted_letters` + docs/CLI.md.
+Tests: tests/test_runner_notify.py.
