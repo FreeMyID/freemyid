@@ -254,6 +254,7 @@ def _sentences(blocks: list[str]) -> list[str]:
 
 
 def _measure(text: str) -> tuple[list[str], int]:
+    text = text.replace("\u2019", "'").replace("\u2018", "'")
     sentences = _sentences(_blocks(text))
     words = [word for sentence in sentences for word in _WORD.findall(sentence)]
     return words, len(sentences)
@@ -388,6 +389,25 @@ def test_code_blocks_and_tables_do_not_count() -> None:
     assert "organizational" not in {word.lower() for word in prose_words(noisy)}
 
 
+def test_curly_apostrophes_stay_inside_one_word() -> None:
+    assert prose_words("We don\u2019t guess. It\u2019s plain.") == ["We", "don't", "guess", "It's", "plain"]
+    assert grade_of("We don\u2019t guess.") == pytest.approx(grade_of("We don't guess."))
+
+
+def test_fence_closes_only_by_commonmark_rules() -> None:
+    cases = {
+        "four backticks need four to close": "````\n```\n" + JARGON + "\n````\n",
+        "tilde fence is not closed by backticks": "~~~\n```\n" + JARGON + "\n~~~\n",
+        "closer with text is not a closer": "```\n``` text\n" + JARGON + "\n```\n",
+        "longer closer closes": "```\n" + JARGON + "\n`````\n",
+    }
+    for name, fenced in cases.items():
+        assert prose_words(PLAIN + "\n\n" + fenced) == prose_words(PLAIN), name
+    after = PLAIN + "\n\n````\n```\ncode\n````\n\nThe cat sat."
+    assert prose_words(after)[-3:] == ["The", "cat", "sat"]
+    assert prose_words(PLAIN + "\n\n```\n" + JARGON) == prose_words(PLAIN), "unclosed fence"
+
+
 def test_helper_sections_comments_headings_and_link_targets_do_not_count() -> None:
     text = "\n".join(
         [
@@ -474,6 +494,8 @@ def test_live_user_pages_stay_readable() -> None:
     assert "docs/USER_GUIDE.md" in rels
     for path in (ROOT / "docs" / "user").glob("*.md"):
         assert f"docs/user/{path.name}" in rels
+    unscored = [rel for rel, grade in rows if grade == 0.0]
+    assert not unscored, f"nothing was scored on {unscored}; the guard would pass silently"
     problems = problems_for(rows)
     if problems:
         pytest.fail(format_report(rows, problems))
