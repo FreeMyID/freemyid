@@ -1,16 +1,38 @@
-"""Desktop notifications. Bodies must be PII-free (counts and first names at most)."""
+"""Desktop notifications. Bodies must be PII-free (counts and first names at most).
+
+A missing OS notifier, or one that exits non-zero, does nothing visible and does not raise.
+"""
 from __future__ import annotations
 
-import asyncio
 import logging
 import os
+import shutil
+import subprocess
+import sys
 import tempfile
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, ClassVar, Protocol
 
 log = logging.getLogger(__name__)
+
+_NOTICE_TIMEOUT_S = 10
+
+
+class _OsGate:
+    """One bad exit disables OS notices until the process ends."""
+
+    unavailable: ClassVar[bool] = False
+    logged: ClassVar[bool] = False
+
+
+def _which(name: str) -> str | None:
+    return shutil.which(name)
+
+
+_finder: Callable[[str], str | None] = _which
+_runner: Callable[[Sequence[str]], object] | None = None
 
 
 class LogNotifier:
@@ -23,36 +45,223 @@ class LogNotifier:
 def _app_icon() -> Path | None:
     """The Free My ID icon, found next to the package (installed exe) or in the repo."""
     here = Path(__file__).resolve().parent
-    for p in (here / "wizard" / "static" / "freemyid.png", here / "wizard" / "static" / "freemyid.ico",
+    for p in (here / "wizard" / "static" / "freemyid.png",
+              here / "wizard" / "static" / "freemyid.ico",
               here.parents[1] / "packaging" / "windows" / "freemyid.ico"):
         if p.is_file():
             return p
     return None
 
 
+def _tool_name(platform: str) -> str | None:
+    system = platform.lower()
+    if system.startswith("linux"):
+        return "notify-send"
+    if system == "darwin":
+        return "osascript"
+    if system == "win32":
+        return "powershell"
+    return None
+
+
+def _rejected(text: str) -> bool:
+    """Lock-screen text stays free of links and email addresses."""
+    if "\x00" in text:
+        return True
+    lowered = text.casefold()
+    return "://" in lowered or "www." in lowered or "@" in text
+
+
+def _mark_down(reason: str) -> bool:
+    _OsGate.unavailable = True
+    if not _OsGate.logged:
+        _OsGate.logged = True
+        log.info("desktop notification unavailable (%s)", reason)
+    return False
+
+
+def _exit_code(result: object) -> int | None:
+    if isinstance(result, int) and not isinstance(result, bool):
+        return result
+    code = getattr(result, "returncode", None)
+    if isinstance(code, int) and not isinstance(code, bool):
+        return code
+    return None
+
+
+def _subprocess_runner(argv: Sequence[str]) -> int:
+    """Run the OS tool. Output is captured so a failure cannot print a traceback."""
+    args = list(argv)
+    try:
+        if sys.platform == "win32":
+            flags = int(getattr(subprocess, "CREATE_NO_WINDOW", 0))
+            done = subprocess.run(
+                args, check=False, capture_output=True, stdin=subprocess.DEVNULL,
+                timeout=_NOTICE_TIMEOUT_S, creationflags=flags)
+        else:
+            done = subprocess.run(
+                args, check=False, capture_output=True, stdin=subprocess.DEVNULL,
+                timeout=_NOTICE_TIMEOUT_S)
+    except subprocess.TimeoutExpired:
+        return 124
+    except OSError:
+        return 127
+    return int(done.returncode)
+
+
+def _active_runner(
+    runner: Callable[[Sequence[str]], object] | None,
+) -> Callable[[Sequence[str]], object]:
+    if runner is not None:
+        return runner
+    if _runner is not None:
+        return _runner
+    return _subprocess_runner
+
+
+_OSASCRIPT = (
+    "on run argv\n"
+    "display notification (item 2 of argv) with title (item 1 of argv)\n"
+    "end run"
+)
+
+
+def _xml_escape(value: str) -> str:
+    return (value.replace("&", "&amp;").replace("<", "&lt;")
+            .replace(">", "&gt;").replace('"', "&quot;"))
+
+
+def _ps_quote(value: str) -> str:
+    return "'" + value.replace("'", "''") + "'"
+
+
+def _powershell_script(title: str, body: str) -> str:
+    """WinRT toast. A failed load exits non-zero; disabled toasts show nothing."""
+    safe_title = _ps_quote(_xml_escape(title))
+    safe_body = _ps_quote(_xml_escape(body))
+    load_toast = (
+        "  $null = [Windows.UI.Notifications.ToastNotificationManager, "
+        "Windows.UI.Notifications, ContentType = WindowsRuntime]"
+    )
+    load_xml = (
+        "  $null = [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, "
+        "ContentType = WindowsRuntime]"
+    )
+    new_doc = (
+        "$doc = [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, "
+        "ContentType = WindowsRuntime]::new()"
+    )
+    new_toast = (
+        "$toast = [Windows.UI.Notifications.ToastNotification, Windows.UI.Notifications, "
+        "ContentType = WindowsRuntime]::new($doc)"
+    )
+    show = ("[Windows.UI.Notifications.ToastNotificationManager]::"
+            "CreateToastNotifier($app).Show($toast)")
+    app_id = "{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\WindowsPowerShell\\v1.0\\powershell.exe"
+    lines = [
+        "$ErrorActionPreference = 'Stop'",
+        f"$title = {safe_title}",
+        f"$body = {safe_body}",
+        "try {",
+        load_toast,
+        load_xml,
+        "} catch { exit 1 }",
+        "$xml = '<toast><visual><binding template=\"ToastText02\">' +",
+        "'<text id=\"1\">' + $title + '</text><text id=\"2\">' + $body + '</text>' +",
+        "'</binding></visual></toast>'",
+        new_doc,
+        "$doc.LoadXml($xml)",
+        f"$app = '{app_id}'",
+        new_toast,
+        show,
+        "exit 0",
+    ]
+    return "\n".join(lines)
+
+
+def _argv(platform: str, tool_path: str, title: str, body: str, icon: Path | None) -> list[str]:
+    kind = _tool_name(platform)
+    if kind == "notify-send":
+        cmd = [tool_path, "-a", "Free My ID"]
+        if icon is not None:
+            cmd.extend(["-i", str(icon)])
+        cmd.extend(["--", title, body])
+        return cmd
+    if kind == "osascript":
+        return [tool_path, "-e", _OSASCRIPT, title, body]
+    return [tool_path, "-NoProfile", "-NonInteractive", "-Command",
+            _powershell_script(title, body)]
+
+
+def _send_os_notice(
+    title: str,
+    body: str,
+    *,
+    platform: str | None,
+    finder: Callable[[str], str | None] | None,
+    runner: Callable[[Sequence[str]], object] | None,
+    icon: Path | None,
+) -> bool:
+    if _OsGate.unavailable:
+        return False
+    if _rejected(title) or _rejected(body):
+        return False
+    system = sys.platform if platform is None else platform
+    tool = _tool_name(system)
+    if tool is None:
+        return False
+    find = _finder if finder is None else finder
+    try:
+        path = find(tool)
+    except OSError as exc:
+        return _mark_down(type(exc).__name__)
+    if not path:
+        return False
+    argv = _argv(system, path, title, body, icon)
+    try:
+        result = _active_runner(runner)(argv)
+    except OSError as exc:
+        return _mark_down(type(exc).__name__)
+    code = _exit_code(result)
+    if code is None or code != 0:
+        reason = "bad exit" if code is None else f"exit {code}"
+        return _mark_down(reason)
+    return True
+
+
+def _deliver_os_notice(
+    title: str,
+    body: str,
+    *,
+    platform: str | None = None,
+    finder: Callable[[str], str | None] | None = None,
+    runner: Callable[[Sequence[str]], object] | None = None,
+    icon: Path | None = None,
+) -> bool:
+    """Show one notice. False means nothing was shown. Never raises.
+
+    The library used to log a traceback when no notifier was there. A missing executable is a
+    no-op. One non-zero exit disables the tool for the rest of this process.
+    """
+    try:
+        return _send_os_notice(title, body, platform=platform, finder=finder, runner=runner,
+                               icon=icon)
+    except Exception as exc:
+        # A toast must not surface a traceback. Keep AssertionError so a test can block subprocess.
+        if isinstance(exc, AssertionError):
+            raise
+        return _mark_down(type(exc).__name__)
+
+
 class DesktopNotifier:
     def __init__(self) -> None:
-        from desktop_notifier import DesktopNotifier as _DN
-        icon = _app_icon()
-        if icon is not None:
-            from desktop_notifier import Icon
-            self._dn = _DN(app_name="Free My ID", app_icon=Icon(path=icon))
-        else:
-            self._dn = _DN(app_name="Free My ID")
         self._fallback = LogNotifier()
+        self._icon = _app_icon()
 
     def notify(self, title: str, body: str, url: str | None = None) -> None:
         self._fallback.notify(title, body, url)
-        try:
-            coro = self._dn.send(title=title, message=body)
-            try:
-                asyncio.get_running_loop()
-            except RuntimeError:
-                asyncio.run(coro)
-            else:   # called from async code: fire and forget on the running loop
-                asyncio.ensure_future(coro)
-        except Exception as e:  # noqa: BLE001  headless boxes have no notification daemon
-            log.info("desktop notification unavailable: %s", type(e).__name__)
+        # url is a link. It stays off the lock screen.
+        _deliver_os_notice(title, body, icon=self._icon)
 
 
 def get_notifier() -> LogNotifier | DesktopNotifier:
