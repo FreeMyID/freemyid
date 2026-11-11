@@ -1,195 +1,176 @@
-# Compliance-Evidence Engine
+# Compliance-evidence engine
 
-Status: spec (owner go 2026-11-11). Serves roadmap bar 9 (hands-off, no staff) and section 7a.
-Author: Morgan Reyes. Boundary: shared rule 5 — no evasion, see §9.
+Owner direction 2026-11-11: engineer the big way, not the small win, and never with evasion. When a broker blocks a lawful request, we don't get past the block. We record it, timestamp it, tie it to the law and the deadline, and hand the person a pre-filled regulator complaint with a tamper-evident evidence annex. The harder a broker blocks, the stronger the case gets. A bypass works the other way: the harder the broker blocks, the weaker it gets.
 
-## 1. The reframe
+Roadmap: bar 9 and section 7a in `docs/roadmap/ROADMAP_TO_1.0.md`. Work orders WO-620 to WO-626 below.
 
-A CAPTCHA on a marketing page is ordinary. A CAPTCHA, a silent 403, or an ignored request
-standing between a person and a **statutory deletion right** is, in several states, an unlawful
-obstruction of that right. We do not try to defeat that gate. We **measure it, timestamp it,
-hash it, and turn it into a filed regulator complaint** the broker would rather not have earned.
+## 1. Boundaries (shared rule 5 and this engine)
 
-A bypass gets weaker every time a broker updates its defenses. This gets **stronger** the harder
-a broker blocks, and at scale it becomes a dataset — "these N brokers obstruct deletion rights" —
-that is leverage with regulators and the press no bypass could ever produce. It also survives the
-three things an evasion layer cannot: a lawsuit, an antivirus scan, and the code-signing review.
+1. **No evasion.** No CAPTCHA solving, stealth, UA or fingerprint spoofing, proxies or IP rotation, in any form or behind any flag.
+2. **Honest identity.** Requests run from the person's own computer, mailbox and browser, as the person or as their authorized agent. The app's own HTTP client names itself; the WO-612 browser session keeps the real UA plus the Free My ID suffix.
+3. **Fail loudly, never reshape.** A block is never retried with altered headers, timing tricks or a different client.
+   - A transient failure (429, 5xx, timeout) is retried later with the same request.
+   - A real block goes straight to evidence capture.
+4. **The person files.** The engine prepares the complaint; the person reviews and sends it. It is a legal act in their name, so it needs one approval. That approval is batched with others and counts toward the bar 9 residual-click budget.
+5. **Privacy.**
+   - Evidence that holds personal data lives only in the encrypted `evidence/` store.
+   - Events and block statistics hold ids, enums, counts and times only.
+   - An exported bundle leaves the computer only when the person sends a complaint.
 
-## 2. What already exists (build on this, do not greenfield)
+## 2. What already exists (we extend, not rebuild)
 
-| Capability | Where |
+| Piece | Where |
 |---|---|
-| `Evidence` record: encrypted file under `FREEMYID_HOME/evidence/`, `sha256`, kind, request/listing id | `models.py:709` |
-| `EvidenceKind` (screenshot, html, email_sent/received, letter, attestation, …) | `models.py:209` |
-| Authorized-agent authorization doc as evidence | `models.py:228` (`Consent.authorization_doc`) |
-| 4-rung escalation ladder incl. `COMPLAINT` | `state.py:_LADDER`, `models.py:702` |
-| Legal-window clock (45 / 15 days + verified extension) | `runner.py:legal_window_end`, `_overdue_parts` |
-| Regulator endpoints (CPPA, AG directory) + per-broker `ag_complaint_url` | `runner.py:88`, `models.py:612` |
-| Challenge detection (yes/no) | `browser.py:detect_challenge` |
-| Reply classifier (confirmed/denied/needs_id/needs_more_time) — **built, not wired** | `mail.py:classify_reply` |
-| Per-folder encryption key (WO-605) | `crypto.py` |
+| `Evidence` (encrypted file, `sha256`, `request_id`, `kind`) | `models.py:709` |
+| `EvidenceKind` (screenshot, html, email sent/received, letter, attestation, call note, postal receipt) | `models.py:209` |
+| Authorized-agent authorization document | `Consent.authorization_doc`, `models.py:228` |
+| Escalation ladder: resubmit, then follow-up, then legal demand, then COMPLAINT to-do | `state.py:101`, `runner.py` escalation |
+| Legal clock: 45 days (15 when stated shorter) plus verified extensions | `runner.py:112`, `legal_window_end` |
+| Regulator links per broker (`ag_complaint_url`, `other_complaint_urls`, `authorized_agent_allowed`) | `models.py:608-614` |
+| Challenge detection (yes/no) | `browser.detect_challenge`, `browser.py:84` |
+| Reply classifier (confirmed / denied / needs_id / needs_more_time / unknown), **not yet called by the loop** | `mail.classify_reply`, `mail.py:406` |
+| Search-session outcomes (read, self-cleared, challenge, queued, hand-check) | `engine/search_session.py` (WO-612) |
 
-The engine adds five bricks on top. None of them is a new stack: Python 3.12, Pydantic v2
-models, the existing encrypted `Store`, `crypto.py` for at-rest encryption. New deps: none in
-the MVP (RFC-3161 timestamping is an optional later brick, §4).
+## 3. Topology (Python, inside the existing package)
 
-## 3. Architecture — five bricks
+There is no new stack. The app is Python 3 with pydantic models, an encrypted SQLite store, and Playwright for the browser. Evidence integrity needs a canonical byte form and a hash; the standard library already gives us `hashlib` and canonical `json.dumps(sort_keys=True, separators=(",", ":"))`.
 
 ```
-request sent ──▶ [B1 Request Harness] ──▶ broker
-                        │ logs exact payload+headers+ts (PII-min, hashed)
-   broker blocks / ignores / replies
-                        ▼
-   [B2 Block-Detector] classifies: obstruction? vendor? surface?   (extends detect_challenge)
-                        ▼
-   [B3 Evidence Ledger] captures a tamper-evident EvidenceBundle   (extends Evidence)
-                        ▼
-   [B5 Reply-wiring] classify_reply → escalation ladder            (wires mail.classify_reply)
-                        ▼
-   deadline passes / denial / obstruction
-                        ▼
-   [B4 Complaint Generator] statute map → filled complaint + Bundle annex  (extends COMPLAINT rung)
+src/freemyid/
+  models.py                  CONTRACT (Morgan): ObstructionKind, ObstructionRecord,
+                             EvidenceKind.BLOCK_CAPTURE / RESPONSE_TIMELINE, BundleManifest
+  evidence_bundle.py         NEW: build, verify and export a tamper-evident bundle
+  engine/obstruction.py      NEW: BlockDetector, classify_obstruction(...) -> ObstructionRecord
+  engine/complaints.py       NEW: obstruction + state law -> complaint draft + annex
+  engine/runner.py           wire: reply codes and obstruction records into the ladder
+  engine/mail.py             existing classify_reply, unchanged
+brokers/obstruction_law.yaml NEW DATA (from Priya's OBSTRUCTION_LAW.md): per state: statute
+                             id, covered obstruction kinds, response days, regulator channel
+schema/                      regenerated (tools/gen_schema.py)
 ```
 
-- **B1 Request Harness** — already mostly present in the submitters + `mail.py`. Add: for every
-  outbound request, write a `RequestRecord` (sent_at, channel, broker, surface, a SHA-256 over the
-  canonical outgoing payload). The payload itself is stored encrypted; only its hash is in the log.
-- **B2 Block-Detector** (`engine/block_detector.py`, new) — turns `detect_challenge`'s yes/no into a
-  classification: the block CLASS and the DISPOSITION (see WO-621 / §5). Pure function over
-  `(status_code, headers, body, frame_urls)`; no interaction with the page.
-- **B3 Evidence Ledger** (`engine/evidence_bundle.py`, new) — assembles ordered `Evidence` into an
-  `EvidenceBundle` with a hash chain and a bound statutory clock (§4).
-- **B4 Complaint Generator** (`engine/complaint.py`, new) — maps an obstruction to the governing
-  statute and fills a structured complaint (JSON + a printable letter via the existing jinja2
-  letter path), attaching the Bundle as an annex. Always queued for the person's approval, never
-  auto-filed (keeps a human in the legal loop; the automation is the drafting + evidence).
-- **B5 Reply-wiring** — in `runner.py`, call `mail.classify_reply` on each matched broker reply and
-  branch: `denied` → jump to the legal-demand rung with the denial quoted; `needs_id` → templated
-  reply offering only permitted fields (never auto-sends an ID document); `needs_more_time` → extend
-  the clock once within statutory limits; `unknown` → keep the timer, surface in the monthly summary.
+## 4. Data schema
 
-## 4. EvidenceBundle schema (Pydantic, our stack)
-
-The Gemini draft used a free JSON schema; we express it as Pydantic v2 to match `models.py` and
-get validation + the existing encrypted-relpath guard for free.
+Contract, written as pydantic sketches. The JSON Schema files are generated from these.
 
 ```python
-class BlockClass(StrEnum):
-    OPEN = "open"                    # not a block; recorded for completeness
-    HARD_BLOCK = "hard_block"        # 403/429/451 or vendor block page, no challenge widget
-    JS_CHALLENGE = "js_challenge"    # interstitial that may self-clear
-    CHECKBOX_CAPTCHA = "checkbox_captcha"
-    INVISIBLE_CAPTCHA = "invisible_captcha"
-    PUZZLE_CAPTCHA = "puzzle_captcha"
-    HUMAN_VERIFY = "human_verify"    # phone/email/SMS code
-    GEO_BLOCK = "geo_block"
-    GONE = "gone"                    # DNS fail / seized / parked
-    UNKNOWN = "unknown"              # unrecognised page
+class ObstructionKind(StrEnum):
+    CAPTCHA_ON_REQUEST = "captcha_on_request"     # a challenge that stays on an opt-out/deletion form
+    BLOCKED_REQUEST = "blocked_request"           # 403 or a vendor block page on the request surface, real browser
+    ACCOUNT_REQUIRED = "account_required"
+    PHONE_REQUIRED = "phone_required"             # the request needs a phone call or SMS
+    EXCESS_VERIFICATION = "excess_verification"   # ID document or more data than the law allows
+    AGENT_REFUSED = "agent_refused"               # an authorized agent was refused (from a reply)
+    REQUEST_DENIED = "request_denied"             # a reply denies a lawful request
+    DEADLINE_MISSED = "deadline_missed"           # the legal clock ran out with no confirmation
+    UNAVAILABLE = "unavailable"                   # the request surface is down repeatedly (>= 3 runs over >= 7 days)
 
-class BlockObservation(_Base):
-    surface: Literal["search", "optout_form", "confirm_link", "email"]
-    observed_at: datetime
-    http_status: int | None = None
-    block_class: BlockClass
-    vendor: str | None = None        # "cloudflare" | "recaptcha-v3" | "perimeterx" | …
-    transport: Literal["http", "browser"]   # blocked over plain HTTP only, or in a real browser too
-    body_evidence_id: Id | None = None       # encrypted snapshot (Evidence, kind=HTML/SCREENSHOT)
-    note_source: Literal["detector"] = "detector"   # PII-free; no names ever
-
-class StatutoryClock(_Base):
-    statute: str                     # e.g. "Cal. Civ. Code 1798.105" (machine key, see WO-623)
-    request_sent_at: datetime
-    deadline_at: datetime            # reuse runner.legal_window_end
-    extension_applied_days: int = 0
-    breached: bool = False
-
-class EvidenceBundle(_Base):
-    id: Id = Field(default_factory=new_id)
+class ObstructionRecord(_Base):          # PII-free by construction: safe for Events and statistics
+    id: Id
     profile_id: Id
     broker_id: BrokerId
-    created_at: datetime = Field(default_factory=utcnow)
-    # ordered chain: each item's hash covers the previous item's hash (tamper-evident)
-    request_hash: str                # SHA-256 over the canonical outgoing request
-    items: list[Id]                  # Evidence ids, in happened order
-    blocks: list[BlockObservation]
-    clock: StatutoryClock
-    bundle_sha256: str               # SHA-256 over the canonical manifest below
-    tsa_token_relpath: str | None = None   # optional RFC-3161 timestamp (later brick)
+    request_id: Id | None                # the lawful request that was obstructed
+    surface: Literal["optout_form", "deletion_form", "email", "postal", "confirmation_link"]
+    kind: ObstructionKind
+    vendor: str | None                   # "recaptcha-v2", "hcaptcha", "turnstile", "cloudflare-block", ...
+    http_status: int | None
+    observed_at: list[datetime]          # every sighting; technical kinds need >= 2 on different days
+    request_sent_at: datetime | None
+    legal_due_on: date | None            # from runner.legal_window_end
+    state: str                           # the person's state (2 letters): picks the law
+    statute_ids: list[str]               # from brokers/obstruction_law.yaml
+    evidence_ids: list[Id]               # Evidence rows (encrypted) that prove it
+    confidence: Literal["observed", "confirmed"]
+
+class BundleEntry(_Base):
+    seq: int
+    evidence_id: Id
+    kind: EvidenceKind
+    created_at: datetime
+    sha256: str                          # of the decrypted evidence bytes
+    prev_hash: str                       # hash chain: sha256(prev_hash + canonical(entry without prev_hash))
+
+class BundleManifest(_Base):
+    version: Literal[1] = 1
+    bundle_id: Id
+    obstruction_id: Id
+    created_at: datetime
+    app_version: str
+    entries: list[BundleEntry]           # ordered: request sent, broker replies, block captures, clock
+    chain_head: str                      # the last entry's chained hash
+    manifest_sha256: str                 # over the canonical manifest without this field
+    timestamp_token: str | None = None   # optional RFC 3161 token over manifest_sha256 (owner decision E2)
 ```
 
-**Tamper-evidence design (honest about its limits):**
-- Each `Evidence` already carries its own file SHA-256. The bundle adds `bundle_sha256` = a hash
-  over the *canonical manifest* (sorted keys, the ordered list of `{id, kind, sha256, created_at}`
-  plus `request_hash` and the clock). Any later edit to any item changes the bundle hash.
-- A local hash proves **internal integrity**, not **time**, to a third party. For court-grade time
-  we add an **RFC-3161 trusted timestamp** (free TSAs exist; e.g. a public TSA over `bundle_sha256`)
-  as an optional field — MVP ships the hash chain, the TSA token is WO-625. We do **not** claim a
-  local-only hash is independently time-proven; the docs and any complaint say exactly what it is.
-- No blockchain, no external upload of personal data. The TSA only ever sees `bundle_sha256`, never
-  content.
+**Why a hash chain, and what it does and doesn't prove.** The chain makes any later edit, reorder or deletion detectable, and `verify_bundle()` re-derives every hash. On its own it can't prove *when* the bundle was made, because the person's own computer could have produced it at any time. For that the bundle sends only `manifest_sha256`, a hash with no personal data in it, to an RFC 3161 timestamp authority. The token proves the bundle existed at that moment. This adds a network host to the allowlist, so it waits for owner decision E2; the hash chain is the MVP. The emails in the bundle carry their own server timestamps and DKIM signatures, which the bundle keeps verbatim as independent proof.
 
-**Privacy:** the bundle's `blocks` and manifest hold ids, enums, hashes, timings — never a name,
-address, phone, or the broker's page content in the clear. The page snapshot lives only as an
-encrypted `Evidence` file, decryptable solely with the person's own key, and is attached to a
-complaint only when the person approves filing it.
+**Export.** A zip with the readable complaint (text, then PDF in WO-624), `manifest.json`, the decrypted evidence files named by `seq`, and a plain `HOW_TO_VERIFY.txt` (sha256sum commands). It is written only when the person sends a complaint.
 
-## 5. Statutory obstruction vs a plain 404/500 (the hard classification)
+## 5. BlockDetector (WO-621): an obstruction, or just an error?
 
-A complaint is only credible if we never cry foul over an ordinary error. Rules (WO-621):
-- A block is a **candidate obstruction** only on the **opt-out surface** of a broker we have a
-  **verified lawful route** for, and only when a **lawful request was actually due or sent**.
-- `404` on a listing URL ≠ obstruction (the listing may simply be gone — that's success-adjacent).
-- `500`/`503`/timeouts → `TRANSIENT`: retried with backoff; counted as obstruction only after it
-  persists across **≥3 observations over ≥N days** (stops a flaky night becoming a false complaint).
-- `403`/`429`/`451` or a named vendor block page on the opt-out surface, persisting, with no
-  CAPTCHA-free route available → `HARD_BLOCK`, obstruction candidate.
-- A CAPTCHA/JS challenge on the opt-out form that does not self-clear → obstruction candidate.
-- Every candidate needs: the statutory right invoked, the request on record, the deadline, and the
-  persisted block capture. Missing any → not an obstruction, just a routing fact.
-- Confidence rises with agreeing observations; a class flips only after 2–3 that agree.
+**Rule 1: only a request surface can be an obstruction.** A CAPTCHA on a *search* page is a site protecting its search, which is lawful and normal; it goes to the search router (WO-612/614), never to a complaint. The same CAPTCHA on an *opt-out or deletion form* can obstruct a statutory right. `surface` is always set by the caller, never guessed from the page.
 
-## 6. Work orders
+| What we saw (on a request surface) | Result |
+|---|---|
+| 200, form submitted, acknowledgement shown | not an obstruction; Evidence `HTML` + `SCREENSHOT` |
+| 404 on the listing URL after a request | not an obstruction; the listing may be gone, so re-scan it |
+| 5xx, timeout, connection reset | TRANSIENT: same request on the next run; `UNAVAILABLE` only after >= 3 failures over >= 7 days |
+| DNS failure, seizure banner, parked page | broker GONE (router), not a complaint |
+| Challenge widget still there after the grace period (vendor from frame hosts) | `CAPTCHA_ON_REQUEST` |
+| 403, 429 or a vendor block page in the person's real browser, with no widget | `BLOCKED_REQUEST` |
+| The form wants an account or login | `ACCOUNT_REQUIRED` |
+| The form or reply needs a phone call or SMS | `PHONE_REQUIRED` |
+| The reply asks for an ID document or more data than the law allows (`classify_reply` needs_id, plus a law check) | `EXCESS_VERIFICATION` |
+| `classify_reply` returns denied | `REQUEST_DENIED`, or `AGENT_REFUSED` when the request went as an agent |
+| `legal_due_on` passed with no confirmation and no verified extension | `DEADLINE_MISSED` |
 
-| WO | Title | Owner | Collision |
+**Confidence.**
+- Technical kinds (CAPTCHA, block, unavailable) start as `observed` and become `confirmed` after a second sighting on a different day. Only a `confirmed` record can produce a complaint.
+- Reply and clock kinds are confirmed at once: the email or the calendar is the proof.
+
+**Capture.** On every sighting the detector saves, through the existing encrypted `Evidence` path:
+- the page (`HTML`)
+- a `SCREENSHOT`
+- a `BLOCK_CAPTURE` JSON with status, final URL, redirect chain, the response headers that identify the vendor (an allowlisted set, no cookies), frame hosts, the timestamp, and the outgoing request (which fields were sent, plus the sha256 of each value)
+
+It never captures cookies, auth tokens or the person's other tabs.
+
+**Never.** The detector never clicks, types, scrolls, waits for a solve or retries with changes. It reads what the site sent, the same way `detect_challenge` does today.
+
+## 6. The loop: replies and obstructions in the ladder (WO-622)
+
+| Event | Ladder effect |
+|---|---|
+| `confirmed` reply | REMOVED once a re-scan agrees; the ladder resets |
+| `denied` reply | `REQUEST_DENIED` record; skip to the legal-demand rung (still inside the legal window rules, BL-IN-10) |
+| `needs_id` reply | template answer: cite the statute's verification limits and offer only the fields the person allowed (rule 6), never an ID document; if the broker insists, `EXCESS_VERIFICATION` |
+| `needs_more_time` reply | one extension, capped at what the law allows (`extension_days` verified, else 45) |
+| `unknown` reply | keep the timer; listed in the monthly summary |
+| a `confirmed` obstruction | the COMPLAINT rung becomes due at once for request-surface obstructions; for `DEADLINE_MISSED` it follows the existing window |
+
+## 7. Complaint generator (WO-624)
+
+Input: one `confirmed` ObstructionRecord, the person's state, and `brokers/obstruction_law.yaml`. Output:
+- a complaint draft in the regulator's own field order (CPPA, the state AG, or the FTC for states with no law), in plain words, quoting the statute;
+- the bundle zip as an annex;
+- a COMPLAINT to-do with one "Review and send" step.
+
+States with no comprehensive privacy law (NC, SC and AZ today) get the FTC and broker-policy route, saying honestly what that can and can't do.
+
+## 8. Work orders
+
+| WO | What | Who | Depends on |
 |---|---|---|---|
-| WO-620 | `EvidenceBundle` + `BlockClass`/`BlockObservation`/`StatutoryClock` models, schema, hash-chain helper, validators | Morgan (contract) | models.py — do on this branch, after wave-1111c lands |
-| WO-621 | `block_detector.py`: classify block + disposition; obstruction-vs-error rules; fixtures | automation-engineer | browser.py/exposure.py — after wave-1111c |
-| WO-622 | `evidence_bundle.py`: assemble + hash + bind clock; capture a block as encrypted Evidence | automation-engineer | new file |
-| WO-623 | Legal research: statute map (right → code section → regulator → filing channel), per state in scope (NC/SC/AZ + CA/CO/CT), GPC state-law table (also clears CR-EXT-6) | broker-researcher (Priya) | **none — dispatch now** |
-| WO-624 | Reply-wiring: `classify_reply` → escalation branches, with tests | automation-engineer | runner.py/mail.py — after wave-1111c |
-| WO-625 | `complaint.py`: statute map → filled complaint (JSON + jinja2 letter) + Bundle annex; always queued for approval | automation-engineer | after WO-620/623 |
-| WO-626 | RFC-3161 trusted timestamp over `bundle_sha256` (optional dep, evaluate) | Morgan + qa | later |
+| WO-620 | Contracts: the models in section 4, `EvidenceKind` additions, schema regeneration | Morgan | none |
+| WO-621 | BlockDetector `engine/obstruction.py` plus synthetic fixtures for every row in section 5 | Theo, then a Marcus review | 620 |
+| WO-622 | Reply and obstruction wiring in the runner (section 6) | Theo, then Marcus | 620 |
+| WO-623 | `evidence_bundle.py`: build, verify, export; hash chain; golden tests for tamper detection | Theo, then Marcus | 620 |
+| WO-624 | Complaint generator plus the review screen | Theo (engine), Nina (screen), Jordan (wording), Marcus | 621-623, 625 |
+| WO-625 | Research: OBSTRUCTION_LAW.md, regulator channels, GPC state table | Priya | none (running) |
+| WO-626 | Block atlas: nightly fake-name canaries producing PII-free obstruction statistics per broker | Theo, then Dana for scheduling | 621 |
 
-Sequencing: WO-623 (research) runs now, collision-free. WO-620 (my contract models) lands after
-`integrate/wave-1111c` merges to main, to avoid a models.py three-way merge. WO-621/622/624 follow.
+## 9. Owner decisions
 
-## 7. What the person sees
-
-Nothing new to do. When a broker blocks a lawful request, the app keeps working the other routes.
-Once the legal clock breaches, a **complaint is drafted for them** with the evidence attached, and
-appears as a single "review and file?" to-do — one click, batched, on their own account, never
-auto-filed. The monthly summary counts obstructions by broker.
-
-## 8. Metrics (into the release gate from 0.6)
-
-Obstructions captured, complaints drafted, median days request→breach, share of brokers with a
-CAPTCHA-free lawful route, and (public) the per-broker obstruction list.
-
-## 9. Boundaries (rule 5, unchanged)
-
-No CAPTCHA solving, no solver services, no stealth or fingerprint spoofing, no proxies or IP
-rotation, no user-agent masking. The harness **only reads** what a site returns. When blocked, it
-**fails loudly** into evidence capture — it never retries with altered headers to get through. We
-identify honestly; the leverage is legal, not technical.
-
-## 10. Open legal questions (for WO-623 / an attorney, decision D6)
-
-1. Does a CAPTCHA on a statutory opt-out form itself violate CA's ban on opt-out being harder than
-   opt-in, or only when it blocks completion? Cite the regulation.
-2. For NC/SC/AZ (no comprehensive consumer-privacy statute today), what is the governing right and
-   regulator for a people-search deletion — CFPB/FCRA where applicable, state UDAP, FTC?
-3. Which states treat GPC as a binding opt-out of sale (verify the table Nina drafted, NOT VERIFIED).
-4. Authorized-agent: what identity proof must a broker accept, and may one agent request cover a
-   whole site family?
-5. Is an RFC-3161 timestamp over a local hash persuasive to these regulators, or is a filed-receipt
-   sufficient on its own?
+- **E1.** Complaint filing needs one approval (recommended: yes, as a legal act in the person's name; batched).
+- **E2.** RFC 3161 timestamping (sends only a hash to one timestamp-authority host; recommended: yes, after 1.0 if needed).
+- **E3.** Publish an aggregate "obstruction index" per broker (PII-free; press and regulator leverage; recommended: after 0.9 with attorney review, D6).
