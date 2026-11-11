@@ -766,3 +766,10 @@ def test_real_retarget_returns_and_logs_dropped_escapes(caplog) -> None:
     assert ctx.freemyid_escaped == [] and "devblocked.example" in ctx.freemyid_hosts
     assert "blocked_by_policy" in caplog.text
     assert _bm().retarget(ctx, ["devauto.example"]) == []
+
+
+def test_conftest_refuses_a_real_session_window(tmp_path) -> None:
+    """Tests can never open a visible window, even if a has_display stub is bypassed."""
+    import asyncio
+    with pytest.raises(RuntimeError, match="never open a real browser window"):
+        asyncio.run(_bm().persistent_context(str(tmp_path), window="visible"))

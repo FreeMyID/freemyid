@@ -377,6 +377,20 @@ def freemyid_env(tmp_path, monkeypatch):
     monkeypatch.setattr(search_session, "real_has_display", search_session.has_display,
                         raising=False)
     monkeypatch.setattr(search_session, "has_display", lambda platform=None: False)
+    # ...and even past that stub, the session window itself refuses to open in tests
+    # unless a test asks for the dev-fixture headless mode (SEC-WO612 review).
+    from freemyid.engine.browser import BrowserManager
+    real_persistent = BrowserManager.persistent_context
+
+    async def _no_real_window(self, user_data_dir, *, window="background",
+                              test_headless=False):
+        if not test_headless:
+            raise RuntimeError("tests never open a real browser window "
+                               "(pass test_headless=True in dev fixture mode)")
+        return await real_persistent(self, user_data_dir, window=window,
+                                     test_headless=test_headless)
+
+    monkeypatch.setattr(BrowserManager, "persistent_context", _no_real_window)
     from freemyid import registry
     monkeypatch.setattr(registry, "_loaded", None)        # no fallback state across tests
     monkeypatch.setattr(registry, "load_warnings", [])
