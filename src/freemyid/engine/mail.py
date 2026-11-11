@@ -20,7 +20,7 @@ import smtplib
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from email.message import EmailMessage
-from email.utils import formatdate, make_msgid, parsedate_to_datetime
+from email.utils import formatdate, getaddresses, make_msgid, parsedate_to_datetime
 from html import unescape
 from typing import TYPE_CHECKING
 
@@ -56,15 +56,23 @@ _ID_REQUEST = re.compile(
     r"proof of (identity|address|residency)|identity document|id document",
     re.IGNORECASE)
 # BL-IN-10: a broker reply saying it needs more time (a statutory extension). The runner then
-# waits the longer legal window before any letter that cites the law.
+# waits the longer legal window before any letter that cites the law. A bare "extension"
+# does not count, nor do "phone extension" and "browser extension": a time word has to sit
+# in the same sentence.
+_NEAR = r"[^.]{0,60}"
+_NOT_FOOTER = r"(?<!phone )(?<!browser )"
 _EXTENSION = re.compile(
-    r"\bextend(ing|ed)?\b[^.]{0,60}\b(time|period|deadline|response|days)\b|"
-    r"\bextension\b|additional (45|forty[- ]five|90|ninety) days|"
-    r"(need|require)s? (additional|more) time",
+    r"\bextend(ing|ed)?\b" + _NEAR + r"\b(time|period|deadline|response|days)\b|"
+    + r"\b(time|period|deadline|days?)\b" + _NEAR + _NOT_FOOTER + r"\bextension\b|"
+    + _NOT_FOOTER + r"\bextension\b" + _NEAR
+    + r"\b(time|period|deadline|response|days?)\b|"
+    + r"additional (45|forty[- ]five|90|ninety) days|"
+    + r"(need|require)s? (additional|more) time",
     re.IGNORECASE)
 DATE_SLACK = timedelta(hours=1)     # broker clock skew vs. our last_submitted_at
 MAX_MESSAGES = 50            # per poll; we only need recent broker mail
 MAX_MESSAGE_BYTES = 2_000_000
+_HEADER_BYTES = 65_536       # From / Date / Message-ID are read from this prefix only
 
 
 class MailError(RuntimeError):
@@ -96,11 +104,19 @@ def build_message(mb: MailboxConfig, to: str, subject: str, body: str,
     return msg
 
 
+def _parse(raw: bytes, *, header_only: bool = False) -> EmailMessage:
+    data = raw[:_HEADER_BYTES] if header_only else raw
+    return email.message_from_bytes(data, policy=email.policy.default)
+
+
 def extract_links(raw: bytes, allowed_domains: list[str]) -> list[str]:
     """Pure: https links in a raw RFC822 message whose host is inside `allowed_domains`."""
     if len(raw) > MAX_MESSAGE_BYTES:
         return []
-    msg = email.message_from_bytes(raw, policy=email.policy.default)
+    return _links_from_message(_parse(raw), allowed_domains)
+
+
+def _links_from_message(msg: EmailMessage, allowed_domains: list[str]) -> list[str]:
     texts: list[str] = []
     for part in msg.walk():
         if part.get_content_maintype() != "text":
@@ -146,11 +162,36 @@ def rank_links(links: list[str], text_of: dict[str, str] | None = None) -> list[
                                              or _CONFIRM.search(t.get(u, ""))))
 
 
+def _clean_domain(domain: str) -> str | None:
+    domain = domain.strip().lower().rstrip(".")
+    if domain and re.fullmatch(r"[a-z0-9.-]+", domain):
+        return domain
+    return None
+
+
+def _sender_domain(msg: EmailMessage) -> str | None:
+    """Domain of the real From address. A display name that contains '@' does not count."""
+    try:
+        header = msg.get("From")
+    except (TypeError, ValueError):
+        return None
+    if header is None:
+        return None
+    addresses = getattr(header, "addresses", None)
+    if addresses:
+        try:
+            return _clean_domain(str(addresses[0].domain or ""))
+        except (AttributeError, IndexError, TypeError, ValueError):
+            return None
+    for _name, addr in getaddresses([str(header)]):
+        if "@" in addr:
+            return _clean_domain(addr.rsplit("@", 1)[-1])
+    return None
+
+
 def sender_domain(raw: bytes) -> str | None:
-    msg = email.message_from_bytes(raw[:65536], policy=email.policy.default)
-    frm = str(msg.get("From", ""))
-    m = re.search(r"@([A-Za-z0-9.-]+)", frm)
-    return m.group(1).lower().rstrip(".") if m else None
+    """Domain of the parsed From address (the first '@' in the header is not enough)."""
+    return _sender_domain(_parse(raw, header_only=True))
 
 
 @dataclass
@@ -168,8 +209,7 @@ class ReplyScan:
     replies: list[tuple[datetime | None, bytes]] = field(default_factory=list, repr=False)
 
 
-def message_date(raw: bytes) -> datetime | None:
-    msg = email.message_from_bytes(raw[:65536], policy=email.policy.default)
+def _date_of(msg: EmailMessage) -> datetime | None:
     try:
         d = parsedate_to_datetime(str(msg.get("Date", "")))
     except (TypeError, ValueError, IndexError):
@@ -179,8 +219,11 @@ def message_date(raw: bytes) -> datetime | None:
     return d if d.tzinfo else d.replace(tzinfo=UTC)
 
 
-def _message_key(raw: bytes) -> str:
-    msg = email.message_from_bytes(raw[:65536], policy=email.policy.default)
+def message_date(raw: bytes) -> datetime | None:
+    return _date_of(_parse(raw, header_only=True))
+
+
+def _message_key_of(msg: EmailMessage, raw: bytes) -> str:
     mid = str(msg.get("Message-ID", "")).strip()
     if mid:
         return mid
@@ -188,8 +231,11 @@ def _message_key(raw: bytes) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
-def _plain_text(raw: bytes) -> str:
-    msg = email.message_from_bytes(raw, policy=email.policy.default)
+def _message_key(raw: bytes) -> str:
+    return _message_key_of(_parse(raw, header_only=True), raw)
+
+
+def _plain_text_of(msg: EmailMessage) -> str:
     parts: list[str] = [str(msg.get("Subject", ""))]
     for part in msg.walk():
         if part.get_content_maintype() != "text":
@@ -201,6 +247,10 @@ def _plain_text(raw: bytes) -> str:
     return " ".join(" ".join(parts).split())
 
 
+def _plain_text(raw: bytes) -> str:
+    return _plain_text_of(_parse(raw))
+
+
 def asks_for_id(raw: bytes) -> bool:
     """Pure: does this message ask for an identity document (ID, licence, SSN, ...)?"""
     if len(raw) > MAX_MESSAGE_BYTES:
@@ -210,6 +260,8 @@ def asks_for_id(raw: bytes) -> bool:
 
 def claims_extension(raw: bytes) -> bool:
     """The reply says the broker is extending its response time (BL-IN-10)."""
+    if len(raw) > MAX_MESSAGE_BYTES:
+        return False
     return bool(_EXTENSION.search(_plain_text(raw)))
 
 
@@ -228,33 +280,41 @@ def scan_replies(raws: list[bytes], broker: Broker, since: datetime | None = Non
     allowed = confirmation_hosts(broker)
     out = ReplyScan()
     seen: set[str] = set()
-    msgs: list[tuple[datetime | None, int, bytes]] = []
+    msgs: list[tuple[datetime | None, int, bytes, EmailMessage]] = []
+    sender_hosts = [*broker.domains, *allowed]
     for i, raw in enumerate(raws):
-        if check_sender and not _host_in(sender_domain(raw), [*broker.domains, *allowed]):
+        # One parse per raw message. Oversized mail stops at the header prefix: the body
+        # checks refuse it, matching asks_for_id and extract_links.
+        oversized = len(raw) > MAX_MESSAGE_BYTES
+        msg = _parse(raw, header_only=oversized)
+        if check_sender and not _host_in(_sender_domain(msg), sender_hosts):
             continue
-        key = _message_key(raw)
+        key = _message_key_of(msg, raw)
         if key in seen:
             out.duplicates += 1
             continue
         seen.add(key)
-        d = message_date(raw)
+        d = _date_of(msg)
         if since is not None and d is not None:
             ref = since if since.tzinfo else since.replace(tzinfo=UTC)
             if d < ref - DATE_SLACK:
                 out.stale += 1
                 continue
-        msgs.append((d, i, raw))
+        msgs.append((d, i, raw, msg))
     out.messages = len(msgs)
     floor = datetime.min.replace(tzinfo=UTC)
     msgs.sort(key=lambda m: (m[0] or floor, m[1]), reverse=True)
-    out.replies = [(d, raw[:MAX_MESSAGE_BYTES]) for d, _i, raw in msgs]
-    for _d, _i, raw in msgs:
-        if claims_extension(raw):
+    out.replies = [(d, raw[:MAX_MESSAGE_BYTES]) for d, _i, raw, _msg in msgs]
+    for _d, _i, raw, msg in msgs:
+        if len(raw) > MAX_MESSAGE_BYTES:
+            continue
+        text = _plain_text_of(msg)
+        if _EXTENSION.search(text):
             out.extension_claimed = True
-        if asks_for_id(raw):
+        if _ID_REQUEST.search(text):
             out.id_requested = True
             continue
-        for u in extract_links(raw, allowed):
+        for u in _links_from_message(msg, allowed):
             if u not in out.links:
                 out.links.append(u)
     return out
