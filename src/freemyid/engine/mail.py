@@ -6,12 +6,14 @@
   `confirmation_domains` (or `domains` if that is empty). Mail text is data, never
   instructions: we extract URLs and nothing else.
 * `FakeMailer` records sends in memory: used for dry runs, dev runs and tests.
+* `classify_reply` turns one already-accepted reply into a category code.
 """
 from __future__ import annotations
 
 import asyncio
 import contextlib
 import email
+import email.errors
 import email.policy
 import imaplib
 import logging
@@ -22,7 +24,7 @@ from datetime import UTC, datetime, timedelta
 from email.message import EmailMessage
 from email.utils import formatdate, getaddresses, make_msgid, parsedate_to_datetime
 from html import unescape
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from ..models import Broker, MailboxConfig, Profile, utcnow
 from ..netpolicy import host_of
@@ -263,6 +265,147 @@ def claims_extension(raw: bytes) -> bool:
     if len(raw) > MAX_MESSAGE_BYTES:
         return False
     return bool(_EXTENSION.search(_plain_text(raw)))
+
+
+ReplyCode = Literal["confirmed", "denied", "needs_id", "needs_more_time", "unknown"]
+_REPLY_ERRORS = (LookupError, ValueError, UnicodeError, email.errors.MessageError)
+# A removal has to name the record (or be the whole sentence). "we have removed the fee"
+# is not a confirmation. Negation and hedges are applied per sentence below.
+_CONFIRMED = re.compile(
+    r"\bwe(?: have |'ve )(?:successfully )?(?:removed|deleted|erased) your "
+    r"(?:record|listing|profile|information|personal information|data|details)\b|"
+    r"\bwe(?: have |'ve )(?:successfully )?(?:removed|deleted|erased)\b"
+    r"(?=\s*[.!]?\s*$)|"
+    r"\b(?:your|the) (?:record|listing|profile|information|personal information|"
+    r"data|details) (?:has been|have been|was) (?:successfully )?"
+    r"(?:removed|deleted|erased)\b|"
+    r"\b(?:the )?(?:removal|opt-?out|deletion) (?:is|was) (?:now )?complete\b|"
+    r"\bwe(?: have |'ve )(?:successfully )?opted you out\b",
+    re.IGNORECASE)
+_REMOVAL_NEGATED = re.compile(
+    r"\b(?:not|never|unable|cannot|can't|could not|couldn't|did not|didn't|"
+    r"will not|won't|have not|haven't|has not|hasn't|nothing|none)\b"
+    r".{0,40}\b(?:remov|delet|eras)|"
+    r"\b(?:remov|delet|eras)\w*.{0,30}\b(?:not|never|nothing|none|unable|cannot|failed)\b",
+    re.IGNORECASE)
+_HEDGE = re.compile(r"\b(?:if|unless|whether|may|might|maybe|perhaps)\b|\?", re.IGNORECASE)
+_DENIED = re.compile(
+    r"\bunable to locate your record\b|"
+    r"\b(?:we (?:were |are )?)?unable to (?:locate|find) "
+    r"(?:your|a matching|the) (?:record|listing|profile|information)\b|"
+    r"\b(?:could not|couldn'?t|cannot|can ?not) (?:locate|find) "
+    r"(?:your|a matching|the) (?:record|listing|profile|information)\b|"
+    r"\bno (?:matching )?record (?:was found|of you|on file)\b|"
+    r"\byour request (?:has been |was )?denied\b|"
+    r"\bwe (?:do not|don't) have (?:your|a|any) (?:record|listing|information|data)\b",
+    re.IGNORECASE)
+# "please verify your identity" is not an asks_for_id document request.
+_NEEDS_ID_TEXT = re.compile(
+    r"\b(?:please )?verify your identity\b|\b(?:please )?confirm your identity\b",
+    re.IGNORECASE)
+# "we need 45 more days" is not a claims_extension hit (that helper wants "more time"
+# or a nearby "extension"). Same category, extra wording.
+_MORE_TIME_TEXT = re.compile(
+    r"\b(?:we )?(?:need|require)s? \d+ more days\b|\b\d+ more days\b",
+    re.IGNORECASE)
+
+
+def _reply_bytes(text: str | bytes) -> bytes | None:
+    """UTF-8 text inside MAX_MESSAGE_BYTES, else None (empty, huge, or binary)."""
+    if isinstance(text, str):
+        if len(text) > MAX_MESSAGE_BYTES or not text.strip():
+            return None
+        if _hostile_text(text):
+            return None
+        raw = text.encode("utf-8")
+    elif isinstance(text, bytes):
+        if len(text) > MAX_MESSAGE_BYTES or not text.strip():
+            return None
+        if any(byte < 32 and byte not in (9, 10, 13) or byte == 127 for byte in text):
+            return None
+        try:
+            text.decode("utf-8")
+        except UnicodeDecodeError:
+            return None
+        raw = text
+    else:
+        return None
+    if len(raw) > MAX_MESSAGE_BYTES:
+        return None
+    return raw
+
+
+def _hostile_text(text: str) -> bool:
+    for char in text:
+        code = ord(char)
+        if code < 32 and char not in "\t\n\r" or code == 127:
+            return True
+    return False
+
+
+def _sentences(text: str) -> list[str]:
+    parts = re.split(r"(?<=[.?!])\s+", text.strip())
+    return [" ".join(part.split()) for part in parts if part.strip()]
+
+
+def _clean_hit(pattern: re.Pattern[str], plain: str) -> bool:
+    for sentence in _sentences(plain):
+        if "?" in sentence:
+            continue
+        if pattern.search(sentence):
+            return True
+    return False
+
+
+def _confirmed_flags(plain: str) -> tuple[bool, bool]:
+    """(clear removal sentence, some sentence takes a removal back)."""
+    clean = False
+    negated = False
+    for sentence in _sentences(plain):
+        if _REMOVAL_NEGATED.search(sentence):
+            negated = True
+        if (_CONFIRMED.search(sentence) and not _HEDGE.search(sentence)
+                and not _REMOVAL_NEGATED.search(sentence)):
+            clean = True
+    return clean, negated
+
+
+def _reply_code(raw: bytes, plain: str) -> ReplyCode:
+    clean, negated = _confirmed_flags(plain)
+    # A removal and its contradiction are ambiguous: never call that confirmed.
+    if clean and negated:
+        return "unknown"
+    hits: list[ReplyCode] = []
+    if clean:
+        hits.append("confirmed")
+    if _clean_hit(_DENIED, plain):
+        hits.append("denied")
+    if asks_for_id(raw) or _clean_hit(_NEEDS_ID_TEXT, plain):
+        hits.append("needs_id")
+    if claims_extension(raw) or _clean_hit(_MORE_TIME_TEXT, plain):
+        hits.append("needs_more_time")
+    if len(hits) == 1:
+        return hits[0]
+    return "unknown"
+
+
+def classify_reply(text: str | bytes) -> ReplyCode:
+    """One already-accepted broker reply, as a category code.
+
+    The code is confirmed, denied, needs_id, needs_more_time, or unknown.
+    Mixed, hedged, or unclear wording is unknown, never confirmed. Empty input,
+    input over MAX_MESSAGE_BYTES, and non-text input are unknown. Nothing is logged.
+    """
+    raw = _reply_bytes(text)
+    if raw is None:
+        return "unknown"
+    try:
+        plain = _plain_text(raw)
+        if not plain.strip():
+            return "unknown"
+        return _reply_code(raw, plain)
+    except _REPLY_ERRORS:
+        return "unknown"
 
 
 def scan_replies(raws: list[bytes], broker: Broker, since: datetime | None = None, *,
