@@ -19,13 +19,6 @@ CHANNELS = ("aur", "flatpak", "homebrew", "nix", "scoop", "winget")
 _ZERO_HASH = "0" * 64
 _REAL_HASH = "ab12" * 16
 
-# Base distro/nix/README.md never says the recipe is not submitted upstream.
-# WO-327 owns that README, so the live nix case is a strict xfail.
-_NIX_NOT_UPSTREAM = (
-    "distro/nix/README.md:5 does not say the recipe is not submitted upstream; "
-    "it says the flake is not part of any release. WO-327 owns this README."
-)
-
 # A named version may be the package version or another version the recipe
 # itself states (Flatpak runtime 24.08, winget ManifestVersion). A version the
 # recipe does not state is a mismatch.
@@ -377,19 +370,8 @@ def compare_channel(channel_dir: Path) -> list[str]:
     return problems
 
 
-def _channel_cases() -> list[object]:
-    cases: list[object] = []
-    for channel in CHANNELS:
-        if channel == "nix":
-            cases.append(
-                pytest.param(
-                    channel,
-                    marks=pytest.mark.xfail(strict=True, reason=_NIX_NOT_UPSTREAM),
-                )
-            )
-        else:
-            cases.append(channel)
-    return cases
+def _channel_cases() -> list[str]:
+    return list(CHANNELS)
 
 
 @pytest.mark.parametrize("channel", _channel_cases())

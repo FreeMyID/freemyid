@@ -4,7 +4,7 @@ This is a community recipe. It is not submitted upstream. There is no tap, and i
 
 `freemyid.rb` would install the `freemyid` command from the PyPI source archive into its own virtualenv (`Language::Python::Virtualenv`). That install was not run.
 
-The app version in this tree is 0.3.1 (`src/freemyid/__init__.py`). The formula URL names `freemyid-0.3.1.tar.gz`. The published Windows installer record is version 0.3.0, about 64.5 MB, dated 2026-11-09 (`site_src/data/release.yaml`). That record is the Windows installer only. It does not list Homebrew. 0.2.0 is not the current version.
+The app version in this tree is 0.3.1 (`src/freemyid/__init__.py`). The formula URL names `freemyid-0.3.1.tar.gz`. The Windows installer record is version 0.3.1, dated 2026-11-10 (`site_src/data/release.yaml`). That record is the Windows installer only. It does not list Homebrew.
 
 Hashes in the recipe are placeholders until the release hashes are filled in. `sha256` is the text `REPLACE_WITH_SDIST_SHA256_FROM_RELEASE_TOOLING`. Dependency `resource` blocks are missing, so those checksums are not filled in either. Do not invent hashes. Do not replace a placeholder with a real hash. In-house release tooling fills them later. This note did not.
 
@@ -20,7 +20,7 @@ Read the file. Do not edit the hash.
 
 1. Open `src/freemyid/__init__.py` and confirm `__version__` is `0.3.1`.
 2. Open `freemyid.rb` and confirm the URL names `freemyid-0.3.1.tar.gz`.
-3. Open `site_src/data/release.yaml` and confirm the Windows installer record is version 0.3.0, about 64.5 MB, dated 2026-11-09.
+3. Open `site_src/data/release.yaml` and confirm the Windows installer record is version 0.3.1, dated 2026-11-10.
 4. Confirm `sha256` is still `REPLACE_WITH_SDIST_SHA256_FROM_RELEASE_TOOLING`, and that there are still no `resource` blocks. Leave them.
 
 After release tooling has put in the real source checksum and the dependency `resource` blocks, and not before, check with Homebrew. These commands were not run here:

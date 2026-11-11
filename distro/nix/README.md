@@ -9,7 +9,7 @@ is version 0.3.1. That record does not list Nix, so this channel stays **coming*
 
 ## How a maintainer would build and check it
 
-From a full checkout (the flake reads `../../pyproject.toml` and builds that tree). These commands
+Run every command from the repository root of a full checkout (the flake reads `../../pyproject.toml` and builds that tree). These commands
 were not run here. They need Nix, and they need the network to fetch nixpkgs. That is
 **release-day, in-house**. Not done here.
 
@@ -31,7 +31,7 @@ with pytest and ruff. If Nix says the flake is not tracked, run `git add distro/
   `pyproject.toml` build. Whether those older copies still work was not checked.
 - Playwright browsers are not installed by this package. Browser steps need a browser supplied
   separately, for example `playwright-driver.browsers` from nixpkgs. Not tested here.
-- There is no `flake.lock`. The first build would write one. Pinning it takes `nix flake lock`,
+- There is no `flake.lock`. The first build would write one. Pinning it takes `nix flake lock ./distro/nix`,
   Nix, and the network. **release-day, in-house.** Not done here.
 - The systems named in the flake were not built: `x86_64-linux`, `aarch64-linux`, `x86_64-darwin`,
   and `aarch64-darwin`.
