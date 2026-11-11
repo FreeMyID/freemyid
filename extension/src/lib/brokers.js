@@ -27,11 +27,17 @@ import { cleanHostname } from "./protocol.js";
 let listPromise;
 
 /**
- * Load the bundled list once per background lifetime.
+ * Load the bundled list once per background lifetime. A failed read is not remembered: the
+ * next lookup tries again.
  * @returns {Promise<BrokerList>}
  */
 export function loadBrokerList() {
-  listPromise ??= fetch(api.runtime.getURL("data/broker_domains.json")).then((r) => r.json());
+  listPromise ??= fetch(api.runtime.getURL("data/broker_domains.json"))
+    .then((r) => r.json())
+    .catch((error) => {
+      listPromise = undefined;
+      throw error;
+    });
   return listPromise;
 }
 
