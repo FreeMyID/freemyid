@@ -453,7 +453,9 @@ def _read(profile: Profile, broker: Broker, url: str, fetch: Fetcher,
         cands = parse_candidates(broker, page.url, page.html)
     except htmlsel.UnsupportedSelector as e:
         raise FetchFailed("no_parser") from e
-    if not cands and spec.no_results_text:
+    if not cands:
+        # CR-C: only the site's own "no results" text proves absence; zero cards without
+        # it is a changed layout, never "not found"
         raise FetchFailed("page_unrecognized")
     kind = _lookup(profile)
     if kind:

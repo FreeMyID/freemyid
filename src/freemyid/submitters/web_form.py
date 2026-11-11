@@ -206,8 +206,8 @@ async def _search_page(bm: BrowserManager, ctx: RunContext, url: str, *,
         if spec and spec.no_results_text and spec.no_results_text.lower() in html.lower():
             return [], None
         cands = await parse_results(page, ctx.broker)
-        if not cands and spec and spec.no_results_text:
-            # neither results nor the site's "no results" text: the page changed
+        if not cands:
+            # neither results nor the site's "no results" text: the page changed (CR-C)
             raise UnexpectedPage("search_page_unrecognized")
         today = (ctx.now or utcnow()).date()
         listings = (matcher.score_lookup(ctx.profile, ctx.broker.id, cands, lookup, today)
