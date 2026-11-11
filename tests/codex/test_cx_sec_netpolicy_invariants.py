@@ -22,15 +22,7 @@ from freemyid.netpolicy import NetPolicy, captcha_subresource_allowed, host_of
     "https://@fakepeople.example/",
     "https://fakepeople.example\t/",
     "https://fakepeople.example\u00a0/",
-    pytest.param(
-        "https://fake\u200bpeople.example/",
-        marks=pytest.mark.xfail(
-            strict=True,
-            reason="SEC finding, fix owner: orchestrator (netpolicy.py contract): host_of "
-                   "keeps invisible Unicode format (Cf) characters such as zero-width "
-                   "chars instead of returning None (src/freemyid/netpolicy.py:38-56)",
-        ),
-    ),
+    "https://fake\u200bpeople.example/",
     "javascript:alert(1)",
     "data:text/plain,fakepeople.example",
     "//fakepeople.example/path",
@@ -51,15 +43,7 @@ from freemyid.netpolicy import NetPolicy, captcha_subresource_allowed, host_of
     " fakepeople.example",
     "https://fake people.example/",
     "https://fakepeople.example\u2028/",
-    pytest.param(
-        "https://fakepeople.example\u200e/",
-        marks=pytest.mark.xfail(
-            strict=True,
-            reason="SEC finding, fix owner: orchestrator (netpolicy.py contract): host_of "
-                   "keeps invisible Unicode format (Cf) characters such as zero-width "
-                   "chars instead of returning None (src/freemyid/netpolicy.py:38-56)",
-        ),
-    ),
+    "https://fakepeople.example\u200e/",
     "https://fakepeople.example%2f.evil.example/",
     "https://fakepeople.example.\u00a0/",
 ])
