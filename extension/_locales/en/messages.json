@@ -1,0 +1,242 @@
+{
+  "extName": {
+    "message": "Free My ID",
+    "description": "Name of the extension."
+  },
+  "extDescription": {
+    "message": "Tells you when a site sells people's information, and lets the Free My ID app ask them to remove you.",
+    "description": "Store and add-ons page description. 132 characters at most."
+  },
+  "actionTitle": {
+    "message": "Free My ID",
+    "description": "Tooltip on the toolbar button."
+  },
+  "bannerLabel": {
+    "message": "Message from Free My ID",
+    "description": "Screen-reader name of the banner shown on a people-search site."
+  },
+  "bannerText": {
+    "message": "This site sells people's information. Free My ID can ask them to remove you.",
+    "description": "Main banner sentence. Keep it calm and short."
+  },
+  "bannerRemove": {
+    "message": "Remove me",
+    "description": "Banner button: start a removal request for this site."
+  },
+  "bannerNotNow": {
+    "message": "Not now",
+    "description": "Banner button: hide the banner on this site for a while."
+  },
+  "bannerClose": {
+    "message": "Close",
+    "description": "Banner button shown after the person pressed Remove me."
+  },
+  "bannerWorking": {
+    "message": "Telling the Free My ID app...",
+    "description": "Shown while the extension talks to the app on this computer."
+  },
+  "bannerStarted": {
+    "message": "The Free My ID app has it from here. This covers this site only, and listings can come back, so the app keeps checking.",
+    "description": "Shown when the app accepted the request. Must stay honest: one site only, listings can return."
+  },
+  "bannerNoApp": {
+    "message": "The Free My ID app did not answer. Open Free My ID on this computer and try again.",
+    "description": "Shown when the app is not installed, not set up, or not reachable."
+  },
+  "bannerNotReady": {
+    "message": "This button is not ready yet. Please open the Free My ID app and start the removal there.",
+    "description": "Shown when the app answered but cannot start the removal from the browser."
+  },
+  "popupTitle": {
+    "message": "Free My ID",
+    "description": "Heading of the toolbar popup."
+  },
+  "popupAppLabel": {
+    "message": "Free My ID app",
+    "description": "Row label: is the desktop app reachable."
+  },
+  "popupAppConnected": {
+    "message": "Connected (version $VERSION$)",
+    "description": "The desktop app answered.",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.4.0"
+      }
+    }
+  },
+  "popupAppNotConnected": {
+    "message": "Not connected. Open Free My ID on this computer.",
+    "description": "The desktop app did not answer."
+  },
+  "popupSiteLabel": {
+    "message": "This site",
+    "description": "Row label: is the site in the current tab a known broker."
+  },
+  "popupSiteBroker": {
+    "message": "$NAME$ is on our list of companies that sell people's information.",
+    "description": "The current site is a known broker.",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "Spokeo"
+      }
+    }
+  },
+  "popupSiteNotBroker": {
+    "message": "Not on our list. That does not mean it is safe; our list is not complete.",
+    "description": "The current site is not in the bundled list."
+  },
+  "popupSiteUnknown": {
+    "message": "We can't check this page.",
+    "description": "The current tab is not a normal web page."
+  },
+  "popupStateLabel": {
+    "message": "Your status on this site",
+    "description": "Row label: listing state for this broker, as the desktop app knows it."
+  },
+  "popupChecking": {
+    "message": "Checking...",
+    "description": "Placeholder while the popup loads."
+  },
+  "popupRemove": {
+    "message": "Remove me",
+    "description": "Popup button: start a removal request for this site."
+  },
+  "popupOptions": {
+    "message": "Settings",
+    "description": "Popup button: open the options page."
+  },
+  "popupPrivacy": {
+    "message": "This add-on sends nothing over the internet. It only talks to the Free My ID app on this computer.",
+    "description": "Short privacy line at the bottom of the popup."
+  },
+  "state_unknown": {
+    "message": "Not checked yet. Open the Free My ID app to check.",
+    "description": "Listing state: never scanned."
+  },
+  "state_not_found": {
+    "message": "No listing found the last time the app looked.",
+    "description": "Listing state."
+  },
+  "state_found": {
+    "message": "A listing was found. No request sent yet.",
+    "description": "Listing state."
+  },
+  "state_submitted": {
+    "message": "Removal request sent. Waiting for the site.",
+    "description": "Listing state."
+  },
+  "state_awaiting_verification": {
+    "message": "The site wants a confirmation. The app is waiting for it.",
+    "description": "Listing state."
+  },
+  "state_confirmed": {
+    "message": "The site says it got the request. The app will check again later.",
+    "description": "Listing state."
+  },
+  "state_removed": {
+    "message": "Removed from this site. Other sites are separate, and listings can come back.",
+    "description": "Listing state. Must stay honest: removed means from this site only."
+  },
+  "state_reappeared": {
+    "message": "The listing came back. The app will ask again.",
+    "description": "Listing state."
+  },
+  "state_needs_human": {
+    "message": "Needs you. Open the Free My ID app to see the next step.",
+    "description": "Listing state: a person has to do a step."
+  },
+  "state_error": {
+    "message": "Something went wrong. Open the Free My ID app to see more.",
+    "description": "Listing state."
+  },
+  "optionsTitle": {
+    "message": "Free My ID settings",
+    "description": "Heading of the options page."
+  },
+  "optionsBannerLabel": {
+    "message": "Show a message when I visit a site that sells people's information",
+    "description": "Checkbox label on the options page."
+  },
+  "optionsSaved": {
+    "message": "Saved.",
+    "description": "Shown after a setting changed."
+  },
+  "optionsForget": {
+    "message": "Forget the sites where I chose \"Not now\"",
+    "description": "Button on the options page."
+  },
+  "optionsForgetHint": {
+    "message": "When you choose \"Not now\", the message stays hidden on that site for 30 days. This is remembered on this computer only.",
+    "description": "Hint under the forget button."
+  },
+  "optionsForgotten": {
+    "message": "Done. The message can show again on those sites.",
+    "description": "Shown after the forget button was pressed."
+  },
+  "optionsGpcTitle": {
+    "message": "Tell websites not to sell or share my information",
+    "description": "Heading of the Global Privacy Control section on the options page."
+  },
+  "optionsGpcLabel": {
+    "message": "Send the Global Privacy Control signal to every website I visit",
+    "description": "Checkbox label. Off by default."
+  },
+  "optionsGpcHint": {
+    "message": "This is a standard \"do not sell or share\" message. Some state laws make websites honor it; in other places a site may ignore it. It does not remove a listing. This setting is new and still being tested.",
+    "description": "Honest limits of the signal. Do not promise that sites obey it."
+  },
+  "optionsGpcPermission": {
+    "message": "When you turn this on, your browser will ask if Free My ID may \"read and change your data on all websites\". That is the browser's wording for any add-on that adds something to what your browser sends. Free My ID adds this one message and does not read your pages.",
+    "description": "Explains the browser permission question before it appears."
+  },
+  "optionsGpcOn": {
+    "message": "On. Your browser now sends the signal.",
+    "description": "Shown after the signal was switched on."
+  },
+  "optionsGpcOff": {
+    "message": "Off. The signal is no longer sent.",
+    "description": "Shown after the signal was switched off."
+  },
+  "optionsGpcDeclined": {
+    "message": "Not turned on. Your browser did not give permission, or could not switch it on. Nothing was changed.",
+    "description": "Shown when the person or the browser said no to the permission question, or a step failed after a yes and everything was switched off again."
+  },
+  "optionsGpcStillOn": {
+    "message": "Still on. Your browser could not switch it off. Please try again.",
+    "description": "Shown when switching the signal off failed and the browser reports it is still on."
+  },
+  "optionsGpcAlready": {
+    "message": "Your browser already sends this signal. There is nothing to turn on here.",
+    "description": "Shown when the browser itself sends GPC (Firefox or Brave with the setting on)."
+  },
+  "optionsGpcBrowser": {
+    "message": "This browser has its own switch for this. In Firefox: open Settings, choose Privacy & Security, and tick \"Tell websites not to sell or share my data\".",
+    "description": "Shown in browsers where the extension does not send GPC itself."
+  },
+  "optionsPrivacyTitle": {
+    "message": "What this add-on does and does not do",
+    "description": "Heading of the privacy list on the options page."
+  },
+  "optionsPrivacy1": {
+    "message": "It sends nothing over the internet. No tracking, no statistics, no account.",
+    "description": "Privacy list item."
+  },
+  "optionsPrivacy2": {
+    "message": "It only talks to the Free My ID app on this computer. Your name and other details stay in the app; they are never given to this add-on.",
+    "description": "Privacy list item."
+  },
+  "optionsPrivacy3": {
+    "message": "On the sites in its list it looks at the site's address only. It does not read the page. On other sites it does nothing, unless you turn on the \"do not sell or share\" signal above, which only adds that signal.",
+    "description": "Privacy list item."
+  },
+  "optionsPrivacy4": {
+    "message": "It never fills in or clicks through \"I am not a robot\" checks. Those are always yours to do.",
+    "description": "Privacy list item."
+  },
+  "optionsPrivacy5": {
+    "message": "Some sites need steps only you can do, and a removed listing can come back. \"Removed\" always means removed from that one site.",
+    "description": "Privacy list item: honesty about limits."
+  }
+}

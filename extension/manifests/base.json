@@ -1,0 +1,41 @@
+{
+  "//": "Shared by every browser. tools/build_extension.py merges one of chrome.json / edge.json / firefox.json on top and fills content_scripts[0].matches from the public sample registry. Keys starting with // are comments and are dropped.",
+  "manifest_version": 3,
+  "name": "__MSG_extName__",
+  "short_name": "Free My ID",
+  "description": "__MSG_extDescription__",
+  "version": "0.0.1",
+  "default_locale": "en",
+  "icons": {
+    "16": "assets/icons/icon-16.png",
+    "32": "assets/icons/icon-32.png",
+    "48": "assets/icons/icon-48.png",
+    "128": "assets/icons/icon-128.png"
+  },
+  "action": {
+    "default_title": "__MSG_actionTitle__",
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "assets/icons/icon-16.png",
+      "32": "assets/icons/icon-32.png",
+      "48": "assets/icons/icon-48.png"
+    }
+  },
+  "options_ui": {
+    "page": "src/options/options.html",
+    "open_in_tab": true
+  },
+  "permissions": ["activeTab", "nativeMessaging", "storage"],
+  "content_scripts": [
+    {
+      "//": "matches is generated at build time: one https pattern per known people-search host. Never add a wildcard host here.",
+      "matches": [],
+      "js": ["src/content/banner.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+  }
+}

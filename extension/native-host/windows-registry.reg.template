@@ -1,0 +1,16 @@
+Windows Registry Editor Version 5.00
+
+; Free My ID native messaging host: per-user keys (HKEY_CURRENT_USER, no admin needed).
+; TEMPLATE. The installer writes these values itself; nobody is asked to import this file.
+; Each default value is the full path of a host manifest JSON file, with every backslash
+; doubled, for example "C:\\Users\\jane\\AppData\\Local\\Programs\\Free My ID\\native-host\\org.freemyid.host.chromium.json".
+; The uninstaller removes the three keys.
+
+[HKEY_CURRENT_USER\Software\Google\Chrome\NativeMessagingHosts\org.freemyid.host]
+@="{{CHROMIUM_MANIFEST_PATH}}"
+
+[HKEY_CURRENT_USER\Software\Microsoft\Edge\NativeMessagingHosts\org.freemyid.host]
+@="{{CHROMIUM_MANIFEST_PATH}}"
+
+[HKEY_CURRENT_USER\Software\Mozilla\NativeMessagingHosts\org.freemyid.host]
+@="{{FIREFOX_MANIFEST_PATH}}"

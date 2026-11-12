@@ -178,3 +178,40 @@ Installer artifact is FreeMyIDSetup-0.1.1 (pyproject still says 0.1.1, so this i
   - `wizard/views.py` `summary_page` ("What Free My ID did for <label>") still says "people-search sites" for every registry and counts waiting / confirmed by state.
   - `wizard/ui.py` `HONESTY` ends "Free My ID works on people-search sites", printed at the foot of this report too.
   - A row whose state is SUBMITTED but has no submission time and no SENT request still reads "asked" (`CHIP_LABEL`). `state.transition` always stamps the time, so only hand-built rows hit this.
+
+
+## Browser extension skeleton (Nina, 2026-11-11) BONES DONE, nothing ships
+Branch `integrate/browser-extension`. Full write-up: `docs/EXTENSION.md`.
+- Built: `extension/` (one MV3 codebase for Chrome, Edge, Firefox; plain ES modules, no npm, no bundler, no third-party code), `tools/build_extension.py` (stdlib only; merges manifests, builds `data/broker_domains.json` from `brokers/registry.sample.yaml` only, deterministic zips into `dist/extension/`), `src/freemyid/native_host.py` (stub host `org.freemyid.host`: length-prefixed JSON; `ping` and `status` work; `site_check` and `start_removal` are stubs), host manifest templates in `extension/native-host/`.
+- Global Privacy Control stub (coordinator request): Chrome and Edge only, off by default, switched on in Settings. This widens the Chromium permission set beyond the first brief (`declarativeNetRequestWithHostAccess` at install; `scripting` and all-sites host access asked for only when the person switches it on). Firefox keeps exactly `activeTab`, `nativeMessaging`, `storage` and points at Firefox's own GPC setting.
+- Tests: `tests/test_extension_build.py` (132) and `tests/test_native_host.py` (75). Run: `PYTHONPATH=$PWD/src .venv/bin/pytest -q tests/test_extension_build.py tests/test_native_host.py`.
+- Checked by hand: Chrome package loaded in Playwright's Chromium with every web request answered locally (banner on a listed host, none on an unlisted host or a marketing data broker, popup and options render, no console errors, "Remove me" reports the app did not answer).
+- NOT TESTED: real Chrome, real Edge, any Firefox, a registered native host, switching GPC on (needs the browser's permission question), the Windows binary-mode branch of the host.
+- Not touched: installers, `packaging/`, CI workflows, contract files.
+
+### Review findings SEC-EXT-1..8 (Marcus, tests in commit 49733e8): all fixed 2026-11-11
+- SEC-EXT-1 MED fixed: `native_host.read_message` refuses JSON nested more than 4 levels before parsing; a parser `RecursionError` becomes `FramingError`.
+- SEC-EXT-2 LOW fixed: `_ID`, `_HOSTNAME`, `_BROKER_ID`, `_CHROME_EXTENSION_ID` (host) and `_HOST`, `_BROKER_ID`, `_VERSION` (build script) are used with `.fullmatch()`.
+- SEC-EXT-3 MED fixed: per-type reply field allowlist; values null, true/false or one short lower-case word; a failed reply always carries a plain error code.
+- SEC-EXT-4 LOW fixed: `serve()` answers `internal_error` for a reply it cannot encode or that is too large, and exits 1 quietly when the pipe closes.
+- SEC-EXT-5 LOW fixed: `sample_registry_path` judges the resolved path (the sample, or `*.sample.yaml` under `tests/`); symlinks, hard links and `brokers/registry.yaml` are refused.
+- SEC-EXT-6 MED fixed: `turnGpcOn` never throws; any failed step after the grant runs `turnGpcOff()` and returns false; Settings shows the browser's real state.
+- SEC-EXT-7 MED fixed: `turnGpcOff` hands the permission back in a `finally` and returns true only when the browser confirms it is off.
+- SEC-EXT-8 LOW fixed: the background calls `turnGpcOffIfGrantGone()` on `permissions.onRemoved` and at startup.
+- Extras: the host checks the caller origin in argv (exit 2 otherwise); `lib/brokers.js` forgets a failed read of the list.
+- Behaviour change to know about: `CHROME_EXTENSION_IDS` is empty until store ids exist, so Chrome and Edge are answered only with `FREEMYID_EXTENSION_IDS` set by a developer's launcher. Firefox works with its fixed id.
+- Tests: `tests/test_extension_review_findings.py` (66, no xfails left), `tests/test_extension_gpc_browser.py` (22; Playwright Chromium, fake extension API, every request local). All four extension files: 295 passed.
+- NOT TESTED: the JS fixes in a real Chrome or Edge (permission question, real API errors, `onRemoved` from the browser's settings page, the header on the wire); any Firefox; the Windows branch of the host.
+
+### Change requests (contract files are Morgan's)
+- CR-EXT-1 `pyproject.toml` `[project.scripts]`: add `freemyid-native-host = "freemyid.native_host:main"`. Why: a browser's host manifest `path` must be one program with no arguments, so pipx and wheel installs need a real executable. (The PyInstaller spec gets a third exe for the same reason; that file is mine, not done yet.)
+- CR-EXT-2 `site_check` data source. The host must answer "which broker is this host, and what is its listing state" without holding the database key or any personal data. Proposal: the engine writes a PII-free file after each run, broker id to the most urgent `ListingState` across the people on this computer, and the host reads only that file. Needs `paths.extension_status_path()` (paths.py) and a write at the end of the run (engine, Theo). Alternative: the host opens the Store, which means keyring access from a browser-started process; I advise against it.
+- CR-EXT-3 `start_removal` entry point. The host needs one call that queues a removal for a broker id and returns at once, with the engine applying every usual rule. Open design point: which person, when 2 to 6 people share the computer. Proposal: `start_removal` never picks; it queues the broker for every person with a CONFIRMED listing there, and otherwise opens the app at that site's page (needs `freemyid app --goto site/<broker_id>` in cli.py) so the person chooses.
+- CR-EXT-4 `freemyid doctor`: report whether the native host is registered for each installed browser (doctor.py; whose file is that? Not in my ownership list).
+- CR-EXT-5 qa-security (Marcus): threat-model review before anything ships. Points listed in `docs/EXTENSION.md` section 5, plus the GPC permission grant.
+- CR-EXT-6 broker-researcher (Priya): the state-law table in `docs/EXTENSION.md` section 6 (which states treat an opt-out signal as a valid opt-out of sale) is from working knowledge and is marked NOT VERIFIED. Verify each row against a primary source before any of it reaches copy, letters or the site.
+- CR-EXT-7 registry: banner eligibility is derived from `category` today (people_search, background_check, phone_lookup, family_tree). If Priya wants per-broker control, a registry flag would be a schema change (models.py, schema/).
+
+### Mine, later (no CR needed)
+- Installer step per OS (described in `docs/EXTENSION.md` section 10): third PyInstaller exe, two host manifest files, per-user registration, removal on uninstall.
+- CI: run `tools/build_extension.py` and upload the three zips.

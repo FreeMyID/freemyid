@@ -1,0 +1,20 @@
+{
+  "//": "Google Chrome: the background is a service worker (ES module). The declarativeNetRequest, scripting and optional host entries exist only for the Global Privacy Control stub, which is off until the person turns it on in Settings (docs/EXTENSION.md).",
+  "minimum_chrome_version": "120",
+  "background": {
+    "service_worker": "src/background/main.js",
+    "type": "module"
+  },
+  "permissions": ["activeTab", "declarativeNetRequestWithHostAccess", "nativeMessaging", "storage"],
+  "optional_permissions": ["scripting"],
+  "optional_host_permissions": ["*://*/*"],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "gpc",
+        "enabled": false,
+        "path": "rules/gpc.json"
+      }
+    ]
+  }
+}
