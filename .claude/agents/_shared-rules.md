@@ -6,7 +6,7 @@ Contracts you MUST build on, owned by the orchestrator (read-only for you): `src
 
 Hard rules:
 1. Edit only files you own. Need a change elsewhere? Stop and put a CHANGE REQUEST (file, exact change, why) in your final report.
-2. No AI or API keys at runtime. Everything is deterministic and local.
+2. No AI or API keys at runtime. Everything is deterministic and local. One narrow exception (owner decision L2, 2026-11-11): an opt-in model that runs entirely on the person's own computer may read broker data exports (right-to-know replies), with no API keys, no network, and no personal data leaving the device, and only after the deterministic parsers exist and as a fallback to them. Nothing else may use a model at runtime.
 3. No PII in logs, events, exceptions, test fixtures or commits. Use fake people only (e.g. "Jane Q Testperson", Springfield IL).
 4. No network calls except to broker domains, the user's own mail server and the configured registry URL. All checks go through `netpolicy.NetPolicy`.
 5. Never solve or bypass CAPTCHAs or bot protection. No stealth plugins and no solver services. Hand those to a human.
