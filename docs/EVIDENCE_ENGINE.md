@@ -177,6 +177,19 @@ States with no comprehensive privacy law (NC, SC and AZ today) get the FTC and b
 | WO-626 | Block atlas: nightly LOAD-ONLY checks of request pages (never fill, never submit, never retry); `CanaryObservation` with no profile; results labelled datacenter-origin and never used for complaints or the public index unless real-user records confirm them (SEC-EE-1) | Theo, then Dana for scheduling | 621 |
 | WO-631 | Evidence viewing: friendly labels for the new kinds; in-app escaped view instead of plaintext download | Nina, then Marcus | 620 |
 
+## 8a. Law findings that bind the engine (WO-625, Priya, 95ca9c8; docs/research/OBSTRUCTION_LAW.md)
+
+1. **Facts, not conclusions.** No statute names "CAPTCHA". An express friction rule exists only in California (11 CCR 7004(a)(5)). Obstruction records, events and complaint drafts state facts (what was sent, what blocked it, when) and never assert that the broker broke the law. Statute citations come only from the per-state law data, never from code.
+2. **Suppression counts as done.** Kentucky and Maryland let a broker satisfy deletion by suppression or opt-out. A suppression or opt-out reply is the "done" path (verified by re-scan), never `REQUEST_DENIED`.
+3. **Authorized agents.** Outside CA and RI, agent rules cover opt-out only. `AGENT_REFUSED` on a deletion request is recorded as a fact everywhere, but cited as a legal claim only in CA and RI.
+4. **Pre-fill, never submit.** Regulator forms block automated clients, and complaints filed in TX, OR and NC can become public. Drafts minimise personal details, and the person gets a plain warning before sending (E1 approval).
+5. **Never record phone calls** (two-party-consent states). Only the fact that a call was demanded is recorded.
+6. **What is express in the law data:**
+   - in every law state: the deadline (45 days plus one 45-day extension; Iowa 90 plus 45);
+   - no new account required (about 11 states plus CA);
+   - no verification on opt-outs (CA, OR, MT, DE, NH, NJ, MN, MD, RI).
+   The per-state YAML shape is in `docs/handoff/broker-researcher-obstruction.md`; the `obstruction_law` model contract arrives with WO-624.
+
 **Upgrade note.** From 0.5 the evidence table can hold `block_capture` and `response_timeline`. An older app version will fail to list that evidence, so downgrading below 0.5 is not supported (qa-security LOW).
 
 ## 9. Owner decisions (DECIDED 2026-11-11, as recommended)
