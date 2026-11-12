@@ -113,15 +113,30 @@ Rules of the protocol:
 
 1. **No personal details, ever.** A request may hold `v`, `type`, `id` and the one field in the
    table. The host refuses any other field, so there is no room to carry a name or an address.
-   Replies carry ids, state words and a version number.
+   Replies carry ids, state words and a version number. The host enforces that on the way out
+   too: a `site_check` reply may add only `broker_id`, `listing_state` and `stub`, a
+   `start_removal` reply only `accepted`, and a failed reply an `error` code. Each value must be
+   null, true/false or one short lower-case word (letters, digits, `_`, 64 at most). Anything
+   else the app code hands back is dropped, so a name or a sentence cannot ride along.
 2. `hostname` is a bare host. A path or a full address is refused (a people-search path often
    contains a person's name).
 3. `start_removal` is a request, not a command. The app applies all its usual rules before
    anything is sent: consent on file, confirmed matches only (rule 7), data minimisation
    (rule 6), no CAPTCHA solving (rule 5).
 4. The host logs nothing about a message and opens no file, database or network connection.
-5. Requests over 64 KiB and replies over 1 MiB are refused.
-6. A change to the envelope means a new `v`, changed in `src/lib/protocol.js`,
+5. Requests over 64 KiB and replies over 1 MiB are refused. So is JSON nested more than 4
+   levels deep (a request is one flat object). Ids, hostnames and broker ids must match in full;
+   a trailing newline is refused. A reply that cannot be encoded is replaced by `internal_error`
+   and the host keeps running.
+6. **The host checks who started it** before it reads anything. Chrome and Edge pass the
+   caller's origin (`chrome-extension://<id>/`) as the first argument; Firefox passes the host
+   manifest's path and then the add-on id. A caller that is not on the list gets no answer
+   (exit code 2, one fixed sentence on stderr). The allowed Chrome and Edge ids are
+   `CHROME_EXTENSION_IDS` in `native_host.py`, **empty until the extension has store ids**, so
+   today Chrome and Edge are answered only when a developer names an id in the
+   `FREEMYID_EXTENSION_IDS` environment variable (section 9). The browser's own check of the
+   host manifest still applies; this is a second one.
+7. A change to the envelope means a new `v`, changed in `src/lib/protocol.js`,
    `src/freemyid/native_host.py` and this page together. A test compares the constants.
 
 Internal messages (inside the extension only): `fmid.site_check`, `fmid.start_removal`,
@@ -212,6 +227,18 @@ I visit"). The checkbox is not pre-ticked. `src/lib/gpc.js` then asks the browse
 optional permissions, enables the ruleset and registers the page script. Turning it off undoes
 all three.
 
+The signal is either fully on or fully off, never half:
+
+- **Switching on.** If any step after the browser's permission question fails, everything is
+  switched off again, the permission is handed back, and Settings says "Not turned on".
+- **Switching off.** The permission is always handed back, whatever else fails (without it the
+  browser sends no header and runs no page script for this extension). Settings says "Off" only
+  after the browser confirms it; otherwise the box stays ticked and it says "Still on".
+- **Taken back in the browser.** The person can remove the "all websites" permission in the
+  browser's own settings. The background script hears that (`permissions.onRemoved`) and
+  switches the rest off. It makes the same check each time it starts. The background can only
+  switch the signal off; switching it on always needs the person's click in Settings.
+
 Per browser:
 
 - **Chrome, Edge:** as above.
@@ -221,10 +248,13 @@ Per browser:
   sends the signal (Firefox with the setting on, Brave), Settings says there is nothing to turn on.
 
 Stub status. Built and tested by the Python tests: the manifest shape, the rule file, that it
-ships off, that only the options page can switch it. **Not tested:** switching it on in a real
-browser (the permission question, the header on the wire, the page property), and taking the
-permission back from the browser's own settings (`permissions.onRemoved` is a TODO in
-`src/lib/gpc.js`).
+ships off, that only the options page can switch it on. `tests/test_extension_gpc_browser.py`
+runs the real `gpc.js`, `options.js` and `background/main.js` in Playwright's Chromium against
+a stand-in for the browser's extension API, makes each step fail in turn and checks what is
+left switched on. **Not tested, because it needs a real Chrome or Edge with the extension
+installed:** the browser's own permission question, the errors the real API raises, the header
+on the wire, the page property on a real site, and `permissions.onRemoved` fired by the
+browser's settings page.
 
 Honest limits, which the Settings text states: GPC is a signal, not a removal. It does not take
 a listing down. Whether a site must honor it depends on where the person lives.
@@ -310,7 +340,12 @@ the rules in section 4, writes `data/broker_domains.json` and the content-script
 from `brokers/registry.sample.yaml`, copies the files and zips them. It uses the Python
 standard library only, including a small reader for the five registry keys it needs (compared
 with PyYAML in a test). The same inputs give the same bytes: sorted names, fixed dates in the
-zip, no timestamps. `--registry` accepts only another `*.sample.yaml` file.
+zip, no timestamps.
+
+Which registry file is read is decided by where the path really leads, not by its name. The
+script reads `brokers/registry.sample.yaml`, or with `--registry` a `*.sample.yaml` test file
+under `tests/`. It refuses symlinks, a second name (hard link) for the private registry, and
+any other place. `brokers/registry.yaml` can never be picked up.
 
 A host is put on the list only when it belongs to the broker's own site, so a shared opt-out
 host or a parent company's host is not pinned on the wrong broker.
@@ -333,9 +368,13 @@ To connect the stub host on a developer machine (this writes a per-user file or 
 so by rule 9 agents do not do it during development; a person may on their own machine):
 
 1. Make a small launcher the browser can start, because the host manifest's `path` must be one
-   program with no arguments. On macOS and Linux a two-line shell script that runs
-   `python -m freemyid.native_host` from the project's virtual environment; on Windows a `.bat`
-   file doing the same.
+   program with no arguments. On macOS and Linux a short shell script that runs
+   `python -m freemyid.native_host "$@"` from the project's virtual environment; on Windows a
+   `.bat` file doing the same with `%*`. The launcher must pass its arguments on: the browser
+   puts the caller's origin there and the host refuses to answer without it. For Chrome and
+   Edge the launcher must also set `FREEMYID_EXTENSION_IDS` to the id shown on the extensions
+   page (an unpacked extension's id differs from machine to machine). Firefox needs no
+   variable; its id is fixed.
 2. Fill in a template from `extension/native-host/`: `HOST_PATH` is the launcher's full path,
    `CHROME_EXTENSION_ID` is the id shown on the extensions page.
 3. Put the file (or the registry key) where `install-locations.json` says for your system and
@@ -345,7 +384,8 @@ Checked on 2026-11-11: the Chrome package loads in Playwright's Chromium with ev
 answered locally; the service worker starts, the banner appears on a listed host and not on an
 unlisted one or a marketing data broker, the popup and options pages render with no console
 errors, and "Remove me" reports that the app did not answer. **Not checked:** real Chrome, real
-Edge, any Firefox, a connected native host, the GPC switch.
+Edge, any Firefox, a connected native host, the GPC switch in a real browser (section 6 says
+what the automated browser test does cover).
 
 ## 10. What the installer has to do later (not built)
 
@@ -355,7 +395,8 @@ by family testers, the installer for each system needs one more step:
 1. Ship a host program next to the app: a third PyInstaller executable,
    `freemyid-native-host` (entry point `freemyid.native_host:main`).
 2. Write the two host manifest files (Chrome/Edge and Firefox) into the app's folder, filled
-   from the templates, with the real store ids in `allowed_origins`.
+   from the templates, with the real store ids in `allowed_origins`. The same ids go into
+   `CHROME_EXTENSION_IDS` in `native_host.py`, or the host refuses Chrome and Edge.
 3. Register them per user, without admin rights:
    - Windows: three `HKEY_CURRENT_USER` keys (`windows-registry.reg.template`), written by Inno
      Setup; the uninstaller deletes them.
@@ -380,8 +421,9 @@ Not started. Nothing has been submitted anywhere.
 - [ ] Firefox Add-ons (AMO): account, listing; the package needs no source upload because
       nothing is bundled or minified. Family testing on Firefox before a public listing needs
       AMO's "unlisted" signing, because unsigned add-ons load only temporarily.
-- [ ] Put the store ids into the host manifests (`allowed_origins`) and, for stable development
-      ids on Chrome and Edge, decide whether to pin a `key` in the manifest.
+- [ ] Put the store ids into the host manifests (`allowed_origins`) and into
+      `CHROME_EXTENSION_IDS` in `native_host.py` (the host's own caller check), and, for stable
+      development ids on Chrome and Edge, decide whether to pin a `key` in the manifest.
 - [ ] Add the build and its tests to CI (`.github/workflows`), and attach the three zips to
       releases with checksums.
 - [ ] Marcus: threat-model review (section 5 risks, the GPC permissions).

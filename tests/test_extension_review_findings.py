@@ -1,8 +1,8 @@
-"""qa-security review of integrate/browser-extension (SEC-EXT-1..6).
+"""qa-security review of integrate/browser-extension (SEC-EXT-1..5), plus the tests added with
+each fix and the host's caller check.
 
-Each test states the behaviour the code should have. They are strict xfails while the finding is
-open: once the fix lands the test passes, strict mode turns that into a failure, and the marker
-must be removed so the test guards the fix from then on.
+Every finding here is fixed and the strict xfail markers are gone, so each test now guards its
+fix. The JavaScript findings (SEC-EXT-6..8) are covered in tests/test_extension_gpc_browser.py.
 """
 from __future__ import annotations
 

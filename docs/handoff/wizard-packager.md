@@ -172,6 +172,20 @@ Branch `integrate/browser-extension`. Full write-up: `docs/EXTENSION.md`.
 - NOT TESTED: real Chrome, real Edge, any Firefox, a registered native host, switching GPC on (needs the browser's permission question), the Windows binary-mode branch of the host.
 - Not touched: installers, `packaging/`, CI workflows, contract files.
 
+### Review findings SEC-EXT-1..8 (Marcus, tests in commit 49733e8): all fixed 2026-11-11
+- SEC-EXT-1 MED fixed: `native_host.read_message` refuses JSON nested more than 4 levels before parsing; a parser `RecursionError` becomes `FramingError`.
+- SEC-EXT-2 LOW fixed: `_ID`, `_HOSTNAME`, `_BROKER_ID`, `_CHROME_EXTENSION_ID` (host) and `_HOST`, `_BROKER_ID`, `_VERSION` (build script) are used with `.fullmatch()`.
+- SEC-EXT-3 MED fixed: per-type reply field allowlist; values null, true/false or one short lower-case word; a failed reply always carries a plain error code.
+- SEC-EXT-4 LOW fixed: `serve()` answers `internal_error` for a reply it cannot encode or that is too large, and exits 1 quietly when the pipe closes.
+- SEC-EXT-5 LOW fixed: `sample_registry_path` judges the resolved path (the sample, or `*.sample.yaml` under `tests/`); symlinks, hard links and `brokers/registry.yaml` are refused.
+- SEC-EXT-6 MED fixed: `turnGpcOn` never throws; any failed step after the grant runs `turnGpcOff()` and returns false; Settings shows the browser's real state.
+- SEC-EXT-7 MED fixed: `turnGpcOff` hands the permission back in a `finally` and returns true only when the browser confirms it is off.
+- SEC-EXT-8 LOW fixed: the background calls `turnGpcOffIfGrantGone()` on `permissions.onRemoved` and at startup.
+- Extras: the host checks the caller origin in argv (exit 2 otherwise); `lib/brokers.js` forgets a failed read of the list.
+- Behaviour change to know about: `CHROME_EXTENSION_IDS` is empty until store ids exist, so Chrome and Edge are answered only with `FREEMYID_EXTENSION_IDS` set by a developer's launcher. Firefox works with its fixed id.
+- Tests: `tests/test_extension_review_findings.py` (66, no xfails left), `tests/test_extension_gpc_browser.py` (22; Playwright Chromium, fake extension API, every request local). All four extension files: 295 passed.
+- NOT TESTED: the JS fixes in a real Chrome or Edge (permission question, real API errors, `onRemoved` from the browser's settings page, the header on the wire); any Firefox; the Windows branch of the host.
+
 ### Change requests (contract files are Morgan's)
 - CR-EXT-1 `pyproject.toml` `[project.scripts]`: add `freemyid-native-host = "freemyid.native_host:main"`. Why: a browser's host manifest `path` must be one program with no arguments, so pipx and wheel installs need a real executable. (The PyInstaller spec gets a third exe for the same reason; that file is mine, not done yet.)
 - CR-EXT-2 `site_check` data source. The host must answer "which broker is this host, and what is its listing state" without holding the database key or any personal data. Proposal: the engine writes a PII-free file after each run, broker id to the most urgent `ListingState` across the people on this computer, and the host reads only that file. Needs `paths.extension_status_path()` (paths.py) and a write at the end of the run (engine, Theo). Alternative: the host opens the Store, which means keyring access from a browser-started process; I advise against it.
