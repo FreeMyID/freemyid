@@ -1,4 +1,4 @@
-"""Native messaging host for the Free My ID browser extension (STUB).
+"""Native messaging host for the Free My ID browser extension.
 
 The extension (extension/, docs/EXTENSION.md) never uses the network. It talks to this program
 only, which the browser starts and connects to over stdin/stdout:
@@ -8,16 +8,21 @@ only, which the browser starts and connects to over stdin/stdout:
 Wire format (set by the browsers): each message is a 4-byte length in the machine's own byte
 order, then that many bytes of UTF-8 JSON.
 
-Messages are versioned envelopes, ``{"v": 1, "type": ..., "id": ...}`` plus at most one field:
+Messages are versioned envelopes, ``{"v": 1, "type": ..., "id": ...}`` plus the fields listed
+for their type in ``REQUEST_FIELDS``:
 
     ping            -> {"ok": true, "pong": true}
-    status          -> {"ok": true, "connected": true, "app_version": "0.3.1"}
-    site_check      hostname   -> broker id and listing state        (stub: always "unknown")
-    start_removal   broker_id  -> the app starts the removal itself  (stub: "not_implemented")
+    status          -> {"ok": true, "connected": true, "app_version": "0.4.0", "paired": ...}
+    pair_start      -> {"ok": true, "code": "123456"}  the person confirms it in the app
+    site_check      hostname   -> broker id and listing state (PII-free status file)
+    start_removal   broker_id  -> queued for the app, which applies every usual rule
+    fill_plan       broker_id, controls  -> which box gets which value (running app only)
 
-No message carries personal details, and unknown fields are refused, so none can be slipped in.
-Nothing about a message is logged. ``site_check`` and ``start_removal`` are stubs: wiring them to
-the store and the engine needs the change requests in docs/handoff/wizard-packager.md.
+Only ``ping``, ``status`` and ``pair_start`` are answered before the person has paired this
+extension with the app (docs/EXTENSION.md, "Pairing"). Requests carry no personal details and
+unknown fields are refused. One reply carries personal details: ``fill_plan``, the values the
+person allowed for that one broker's form, checked field by field here (``_assignments``).
+Nothing about a message is logged. The files and the bridge live in ``freemyid.extension_link``.
 
 The browser says who is calling on the command line, and the host checks it before it reads a
 single byte: Chrome and Edge pass ``chrome-extension://<id>/`` as the first argument, Firefox
@@ -25,7 +30,8 @@ passes the host manifest's path and then the add-on id. A caller that is not on 
 no answer at all (exit code 2). The browser already enforces the host manifest's own list; this
 is a second check that does not depend on that file.
 
-This module opens no files, no database and no network connection.
+This module itself opens no files, no database and no network connection: what the link needs
+is in ``freemyid.extension_link`` (small PII-free files and the 127.0.0.1 bridge to the app).
 """
 from __future__ import annotations
 
@@ -58,10 +64,13 @@ MAX_REPLY_BYTES = 1024 * 1024
 # JSON parser sees it (the parser recurses once per level).
 MAX_JSON_DEPTH = 4
 
-MESSAGE_TYPES = ("ping", "status", "site_check", "start_removal")
-# The one extra field each type may carry, next to v/type/id.
-_EXTRA_FIELD = {"ping": None, "status": None, "site_check": "hostname",
-                "start_removal": "broker_id"}
+MESSAGE_TYPES = ("ping", "status", "pair_start", "site_check", "start_removal", "fill_plan")
+# The fields each type may carry, next to v/type/id. All of them are required.
+REQUEST_FIELDS: dict[str, tuple[str, ...]] = {
+    "ping": (), "status": (), "pair_start": (), "site_check": ("hostname",),
+    "start_removal": ("broker_id",), "fill_plan": ("broker_id", "controls")}
+# Answered before pairing. Everything else needs a paired extension.
+UNPAIRED_TYPES = ("ping", "status", "pair_start")
 
 # Always used with .fullmatch(): "$" would let a trailing newline through, .fullmatch() does not.
 _ID = re.compile(r"[A-Za-z0-9-]{1,64}")
@@ -72,11 +81,18 @@ _CHROME_EXTENSION_ID = re.compile(r"[a-p]{32}")
 # address or a sentence cannot ride along in a reply.
 _REPLY_WORD = re.compile(r"[a-z0-9_]{1,64}")
 # What a handler may add to a reply, per message type ("error" too, when ok is false).
-_REPLY_FIELDS = {"site_check": ("broker_id", "listing_state", "stub"),
-                 "start_removal": ("accepted",)}
+_REPLY_FIELDS = {"pair_start": ("code",),
+                 "site_check": ("broker_id", "listing_state", "stub"),
+                 "start_removal": ("accepted", "now"),
+                 "fill_plan": ()}
+# fill_plan: control keys come from the page scan (filler.SCAN_JS); values are short text.
+_CONTROL_KEY = re.compile(r"f\d{1,6}")
+_UNSAFE_TEXT = re.compile(r"[\x00-\x1f\x7f]")
+MAX_ASSIGNMENTS = 200
+MAX_VALUE_CHARS = 300
 _LENGTH = struct.Struct("=I")
 
-Handler = Callable[[str], dict[str, Any]]
+Handler = Callable[..., dict[str, Any]]
 
 
 class FramingError(Exception):
@@ -175,15 +191,52 @@ def _error(request_id: str, msg_type: str, code: str) -> dict[str, Any]:
     return _reply(request_id, msg_type, False, error=code)
 
 
-def _site_check_stub(hostname: str) -> dict[str, Any]:
-    """STUB. Real version: registry lookup + the stored listing state for the default person."""
-    return {"ok": True, "broker_id": None, "listing_state": "unknown", "stub": True}
+def _site_check(hostname: str) -> dict[str, Any]:
+    """Broker id and the most urgent listing state, from the app's PII-free status file."""
+    from freemyid import extension_link
+    broker_id, state = extension_link.site_state(hostname)
+    return {"ok": True, "broker_id": broker_id, "listing_state": state}
 
 
-def _start_removal_stub(broker_id: str) -> dict[str, Any]:
-    """STUB. Real version: hand the broker id to the engine, which applies every usual rule
-    (consent, confirmed matches only, data minimisation, no CAPTCHA solving)."""
-    return {"ok": False, "error": "not_implemented"}
+def _start_removal(broker_id: str, origin: str) -> dict[str, Any]:
+    """Queue the request for the app; if its window is open, it starts now. The engine applies
+    every usual rule (consent, confirmed matches only, data minimisation, no CAPTCHA solving)."""
+    from freemyid import extension_link
+    if not extension_link.queue_removal(broker_id, origin):
+        return {"ok": False, "error": "busy"}
+    reply = extension_link.bridge_call("/v1/inbox", {"origin": origin})
+    return {"ok": True, "accepted": True, "now": bool(reply and reply.get("ok") is True)}
+
+
+def _fill_plan(broker_id: str, controls: Any, origin: str) -> dict[str, Any]:
+    """Ask the running app which allowed value goes into which box of this form."""
+    from freemyid import extension_link
+    try:
+        extension_link.parse_controls(controls)
+    except extension_link.FillRefused as e:
+        return {"ok": False, "error": e.code}
+    reply = extension_link.bridge_call(
+        "/v1/fill-plan", {"origin": origin, "broker_id": broker_id, "controls": controls})
+    if reply is None:
+        return {"ok": False, "error": "app_closed"}
+    return reply
+
+
+def _pair_start(origin: str) -> dict[str, Any]:
+    from freemyid import extension_link
+    return {"ok": True, "code": extension_link.start_pairing(origin)}
+
+
+def _is_paired(origin: str) -> bool:
+    if not origin:
+        return False
+    from freemyid import extension_link
+    return extension_link.is_paired(origin)
+
+
+def _app_open() -> bool:
+    from freemyid import extension_link
+    return extension_link.app_is_open()
 
 
 def _envelope_ids(message: Any) -> tuple[str, str]:
@@ -202,15 +255,36 @@ def _plain(value: Any) -> bool:
             or (isinstance(value, str) and _REPLY_WORD.fullmatch(value) is not None))
 
 
+def _assignments(value: Any) -> list[dict[str, str]] | None:
+    """A fill plan exactly as allowed: [{"key": "f3", "value": "Springfield"}, ...], or None."""
+    if not isinstance(value, list) or len(value) > MAX_ASSIGNMENTS:
+        return None
+    out = []
+    for a in value:
+        if not (isinstance(a, dict) and set(a) == {"key", "value"}
+                and isinstance(a["key"], str) and _CONTROL_KEY.fullmatch(a["key"])
+                and isinstance(a["value"], str) and 0 < len(a["value"]) <= MAX_VALUE_CHARS
+                and not _UNSAFE_TEXT.search(a["value"])):
+            return None
+        out.append({"key": a["key"], "value": a["value"]})
+    return out
+
+
 def _handler_reply(request_id: str, msg_type: str, fields: dict[Any, Any]) -> dict[str, Any]:
     """Build the reply from what a handler returned, keeping only the fields on the list.
 
     The envelope is ours. Every other key, and every value that is not null, true/false or a
     short word, is dropped without comment, so a handler cannot pass anything else through.
+    The one exception is a fill plan, which must pass ``_assignments`` as a whole.
     """
     ok = fields.get("ok") is True
     kept = {key: fields[key] for key in _REPLY_FIELDS[msg_type]
             if key in fields and _plain(fields[key])}
+    if ok and msg_type == "fill_plan":
+        plan = _assignments(fields.get("assignments"))
+        if plan is None:
+            return _reply(request_id, msg_type, False, error="internal_error")
+        kept["assignments"] = plan
     if not ok:
         error = fields.get("error")
         kept["error"] = (error if isinstance(error, str) and _REPLY_WORD.fullmatch(error)
@@ -218,12 +292,23 @@ def _handler_reply(request_id: str, msg_type: str, fields: dict[Any, Any]) -> di
     return _reply(request_id, msg_type, ok, **kept)
 
 
-def handle_message(message: Any, *, site_check: Handler = _site_check_stub,
-                   start_removal: Handler = _start_removal_stub) -> dict[str, Any]:
+def handle_message(message: Any, *, origin: str = "", site_check: Handler | None = None,
+                   start_removal: Handler | None = None, fill_plan: Handler | None = None,
+                   pair_start: Handler | None = None,
+                   is_paired: Callable[[str], bool] | None = None,
+                   app_open: Callable[[], bool] | None = None) -> dict[str, Any]:
     """Answer one request envelope. Never raises; a bad request gets ``ok: false``.
 
-    ``site_check`` and ``start_removal`` can be replaced (tests, and later the real app code).
+    ``origin`` is the calling extension as the browser named it on the command line
+    (``caller_origin``). The handlers can be replaced (tests); by default they are the
+    module's own, looked up at call time.
     """
+    site_check = site_check or _site_check
+    start_removal = start_removal or _start_removal
+    fill_plan = fill_plan or _fill_plan
+    pair_start = pair_start or _pair_start
+    is_paired = is_paired or _is_paired
+    app_open = app_open or _app_open
     if not isinstance(message, dict):
         return _error("", "", "bad_request")
     request_id, msg_type = _envelope_ids(message)
@@ -236,28 +321,40 @@ def handle_message(message: Any, *, site_check: Handler = _site_check_stub,
         return _error(request_id, msg_type, "unsupported_version")
     if not msg_type:
         return _error(request_id, "", "unknown_type")
-    extra = _EXTRA_FIELD[msg_type]
-    allowed = {"v", "type", "id"} | ({extra} if extra else set())
-    if set(message) - allowed:
+    extra = REQUEST_FIELDS[msg_type]
+    if set(message) != {"v", "type", "id", *extra}:
         return _error(request_id, msg_type, "bad_request")   # no room for anything else
 
-    if msg_type == "ping":
-        return _reply(request_id, msg_type, True, pong=True)
-    if msg_type == "status":
-        return _reply(request_id, msg_type, True, connected=True, app_version=__version__)
-    value = message.get(extra)
-    pattern = _HOSTNAME if msg_type == "site_check" else _BROKER_ID
-    if not isinstance(value, str) or not pattern.fullmatch(value):
-        return _error(request_id, msg_type, "bad_request")
-    handler = site_check if msg_type == "site_check" else start_removal
     try:
-        fields = dict(handler(value))
+        if msg_type == "ping":
+            return _reply(request_id, msg_type, True, pong=True)
+        paired = is_paired(origin)
+        if msg_type == "status":
+            return _reply(request_id, msg_type, True, connected=True, app_version=__version__,
+                          paired=paired, app_open=paired and app_open())
+        if msg_type == "pair_start":
+            fields = dict(pair_start(origin)) if origin else {"ok": False, "error": "not_allowed"}
+            return _handler_reply(request_id, msg_type, fields)
+        value = message["hostname" if msg_type == "site_check" else "broker_id"]
+        pattern = _HOSTNAME if msg_type == "site_check" else _BROKER_ID
+        if not isinstance(value, str) or not pattern.fullmatch(value):
+            return _error(request_id, msg_type, "bad_request")
+        if msg_type == "fill_plan" and not isinstance(message["controls"], list):
+            return _error(request_id, msg_type, "bad_request")
+        if not paired:   # checked after the shape, so a bad request is always "bad_request"
+            return _error(request_id, msg_type, "not_paired")
+        if msg_type == "site_check":
+            fields = dict(site_check(value))
+        elif msg_type == "start_removal":
+            fields = dict(start_removal(value, origin))
+        else:
+            fields = dict(fill_plan(value, message["controls"], origin))
     except Exception:   # noqa: BLE001 - the reason is not passed on: it could name a person
         return _error(request_id, msg_type, "internal_error")
     return _handler_reply(request_id, msg_type, fields)
 
 
-def serve(stdin: BinaryIO, stdout: BinaryIO) -> int:
+def serve(stdin: BinaryIO, stdout: BinaryIO, origin: str = "") -> int:
     """Answer requests until the browser closes the pipe. Returns a process exit code.
 
     Never raises and never prints a traceback (a traceback could quote a message). A reply that
@@ -271,7 +368,7 @@ def serve(stdin: BinaryIO, stdout: BinaryIO) -> int:
         if message is None:
             return 0
         try:
-            frame = encode_message(handle_message(message))
+            frame = encode_message(handle_message(message, origin=origin))
         except Exception:   # noqa: BLE001 - not encodable, too large, or a bug: say so, go on
             request_id, msg_type = _envelope_ids(message)
             frame = encode_message(_error(request_id, msg_type, "internal_error"))
@@ -320,6 +417,14 @@ def allowed_chrome_ids(environ: Mapping[str, str]) -> tuple[str, ...]:
                  if _CHROME_EXTENSION_ID.fullmatch(i))
 
 
+def caller_origin(args: Sequence[str], chrome_ids: Sequence[str]) -> str:
+    """The calling extension as one string ("chrome-extension://<id>/" or "firefox:<add-on
+    id>"), or "" when the caller is not on the list (see ``caller_allowed``)."""
+    if not caller_allowed(args, chrome_ids):
+        return ""
+    return args[0] if args[0].startswith("chrome-extension:") else f"firefox:{args[1]}"
+
+
 def caller_allowed(args: Sequence[str], chrome_ids: Sequence[str]) -> bool:
     """Was this process started by our extension? ``args`` is the command line after the program.
 
@@ -339,7 +444,8 @@ def caller_allowed(args: Sequence[str], chrome_ids: Sequence[str]) -> bool:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = sys.argv[1:] if argv is None else argv
-    if not caller_allowed(args, allowed_chrome_ids(os.environ)):
+    origin = caller_origin(args, allowed_chrome_ids(os.environ))
+    if not origin:
         # A fixed sentence: what was on the command line is not repeated.
         sys.stderr.write("freemyid native host: not started by the Free My ID browser "
                          "extension, so it will not answer.\n")
@@ -351,7 +457,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         msvcrt.setmode(stdout.fileno(), os.O_BINARY)
     # stdout belongs to the protocol: a stray print() anywhere would corrupt it.
     sys.stdout = sys.stderr
-    return serve(stdin, stdout)
+    return serve(stdin, stdout, origin)
 
 
 if __name__ == "__main__":

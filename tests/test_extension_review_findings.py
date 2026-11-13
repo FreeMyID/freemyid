@@ -35,6 +35,13 @@ def _frame_bytes(body: bytes) -> bytes:
 def _req(msg_type: str, **fields: object) -> dict:
     return {"v": 1, "type": msg_type, "id": "3f2c9d1e-0000-4000-8000-000000000001", **fields}
 
+@pytest.fixture(autouse=True)
+def _paired_by_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Most tests here are about framing and reply rules, not pairing: treat the caller as a
+    paired extension. Pairing itself is tested in tests/test_extension_link.py."""
+    monkeypatch.setattr(native_host, "_is_paired", lambda origin: True)
+
+
 
 # ------------------------------------------------------------------------------ native host
 
@@ -131,8 +138,8 @@ def test_reply_fields_are_listed_per_message_type() -> None:
                                       site_check=lambda _h: dict(everything))
     assert set(site) == {"v", "id", "type", "ok", "broker_id", "listing_state", "stub"}
     removal = native_host.handle_message(_req("start_removal", broker_id="spokeo"),
-                                         start_removal=lambda _b: dict(everything))
-    assert set(removal) == {"v", "id", "type", "ok", "accepted"}
+                                         start_removal=lambda _b, _o: dict(everything))
+    assert set(removal) == {"v", "id", "type", "ok", "accepted"}   # "now" was not returned
     assert removal["accepted"] is True
 
 
@@ -169,11 +176,9 @@ def test_reply_values_must_be_a_short_word_true_false_or_null(value: object) -> 
 def test_a_failed_reply_always_carries_a_plain_error_code(result: dict) -> None:
     """SEC-EXT-3: ok false means an error code, and only a code."""
     reply = native_host.handle_message(_req("start_removal", broker_id="spokeo"),
-                                       start_removal=lambda _b: result)
+                                       start_removal=lambda _b, _o: result)
     assert reply == {"v": 1, "id": _req("x")["id"], "type": "start_removal", "ok": False,
                      "error": "internal_error"}
-    stub = native_host.handle_message(_req("start_removal", broker_id="spokeo"))
-    assert stub["error"] == "not_implemented"
 
 
 def test_serve_answers_internal_error_when_a_reply_cannot_be_encoded(monkeypatch) -> None:
@@ -210,13 +215,13 @@ def test_serve_keeps_going_after_a_reply_it_cannot_send(monkeypatch, capsys,
     real = native_host.handle_message
     calls: list[object] = []
 
-    def flaky(message: object) -> dict:
+    def flaky(message: object, **kwargs: object) -> dict:
         calls.append(message)
         if len(calls) == 1:
             if isinstance(bad_reply, Exception):
                 raise bad_reply
             return bad_reply
-        return real(message)
+        return real(message, **kwargs)
 
     monkeypatch.setattr(native_host, "handle_message", flaky)
     stdin = io.BytesIO(native_host.encode_message(_req("status"))

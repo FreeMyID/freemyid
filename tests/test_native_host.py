@@ -36,6 +36,13 @@ def _unframe(data: bytes) -> list[dict]:
 def _req(msg_type: str, **fields: object) -> dict:
     return {"v": 1, "type": msg_type, "id": "3f2c9d1e-0000-4000-8000-000000000001", **fields}
 
+@pytest.fixture(autouse=True)
+def _paired_by_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Most tests here are about framing and reply rules, not pairing: treat the caller as a
+    paired extension. Pairing itself is tested in tests/test_extension_link.py."""
+    monkeypatch.setattr(native_host, "_is_paired", lambda origin: True)
+
+
 
 # --------------------------------------------------------------------------------- framing
 
@@ -108,20 +115,24 @@ def test_ping() -> None:
 
 
 def test_status_reports_the_app_version() -> None:
-    reply = native_host.handle_message(_req("status"))
+    reply = native_host.handle_message(_req("status"), app_open=lambda: False)
     assert reply == {"v": 1, "id": _req("status")["id"], "type": "status", "ok": True,
-                     "connected": True, "app_version": __version__}
+                     "connected": True, "app_version": __version__, "paired": True,
+                     "app_open": False}
 
 
-def test_site_check_is_a_stub_that_knows_nothing_yet() -> None:
+def test_site_check_without_a_status_file_knows_nothing() -> None:
     reply = native_host.handle_message(_req("site_check", hostname="www.spokeo.com"))
-    assert reply["ok"] is True and reply["stub"] is True
+    assert reply["ok"] is True and "stub" not in reply
     assert reply["broker_id"] is None and reply["listing_state"] == "unknown"
 
 
-def test_start_removal_is_a_stub_that_starts_nothing() -> None:
-    reply = native_host.handle_message(_req("start_removal", broker_id="spokeo"))
-    assert reply["ok"] is False and reply["error"] == "not_implemented"
+def test_start_removal_is_queued_for_the_app() -> None:
+    from freemyid import extension_link
+    reply = native_host.handle_message(_req("start_removal", broker_id="spokeo"),
+                                       origin="firefox:extension@freemyid.org")
+    assert reply["ok"] is True and reply["accepted"] is True and reply["now"] is False
+    assert extension_link.take_inbox() == ["spokeo"]
 
 
 def test_every_reply_is_an_envelope_for_its_request() -> None:
@@ -197,7 +208,7 @@ def test_handlers_can_be_replaced_and_get_only_the_checked_value() -> None:
         seen.append(hostname)
         return {"ok": True, "broker_id": "spokeo", "listing_state": "submitted"}
 
-    def start_removal(broker_id: str) -> dict:
+    def start_removal(broker_id: str, origin: str) -> dict:
         seen.append(broker_id)
         return {"ok": True, "accepted": True}
 
@@ -216,7 +227,7 @@ def test_a_handler_cannot_replace_the_envelope() -> None:
 
 
 def test_a_failing_handler_gives_a_bare_error_code() -> None:
-    def boom(_value: str) -> dict:
+    def boom(_value: str, _origin: str) -> dict:
         raise RuntimeError("Jane Q Testperson, 12 Oak Street, Springfield IL")
 
     reply = native_host.handle_message(_req("start_removal", broker_id="spokeo"), start_removal=boom)
@@ -257,8 +268,9 @@ def test_real_process_speaks_only_frames_on_stdout() -> None:
     replies = _unframe(done.stdout)
     assert [r["type"] for r in replies] == ["ping", "status", "site_check", "start_removal"]
     assert replies[1]["app_version"] == __version__
-    assert replies[3] == {"v": 1, "id": _req("x")["id"], "type": "start_removal", "ok": False,
-                          "error": "not_implemented"}
+    assert replies[1]["paired"] is False                     # nobody paired this extension yet
+    for reply in replies[2:]:
+        assert reply["ok"] is False and reply["error"] == "not_paired"
 
 
 def test_host_module_has_no_network_file_or_process_imports() -> None:
