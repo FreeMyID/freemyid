@@ -193,3 +193,32 @@ def test_site_data_loader_still_refuses_the_private_registry():
     assert 'realpathSync(resolve(REPO, "brokers/registry.yaml"))' in site_ts
     assert "resolves to brokers/registry.yaml (private)" in site_ts
     assert 'endsWith(".sample.yaml")' in site_ts
+
+
+# ---------------------------------------------------------------- copy rules and the coverage rows
+
+def copy_errors(tmp_path, rel: str, body: str) -> list[str]:
+    site = tmp_path / "dist"
+    page = site / rel
+    page.parent.mkdir(parents=True, exist_ok=True)
+    page.write_text(PAGE.format(rows="") + body, encoding="utf-8")
+    return [e for e in sc.content_rules(site) if "banned phrase" in e]
+
+
+def test_a_company_name_in_the_coverage_rows_is_not_a_banned_claim(tmp_path):
+    rows = ('<ul class="cov-list" role="list"><li><b>Five Star Rated</b> <span>five-star.example.test</span>'
+            "<small>Not yet verified · By email</small></li></ul>")
+    assert copy_errors(tmp_path, "brokers/index.html", rows) == []
+
+
+def test_copy_around_the_coverage_rows_is_still_checked(tmp_path):
+    rows = '<ul class="cov-list" role="list"><li><b>Fake Data</b> <span>fake.example.test</span></li></ul>'
+    errors = copy_errors(tmp_path, "brokers/index.html", "<p>We guarantee every removal.</p>" + rows)
+    assert len(errors) == 1 and "guarantee" in errors[0]
+    errors = copy_errors(tmp_path, "brokers/index.html", rows + "<p>Rated five stars.</p>")
+    assert len(errors) == 1 and "star rating" in errors[0]
+
+
+def test_the_exception_is_only_for_the_coverage_page(tmp_path):
+    rows = '<ul class="cov-list" role="list"><li><b>Five Star Rated</b></li></ul>'
+    assert len(copy_errors(tmp_path, "guides/index.html", rows)) == 1

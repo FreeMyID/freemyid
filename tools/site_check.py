@@ -389,6 +389,10 @@ BANNED_PHRASES = [
 ]
 
 
+# The rows of the coverage list on /brokers/: names, hostnames and family names from the public list.
+COVERAGE_ROWS = re.compile(r'<ul class="cov-list".*?</ul>', re.DOTALL)
+
+
 def visible_text(html: str) -> str:
     import html as htmllib
     html = re.sub(r"<(script|style|head)\b.*?</\1>", " ", html, flags=re.DOTALL | re.IGNORECASE)
@@ -412,7 +416,11 @@ def content_rules(site: Path) -> list[str]:
         raw = f.read_text(encoding="utf-8")
         if rel.startswith("styleguide/"):
             continue
-        text = visible_text(raw)
+        # The coverage list rows are company and site names from brokers/coverage.public.yaml (data, not
+        # our claims): a broker called "Five Star ..." is not a star rating. Everything around the rows
+        # is still checked.
+        copy = COVERAGE_ROWS.sub(" ", raw) if rel == "brokers/index.html" else raw
+        text = visible_text(copy)
         for pat, label in BANNED_PHRASES:
             # /protect/ pages quote third-party time estimates ("about 15 minutes online" at a credit
             # bureau). D8 forbids timing *our app's* setup, not quoting how long someone else's site takes.
