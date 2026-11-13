@@ -5,8 +5,11 @@
 //      Versioned envelopes {v, type, id, ...}. Mirrored in src/freemyid/native_host.py.
 //   2. Internal messages: content script / popup / options -> background, inside the extension.
 //
-// Neither kind ever carries personal details. The only things that travel are a site hostname
-// that is already on the bundled broker list, a broker id, and status words.
+// Requests never carry personal details. What travels is a site hostname that is already on the
+// bundled broker list, a broker id, status words, a pairing code and, for "Fill in the form",
+// the page's form layout (labels and box names, never what is typed in them). The one reply
+// with personal details is fill_plan: the values the person allowed for that one broker's form,
+// used once by the content script and never stored (docs/EXTENSION.md section 3a).
 
 /** Native messaging host name. Must match the host manifest installed by the desktop app. */
 export const HOST_NAME = "org.freemyid.host";
@@ -18,8 +21,10 @@ export const PROTOCOL_VERSION = 1;
 export const AppMessage = Object.freeze({
   PING: "ping",
   STATUS: "status",
+  PAIR_START: "pair_start",
   SITE_CHECK: "site_check",
   START_REMOVAL: "start_removal",
+  FILL_PLAN: "fill_plan",
 });
 
 /** Internal message types. The content script repeats these literals (it cannot import). */
@@ -28,6 +33,12 @@ export const Internal = Object.freeze({
   START_REMOVAL: "fmid.start_removal",
   DISMISS: "fmid.dismiss",
   STATUS: "fmid.status",
+  PAIR_START: "fmid.pair_start",
+  FILL: "fmid.fill",
+  // background -> content/assisted-fill.js
+  FORM_PROBE: "fmid.form_probe",
+  SCAN: "fmid.scan",
+  APPLY: "fmid.apply",
 });
 
 /** Listing states, the same words as freemyid.models.ListingState. */
@@ -53,6 +64,8 @@ export const ErrorCode = Object.freeze({
   BAD_REPLY: "bad_reply",
   BAD_REQUEST: "bad_request",
   NOT_ALLOWED: "not_allowed",
+  NOT_PAIRED: "not_paired",
+  NO_FORM: "no_form",
   UNKNOWN_BROKER: "unknown_broker",
 });
 
@@ -88,8 +101,8 @@ export function isBrokerId(value) {
 /**
  * Build a request envelope.
  * @param {string} type
- * @param {Record<string, string>} [fields]
- * @returns {Envelope & Record<string, string>}
+ * @param {Record<string, unknown>} [fields]
+ * @returns {Envelope & Record<string, unknown>}
  */
 export function makeEnvelope(type, fields = {}) {
   return { ...fields, v: PROTOCOL_VERSION, type, id: crypto.randomUUID() };

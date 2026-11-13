@@ -238,5 +238,77 @@
   "optionsPrivacy5": {
     "message": "Some sites need steps only you can do, and a removed listing can come back. \"Removed\" always means removed from that one site.",
     "description": "Privacy list item: honesty about limits."
+  },
+  "bannerFill": {
+    "message": "Fill in the form for me",
+    "description": "Banner button: fill this site's removal form with the details the person allowed."
+  },
+  "bannerFillWorking": {
+    "message": "Asking the Free My ID app what to fill in...",
+    "description": "Shown while the app decides which boxes to fill."
+  },
+  "bannerFilled": {
+    "message": "Free My ID filled in $COUNT$ boxes. Please check them. If the site asks you to prove you are not a robot, do that step yourself, then press the site's own button to send the form.",
+    "description": "After filling. Must say: check, the person does any robot check and presses Submit.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "4"
+      }
+    }
+  },
+  "bannerFillNothing": {
+    "message": "Free My ID did not find boxes on this page it may fill in. Open the site's removal form and try again, or use the steps in the Free My ID app.",
+    "description": "Nothing was filled."
+  },
+  "bannerFillOpenApp": {
+    "message": "Please open the Free My ID app on this computer, then press the button again. Your details stay locked inside the app until it is open.",
+    "description": "The app window is closed, so it cannot read the person's details."
+  },
+  "bannerFillChoosePerson": {
+    "message": "Free My ID looks after more than one person on this computer. Please open the app and use Fill it in for me on the right person's card.",
+    "description": "Several people could be meant; the extension never shows names."
+  },
+  "bannerFillNotPaired": {
+    "message": "This browser is not connected to the Free My ID app yet. Click the Free My ID button in the toolbar and choose Connect to the app.",
+    "description": "The extension has not been paired with the app."
+  },
+  "bannerFillNoPermission": {
+    "message": "Free My ID needs your permission first. Please open the app and finish the setup.",
+    "description": "No person has given consent in the app yet."
+  },
+  "bannerFillFailed": {
+    "message": "That did not work. Please use the steps in the Free My ID app instead.",
+    "description": "Any other error while filling."
+  },
+  "popupAppNotPaired": {
+    "message": "Found, but not connected yet.",
+    "description": "The app answered, but this browser is not paired with it."
+  },
+  "popupPairIntro": {
+    "message": "Connect this browser to the Free My ID app on this computer, so it can start removals and fill in forms for you.",
+    "description": "Explains pairing in the popup."
+  },
+  "popupPair": {
+    "message": "Connect to the app",
+    "description": "Popup button: start pairing with the desktop app."
+  },
+  "popupPairCode": {
+    "message": "Your code is $CODE$. In the Free My ID app, open Settings, then Browser helper, and confirm this same code. The code works for 10 minutes.",
+    "description": "Shows the pairing code to confirm in the app.",
+    "placeholders": {
+      "code": {
+        "content": "$1",
+        "example": "482 913"
+      }
+    }
+  },
+  "popupPairFailed": {
+    "message": "The Free My ID app did not give a code. Open Free My ID on this computer and try again.",
+    "description": "Pairing could not start."
+  },
+  "popupFill": {
+    "message": "Fill in the form for me",
+    "description": "Popup button: fill this broker's form."
   }
 }

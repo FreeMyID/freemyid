@@ -54,7 +54,9 @@ BANNER_CATEGORIES = frozenset({"people_search", "background_check", "phone_looku
 LISTED_CATEGORIES = BANNER_CATEGORIES | {"data_broker", "risk_data"}
 
 # Files that live in extension/src but must not ship (future work, not wired up).
-EXCLUDED_FILES = frozenset({"src/content/assisted-fill.js"})
+EXCLUDED_FILES: frozenset[str] = frozenset()
+# The content scripts, in load order: form help first, then the banner that offers it.
+CONTENT_SCRIPTS = ["src/content/assisted-fill.js", "src/content/banner.js"]
 PACKAGE_DIRS = ("_locales", "assets/icons", "src")
 PACKAGE_SUFFIXES = frozenset({".css", ".html", ".js", ".json", ".png"})
 DOMAINS_PATH = "data/broker_domains.json"
@@ -315,6 +317,8 @@ def validate_manifest(manifest: dict, browser: str) -> list[str]:
                 errors.append(f"content script match {pattern!r} is not an exact https host")
         if not cs.get("matches"):
             errors.append("content script has no matches")
+        if cs.get("js") != CONTENT_SCRIPTS:
+            errors.append(f"content scripts must be exactly {CONTENT_SCRIPTS!r}")
     csp = manifest.get("content_security_policy")
     policy = csp.get("extension_pages", "") if isinstance(csp, dict) else ""
     directives = {d.split()[0]: d.split()[1:] for d in policy.split(";") if d.strip()}

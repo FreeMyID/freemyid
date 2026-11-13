@@ -11,6 +11,8 @@ import { AppMessage, ErrorCode, HOST_NAME, isReplyTo, makeEnvelope } from "./pro
 
 /** How long to wait for the app before saying "not connected". */
 const TIMEOUT_MS = 5000;
+/** A fill plan goes through the running app's bridge, which reads the encrypted store. */
+const FILL_TIMEOUT_MS = 15000;
 
 /**
  * @typedef {Object} AppReply
@@ -20,6 +22,11 @@ const TIMEOUT_MS = 5000;
  * @property {string|null} [broker_id] site_check
  * @property {string} [listing_state]  site_check
  * @property {boolean} [accepted]      start_removal
+ * @property {boolean} [now]           start_removal: the open app started it right away
+ * @property {boolean} [paired]        status
+ * @property {boolean} [app_open]      status
+ * @property {string} [code]           pair_start: six digits to confirm in the app
+ * @property {{key: string, value: string}[]} [assignments]  fill_plan
  */
 
 /**
@@ -27,16 +34,17 @@ const TIMEOUT_MS = 5000;
  * Never throws: a missing app, a timeout or a malformed reply all come back as {ok: false}.
  * Nothing about the request or the reply is logged.
  * @param {string} type one of AppMessage
- * @param {Record<string, string>} [fields]
+ * @param {Record<string, unknown>} [fields]
  * @returns {Promise<AppReply>}
  */
 export async function sendToApp(type, fields = {}) {
   const request = makeEnvelope(type, fields);
+  const limit = type === AppMessage.FILL_PLAN ? FILL_TIMEOUT_MS : TIMEOUT_MS;
   /** @type {ReturnType<typeof setTimeout>|undefined} */
   let timer;
   try {
     const timeout = new Promise((_resolve, reject) => {
-      timer = setTimeout(() => reject(new Error("timeout")), TIMEOUT_MS);
+      timer = setTimeout(() => reject(new Error("timeout")), limit);
     });
     const reply = await Promise.race([api.runtime.sendNativeMessage(HOST_NAME, request), timeout]);
     if (!isReplyTo(request, reply)) return { ok: false, error: ErrorCode.BAD_REPLY };
@@ -69,3 +77,15 @@ export const checkSite = (hostname) => sendToApp(AppMessage.SITE_CHECK, { hostna
  * @param {string} brokerId
  */
 export const startRemoval = (brokerId) => sendToApp(AppMessage.START_REMOVAL, { broker_id: brokerId });
+
+/** Ask the app for a pairing code to show the person (they confirm it in the app). */
+export const startPairing = () => sendToApp(AppMessage.PAIR_START);
+
+/**
+ * Ask the running app which allowed value goes into which box of this broker's form.
+ * `controls` is the page scan from content/assisted-fill.js: labels and box names only.
+ * @param {string} brokerId
+ * @param {unknown[]} controls
+ */
+export const fillPlan = (brokerId, controls) =>
+  sendToApp(AppMessage.FILL_PLAN, { broker_id: brokerId, controls });

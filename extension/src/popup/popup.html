@@ -26,10 +26,17 @@
       </div>
     </dl>
 
+    <section id="pair-box" hidden>
+      <p data-i18n="popupPairIntro">Connect this browser to the Free My ID app on this computer, so it can start removals and fill in forms for you.</p>
+      <button type="button" id="pair" class="primary" data-i18n="popupPair">Connect to the app</button>
+      <p id="pair-code" class="code" role="status" hidden></p>
+    </section>
+
     <p id="result" role="status"></p>
 
     <div class="buttons">
       <button type="button" id="remove" class="primary" data-i18n="popupRemove" hidden>Remove me</button>
+      <button type="button" id="fill" data-i18n="popupFill" hidden>Fill in the form for me</button>
       <button type="button" id="open-options" data-i18n="popupOptions">Settings</button>
     </div>
 

@@ -259,22 +259,41 @@ def test_banner_reads_nothing_from_the_page_and_touches_no_form() -> None:
                     r"\.click\s*\(", r"\.submit\s*\(", r"dispatchEvent", r"MutationObserver",
                     r"(?i)captcha", r"\bstorage\b"):
         assert not re.search(pattern, code), f"banner.js uses {pattern}"
-    assert code.count("event.isTrusted") == 2          # both buttons need a real click
+    assert code.count("event.isTrusted") == 3          # all three buttons need a real click
     assert 'attachShadow({ mode: "closed" })' in code
 
 
-def test_assisted_fill_is_a_todo_that_ships_nowhere() -> None:
+def test_assisted_fill_ships_first_and_acts_only_when_the_background_asks() -> None:
     rel = "src/content/assisted-fill.js"
     text = (EXT / rel).read_text(encoding="utf-8")
-    assert text.startswith("// TODO (FUTURE, NOT BUILT, NOT SHIPPED)")
     assert "only after the person clicks" in text and "never touches a CAPTCHA" in text
     for browser in BROWSERS:
         files = build_extension.build_tree(browser)
-        assert rel not in files
-        assert "assisted-fill" not in files["manifest.json"].decode()
-    others = [p for p in SHIPPED_TEXT if p.name != "assisted-fill.js"
-              and "assisted-fill.js" in _strip_js_comments(p.read_text(encoding="utf-8"))]
-    assert others == []
+        assert rel in files
+        manifest = json.loads(files["manifest.json"].decode())
+        assert manifest["content_scripts"][0]["js"] == build_extension.CONTENT_SCRIPTS
+    code = _strip_js_comments(text)
+    # It answers the extension's own background only, and never on page load.
+    assert "sender.id !== api.runtime.id || sender.tab" in code
+    listener = code.index("api.runtime.onMessage.addListener")
+    assert "scan(" not in code[code.rindex("})();"):]                 # nothing runs at the end
+    assert code.count("scanControls()") == 1 and code.index("scanControls()") < listener
+    # It never submits, clicks, ticks or touches a CAPTCHA, and never reads storage or cookies.
+    for pattern in (r"\.submit\s*\(", r"\.click\s*\(", r"\.checked\s*=", r"requestSubmit",
+                    r"document\.cookie", r"\blocalStorage\b", r"\bsessionStorage\b",
+                    r"\bstorage\.", r"\bfetch\b", r"XMLHttpRequest", r"sendMessage",
+                    r"KeyboardEvent", r"userAgent"):
+        assert not re.search(pattern, code), f"assisted-fill.js uses {pattern}"
+    # Values are dropped as soon as they are used.
+    assert code.count("scanned = new Map()") >= 3
+
+
+def test_validator_refuses_other_content_scripts() -> None:
+    manifest = _manifest("chrome")
+    manifest["content_scripts"][0]["js"] = ["src/content/banner.js"]
+    assert build_extension.validate_manifest(manifest, "chrome") != []
+    manifest["content_scripts"][0]["js"] = [*build_extension.CONTENT_SCRIPTS, "src/lib/x.js"]
+    assert build_extension.validate_manifest(manifest, "chrome") != []
 
 
 # ------------------------------------------------------- domain list: public sample only

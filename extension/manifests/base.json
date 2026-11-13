@@ -30,7 +30,7 @@
     {
       "//": "matches is generated at build time: one https pattern per known people-search host. Never add a wildcard host here.",
       "matches": [],
-      "js": ["src/content/banner.js"],
+      "js": ["src/content/assisted-fill.js", "src/content/banner.js"],
       "run_at": "document_idle",
       "all_frames": false
     }

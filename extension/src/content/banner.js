@@ -4,11 +4,13 @@
 // top frame, in the browser's isolated world.
 //
 // What it does: asks the background "should I show the banner here?", and if so shows a calm,
-// dismissible card with two buttons.
+// dismissible card with two buttons, plus "Fill in the form for me" when this browser is paired
+// with the app and the page has boxes to fill.
 // What it does NOT do: it reads nothing from the page. Not the text, not forms, not cookies,
 // not the address beyond what the browser already tells the background about the sender.
 // It never touches a CAPTCHA or any "are you human" check, never fills a form and never clicks
-// anything on the page. (Form help for the Assisted tier is future work; see assisted-fill.js.)
+// anything on the page. Form help lives in assisted-fill.js, which acts only when the background
+// asks it to, after the person clicked "Fill in the form for me" here or in the popup.
 //
 // This is a classic script (manifest content scripts cannot be ES modules), so it cannot import
 // from ../lib. The message names below repeat lib/protocol.js; tests keep them in step.
@@ -24,6 +26,7 @@
   const MSG_SITE_CHECK = "fmid.site_check";
   const MSG_START_REMOVAL = "fmid.start_removal";
   const MSG_DISMISS = "fmid.dismiss";
+  const MSG_FILL = "fmid.fill";
 
   /** @param {string} key */
   const t = (key) => api.i18n.getMessage(key) || key;
@@ -73,8 +76,33 @@
     return el;
   }
 
-  /** @param {{id: string, name: string}} broker */
-  function showBanner(broker) {
+  /**
+   * What to tell the person after "Fill in the form for me".
+   * @param {{ok?: boolean, error?: string, filled?: number}|undefined} reply
+   */
+  function fillMessage(reply) {
+    if (reply?.ok) {
+      return reply.filled
+        ? api.i18n.getMessage("bannerFilled", [String(reply.filled)]) || t("bannerFilled")
+        : t("bannerFillNothing");
+    }
+    switch (reply?.error) {
+      case "app_closed": return t("bannerFillOpenApp");
+      case "choose_person": return t("bannerFillChoosePerson");
+      case "not_paired": return t("bannerFillNotPaired");
+      case "no_permission": return t("bannerFillNoPermission");
+      case "no_form": return t("bannerFillNothing");
+      case "app_not_connected":
+      case undefined: return t("bannerNoApp");
+      default: return t("bannerFillFailed");
+    }
+  }
+
+  /**
+   * @param {{id: string, name: string}} broker
+   * @param {boolean} canFill
+   */
+  function showBanner(broker, canFill) {
     const host = document.createElement("div");
     const shadow = host.attachShadow({ mode: "closed" });
     try {
@@ -97,9 +125,11 @@
     const buttons = make("div", "buttons");
     const remove = /** @type {HTMLButtonElement} */ (make("button", "primary", t("bannerRemove")));
     const notNow = /** @type {HTMLButtonElement} */ (make("button", "secondary", t("bannerNotNow")));
+    const fill = /** @type {HTMLButtonElement} */ (make("button", "secondary", t("bannerFill")));
     remove.type = "button";
     notNow.type = "button";
-    buttons.append(remove, notNow);
+    fill.type = "button";
+    buttons.append(remove, ...(canFill ? [fill] : []), notNow);
     card.append(make("p", "brand", t("extName")), text, buttons);
     shadow.append(card);
 
@@ -126,6 +156,21 @@
       buttons.replaceChildren(done);
     });
 
+    fill.addEventListener("click", async (event) => {
+      if (!event.isTrusted) return; // the person's own click; the page cannot start a fill
+      fill.disabled = true;
+      text.textContent = t("bannerFillWorking");
+      /** @type {{ok?: boolean, error?: string, filled?: number}|undefined} */
+      let reply;
+      try {
+        reply = await api.runtime.sendMessage({ type: MSG_FILL, brokerId: broker.id });
+      } catch {
+        reply = undefined;
+      }
+      text.textContent = fillMessage(reply);
+      fill.disabled = false;
+    });
+
     notNow.addEventListener("click", (event) => {
       if (!event.isTrusted) return;
       api.runtime.sendMessage({ type: MSG_DISMISS, brokerId: broker.id }).catch(() => {});
@@ -138,7 +183,7 @@
   api.runtime
     .sendMessage({ type: MSG_SITE_CHECK })
     .then((/** @type {any} */ reply) => {
-      if (reply?.ok && reply.showBanner && reply.broker) showBanner(reply.broker);
+      if (reply?.ok && reply.showBanner && reply.broker) showBanner(reply.broker, reply.canFill === true);
     })
     .catch(() => {
       // Background not reachable (extension updating or switched off): show nothing.

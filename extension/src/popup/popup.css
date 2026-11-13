@@ -37,3 +37,5 @@ dd {
   gap: 12px;
   margin-bottom: 16px;
 }
+
+.code { font-size: 1.6rem; font-weight: 700; letter-spacing: 0.15em; }
