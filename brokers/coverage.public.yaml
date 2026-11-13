@@ -5,56 +5,58 @@
 # counts.listed = verified + not_verified; not_available sites are listed but counted apart.
 format: 1
 updated: "2026-11"
-counts: {total: 642, listed: 638, verified: 197, not_verified: 441, not_available: 4}
+counts: {total: 656, listed: 647, verified: 288, not_verified: 359, not_available: 9}
 sites:
   - {name: "01Advertising", site: "01advertising.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "33Across", site: "33across.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "411.com", site: "411.com", category: "people_search", route: "email", status: "not_verified", family: "Whitepages"}
+  - {name: "411.info", site: "411.info", category: "people_search", route: "assisted", status: "not_verified"}
   - {name: "4Eyes.ai", site: "4-eyes.ai", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "5x5 US, LLC", site: "5x5data.com", category: "data_broker", route: "assisted", status: "not_verified"}
   - {name: "6sense Insights", site: "6sense.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Above Data", site: "abovedata.io", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Above Data", site: "abovedata.io", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Absolute People Search", site: "absolutepeoplesearch.com", category: "people_search", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "Accudata", site: "accudata.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11", family: "AccuData Integrated Marketing"}
   - {name: "AccuData Integrated Marketing", site: "deepsync.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Accurate Append", site: "accurateappend.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "ACH, Address Clearing House", site: "achcoop.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Acronymix LLC", site: "acronymix.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "ActivImpact", site: "activimpact.ai", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "ActivImpact", site: "activimpact.ai", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Acxiom", site: "acxiom.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "Adagio", site: "adagio.io", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Addresses.com", site: "addresses.com", category: "people_search", route: "assisted", status: "not_verified", family: "PeopleConnect Suppression Center"}
   - {name: "AddressSearch", site: "addresssearch.com", category: "people_search", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "Adelphic LLC", site: "viantinc.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Adept ID", site: "adept-id.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Adprime", site: "adprime.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "adsquare GmbH", site: "adsquare.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Adprime", site: "adprime.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
+  - {name: "adsquare GmbH", site: "adsquare.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Adstra LLC", site: "adstradata.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "AdsWizz", site: "adswizz.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Adttribution", site: "adttribution.com", category: "data_broker", route: "assisted", status: "not_verified"}
   - {name: "AdvancedBackgroundChecks", site: "advancedbackgroundchecks.com", category: "background_check", route: "assisted", status: "not_available", family: "Mississippi Tornado Alley LLC"}
   - {name: "Affinity", site: "affinity.co", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Affinity Answers Corporation", site: "affinityanswers.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Affinity Answers Corporation", site: "affinityanswers.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Affinity Solutions", site: "affinity.solutions", category: "data_broker", route: "assisted", status: "not_verified"}
   - {name: "agedleadstore.com", site: "agedleadstore.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "AggKnowledge", site: "aggknowledge.ai", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "AggKnowledge", site: "aggknowledge.ai", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Agile Education Marketing, LLC", site: "agile-ed.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "AGR Marketing Solutions LLC", site: "agrmarketingsolutions.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Aidentified", site: "aidentified.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Aidentified", site: "aidentified.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Airlines Reporting Corporation", site: "www2.arccorp.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Alesco Data, Response Solutions, Statlistics", site: "alescodata.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "AlikeAudience", site: "alikeaudience.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Allant Group, LLC", site: "allantgroup.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Allant Group, LLC", site: "allantgroup.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Alliant Cooperative Data Solutions LLC", site: "alliantinsight.com", category: "data_broker", route: "assisted", status: "not_verified"}
   - {name: "Alphonso", site: "alphonso.tv", category: "data_broker", route: "assisted", status: "not_verified"}
-  - {name: "Alpine Digital Group", site: "alpinedigitalgroup.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Altair Data Resources", site: "altairdata.com", category: "data_broker", route: "assisted", status: "not_verified"}
+  - {name: "Alpine Digital Group", site: "alpinedigitalgroup.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
+  - {name: "Altair Data Resources", site: "altairdata.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "Altrata", site: "altrata.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Amplemarket", site: "amplemarket.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "AnalyticsIQ", site: "analytics-iq.com", category: "data_broker", route: "assisted", status: "not_verified"}
   - {name: "Anchor Computer", site: "anchorcomputer.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
+  - {name: "AncientFaces", site: "ancientfaces.com", category: "family_tree", route: "assisted", status: "not_verified"}
   - {name: "Andrews Wharton", site: "andrewswharton.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Anteriad, LLC", site: "anteriad.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Anteriad, LLC", site: "anteriad.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Apollo Interactive, LLC", site: "apollointeractive.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Apollo.io", site: "apollo.io", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "AppLovin Corporation", site: "applovin.com", category: "data_broker", route: "email", status: "not_verified"}
@@ -62,7 +64,7 @@ sites:
   - {name: "Aristotle International", site: "aristotle.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "AtData", site: "atdata.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "Attribits", site: "attribits.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Audience Acuity LLC", site: "audienceacuity.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Audience Acuity LLC", site: "audienceacuity.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Audience Mix LLC", site: "audiencemix.net", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Audigent", site: "audigent.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Autodata Solutions", site: "jdpower.com", category: "data_broker", route: "assisted", status: "not_verified"}
@@ -71,22 +73,22 @@ sites:
   - {name: "AWL Holdings, LLC", site: "allwebleads.com", category: "data_broker", route: "assisted", status: "not_verified"}
   - {name: "Azerion US", site: "azerion.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Azira LLC", site: "azira.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
-  - {name: "B.I Science", site: "biscience.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Babel Street", site: "babelstreet.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "B.I Science", site: "biscience.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
+  - {name: "Babel Street", site: "babelstreet.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "BB Direct", site: "bbdirect.com", category: "data_broker", route: "assisted", status: "not_verified"}
   - {name: "BDEX, LLC", site: "bdex.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "BECAUSAL, INC", site: "becausal.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "BeenVerified", site: "beenverified.com", category: "people_search", route: "assisted", status: "verified", checked: "2026-11"}
-  - {name: "Beeswax", site: "beeswax.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Belardi Wong", site: "belardiwong.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Beeswax", site: "beeswax.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
+  - {name: "Belardi Wong", site: "belardiwong.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Big Village", site: "big-village.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "BIGDBM", site: "bigdbm.com", category: "data_broker", route: "email", status: "not_verified", checked: "2026-11", family: "PublicNSA LLC"}
-  - {name: "Biscred", site: "biscred.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Biscred", site: "biscred.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Black Pearl Group Limited", site: "blackpearl.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Blackbaud", site: "blackbaud.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Blis Global Ltd", site: "blis.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Blue Action", site: "blueaction.io", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Blue Fire Leads", site: "bluefireleads.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Blue Action", site: "blueaction.io", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
+  - {name: "Blue Fire Leads", site: "bluefireleads.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Blueprint Audiences", site: "blueprintaudiences.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Bombora", site: "bombora.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Bridg", site: "bridg.com", category: "data_broker", route: "email", status: "not_verified"}
@@ -94,12 +96,14 @@ sites:
   - {name: "Brightquery", site: "brightquery.com", category: "data_broker", route: "assisted", status: "not_verified"}
   - {name: "Brooks Integrated Marketing, LLC", site: "brooksim.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Buildertrend Solutions", site: "buildertrend.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Bumper", site: "bumper.com", category: "data_broker", route: "assisted", status: "not_verified"}
   - {name: "Buxton Company, LLC", site: "buxtonco.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Buyerlink", site: "buyerlink.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Cadent, LLC", site: "cadent.tv", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "California Court Records", site: "californiacourtrecords.us", category: "people_search", route: "assisted", status: "verified", checked: "2026-11", family: "Intermedia Ventures, LLC"}
   - {name: "California DROP", site: "privacy.ca.gov", category: "other", route: "by_hand", status: "verified", checked: "2026-11"}
-  - {name: "Captify Technologies", site: "captifytechnologies.com", category: "data_broker", route: "assisted", status: "not_verified"}
+  - {name: "CallerSmart", site: "callersmart.com", category: "phone_lookup", route: "by_hand", status: "verified", checked: "2026-11"}
+  - {name: "Captify Technologies", site: "captifytechnologies.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "Captiv8", site: "captiv8.io", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "CareerBuilder, LLC", site: "careerbuilder.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Carney Direct Marketing", site: "carneydirect.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
@@ -108,12 +112,12 @@ sites:
   - {name: "Catalist LLC", site: "catalist.us", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "CB Insights", site: "cbinsights.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Cengage Learning", site: "cengage.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Censai Analytics", site: "rushmorelabs.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Censai Analytics", site: "rushmorelabs.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Censia, In", site: "censia.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "CheckPeople", site: "checkpeople.com", category: "people_search", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Choreograph LLP", site: "choreograph.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "CinqDI", site: "cinqdi.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Circana, LLC", site: "circana.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "CinqDI", site: "cinqdi.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
+  - {name: "Circana, LLC", site: "circana.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Cision US", site: "cision.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "CITYDATA", site: "citydata.ai", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Civis Analytics", site: "civisanalytics.com", category: "data_broker", route: "email", status: "not_verified"}
@@ -123,7 +127,7 @@ sites:
   - {name: "Clearbit", site: "hubspot.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "ClearCompany, LLC", site: "clearcompany.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Clearview AI", site: "clearview.ai", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
-  - {name: "Clickagy LLC", site: "clickagy.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Clickagy LLC", site: "clickagy.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Client Command", site: "clientcommand.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Clustal", site: "clustal.org", category: "people_search", route: "assisted", status: "not_verified"}
   - {name: "Coast Technology, LLC", site: "coasttechnology.com", category: "data_broker", route: "assisted", status: "not_verified"}
@@ -135,9 +139,9 @@ sites:
   - {name: "CompactLists", site: "compactlists.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11", family: "AccuData Integrated Marketing"}
   - {name: "Complementics", site: "complementics.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Complete Mailing Lists LLC", site: "completemailinglists.com", category: "data_broker", route: "assisted", status: "not_verified"}
-  - {name: "Complete Medical Lists", site: "completemedicallists.com", category: "data_broker", route: "assisted", status: "not_verified"}
+  - {name: "Complete Medical Lists", site: "completemedicallists.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "Comscore", site: "comscore.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
-  - {name: "Connected Investors, LLC", site: "connectedinvestors.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Connected Investors, LLC", site: "connectedinvestors.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Connext Digital, LLC", site: "connextdigital.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "ContactOut", site: "contactout.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Converge Direct, LLC", site: "convergemarketing.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
@@ -151,26 +155,26 @@ sites:
   - {name: "Cross Pixel Media", site: "crosspixel.net", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Crunchbase", site: "crunchbase.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "CTAM LeadShare Corp", site: "smartmove.us", category: "data_broker", route: "assisted", status: "not_verified"}
-  - {name: "Cuebiq Group, LLC", site: "cuebiq.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Cuebiq Group, LLC", site: "cuebiq.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Customers.ai", site: "customers.ai", category: "data_broker", route: "assisted", status: "not_verified"}
   - {name: "Cybba", site: "cybba.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "CyberBackgroundChecks", site: "cyberbackgroundchecks.com", category: "background_check", route: "assisted", status: "not_verified", family: "Mississippi Tornado Alley LLC"}
   - {name: "Data Axle", site: "data-axle.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
-  - {name: "Data Decisions Group, LLC", site: "datadecisionsgroup.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Data Decisions Group, LLC", site: "datadecisionsgroup.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Data Partners", site: "datapartners.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "Data Trust", site: "thedatatrust.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "DataDelivers, LLC", site: "datadelivers.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Datadesk", site: "datadesk.io", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Datafy LLC", site: "datafy.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Dataline", site: "datalinedata.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
-  - {name: "Dataman Group", site: "datamangroup.com", category: "data_broker", route: "assisted", status: "not_verified"}
+  - {name: "Dataman Group", site: "datamangroup.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "Datanyze LLC", site: "datanyze.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Dataskip", site: "dataskip.io", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Datasys Group", site: "datasys.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Datasys Group", site: "datasys.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Date Detective", site: "date-detective.app", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "DealerSocket, LLC", site: "dealersocket.com", category: "data_broker", route: "assisted", status: "not_verified"}
-  - {name: "DealerX Partners LLC", site: "dealerx.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Dealfront Finland Oy", site: "leadfeeder.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "DealerX Partners LLC", site: "dealerx.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
+  - {name: "Dealfront Finland Oy", site: "leadfeeder.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "DealMachine", site: "dealmachine.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Decide Technologies", site: "decide.co", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "DecisionLinks", site: "decisionlinks.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
@@ -183,7 +187,7 @@ sites:
   - {name: "Dice Career Solutions", site: "dice.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Digital Segment", site: "digitalsegment.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Digital Viking Media", site: "digitalvikingmedia.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Disco Technology", site: "disconetwork.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Disco Technology", site: "disconetwork.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Disqus", site: "disqus.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "DojoMojo", site: "proxima.ai", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "DonorBase", site: "donorbase.com", category: "data_broker", route: "email", status: "not_verified"}
@@ -208,14 +212,14 @@ sites:
   - {name: "Enrich Layer", site: "enrichlayer.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "EntityCheck", site: "entitycheck.com", category: "background_check", route: "email", status: "verified", checked: "2026-11", family: "InfoPay"}
   - {name: "EproDirect LLC", site: "eprodirect.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
-  - {name: "Epsilon", site: "epsilon.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Epsilon", site: "epsilon.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Equifax", site: "equifax.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "EverConnect", site: "33mileradius.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "EverConnect", site: "bestpickreports.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "EverConnect", site: "keywordconnects.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "EverConnect", site: "remodeling.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
-  - {name: "Everleads", site: "everleads.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "EverTrue", site: "evertrue.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Everleads", site: "everleads.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
+  - {name: "EverTrue", site: "evertrue.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "EveryJoe", site: "everyjoe.com", category: "people_search", route: "assisted", status: "not_verified"}
   - {name: "Evorra Ltd", site: "evorra.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Exa", site: "exa.ai", category: "data_broker", route: "email", status: "not_verified"}
@@ -224,12 +228,12 @@ sites:
   - {name: "Exact Match Marketing", site: "exactmatchmarketing.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "ExlService.com LLC", site: "exlservice.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Experian", site: "experian.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
-  - {name: "Experience.com", site: "experience.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Experience.com", site: "experience.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Explorium", site: "explorium.ai", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Eyeota Pte Ltd", site: "eyeota.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "FamilyTreeNow", site: "familytreenow.com", category: "family_tree", route: "email", status: "not_verified"}
   - {name: "Famous Birthdays LLC", site: "famousbirthdays.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Faraday", site: "faraday.ai", category: "data_broker", route: "assisted", status: "not_verified"}
+  - {name: "Faraday", site: "faraday.ai", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "FastPeopleSearch", site: "fastpeoplesearch.com", category: "people_search", route: "assisted", status: "verified", checked: "2026-11", family: "Mississippi Tornado Alley LLC"}
   - {name: "Feedzai", site: "feedzai.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Fetch Rewards, LLC", site: "fetch.com", category: "data_broker", route: "email", status: "not_verified"}
@@ -239,30 +243,31 @@ sites:
   - {name: "Findymail", site: "findymail.com", category: "data_broker", route: "assisted", status: "not_verified"}
   - {name: "FinSum", site: "finsum.com", category: "data_broker", route: "assisted", status: "not_verified"}
   - {name: "FinThrive Healthcare", site: "finthrive.com", category: "data_broker", route: "assisted", status: "not_verified"}
-  - {name: "First Direct, National List Services", site: "firstdirectmarketing.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "First Direct, National List Services", site: "firstdirectmarketing.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Five Star Rated", site: "fivestarrated.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "Focus USA", site: "focus-usa.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
-  - {name: "Fog Data Science LLC", site: "fogdatascience.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Fog Data Science LLC", site: "fogdatascience.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Forager.ai, LLC", site: "forager.ai", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "FordDirect", site: "forddirect.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "FOREWARN, LLC", site: "forewarn.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "FOREWARN, LLC", site: "forewarn.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "formerly FullContact", site: "fideo.ai", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Four Corner Media Corp", site: "fourcornerhome.com", category: "data_broker", route: "assisted", status: "not_verified"}
   - {name: "FourLeaf LLC", site: "fourleafdata.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Foursquare Labs", site: "foursquare.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "FourthWall Media", site: "fourthwall.tv", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Fraiser LLC", site: "fraiser.org", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
-  - {name: "FreePeopleDirectory", site: "freepeopledirectory.com", category: "people_search", route: "email", status: "not_verified", family: "Spokeo"}
+  - {name: "FreePeopleDirectory", site: "freepeopledirectory.com", category: "people_search", route: "email", status: "verified", checked: "2026-11", family: "Spokeo"}
   - {name: "FREEPEOPLESEARCH.COM, LLC", site: "freepeoplesearch.com", category: "people_search", route: "email", status: "not_verified"}
   - {name: "FreeWheel Media", site: "freewheel.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Full Contact, Blackbox, Alfred", site: "fullcontact.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Full Contact, Blackbox, Alfred", site: "fullcontact.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Fusable", site: "fusable.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Fushia Media, LLC", site: "fushiamedia.com", category: "data_broker", route: "assisted", status: "not_verified"}
   - {name: "Fusion92", site: "fusion92.com", category: "data_broker", route: "assisted", status: "not_verified"}
   - {name: "General Motors LLC", site: "gm.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "getrev", site: "getrev.ai", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Glad I Know", site: "gladiknow.com", category: "people_search", route: "assisted", status: "verified", checked: "2026-11"}
-  - {name: "Global Source Data Solutions", site: "gsdsi.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Global Source Data Solutions", site: "gsdsi.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
+  - {name: "GoLookUp", site: "golookup.com", category: "people_search", route: "assisted", status: "not_available", checked: "2026-11"}
   - {name: "GoodCar", site: "goodcar.com", category: "background_check", route: "email", status: "verified", checked: "2026-11", family: "InfoPay"}
   - {name: "Google Results about you", site: "myactivity.google.com", category: "other", route: "by_hand", status: "not_verified"}
   - {name: "Grassroots Analytics", site: "grassrootsanalytics.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
@@ -275,7 +280,7 @@ sites:
   - {name: "Growbots", site: "growbots.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Growing Libraries, LLC", site: "growinglibraries.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "GrowthCode, LLC", site: "growthcode.io", category: "data_broker", route: "assisted", status: "not_verified"}
-  - {name: "Health Union, LLC", site: "health-union.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Health Union, LLC", site: "health-union.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Healthcare.com", site: "healthcare.com", category: "data_broker", route: "assisted", status: "not_verified"}
   - {name: "HealthLink Dimensions, LLC", site: "healthlinkdimensions.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "HealthWise Data", site: "healthwisedata.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
@@ -287,23 +292,23 @@ sites:
   - {name: "Hunter.io", site: "hunter.io", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "i360, LLC", site: "i-360.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "ID5", site: "id5.io", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
-  - {name: "IDI", site: "ididata.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "IDI", site: "ididata.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "IDM, LLC", site: "idm.us.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "IDMAP", site: "idmap.ai", category: "data_broker", route: "assisted", status: "not_verified"}
   - {name: "IDStrong", site: "idstrong.com", category: "background_check", route: "email", status: "verified", checked: "2026-11", family: "InfoPay"}
   - {name: "iLeads.com, LLC", site: "ileads.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "illumin", site: "illumin.com", category: "data_broker", route: "assisted", status: "not_verified"}
   - {name: "Inbound Insight, LLC", site: "inboundinsight.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Index Exchange", site: "indexexchange.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Index Exchange", site: "indexexchange.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Infillion", site: "infillion.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Infomatics LLC", site: "privatereports.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "InfoPay", site: "infopay.com", category: "background_check", route: "email", status: "not_verified", checked: "2026-11"}
+  - {name: "InfoPay", site: "infopay.com", category: "background_check", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Informa TechTarget", site: "techtarget.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Informa USA", site: "informa.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "INFORMATION.COM, LLC", site: "information.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "InfoTracer", site: "infotracer.com", category: "background_check", route: "email", status: "verified", checked: "2026-11", family: "InfoPay"}
   - {name: "InfutorData", site: "infutor.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Inmar Brand Solutions", site: "inmar.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Inmar Brand Solutions", site: "inmar.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "InMarket Media, LLC", site: "inmarket.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Innovative Database Solutions", site: "idatabasesolutions.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Innovis", site: "innovis.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
@@ -328,15 +333,16 @@ sites:
   - {name: "Key Marketing Advantage, LLC", site: "keymarketingadvantage.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Kids Live Safe", site: "kidslivesafe.com", category: "background_check", route: "email", status: "not_verified", checked: "2026-11", family: "Scalable Commerce LLC"}
   - {name: "Kind Skiptracing", site: "kindskiptracing.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Kindsight", site: "kindsight.io", category: "data_broker", route: "assisted", status: "not_verified"}
+  - {name: "Kindsight", site: "kindsight.io", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "Kloudend", site: "ipapi.co", category: "data_broker", route: "assisted", status: "not_verified"}
   - {name: "Koddi", site: "koddi.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Komodo Health", site: "komodohealth.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Kontext Data", site: "kontextdata.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Kwold", site: "kwold.com", category: "people_search", route: "assisted", status: "not_available", checked: "2026-11"}
   - {name: "L.S Mobile Apps Holdings Ltd", site: "lsmapps.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "L2", site: "l2-data.com", category: "data_broker", route: "assisted", status: "not_verified"}
-  - {name: "LEAD ENHANCE LLC", site: "lead-enhance.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Lead411 Corporation", site: "lead411.com", category: "data_broker", route: "assisted", status: "not_verified"}
+  - {name: "LEAD ENHANCE LLC", site: "lead-enhance.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
+  - {name: "Lead411 Corporation", site: "lead411.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "Leadership Connect", site: "leadershipconnect.io", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "LeadIQ", site: "leadiq.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "LeadLoft", site: "leadloft.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
@@ -349,9 +355,9 @@ sites:
   - {name: "LG Ad Solutions", site: "lgads.tv", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "LiftEngine", site: "liftbasedata.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "LightBox Parent, L.P", site: "lightboxre.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
-  - {name: "Lightcast", site: "lightcast.io", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Lightcast", site: "lightcast.io", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Liminal", site: "getliminal.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Lionshare Marketing", site: "lionsharemarketing.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Lionshare Marketing", site: "lionsharemarketing.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "List Giant", site: "giantpartners.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "ListKit LLC", site: "listkit.io", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "ListMatch", site: "listmatch.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
@@ -368,21 +374,21 @@ sites:
   - {name: "Lotame Solutions", site: "lotame.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Lusha", site: "lusha.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "M+R", site: "mrss.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "M1 Data & Analytics, LLC", site: "m1-data.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "M1 Data & Analytics, LLC", site: "m1-data.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "MachIntel", site: "machintel.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "MadHive", site: "madhive.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Magnite", site: "magnite.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Mailinglists.com", site: "mailinglists.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Mailinglists.com", site: "mailinglists.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Malvern Media", site: "malvernmedia.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "Market Force Corporation", site: "marketforcecorp.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Marketing Architects", site: "marketingarchitects.com", category: "data_broker", route: "assisted", status: "not_verified"}
-  - {name: "MarketOps LLC", site: "marketops.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "MarketOps LLC", site: "marketops.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Marriott International", site: "marriott.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Matchbook Data, LLC", site: "matchbookdata.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "MaxMind", site: "maxmind.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Media.net Advertising FZ, LLC", site: "media.net", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "MediaWallah", site: "mediawallah.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Medical Marketing Service", site: "mmslists.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Medical Marketing Service", site: "mmslists.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "MedPro Systems", site: "medprosystems.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Melissa Data Corpoation", site: "melissa.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Meltwater News US", site: "meltwater.com", category: "data_broker", route: "email", status: "not_verified"}
@@ -398,7 +404,7 @@ sites:
   - {name: "Mogean", site: "mogean.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Monevo", site: "monevo.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "MonitorBase", site: "monitorbase.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Moody's Corporation", site: "moodys.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Moody's Corporation", site: "moodys.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Multimedia Lists", site: "multimedialists.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "MyLife", site: "mylife.com", category: "people_search", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Narvar", site: "narvar.com", category: "data_broker", route: "email", status: "not_verified"}
@@ -408,11 +414,11 @@ sites:
   - {name: "Nativo", site: "nativo.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "NCS", site: "ncsolutions.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Neptune Ops LLC", site: "neptuneops.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Networx Systems", site: "networx.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Networx Systems", site: "networx.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "NextRoll", site: "nextroll.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Nexxen", site: "nexxen.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "NFocus Consulting", site: "n-focus.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Nielsen Marketing Cloud", site: "nielsen.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Nielsen Marketing Cloud", site: "nielsen.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "No", site: "consumercanvas.net", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Nordic Data Resources AS", site: "nordicdataresources.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "NumLookup LLC", site: "numlookup.com", category: "people_search", route: "assisted", status: "not_verified"}
@@ -423,7 +429,7 @@ sites:
   - {name: "ONLINE MEDIA GROUP INC", site: "omginc.xyz", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "OnSpot Data", site: "onspotdata.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "OpenPeopleSearch", site: "openpeoplesearch.com", category: "people_search", route: "assisted", status: "verified", checked: "2026-11"}
-  - {name: "Opensend", site: "opensend.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Opensend", site: "opensend.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "OpenX Technologies", site: "openx.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Optable", site: "optable.co", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Optimal", site: "dspolitical.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
@@ -435,7 +441,7 @@ sites:
   - {name: "Outward Media", site: "outwardmedia.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Pacific East Research", site: "pacificeast.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Paramount Direct Marketing", site: "paramountdirectmarketing.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Path2Response LLC", site: "path2response.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Path2Response LLC", site: "path2response.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "PeekYou", site: "peekyou.com", category: "people_search", route: "assisted", status: "not_available", checked: "2026-11"}
   - {name: "Penlink", site: "penlink.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "People Data Labs", site: "peopledatalabs.com", category: "people_search", route: "assisted", status: "verified", checked: "2026-11"}
@@ -447,12 +453,13 @@ sites:
   - {name: "PeopleSearchNow", site: "peoplesearchnow.com", category: "people_search", route: "assisted", status: "verified", checked: "2026-11", family: "Mississippi Tornado Alley LLC"}
   - {name: "PeopleWhiz", site: "peoplewhiz.com", category: "people_search", route: "email", status: "not_verified"}
   - {name: "Persistent.id", site: "persistent.id", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
+  - {name: "PhoneLookup", site: "phonelookup.com", category: "phone_lookup", route: "by_hand", status: "verified", checked: "2026-11"}
   - {name: "Pipl", site: "pipl.com", category: "people_search", route: "email", status: "verified", checked: "2026-11"}
   - {name: "PitchBook Data", site: "pitchbook.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Place Exchange", site: "placeexchange.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Plunge Digital", site: "plungedigital.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "PMG Worldwide, LLC", site: "pmg.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Podscribe", site: "podscribe.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Podscribe", site: "podscribe.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Pop Acta Media, LLC", site: "popacta.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Porch Group Media", site: "porchgroupmedia.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "PossibleNOW", site: "possiblenow.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
@@ -461,7 +468,7 @@ sites:
   - {name: "Precisely Software Incorporated", site: "precisely.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "Private Records LLC", site: "privaterecords.net", category: "people_search", route: "email", status: "not_verified"}
   - {name: "PrivateEye", site: "privateeye.com", category: "people_search", route: "assisted", status: "not_verified"}
-  - {name: "PrivCo Media LLC", site: "privco.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "PrivCo Media LLC", site: "privco.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "ProdPro", site: "prodpro.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Propensity", site: "propensity.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Property Reach LP", site: "propertyreach.com", category: "data_broker", route: "email", status: "not_verified"}
@@ -469,8 +476,10 @@ sites:
   - {name: "PropertyRadar", site: "propertyradar.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "PropertyRecs", site: "dashboard.propertyrecs.com", category: "people_search", route: "assisted", status: "not_verified"}
   - {name: "ProspectBase UK Limited", site: "prospectbase.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Pub360", site: "pub360.com", category: "people_search", route: "assisted", status: "not_available", checked: "2026-11"}
   - {name: "Public Data Check", site: "publicdatacheck.com", category: "background_check", route: "email", status: "verified", checked: "2026-11", family: "National Data Analytics, LLC"}
   - {name: "Public Information Services", site: "publicinfoservices.com", category: "background_check", route: "email", status: "verified", checked: "2026-11", family: "Information Data Resources, LLC"}
+  - {name: "Public Record Reports", site: "publicrecordreports.com", category: "background_check", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "PublicRecordCom, LLC", site: "publicrecord.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "PubMatic", site: "pubmatic.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "PulsePoint Media", site: "pulsepoint.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
@@ -488,24 +497,27 @@ sites:
   - {name: "Real Intent", site: "realintent.co", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Realeflow LLC", site: "realeflow.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "RealSource", site: "realsourcedata.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
+  - {name: "RealtyTrac", site: "realtytrac.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "RecordsFinder", site: "recordsfinder.com", category: "people_search", route: "email", status: "verified", checked: "2026-11", family: "Globicom"}
   - {name: "RecruitBot", site: "recruitbot.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Redi-Data", site: "redidata.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Redmob LLC", site: "redmob.io", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Redmob LLC", site: "redmob.io", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
+  - {name: "Rehold", site: "rehold.com", category: "people_search", route: "assisted", status: "not_available", checked: "2026-11"}
   - {name: "Reklaim Ltd", site: "reklaimyours.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "RelPro", site: "relpro.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Resonate", site: "resonate.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Resonate", site: "resonate.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Response America", site: "responseamerica.net", category: "data_broker", route: "assisted", status: "not_verified"}
   - {name: "Retention.com, RB2B", site: "retention.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "RevContent", site: "revcontent.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Reveal Mobile", site: "revealmobile.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Reveal Mobile", site: "revealmobile.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
+  - {name: "RevealName", site: "revealname.com", category: "people_search", route: "assisted", status: "not_available", checked: "2026-11"}
   - {name: "Revelio Labs", site: "reveliolabs.com", category: "data_broker", route: "assisted", status: "not_verified"}
   - {name: "Revenue Roll", site: "revenueroll.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "RevenueBase", site: "revenuebase.ai", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "RevenueBase", site: "revenuebase.ai", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "RevOptimal, LLC", site: "revoptimal.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "RGR Marketing", site: "rgrmarketing.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Rhetorik Limited", site: "rhetorik.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Rich Media LLC", site: "richmediallc.com", category: "data_broker", route: "assisted", status: "not_verified"}
+  - {name: "Rich Media LLC", site: "richmediallc.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "RocketReach", site: "rocketreach.co", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Roq.ad", site: "roq.ad", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "ROR Partners", site: "rorpartners.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
@@ -519,29 +531,31 @@ sites:
   - {name: "SBFE, LLC", site: "sbfe.org", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "SciLeads Ltd", site: "scileads.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Search Public Records", site: "searchpublicrecords.com", category: "background_check", route: "email", status: "verified", checked: "2026-11", family: "Civil Data Research, LLC"}
+  - {name: "Searchbug", site: "searchbug.com", category: "people_search", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "SearchPeopleFree", site: "searchpeoplefree.com", category: "people_search", route: "assisted", status: "verified", checked: "2026-11", family: "Mississippi Tornado Alley LLC"}
   - {name: "SearchQuarry", site: "searchquarry.com", category: "people_search", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "SeekOut", site: "seekout.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "SEMANTIQ INC", site: "semantiqhealth.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Semasio GmbH", site: "semasio.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Semasio GmbH", site: "semasio.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Semcasting", site: "semcasting.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
-  - {name: "SenioROI, LLC", site: "senioroi.com", category: "data_broker", route: "assisted", status: "not_verified"}
+  - {name: "SenioROI, LLC", site: "senioroi.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "Sentinex", site: "sentinex.com", category: "background_check", route: "email", status: "verified", checked: "2026-11", family: "InfoPay"}
-  - {name: "SG360", site: "sg360.com", category: "data_broker", route: "assisted", status: "not_verified"}
-  - {name: "Share Local Media", site: "sharelocalmedia.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "SG360", site: "sg360.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
+  - {name: "Share Local Media", site: "sharelocalmedia.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "ShareThis, a division of Predactiv", site: "predactiv.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Sharethrough", site: "sharethrough.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "SheerID", site: "sheerid.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "SignalHire", site: "signalhire.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Similarweb Ltd", site: "similarweb.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Simio Cloud, LLC", site: "simiocloud.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Site Impact", site: "siteimpact.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Skydeo", site: "skydeo.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Slashdot Media", site: "slashdotmedia.com", category: "data_broker", route: "assisted", status: "not_verified"}
   - {name: "SmartBackgroundChecks", site: "smartbackgroundchecks.com", category: "background_check", route: "assisted", status: "verified", checked: "2026-11", family: "Mississippi Tornado Alley LLC"}
-  - {name: "Snovio", site: "snov.io", category: "data_broker", route: "assisted", status: "not_verified"}
+  - {name: "Snovio", site: "snov.io", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "Social Catfish", site: "socialcatfish.com", category: "people_search", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Socialgist", site: "socialgist.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Sojern", site: "sojern.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Sojern", site: "sojern.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Source Path Digital", site: "sourcepathdigital.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Sovrn", site: "sovrn.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "Specialists Marketing Services", site: "sms-inc.com", category: "data_broker", route: "email", status: "not_verified"}
@@ -558,10 +572,10 @@ sites:
   - {name: "StateRecords", site: "staterecords.org", category: "people_search", route: "email", status: "verified", checked: "2026-11", family: "Intermedia Ventures, LLC"}
   - {name: "StatSocial", site: "statsocial.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "Steppingblocks", site: "steppingblocks.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Sterling Data Company LLC", site: "sterling.ai", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Sterling Data Company LLC", site: "sterling.ai", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Stirista, 123Push, LBDigital, Media Source Solutions", site: "stirista.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Subdirect LLC DBA 360 Media Direct", site: "360mediadirect.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Subgraph", site: "subgraph.tech", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Subgraph", site: "subgraph.tech", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Supplier.io", site: "supplier.io", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Swarm Holdings", site: "theswarm.com", category: "data_broker", route: "assisted", status: "not_verified"}
   - {name: "Swoop.com", site: "swoop.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
@@ -581,7 +595,7 @@ sites:
   - {name: "The Data Group", site: "thedatagroup.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "The Org", site: "theorg.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "The People Searchers LLC", site: "peoplesearcher.com", category: "people_search", route: "email", status: "not_verified"}
-  - {name: "Thomson Reuters", site: "thomsonreuters.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Thomson Reuters", site: "thomsonreuters.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "TL1 MKT", site: "tl1mkt.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "TopTop Leads", site: "toptopleads.com", category: "data_broker", route: "assisted", status: "not_verified"}
   - {name: "Traackr", site: "traackr.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
@@ -589,7 +603,7 @@ sites:
   - {name: "TransUnion", site: "transunion.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Trestle Solutions", site: "trestleiq.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "TripleLift", site: "triplelift.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "True Blue Analytics LLC", site: "trueblueanalytics.org", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "True Blue Analytics LLC", site: "trueblueanalytics.org", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "True Opulence Corporation", site: "trueopulence.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "TrueData Solutions", site: "truedata.co", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "TruePeopleSearch", site: "truepeoplesearch.com", category: "people_search", route: "email", status: "verified", checked: "2026-11"}
@@ -604,17 +618,17 @@ sites:
   - {name: "United States Phone Book", site: "unitedstatesphonebook.com", category: "phone_lookup", route: "assisted", status: "not_verified"}
   - {name: "UnMask", site: "unmask.com", category: "people_search", route: "email", status: "not_verified"}
   - {name: "upcell", site: "upcell.io", category: "data_broker", route: "assisted", status: "not_verified"}
-  - {name: "Uplead LLC", site: "uplead.com", category: "data_broker", route: "assisted", status: "not_verified"}
+  - {name: "Uplead LLC", site: "uplead.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "Upwork", site: "upwork.com", category: "data_broker", route: "assisted", status: "not_verified"}
   - {name: "Urban Cyber Security", site: "urban-vpn.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Urban Science", site: "urbanscience.com", category: "data_broker", route: "assisted", status: "not_verified"}
-  - {name: "US Marketing Group", site: "usmarketinggrp.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "US Marketing Group", site: "usmarketinggrp.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "US Search", site: "ussearch.com", category: "people_search", route: "assisted", status: "not_verified", family: "PeopleConnect Suppression Center"}
   - {name: "USA People Search", site: "usa-people-search.com", category: "people_search", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "USADATA", site: "usadata.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "USPeopleSearch.com, LLC", site: "uspeoplesearch.com", category: "people_search", route: "email", status: "not_verified"}
   - {name: "USPhonebook", site: "usphonebook.com", category: "phone_lookup", route: "email", status: "not_verified", family: "Mississippi Tornado Alley LLC"}
-  - {name: "Vector", site: "vector.co", category: "data_broker", route: "assisted", status: "not_verified"}
+  - {name: "Vector", site: "vector.co", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "Veeva Systems", site: "veeva.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "Vendelux", site: "vendelux.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Venntel", site: "venntel.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
@@ -631,7 +645,7 @@ sites:
   - {name: "Visual Visitor L.L.C", site: "visualvisitor.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "VIZIO Services, LLC", site: "vizio.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "VRTCAL Markets", site: "vrtcal.com", category: "data_broker", route: "email", status: "not_verified"}
-  - {name: "Warmly", site: "warmly.ai", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "Warmly", site: "warmly.ai", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "WealthFeed", site: "wealthfeed.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
   - {name: "Webbula, LLC", site: "webbula.com", category: "data_broker", route: "assisted", status: "verified", checked: "2026-11"}
   - {name: "Whitepages", site: "whitepages.com", category: "people_search", route: "email", status: "verified", checked: "2026-11"}
@@ -648,4 +662,4 @@ sites:
   - {name: "ZeroToOne.AI", site: "zerotoone.ai", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "Zeta Global Corp", site: "zetaglobal.com", category: "data_broker", route: "email", status: "not_verified"}
   - {name: "ZoomInfo", site: "zoominfo.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}
-  - {name: "ZS Associates", site: "zs.com", category: "data_broker", route: "email", status: "not_verified"}
+  - {name: "ZS Associates", site: "zs.com", category: "data_broker", route: "email", status: "verified", checked: "2026-11"}

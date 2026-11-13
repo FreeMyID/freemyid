@@ -317,8 +317,8 @@ For Morgan (Copilot lane / not mine):
 
 ## Coverage list and /brokers/ "Sites we cover" (2026-11-12, web lead; branch integrate/coverage-page)
 - Decision (Morgan, 2026-11-12): publish a coverage list, not the registry. `tools/export_coverage.py` writes
-  `brokers/coverage.public.yaml` (allowlist: name, site, category, route, status, checked month, family). First export:
-  642 rows = 638 listed (197 verified, 441 not yet verified) + 4 not available. Details: docs/WEBSITE.md "Coverage list".
+  `brokers/coverage.public.yaml` (allowlist: name, site, category, route, status, checked month, family). Export of 2026-11-13:
+  656 rows = 647 listed (288 verified, 359 not yet verified) + 9 not available. Details: docs/WEBSITE.md "Coverage list".
 - Page: web/src/pages/brokers/index.astro + web/src/lib/coverage.ts. No JS, no form; filters are CSS :has().
   Budget and row counts in check-site.mjs; tests/test_web_coverage_page.py, test_export_coverage.py, test_site_leak_scan.py.
 - site_check: coverage hostnames allowed bare; paths, email domains and every other private host still flagged.
