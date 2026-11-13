@@ -14,6 +14,15 @@ In plain words: you may copy, share and adapt it for non-commercial purposes, as
 
 `state_laws.yaml` in this folder is covered by the same CC BY-NC 4.0 license.
 
+## Coverage list (`coverage.public.yaml`): CC BY-NC 4.0
+
+The public coverage list in this repository (the names of the sites on our list, each site's main
+web address, its category, how Free My ID handles it, whether we have verified it, the month it was
+last checked and the state data broker registries that list it) is licensed under the same
+CC BY-NC 4.0 license as the sample registry. Credit "Free My ID" and link to the license.
+It is written by `tools/export_coverage.py` and contains none of the full registry's removal
+addresses, links, steps or notes.
+
 ## Full registry: not public, all rights reserved
 
 The full maintained broker registry (several hundred brokers, with verification notes, steps and
