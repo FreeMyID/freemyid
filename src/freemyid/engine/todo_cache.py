@@ -6,17 +6,21 @@ The run loop asks "does this site already have an open to-do?" several times per
 calls decrypted every to-do of the person: with 1,000 brokers that was about a million
 decrypts per run (measured 11.5 s of a 15.7 s run).
 
-`TodoCachingStore` wraps the store for ONE run: the first `list_todos(pid, open_only)` reads
-the table once, and every to-do written through the wrapper (`save_todo`, `complete_todo`)
-updates the cached copy in place, so later reads cost a dict copy instead of a full decrypt.
-Everything else is passed straight through to the real store.
+`TodoCachingStore` wraps the store. Only inside `with cache.cached():` (the runner's
+broker loop for one person) the first `list_todos(pid, open_only)` reads the table once,
+and every to-do written through the wrapper (`save_todo`, `complete_todo`) updates the
+cached copy in place, so later reads cost a dict copy instead of a full decrypt. Outside
+that block, and for everything else, calls go straight to the real store.
 
-Writers outside the run (the dashboard completing a to-do while a run is going) are not
-seen until the next run. That is the cautious direction: the runner may keep a site waiting
+Writers outside the loop (the dashboard completing a to-do while a run is going) are not
+seen until the loop ends. That is the cautious direction: the runner may keep a site waiting
 on a to-do that was just done, never send a request the person still has to act on.
+The real fix is a broker filter on `Store.list_todos` (change request, roadmap 0.7).
 """
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -33,6 +37,20 @@ class TodoCachingStore:
         self._store = store
         # (profile_id or None, open_only) -> todo id -> Todo, in created_at order
         self._cache: dict[_Key, dict[str, Todo]] = {}
+        self._depth = 0
+
+    @contextmanager
+    def cached(self) -> Iterator[None]:
+        """Serve list_todos from memory inside this block; start and end with a clean read."""
+        if self._depth == 0:
+            self._cache.clear()
+        self._depth += 1
+        try:
+            yield
+        finally:
+            self._depth -= 1
+            if self._depth == 0:
+                self._cache.clear()
 
     @property
     def wrapped(self) -> Store:
@@ -42,6 +60,8 @@ class TodoCachingStore:
         return getattr(self._store, name)
 
     def list_todos(self, pid: str | None = None, open_only: bool = True) -> list[Todo]:
+        if not self._depth:
+            return self._store.list_todos(pid, open_only=open_only)
         key = (pid, open_only)
         rows = self._cache.get(key)
         if rows is None:

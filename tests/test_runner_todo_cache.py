@@ -32,6 +32,14 @@ def test_cache_reads_once_then_tracks_writes(store, monkeypatch):
                  title="Opt out", created_at=t0)
     store.save_todo(first)
     cache = TodoCachingStore(store)
+    with cache.cached():
+        _cached_flow(cache, store, a, b, first, t0, monkeypatch)
+    # outside the block every read goes to the store again (fresh after outside writes)
+    store.complete_todo(cache.list_todos(a.id)[0].id)
+    _same(cache, store, a.id)
+
+
+def _cached_flow(cache, store, a, b, first, t0, monkeypatch) -> None:
     for pid in (a.id, b.id, None):
         _same(cache, store, pid)
 
