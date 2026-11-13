@@ -941,9 +941,8 @@ def run_session(store: Store, profile_id: str, *, mode: Mode = "background",
         run = fetcher.runs.get(b.id)
         entry = entries.get(b.id)
         if run is None:
-            outcome = Outcome.CACHED if entry is not None and entry.status != \
-                "check_by_hand" else Outcome.NOT_TRIED
-            run = SiteRun(outcome)
+            run = SiteRun(Outcome.CACHED if entry is not None and entry.status !=
+                          "check_by_hand" else Outcome.NOT_TRIED)
         outcome = _settle(store, profile.id, b, run.outcome, mode,
                           entry.reason if entry else None, entry.check_url if entry else None)
         report.outcomes[b.id] = outcome
