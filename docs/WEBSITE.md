@@ -149,31 +149,46 @@ hashed from the downloaded asset and must match the release's SHA256SUMS.txt. 0.
 
 ## Coverage list (`/brokers/`, "Sites we cover")
 
-Orchestrator decision 2026-11-12: publish a coverage list, not the registry.
+Orchestrator decision 2026-11-12: publish a coverage list, not the registry. Rulings of 2026-11-13 are marked (R).
 
-- **Data:** `brokers/coverage.public.yaml`, written by `tools/export_coverage.py` from the private registry
-  (`.venv/bin/python tools/export_coverage.py [path/to/registry.yaml]`, `--check` to compare). Per site, and nothing
-  else: `name`, `site` (main hostname), `category`, `route` (automatic, email, assisted, by_hand), `status` (verified,
-  not_verified, not_available), `checked` (month, never the day), `family`. Rows are built from an allowlist, so a
-  new registry field cannot leak. Never exported: removal links, email addresses, steps, selectors, required
-  fields, notes, source links. Route rules follow `src/freemyid/engine/tiers.py` for the default permissions
-  (a test compares the two on the public sample). Broken or switched-off entries are listed as `not_available`
-  and counted apart: `counts.listed = verified + not_verified`.
-- **Refresh:** whoever has the private registry reruns the exporter, reads the diff (names only; stop if a name looks
-  like a person, an address or a link) and commits the file. The page's "new ones every week" line depends on this.
+- **Data:** `brokers/coverage.public.yaml` (format 2, CC BY-NC 4.0, see `brokers/LICENSE-DATA.md`), written by
+  `tools/export_coverage.py` from the private registry. Per site, and nothing else: `name`, `site` (main hostname),
+  `category`, `route` (automatic, email, assisted, by_hand), `status` (verified, not_verified), `checked` (month,
+  never the day), `registered` (state data broker registries that list it: `CA`, `VT`), `family` (the `covered_by`
+  parent). Rows are built from an allowlist, so a new registry field cannot leak. Never exported: removal links,
+  email addresses, steps, selectors, required fields, notes, source links, `parent_company` (R: the registry does
+  not record whether an owner name came from a filing, so no "Owned by" line). Route rules follow
+  `src/freemyid/engine/tiers.py` for the default permissions (a test compares the two on the public sample).
+- **Not named (R):** broken or switched-off entries are left out of the rows and only counted
+  (`counts.not_available`). The page shows one line: "N sites we listed earlier have no way to remove yourself
+  right now; we are watching them."
+- **Refused entries:** a name shorter than 3 characters, one that starts with "formerly", one with an underscore
+  (an id), one that looks like contact data; a site that is a removal address or sits on a subdomain that nobody
+  confirmed as the main site (`MAIN_SITE_SUBDOMAINS` in the exporter). The default stops and lists every refused
+  entry; `--hold-back` leaves them out and prints them.
+- **Refresh:** `.venv/bin/python tools/export_coverage.py [path/to/registry.yaml] --hold-back`, send the held-back
+  list to broker-researcher, read the diff (names only; stop if a name looks like a person, an address or a link)
+  and commit the file. `--check` (with the same flags) compares without writing.
 - **Page:** `web/src/pages/brokers/index.astro` + `web/src/lib/coverage.ts` (v3 only; `pages.yaml` id `brokers`).
   The reader refuses the private registry (path guard, as `site.ts` does for the sample) and any file with a field
   off the allowlist, and recounts the rows, so the headline numbers are always the rows on the page.
 - **Honest numbers:** "Sites on the list" (listed) and "Verified by us" sit side by side, with one sentence on what
-  verified means. A callout says how many of the sites the free download includes today (the ones with a free
-  guide, i.e. the public sample). No "we remove you from all of them": each row says how the site is handled.
-- **No JavaScript, no form.** Group filter (radio buttons) and "verified only" (checkbox) are read by CSS `:has()`;
-  without `:has()` the controls are hidden and the grouped list is still complete. Every row is in the page, so the
-  browser's Find works for names (the page says how). Long groups get A to Z jump links.
-- **Budget at 1,000 rows** (lab, 2026-11-12, synthetic list): a row is three elements with no classes, about 25
-  gzip bytes each with real names. HTML + CSS about 40 KiB gzip (budget 50, enforced by `check-site.mjs` and
-  `tests/test_web_coverage_page.py`), 3 requests, no images. Phone profile (CPU 4x slower, slow 4G): LCP 0.6 s,
-  CLS 0, filter change 30 to 70 ms. Page styles are a separate small stylesheet loaded by this page only.
+  verified means and "Last checked <Month YYYY>" from the list's `updated` month. No "how often" claim (R). A
+  callout says how many of the sites the free download includes today (the ones with a free guide, i.e. the public
+  sample). No "we remove you from all of them": each row says how the site is handled.
+- **Groups:** by category. Data brokers that are on a state registry form their own group, "Registered data
+  brokers", with the sentence "These companies are on a state's official data broker registry. Being listed does
+  not mean they did anything wrong; it means the law lets you ask them to delete your data." (R). The other data
+  brokers keep "Marketing data companies", the guides index label. Every row with a registry flag, in any group,
+  says "Registered as a data broker in California".
+- **No JavaScript, no form, no search box (R).** Group filter (radio buttons) and "verified only" (checkbox) are read
+  by CSS `:has()`; without `:has()` the controls are hidden and the grouped list is still complete. Every row is in
+  the page, so the browser's Find works for names (the page says how). Long groups get A to Z jump links. A new
+  group needs its `:has()` rule in the page's stylesheet (the page test clicks every group filter).
+- **Budget at 1,000 rows** (lab, 2026-11-13, synthetic list): a row is three elements with no classes. HTML + CSS
+  34 KiB gzip at 784 real rows; about 40 KiB at 1,000 (budget 50, enforced by `check-site.mjs` and
+  `tests/test_web_coverage_page.py`), 3 requests, no images. Phone profile (CPU 4x slower, slow 4G): LCP under 1 s,
+  CLS 0, a filter change under 200 ms. Page styles are a separate small stylesheet loaded by this page only.
 - **Leak scan:** hostnames in the coverage list may appear on the site, bare only. Any other private hostname, a
   coverage hostname followed by a path or used as an email domain, and any private removal link or address are
   still errors. The scan needs the private inputs; from a worktree:
