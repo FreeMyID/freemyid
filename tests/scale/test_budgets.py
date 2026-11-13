@@ -199,3 +199,21 @@ def test_today_page_and_cli_json_budget(store, tmp_path):
     assert res is not None and res.exit_code == 0
     assert len(json.loads(res.stdout)["profiles"][0]["brokers"]) == N
     assert t < 3.0, f"status --json took {t:.2f}s at {N} brokers"
+
+
+@pytest.mark.xfail(strict=True, reason=(
+    "FINDING (roadmap 0.7): engine/exposure.py _scan_events reads only the newest 5,000 "
+    "events (Store.events has no action filter), so a person's last exposure scan "
+    "disappears from the dashboard once later events pass 5,000. One first run at 2,000 "
+    "brokers writes 7,368. Needs CHANGE REQUEST Store.events(action=...)."))
+def test_latest_exposure_survives_a_big_run(store):
+    from freemyid.models import Actor, Event
+    reg = registry_gen.registry(N)
+    prof = make_profile()
+    store.save_profile(prof)
+    exposure.scan_exposure(store, prof.id, registry=reg, offline=True)
+    assert exposure.latest_exposure(store, prof, reg) is not None
+    for i in range(5001):     # what one first run at 2,000 brokers writes (ids/enums only)
+        store.log(Event(profile_id=prof.id, broker_id=f"fakee{i % 2000:05d}",
+                        actor=Actor.ENGINE, action="presumed_listed"))
+    assert exposure.latest_exposure(store, prof, reg) is not None
