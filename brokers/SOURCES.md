@@ -184,3 +184,11 @@ Method: plain `curl` fetch (generic User-Agent, 1 request per second, no retries
 | SmartBackgroundChecks, USA People Search, Archives.com, Social Catfish, Pipl, CheckPeople, SearchQuarry opt-out pages | see each entry's `source_urls` | 2026-11-12 | Upgraded from unverified |
 | Radaris and PeekYou notices | https://radaris.com/control/privacy , https://www.peekyou.com/contact/ | 2026-11-12 | Both domains show a court-ordered transfer to Atlas Data Privacy Corporation; entries marked broken and disabled |
 | 35 marketing / data-broker privacy pages | see each entry's `source_urls` | 2026-11-12 | Email routes (generated CA-registry entries replaced by curated, page-checked entries) |
+
+Batch 2-3 additions (2026-11-12):
+
+| Source | URL | Accessed | Used for |
+|---|---|---|---|
+| Privacy Shield opt-out manual 2026 (third party, leads only) | https://github.com/thumpersecure/opt-out-manual-2026 (docs/data.js) | 2026-11-12 | Opt-out page leads for Sync.me, TennHelp, Wyty, Glad I Know, Locate Family, National Cellular Directory, AddressSearch, Absolute People Search; each page was fetched and checked before an entry was written |
+| Broker privacy pages and request forms (OneTrust, datasubject.com, own forms) | see each entry's `source_urls` | 2026-11-12 | 22 form-route entries and 21 more email-route entries (generated CA entries replaced by page-checked ones) |
+| Court-transfer notices (Atlas Data Privacy Corporation) | pub360.com, revealname.com, telephonedirectories.us, veriforia.com, dataveria.com, newenglandfacts.com, golookup.com, centeda.com, corporationwiki.com (each /control/privacy or equivalent), grey-pages.com (seized notice) | 2026-11-12 | Not added to the registry; listed in the wave report as dead domains |
