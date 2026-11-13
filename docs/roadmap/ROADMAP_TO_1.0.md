@@ -27,7 +27,7 @@ Tray icon code exists (`wizard/tray.py`) but is off by default and needs the opt
 
 ## 2. What "1.0" means
 
-1.0 is the first release we would hand to a stranger's grandmother without a family member standing by. All nine bars must be met.
+1.0 is the first release we would hand to a stranger's grandmother without a family member standing by. All ten bars must be met.
 
 | # | Bar | Test |
 |---|---|---|
@@ -40,6 +40,7 @@ Tray icon code exists (`wizard/tray.py`) but is off by default and needs the opt
 | 7 | **Docs and support.** User guide per OS, help centre on the site, Spanish UI and guide, CLI and config reference. Support mail answered within two business days for paid users by an automated process (no staff, see bar 9); only what automation cannot answer reaches the owner. | Help centre covers the 15 most common problems; support process written down. |
 | 9 | **Hands-off, no staff (paid 1.0 goal, owner 2026-11-11).** After setup, a paid user never has to act: the app finds listings, sends removals end to end, follows up, re-checks on a schedule, catches re-listings, tracks every legal deadline and keeps proof, on its own. There are no human operators behind the product: no support desk, no removal agents. Everything a competitor does with staff, we engineer (section 7a). Shared rule 5 still stands: we route around human checks, we never break them. | Owner stage-2 test plus beta: median **0** person actions per person per quarter after setup; worst case at most **1 batched click per quarter**; every remaining human-only step listed by broker on the transparency page with the plan to remove it. No support ticket that a self-repair or automated answer could have closed. |
 | 8 | **Stable contracts.** CLI verbs, exit codes, `--json` documents, the config schema and the registry schema are versioned and frozen. From 1.0 we follow semantic versioning. | Contract tests; a written deprecation policy. |
+| 10 | **Coverage worth paying for (owner 2026-11-12).** The paid feed lists 800+ brokers, at least 500 of them with a verified route (an opt-out page or mailbox checked live within its recheck interval), including every major people-search site. The site and the app publish both numbers, listed and verified, and never count an unverified entry as covered. | `freemyid registry validate` counts on the release feed; registry health report (online) with no stale verified entry; coverage page numbers match the feed |
 
 **Not in 1.0** (recommended, see decision D8): Business/Partner edition (white-label build, MSI, partner portal), the community plugin API, mobile apps, languages beyond Spanish. They follow in 1.x.
 
@@ -53,7 +54,7 @@ Tray icon code exists (`wizard/tray.py`) but is off by default and needs the opt
 | **0.4** | For the family (Pat's journey) | Set it up for someone else; large text and read-aloud; printable "what we did for you"; smart re-check; delivery reliability | In-house screens; Codex and Grok epics E1 to E12 |
 | **0.5** | Every desktop | macOS app and Linux packages; update notice; Windows signing; package channels published; proof vault; Outlook sign-in | In-house (Dana, Nina); Grok mail; Codex tests |
 | **0.6** | Together | Helper relay (end-to-end encrypted, PII-free by default); shared family to-do; Spanish UI; community broker reports | In-house protocol and screens; vendors for tests, client plumbing, docs |
-| **0.7** | Fresh feed | Signed registry feed; offline licence tokens (no payments yet); registry at 400+ scale; wider Automatic tier; broker monitoring automated | In-house contracts and security core; Codex finding side; Priya registry |
+| **0.7** | Fresh feed | Signed registry feed; offline licence tokens (no payments yet); registry at 800+ listed brokers, with the verified count published beside it; wider Automatic tier; broker monitoring automated | In-house contracts and security core; Codex finding side; Priya registry |
 | **0.8** | Plus and Family | Payments through a merchant of record; buy and activate without an account; pricing and legal pages; support process | In-house; Jordan and web crew; owner for legal |
 | **0.9** | Hardening | Independent security audit and fixes; accessibility audit; fuzzing; upgrade matrix; contract freeze; transparency page; 1.0 release candidates | Everyone; outside auditor |
 | **1.0** | Sustainable | Signed installers on three desktops; audit report published; contracts frozen | Everyone |
@@ -130,7 +131,7 @@ Detail in `DESKTOP.md`.
 ### 0.7: fresh feed
 - **Signed registry feed:** versioned, ed25519-signed, served from a CDN; the app pins the root key; rollback, replay and oversize files are refused. Key handling written down: offline root key, online signing key, rotation, revocation.
 - **Licence tokens, no payments yet:** a signed token with plan, expiry and a random id; no name, email or device data. Verified offline. Test keys for family. A plan setting gates the Free and Plus lines from `docs/ROADMAP.md` section 2.
-- **Registry at scale:** the full registry loads, scans and re-checks inside time budgets; the broker monitor runs weekly and flags changed pages automatically; new brokers are found by cross-checking the state registries (CA, VT, OR, TX).
+- **Registry at scale (target raised 2026-11-12: a competitor lists 800+):** 800+ listed brokers by 0.7, with at least 300 verified routes and every people-search site a person is likely to find themselves on verified; 1.0 publishes both numbers (listed, verified) and never counts an unverified entry as covered. Sources: the state registries via `tools/import_registries.py` (CA scripted; VT, TX, OR from saved exports) plus curated people-search research. The full registry loads, scans and re-checks inside time budgets; the broker monitor runs weekly and flags changed pages automatically; new brokers are found by cross-checking the state registries (CA, VT, OR, TX).
 - **Wider Automatic tier:** verified form steps for the most common people-search sites, each with a success signal. Needs real-browser inspection of opt-out pages with the owner's OK.
 - **Opt-in crash reports** that are scrubbed on the device and shown to the user before sending (only if D15 is yes).
 - **Built by:** in-house: feed and licence contracts, signature checks, plan gating screens (Morgan, Theo, Nina, Marcus). Priya: registry growth and verification. Codex: finding-side scale and monitor tests. Grok: feed download and retry in the delivery lane. Dana: CDN, signing job, key ceremony runbook.
@@ -230,7 +231,7 @@ Detail in `LEVERAGE.md` and `../EVIDENCE_ENGINE.md`. Lawful and honest only: no 
 
 | Track | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 to 1.0 | Lead |
 |---|---|---|---|---|---|---|---|
-| **Broker registry coverage** | Keep the sample and full registry verified; checklists | Guides for the most-searched sites | Community reports queue | 400+ at scale, state-registry cross-check, weekly monitor flags | Daily feed for Plus | Coverage numbers published with their limits | Priya, Theo |
+| **Broker registry coverage** | Keep the sample and full registry verified; checklists | Guides for the most-searched sites | Community reports queue | 800+ listed (300+ verified), state-registry import and cross-check, weekly monitor flags | Daily feed for Plus | Coverage numbers published with their limits | Priya, Theo |
 | **Engine reliability** | E4, E6, E8 | Same behaviour on three OSes | Relay transport retries | Feed download, wider Automatic tier | Licence edge cases | Fuzzing, soak | Theo, Codex, Grok |
 | **Security and privacy** | E7 privacy proofs; bundle format review | Installer and update-notice review | Relay threat model | Feed and key ceremony review; audit booked | Payment separation review | Independent audit, report published | Marcus |
 | **i18n** | Inventories, glossary (E10); catalogue mechanism chosen | Catalogue wired, English only | Spanish UI and guide | Spanish for feed and licence screens | Spanish pricing and legal pages | Freeze | Codex, Nina |

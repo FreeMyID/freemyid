@@ -53,7 +53,7 @@ A program that runs on your own computer and takes your name, address, phone and
 | Price (decided 2026-11-07, see docs/marketing/competitor-pricing.md) | $0 | $4.99/mo or $39/yr | $69/yr | included in Plus (same licence) | quoted per seat / per member |
 | App, wizard, dashboard, CLI | yes | yes | yes | yes | yes, white-label option |
 | Email + assisted removals | yes | yes | yes | yes | yes |
-| Brokers | core set (~60 biggest, updated monthly) | full feed (400+), updated daily | full | full | full |
+| Brokers | core set (~60 biggest, updated monthly) | full feed (800+ listed, verified count shown), updated daily | full | full | full |
 | Automatic browser removals | top ~10 | all verified | all verified | all verified | all verified |
 | Re-checks | every 90 days | every 7-30 days, smart | same | configurable | policy-set |
 | Proof vault + PDF report | basic | full + legal letters | full | full | full + aggregate (PII-free) admin view |
