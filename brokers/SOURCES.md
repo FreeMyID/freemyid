@@ -192,3 +192,11 @@ Batch 2-3 additions (2026-11-12):
 | Privacy Shield opt-out manual 2026 (third party, leads only) | https://github.com/thumpersecure/opt-out-manual-2026 (docs/data.js) | 2026-11-12 | Opt-out page leads for Sync.me, TennHelp, Wyty, Glad I Know, Locate Family, National Cellular Directory, AddressSearch, Absolute People Search; each page was fetched and checked before an entry was written |
 | Broker privacy pages and request forms (OneTrust, datasubject.com, own forms) | see each entry's `source_urls` | 2026-11-12 | 22 form-route entries and 21 more email-route entries (generated CA entries replaced by page-checked ones) |
 | Court-transfer notices (Atlas Data Privacy Corporation) | pub360.com, revealname.com, telephonedirectories.us, veriforia.com, dataveria.com, newenglandfacts.com, golookup.com, centeda.com, corporationwiki.com (each /control/privacy or equivalent), grey-pages.com (seized notice) | 2026-11-12 | Not added to the registry; listed in the wave report as dead domains |
+
+Batch 4-5 additions (2026-11-12):
+
+| Source | URL | Accessed | Used for |
+|---|---|---|---|
+| Opt-out manual 2026, data-broker list (domains only, third party) | https://github.com/thumpersecure/opt-out-manual-2026 (docs/data.js, dataBrokerSites) | 2026-11-12 | 17 marketing/B2B broker domains; each site's own privacy pages were found from its home page and fetched |
+| Broker privacy pages and do-not-sell forms for 47 CA-registry brokers | see each entry's `source_urls` | 2026-11-12 | Generated email entries replaced by curated, page-checked entries (email or form route) |
+| DeepSync privacy portal | https://privacy.deepsync.com/request/data | 2026-11-12 | DeepSync, CompactLists, Accudata |
