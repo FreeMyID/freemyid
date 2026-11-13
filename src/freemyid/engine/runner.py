@@ -25,7 +25,7 @@ import logging
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from .. import config as cfgmod
 from ..consent import consent_ok
@@ -33,6 +33,7 @@ from ..interfaces import RunContext
 from ..models import (
     Actor,
     Broker,
+    EmailMode,
     Event,
     EvidenceKind,
     Listing,
@@ -63,11 +64,13 @@ from ..state import (
 )
 from ..submitters import assisted
 from ..submitters import base as sbase
-from ..submitters.email import NOT_SENT
+from ..submitters.email import NOT_SENT, PACED
 from . import handoff as hmod
 from . import matcher, plugins, tiers
 from .mail import DATE_SLACK, ReplyScan
-from .outbox import OutboxError, dev_fixture_base
+from .outbox import OutboxError, SendPaced, dev_fixture_base
+from .pacing import RETRY_AFTER, SendPacer, daily_cap
+from .todo_cache import TodoCachingStore
 
 if TYPE_CHECKING:
     from ..storage import Store
@@ -144,6 +147,9 @@ NO_SEARCH_LINE = "No site could be searched automatically; requests will still b
 MAILBOX_HINT_MIN = 10
 MAILBOX_LINE = ("Add a removal mailbox: then Free My ID can send the {n} letters for you, "
                 "instead of you sending each one yourself.")
+#: roadmap 0.7: requests held back by the daily send budget (engine/pacing.py)
+PACED_LINE = ("{n} more email request(s) will go out on the next days. Free My ID sends at "
+              "most {cap} a day, so your removal mailbox stays in good standing.")
 #: WO-609: up to this many open items the end-of-run notice keeps its friendly line
 SMALL_NOTICE_MAX = 10
 
@@ -183,6 +189,10 @@ class RunReport:
     #: WO-609: open "send it yourself" letters for people with no removal mailbox (set at
     #: the end of the run); above MAILBOX_HINT_MIN the summary leads with MAILBOX_LINE
     letters_need_mailbox: int = 0
+    #: roadmap 0.7: email requests held back by the removal mailbox's daily send budget
+    #: (engine/pacing.py); they go out at later runs. Not "need you": nothing to do.
+    paced_emails: int = 0
+    daily_send_cap: int = 0
 
     def _profile_parts(self, pid: str, counts: dict[ListingState, int]) -> list[str]:
         presumed = min(self.presumed.get(pid, 0), counts.get(S.FOUND, 0))
@@ -223,6 +233,8 @@ class RunReport:
             out.append(f"{self.drafted_emails} email(s) drafted (dry run, not sent).")
         if self.drafted_letters:
             out.append(f"{self.drafted_letters} letter(s) written for you to send yourself.")
+        if self.paced_emails:
+            out.append(PACED_LINE.format(n=self.paced_emails, cap=self.daily_send_cap))
         if self.open_todos:
             out.append(f"{self.open_todos} thing(s) need you. Open the dashboard to see them.")
         if self.errors:
@@ -365,7 +377,10 @@ class Runner:
                  browser: BrowserManager | None = None,
                  state_laws: dict[str, StateLaw] | None = None, now: datetime | None = None,
                  cfg: cfgmod.Config | None = None, practice_notices: bool = False) -> None:
-        self.store, self.registry = store, registry
+        # roadmap 0.7: list_todos is served from memory for the run (engine/todo_cache.py)
+        self.store: Store = cast("Store", TodoCachingStore(store))
+        self.registry = registry
+        self._policy: Any = None      # one NetPolicy per run, built on first use
         #: WO-609: label every notice "Practice run: ..." (run() sets it for dry runs)
         self.practice_notices = practice_notices
         if practice_notices and notifier is not None:
@@ -390,6 +405,10 @@ class Runner:
         self.report = RunReport(dry_run=self.dry_run)
         # (profile_id, target_id) -> outcome this run: sent | queued | draft | human
         self._target_outcome: dict[tuple[str, str], str] = {}
+        # roadmap 0.7: daily send budget per removal mailbox (engine/pacing.py)
+        self.pacer = SendPacer(self.store, self.now)
+        self._paced_sites: set[tuple[str, str]] = set()
+        self._real_mailers: dict[str, Any] = {}
 
     # ------------------------------------------------------------------ services
     @staticmethod
@@ -408,8 +427,13 @@ class Runner:
         if self.dry_run or self.fixture_base or profile.mailbox is None:
             self._mailer = FakeMailer(inbox=self._fixture_inbox())
             return self._mailer
-        from ..netpolicy import NetPolicy
-        return SmtpImapMailer(NetPolicy(self.registry, [profile]))
+        # one mailer per person per run: building one walks every broker's domains
+        mailer = self._real_mailers.get(profile.id)
+        if mailer is None:
+            from ..netpolicy import NetPolicy
+            mailer = SmtpImapMailer(NetPolicy(self.registry, [profile]))
+            self._real_mailers[profile.id] = mailer
+        return mailer
 
     def _fixture_inbox(self) -> dict[str, list[bytes]]:
         if not self.fixture_base:
@@ -427,10 +451,8 @@ class Runner:
             return None
         bm = None
         try:
-            from ..netpolicy import NetPolicy
             from .browser import BrowserManager
-            pol = NetPolicy(self.registry)
-            bm = BrowserManager(pol, headless=True if not self.interactive else None,
+            bm = BrowserManager(self.netpolicy(), headless=True if not self.interactive else None,
                                 cfg=self.cfg, fixture_base=self.fixture_base)
             await bm.start()
             self._browser = bm
@@ -503,9 +525,25 @@ class Runner:
     async def run_profile(self, profile: Profile) -> None:
         counts: Counter[ListingState] = Counter()
         tcounts: Counter[Tier] = Counter()
-        presumed = 0
         if not self.scan_only:
             self._drop_first(profile)
+        with cast(TodoCachingStore, self.store).cached():
+            presumed = await self._loop(profile, counts, tcounts)
+        self.report.per_profile[profile.id] = dict(counts)
+        self.report.tiers[profile.id] = dict(tcounts)
+        self.report.presumed[profile.id] = presumed
+        self._drain(profile)
+        paced = self.pacer.paced.get(profile.id, 0)
+        if paced:
+            self.report.paced_emails += paced
+            self.report.daily_send_cap = max(self.report.daily_send_cap, daily_cap(profile))
+            self._event(profile, None, "emails_paced", count=paced, cap=daily_cap(profile))
+
+    async def _loop(self, profile: Profile, counts: Counter[ListingState],
+                    tcounts: Counter[Tier]) -> int:
+        """Every enabled broker for one person, highest priority first. Returns how many
+        FOUND sites were never searched (WO-602)."""
+        presumed = 0
         for broker in self.brokers():
             if broker.id == assisted.DROP_BROKER_ID:
                 # handled by the GOVERNMENT_PORTAL to-do (CA only); record the tier only
@@ -529,9 +567,24 @@ class Runner:
                 tcounts[st.tier] += 1
             if st.state == S.NEEDS_HUMAN:
                 self.report.needs_human += 1
-        self.report.per_profile[profile.id] = dict(counts)
-        self.report.tiers[profile.id] = dict(tcounts)
-        self.report.presumed[profile.id] = presumed
+        return presumed
+
+    def _drain(self, profile: Profile) -> None:
+        """Roadmap 0.7: send AUTO emails that are already allowed (first email approved) but
+        were held back by an earlier run's send budget, within today's budget. Their sites
+        may not be due for a check for days, so they are not reached by the loop above."""
+        if self.dry_run or self.scan_only or profile.mailbox is None:
+            return
+        if profile.email_mode != EmailMode.AUTO:
+            return
+        from .outbox import drain
+        try:
+            got = drain(self.store, profile, self.mailer_for(profile), registry=self.registry,
+                        now=self.now, pacer=self.pacer)
+        except Exception as e:  # noqa: BLE001 - never fail the run on the catch-up pass
+            log.warning("queued email pass failed: %s", type(e).__name__)
+            return
+        self.report.submitted += got.get("sent", 0)
 
     def _mark_error(self, profile: Profile, broker: Broker, err: str) -> Any:
         try:
@@ -615,9 +668,11 @@ class Runner:
         if not self.scan_only:
             st = await self._escalate(profile, broker, target, st, tier, scanned)
 
-        # 7. next check
-        st = st.model_copy(update={"next_check_at": next_check_at(
-            broker, st.state, self.now, weekly=profile.schedule.weekly_recheck)})
+        # 7. next check (a site held back by email pacing is tried again at the next run)
+        due = next_check_at(broker, st.state, self.now, weekly=profile.schedule.weekly_recheck)
+        if (profile.id, broker.id) in self._paced_sites:
+            due = min(due, self.now + RETRY_AFTER)
+        st = st.model_copy(update={"next_check_at": due})
         self.store.save_status(st)
         return st
 
@@ -644,14 +699,22 @@ class Runner:
         new = self._set(profile, st, S.FOUND, "manual_letter_superseded")
         return new.model_copy(update={"needs_human_reason": None})
 
+    def netpolicy(self) -> Any:
+        """The run's NetPolicy. Built once: construction walks every broker's domains and
+        reads the config file, which per broker made run planning O(n^2) (roadmap 0.7)."""
+        if self._policy is None:
+            from ..netpolicy import NetPolicy
+            self._policy = NetPolicy(self.registry)
+        return self._policy
+
     def _ctx(self, profile: Profile, broker: Broker, **scratch: Any) -> RunContext:
-        from ..netpolicy import NetPolicy
         return RunContext(profile=profile, broker=broker, store=self.store,
-                          netpolicy=NetPolicy(self.registry), handoff=self._handoff(profile),
+                          netpolicy=self.netpolicy(), handoff=self._handoff(profile),
                           notifier=NullNotifier(), mailer=self.mailer_for(profile),
                           dry_run=self.dry_run, interactive=self.interactive,
                           state_law=self._law(profile), now=self.now,
-                          scratch={"search_variants": search_variants(self.cfg), **scratch})
+                          scratch={"search_variants": search_variants(self.cfg),
+                                   "pacer": self.pacer, **scratch})
 
     def _set(self, profile: Profile, st: Any, dst: S, action: str, **detail: Any) -> Any:
         if st.state == dst:
@@ -829,6 +892,10 @@ class Runner:
             elif req.dry_run:
                 self.report.drafted_emails += 1
             self._target_outcome[key] = "draft" if req.dry_run else "queued"
+            return st
+        if out.message == PACED:
+            self._paced_sites.add((profile.id, broker.id))
+            self._event(profile, broker.id, PACED)
             return st
         if out.new_state == S.NEEDS_HUMAN:
             self._target_outcome[key] = "human"
@@ -1017,6 +1084,8 @@ class Runner:
                                            kind=RequestKind.RESUBMIT, again=True)
                 for t in out.todos:
                     hmod.persist_todo(self.store, t)
+                if out.message == PACED:
+                    raise SendPaced(PACED)
                 if out.request is None and out.message.startswith(NOT_SENT):
                     # WO-348: the email submitter reports a failed send instead of raising
                     done = f"failed:{out.message[:40]}"
@@ -1031,6 +1100,12 @@ class Runner:
                 done = self._letter(profile, broker, listings, law, kind, original)
             elif dec.action == Escalation.COMPLAINT:
                 hmod.persist_todo(self.store, self._complaint_todo(profile, broker, law))
+        except SendPaced:
+            # today's send budget is used up: same rung at the next run, never skipped
+            self._paced_sites.add((profile.id, broker.id))
+            self._event(profile, broker.id, "escalation_waiting", rung=dec.action.value,
+                        why="send_pacing")
+            return st
         except OutboxError as e:
             done = f"failed:{str(e)[:40]}"
         if done.startswith("failed:"):
@@ -1127,7 +1202,7 @@ class Runner:
             return "manual_todo"
         req = queue_email(self.store, profile, broker, listings, kind=kind, state_law=law,
                           dry_run=False, mailer=self.mailer_for(profile), original=original,
-                          now=self.now)
+                          now=self.now, pacer=self.pacer)
         if req.status == RequestStatus.QUEUED_FOR_APPROVAL:
             self.report.queued_emails += 1
         return req.status.value
