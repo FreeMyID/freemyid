@@ -156,7 +156,9 @@ async def test_route_handler_with_fake_requests():
     assert r.did == "continue"
 
 
-def test_escape_detector_captcha_frames():
+def test_escape_detector_captcha_frames(monkeypatch):
+    import urllib.request
+    monkeypatch.setattr(urllib.request, "getproxies", dict)   # no system proxy here
     bm = _bm()
     hosts = bm.allowed_hosts(["devfill.example"])
     iframe_hop = _Req(TURNSTILE, nav=True, frame=SUB, redirected_from=object())

@@ -64,6 +64,49 @@ def _setup(store: Any, broker: Broker) -> Any:
     return p
 
 
+@pytest.fixture(autouse=True)
+def _no_system_proxy(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Pin "no system proxy" (the proxy branch has its own tests below)."""
+    import urllib.request
+    monkeypatch.setattr(urllib.request, "getproxies", dict)
+
+
+@pytest.mark.parametrize("proxies", [
+    {"https": "http://proxy.corp.example:8080"},
+    {"http": "http://proxy.corp.example:8080", "no": "localhost"},
+])
+def test_with_a_system_proxy_every_offlist_hop_is_an_escape(
+        monkeypatch: pytest.MonkeyPatch, proxies: dict[str, str]) -> None:
+    """The proxy resolves names, so the resolver floor stops nothing (review MEDIUM)."""
+    import urllib.request
+    monkeypatch.setattr(urllib.request, "getproxies", lambda: proxies)
+    bm = BrowserManager(NetPolicy(_registry(_broker("v", "labels"))), headless=True)
+    hosts = bm.allowed_hosts(["devfill.example"])
+    assert not bm.floor_stops("https://tracker.example/px.gif")
+    for frame, nav in ((MAIN, False), (SUB, True)):
+        req = _Req("https://tracker.example/px.gif", frame=frame, nav=nav, hop=True)
+        assert bm.request_verdict(req, hosts) == "escape"
+    ok = _Req("https://www.devfill.example/form", frame=MAIN, nav=True, hop=True)
+    assert bm.request_verdict(ok, hosts) == "ok"
+
+
+def test_without_a_proxy_the_floor_stops_unlisted_names() -> None:
+    bm = BrowserManager(NetPolicy(_registry(_broker("v", "labels"))), headless=True)
+    assert bm.floor_stops("https://tracker.example/px.gif")
+    assert not bm.floor_stops("https://198.51.100.7/px.gif")
+
+
+def test_unreadable_proxy_settings_count_as_a_proxy(monkeypatch: pytest.MonkeyPatch) -> None:
+    import urllib.request
+
+    def boom() -> dict[str, str]:
+        raise OSError("registry unreadable")
+
+    monkeypatch.setattr(urllib.request, "getproxies", boom)
+    bm = BrowserManager(NetPolicy(_registry(_broker("v", "labels"))), headless=True)
+    assert not bm.floor_stops("https://tracker.example/px.gif")
+
+
 def _assert_card(store: Any, pid: str, res: Any, reason: str) -> None:
     todos = [t for t in store.list_todos(pid) if t.kind == TodoKind.ASSISTED_OPT_OUT]
     assert len(todos) == 1 and todos[0].id == res.todo_id       # the card is kept

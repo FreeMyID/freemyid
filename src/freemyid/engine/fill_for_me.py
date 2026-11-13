@@ -512,13 +512,16 @@ def _record_success(store: Store, profile: Profile, broker: Broker, listing: Lis
 # (never extended) is not a hand-off (EVIDENCE_ENGINE.md section 5, SEC-EE-5).
 _TURNSTILE_GRACE_S = 10.0
 _TURNSTILE_ATTR = "data-freemyid-turnstile"
+# Only a real message from another window (the widget frame) on the widget's origin counts:
+# a page script cannot forge a failure with dispatchEvent (isTrusted) or a self-post.
+_TURNSTILE_ORIGIN = "https://challenges.cloudflare.com"
 _TURNSTILE_WATCH_JS = f"""
-() => {{
+(origin) => {{
   const k = Symbol.for('freemyid.turnstile');
   if (window[k]) return true;
   window[k] = true;
   window.addEventListener('message', (e) => {{
-    if (e.origin !== 'https://challenges.cloudflare.com') return;
+    if (!e.isTrusted || e.source === window || e.origin !== origin) return;
     let d = e.data;
     if (typeof d === 'string') {{ try {{ d = JSON.parse(d); }} catch (_) {{ return; }} }}
     if (!d || typeof d !== 'object' || d.source !== 'cloudflare-challenge') return;
@@ -834,7 +837,7 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
                 if await _eval_t(page, _NEEDS_BANNER_JS):
                     await _eval_t(page, banner)   # page reloaded (e.g. a validation error)
                 # WO-635: listen (again, after a reload) for the widget's own result.
-                await _eval_t(page, _TURNSTILE_WATCH_JS)
+                await _eval_t(page, _TURNSTILE_WATCH_JS, _TURNSTILE_ORIGIN)
                 ts = await _eval_t(page, _TURNSTILE_STATE_JS)
                 if ts == "failed":
                     ts_failed_at = ts_failed_at if ts_failed_at is not None else loop.time()

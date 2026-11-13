@@ -1,27 +1,34 @@
 <!doctype html><html><head><title>Dev Fill: are you human</title></head><body>
 <!-- DEV FIXTURE (WO-635): an opt-out form with a stand-in for a Cloudflare Turnstile widget.
      There is no real widget (fixture mode never loads CAPTCHA hosts). The buttons below play
-     the person clicking it: they post the widget's own result events the way the widget
-     frame does (source "cloudflare-challenge", origin https://challenges.cloudflare.com).
-     Nothing here solves or skips anything. Fake site. -->
+     the person clicking it: each loads a real child frame that posts the widget's result
+     message to this page, the way the widget frame does. "forge" fires a synthetic event
+     from this page's own script, which must be ignored. Nothing here solves or skips
+     anything. Fake site. -->
 <h1>Opt out</h1>
 <form action="/done" method="post">
   <label for="nm">Your name</label> <input id="nm" name="name"><br>
   <div class="cf-turnstile" data-sitekey="1x00000000000000000000AA"></div>
   <button type="submit">Submit</button>
 </form>
+<iframe id="widget" title="widget" width="300" height="70"></iframe>
 <button type="button" id="ts-fail">widget: fail</button>
 <button type="button" id="ts-ok">widget: complete</button>
 <button type="button" id="ts-wrong-origin">other frame: fail</button>
+<button type="button" id="ts-forge">page script: forged fail</button>
 <script>
-function post(event, origin) {
+const W = 'https://widget.devfill.example/turnstile?event=';
+const frame = document.getElementById('widget');
+document.getElementById('ts-fail').addEventListener('click', () => { frame.src = W + 'fail'; });
+document.getElementById('ts-ok').addEventListener('click', () => { frame.src = W + 'complete'; });
+document.getElementById('ts-wrong-origin').addEventListener('click', () => {
+  frame.src = 'https://www.devfill.example/turnstile?event=fail';
+});
+document.getElementById('ts-forge').addEventListener('click', () => {
   window.dispatchEvent(new MessageEvent('message', {
-    data: {source: 'cloudflare-challenge', widgetId: 'cf-chl-widget-x', event: event},
-    origin: origin || 'https://challenges.cloudflare.com'}));
-}
-document.getElementById('ts-fail').addEventListener('click', () => post('fail'));
-document.getElementById('ts-ok').addEventListener('click', () => post('complete'));
-document.getElementById('ts-wrong-origin').addEventListener(
-  'click', () => post('fail', 'https://elsewhere.example'));
+    data: {source: 'cloudflare-challenge', widgetId: 'x', event: 'fail'},
+    origin: 'https://widget.devfill.example'}));
+  window.postMessage({source: 'cloudflare-challenge', widgetId: 'x', event: 'fail'}, '*');
+});
 </script>
 </body></html>

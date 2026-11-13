@@ -194,6 +194,7 @@ class BrowserManager:
         self._ua: str | None = None
         self._headed: list[Browser] = []
         self._headed_ua: dict[int, str] = {}
+        self._proxy: bool | None = None
         self._persistent: BrowserContext | None = None
         self.rate = RateLimiter(self.cfg.min_delay_s)
         self.fast = self.cfg.max_delay_s <= 0 or bool(fixture_base)   # dev/test: no sleeps
@@ -323,10 +324,30 @@ class BrowserManager:
             return "captcha"
         return "block"
 
+    def _proxy_configured(self) -> bool:
+        """A system proxy the browser would use (read once per manager; on Windows
+        `urllib.request.getproxies` reads the WinINET registry settings, elsewhere the
+        *_proxy variables). Any failure to read it counts as "configured": the strict side."""
+        if self._proxy is None:
+            import urllib.request
+            try:
+                found = {k: v for k, v in urllib.request.getproxies().items()
+                         if k.lower() != "no" and v}
+                self._proxy = bool(found)
+            except Exception:  # noqa: BLE001
+                self._proxy = True
+        return self._proxy
+
     def floor_stops(self, url: str, allow_captcha_frames: bool = False) -> bool:
         """True if the browser-wide `--host-resolver-rules` floor (`launch_args`) can never
         resolve this URL's host, so a request to it is never sent. IP literals and loopback
-        names are never counted as stopped (SEC-16 residual gap: the strict side)."""
+        names are never counted as stopped (SEC-16 residual gap: the strict side).
+
+        With a system proxy (Windows WinINET / PAC / policy, or *_proxy variables) the proxy
+        resolves names and `--host-resolver-rules` does not apply, so nothing is "stopped":
+        every off-list hop is an escape again, the old strict behaviour (WO-634 review)."""
+        if self._proxy_configured():
+            return False
         host = host_of(url)
         if not host or _is_ip(host) or host in LOOPBACK_HOSTS or host.endswith(".localhost"):
             return False

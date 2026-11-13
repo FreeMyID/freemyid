@@ -198,6 +198,22 @@ def short_grace(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(ffm, "_TURNSTILE_GRACE_S", 0.3)
 
 
+WIDGET_ORIGIN = "https://widget.devfill.example"
+_LISTENING = "() => !!window[Symbol.for('freemyid.turnstile')]"
+
+
+@pytest.fixture(autouse=True)
+def _fixture_widget_origin(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Fixture mode cannot serve challenges.cloudflare.com: the stand-in widget frame is
+    served from widget.devfill.example, so that is the origin the listener trusts here."""
+    monkeypatch.setattr(ffm, "_TURNSTILE_ORIGIN", WIDGET_ORIGIN)
+
+
+def test_real_widget_origin_is_cloudflare() -> None:
+    text = (SRC / "engine" / "fill_for_me.py").read_text(encoding="utf-8")
+    assert f'\n_TURNSTILE_ORIGIN = "{CF}"\n' in text
+
+
 @pytest.mark.browser
 async def test_failed_turnstile_hands_off_and_keeps_the_card(store: Any,
                                                              short_grace: None) -> None:
@@ -205,6 +221,7 @@ async def test_failed_turnstile_hands_off_and_keeps_the_card(store: Any,
     p = _setup(store, b)
 
     async def person(page: Any) -> None:
+        await page.wait_for_function(_LISTENING)
         await page.click("#ts-fail")          # the widget answers "can't verify"
 
     with fixture_server():
@@ -249,8 +266,14 @@ async def test_turnstile_that_recovers_is_not_handed_off(store: Any,
     p = _setup(store, b)
 
     async def person(page: Any) -> None:
+        await page.wait_for_function(_LISTENING)
         await page.click("#ts-fail")
+        await page.wait_for_function(
+            "() => document.documentElement.getAttribute('data-freemyid-turnstile') "
+            "=== 'failed'")
         await page.click("#ts-ok")
+        await page.wait_for_function(
+            "() => document.documentElement.getAttribute('data-freemyid-turnstile') === 'ok'")
         await page.click("button[type=submit]")
 
     with fixture_server():
@@ -267,6 +290,7 @@ async def test_failure_message_from_another_origin_is_ignored(store: Any,
     p = _setup(store, b)
 
     async def person(page: Any) -> None:
+        await page.wait_for_function(_LISTENING)
         await page.click("#ts-wrong-origin")
 
     with fixture_server():
@@ -275,11 +299,30 @@ async def test_failure_message_from_another_origin_is_ignored(store: Any,
     assert res.reason == "timeout", res
 
 
+@pytest.mark.browser
+async def test_page_script_cannot_forge_a_widget_failure(store: Any,
+                                                         short_grace: None) -> None:
+    """A synthetic event or a self-post from the page's own script is ignored (review LOW)."""
+    b = _broker("wo635_forge")
+    p = _setup(store, b)
+
+    async def person(page: Any) -> None:
+        await page.wait_for_function(_LISTENING)
+        await page.click("#ts-forge")
+
+    with fixture_server():
+        res = await fill_bounded(store, p.id, b.id, registry=_registry(b), headed=False,
+                                 timeout_s=3, on_ready=person, close_delay_s=0)
+    assert res.reason == "timeout", res
+    assert not [e for e in store.events(p.id) if e.action == "obstruction_observed"]
+
+
 def test_turnstile_state_is_read_passively() -> None:
     """The listener only reads the widget's own result messages: it never posts, clicks,
     or touches the widget frame."""
     js = ffm._TURNSTILE_WATCH_JS
-    assert "addEventListener('message'" in js and "https://challenges.cloudflare.com" in js
+    assert "addEventListener('message'" in js and "e.origin !== origin" in js
+    assert "!e.isTrusted" in js and "e.source === window" in js
     for bad in ("postMessage(", ".click(", "contentWindow", "contentDocument",
                 "dispatchEvent(", "webdriver", "defineProperty"):
         assert bad not in js
@@ -297,13 +340,32 @@ _EVASION = re.compile(
     r"setUserAgentOverride|userAgentMetadata)", re.IGNORECASE)
 
 
+ROOT = SRC.parents[1]
+
+
+def _scanned_files() -> list[Path]:
+    """Product code, its dependency list, and the packaging (installer, spec, Docker)."""
+    out = [f for f in SRC.rglob("*")
+           if f.suffix in (".py", ".js", ".html", ".json") and "zzz_legacy" not in f.parts]
+    out.append(ROOT / "pyproject.toml")
+    out += [f for f in (ROOT / "packaging").rglob("*")
+            if f.is_file() and f.suffix not in (".ico", ".png", ".bmp", ".icns", ".exe")]
+    return out
+
+
+def test_evasion_scan_covers_dependencies_and_packaging() -> None:
+    files = {f.relative_to(ROOT).as_posix() for f in _scanned_files()}
+    assert "pyproject.toml" in files
+    assert any(f.startswith("packaging/windows/") for f in files)
+    assert _EVASION.search('dependencies = ["playwright-stealth>=1.0"]')
+    assert _EVASION.search("args=['--disable-blink-features=AutomationControlled']")
+
+
 def test_no_evasion_code_in_the_product() -> None:
     hits = []
-    for f in SRC.rglob("*"):
-        if f.suffix not in (".py", ".js", ".html", ".json") or "zzz_legacy" in f.parts:
-            continue
+    for f in _scanned_files():
         for n, line in enumerate(f.read_text(encoding="utf-8", errors="replace").splitlines(),
                                  1):
             if _EVASION.search(line) and "noqa: evasion-list" not in line:
-                hits.append(f"{f.relative_to(SRC)}:{n}")
+                hits.append(f"{f.relative_to(ROOT)}:{n}")
     assert hits == []
