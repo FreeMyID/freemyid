@@ -327,6 +327,15 @@ def _do_run(profile, broker, scan_only, dry_run, scheduled, headless: bool = Fal
     else:
         for line in rep.summary_lines():
             con.print(line)
+    # Browser extension: "Remove me" requests that came in while the app was closed, then the
+    # PII-free status the extension's banner reads (docs/EXTENSION.md). Never fails the run.
+    try:
+        from . import extension_link
+        if not scan_only:
+            extension_link.process_inbox(store, _registry(), dry_run=dry_run)
+        extension_link.write_status(store, _registry())
+    except Exception:
+        log.debug("extension link skipped", exc_info=True)
     if scheduled and not dry_run:
         # BL-IN-25: the app is often closed, so the monthly PII-free summary also fires after a
         # scheduled run. Never let a notification problem change the run's result.
@@ -820,6 +829,78 @@ def outbox_approve(request_id: str):
 
 
 # --------------------------------------------------------------------------- checklists
+
+extension_app = typer.Typer(help="The Free My ID browser extension: connect it to this app.",
+                            no_args_is_help=True)
+app.add_typer(extension_app, name="extension")
+
+
+@extension_app.command("connect")
+def extension_connect(
+        chrome_id: Annotated[list[str] | None, typer.Option(
+            "--chrome-id", help="Developer only: id of an unpacked Chrome/Edge extension.")] = None,
+        browser: Annotated[list[str] | None, typer.Option(
+            "--browser", help="chrome, edge or firefox (default: all three).")] = None):
+    """Let the browser extension reach this app (per user, no admin rights needed)."""
+    from . import extension_link as el
+    from .native_host import _CHROME_EXTENSION_ID
+    ids = tuple(chrome_id or ())
+    if bad := [i for i in ids if not _CHROME_EXTENSION_ID.fullmatch(i)]:
+        con.print(f"[red]Not an extension id:[/] {', '.join(bad)} (32 letters a to p)")
+        raise typer.Exit(2)
+    if unknown := [b for b in (browser or []) if b not in el.BROWSERS]:
+        con.print(f"[red]Unknown browser:[/] {', '.join(unknown)} (chrome, edge or firefox)")
+        raise typer.Exit(2)
+    done = el.register_host(ids, browser or el.BROWSERS)
+    for name, where in done.items():
+        con.print(f"{name}: ready ({where})")
+    skipped = [b for b in (browser or el.BROWSERS) if b not in done]
+    if skipped:
+        con.print(f"Skipped {', '.join(skipped)}: the extension is not in that browser's store "
+                  "yet. Developers can pass --chrome-id.")
+    con.print("Next: click the Free My ID button in the browser, choose Connect to the app, and "
+              "confirm the code here with `freemyid extension pair <code>` (or in the app's "
+              "Settings, Browser helper).")
+
+
+@extension_app.command("pair")
+def extension_pair(code: Annotated[str, typer.Argument(help="The six digits the browser shows.")]):
+    """Confirm the code the browser extension shows, so it can work with this app."""
+    from . import extension_link as el
+    origin = el.confirm_pairing(code.replace(" ", ""))
+    if origin is None:
+        con.print("[red]That code did not match, or it has expired.[/] Ask the extension for a "
+                  "new code and try again.")
+        raise typer.Exit(1)
+    con.print(f"Connected: {el.describe_origin(origin)} can now start removals and fill in "
+              "forms with this app.")
+
+
+@extension_app.command("status")
+def extension_status():
+    """Which browsers can reach this app, and which are connected."""
+    from . import extension_link as el
+    reg = el.registered_browsers()
+    con.print(f"Browsers that can reach the app: {', '.join(reg) if reg else 'none yet'}")
+    paired = el.paired_origins()
+    con.print(f"Connected extensions: {len(paired)}"
+              + (f" ({', '.join(sorted({el.describe_origin(o) for o in paired}))})" if paired else ""))
+    if el.pending_pairing():
+        con.print("A connection code is waiting to be confirmed (`freemyid extension pair <code>`).")
+
+
+@extension_app.command("disconnect")
+def extension_disconnect(
+        remove: Annotated[bool, typer.Option(
+            "--remove", help="Also stop the browsers from starting the app's helper.")] = False):
+    """Disconnect every browser extension from this app."""
+    from . import extension_link as el
+    n = el.unpair()
+    con.print(f"Disconnected {n} extension{'s' if n != 1 else ''}.")
+    if remove:
+        gone = el.unregister_host()
+        con.print(f"Removed from: {', '.join(gone) if gone else 'nothing to remove'}")
+
 
 checklist_app = typer.Typer(help="Identity-safety checklists: credit freezes, opt-out lists "
                             "and more. Tick them off as you go.", no_args_is_help=True)

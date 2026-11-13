@@ -50,6 +50,15 @@ EVIDENCE_CSP = "sandbox; " + CSP
 CONSENT_UNCHECKED = ("Free My ID could not check the saved permission for this person. "
                      "Please close Free My ID and open it again.")
 MSGS = {
+    "browser_paired": "Connected. The browser extension can now start removals and fill in forms "
+                      "with Free My ID.",
+    "browser_code_bad": "That code has expired. Click Connect to the app in the browser again.",
+    "browser_cancelled": "Not connected. Nothing was changed.",
+    "browser_disconnected": "The browser extension is disconnected.",
+    "browser_ready": "Your browsers can now reach Free My ID. Next, click the Free My ID button in "
+                     "the browser and choose Connect to the app.",
+    "browser_setup_failed": "The browsers could not be set up. The extension is not in their "
+                            "stores yet.",
     "created": "All set. Free My ID is starting its first check now.",
     "updated": "Changes saved.", "done": "Great, thank you. Marked as done.",
     "resolved": "Thank you. Free My ID will carry on.",
@@ -667,7 +676,44 @@ def create_app(store, token: str, allowed_hosts: set[str],
         return html(dash.settings_page(
             people=store.list_profiles(), schedule_status=sched,
             practice=not cfgmod.load().real_submissions_enabled, csrf=csrf_token,
-            flash=flash(request), can_quit=app.state.on_quit is not None))
+            flash=flash(request), can_quit=app.state.on_quit is not None,
+            browser=_browser_info()))
+
+    def _browser_info() -> dict | None:
+        try:
+            from .. import extension_link as el
+            pending = el.pending_pairing()
+            return {"registered": el.registered_browsers(),
+                    "paired": sorted({el.describe_origin(o) for o in el.paired_origins()}),
+                    "pending": pending["code"] if pending else None}
+        except Exception as e:  # noqa: BLE001  the page works without the extension
+            log.info("browser helper info unavailable: %s", type(e).__name__)
+            return None
+
+    @app.post("/settings/browser/{action}")
+    async def browser_helper(action: str, request: Request):
+        from .. import extension_link as el
+        if action == "pair":
+            form = await request.form()
+            origin = el.confirm_pairing(str(form.get("code", "")))
+            if origin is not None:
+                store.log(Event(actor=Actor.USER, action="extension_paired"))
+            return redirect("/settings", "browser_paired" if origin else "browser_code_bad")
+        if action == "cancel":
+            el.cancel_pairing()
+            return redirect("/settings", "browser_cancelled")
+        if action == "disconnect":
+            el.unpair()
+            store.log(Event(actor=Actor.USER, action="extension_unpaired"))
+            return redirect("/settings", "browser_disconnected")
+        if action == "setup":
+            try:
+                done = el.register_host()
+            except Exception as e:  # noqa: BLE001
+                log.warning("browser helper setup failed: %s", type(e).__name__)
+                done = {}
+            return redirect("/settings", "browser_ready" if done else "browser_setup_failed")
+        return redirect("/settings")
 
     @app.post("/_focus")
     async def focus():
@@ -979,23 +1025,44 @@ def serve(port: int, open_browser: bool = True) -> None:
     if open_browser:
         threading.Timer(0.8, lambda: webbrowser.open(url)).start()
     paths.home()
+    bridge = _start_bridge()
     server = uvicorn.Server(uvicorn.Config(app, log_level="warning", access_log=False))
-    server.run(sockets=[sock])
+    try:
+        server.run(sockets=[sock])
+    finally:
+        if bridge is not None:
+            bridge.stop()
+
+
+def _start_bridge(store_factory=None, registry_loader=_load_registry):
+    """The browser extension's link to this open app (extension_link.Bridge). Never raises."""
+    from .. import config as cfgmod
+    from .. import extension_link
+    from ..storage import Store
+    if _background_disabled():
+        return None
+    return extension_link.start_bridge(
+        store_factory or Store, registry_loader,
+        lambda: not cfgmod.load().real_submissions_enabled)
 
 
 class Running:
     """A server running on a background thread (used by the desktop launcher)."""
 
     def __init__(self, app: FastAPI, server: Any, thread: threading.Thread, port: int,
-                 token: str) -> None:
+                 token: str, bridge: Any = None) -> None:
         self.app, self.server, self.thread, self.port, self.token = (
             app, server, thread, port, token)
+        self.bridge = bridge
 
     @property
     def url(self) -> str:
         return f"http://127.0.0.1:{self.port}/?t={self.token}"
 
     def stop(self) -> None:
+        if self.bridge is not None:
+            self.bridge.stop()
+            self.bridge = None
         self.server.should_exit = True
         self.thread.join(timeout=5)
 
@@ -1022,4 +1089,5 @@ def start_background(port: int = 0, store=None, registry_loader=_load_registry) 
         if server.started:
             break
         time.sleep(0.05)
-    return Running(app, server, t, real_port, token)
+    return Running(app, server, t, real_port, token,
+                   _start_bridge(registry_loader=registry_loader) if store is None else None)

@@ -496,8 +496,41 @@ def confirm_real_page(people: list[Profile], csrf: str) -> str:
     return layout("Real requests", body)
 
 
+def browser_helper_card(info: dict | None, csrf: str) -> str:
+    """Settings card for the browser extension link (docs/EXTENSION.md). `info` holds
+    registered (list of browser names), paired (list of plain browser names) and pending
+    (the six-digit code waiting to be confirmed, or None)."""
+    if info is None:
+        return ""
+    reg, paired, pending = info.get("registered", []), info.get("paired", []), info.get("pending")
+    out = ('<div class="card" id="browser-helper"><h2>Browser helper</h2><p>The Free My ID '
+           'browser extension tells you when a site sells people\'s information. Once it is '
+           'connected to this app, it can start a removal for that site, and fill in a site\'s '
+           'removal form with only the details you allowed. You always check the form, do any '
+           '"I am not a robot" step yourself, and press the site\'s button to send it.</p>')
+    if pending:
+        out += (f'<p><b>Your browser asked to connect.</b> Does it show this code?</p>'
+                f'<p class="big-code">{esc(pending[:3])} {esc(pending[3:])}</p>'
+                f'<form method="post" action="/settings/browser/pair" class="actions">'
+                f'{csrf_field(csrf)}<input type="hidden" name="code" value="{esc(pending)}">'
+                '<button type="submit">Yes, connect it</button><button type="submit" '
+                'class="secondary" formaction="/settings/browser/cancel">No, that is not my '
+                'code</button></form>')
+    out += (f'<p><b>Connected:</b> {esc(", ".join(paired)) if paired else "nothing yet"}</p>'
+            f'<p><b>Browsers that can reach Free My ID:</b> '
+            f'{esc(", ".join(reg)) if reg else "none yet"}</p>'
+            f'<form method="post" action="/settings/browser/setup" class="actions">'
+            f'{csrf_field(csrf)}<button type="submit" class="secondary">Set up the browsers'
+            '</button>')
+    if paired:
+        out += ('<button type="submit" class="secondary" formaction="/settings/browser/disconnect" '
+                'data-confirm="Disconnect the browser extension from Free My ID?">'
+                'Disconnect</button>')
+    return out + '</form></div>'
+
+
 def settings_page(*, people: list[Profile], schedule_status: str, practice: bool, csrf: str,
-                  flash: str = "", can_quit: bool = False) -> str:
+                  flash: str = "", can_quit: bool = False, browser: dict | None = None) -> str:
     body = f'<h1>Settings</h1>{_flash(flash)}'
     body += ('<div class="card"><h2>Run automatically</h2><p>Once a day Free My ID can check '
              'quietly in the background. If the computer was off, it catches up when it is '
@@ -538,6 +571,7 @@ def settings_page(*, people: list[Profile], schedule_status: str, practice: bool
                  + '<div class="actions"><button type="submit">Save</button></div></form></div>')
     if not people:
         body += "<p>No one has been added yet.</p>"
+    body += browser_helper_card(browser, csrf)
     if can_quit:
         body += (f'<div class="card"><h2>Close Free My ID</h2><form method="post" action="/quit" '
                  f'class="actions">{csrf_field(csrf)}<button type="submit" class="secondary" '
