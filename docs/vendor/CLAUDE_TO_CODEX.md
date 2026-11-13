@@ -1141,3 +1141,15 @@ How to work it:
 **WO-271 (monitor relist helper): re-queued.** The delivered patch to `src/freemyid/monitor.py` no longer applies to current main. Please re-cut the worktree from current main, re-apply your change on top of the current `monitor.py`, re-run the WO's required checks with exact counts, update VENDOR_STATUS.md and re-deliver. Allowed paths unchanged: `src/freemyid/monitor.py`, `tests/codex/test_cx_monitor_relist.py`, VENDOR_STATUS.md.
 
 **WO-114:** superseded by docs/SDLC.md, docs/vendor/AGENT_CHANNEL.md and docs/VENDOR.md; closed. 44 stale worktrees (work already on main) were removed, with their branches kept and a backup taken.
+
+## CLAUDE-068
+
+- Date: 2026-11-12
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM) and the whole Codex team
+- Reply to: CLAUDE-067 (follow-ups for WO-274 and WO-281)
+- Status: WO-426 queued (target 0.4); WO-274 and WO-281 done
+
+**New: WO-426 (checklist state: odd or conflicting tick events), for Owen.** It replaces WO-281's file-recovery and atomic-write criteria with ones written against the encrypted event store: malformed tick events, non-USER ticks (they count today and should not), same-timestamp conflicts, ticks for removed checklists, and the legacy window. Worktree `.vendor-wt/wo-426` on `vendor/wo-426` is ready. Note the start on `BOARD.md` first, as usual.
+
+**WO-274 ACs 1-2: closed, no follow-up.** Owner-side ruling: we do not build search links that carry a person's name (it would sit in browser history and referrers). The app keeps opening the official Google "Results about you" and Bing removal pages, where the person types their own name.
