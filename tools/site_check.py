@@ -8,12 +8,21 @@ Every HTML page must have: lang, CSP meta (script-src 'none', no unsafe-*), refe
 No asset (stylesheet, image, script, font, iframe...) may come from another origin; no inline <script>
 except JSON-LD; no style="" attributes (blocked by the CSP anyway). Internal links and #anchors must
 resolve. Every <img> needs alt, width and height. The sitemap must list exactly the indexable pages.
-No data from the private full registry (brokers/registry.yaml) may appear in the output.
+No data from the private full registry (brokers/registry.yaml) may appear in the output. The one
+exception is the public coverage list (brokers/coverage.public.yaml, written by
+tools/export_coverage.py): the main-site hostnames in it may be named, as bare hostnames only.
+A private opt-out URL, an email address, any other private hostname, and a coverage-list hostname
+followed by a path or used as an email domain are all still errors.
+
+The private inputs are looked for beside this checkout. From a worktree or a checkout without them,
+point at them with FMID_FULL_REGISTRY (the full registry) and FMID_HOST_HASHES (the hash list from
+tools/gen_private_host_hashes.py).
 """
 from __future__ import annotations
 
 import argparse
 import hashlib
+import os
 import re
 import sys
 import xml.etree.ElementTree as ET
@@ -142,7 +151,7 @@ def resolve(site: Path, page_file: Path, href: str, base_path: str) -> tuple[Pat
 def full_registry_needles() -> list[str]:
     """Opt-out URLs and emails that are in the private full registry but NOT in the public sample.
     Skipped when the full registry isn't present (e.g. after it moves to a private repo)."""
-    full = ROOT / "brokers" / "registry.yaml"
+    full = Path(os.environ.get("FMID_FULL_REGISTRY") or ROOT / "brokers" / "registry.yaml")
     sample = ROOT / "brokers" / "registry.sample.yaml"
     if not full.exists() or not sample.exists():
         return []
@@ -157,10 +166,25 @@ HOST_RE = re.compile(r"(?<![a-z0-9-])[a-z0-9-]+(?:\.[a-z0-9-]+)+", re.IGNORECASE
 
 
 def private_host_hashes() -> set[str]:
-    if not HOST_HASHES.exists():
+    path = Path(os.environ.get("FMID_HOST_HASHES") or HOST_HASHES)
+    if not path.exists():
         return set()
-    return {ln.strip() for ln in HOST_HASHES.read_text(encoding="utf-8").splitlines()
+    return {ln.strip() for ln in path.read_text(encoding="utf-8").splitlines()
             if ln.strip() and not ln.startswith("#")}
+
+
+COVERAGE = ROOT / "brokers" / "coverage.public.yaml"
+
+
+def coverage_hosts(path: Path | None = None) -> set[str]:
+    """Main-site hostnames in the public coverage list (tools/export_coverage.py). These are public
+    by orchestrator decision 2026-11-12, so a page may name them. Stdlib only: the file is one
+    `site: "host"` per row."""
+    path = path or COVERAGE
+    if not path.exists():
+        return set()
+    hosts = re.findall(r'\bsite: "([^"]+)"', path.read_text(encoding="utf-8"))
+    return {h.lower().rstrip(".").removeprefix("www.") for h in hosts}
 
 
 # Hosts that are in the private registry but are well-known public addresses that a public page
@@ -168,18 +192,36 @@ def private_host_hashes() -> set[str]:
 PUBLIC_OK_HOSTS = {"consumer.risk.lexisnexis.com"}
 
 
-def hashed_host_leaks(text: str, hashes: set[str]) -> list[str]:
-    """Hostnames in text whose SHA-256 is in the private-only list (returns hashes, never names)."""
+_PATH_START = re.compile(r"[/?][A-Za-z0-9%_~.\-]")
+
+
+def host_leaks(text: str, hashes: set[str], public: set[str] | frozenset[str] = frozenset()
+               ) -> list[tuple[str, str]]:
+    """Private-registry hostnames in text, as (kind, hash prefix); never the names.
+
+    "private": the hostname is not in the public coverage list. "path": it is, but here it is
+    followed by a path or query (how an opt-out URL would look) or it is an email domain. Only the
+    bare site name is public."""
     found = set()
-    for m in HOST_RE.findall(text):
-        h = m.lower().rstrip(".")
+    for m in HOST_RE.finditer(text):
+        h = m.group(0).lower().rstrip(".")
         h = h.removeprefix("www.")
         if h in PUBLIC_OK_HOSTS:
             continue
         d = hashlib.sha256(h.encode()).hexdigest()
-        if d in hashes:
-            found.add(d[:12])
+        if d not in hashes:
+            continue
+        if h not in public:
+            found.add(("private", d[:12]))
+        elif text[m.start() - 1:m.start()] == "@" or _PATH_START.match(text, m.end()):
+            found.add(("path", d[:12]))
     return sorted(found)
+
+
+def hashed_host_leaks(text: str, hashes: set[str],
+                      public: set[str] | frozenset[str] = frozenset()) -> list[str]:
+    """Hash prefixes of every hostname host_leaks reports."""
+    return sorted({d for _, d in host_leaks(text, hashes, public)})
 
 
 def check_site(site: Path, base_url: str, base_path: str) -> list[str]:
@@ -315,11 +357,17 @@ def check_site(site: Path, base_url: str, base_path: str) -> list[str]:
                     if n in text:
                         errors.append(f"{f.relative_to(site)}: contains full-registry-only value {n}")
     # Works without the full registry: compare hashed hostnames in the output with the checked-in list.
+    # Hostnames in the public coverage list are allowed, as bare hostnames only.
     hashes = private_host_hashes()
+    public = coverage_hosts()
     for f in sorted(site.rglob("*")):
         if hashes and f.is_file() and f.suffix in (".html", ".xml", ".txt", ".css"):
-            for d in hashed_host_leaks(f.read_text(encoding="utf-8"), hashes):
-                errors.append(f"{f.relative_to(site)}: contains a private-only broker hostname (hash {d}...)")
+            for kind, d in host_leaks(f.read_text(encoding="utf-8"), hashes, public):
+                errors.append(
+                    f"{f.relative_to(site)}: contains a private-only broker hostname (hash {d}...)"
+                    if kind == "private" else
+                    f"{f.relative_to(site)}: a coverage-list site is followed by a path or used as an "
+                    f"email domain; only the bare site name is public (hash {d}...)")
     for f in sorted(site.rglob("*")):
         if f.is_file() and f.suffix == ".html" and re.search(r"registry\.yaml\b",
                                                               f.read_text(encoding="utf-8")):
