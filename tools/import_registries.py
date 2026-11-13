@@ -25,7 +25,9 @@ loosely (see FIELD_NEEDLES); unknown columns are ignored.
 Rules (unchanged from import_ca_registry.py):
 - The email must be on the broker's own registrable domain (same as its website).
 - The mailbox local part must look like a role/privacy mailbox, never one person's inbox.
-- https only for the privacy/opt-out page, and it must be on the broker's own domain.
+- https only for the privacy/opt-out page, and it must be on the broker's own domain, or on a
+  known privacy-request portal vendor (PRIVACY_PORTALS: OneTrust, TrustArc, Transcend, ...).
+  The portal host is added to the entry's `domains` so NetPolicy allows it for that broker only.
 - No email but a usable privacy-request page: method web_form, verification_status unverified.
 - Dedupe across sources and against curated entries by registrable domain and by name/DBA/parent.
 """
@@ -97,6 +99,15 @@ FIELD_NEEDLES: dict[str, dict[str, tuple[str, ...]]] = {
     "year": {"any": ("registrationyear", "registrationdate", "effectivedate", "filingdate",
                      "dateregistered", "issuedate", "year"), "not": ()},
 }
+
+
+# Vendors that host consumer privacy-request (DSAR) portals for many companies. A registry
+# listing whose privacy page is on one of these is still the broker's own request channel.
+# Emails are never accepted off-domain, portal or not.
+PRIVACY_PORTALS = frozenset({
+    "onetrust.com", "trustarc.com", "transcend.io", "datagrail.io", "securiti.ai",
+    "osano.com", "ketch.com",
+})
 
 
 def reg_domain(host: str) -> str:
@@ -271,7 +282,8 @@ def usable_contact(rec: Record) -> tuple[str | None, str | None, str]:
         ph = host_of(rec.privacy_url)
         path = urlsplit(rec.privacy_url.strip()).path
         # A bare homepage is not a privacy-request page.
-        if ph and reg_domain(ph) == dom and path.strip("/"):
+        if ph and (reg_domain(ph) == dom or reg_domain(ph) in PRIVACY_PORTALS) \
+                and path.strip("/"):
             url = rec.privacy_url.strip()
     return email, url, ("" if (email or url) else why)
 

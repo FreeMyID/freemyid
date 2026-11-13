@@ -215,3 +215,24 @@ def test_rerun_after_adoption_into_curated_does_not_duplicate(setup):
     reg.write_text(reg.read_text().replace(ir.BEGIN, "").replace(ir.END, ""))
     r = _run(files, reg)
     assert r["entries"] == [] and r["curated"] == len(data["brokers"])
+
+
+def test_privacy_page_on_a_known_portal_vendor_is_usable_but_unknown_hosts_are_not():
+    portal = "https://privacyportal.onetrust.com/webform/fake-tenant/fake-form"
+    rows = [
+        CA_CSV.splitlines()[0],
+        f"7,Portal Fake Inc,,portalfake-example.test,,{portal}",
+        "8,Thirdparty Fake LLC,,thirdparty-example.test,,https://forms-example.test/privacy",
+        "9,Portal Root Inc,,portalroot-example.test,,https://privacyportal.onetrust.com/",
+        "10,Portal Mail Inc,,portalmail-example.test,privacy@onetrust.com,",
+    ]
+    text = "\n".join(rows) + "\n"
+    recs = {r.name: r for r in ir.parse_ca(text)[0]}
+    email, url, _ = ir.usable_contact(recs["Portal Fake Inc"])
+    assert email is None and url and url.startswith("https://privacyportal.onetrust.com/")
+    assert ir.usable_contact(recs["Thirdparty Fake LLC"])[:2] == (None, None)
+    assert ir.usable_contact(recs["Portal Root Inc"])[:2] == (None, None)   # bare portal root
+    assert ir.usable_contact(recs["Portal Mail Inc"])[:2] == (None, None)   # emails never off-domain
+    entry = ir._entry([recs["Portal Fake Inc"]], recs["Portal Fake Inc"], None, url)
+    assert "privacyportal.onetrust.com" in entry["domains"]
+    assert entry["method"] == "web_form"
