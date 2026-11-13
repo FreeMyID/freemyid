@@ -228,7 +228,8 @@ def home_page(*, statuses: list[BrokerStatus], todos: list[tuple[Todo, str, str]
               filling: bool = False, sent: int = 0, exposure: str = "",
               protect: list[tuple[str, str, int, int]] | None = None,
               engines: dict[str, int] | None = None,
-              reasons: dict[str, list[str]] | None = None) -> str:
+              reasons: dict[str, list[str]] | None = None,
+              sched_problem: str = "") -> str:
     """The Today view: one big card with the next thing to do, then one progress line.
     todos = (todo, person label, broker name). `exposure` is ready-made HTML (views.exposure_card)."""
     need = len(todos) + (1 if outbox_count else 0)
@@ -242,6 +243,9 @@ def home_page(*, statuses: list[BrokerStatus], todos: list[tuple[Todo, str, str]
             body += (f'<div class="note">Not running yet for {esc(r["profile"].label)}: '
                      f'{esc(r["consent_problem"])} <a href="/profile/{esc(r["profile"].id)}">'
                      'Fix it</a></div>')
+    if sched_problem:
+        body += (f'<div class="note">{esc(sched_problem)} Your details are saved. '
+                 '<a href="/settings">Turn it on in Settings</a></div>')
     if filling:
         body += ('<div class="banner">A form is being filled in. <a href="/fill">'
                  'Go to that window</a></div>')

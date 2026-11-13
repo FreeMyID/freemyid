@@ -87,6 +87,23 @@
     });
   });
 
+  // Finish: one press is enough. The button shows "Saving..." and cannot be pressed twice.
+  document.querySelectorAll("button[data-busy]").forEach(function (el) {
+    if (!el.form) { return; }
+    var label = el.textContent;
+    el.form.addEventListener("submit", function (e) {
+      if (el.disabled) { e.preventDefault(); return; }
+      el.disabled = true;
+      el.setAttribute("aria-busy", "true");
+      el.textContent = el.getAttribute("data-busy");
+    });
+    window.addEventListener("pageshow", function () {
+      el.disabled = false;
+      el.removeAttribute("aria-busy");
+      el.textContent = label;
+    });
+  });
+
   document.querySelectorAll("[data-print]").forEach(function (el) {
     el.addEventListener("click", function () { window.print(); });
   });

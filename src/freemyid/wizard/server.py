@@ -49,6 +49,7 @@ CSP = ("default-src 'none'; img-src 'self'; style-src 'self'; script-src 'self';
 EVIDENCE_CSP = "sandbox; " + CSP
 CONSENT_UNCHECKED = ("Free My ID could not check the saved permission for this person. "
                      "Please close Free My ID and open it again.")
+SCHED_PROBLEM = "Free My ID could not switch on automatic checking."
 MSGS = {
     "created": "All set. Free My ID is starting its first check now.",
     "updated": "Changes saved.", "done": "Great, thank you. Marked as done.",
@@ -117,21 +118,28 @@ def _background_disabled() -> bool:
 
 def _default_finish(app: FastAPI, registry_loader: Callable[[], Any], profile,
                     schedule_on: bool) -> None:
-    """After the wizard saves: install the scheduled job if asked, start the first run."""
+    """After the wizard saves: install the scheduled job if asked, start the first run.
+
+    Both happen on a background thread, so the Finish button is answered at once (WO-633:
+    installing the scheduled task can take seconds on Windows). If the install fails, the
+    home page says so and points to Settings.
+    """
     if _background_disabled():
         return
-    if schedule_on:
-        try:
-            from .. import scheduler
-            scheduler.install()
-        except Exception as e:  # noqa: BLE001  never block finishing on this
-            log.warning("scheduler install failed: %s", type(e).__name__)
     pid = profile.id
 
     def job() -> None:
         from .. import config as cfgmod
         from ..storage import Store
         app.state.running = True
+        if schedule_on:
+            try:
+                from .. import scheduler
+                scheduler.install()
+                app.state.sched_problem = False
+            except Exception as e:  # noqa: BLE001  never block the first check on this
+                log.warning("scheduler install failed: %s", type(e).__name__)
+                app.state.sched_problem = True
         try:
             from ..engine.runner import run as engine_run
             reg = registry_loader()
@@ -165,6 +173,8 @@ def create_app(store, token: str, allowed_hosts: set[str],
     pywebview window too). `on_finish(profile, schedule_on)` runs after the wizard saves."""
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     app.state.draft = None
+    app.state.finished = ""        # "created"/"updated" after a save, until a new draft starts
+    app.state.sched_problem = False   # the scheduled job could not be installed after Finish
     app.state.running = False
     app.state.on_focus = None      # desktop launcher: bring the window to the front
     app.state.fill = {"running": False, "tid": None, "result": None}
@@ -188,7 +198,16 @@ def create_app(store, token: str, allowed_hosts: set[str],
         if new or app.state.draft is None:
             app.state.draft = dr.Draft()
             app.state.pending_pin = None
+            app.state.finished = ""
         return app.state.draft
+
+    def already_saved(step: str) -> RedirectResponse | None:
+        """WO-633: the wizard just saved this person and no new one has been started, so a
+        repeat (double click, page sent again, Back) goes home with the same message. It
+        saves nothing and never stands in for consent: a new draft takes the normal path."""
+        if step != "consent" and app.state.draft is None and app.state.finished:
+            return redirect("/", app.state.finished)
+        return None
 
     @app.middleware("http")
     async def guard(request: Request, call_next):
@@ -281,6 +300,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
             running=bool(app.state.running), fill=True,
             reasons=_reasons([t for t, _, _ in todos]),
             filling=bool(app.state.fill["running"]),
+            sched_problem=SCHED_PROBLEM if app.state.sched_problem else "",
             sent=sum(1 for r in store.list_requests(status=RequestStatus.SENT) if not r.dry_run)))
 
     @app.get("/more")
@@ -766,6 +786,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
         except Exception as e:  # noqa: BLE001
             log.warning("scheduler %s failed: %s", action, type(e).__name__)
             return redirect("/settings", "sched_fail")
+        app.state.sched_problem = False
         return redirect("/settings", "sched_on" if action == "install" else "sched_off")
 
     @app.get("/profile/{pid}/report")
@@ -802,6 +823,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
             return redirect("/")
         app.state.draft = dr.draft_from_profile(p)
         app.state.pending_pin = None
+        app.state.finished = ""
         return redirect("/wizard/name")
 
     # ---------------------------------------------------------------- wizard
@@ -909,6 +931,8 @@ def create_app(store, token: str, allowed_hosts: set[str],
     async def wizard_get(step: str, request: Request):
         if step not in dr.STEPS:
             return redirect("/")
+        if (done := already_saved(step)) is not None:
+            return done
         d = get_draft(new=request.query_params.get("new") == "1" and step == "consent")
         if step not in ui.visible_steps(d):
             return redirect("/wizard/name")
@@ -920,12 +944,17 @@ def create_app(store, token: str, allowed_hosts: set[str],
     async def wizard_post(step: str, request: Request):
         if step not in dr.STEPS:
             return redirect("/")
+        if (done := already_saved(step)) is not None:
+            return done
         d = get_draft()
         form = await request.form()
         files = {}
         up = form.get("authorization")
         if hasattr(up, "read"):
             files["authorization"] = (getattr(up, "filename", "") or "", await up.read())  # type: ignore[union-attr]
+        # Another Finish may have saved this same draft while this request was being read.
+        if app.state.draft is not d and (done := already_saved(step)) is not None:
+            return done
         errs = dr.apply_step(d, step, form, files)
         if errs:
             return html(ui.step_page(step, d, csrf_token, errs), 400)
@@ -939,6 +968,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
         was_edit, sched_on = d.editing, d.weekly_recheck and d.schedule_consent
         app.state.draft = None
         app.state.pending_pin = None
+        app.state.finished = "updated" if was_edit else "created"
         if was_edit:
             return redirect("/", "updated")
         (on_finish or (lambda p, on: _default_finish(app, registry_loader, p, on)))(prof, sched_on)
