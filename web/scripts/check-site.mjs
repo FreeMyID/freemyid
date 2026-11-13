@@ -6,7 +6,8 @@
 // (SEC-97): no style="" attributes, no inline event handlers, no javascript: URLs, no third-party asset URLs, every <img> has alt/width/height,
 // internal links and #anchors resolve, sitemap lists every indexable page and nothing else,
 // no mention of the private registry file, no deployed .js that no page loads. Then budgets
-// (gzip, KiB = 1024 bytes): home first view < 300 KiB, JS on home < 80 KiB, CSS < 20 KiB.
+// (gzip, KiB = 1024 bytes): home first view < 300 KiB, JS on home < 80 KiB, CSS < 20 KiB; /brokers/ (the
+// coverage list, up to 1,000 rows) HTML + CSS < 50 KiB, no JS, and its rows must match the list's counts.
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
@@ -258,7 +259,8 @@ for (const f of htmlFiles) for (const j of pageScripts(f, read(f))) usedJs.add(j
 for (const f of files) if (f.endsWith(".js") && !usedJs.has(f)) err(f, "script that no page loads (remove it from the build)");
 const rows = [];
 for (const f of ["index.html", "download/index.html", "how-it-works/index.html", "safety/index.html", "faq/index.html",
-  "families/index.html", "guides/index.html", "guides/spokeo/index.html", "i-do-not-consent/index.html", "404.html"]) {
+  "families/index.html", "guides/index.html", "guides/spokeo/index.html", "brokers/index.html",
+  "i-do-not-consent/index.html", "404.html"]) {
   if (!files.includes(f)) continue;
   const w = pageWeight(f);
   const total = w.html + w.css + w.js + w.img;
@@ -268,6 +270,23 @@ for (const f of ["index.html", "download/index.html", "how-it-works/index.html",
     if (w.js > 80 * 1024) err(f, `JS ${(w.js / 1024).toFixed(1)} KiB gzip > 80 KiB`);
   }
   if (w.css > 20 * 1024) err(f, `CSS ${(w.css / 1024).toFixed(1)} KiB gzip > 20 KiB`);
+  // docs/WEBSITE.md budget: HTML + CSS < 50 KiB compressed. The coverage list is the one page that can outgrow it.
+  if (f === "brokers/index.html") {
+    if (w.html + w.css > 50 * 1024) err(f, `HTML + CSS ${((w.html + w.css) / 1024).toFixed(1)} KiB gzip > 50 KiB (coverage list too heavy)`);
+    if (w.js > 0) err(f, "the coverage list must not load JavaScript");
+  }
+}
+// /brokers/: the rows on the page are the rows of the public coverage list, no more and no fewer.
+if (files.includes("brokers/index.html")) {
+  const f = "brokers/index.html";
+  const listFile = process.env.FMID_COVERAGE || new URL("../../brokers/coverage.public.yaml", import.meta.url);
+  const list = readFileSync(listFile, "utf8");
+  const want = (re) => (list.match(re) || []).length;
+  const html = read(f);
+  const rows = (html.match(/<li(?: data-v="1")?(?: id="[^"]*")?><b>/g) || []).length;
+  const verified = (html.match(/<li data-v="1"/g) || []).length;
+  if (rows !== want(/^  - \{/gm)) err(f, `${rows} rows on the page, ${want(/^  - \{/gm)} in the coverage list`);
+  if (verified !== want(/status: "verified"/g)) err(f, `${verified} verified rows on the page, ${want(/status: "verified"/g)} in the coverage list`);
 }
 console.log("Page weights (KiB = 1024 bytes, gzip -9; images as stored):\n" + rows.join("\n"));
 for (const e of errors) console.log("ERROR:", e);

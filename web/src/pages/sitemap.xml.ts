@@ -15,6 +15,7 @@ const PAGE_DATA: Record<string, string[]> = {
   download: ["site_src/data/release.yaml"],
   guides: ["brokers/registry.sample.yaml", "site_src/data/guide_intros.yaml"],
   protect: ["brokers/checklists.yaml"],
+  brokers: ["brokers/coverage.public.yaml", "web/src/lib/coverage.ts"],
   "developers-cli": ["web/src/pages/developers/cli/_commands.json"],
 };
 const pageSource = (out: string) => `${W}${out}index.astro`;

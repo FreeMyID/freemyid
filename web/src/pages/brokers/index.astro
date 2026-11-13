@@ -1,0 +1,226 @@
+---
+// /brokers/ "Sites we cover": the public coverage list (brokers/coverage.public.yaml, written by
+// tools/export_coverage.py). Names, main site hostnames, categories, how each site is handled and
+// whether we have verified it. Never the private registry: no removal addresses, links or steps.
+// Zero client JS and no form. The filters are plain radio buttons and a checkbox read by CSS :has();
+// without :has() the controls are hidden and the full grouped list is still there. Every row is in
+// the page, so the browser's own Find works for names.
+// Budget (docs/WEBSITE.md): HTML + CSS under 50 KiB gzip at 1,000 rows, so a row is three small
+// elements with no classes. scripts/check-site.mjs enforces the budget.
+import Base from "@/layouts/Base.astro";
+import PageHead from "@/components/PageHead.astro";
+import Section from "@/components/Section.astro";
+import Alert from "@/components/ui/Alert.astro";
+import StatGroup from "@/components/ui/StatGroup.astro";
+import Stat from "@/components/ui/Stat.astro";
+import CtaDownload from "@/components/CtaDownload.astro";
+import { guides, pageProps, url } from "@/lib/site";
+import { coverage, coverageGroups, monthLabel, num, routeCounts, ROUTES, type CoverageSite } from "@/lib/coverage";
+
+const p = pageProps("brokers");
+const { counts, updated } = coverage;
+const routeLabel = Object.fromEntries(ROUTES.map((r) => [r.id, r.short]));
+
+// Free guides exist for the sites in the public sample registry, which is also the list the free
+// download ships with (pyproject.toml, packaging/windows/freemyid.spec). Matched by main site hostname.
+const hostOf = (u: string | null) => { try { return new URL(u ?? "").hostname.replace(/^www\./, ""); } catch { return ""; } };
+const guideByHost = new Map(guides.filter((g) => g.home_url).map((g) => [hostOf(g.home_url), g]));
+const withGuide = coverage.sites.filter((s) => s.status !== "not_available" && guideByHost.has(s.site)).length;
+
+// The newest month any verified site was checked in (the date under the "verified" number).
+const lastChecked = coverage.sites.filter((s) => s.status === "verified" && s.checked)
+  .map((s) => s.checked as string).sort().pop();
+
+function meta(s: CoverageSite): string {
+  if (s.status === "not_available") return "Not available right now";
+  const status = s.status === "verified"
+    ? (s.checked ? `Verified ${monthLabel(s.checked, true)}` : "Verified") : "Not yet verified";
+  return `${status} · ${routeLabel[s.route]}${s.family ? ` · Part of the ${s.family} group` : ""}`;
+}
+// A to Z jump links for long groups: the first row of each letter gets an id.
+const LONG = 60;
+const letterOf = (name: string) => (/^[a-z]/i.test(name) ? name[0].toUpperCase() : "0-9");
+function letters(sites: CoverageSite[]): Map<number, string> {
+  const first = new Map<number, string>();
+  const seen = new Set<string>();
+  sites.forEach((s, i) => { const l = letterOf(s.name); if (!seen.has(l)) { seen.add(l); first.set(i, l); } });
+  return first;
+}
+const sitesWord = (n: number) => `${num(n)} ${n === 1 ? "site" : "sites"}`;
+---
+<Base {...p}>
+<PageHead crumbs={p.crumbs} title="Sites we cover"
+  lead="The people-search and data-broker sites on the Free My ID list, and how each one is handled." />
+
+<Section tight label="The list in numbers">
+  {/* source: brokers/coverage.public.yaml counts (recounted from the rows at build time, lib/coverage.ts).
+     "listed" leaves out the sites marked not available. Verified = verification_status verified with a check
+     date (src/freemyid/models.py VerificationStatus: the removal page was loaded live and matched its source). */}
+  <StatGroup label="The list in numbers" class="cov-stats max-w-[44rem]">
+    <Stat value={num(counts.listed)} label="Sites on the list" />
+    <Stat value={num(counts.verified)} label="Verified by us" hint={lastChecked ? `Last checked ${monthLabel(lastChecked)}` : undefined} />
+  </StatGroup>
+  {/* source: "new sites are added every week": orchestrator brief 2026-11-12 (coverage page) */}
+  <p class="mt-m max-w-measure"><strong>Verified</strong> means we opened that site's own removal page ourselves and confirmed that our steps match it. The other {sitesWord(counts.not_verified)} are on the list, but we have not confirmed their steps ourselves yet. We verify more sites and add new ones every week.</p>
+  {counts.not_available > 0 && (
+    <p class="mt-s max-w-measure text-small text-muted">{num(counts.not_available)} more {counts.not_available === 1 ? "site is" : "sites are"} shown as "Not available right now", because the removal page changed or stopped working. {counts.not_available === 1 ? "It is" : "They are"} not counted above.</p>
+  )}
+  {/* source: the free download ships the public sample registry only (pyproject.toml force-include,
+     packaging/windows/freemyid.spec); the guides are built from the same file. No prices or plan names here
+     (whats-coming honesty rules, orchestrator 2026-11-07). */}
+  {withGuide > 0 && (
+    <Alert title="What the free download includes today" class="max-w-[48rem]">
+      <p>The free download works with {num(withGuide)} of these sites today. They are the ones with a "Free guide" link below. The rest of the list is not in the free download.</p>
+    </Alert>
+  )}
+</Section>
+
+<Section tone="alt" title="How each site is handled" titleId="handled-title">
+  {/* source: docs/PLAN_V1.md D1 (three tiers) and /how-it-works/ "Three ways"; counts from the coverage list */}
+  <p class="max-w-measure">Each site has its own way of taking removal requests. Free My ID uses the one that site accepts.</p>
+  <dl class="cov-routes mt-m">
+    {routeCounts.map((r) => (
+      <div>
+        <dt>{r.label} <span>{sitesWord(r.count)}</span></dt>
+        <dd>{r.what}{r.anchor && <> <a href={url(`how-it-works/#${r.anchor}`)}>How "{r.label.toLowerCase()}" works</a></>}</dd>
+      </div>
+    ))}
+  </dl>
+  {/* source: POSITIONING rule 2 (literal accuracy, re-listing) and "Legal accuracy" (state-law qualifier);
+     the "days / weeks / ignore" sentence is the home page's (PLAN_V1 D4 report). */}
+  <div class="mt-m grid max-w-measure gap-s">
+    <p>Being on this list means Free My ID knows how to ask that site to remove your listing. It does not mean every site says yes. Some sites remove you in days. Some take weeks. Some ignore the request, and the report shows those too.</p>
+    <p>Some states have privacy laws that require a site to answer. In the other states it is a polite request, which many sites honor but are not required to.</p>
+    <p>Sites often list people again later. That is why Free My ID keeps checking.</p>
+  </div>
+</Section>
+
+<Section title="Find a site" titleId="find-title">
+  <div class="cov">
+    <p class="max-w-measure">Looking for one site? Use your browser's Find tool. On a computer, hold <kbd>Ctrl</kbd> and press <kbd>F</kbd> (on a Mac, <kbd>Command</kbd> and <kbd>F</kbd>). On a phone, open the browser menu and choose "Find in page". Then type the site's name.</p>
+    <div class="cov-controls no-print">
+      <fieldset>
+        <legend>Show one group</legend>
+        <label><input type="radio" name="cov-c" id="cov-c-all" checked /> All groups <span>({num(counts.total)})</span></label>
+        {coverageGroups.map((g) => (
+          <label><input type="radio" name="cov-c" id={`cov-c-${g.id}`} /> {g.label} <span>({num(g.sites.length)})</span></label>
+        ))}
+      </fieldset>
+      <label><input type="checkbox" id="cov-v" /> Show only the sites we have verified <span>({num(counts.verified)})</span></label>
+    </div>
+    {coverageGroups.map((g) => {
+      const first = g.sites.length > LONG ? letters(g.sites) : new Map<number, string>();
+      const unavailable = g.sites.length - g.listed;
+      return (
+        <section class="cov-group" data-c={g.id} aria-labelledby={`group-${g.id}`}>
+          <h3 id={`group-${g.id}`}>{g.label}</h3>
+          <p class="cov-count">{sitesWord(g.listed)}, {num(g.verified)} verified{unavailable > 0 && `, ${num(unavailable)} not available right now`}</p>
+          {first.size > 0 && (
+            <nav class="cov-az no-print" aria-label={`${g.label}, A to Z`}>
+              {[...first.values()].map((l) => <a href={`#${g.id}-${l}`}>{l}<span class="visually-hidden"> in {g.label}</span></a>)}
+            </nav>
+          )}
+          <p class="cov-empty">We have not verified a site in this group yet.</p>
+          <ul class="cov-list" role="list">
+            {g.sites.map((s, i) => {
+              const guide = s.status !== "not_available" ? guideByHost.get(s.site) : undefined;
+              return <li data-v={s.status === "verified" ? "1" : undefined} id={first.has(i) ? `${g.id}-${first.get(i)}` : undefined}><b>{s.name}</b> <span>{s.site}</span><small>{meta(s)}{guide && <> · <a href={url(guide.out)}>Free guide<span class="visually-hidden"> for {s.name}</span></a></>}</small></li>;
+            })}
+          </ul>
+        </section>
+      );
+    })}
+  </div>
+</Section>
+
+<Section tone="brand" title="Rather not do it all by hand?" titleId="let-us">
+  {/* source: PLAN_V1 D1 (three tiers) and D4 (daily checks, re-scan); runs locally (netpolicy.py). Same band as /guides/. */}
+  <p class="max-w-measure text-lead">Free My ID does the repetitive part for you on your own computer, keeps track of every site, and checks again later.</p>
+  <div class="mt-m"><CtaDownload look="onBrand" /></div>
+</Section>
+<div class="wrap py-l">
+  {/* source: coverage.public.yaml `updated` (the month only); /guides/ are built from the public sample registry */}
+  <p class="max-w-measure text-small text-muted">List updated {monthLabel(updated)}. This page shows each site's name, its main web address and how it is handled. Want to do one yourself? See the <a href={url("guides/")}>free opt-out guides</a>.</p>
+</div>
+</Base>
+
+<style is:global>
+/* /brokers/ only. Plain CSS on the site tokens; rows carry no classes (1,000 rows must stay light). */
+/* the two headline numbers stay side by side, down to 320px */
+.cov-stats { grid-template-columns: 1fr 1fr; }
+@media (max-width: 30em) { .cov-stats .stat { padding: var(--fmi-space-s); } }
+
+.cov-routes { display: grid; gap: var(--fmi-space-s); grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); }
+.cov-routes > div {
+  padding: var(--fmi-space-m); border: 1px solid var(--fmi-color-line); border-radius: var(--fmi-radius-xl);
+  background: var(--fmi-color-card);
+}
+.cov-routes dt { font-weight: 700; color: var(--fmi-color-heading); }
+.cov-routes dt span { display: block; font-size: var(--fmi-text-small); font-weight: 400; color: var(--fmi-color-muted); }
+.cov-routes dd { margin: var(--fmi-space-2xs) 0 0; }
+
+.cov-controls { display: grid; gap: var(--fmi-space-s); margin-block: var(--fmi-space-m); }
+.cov-controls fieldset { display: flex; flex-wrap: wrap; gap: var(--fmi-space-2xs); margin: 0; padding: 0; border: 0; min-inline-size: 0; }
+.cov-controls legend { padding: 0; margin-block-end: var(--fmi-space-2xs); font-weight: 700; color: var(--fmi-color-heading); }
+.cov-controls label {
+  display: inline-flex; align-items: center; gap: 0.5em; min-block-size: var(--fmi-tap); inline-size: fit-content;
+  padding: 0.25em 0.9em; border: 1px solid var(--fmi-color-line-strong); border-radius: var(--fmi-radius-pill);
+  background: var(--fmi-color-card); cursor: pointer;
+}
+.cov-controls label span { color: var(--fmi-color-muted); }
+.cov-controls input { inline-size: 1.2em; block-size: 1.2em; margin: 0; flex: none; accent-color: var(--fmi-color-brand); }
+.cov-controls label:has(:checked) { border-color: var(--fmi-color-brand); background: var(--fmi-color-brand-soft); box-shadow: inset 0 0 0 1px var(--fmi-color-brand); }
+
+.cov-group { margin-block-start: var(--fmi-space-l); }
+.cov-count { margin: var(--fmi-space-3xs) 0 0; color: var(--fmi-color-muted); }
+.cov-empty { display: none; margin: var(--fmi-space-s) 0 0; }
+.cov-az { display: flex; flex-wrap: wrap; gap: var(--fmi-space-3xs); margin-block-start: var(--fmi-space-s); }
+.cov-az a {
+  display: inline-flex; align-items: center; justify-content: center; min-inline-size: 2.4rem; min-block-size: 2.4rem;
+  padding-inline: 0.4em; border: 1px solid var(--fmi-color-line); border-radius: var(--fmi-radius-sm);
+  background: var(--fmi-color-card); font-weight: 700; text-decoration: none;
+}
+.cov-az a:hover { border-color: var(--fmi-color-line-strong); text-decoration: underline; }
+
+.cov-list {
+  display: grid; gap: 0 var(--fmi-space-m); margin: var(--fmi-space-s) 0 0; padding: 0; list-style: none;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+}
+.cov-list li {
+  min-inline-size: 0; margin: 0; padding: var(--fmi-space-2xs) 0 var(--fmi-space-2xs) var(--fmi-space-xs);
+  border-block-end: 1px solid var(--fmi-color-line); border-inline-start: 3px solid var(--fmi-color-line);
+  overflow-wrap: anywhere; scroll-margin-top: 6rem;
+}
+.cov-list li[data-v] { border-inline-start-color: var(--fmi-color-ok); }
+.cov-list b { color: var(--fmi-color-heading); }
+.cov-list span { font-size: var(--fmi-text-small); color: var(--fmi-color-muted); }
+.cov-list small { display: block; font-size: var(--fmi-text-small); color: var(--fmi-color-muted); }
+/* a 44px target for the guide link without making its row taller */
+.cov-list a { display: inline-block; padding-block: 0.55em; margin-block: -0.55em; }
+.cov-list a span { font-size: inherit; }
+
+/* Filters, no JavaScript. One rule per group in lib/coverage.ts CATEGORIES. */
+@supports selector(:has(*)) {
+  .cov:has(#cov-c-people_search:checked) .cov-group:not([data-c="people_search"]),
+  .cov:has(#cov-c-background_check:checked) .cov-group:not([data-c="background_check"]),
+  .cov:has(#cov-c-phone_lookup:checked) .cov-group:not([data-c="phone_lookup"]),
+  .cov:has(#cov-c-family_tree:checked) .cov-group:not([data-c="family_tree"]),
+  .cov:has(#cov-c-risk_data:checked) .cov-group:not([data-c="risk_data"]),
+  .cov:has(#cov-c-data_broker:checked) .cov-group:not([data-c="data_broker"]),
+  .cov:has(#cov-c-other:checked) .cov-group:not([data-c="other"]),
+  .cov:has(#cov-v:checked) .cov-list li:not([data-v]),
+  .cov:has(#cov-v:checked) .cov-az { display: none; }
+  .cov:has(#cov-v:checked) .cov-group:not(:has(li[data-v])) .cov-empty { display: block; }
+}
+@supports not selector(:has(*)) {
+  .cov-controls { display: none; }
+}
+@media (forced-colors: active) {
+  .cov-controls label:has(:checked) { outline: 2px solid Highlight; }
+  .cov-list li[data-v] { border-inline-start-color: Highlight; }
+}
+@media print {
+  .cov-list { grid-template-columns: repeat(3, 1fr); }
+  .cov-list li { break-inside: avoid; }
+}
+</style>

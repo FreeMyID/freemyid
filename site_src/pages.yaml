@@ -27,6 +27,14 @@
   title: "Free opt-out guides for people-search sites"
   description: Step-by-step, plain-English guides to remove yourself from Spokeo, Whitepages, BeenVerified and other people-search sites. Free, no app needed.
   jsonld: [breadcrumbs]
+- id: brokers
+  out: brokers/
+  template: pages/brokers.html   # not used: v3_only (web/src/pages/brokers/index.astro, from brokers/coverage.public.yaml)
+  v3_only: true
+  label: Sites we cover
+  title: "Sites we cover: people-search sites and data brokers"
+  description: The people-search and data-broker sites on the Free My ID list, how each one is handled, and which ones we have verified ourselves.
+  jsonld: [breadcrumbs]
 - id: help-a-parent
   out: guides/help-a-parent-remove-their-information/
   og_image: og-guide-help-a-parent   # brand/social/og (WO-17x, Iris), alt from brand/README.md
