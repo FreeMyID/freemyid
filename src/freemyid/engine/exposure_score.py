@@ -83,17 +83,22 @@ class SitePoints:
         return self.base + self.extra + self.contact
 
 
+def _count(value: object) -> int:
+    """Ignore missing or invalid counts from older data and injected fetchers."""
+    return value if isinstance(value, int) and not isinstance(value, bool) and value > 0 else 0
+
+
 def site_points(e: ExposureEntry, weighted: bool = True) -> SitePoints | None:
     """None when the site adds nothing (not found, or nothing known)."""
     pct = weight(e.category) if weighted else 100
     if e.match_level == MatchLevel.CONFIRMED:
-        conf = [li for li in e.listings if li.match_level == MatchLevel.CONFIRMED]
+        conf = [li for li in (e.listings or []) if li.match_level == MatchLevel.CONFIRMED]
         n_extra = max(0, min(MAX_EXTRA_PER_SITE, len(conf) - 1))
         contact = any(li.contact_shown for li in conf)
         return SitePoints(entry=e, confirmed=True, base=_w(W_CONFIRMED_SITE, pct),
                           extra=_w(W_EXTRA_LISTING * n_extra, pct), extra_n=n_extra,
                           contact=_w(W_CONTACT, pct) if contact else 0,
-                          relatives=sum(li.relatives_shown for li in conf))
+                          relatives=sum(_count(li.relatives_shown) for li in conf))
     if e.match_level == MatchLevel.POSSIBLE:
         return SitePoints(entry=e, confirmed=False, base=_w(W_POSSIBLE_SITE, pct), extra=0,
                           extra_n=0, contact=0, relatives=0)

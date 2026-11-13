@@ -13,6 +13,10 @@ from __future__ import annotations
 
 from functools import cache
 
+# Expansion keeps the requested token plus the first alternatives in lexical order.
+# Membership is deterministic; the public set return type has no iteration-order promise.
+MAX_VARIANTS = 32
+
 #: formal name first, then the short forms. Lower case, ASCII.
 GROUPS: tuple[tuple[str, ...], ...] = (
     ("abigail", "abby", "gail"),
@@ -100,11 +104,15 @@ def _index() -> dict[str, frozenset[str]]:
     for g in GROUPS:
         for n in g:
             idx.setdefault(n, set()).update(g)
-    return {k: frozenset(v) for k, v in idx.items()}
+    return {k: frozenset({k, *sorted(v - {k})[:MAX_VARIANTS - 1]}) for k, v in idx.items()}
 
 
 def expand(first: str) -> set[str]:
-    """`first` (already normalized: lower case ASCII) plus every name in a group it is in."""
+    """Normalized `first` plus its direct alternatives, at most MAX_VARIANTS names.
+
+    Keep the input token, then lexical alternatives if future table groups exceed the cap.
+    The current table fits without truncation. The return value remains an unordered set.
+    """
     f = first.strip()
     if not f:
         return set()
