@@ -518,7 +518,9 @@ def _previous_name(d: Draft, text: str) -> PersonName:
 
 def build_profile(d: Draft) -> Profile:
     if not d.consent_ack and d.existing_consent is None:
-        raise SaveError("Consent has not been given.")
+        raise SaveError("Free My ID does not have your permission yet, so nothing was saved. "
+                        "Please go back to the first step, read it and agree, then press "
+                        "Finish again.")
     minor = is_minor(d)
     if d.existing_consent is not None and not d.consent_ack:
         consent = d.existing_consent
