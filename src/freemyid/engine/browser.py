@@ -14,6 +14,10 @@
   `check_escaped` raise BlockedByPolicy (never retried). Residual gap: IP-literal and
   loopback redirect targets bypass the resolver floor; they are detected (BlockedByPolicy)
   but the request itself has already been sent. Full fix = allowlisting proxy (SEC-16 A).
+  WO-634: a sub-resource / sub-frame redirect hop to a DNS name the floor never resolves is
+  recorded as blocked (nothing was sent), not an escape; main-frame hops stay escapes.
+* WO-634: each browser announces its own UA (a headed window no longer borrows the
+  headless browser's "HeadlessChrome" string).
 * SEC-36: the headed human-in-the-loop windows (D9 fill_for_me, D10 listing finder) may
   opt in with `new_context(..., headed=True, allow_captcha_frames=True)`. Only then the
   CAPTCHA widget hosts (`netpolicy.captcha_subresource_allowed` / `captcha_hosts`) load as
@@ -189,6 +193,7 @@ class BrowserManager:
         self._browser: Browser | None = None
         self._ua: str | None = None
         self._headed: list[Browser] = []
+        self._headed_ua: dict[int, str] = {}
         self._persistent: BrowserContext | None = None
         self.rate = RateLimiter(self.cfg.min_delay_s)
         self.fast = self.cfg.max_delay_s <= 0 or bool(fixture_base)   # dev/test: no sleeps
@@ -244,15 +249,45 @@ class BrowserManager:
             return await self._pw.chromium.launch(executable_path=shell, headless=headless,
                                                   args=args)
 
-    async def user_agent(self) -> str:
-        if self._ua is None:
-            b = await self._ensure()
-            ctx = await b.new_context(service_workers="block")
+    @staticmethod
+    async def _real_ua(b: Browser) -> str:
+        """The UA string this very browser sends by default. Read from the browser process
+        (CDP Browser.getVersion), so a headed browser never opens a probe window; a blank
+        probe page is the fallback."""
+        try:
+            cdp = await b.new_browser_cdp_session()
+            try:
+                info = await cdp.send("Browser.getVersion")
+            finally:
+                await cdp.detach()
+            ua = str(info.get("userAgent") or "")
+            if ua:
+                return ua
+        except Exception as e:  # noqa: BLE001 - not Chromium / no CDP: use a probe page
+            log.debug("browser UA via CDP unavailable (%s)", type(e).__name__)
+        ctx = await b.new_context(service_workers="block")
+        try:
             pg = await ctx.new_page()
-            real = await pg.evaluate("navigator.userAgent")
+            return str(await pg.evaluate("navigator.userAgent"))
+        finally:
             await ctx.close()
-            self._ua = f"{real} {self.cfg.user_agent_suffix}".strip()
-        return self._ua
+
+    async def user_agent(self, browser: Browser | None = None) -> str:
+        """Honest UA: `browser`'s own UA + `config.user_agent_suffix`.
+
+        WO-634: a headed window must announce ITS OWN UA. It used to get the shared
+        (headless) browser's string, i.e. "HeadlessChrome/...", which bot walls refuse at
+        once, and which no longer described the browser the person was looking at."""
+        if browser is None or browser is self._browser:
+            if self._ua is None:
+                real = await self._real_ua(await self._ensure())
+                self._ua = f"{real} {self.cfg.user_agent_suffix}".strip()
+            return self._ua
+        key = id(browser)
+        if key not in self._headed_ua:
+            real = await self._real_ua(browser)
+            self._headed_ua[key] = f"{real} {self.cfg.user_agent_suffix}".strip()
+        return self._headed_ua[key]
 
     def allowed_hosts(self, domains: list[str], extra: list[str] | None = None) -> set[str]:
         return self.netpolicy.for_broker(domains, extra)
@@ -288,19 +323,62 @@ class BrowserManager:
             return "captcha"
         return "block"
 
-    def is_escape(self, req: Any, hosts: set[str], allow_captcha_frames: bool = False) -> bool:
-        """Off-list redirect hop (any frame) or off-list main-frame navigation (SEC-16).
-        In an opted-in headed window a CAPTCHA sub-frame / sub-resource is not an escape,
-        but a main-frame navigation to a CAPTCHA host still is (SEC-36)."""
+    def floor_stops(self, url: str, allow_captcha_frames: bool = False) -> bool:
+        """True if the browser-wide `--host-resolver-rules` floor (`launch_args`) can never
+        resolve this URL's host, so a request to it is never sent. IP literals and loopback
+        names are never counted as stopped (SEC-16 residual gap: the strict side)."""
+        host = host_of(url)
+        if not host or _is_ip(host) or host in LOOPBACK_HOSTS or host.endswith(".localhost"):
+            return False
+        if self.fixture_base:
+            return True                   # fixture floor: loopback only
+        floor = set(self.netpolicy.allowed)
+        if allow_captcha_frames:
+            floor |= captcha_hosts()
+        return not _host_ok(host, floor)
+
+    def request_verdict(self, req: Any, hosts: set[str],
+                        allow_captcha_frames: bool = False) -> str:
+        """"ok", "escape" or "stopped" for a request the context saw (SEC-16, WO-634).
+
+        * escape: an off-list main-frame navigation (any hop of it), or a sub-resource /
+          sub-frame redirect hop to a host the network floor would still let through
+          (IP literal, loopback, another broker's domain). The window must stop.
+        * stopped: a sub-resource / sub-frame redirect hop to a DNS name the floor never
+          resolves. Nothing was sent, so it is recorded as blocked, like any other
+          off-list sub-resource, instead of ending the person's window (WO-634: ordinary
+          pages redirect pixels and images to CDNs all the time).
+        In an opted-in headed window a CAPTCHA sub-frame / sub-resource is ok, but a
+        main-frame navigation to a CAPTCHA host is still an escape (SEC-36)."""
         try:
             hop = req.redirected_from is not None
         except Exception:  # noqa: BLE001
             hop = True
         nav = self._is_main_frame_navigation(req)
         if not (hop or nav) or self.url_allowed(req.url, hosts):
-            return False
-        return not (allow_captcha_frames and not nav and not self.fixture_base and
-                    captcha_subresource_allowed(req.url, is_main_frame_navigation=False))
+            return "ok"
+        if nav:
+            return "escape"
+        if allow_captcha_frames and not self.fixture_base and \
+                captcha_subresource_allowed(req.url, is_main_frame_navigation=False):
+            return "ok"
+        return "stopped" if self.floor_stops(req.url, allow_captcha_frames) else "escape"
+
+    def is_escape(self, req: Any, hosts: set[str], allow_captcha_frames: bool = False) -> bool:
+        """Off-list main-frame navigation, or a sub-resource redirect hop the network floor
+        would not stop (SEC-16; see `request_verdict`)."""
+        return self.request_verdict(req, hosts, allow_captcha_frames) == "escape"
+
+    def _request_listener(self, hosts: set[str], blocked: list[str], escaped: list[str],
+                          captcha_ok: bool) -> Callable[[Any], None]:
+        def _on_request(req: Any) -> None:
+            # Redirect hops never reach the route handler (SEC-16): record off-list ones.
+            what = self.request_verdict(req, hosts, captcha_ok)
+            if what == "escape":
+                escaped.append(host_of(req.url) or "?")
+            elif what == "stopped":
+                blocked.append(host_of(req.url) or "?")
+        return _on_request
 
     def make_route_handler(self, hosts: set[str], blocked: list[str],
                            allow_captcha_frames: bool = False) -> Callable[[Any], Awaitable[None]]:
@@ -339,18 +417,13 @@ class BrowserManager:
             self._headed.append(b)
         else:
             b = await self._ensure()
-        ctx = await b.new_context(user_agent=await self.user_agent(),
+        ctx = await b.new_context(user_agent=await self.user_agent(b),
                                   storage_state=storage_state, locale="en-US",
                                   service_workers="block")
         blocked: list[str] = []
         escaped: list[str] = []
 
-        def _on_request(req: Any) -> None:
-            # Redirect hops never reach the route handler (SEC-16): record off-list ones.
-            if self.is_escape(req, hosts, captcha_ok):
-                escaped.append(host_of(req.url) or "?")
-
-        ctx.on("request", _on_request)
+        ctx.on("request", self._request_listener(hosts, blocked, escaped, captcha_ok))
         await ctx.route("**/*", self.make_route_handler(hosts, blocked, captcha_ok))
         ctx.freemyid_blocked = blocked  # type: ignore[attr-defined]
         ctx.freemyid_escaped = escaped  # type: ignore[attr-defined]
@@ -423,11 +496,7 @@ class BrowserManager:
         blocked: list[str] = []
         escaped: list[str] = []
 
-        def _on_request(req: Any) -> None:
-            if self.is_escape(req, hosts, captcha_ok):
-                escaped.append(host_of(req.url) or "?")
-
-        ctx.on("request", _on_request)
+        ctx.on("request", self._request_listener(hosts, blocked, escaped, captcha_ok))
         await ctx.route("**/*", self.make_route_handler(hosts, blocked, captcha_ok))
         ctx.freemyid_blocked = blocked  # type: ignore[attr-defined]
         ctx.freemyid_escaped = escaped  # type: ignore[attr-defined]
@@ -523,6 +592,7 @@ class BrowserManager:
         pw, self._pw = self._pw, None
         self._persistent, self._browser = None, None
         self._headed.clear()
+        self._headed_ua.clear()
         if pw is not None:
             await pw.stop()
 
@@ -534,6 +604,7 @@ class BrowserManager:
             for hb in self._headed:
                 await hb.close()
             self._headed.clear()
+            self._headed_ua.clear()
             if self._browser:
                 await self._browser.close()
             if self._pw:

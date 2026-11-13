@@ -73,6 +73,30 @@ MSG_PRACTICE = ("Practice mode is on, but this is the real website: pressing Sub
 MSG_HINT = "Free My ID will notice when you're done. To stop, just close this window."
 MSG_DONE = "Done! Free My ID saved proof that you sent it. You can close this window now."
 
+# WO-634: the window never closes without saying why. Each reason below has one plain
+# sentence for the person (shown in the window before it closes, and in the app) and a
+# "Next step" line on the to-do card, which is kept. The card's button that opens the page
+# in the person's own browser is "Open the site myself" (wizard/dashboard.py).
+_OPEN_OWN = "click \"Open the site myself\" on its to-do"
+NOTICES: dict[str, str] = {
+    "blocked": ("This site sent us to an address we don't recognize, so we stopped. You can "
+                f"finish this one in your normal browser: {_OPEN_OWN}."),
+    "challenge": ("This site would not show its form to our helper window. You can finish "
+                  f"this one in your normal browser: {_OPEN_OWN} and use the Copy buttons."),
+    "nothing_filled": ("We could not find the boxes to fill in on this site. You can finish "
+                       f"this one in your normal browser: {_OPEN_OWN} and use the Copy "
+                       "buttons."),
+}
+_HANDOFF_STEP: dict[str, str] = {
+    "blocked": ("Next step: this site sent the helper window to an address Free My ID does "
+                "not know, so it stopped. Click \"Open the site myself\" and finish it in "
+                "your normal browser."),
+    "challenge": ("Next step: this site would not show its form to the helper window. Click "
+                  "\"Open the site myself\" and use the Copy buttons below."),
+    "nothing_filled": ("Next step: Free My ID could not find the boxes to fill in. Click "
+                       "\"Open the site myself\" and use the Copy buttons below."),
+}
+
 Status = Literal["submitted", "fallback", "refused"]
 
 
@@ -93,6 +117,7 @@ class FillResult:
     todo_id: str | None = None      # Assisted card to fall back to (fallback)
     request_id: str | None = None   # SENT request (submitted)
     evidence_ids: list[str] = field(default_factory=list)
+    notice: str | None = None       # plain sentence for the person (WO-634), never a value
 
     @property
     def ok(self) -> bool:
@@ -147,9 +172,11 @@ def url_matches(pattern: str | None, url: str) -> bool:
         return False
 
 
-def _banner_js(lines: list[str], done: bool) -> str:
+def _banner_js(lines: list[str], done: bool, stop: bool = False) -> str:
     import json
     bg, fg = ("#0b6b2e", "#ffffff") if done else ("#ffe600", "#000000")
+    if stop:
+        bg, fg = ("#b00020", "#ffffff")
     return f"""
 (() => {{
   const id = {json.dumps(BANNER_ID)};
@@ -395,22 +422,36 @@ def _event(store: Store, profile_id: str, broker_id: str, action: str, actor: Ac
                     from_state=frm, to_state=to, detail=detail))
 
 
+def _strip_step(body: str) -> str:
+    """The card body without a leading "Next step:" line we put there earlier."""
+    while body.startswith("Next step:"):
+        body = body.split("\n", 1)[1] if "\n" in body else ""
+    return body
+
+
 def _fallback_todo(store: Store, profile: Profile, broker: Broker, listings: list[Listing],
-                   law: StateLaw | None, reason: str | None) -> str:
+                   law: StateLaw | None, reason: str | None,
+                   handoff: str | None = None) -> str:
     """Make sure the Assisted card exists (deduplicated) and return its id.
 
     `timeout`, `window_closed` and `error_page` put a plain next step on a new card.
-    An existing card is reused as-is (same id). `error` / `challenge` stay the words
-    `assisted_todo` already knows.
+    An existing card is reused (same id); only a hand-off reason (`_HANDOFF_STEP`, WO-634)
+    rewrites its "Next step" line, so the person sees why the window stopped. `error` /
+    `challenge` stay the words `assisted_todo` already knows.
     """
     from ..submitters import assisted
     from .handoff import persist_todo
+    hstep = _HANDOFF_STEP.get(handoff or "")
     for t in store.list_todos(profile.id):
         if t.broker_id == broker.id and t.kind == TodoKind.ASSISTED_OPT_OUT:
+            if hstep:
+                body = hstep + "\n" + _strip_step(t.body)
+                if body != t.body:
+                    store.save_todo(t.model_copy(update={"body": body}))
             return t.id
     known = reason if reason in ("error", "challenge") else None
     todo = assisted.assisted_todo(profile, broker, listings, reason=known)
-    step = _NEXT_STEP.get(reason or "")
+    step = hstep or _NEXT_STEP.get(reason or "")
     if step:
         todo = todo.model_copy(update={"body": step + "\n" + todo.body})
     return persist_todo(store, todo).id
@@ -450,6 +491,43 @@ def _record_success(store: Store, profile: Profile, broker: Broker, listing: Lis
                                                    TodoKind.CAPTCHA):
             store.complete_todo(t.id)
     return req.id, ev_ids
+
+
+# WO-634: forms that a script draws after the page loads get a short, fixed wait. Never
+# extended, never retried with changes: it only waits for the page to finish drawing.
+_FORM_WAIT_S = 8.0
+_FORM_SEL = "input:not([type=hidden]), textarea, select"
+
+
+async def _wait_for_form(page: Page, wait_s: float) -> None:
+    if wait_s <= 0:
+        return
+    try:
+        await page.wait_for_selector(_FORM_SEL, state="visible", timeout=int(wait_s * 1000))
+    except Exception as e:  # noqa: BLE001 - no form (yet): fill_page reports nothing_filled
+        log.debug("fill_for_me: no form control appeared (%s)", type(e).__name__)
+
+
+async def _is_block_page(page: Page, resp: Any) -> bool:
+    """A challenge / block page instead of the form (reads only what the site sent)."""
+    from .browser import page_challenge
+    try:
+        status = getattr(resp, "status", None)
+        return await asyncio.wait_for(page_challenge(page, status), _CALL_TIMEOUT_S) is not None
+    except Exception:  # noqa: BLE001 - odd page: count it as "no form"
+        return False
+
+
+async def _show_stop(page: Page, text: str, close_delay_s: float) -> None:
+    """Best effort: tell the person in the window why it is about to close (WO-634)."""
+    try:
+        if page.is_closed():
+            return
+        await _eval_t(page, _banner_js([text], done=False, stop=True))
+        if close_delay_s > 0:
+            await asyncio.sleep(close_delay_s * 2)
+    except Exception as e:  # noqa: BLE001 - error page / closed: the app still says it
+        log.debug("fill_for_me: stop banner not shown (%s)", type(e).__name__)
 
 
 # --------------------------------------------------------------------------- entry point
@@ -502,7 +580,9 @@ async def fill_for_me(store: Store, profile_id: str, broker_id: str, *, timeout_
 
     def fallback(reason: str) -> FillResult:
         res.status, res.reason = "fallback", reason
-        res.todo_id = _fallback_todo(store, profile, broker, listings, law, _todo_reason(reason))
+        res.notice = NOTICES.get(reason)
+        res.todo_id = _fallback_todo(store, profile, broker, listings, law, _todo_reason(reason),
+                                     handoff=reason if reason in _HANDOFF_STEP else None)
         # Codes and counts only: never the page address, the next-step sentence, or a value.
         log.info("fill_for_me fallback code=%s filled=%s submit_seen=%s",
                  reason[:40], len(res.filled), int(res.submit_seen))
@@ -537,6 +617,8 @@ async def fill_for_me(store: Store, profile_id: str, broker_id: str, *, timeout_
             return await _drive(store, profile, broker, listing, bm, page, res, timeout_s,
                                 practice, on_ready, close_delay_s, fallback)
         except BlockedByPolicy:
+            # WO-634: say why before the window goes (it used to vanish, like a crash).
+            await _show_stop(page, NOTICES["blocked"], close_delay_s)
             return fallback("blocked")
         except Exception as e:  # noqa: BLE001 - window closed mid-call, odd page, ...
             if page.is_closed():
@@ -561,7 +643,8 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
     closed = {"v": False}
     page.on("close", lambda _p: closed.__setitem__("v", True))
 
-    await bm.goto(page, str(broker.opt_out_url), check_challenge=False)
+    resp = await bm.goto(page, str(broker.opt_out_url), check_challenge=False)
+    await _wait_for_form(page, min(_FORM_WAIT_S, timeout_s / 5))
     values = filler.plan_values(profile, broker, listing)
     rep = await filler.fill_page(page, values)
     if broker.safe_checkboxes:
@@ -570,7 +653,10 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
                                                sorted(set(rep.withheld)))
     _event(store, profile.id, broker.id, "fill_for_me_filled", **rep.summary())
     if not rep.filled:
-        return fallback("nothing_filled")
+        # WO-634: a bot wall / block page is not "no form". Either way, say so first.
+        why = "challenge" if await _is_block_page(page, resp) else "nothing_filled"
+        await _show_stop(page, NOTICES[why], close_delay_s)
+        return fallback(why)
     # Kept only as a fallback: the evidence shot is taken when the person submits (SEC-37).
     filled_png = await page.screenshot(full_page=True)
 

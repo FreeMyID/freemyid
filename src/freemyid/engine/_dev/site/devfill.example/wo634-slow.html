@@ -1,0 +1,12 @@
+<!doctype html><html><head><title>Dev Fill: slow form</title></head><body>
+<!-- DEV FIXTURE (WO-634): a script draws the form after the page has loaded. Fake site. -->
+<h1>Opt out</h1>
+<div id="app">Loading...</div>
+<script>
+setTimeout(() => {
+  document.getElementById('app').innerHTML =
+    '<form action="/done" method="post"><label for="nm">Your name</label> ' +
+    '<input id="nm" name="name"><button type="submit">Submit</button></form>';
+}, 1200);
+</script>
+</body></html>
