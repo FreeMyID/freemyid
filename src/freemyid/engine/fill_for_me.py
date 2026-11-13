@@ -20,7 +20,12 @@ Flow (only ever started by the person, from the dashboard; scheduled runs never 
      a SENT web-form Request, the broker moves to SUBMITTED (or AWAITING_VERIFICATION)
      exactly like a successful web_form submission, and the Assisted to-do is closed;
   6. timeout / window closed / the page moved to an error address / no success signal /
-     any error: the Assisted to-do stays (or is created) and names the next step.
+     any error: the Assisted to-do stays (or is created) and names the next step;
+  7. WO-634/635: the window never closes silently. A redirect off the site, a bot wall, no
+     form, or a Turnstile widget that reports failure (read passively from the widget's own
+     result message, after a fixed grace) ends with a plain message in the window and in the
+     app, and the kept card points to "Open the site myself". A failed Turnstile is saved as
+     evidence (observed CAPTCHA_ON_REQUEST). No evasion of any kind (shared rule 5).
 
 Practice mode (`real_submissions_enabled: false`) still fills: the person, not Free My ID,
 presses Submit. The banner then says plainly that Submit sends a real request.
@@ -86,6 +91,9 @@ NOTICES: dict[str, str] = {
     "nothing_filled": ("We could not find the boxes to fill in on this site. You can finish "
                        f"this one in your normal browser: {_OPEN_OWN} and use the Copy "
                        "buttons."),
+    # WO-635: the site's own "are you human" check refused the helper window.
+    "challenge_failed": ("This site's 'are you human' check doesn't work in our helper "
+                         f"window. Please {_OPEN_OWN} and we'll show you what to type."),
 }
 _HANDOFF_STEP: dict[str, str] = {
     "blocked": ("Next step: this site sent the helper window to an address Free My ID does "
@@ -95,6 +103,9 @@ _HANDOFF_STEP: dict[str, str] = {
                   "\"Open the site myself\" and use the Copy buttons below."),
     "nothing_filled": ("Next step: Free My ID could not find the boxes to fill in. Click "
                        "\"Open the site myself\" and use the Copy buttons below."),
+    "challenge_failed": ("Next step: this site's \"are you human\" check does not work in "
+                         "the helper window. Click \"Open the site myself\", then type in "
+                         "what the Copy buttons below show."),
 }
 
 Status = Literal["submitted", "fallback", "refused"]
@@ -493,6 +504,84 @@ def _record_success(store: Store, profile: Profile, broker: Broker, listing: Lis
     return req.id, ev_ids
 
 
+# WO-635: a Cloudflare Turnstile widget that answers "can't verify" in the helper window.
+# Read passively: the widget frame tells its embedding page the result with a message
+# (source "cloudflare-challenge", origin https://challenges.cloudflare.com). We only listen
+# for that message; we never post, click, or look inside the widget, and change nothing
+# about the browser. A failure the widget clears by itself within a fixed grace period
+# (never extended) is not a hand-off (EVIDENCE_ENGINE.md section 5, SEC-EE-5).
+_TURNSTILE_GRACE_S = 10.0
+_TURNSTILE_ATTR = "data-freemyid-turnstile"
+_TURNSTILE_WATCH_JS = f"""
+() => {{
+  const k = Symbol.for('freemyid.turnstile');
+  if (window[k]) return true;
+  window[k] = true;
+  window.addEventListener('message', (e) => {{
+    if (e.origin !== 'https://challenges.cloudflare.com') return;
+    let d = e.data;
+    if (typeof d === 'string') {{ try {{ d = JSON.parse(d); }} catch (_) {{ return; }} }}
+    if (!d || typeof d !== 'object' || d.source !== 'cloudflare-challenge') return;
+    const ev = String(d.event || '');
+    const root = document.documentElement;
+    if (ev === 'fail' || ev === 'error' || ev === 'reject') root.setAttribute(
+      {_TURNSTILE_ATTR!r}, 'failed');
+    else if (ev === 'complete') root.setAttribute({_TURNSTILE_ATTR!r}, 'ok');
+  }});
+  return true;
+}}
+"""
+_TURNSTILE_STATE_JS = f"() => document.documentElement.getAttribute({_TURNSTILE_ATTR!r})"
+
+
+def submit_like_post(url: str, method: str, resource_type: str) -> bool:
+    """An XHR/fetch that may be the person submitting (SEC-32). WO-635: the site's own
+    Cloudflare background calls (/cdn-cgi/...) are never a submit. Host checks are the
+    caller's."""
+    if resource_type not in ("xhr", "fetch") or method in ("GET", "HEAD", "OPTIONS"):
+        return False
+    return not _path_of(url).startswith("/cdn-cgi/")
+
+
+def _record_turnstile_sighting(store: Store, profile: Profile, broker: Broker,
+                               listing: Listing | None, page_url: str,
+                               frame_hosts: list[str], png: bytes | None) -> None:
+    """Save the sighting as evidence (WO-635): an observed CAPTCHA_ON_REQUEST / turnstile
+    ObstructionRecord as a BLOCK_CAPTURE JSON (PII-free: ids, enums, host and path only)
+    plus the screenshot, both through the encrypted evidence store. Event: codes only."""
+    import json
+    from urllib.parse import urlsplit
+
+    from ..models import ObstructionKind, ObstructionRecord, ObstructionVendor
+    from ..submitters import base
+    now = utcnow()
+    kind, vendor = ObstructionKind.CAPTCHA_ON_REQUEST, ObstructionVendor.TURNSTILE
+    detail: dict[str, Any] = {"kind": kind.value, "vendor": vendor.value,
+                              "surface": "optout_form", "window": "helper"}
+    lid = listing.id if listing else None
+    ev_ids: list[str] = []
+    if png:
+        shot = base.evidence(profile.id, broker.id, EvidenceKind.SCREENSHOT, "png",
+                             listing_id=lid, caption="are-you-human check failed")
+        ev_ids.append(store.save_evidence(shot, png).id)
+    try:
+        u = urlsplit(page_url)
+        rec = ObstructionRecord(profile_id=profile.id, broker_id=broker.id,
+                                surface="optout_form", kind=kind, vendor=vendor,
+                                observed_at=[now], state=profile.state_of_residence or "",
+                                evidence_ids=ev_ids)
+        cap = {"obstruction": rec.model_dump(mode="json"),
+               "final_url": f"{u.scheme}://{u.hostname}{u.path or '/'}",
+               "frame_hosts": sorted({h for h in frame_hosts if h})[:20],
+               "window": "helper", "observed_at": now.isoformat()}
+        ev = base.evidence(profile.id, broker.id, EvidenceKind.BLOCK_CAPTURE, "json",
+                           listing_id=lid, caption="are-you-human check failed")
+        store.save_evidence(ev, json.dumps(cap, sort_keys=True).encode("utf-8"))
+    except Exception as e:  # noqa: BLE001 - the hand-off matters more than the record
+        log.warning("turnstile sighting not recorded (%s)", type(e).__name__)
+    _event(store, profile.id, broker.id, "obstruction_observed", **detail)
+
+
 # WO-634: forms that a script draws after the page loads get a short, fixed wait. Never
 # extended, never retried with changes: it only waits for the page to finish drawing.
 _FORM_WAIT_S = 8.0
@@ -689,8 +778,7 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
             req = route.request
             try:
                 nav = req.is_navigation_request() and req.frame == page.main_frame
-                post = (req.resource_type in ("xhr", "fetch") and
-                        req.method not in ("GET", "HEAD", "OPTIONS") and
+                post = (submit_like_post(req.url, req.method, req.resource_type) and
                         bm.url_allowed(req.url, hosts))
             except Exception:  # noqa: BLE001 - no frame (worker): not a submit
                 nav = post = False
@@ -722,6 +810,7 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
     deadline = loop.time() + max(1, timeout_s)
     how: str | None = None
     seen_url = submit["base"].url
+    ts_failed_at: float | None = None
     try:
         while loop.time() < deadline:
             if closed["v"] or page.is_closed():
@@ -744,6 +833,16 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
                 # close). error_page is decided from seen_url when the time runs out.
                 if await _eval_t(page, _NEEDS_BANNER_JS):
                     await _eval_t(page, banner)   # page reloaded (e.g. a validation error)
+                # WO-635: listen (again, after a reload) for the widget's own result.
+                await _eval_t(page, _TURNSTILE_WATCH_JS)
+                ts = await _eval_t(page, _TURNSTILE_STATE_JS)
+                if ts == "failed":
+                    ts_failed_at = ts_failed_at if ts_failed_at is not None else loop.time()
+                    if loop.time() - ts_failed_at >= _TURNSTILE_GRACE_S:
+                        return await _turnstile_handoff(store, profile, broker, listing, page,
+                                                        close_delay_s, fallback)
+                else:
+                    ts_failed_at = None
             except Exception:  # noqa: BLE001 - mid-navigation; try again next tick
                 if closed["v"] or page.is_closed():
                     return fallback("window_closed")
@@ -776,6 +875,23 @@ async def _drive(store: Store, profile: Profile, broker: Broker, listing: Listin
     finally:
         if task is not None and not task.done():
             task.cancel()
+
+
+async def _turnstile_handoff(store: Store, profile: Profile, broker: Broker,
+                             listing: Listing | None, page: Page, close_delay_s: float,
+                             fallback: Callable[[str], FillResult]) -> FillResult:
+    """The check refused the helper window: keep the proof, say so plainly, hand off."""
+    from ..netpolicy import host_of
+    png: bytes | None = None
+    try:
+        await _eval_t(page, _REMOVE_BANNER_JS)
+        png = await asyncio.wait_for(page.screenshot(full_page=True), _CALL_TIMEOUT_S)
+    except Exception as e:  # noqa: BLE001 - the record and hand-off still happen
+        log.debug("turnstile screenshot failed: %s", type(e).__name__)
+    hosts = [host_of(f.url) or "" for f in page.frames] if hasattr(page, "frames") else []
+    _record_turnstile_sighting(store, profile, broker, listing, page.url, hosts, png)
+    await _show_stop(page, NOTICES["challenge_failed"], close_delay_s)
+    return fallback("challenge_failed")
 
 
 def fill_for_me_sync(store: Store, profile_id: str, broker_id: str, **kw: Any) -> FillResult:
