@@ -169,3 +169,18 @@ Row 8, staff handle hard cases (often, on higher plans):
 - EasyOptOuts: https://easyoptouts.com/ (fully automated; staff role for hard cases n/s)
 - Privacy Bee: https://www.privacybee.com/pricing (human analysts on Pro and Signature; Essentials automated)
 - Aura: https://www.aura.com/pricing (24/7 support and fraud remediation team; not stated for broker removal)
+
+## Wave 3 (verified-coverage growth), 2026-11-12
+
+Method: plain `curl` fetch (generic User-Agent, 1 request per second, no retries around bot protection) of each opt-out or privacy-rights page; an entry is `verified` only when the page loaded (HTTP 200, no challenge) and its text matches the route recorded. Pages behind Cloudflare, Radware or similar checks stay `unverified` with the reason in `verification_notes`. No request was submitted and no email was sent.
+
+| Source | URL | Accessed | Used for |
+|---|---|---|---|
+| California CPPA data broker registry CSV ("Last Updated 10/30/2026") | https://cppa.ca.gov/data_broker_registry/registry.csv | 2026-11-12 | Broker names, DBAs, websites, contact emails and the "how to exercise rights" page for batch 1 |
+| BADBOOL (yaelwrites) | https://raw.githubusercontent.com/yaelwrites/Big-Ass-Data-Broker-Opt-Out-List/master/README.md | 2026-11-12 | Re-read for people-search opt-out pages (updated 2026-10-31) |
+| InfoPay / Intermedia / Globicom "Your Privacy Choices" pages | https://staterecords.org/optout , https://courtrecords.us/optout/ , https://californiacourtrecords.us/optout/ , https://recordsfinder.com/optout/ , https://propertychecker.com/optout , https://www.statecourts.org/optout/ , https://courtcasefinder.com/optout , https://entitycheck.com/optout , https://sentinex.com/optout , https://goodcar.com/optout , https://members.idstrong.com/opt-out/ , https://infotracer.com/optout/ | 2026-11-12 | Eleven sister-site entries and the InfoTracer upgrade |
+| Digital Safety Products / Scalable Commerce help-center requests | https://www.publicinfoservices.com/help-center/privacy-requests , https://www.searchpublicrecords.com/help-center/privacy-requests , https://www.quickpublicrecords.com/help-center/privacy-requests , https://www.publicdatacheck.com/help-center/privacy-requests | 2026-11-12 | Form fields and identity-verification step |
+| Spy Dialer, BIGDBM, LocateSmarter opt-out pages | https://www.spydialer.com/optout , https://optout.bigdbm.com/ , https://locatesmarter.com/optout-form/ | 2026-11-12 | Form fields and routes |
+| SmartBackgroundChecks, USA People Search, Archives.com, Social Catfish, Pipl, CheckPeople, SearchQuarry opt-out pages | see each entry's `source_urls` | 2026-11-12 | Upgraded from unverified |
+| Radaris and PeekYou notices | https://radaris.com/control/privacy , https://www.peekyou.com/contact/ | 2026-11-12 | Both domains show a court-ordered transfer to Atlas Data Privacy Corporation; entries marked broken and disabled |
+| 35 marketing / data-broker privacy pages | see each entry's `source_urls` | 2026-11-12 | Email routes (generated CA-registry entries replaced by curated, page-checked entries) |
