@@ -200,3 +200,11 @@ Batch 4-5 additions (2026-11-12):
 | Opt-out manual 2026, data-broker list (domains only, third party) | https://github.com/thumpersecure/opt-out-manual-2026 (docs/data.js, dataBrokerSites) | 2026-11-12 | 17 marketing/B2B broker domains; each site's own privacy pages were found from its home page and fetched |
 | Broker privacy pages and do-not-sell forms for 47 CA-registry brokers | see each entry's `source_urls` | 2026-11-12 | Generated email entries replaced by curated, page-checked entries (email or form route) |
 | DeepSync privacy portal | https://privacy.deepsync.com/request/data | 2026-11-12 | DeepSync, CompactLists, Accudata |
+
+Wave 4 batch 1 (2026-11-12 and 2026-11-13):
+
+| Source | URL | Accessed | Used for |
+|---|---|---|---|
+| Each broker's own privacy or opt-out page (plain fetch, 1 request/sec, no bot protection worked around) | see each entry's `source_urls` | 2026-11-12 / 2026-11-13 | 49 generated entries and 36 older entries upgraded to verified; new verified entries CallerSmart, Public Record Reports, SignalHire, Searchbug, RealtyTrac, PhoneLookup, FastBackgroundCheck, Truecaller |
+| DeleteMe opt-out guide index and per-site guides (third party, leads only) | https://joindeleteme.com/opt-out-guides/ | 2026-11-13 | Site names and opt-out URLs for people-search and background-check sites; every URL was fetched before use |
+| Court-transfer notices (Atlas Data Privacy Corporation) | pub360.com, revealname.com, golookup.com, kwold.com, rehold.com (home pages) | 2026-11-12 | Five entries marked broken and disabled |
