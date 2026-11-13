@@ -50,4 +50,7 @@ def test_workflow_builds_bootloader_from_source():
     wf = (ROOT / ".github" / "workflows" / "build.yml").read_text()
     assert "--no-binary pyinstaller" in wf
     assert re.search(r'PYINSTALLER_VERSION: "\d+\.\d+\.\d+"', wf)
+    assert 'PYINSTALLER_COMPILE_BOOTLOADER: "1"' in wf
+    assert "not compiled from source" in wf  # fails if the bootloader equals the stock wheel's
+    assert "$n = @([regex]::Matches" in wf
     assert "AppVersionNumeric" in wf

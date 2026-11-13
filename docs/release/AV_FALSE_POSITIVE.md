@@ -64,11 +64,14 @@ fix is signing, plus reporting each release (below).
 
 1. Push the branch (owner or Morgan) and run `build` via `workflow_dispatch`, or open a PR.
 2. In job `windows-installer`, step "PyInstaller from source (bootloader built here)" must show
-   the source build of the wheel, then `PyInstaller 6.22.3` and two SHA-256 lines for `run.exe`
-   and `runw.exe`. Those hashes will differ from the stock wheel's. If the compile fails, the job
-   fails (there is no silent fallback to the stock bootloader). If MSVC is not found on the
-   runner, add a `ilammy/msvc-dev-cmd` step pinned by SHA, or fall back to the stock wheel
-   and tell the owner.
+   the source build of the wheel (the step sets `PYINSTALLER_COMPILE_BOOTLOADER=1`, because the
+   sdist ships prebuilt bootloaders and only that variable makes it compile them with waf), then
+   `PyInstaller 6.22.3` and a `stock=... built=...` line for `run.exe` and `runw.exe`. The step
+   throws if a built hash equals the stock wheel's, so a silent non-compile cannot pass. This
+   needs a C compiler: MSVC (Visual Studio Build Tools) must be present, which `windows-latest`
+   normally has. If the compile fails, the job fails (no silent fallback). If MSVC is not found,
+   add a `ilammy/msvc-dev-cmd` step pinned by SHA, or fall back to the stock wheel and tell the
+   owner.
 3. Step "Check the Windows version resource and record build facts" must pass, and the job
    summary must list company `Free My ID` plus product and version for three files.
 4. The existing smoke and install tests must still pass (silent install, `schedule install`,
