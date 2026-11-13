@@ -277,6 +277,7 @@ for (const f of ["index.html", "download/index.html", "how-it-works/index.html",
   }
 }
 // /brokers/: the rows on the page are the rows of the public coverage list, no more and no fewer.
+// (Sites with no working removal route are not in the list and must not be named on the page.)
 if (files.includes("brokers/index.html")) {
   const f = "brokers/index.html";
   const listFile = process.env.FMID_COVERAGE || new URL("../../brokers/coverage.public.yaml", import.meta.url);
@@ -286,6 +287,7 @@ if (files.includes("brokers/index.html")) {
   const rows = (html.match(/<li(?: data-v="1")?(?: id="[^"]*")?><b>/g) || []).length;
   const verified = (html.match(/<li data-v="1"/g) || []).length;
   if (rows !== want(/^  - \{/gm)) err(f, `${rows} rows on the page, ${want(/^  - \{/gm)} in the coverage list`);
+  if (/not available right now/i.test(html)) err(f, "names a site as not available (they are counted, never named)");
   if (verified !== want(/status: "verified"/g)) err(f, `${verified} verified rows on the page, ${want(/status: "verified"/g)} in the coverage list`);
 }
 console.log("Page weights (KiB = 1024 bytes, gzip -9; images as stored):\n" + rows.join("\n"));

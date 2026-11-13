@@ -40,12 +40,23 @@ def num(n: int) -> str:
     return f"{n:,}"
 
 
+def group_of(site: dict) -> str:
+    """lib/coverage.ts groupOf: registry-listed data brokers are their own group."""
+    return "registered" if site["category"] == "data_broker" and "registered" in site else site["category"]
+
+
+GROUP_IDS = sorted({group_of(s) for s in SITES})
+STATES = {"CA": "California", "VT": "Vermont", "CA,VT": "California and Vermont"}
+REGISTERED_NOTE = ("These companies are on a state's official data broker registry. Being listed does not mean "
+                   "they did anything wrong; it means the law lets you ask them to delete your data.")
+
+
 # ---------------------------------------------------------------- the numbers are the rows
 
 def test_every_site_in_the_list_is_on_the_page_once():
     on_page = sorted((html.unescape(r["name"]), r["site"]) for r in rows())
     assert on_page == sorted((s["name"], s["site"]) for s in SITES)
-    assert len(on_page) == COUNTS["total"]
+    assert len(on_page) == COUNTS["listed"]
 
 
 def test_headline_numbers_are_the_listed_and_verified_counts_side_by_side():
@@ -53,23 +64,39 @@ def test_headline_numbers_are_the_listed_and_verified_counts_side_by_side():
     assert stats is not None
     values = re.findall(r'<dd class="stat__value">([^<]*)</dd>', stats.group(1))
     labels = re.findall(r'<dt class="stat__label">([^<]*)</dt>', stats.group(1))
+    hints = re.findall(r'<dd class="stat__hint">([^<]*)</dd>', stats.group(1))
     assert values == [num(COUNTS["listed"]), num(COUNTS["verified"])]
     assert labels == ["Sites on the list", "Verified by us"]
-    assert COUNTS["listed"] == sum(1 for s in SITES if s["status"] != "not_available")
+    assert COUNTS["listed"] == len(SITES)
     assert COUNTS["verified"] == sum(1 for s in SITES if s["status"] == "verified")
     assert sum(1 for r in rows() if r["v"]) == COUNTS["verified"]
+    # the one date: the export's month, e.g. "Last checked November 2026"
+    year, month = COVERAGE["updated"].split("-")
+    name = ["January", "February", "March", "April", "May", "June", "July", "August", "September",
+            "October", "November", "December"][int(month) - 1]
+    assert hints == [f"Last checked {name} {year}"]
 
 
 def test_the_page_says_what_verified_means_and_does_not_overclaim():
     body = text(page())
     assert "Verified means we opened that site's own removal page ourselves" in body
     assert f"The other {num(COUNTS['not_verified'])} sites are on the list, but we have not confirmed" in body
-    assert "add new ones every week" in body
     assert "It does not mean every site says yes" in body
     assert "many sites honor but are not required to" in body          # the state-law qualifier
     assert "Sites often list people again later" in body
-    for claim in ("all sites", "every data broker", "removes you from", "remove you from all"):
-        assert claim not in body.lower()
+    for claim in ("all sites", "every data broker", "removes you from", "remove you from all",
+                  "every week", "every day", "daily", "weekly", "add new ones"):   # no cadence claims
+        assert claim not in body.lower(), claim
+
+
+def test_sites_with_no_removal_route_are_counted_and_not_named():
+    body = text(page())
+    n = COUNTS["not_available"]
+    line = ("1 site we listed earlier has no way to remove yourself right now; we are watching it." if n == 1 else
+            f"{num(n)} sites we listed earlier have no way to remove yourself right now; we are watching them.")
+    assert (line in body) == (n > 0)
+    assert "Not available right now" not in body and "not available" not in body.lower()
+    assert all(s["status"] in ("verified", "not_verified") for s in SITES)
 
 
 def test_each_row_says_how_the_site_is_handled():
@@ -78,32 +105,49 @@ def test_each_row_says_how_the_site_is_handled():
              "by_hand": "By hand"}
     for s in SITES:
         meta = text(by_site[s["site"]]["meta"])
-        if s["status"] == "not_available":
-            assert meta == "Not available right now", s["site"]
-            assert not by_site[s["site"]]["v"]
-            continue
-        assert route[s["route"]] in meta, s["site"]
-        assert meta.startswith("Verified " if s["status"] == "verified" else "Not yet verified"), s["site"]
+        parts = [p.strip() for p in meta.split("·")]
+        assert parts[0].startswith("Verified " if s["status"] == "verified" else "Not yet verified"), s["site"]
+        assert parts[1] == route[s["route"]], s["site"]
         assert bool(by_site[s["site"]]["v"]) == (s["status"] == "verified")
-        if "family" in s:
-            assert f"Part of the {s['family']} group" in meta, s["site"]
+        registered = [p for p in parts if p.startswith("Registered as a data broker in ")]
+        assert registered == ([f"Registered as a data broker in {STATES[s['registered']]}"]
+                              if "registered" in s else []), s["site"]
+        family = [p for p in parts if p.startswith("Part of the ")]
+        assert family == ([f"Part of the {s['family']} group"] if "family" in s else []), s["site"]
+        assert "Owned by" not in meta
 
 
 def test_groups_show_their_own_counts():
     groups = re.findall(r'<section class="cov-group" data-c="([a-z_]+)"[^>]*>(.*?)</section>', page(), re.DOTALL)
-    assert sorted(c for c, _ in groups) == sorted({s["category"] for s in SITES})
-    listed_total = 0
-    for category, markup in groups:
-        mine = [s for s in SITES if s["category"] == category]
-        listed = sum(1 for s in mine if s["status"] != "not_available")
+    assert sorted(c for c, _ in groups) == GROUP_IDS
+    total = 0
+    for group, markup in groups:
+        mine = [s for s in SITES if group_of(s) == group]
         verified = sum(1 for s in mine if s["status"] == "verified")
         count = text(re.search(r'<p class="cov-count">(.*?)</p>', markup, re.DOTALL).group(1))
-        assert count.startswith(f"{num(listed)} site{'' if listed == 1 else 's'}, {num(verified)} verified"), category
+        assert count == f"{num(len(mine))} site{'' if len(mine) == 1 else 's'}, {num(verified)} verified", group
         assert len(ROW.findall(markup)) == len(mine)
         names = [html.unescape(m.group("name")) for m in ROW.finditer(markup)]
-        assert names == sorted(names, key=str.casefold), category
-        listed_total += listed
-    assert listed_total == COUNTS["listed"]
+        assert names == sorted(names, key=str.casefold), group
+        total += len(mine)
+    assert total == COUNTS["listed"]
+
+
+def test_registered_data_brokers_have_their_own_group_and_plain_sentence():
+    groups = dict(re.findall(r'<section class="cov-group" data-c="([a-z_]+)"[^>]*>(.*?)</section>', page(), re.DOTALL))
+    registered = [s for s in SITES if group_of(s) == "registered"]
+    if not registered:
+        pytest.skip("no registry-listed data broker in this list")
+    markup = groups["registered"]
+    assert text(re.search(r"<h3[^>]*>(.*?)</h3>", markup, re.DOTALL).group(1)) == "Registered data brokers"
+    assert REGISTERED_NOTE in text(markup)
+    assert all("Registered as a data broker in" in text(m.group("meta")) for m in ROW.finditer(markup))
+    assert text(page()).count(REGISTERED_NOTE) == 1
+    if "data_broker" in groups:      # the rest keep the guides index label
+        heading = re.search(r"<h3[^>]*>(.*?)</h3>", groups["data_broker"], re.DOTALL).group(1)
+        assert text(heading) == "Marketing data companies"
+        assert "Registered as a data broker" not in text(groups["data_broker"])
+    assert "Marketing data companies" in text((DIST / "guides" / "index.html").read_text(encoding="utf-8"))
 
 
 # ---------------------------------------------------------------- nothing private, nothing heavy
@@ -178,7 +222,7 @@ def test_no_sideways_scroll_and_numbers_stay_side_by_side(coverage_page: Page):
     boxes = [b.bounding_box() for b in tab.locator(".cov-stats .stat").all()]
     assert len(boxes) == 2 and all(b is not None for b in boxes)
     assert abs(boxes[0]["y"] - boxes[1]["y"]) < 1 and boxes[0]["x"] + boxes[0]["width"] <= boxes[1]["x"]
-    assert tab.locator(".cov-list li:visible").count() == COUNTS["total"]
+    assert tab.locator(".cov-list li:visible").count() == COUNTS["listed"]
 
 
 @pytest.mark.parametrize("coverage_page", [(360, "light"), (1280, "light")], ids=["360", "1280"], indirect=True)
@@ -188,28 +232,27 @@ def test_verified_only_filter_works_without_javascript(coverage_page: Page):
     assert tab.locator(".cov-list li:visible").count() == COUNTS["verified"]
     assert tab.locator(".cov-list li:not([data-v]):visible").count() == 0
     tab.locator("label", has=tab.locator("#cov-v")).click()
-    assert tab.locator(".cov-list li:visible").count() == COUNTS["total"]
+    assert tab.locator(".cov-list li:visible").count() == COUNTS["listed"]
 
 
 @pytest.mark.parametrize("coverage_page", [(360, "light")], ids=["360"], indirect=True)
 def test_every_group_filter_works_without_javascript(coverage_page: Page):
     tab = coverage_page
-    categories = sorted({s["category"] for s in SITES})
-    assert tab.locator(".cov-controls input[type=radio]").count() == len(categories) + 1
-    for category in categories:
-        tab.locator("label", has=tab.locator(f"#cov-c-{category}")).click()
+    assert tab.locator(".cov-controls input[type=radio]").count() == len(GROUP_IDS) + 1
+    for group in GROUP_IDS:
+        tab.locator("label", has=tab.locator(f"#cov-c-{group}")).click()
         shown = tab.locator(".cov-group:visible")
-        assert shown.count() == 1 and shown.first.get_attribute("data-c") == category
-        assert tab.locator(".cov-list li:visible").count() == sum(1 for s in SITES if s["category"] == category)
+        assert shown.count() == 1 and shown.first.get_attribute("data-c") == group
+        assert tab.locator(".cov-list li:visible").count() == sum(1 for s in SITES if group_of(s) == group)
     # both filters together: a group with no verified site says so instead of showing an empty list
     tab.locator("label", has=tab.locator("#cov-v")).click()
-    for category in categories:
-        tab.locator("label", has=tab.locator(f"#cov-c-{category}")).click()
-        verified = sum(1 for s in SITES if s["category"] == category and s["status"] == "verified")
+    for group in GROUP_IDS:
+        tab.locator("label", has=tab.locator(f"#cov-c-{group}")).click()
+        verified = sum(1 for s in SITES if group_of(s) == group and s["status"] == "verified")
         assert tab.locator(".cov-list li:visible").count() == verified
         assert tab.locator(".cov-empty:visible").count() == (0 if verified else 1)
     tab.locator("label", has=tab.locator("#cov-c-all")).click()
-    assert tab.locator(".cov-group:visible").count() == len(categories)
+    assert tab.locator(".cov-group:visible").count() == len(GROUP_IDS)
 
 
 @pytest.mark.parametrize("coverage_page", [(360, "light")], ids=["360"], indirect=True)
