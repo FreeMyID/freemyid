@@ -588,6 +588,58 @@ async def fill_page(page: Page, values: dict[str, str], *, timeout_ms: int = 500
     return rep
 
 
+MAX_PLAN_VALUE = 300     # longest value a plan may hand out (a listing URL is the longest)
+
+
+def fill_plan(controls: list[Control], values: dict[str, str]) -> tuple[dict[str, str],
+                                                                        FillReport]:
+    """The decisions of `fill_page` without a page: control key -> value to put in it.
+
+    Used by the browser extension's "Fill in the form" (docs/EXTENSION.md): the extension
+    scans the page with the same SCAN_JS, the app decides here with the same rules, and the
+    extension only applies the result. For a <select> the value is the option's own value.
+    Protected, unknown, already-filled and withheld boxes get nothing. Never submits.
+    """
+    rep = FillReport()
+    plan: dict[str, str] = {}
+    seen: set[str] = set()
+    for c in controls:
+        if not _KEY_RE.fullmatch(c.key or ""):
+            rep.errors += 1
+            continue
+        if c.protected():
+            rep.protected += 1
+            continue
+        k = classify(c)
+        if k is None:
+            if c.fillable():
+                rep.unknown += 1
+            continue
+        seen.add(k)
+        val = values.get(k)
+        if not val:
+            rep.withheld.append(k)
+            continue
+        if c.tag == "select":
+            opt = choose_state_option(c.options, val) if k == "state" else None
+            if opt is None:
+                rep.unknown += 1
+                continue
+            val = opt
+        elif c.has_value:
+            rep.already_filled.append(k)
+            continue
+        if c.maxlength > 0:
+            val = val[:c.maxlength]
+        if len(val) > MAX_PLAN_VALUE:
+            rep.errors += 1
+            continue
+        plan[c.key] = val
+        rep.filled.append(k)
+    rep.not_found = [k for k in values if k not in seen and not _covered(k, seen)]
+    return plan, rep
+
+
 # The element must be a real, visible, enabled, unticked checkbox input that is not inside
 # a CAPTCHA / challenge container (also across shadow roots, SEC-33), and whose wording is
 # not a robot / human check (SEC-31) or a marketing opt-in. Returns '' when it is ok to tick.

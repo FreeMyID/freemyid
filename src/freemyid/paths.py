@@ -34,7 +34,9 @@ OWNED_ENTRIES = ("freemyid.db", "freemyid.db-wal", "freemyid.db-shm", "evidence"
                  "datakey.wrapped.json", "secrets.enc", "secrets.enc.lock", "migrate.pending",
                  # WO-612 search window: temp browser folders + the one-session lock. The
                  # person's encrypted cookies live in evidence/<id>/ (SEC-WO612-1).
-                 "browser_profile", "browser_profile.lock", MARKER)
+                 "browser_profile", "browser_profile.lock",
+                 # Browser extension link (docs/EXTENSION.md): pairing, PII-free status, inbox.
+                 "extension", MARKER)
 
 
 def is_safe_wipe_target(p: Path) -> bool:
@@ -65,6 +67,14 @@ def artifacts_dir() -> Path:
 
 def logs_dir() -> Path:
     d = home() / "logs"
+    d.mkdir(exist_ok=True, mode=0o700)
+    return d
+
+
+def extension_dir() -> Path:
+    """Files shared with the browser extension's native host. PII-free by design: pairing
+    records, a broker-id -> listing-state summary, removal requests and the bridge address."""
+    d = home() / "extension"
     d.mkdir(exist_ok=True, mode=0o700)
     return d
 
