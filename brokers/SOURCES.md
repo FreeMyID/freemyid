@@ -208,3 +208,11 @@ Wave 4 batch 1 (2026-11-12 and 2026-11-13):
 | Each broker's own privacy or opt-out page (plain fetch, 1 request/sec, no bot protection worked around) | see each entry's `source_urls` | 2026-11-12 / 2026-11-13 | 49 generated entries and 36 older entries upgraded to verified; new verified entries CallerSmart, Public Record Reports, SignalHire, Searchbug, RealtyTrac, PhoneLookup, FastBackgroundCheck, Truecaller |
 | DeleteMe opt-out guide index and per-site guides (third party, leads only) | https://joindeleteme.com/opt-out-guides/ | 2026-11-13 | Site names and opt-out URLs for people-search and background-check sites; every URL was fetched before use |
 | Court-transfer notices (Atlas Data Privacy Corporation) | pub360.com, revealname.com, golookup.com, kwold.com, rehold.com (home pages) | 2026-11-12 | Five entries marked broken and disabled |
+
+Wave 4 batch 2 (2026-11-13):
+
+| Source | URL | Accessed | Used for |
+|---|---|---|---|
+| DeleteMe opt-out guides (third party, leads only: site name and privacy-page link) | https://joindeleteme.com/opt-out-guides/ (668 guides) | 2026-11-13 | 125 new entries (B2B, marketing, analytics and a few people-search brokers); each site's home page and privacy or opt-out page was fetched; 62 verified, the rest unverified with the reason in `verification_notes` |
+| Each broker's own pages | see each entry's `source_urls` | 2026-11-13 | FastBackgroundCheck /optout, Truecaller /unlisting, hibu CCPA page (Yellow Book), BlockShopper /donotsell, Hiya privacy page; Datafinder marked broken (retired notice) |
+| Company home pages (names only) | consumercanvas.net, fideo.ai, censia.com, melissa.com, bestpickreports.com, 33mileradius.com, remodeling.com, keywordconnects.com | 2026-11-13 | Corrected display names |
