@@ -51,3 +51,7 @@ docs/marketing/seo/.bluesky-queue.md.lock
 .vendor-wt/
 .vendor-last-message.txt
 .claude/settings.local.json
+
+# raw state data-broker registry exports: inputs to tools/import_registries.py, never committed
+docs/research/registries/*
+!docs/research/registries/README.md
