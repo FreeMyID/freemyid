@@ -8,11 +8,13 @@ name: pages
 on:
   push:
     branches: [main]
-    paths: ["web/**", "site_src/**", "brokers/registry.sample.yaml", "tools/site_check.py",
+    paths: ["web/**", "site_src/**", "brokers/registry.sample.yaml", "brokers/coverage.public.yaml",
+            "tools/site_check.py",
             "tests/test_web_*.py", "tests/codex/test_cx_developer_og_metadata.py",
             "tests/conftest.py", ".github/workflows/pages.yml"]
   pull_request:
-    paths: ["web/**", "site_src/**", "brokers/registry.sample.yaml", "tools/site_check.py",
+    paths: ["web/**", "site_src/**", "brokers/registry.sample.yaml", "brokers/coverage.public.yaml",
+            "tools/site_check.py",
             "tests/test_web_*.py", "tests/codex/test_cx_developer_og_metadata.py",
             "tests/conftest.py", ".github/workflows/pages.yml"]
   workflow_dispatch:

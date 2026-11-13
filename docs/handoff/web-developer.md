@@ -314,3 +314,19 @@ For Morgan (Copilot lane / not mine):
   page is "Setup YAML reference: Prepare a file for the terminal setup command", not the live settings).
 - WO-178 steps 1-3 on /how-it-works/ (site_src/static/assets/art/step-*-{light,dark}.svg); step 4 keeps brand/v3 step-report.
 - d2d9584: freeze_child_equifax (Morgan 9acd2e6) put in protect.ts HOLD; it broke the build (no /protect/ group).
+
+## Coverage list and /brokers/ "Sites we cover" (2026-11-12, web lead; branch integrate/coverage-page)
+- Decision (Morgan, 2026-11-12): publish a coverage list, not the registry. `tools/export_coverage.py` writes
+  `brokers/coverage.public.yaml` (allowlist: name, site, category, route, status, checked month, family). First export:
+  642 rows = 638 listed (197 verified, 441 not yet verified) + 4 not available. Details: docs/WEBSITE.md "Coverage list".
+- Page: web/src/pages/brokers/index.astro + web/src/lib/coverage.ts. No JS, no form; filters are CSS :has().
+  Budget and row counts in check-site.mjs; tests/test_web_coverage_page.py, test_export_coverage.py, test_site_leak_scan.py.
+- site_check: coverage hostnames allowed bare; paths, email domains and every other private host still flagged.
+  FMID_FULL_REGISTRY / FMID_HOST_HASHES point the scan at the private inputs from a worktree.
+- Open for the orchestrator: (1) the callout "The free download works with N of these sites today ... The rest of the list
+  is not in the free download" is true (the download ships the public sample) but says nothing about where the rest
+  will be available; wording needs sign-off before a paid plan is announced. (2) brokers/LICENSE-DATA.md has no entry for
+  coverage.public.yaml. (3) Registry names to fix at the source (Priya), then re-export: "No" (consumercanvas.net),
+  "formerly FullContact" (fideo.ai), "Censia, In", "Melissa Data Corpoation", four rows all named "EverConnect".
+  (4) No pricing page exists, so there is no link from one. (5) A real search box would need a script on this page
+  (script-src 'self', as /download/ has for CopyHash): not done, the site stays script-free.

@@ -127,6 +127,7 @@ Callout mapping from v1: gold -> `--note`, fact -> `--info`, myth -> `--note` (w
 | `/styleguide/` | built, noindex | living style guide (every contract component) |
 | `/404.html` | built, noindex | absolute links (served at any depth) |
 | Redirect stubs (noindex, meta refresh + canonical) | built | `download.html`, `faq.html`, `how-it-works.html` -> their folders; `privacy.html` **and** `privacy/` -> `safety/` (both from `site.yaml` `redirects`; keys are output file paths, values page ids) |
+| `/brokers/` "Sites we cover" | built (v3 only) | the public coverage list: listed and verified totals, how each site is handled, every site by group. See "Coverage list" below |
 | Who's buying your data? | not built | citations not verified yet |
 | /free/, /compare/, /open-source/ | not built (D3) | live on home and /safety/ this round |
 | Pricing | do not build | paid tier not announced |
@@ -145,6 +146,39 @@ it. Use `{% if release.version %}` for any new release-dependent line (FAQ answe
 v0.1.0 (2026-11-07) is set: 64.0 MB is the Windows File Explorer count (67,113,842 bytes / 1,048,576); sha256 is
 hashed from the downloaded asset and must match the release's SHA256SUMS.txt. 0.x versions get the WR-38
 "early release" hero note (`release.version.startswith("0.")`).
+
+## Coverage list (`/brokers/`, "Sites we cover")
+
+Orchestrator decision 2026-11-12: publish a coverage list, not the registry.
+
+- **Data:** `brokers/coverage.public.yaml`, written by `tools/export_coverage.py` from the private registry
+  (`.venv/bin/python tools/export_coverage.py [path/to/registry.yaml]`, `--check` to compare). Per site, and nothing
+  else: `name`, `site` (main hostname), `category`, `route` (automatic, email, assisted, by_hand), `status` (verified,
+  not_verified, not_available), `checked` (month, never the day), `family`. Rows are built from an allowlist, so a
+  new registry field cannot leak. Never exported: removal links, email addresses, steps, selectors, required
+  fields, notes, source links. Route rules follow `src/freemyid/engine/tiers.py` for the default permissions
+  (a test compares the two on the public sample). Broken or switched-off entries are listed as `not_available`
+  and counted apart: `counts.listed = verified + not_verified`.
+- **Refresh:** whoever has the private registry reruns the exporter, reads the diff (names only; stop if a name looks
+  like a person, an address or a link) and commits the file. The page's "new ones every week" line depends on this.
+- **Page:** `web/src/pages/brokers/index.astro` + `web/src/lib/coverage.ts` (v3 only; `pages.yaml` id `brokers`).
+  The reader refuses the private registry (path guard, as `site.ts` does for the sample) and any file with a field
+  off the allowlist, and recounts the rows, so the headline numbers are always the rows on the page.
+- **Honest numbers:** "Sites on the list" (listed) and "Verified by us" sit side by side, with one sentence on what
+  verified means. A callout says how many of the sites the free download includes today (the ones with a free
+  guide, i.e. the public sample). No "we remove you from all of them": each row says how the site is handled.
+- **No JavaScript, no form.** Group filter (radio buttons) and "verified only" (checkbox) are read by CSS `:has()`;
+  without `:has()` the controls are hidden and the grouped list is still complete. Every row is in the page, so the
+  browser's Find works for names (the page says how). Long groups get A to Z jump links.
+- **Budget at 1,000 rows** (lab, 2026-11-12, synthetic list): a row is three elements with no classes, about 25
+  gzip bytes each with real names. HTML + CSS about 40 KiB gzip (budget 50, enforced by `check-site.mjs` and
+  `tests/test_web_coverage_page.py`), 3 requests, no images. Phone profile (CPU 4x slower, slow 4G): LCP 0.6 s,
+  CLS 0, filter change 30 to 70 ms. Page styles are a separate small stylesheet loaded by this page only.
+- **Leak scan:** hostnames in the coverage list may appear on the site, bare only. Any other private hostname, a
+  coverage hostname followed by a path or used as an email domain, and any private removal link or address are
+  still errors. The scan needs the private inputs; from a worktree:
+  `FMID_FULL_REGISTRY=<main>/brokers/registry.yaml FMID_HOST_HASHES=<hash file> python web/scripts/content_check.py web/dist`.
+  Company names in the list rows are not checked against the banned-phrase rules (a broker may be called "Five Star ...").
 
 ## Checks (`tools/site_check.py`)
 
