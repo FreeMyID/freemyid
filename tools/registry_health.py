@@ -8,11 +8,15 @@ Offline (default, no network at all):
     in one broker, an unreadable/invalid file;
   * WARN: no source_urls (missing citation), last_verified missing or older than --max-age-days
     (default 180), the file's `updated` date that old, a domain claimed by two brokers.
+  * WO-634: ERROR when a web-form broker's opt-out URL host is not in its own `domains` (the
+    "Fill it in for me" window only reaches that broker's domains); WARN when that host is
+    www.<site> and <site> itself is not listed (a www-to-<site> redirect would stop the window).
 
 Online (--online): one polite HEAD per enabled broker's opt-out page (falls back to a GET whose
 body is never read when HEAD is refused). Every URL, and every redirect hop, must be https and
-pass NetPolicy built from the registry under test; redirects are followed by hand (max 5) and an
-off-list hop is an ERROR, never fetched. A generic User-Agent, one request at a time, and
+pass NetPolicy built from the registry under test AND that broker's own domains (what the fill
+window allows, WO-634); redirects are followed by hand (max 5) and an off-list hop is an ERROR,
+never fetched. A generic User-Agent, one request at a time, and
 --delay seconds (min 1) between requests. 403/429/503 are reported as "blocked, check by hand"
 (WARN): this tool never retries around bot protection. --selectors also GETs (capped) pages with
 declarative form steps and checks that simple selectors (#id, [name=x], tag[name=x]) appear.
@@ -82,6 +86,48 @@ def _strings(node: Any, where: str = "") -> Iterator[tuple[str, str]]:
         yield where, node
 
 
+def _host_in(host: str, domains: list[str]) -> bool:
+    return any(host == d or host.endswith("." + d) for d in domains)
+
+
+def optout_host_findings(b: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """(level, check, detail) for a web-form broker whose opt-out page the fill window cannot
+    reach or could lose on a www redirect (WO-634). Pure: works on a raw registry entry."""
+    from urllib.parse import urlsplit
+    if b.get("method") != "web_form" or not isinstance(b.get("opt_out_url"), str):
+        return []
+    try:
+        host = (urlsplit(b["opt_out_url"]).hostname or "").lower().rstrip(".")
+    except ValueError:
+        return []
+    doms = [str(d).lower().rstrip(".") for d in b.get("domains") or []]
+    if not host:
+        return []
+    if not _host_in(host, doms):
+        return [(ERROR, "optout_host", f"opt-out host {host} is not in domains")]
+    if host.startswith("www.") and not _host_in(host[4:], doms):
+        detail = (f"only {host} is listed; a redirect to {host[4:]} would stop the fill window "
+                  "(add it to domains with a source if the site uses it)")
+        return [(WARN, "optout_www_only", detail)]
+    return []
+
+
+class _BrokerPolicy:
+    """NetPolicy narrowed to one broker's domains, like the fill window (WO-634)."""
+
+    def __init__(self, policy: Any, domains: list[str]) -> None:
+        self.policy = policy
+        self.domains = [d.lower().rstrip(".") for d in domains]
+
+    def is_allowed(self, url: str) -> bool:
+        from urllib.parse import urlsplit
+        try:
+            host = (urlsplit(url).hostname or "").lower().rstrip(".")
+        except ValueError:
+            return False
+        return bool(host) and _host_in(host, self.domains) and self.policy.is_allowed(url)
+
+
 def check_offline(path: Path, *, today: date | None = None,
                   max_age_days: int = MAX_AGE_DAYS) -> list[Finding]:
     """Schema + content checks for one registry file. No network."""
@@ -138,6 +184,8 @@ def check_offline(path: Path, *, today: date | None = None,
             add(WARN, bid, "stale", "no last_verified date")
         elif (today - lv).days > max_age_days:
             add(WARN, bid, "stale", f"last_verified {lv} is older than {max_age_days} days")
+        for level, check, detail in optout_host_findings(b):
+            add(level, bid, check, detail)
         doms = [str(d).lower().rstrip(".") for d in b.get("domains") or []]
         for d in sorted({d for d in doms if doms.count(d) > 1}):
             add(ERROR, bid, "duplicate_domain", f"{d} listed twice in domains")
@@ -198,7 +246,8 @@ def check_online(path: Path, *, delay: float = 3.0, selectors: bool = False,
             if not b.enabled:
                 continue
             target = str(b.opt_out_url or b.url)
-            status, problem, _ = _fetch(target, "HEAD", policy, requester, pause)
+            bpol = _BrokerPolicy(policy, b.domains)
+            status, problem, _ = _fetch(target, "HEAD", bpol, requester, pause)
             if problem:
                 out.append(Finding(ERROR, name, b.id, "online", problem))
             elif status in BLOCKED:
@@ -211,7 +260,7 @@ def check_online(path: Path, *, delay: float = 3.0, selectors: bool = False,
             page, sels = monitor.form_plan(b)
             if not sels:
                 continue
-            status, problem, body = _fetch(page, "GET_BODY", policy, requester, pause)
+            status, problem, body = _fetch(page, "GET_BODY", bpol, requester, pause)
             if problem or status is None or status >= 400:
                 out.append(Finding(WARN, name, b.id, "selector",
                                    f"page not checked: {problem or f'HTTP {status}'}"))

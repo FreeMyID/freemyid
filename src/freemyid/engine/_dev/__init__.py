@@ -61,6 +61,13 @@ class _Handler(BaseHTTPRequestHandler):
             n = int(self.headers.get("Content-Length") or 0)
             self.rfile.read(min(n, 1_000_000))
         f = resolve(self.path)
+        if f is not None and f.suffix == ".redirect":
+            # WO-634: a `<name>.redirect` file holds one https URL; answer with a 302 to it.
+            self.send_response(302)
+            self.send_header("Location", f.read_text(encoding="utf-8").strip())
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
         if f is None:
             body = b"<html><body><h1>Not found</h1></body></html>"
             self.send_response(404)

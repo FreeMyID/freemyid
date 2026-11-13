@@ -1,0 +1,7 @@
+<!doctype html><html><head><title>Dev Fill: to www</title></head><body>
+<!-- DEV FIXTURE (WO-634): the site moves the window to its own www. host. A script redirect
+     is used because, in fixture mode, a server redirect hop is not routed back to the
+     fixture server (the redirect-hop case is covered by the pure verdict test). Fake site. -->
+<p>One moment...</p>
+<script>location.replace('https://www.devfill.example/form');</script>
+</body></html>

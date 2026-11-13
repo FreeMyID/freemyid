@@ -156,17 +156,29 @@ async def test_route_handler_with_fake_requests():
     assert r.did == "continue"
 
 
-def test_escape_detector_captcha_frames():
+def test_escape_detector_captcha_frames(monkeypatch):
+    import urllib.request
+    monkeypatch.setattr(urllib.request, "getproxies", dict)   # no system proxy here
     bm = _bm()
     hosts = bm.allowed_hosts(["devfill.example"])
     iframe_hop = _Req(TURNSTILE, nav=True, frame=SUB, redirected_from=object())
-    assert bm.is_escape(iframe_hop, hosts)                          # default: escape
+    # WO-634: without the opt-in the network floor never resolves the widget host, so the
+    # hop is stopped (recorded as blocked), not an escape that ends the person's window.
+    assert bm.request_verdict(iframe_hop, hosts) == "stopped"
     assert not bm.is_escape(iframe_hop, hosts, allow_captcha_frames=True)
+    assert bm.request_verdict(iframe_hop, hosts, allow_captcha_frames=True) == "ok"
     main_nav = _Req(RECAPTCHA, nav=True, frame=MAIN)
     assert bm.is_escape(main_nav, hosts, allow_captcha_frames=True)  # still an escape
     off_list_iframe_hop = _Req("https://evil.example/x", nav=True, frame=SUB,
                                redirected_from=object())
-    assert bm.is_escape(off_list_iframe_hop, hosts, allow_captcha_frames=True)
+    assert bm.request_verdict(off_list_iframe_hop, hosts,
+                              allow_captcha_frames=True) == "stopped"
+    # A hop the floor would let through is still an escape (SEC-16 residual gap).
+    ip_hop = _Req("https://203.0.113.9/x", nav=True, frame=SUB, redirected_from=object())
+    assert bm.is_escape(ip_hop, hosts, allow_captcha_frames=True)
+    google_hop = _Req("https://www.google.com/maps", nav=True, frame=SUB,
+                      redirected_from=object())
+    assert bm.is_escape(google_hop, hosts, allow_captcha_frames=True)  # resolvable there
     assert not bm.is_escape(_Req(f"{H}/done", nav=True), hosts)
 
 

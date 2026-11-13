@@ -1,0 +1,11 @@
+<!doctype html><html><head><title>Dev widget</title></head><body>
+<!-- DEV FIXTURE (WO-635): a stand-in for the Turnstile widget frame. On load it tells the
+     page embedding it the result named in ?event=, the way the widget frame does. Tests set
+     the expected widget origin to widget.devfill.example, so this www. copy is the wrong origin. Nothing is solved or skipped. Fake site. -->
+<p>widget</p>
+<script>
+const ev = new URLSearchParams(location.search).get('event') || 'fail';
+window.parent.postMessage(
+  {source: 'cloudflare-challenge', widgetId: 'cf-chl-widget-x', event: ev}, '*');
+</script>
+</body></html>

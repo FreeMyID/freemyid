@@ -30,6 +30,7 @@ from fastapi.staticfiles import StaticFiles
 from .. import consent as consent_gate
 from .. import paths
 from ..engine import search_engines as se
+from ..engine.fill_for_me import NOTICES as _ENGINE_FILL_NOTICES
 from ..models import (
     Actor,
     Event,
@@ -74,6 +75,9 @@ MSGS = {
     "bad_receipt": proof_input.BAD_RECEIPT + " Nothing was changed.",
     "no_practice": "Please let a practice check finish first, then look at the results.",
 }
+# WO-634: why a "Fill it in for me" window stopped (fixed keys, engine wording).
+_FILL_NOTICES = {f"fill_{k}": v for k, v in _ENGINE_FILL_NOTICES.items()}
+MSGS.update(_FILL_NOTICES)
 
 
 def _csrf_for(token: str) -> str:
@@ -536,6 +540,10 @@ def create_app(store, token: str, allowed_hosts: set[str],
                 and getattr(res, "submit_seen", False):
             return html(dash.fill_page("pressed", getattr(res, "todo_id", None) or tid,
                                        csrf_token))
+        # WO-634/635: the window stopped for a reason the person should hear in plain words.
+        reason = getattr(res, "reason", "") if res is not None else ""
+        if getattr(res, "status", "") == "fallback" and f"fill_{reason}" in _FILL_NOTICES:
+            return redirect("/", f"fill_{reason}")
         return redirect("/", "fill_none")
 
     @app.post("/todo/{tid}/couldnt")

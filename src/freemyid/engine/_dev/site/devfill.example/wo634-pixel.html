@@ -1,0 +1,12 @@
+<!doctype html><html><head><title>Dev Fill: pixel redirect</title></head><body>
+<!-- DEV FIXTURE (WO-634): an image and a frame on the broker's own host redirect to
+     unlisted hosts (tracking pixel, embedded widget). Nothing reaches them; the form works.
+     Fake site. -->
+<h1>Opt out</h1>
+<img src="/wo634-px.redirect" width="1" height="1" alt="">
+<iframe src="/wo634-frame.redirect" width="10" height="10" title="widget"></iframe>
+<form action="/done" method="post">
+  <label for="nm">Your name</label> <input id="nm" name="name"><br>
+  <button type="submit">Submit</button>
+</form>
+</body></html>
