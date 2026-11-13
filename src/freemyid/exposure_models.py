@@ -79,16 +79,22 @@ class Coverage(_M):
 
 
 def coverage_of(entries: list[ExposureEntry]) -> Coverage:
+    # A "found" page whose best listing is no_match (or has no level: every listing gone) shows
+    # nothing that matches you, so it counts as not_found, not as uncertain ("may show you").
+    def shown(e: ExposureEntry) -> bool:
+        return e.match_level in (MatchLevel.CONFIRMED, MatchLevel.POSSIBLE)
+
     return Coverage(
         sites_total=len(entries),
         sites_checked=sum(1 for e in entries
                           if e.status in ("found", "not_found") and not e.from_store),
         found=sum(1 for e in entries
                   if e.status == "found" and e.match_level == MatchLevel.CONFIRMED),
-        not_found=sum(1 for e in entries if e.status == "not_found"),
+        not_found=sum(1 for e in entries
+                      if e.status == "not_found" or (e.status == "found" and not shown(e))),
         check_by_hand=sum(1 for e in entries if e.status == "check_by_hand"),
         uncertain=sum(1 for e in entries
-                      if e.status == "found" and e.match_level != MatchLevel.CONFIRMED))
+                      if e.status == "found" and e.match_level == MatchLevel.POSSIBLE))
 
 
 def _n(n: int, one: str, many: str) -> str:

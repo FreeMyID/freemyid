@@ -69,6 +69,18 @@ def test_coverage_counts_partition_the_sites():
     assert cov.found + cov.uncertain + cov.not_found + cov.check_by_hand == cov.sites_total
 
 
+@pytest.mark.parametrize("level", [None, MatchLevel.NO_MATCH])
+def test_found_page_with_nothing_matching_you_is_not_uncertain(level):
+    # A page that was read but whose listings are all no_match (or gone) shows nothing that
+    # matches: it counts as not found, never as "may show you" (no Is-this-you todo exists).
+    entries = [_e("found", level), _e("found", MatchLevel.POSSIBLE, bid="p")]
+    cov = coverage_of(entries)
+    assert cov.uncertain == 1
+    assert cov.not_found == 1
+    assert cov.found + cov.uncertain + cov.not_found + cov.check_by_hand == cov.sites_total
+    assert "1 site may show you" in coverage_note(cov)
+
+
 @pytest.mark.parametrize("cov, parts", [
     (Coverage(), ["No sites could be searched"]),
     (Coverage(sites_total=3, check_by_hand=3),
