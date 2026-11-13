@@ -170,3 +170,30 @@ def test_non_ascii_csrf_value_is_refused_not_a_server_error(
     assert response.status_code == 403
     _assert_hardened(response)
     assert focused == []
+
+
+# ------------------------------------------------------------------ evidence sandbox
+
+
+@pytest.mark.parametrize("payload, media", [
+    (b"\x89PNG\r\n\x1a\n" + b"fake-png-bytes", "image/png"),
+    (b"<html><script>alert(1)</script>Jane Q Testperson</html>", "application/octet-stream"),
+])
+def test_evidence_response_keeps_its_sandbox_policy(store: Store, profile, payload, media) -> None:
+    # Saved broker pages and screenshots are untrusted content: the evidence route sends the
+    # site-wide policy plus `sandbox`, and the header step must not replace it with the
+    # plain site-wide policy (it used to, so the sandbox directive was never sent).
+    from freemyid.models import Evidence, EvidenceKind
+    ev = store.save_evidence(
+        Evidence(profile_id=profile.id, broker_id="fakepeople", kind=EvidenceKind.SCREENSHOT,
+                 relpath=f"{profile.id}/shot.bin", sha256=""), payload)
+    response = _client(store).get(f"/evidence/{profile.id}/{ev.id}")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith(media)
+    csp = response.headers["Content-Security-Policy"]
+    assert csp == server.EVIDENCE_CSP
+    assert csp.split(";")[0].strip() == "sandbox"
+    assert server.CSP in csp                       # never weaker than the site-wide policy
+    for name, value in SECURITY_HEADERS.items():
+        if name != "Content-Security-Policy":
+            assert response.headers[name] == value

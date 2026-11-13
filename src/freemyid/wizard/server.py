@@ -45,6 +45,8 @@ STATIC_DIR = Path(__file__).resolve().parent / "static"
 COOKIE = "freemyid_session"
 CSP = ("default-src 'none'; img-src 'self'; style-src 'self'; script-src 'self'; "
        "connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'")
+# Saved broker pages and screenshots are untrusted: the site-wide policy plus `sandbox`.
+EVIDENCE_CSP = "sandbox; " + CSP
 CONSENT_UNCHECKED = ("Free My ID could not check the saved permission for this person. "
                      "Please close Free My ID and open it again.")
 MSGS = {
@@ -234,7 +236,9 @@ def create_app(store, token: str, allowed_hosts: set[str],
         return await call_next(request)
 
     def _hardened(resp: Response) -> Response:
-        resp.headers["Content-Security-Policy"] = CSP
+        # Only the stricter evidence policy may survive; anything else becomes the site policy.
+        if resp.headers.get("Content-Security-Policy") != EVIDENCE_CSP:
+            resp.headers["Content-Security-Policy"] = CSP
         resp.headers["X-Content-Type-Options"] = "nosniff"
         resp.headers["Referrer-Policy"] = "same-origin"
         resp.headers["Cache-Control"] = "no-store"
@@ -387,7 +391,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
                 else:
                     mt = "application/octet-stream"
                     hdr = {"Content-Disposition": f'attachment; filename="evidence-{e.id[:8]}"'}
-                hdr["Content-Security-Policy"] = "sandbox; default-src 'none'"
+                hdr["Content-Security-Policy"] = EVIDENCE_CSP
                 return Response(data, media_type=mt, headers=hdr)
         return Response("Not found", status_code=404)
 
