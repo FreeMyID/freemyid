@@ -124,7 +124,6 @@ def test_valid_post_redirect_sets_security_headers(client: TestClient) -> None:
     assert_no_session_leak_or_foreign_cookie(response)
 
 
-@pytest.mark.xfail(strict=True, reason="bad Host branch skips _hardened at server.py:176")
 def test_bad_host_response_sets_security_headers(client: TestClient) -> None:
     response = client.get("/", headers={"host": "evil.example"})
     assert_security_headers(response)

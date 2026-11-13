@@ -74,6 +74,13 @@ def _csrf_for(token: str) -> str:
     return hmac.new(token.encode(), b"freemyid-csrf", hashlib.sha256).hexdigest()
 
 
+def _same(sent: str, expected: str) -> bool:
+    """Constant-time equality for a value the client sent. Compared as bytes: on text,
+    `hmac.compare_digest` raises for anything that is not ASCII."""
+    return hmac.compare_digest(sent.encode("utf-8", "surrogatepass"),
+                               expected.encode("utf-8", "surrogatepass"))
+
+
 def _load_registry():
     try:
         from ..registry import load_registry
@@ -171,26 +178,31 @@ def create_app(store, token: str, allowed_hosts: set[str],
 
     @app.middleware("http")
     async def guard(request: Request, call_next):
+        # The one exit: every response, refusals included, leaves through _hardened.
+        return _hardened(await _guarded(request, call_next))
+
+    async def _guarded(request: Request, call_next) -> Response:
         host = (request.headers.get("host") or "").lower()
         if host not in allowed_hosts:
+            # Checked before the token, so a wrong Host never gets a cookie or a redirect.
             return Response("Forbidden", status_code=403)
-        authed = hmac.compare_digest(request.cookies.get(COOKIE, ""), token)
+        authed = _same(request.cookies.get(COOKIE, ""), token)
         qt = request.query_params.get("t")
-        if not authed and qt and hmac.compare_digest(qt, token) and request.method == "GET":
+        if not authed and qt and _same(qt, token) and request.method == "GET":
             r = RedirectResponse(request.url.path, status_code=303)
             r.set_cookie(COOKIE, token, httponly=True, samesite="strict", path="/")
-            return _hardened(r)
+            return r
         if not authed:
-            return _hardened(html(ui.error_page(
+            return html(ui.error_page(
                 "Please open Free My ID from its icon",
-                ["Please open Free My ID from its icon on your desktop."]), 403))
+                ["Please open Free My ID from its icon on your desktop."]), 403)
         if request.method == "POST":
             origin = request.headers.get("origin")
             if origin and urlsplit(origin).netloc.lower() not in allowed_hosts:
-                return _hardened(html(ui.error_page(
+                return html(ui.error_page(
                     "That didn't work",
                     ["Free My ID could not tell that this request came from its own window."]),
-                    403))
+                    403)
             sent = request.headers.get("x-csrf")
             if sent is None:
                 body = await request.body()
@@ -198,13 +210,16 @@ def create_app(store, token: str, allowed_hosts: set[str],
                 async def replay(body=body):
                     return {"type": "http.request", "body": body, "more_body": False}
                 request._receive = replay   # let the route re-read the body
-                form = await request.form()
-                sent = str(form.get("csrf", ""))
-            if not hmac.compare_digest(sent, csrf_token):
-                return _hardened(html(ui.error_page(
+                try:
+                    form = await request.form()
+                    sent = str(form.get("csrf", ""))
+                except Exception:  # noqa: BLE001  a body we cannot read carries no CSRF token
+                    sent = ""
+            if not _same(sent, csrf_token):
+                return html(ui.error_page(
                     "That page timed out",
-                    ["That page timed out. Go back and try again."]), 403))
-        return _hardened(await call_next(request))
+                    ["That page timed out. Go back and try again."]), 403)
+        return await call_next(request)
 
     def _hardened(resp: Response) -> Response:
         resp.headers["Content-Security-Policy"] = CSP
@@ -213,6 +228,17 @@ def create_app(store, token: str, allowed_hosts: set[str],
         resp.headers["Cache-Control"] = "no-store"
         resp.headers["X-Frame-Options"] = "DENY"
         return resp
+
+    @app.exception_handler(Exception)
+    async def server_error(request: Request, exc: Exception) -> Response:
+        """An error no route handled. Starlette sends this page from outside the guard and
+        then re-raises, so the error still reaches the server log; the page says nothing
+        about what failed and carries the same headers as every other response."""
+        return _hardened(html(ui.layout("Something went wrong", (
+            '<div class="card"><h1>Something went wrong</h1>'
+            "<p>Free My ID could not finish that. Please go back and try again.</p>"
+            '<div class="actions"><a class="btn primary" href="/">Go back</a></div></div>'),
+            nav=False), 500))
 
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
