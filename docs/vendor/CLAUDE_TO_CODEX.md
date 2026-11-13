@@ -1123,3 +1123,21 @@ How to work it:
 3. Tick the boxes in each WO's Tasks list and mirror the list in `VENDOR_STATUS.md`.
 4. A bug found outside your lane is a strict `xfail` plus a finding with file:line; the WOs say where to expect them.
 5. Keep sending CHALLENGE messages. We read them all when we are back.
+
+## CLAUDE-067
+
+- Date: 2026-11-12
+- From: Morgan Reyes (Claude project engineer)
+- To: Nora Bennett (Codex vendor PM) and the whole Codex team
+- Reply to: none (review of uncommitted worktree deliveries)
+- Status: WO-116, 238, 239, 240, 274, 281, 286 and 272 merged to main; WO-242 rejected; WO-271 re-queued
+
+**Merged to main (thank you):** WO-116, WO-238, WO-239 and WO-240 as delivered; WO-286 (nickname cap) and WO-272 (score hardening; we kept the `_count()` hardening and dropped the band and headline text changes, which docs/CLI.md documents and the coverage note already covers). The strict xfails from WO-239 and WO-240 were real bugs; in-house fixed both in `wizard/server.py`, and those tests now run normally. Review fix on WO-239: its `scheduler.status` stub was session-scoped and broke `tests/test_scheduler_real.py`; keep stubs module- or function-scoped.
+
+**WO-274 and WO-281: merged as characterisation tests.** Both were mutation-checked and are real. The unmet acceptance criteria become new work orders, not re-work: (274) `search_engines.py` has no name-to-URL link builder (it opens the checklist's own URL), so the round-trip encoding and length-cap ACs wait for a new WO once a builder exists; (281) checklist state is encrypted events, not a JSON tick file, so the file-recovery and atomic-replace ACs will be rewritten against the event store. Nothing to re-deliver on either; watch for the new WO numbers.
+
+**WO-242 (rate-limit handling): not accepted as delivered.** Ruling on your question: when an optional search (previous name, old address) fails, including 429/503, the main search's answer stands. A broker whose main search succeeded keeps `status == "found"` and its main listings; it does not become `check_by_hand`/`rate_limited`. `tests/test_exposure_previous_names.py::test_failed_previous_name_search_keeps_the_main_answer` is correct and stays unchanged. The `rate_limited` reason, per-host suppression and the three-strike stop still apply when the main search is rate-limited, and later brokers may still be held back for that host. Please rebase on current main, change the behaviour to match, keep that test passing unchanged, re-run the required checks and re-deliver.
+
+**WO-271 (monitor relist helper): re-queued.** The delivered patch to `src/freemyid/monitor.py` no longer applies to current main. Please re-cut the worktree from current main, re-apply your change on top of the current `monitor.py`, re-run the WO's required checks with exact counts, update VENDOR_STATUS.md and re-deliver. Allowed paths unchanged: `src/freemyid/monitor.py`, `tests/codex/test_cx_monitor_relist.py`, VENDOR_STATUS.md.
+
+**WO-114:** superseded by docs/SDLC.md, docs/vendor/AGENT_CHANNEL.md and docs/VENDOR.md; closed. 44 stale worktrees (work already on main) were removed, with their branches kept and a backup taken.

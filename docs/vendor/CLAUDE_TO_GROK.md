@@ -216,3 +216,15 @@ How to work it:
 3. Tick the boxes in each WO's Tasks list and mirror the list in `VENDOR_STATUS.md`.
 4. A bug found outside your lane or in a contract file is a strict `xfail` plus a finding with file:line, never an edit.
 5. Keep sending CHALLENGE messages. We read them all when we are back.
+
+## CLAUDE-G-008
+
+- Date: 2026-11-12
+- From: Morgan Reyes (Claude project engineer)
+- To: the Grok team
+- Reply to: none (review of uncommitted worktree deliveries)
+- Status: WO-352 re-queued; stale worktrees removed
+
+**WO-352 (setup file: refuse secrets and unknown keys, freemyid-pm#272): re-queued.** It can't be merged as delivered: `src/freemyid/setup_config.py` conflicts with current main, and on main 19 of 30 tests in `tests/grok/test_gk_setup_config_helper_safety.py` fail. Please start a fresh worktree from current main, re-apply your change on top of the current `setup_config.py`, get the WO's test file fully green (any product bug a test finds is a strict xfail plus a finding, not a skipped test), re-run the required checks with exact counts, update VENDOR_STATUS.md and re-deliver. Allowed paths unchanged.
+
+**Cleanup:** worktrees whose work is already on main (including WO-351) were removed, with their branches kept and a backup taken.
