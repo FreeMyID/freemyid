@@ -25,7 +25,7 @@ import logging
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from .. import config as cfgmod
 from ..consent import consent_ok
@@ -68,6 +68,7 @@ from . import handoff as hmod
 from . import matcher, plugins, tiers
 from .mail import DATE_SLACK, ReplyScan
 from .outbox import OutboxError, dev_fixture_base
+from .todo_cache import TodoCachingStore
 
 if TYPE_CHECKING:
     from ..storage import Store
@@ -365,7 +366,10 @@ class Runner:
                  browser: BrowserManager | None = None,
                  state_laws: dict[str, StateLaw] | None = None, now: datetime | None = None,
                  cfg: cfgmod.Config | None = None, practice_notices: bool = False) -> None:
-        self.store, self.registry = store, registry
+        # roadmap 0.7: list_todos is served from memory for the run (engine/todo_cache.py)
+        self.store: Store = cast("Store", TodoCachingStore(store))
+        self.registry = registry
+        self._policy: Any = None      # one NetPolicy per run, built on first use
         #: WO-609: label every notice "Practice run: ..." (run() sets it for dry runs)
         self.practice_notices = practice_notices
         if practice_notices and notifier is not None:
@@ -427,10 +431,8 @@ class Runner:
             return None
         bm = None
         try:
-            from ..netpolicy import NetPolicy
             from .browser import BrowserManager
-            pol = NetPolicy(self.registry)
-            bm = BrowserManager(pol, headless=True if not self.interactive else None,
+            bm = BrowserManager(self.netpolicy(), headless=True if not self.interactive else None,
                                 cfg=self.cfg, fixture_base=self.fixture_base)
             await bm.start()
             self._browser = bm
@@ -644,10 +646,17 @@ class Runner:
         new = self._set(profile, st, S.FOUND, "manual_letter_superseded")
         return new.model_copy(update={"needs_human_reason": None})
 
+    def netpolicy(self) -> Any:
+        """The run's NetPolicy. Built once: construction walks every broker's domains and
+        reads the config file, which per broker made run planning O(n^2) (roadmap 0.7)."""
+        if self._policy is None:
+            from ..netpolicy import NetPolicy
+            self._policy = NetPolicy(self.registry)
+        return self._policy
+
     def _ctx(self, profile: Profile, broker: Broker, **scratch: Any) -> RunContext:
-        from ..netpolicy import NetPolicy
         return RunContext(profile=profile, broker=broker, store=self.store,
-                          netpolicy=NetPolicy(self.registry), handoff=self._handoff(profile),
+                          netpolicy=self.netpolicy(), handoff=self._handoff(profile),
                           notifier=NullNotifier(), mailer=self.mailer_for(profile),
                           dry_run=self.dry_run, interactive=self.interactive,
                           state_law=self._law(profile), now=self.now,
