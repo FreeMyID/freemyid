@@ -92,6 +92,8 @@ const az = [...guides].sort((a, b) => a.name.localeCompare(b.name, "en", { sensi
   <div class="mt-m"><CtaDownload look="onBrand" /></div>
 </Section>
 <div class="wrap py-l">
-  <p class="max-w-measure text-small text-muted">Guide data: the Free My ID sample broker registry, version {guidesMeta.version}, licensed <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>. Sites change their pages often; if a guide is out of date, follow what the site's own page says.</p>
+  {/* source: /brokers/ (brokers/coverage.public.yaml) */}
+  <p class="max-w-measure">Don't see a site here? These guides cover the best-known sites. The <a href={url("brokers/")}>full list of sites we cover</a> shows every site on our list and how it is handled.</p>
+  <p class="mt-s max-w-measure text-small text-muted">Guide data: the Free My ID sample broker registry, version {guidesMeta.version}, licensed <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>. Sites change their pages often; if a guide is out of date, follow what the site's own page says.</p>
 </div>
 </Base>

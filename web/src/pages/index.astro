@@ -213,6 +213,8 @@ const cardIcon = "inline-flex size-12 items-center justify-center rounded-lg bg-
     <Stat value="0" label="Free My ID accounts to create" />
   </StatGroup>
   <p class="max-w-measure">We have {guides.length} step-by-step opt-out guides, and you can use every guide without the app. <a href={url("guides/")}>Browse the guides</a></p>
+  {/* source: /brokers/ is built from brokers/coverage.public.yaml (the public coverage list); no number here, the page gives the listed and verified counts together */}
+  <p class="mt-2xs max-w-measure">Looking for a particular site? <a href={url("brokers/")}>See the sites we cover</a> and how each one is handled.</p>
   {/* names = the same build data (public sample registry); decorative repeat of the guides list */}
   <Marquee id="guide-marquee" label={`Sites and services with a free guide (${guides.length})`} items={guides.map((g) => g.name)} />
 </Section>
