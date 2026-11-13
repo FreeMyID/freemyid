@@ -32,6 +32,7 @@ REASON_CONNECTION = "connection error"
 REASON_FIRST = "first-email approval missing"
 REASON_OTHER = "could not send"
 NOT_SENT = "not sent: "   # SubmitOutcome.message prefix; the runner treats it as a failed rung
+PACED = "email_paced"     # SubmitOutcome.message: held back by the daily send budget (pacing)
 
 _SETUP_PHRASES = (
     "no removal mailbox",
@@ -189,6 +190,7 @@ class EmailSubmitter(Submitter):
     async def submit(self, ctx: RunContext, listings: list[Listing]) -> SubmitOutcome:
         from ..engine.outbox import (
             OutboxError,
+            SendPaced,
             compose,
             held_by_first_approval,
             needs_approval,
@@ -210,7 +212,12 @@ class EmailSubmitter(Submitter):
         try:
             req = queue_email(ctx.store, ctx.profile, ctx.broker, use, kind=kind,
                               state_law=ctx.state_law, dry_run=ctx.dry_run, mailer=watched,
-                              original=original, now=ctx.now)
+                              original=original, now=ctx.now,
+                              pacer=ctx.scratch.get("pacer"))
+        except SendPaced:
+            # roadmap 0.7: today's send budget for this mailbox is used up. Nothing was
+            # stored; the site stays as it is and the runner retries it at a later run.
+            return SubmitOutcome(new_state=ListingState.FOUND, message=PACED)
         except OutboxError as exc:
             origin = watched.error if watched is not None else None
             tried = watched.request_id if watched is not None else None

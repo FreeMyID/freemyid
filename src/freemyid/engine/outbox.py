@@ -28,6 +28,7 @@ import os
 import smtplib
 import socket
 import sys
+import weakref
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 from urllib.parse import quote, urlencode
@@ -55,6 +56,7 @@ from ..models import (
 from ..models import ListingState as S
 from ..state import can_transition, mark_submitted, transition
 from . import law_matrix, letters
+from .pacing import SendPacer
 
 log = logging.getLogger(__name__)
 
@@ -91,6 +93,11 @@ def dev_fixture_base() -> str | None:
 
 class OutboxError(RuntimeError):
     """PII-free reason an email could not be queued or sent."""
+
+
+class SendPaced(OutboxError):
+    """The removal mailbox has used today's send budget (engine/pacing.py). Nothing was
+    created or sent; the site is tried again at a later run."""
 
 
 # --------------------------------------------------------------------------- composing
@@ -283,11 +290,27 @@ RELEASE_ACTION = "held_emails_released"      # SEC-27 Event marker (detail: coun
 HANDOFF_ACTION = "email_handed"              # mailer accepted; SENT row may not exist yet
 
 
+# store -> profile ids known to have sent a real email. Once true it stays true (a SENT
+# request is never un-sent), so the answer is remembered: this check runs once per broker
+# and per queued email, and re-reading every request each time was O(n^2) (roadmap 0.7).
+_sent_before: weakref.WeakKeyDictionary[Any, set[str]] = weakref.WeakKeyDictionary()
+
+
 def email_sent_before(store, profile_id: str) -> bool:
     """True once a real (non-dry) EMAIL request for this profile has gone out. A web-form
     submission does not count: the person must have seen one of Free My ID's emails."""
-    return any(r.status == RequestStatus.SENT and r.method == Method.EMAIL and not r.dry_run
-               for r in store.list_requests(profile_id))
+    base = getattr(store, "wrapped", store)
+    try:
+        known = _sent_before.setdefault(base, set())
+    except TypeError:             # a store that can't be weakly referenced: no memo
+        known = set()
+    if profile_id in known:
+        return True
+    hit = any(r.method == Method.EMAIL and not r.dry_run
+              for r in store.list_requests(profile_id, status=RequestStatus.SENT))
+    if hit:
+        known.add(profile_id)
+    return hit
 
 
 def needs_approval(profile: Profile, kind: RequestKind, store=None) -> bool:
@@ -340,11 +363,15 @@ def first_email_pending(store, profile: Profile) -> Request | None:
 def queue_email(store, profile: Profile, broker: Broker, listings: list[Listing], *,
                 kind: RequestKind = RequestKind.OPT_OUT, state_law: StateLaw | None = None,
                 dry_run: bool, mailer=None, original: Request | None = None,
-                now: datetime | None = None) -> Request:
+                now: datetime | None = None, pacer: SendPacer | None = None) -> Request:
     """Create (or reuse) the Request for this letter; send it now only in AUTO mode.
 
     Does NOT change the BrokerStatus: the runner does that from the returned request
     (status SENT = a real send happened).
+
+    With a `pacer` (engine/pacing.py), a real (non-dry) NEW request is only created while
+    the removal mailbox has budget left, else SendPaced is raised and nothing is stored;
+    a stored request is only handed to the mailer while there is send budget.
     """
     if not broker.opt_out_email:
         raise OutboxError("broker has no opt-out email address")
@@ -358,9 +385,12 @@ def queue_email(store, profile: Profile, broker: Broker, listings: list[Listing]
         # profile has an approved send (approve_and_send also releases them right away).
         if (mailer is not None and _auto_releasable(profile, existing)
                 and not needs_approval(profile, kind, store)
-                and not _retry_waiting(store, existing, now)):   # WO-332 backoff
+                and not _retry_waiting(store, existing, now)   # WO-332 backoff
+                and (pacer is None or pacer.take_send(profile))):
             return send_request(store, existing, profile, mailer, now=now)
         return existing
+    if not dry_run and pacer is not None and not pacer.take_new(profile):
+        raise SendPaced("daily send limit for the removal mailbox reached")
     subject, body = compose(profile, broker, listings, state_law, kind, original=original)
     attempt = 1 + sum(1 for r in store.list_requests(profile.id, broker.id)
                       if r.kind == kind and r.status == RequestStatus.SENT)
@@ -389,6 +419,8 @@ def queue_email(store, profile: Profile, broker: Broker, listings: list[Listing]
             store.log(Event(profile_id=profile.id, broker_id=broker.id, actor=Actor.ENGINE,
                             action=HOLD_ACTION, detail={"request_id": req.id}))
         return req
+    if pacer is not None and not pacer.take_send(profile):
+        return req          # stays queued; the next run's drain sends it
     return send_request(store, req, profile, mailer, now=now)
 
 
@@ -600,7 +632,10 @@ def apply_sent(store, req: Request, broker: Broker | None, now: datetime) -> Non
 
 def approve_and_send(store, request_id: str, *, mailer=None, registry: Registry | None = None,
                      now: datetime | None = None) -> None:
-    """User-approved send of a QUEUED_FOR_APPROVAL email (interfaces.py entry point)."""
+    """User-approved send of a QUEUED_FOR_APPROVAL email (interfaces.py entry point).
+
+    The approved email always goes out. The held AUTO emails it releases are paced
+    (engine/pacing.py): at most the mailbox's daily budget now, the rest at later runs."""
     req = store.get_request(request_id)
     if req is None:
         raise OutboxError("unknown request")
@@ -622,12 +657,15 @@ def approve_and_send(store, request_id: str, *, mailer=None, registry: Registry 
         broker = None
     mailer = mailer or _default_mailer(profile, registry)
     now = now or utcnow()
+    pacer = SendPacer(store, now)
+    pacer.sends_left(profile)     # read the budget before this send changes it
     store.log(Event(profile_id=req.profile_id, broker_id=req.broker_id, actor=Actor.USER,
                     action="email_approved", detail={"request_id": req.id}))
     sent = send_request(store, req, profile, mailer, now=now)
+    pacer.note_sent(profile)
     apply_sent(store, sent, broker, now)
     if profile.email_mode == EmailMode.AUTO:
-        release_held(store, profile, mailer=mailer, registry=registry, now=now)
+        release_held(store, profile, mailer=mailer, registry=registry, now=now, pacer=pacer)
 
 
 def _broker_from(registry: Registry | None, broker_id: str) -> Broker | None:
@@ -663,7 +701,8 @@ def _finish_send(store, profile: Profile, req: Request, mailer, registry: Regist
 
 
 def release_held(store, profile: Profile, *, mailer, registry: Registry | None = None,
-                 now: datetime | None = None) -> dict[str, int]:
+                 now: datetime | None = None,
+                 pacer: SendPacer | None = None) -> dict[str, int]:
     """SEC-27: after the profile's first approved send, send the AUTO emails that were held
     for it. Legal demands, dry-run and non-AUTO requests are never touched. One failure
     never stops the rest.
@@ -675,6 +714,9 @@ def release_held(store, profile: Profile, *, mailer, registry: Registry | None =
 
     Once this pass runs (a real email is already on record), a request the mailer
     already accepted is recorded and not sent again, including during its backoff.
+
+    Paced (engine/pacing.py): once the mailbox's send budget is used up the rest stay
+    queued and are counted as ``paced`` (omitted when zero); later runs send them.
     """
     counts: dict[str, int] = {"sent": 0, "failed": 0}
     if profile.email_mode != EmailMode.AUTO or not email_sent_before(store, profile.id):
@@ -683,6 +725,7 @@ def release_held(store, profile: Profile, *, mailer, registry: Registry | None =
     if not consent_ok(profile, store)[0]:
         return counts
     now = now or utcnow()
+    pacer = pacer or SendPacer(store, now)
     for r in store.list_requests(profile.id, status=RequestStatus.QUEUED_FOR_APPROVAL):
         if not _auto_releasable(profile, r):
             continue
@@ -694,23 +737,29 @@ def release_held(store, profile: Profile, *, mailer, registry: Registry | None =
         if _retry_waiting(store, r, now):
             _bump(counts, "deferred")
             continue
+        if not pacer.take_send(profile):
+            _bump(counts, "paced")
+            continue
         _bump(counts, _finish_send(store, profile, r, mailer, registry, now))
-    if counts["sent"] or counts["failed"] or counts.get("deferred"):
+    if counts["sent"] or counts["failed"] or counts.get("deferred") or counts.get("paced"):
         store.log(Event(profile_id=profile.id, actor=Actor.ENGINE, action=RELEASE_ACTION,
                         detail=dict(counts)))
     return counts
 
 
 def drain(store, profile: Profile, mailer, *, registry: Registry | None = None,
-          now: datetime | None = None) -> dict[str, int]:
+          now: datetime | None = None, pacer: SendPacer | None = None) -> dict[str, int]:
     """One pass over this profile's queued email.
 
     A message the mailer already accepted is recorded once and not sent again.
-    A message that never reached the mailer is sent when the approval rules and
-    the WO-332 backoff already allow it. Counts and codes only.
+    A message that never reached the mailer is sent when the approval rules, the
+    WO-332 backoff and the mailbox's send budget (engine/pacing.py) allow it; past the
+    budget it stays queued and is counted as ``paced`` (omitted when zero). Counts and
+    codes only.
     """
     counts: dict[str, int] = {"sent": 0, "recorded": 0, "failed": 0, "deferred": 0}
     now = now or utcnow()
+    pacer = pacer or SendPacer(store, now)
     from ..consent import consent_ok
     allowed = consent_ok(profile, store)[0]
     queued = store.list_requests(profile.id, status=RequestStatus.QUEUED_FOR_APPROVAL)
@@ -727,8 +776,12 @@ def drain(store, profile: Profile, mailer, *, registry: Registry | None = None,
         if _retry_waiting(store, req, now):
             counts["deferred"] += 1
             continue
+        if not pacer.take_send(profile):
+            _bump(counts, "paced")       # omitted when zero, like release_held
+            continue
         outcome = _finish_send(store, profile, req, mailer, registry, now)
         counts[outcome] += 1
-    log.info("outbox drain sent=%s recorded=%s failed=%s deferred=%s",
-             counts["sent"], counts["recorded"], counts["failed"], counts["deferred"])
+    log.info("outbox drain sent=%s recorded=%s failed=%s deferred=%s paced=%s",
+             counts["sent"], counts["recorded"], counts["failed"], counts["deferred"],
+             counts.get("paced", 0))
     return counts
