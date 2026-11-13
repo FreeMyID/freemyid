@@ -126,11 +126,6 @@ async def test_browser_flows_refuse_invalid_consent_before_factory(
     assert starts == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=("SEC finding: wizard server.py:88 calls consent_ok without the store, so a valid "
-            "stored AUTHORIZED_AGENT authorization is reported missing on the dashboard"),
-)
 def test_dashboard_accepts_stored_agent_authorization(
     store: Store,
 ) -> None:

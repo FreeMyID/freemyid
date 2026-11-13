@@ -27,6 +27,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 
+from .. import consent as consent_gate
 from .. import paths
 from ..engine import search_engines as se
 from ..models import (
@@ -44,6 +45,8 @@ STATIC_DIR = Path(__file__).resolve().parent / "static"
 COOKIE = "freemyid_session"
 CSP = ("default-src 'none'; img-src 'self'; style-src 'self'; script-src 'self'; "
        "connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'")
+CONSENT_UNCHECKED = ("Free My ID could not check the saved permission for this person. "
+                     "Please close Free My ID and open it again.")
 MSGS = {
     "created": "All set. Free My ID is starting its first check now.",
     "updated": "Changes saved.", "done": "Great, thank you. Marked as done.",
@@ -90,10 +93,19 @@ def _load_registry():
         return None
 
 
-def _consent_problem(p) -> str:
-    from ..cli import consent_ok
-    ok, why = consent_ok(p)
-    return "" if ok else why
+def _consent_problem(p, store) -> str:
+    """Why this person's saved consent does not allow any work yet ("" when it does).
+
+    The shared gate needs the store to find a signed agent authorization. If the gate
+    cannot be evaluated at all (store or disk unreadable), that is a problem too: the
+    dashboard never shows consent as fine without having checked it.
+    """
+    try:
+        ok, why = consent_gate.consent_ok(p, store)
+    except Exception as e:  # noqa: BLE001  fail closed; the message could name the person
+        log.warning("consent check failed: %s", type(e).__name__)
+        return CONSENT_UNCHECKED
+    return "" if ok else (why or CONSENT_UNCHECKED)
 
 
 def _background_disabled() -> bool:
@@ -255,7 +267,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
         queued = store.list_requests(status=RequestStatus.QUEUED_FOR_APPROVAL)
         nm = names()
         who = {p.id: p.label for p in profiles}
-        people = [{"profile": p, "consent_problem": _consent_problem(p)} for p in profiles]
+        people = [{"profile": p, "consent_problem": _consent_problem(p, store)} for p in profiles]
         todos = [(t, who.get(t.profile_id, ""), nm.get(t.broker_id or "", ""))
                  for t in store.list_todos()]
         return html(dash.home_page(
@@ -294,7 +306,7 @@ def create_app(store, token: str, allowed_hosts: set[str],
             if e.broker_id != "_consent":
                 ev.setdefault(e.broker_id, []).append(e)
         return html(dash.profile_page(p, store.list_statuses(pid), names(), store.list_todos(pid),
-                                      ev, csrf_token, _consent_problem(p), flash(request),
+                                      ev, csrf_token, _consent_problem(p, store), flash(request),
                                       fill=not app.state.fill["running"],
                                       reasons=_reasons(store.list_todos(pid))))
 
