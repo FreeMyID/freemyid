@@ -1,8 +1,12 @@
 ; Inno Setup script. Build after PyInstaller:
-;   iscc /DAppVersion=0.3.1 packaging\windows\freemyid.iss
+;   iscc /DAppVersion=0.3.1 /DAppVersionNumeric=0.3.1.0 packaging\windows\freemyid.iss
 ; Optional family installer: add /DFamilyBundle=C:\path\Mom.freemyid-profile
 #ifndef AppVersion
   #define AppVersion "0.3.1"
+#endif
+#ifndef AppVersionNumeric
+  ; four plain numbers for the version resource; CI passes it (rc suffixes dropped)
+  #define AppVersionNumeric "0.3.1.0"
 #endif
 
 [Setup]
@@ -10,6 +14,17 @@ AppId={{90CB7231-F487-4012-93B4-C1CE0AC4DF82}
 AppName=Free My ID
 AppVersion={#AppVersion}
 AppPublisher=Free My ID
+AppPublisherURL=https://freemyid.org
+AppSupportURL=https://github.com/FreeMyID/freemyid/issues
+AppUpdatesURL=https://freemyid.org
+AppCopyright=Copyright (C) Free My ID contributors. Licensed AGPL-3.0-or-later.
+; Version resource of the setup program itself (WO-632): plain facts in the file's Details tab.
+VersionInfoVersion={#AppVersionNumeric}
+VersionInfoCompany=Free My ID
+VersionInfoDescription=Free My ID setup
+VersionInfoProductName=Free My ID
+VersionInfoProductVersion={#AppVersion}
+VersionInfoCopyright=Copyright (C) Free My ID contributors. Licensed AGPL-3.0-or-later.
 DefaultDirName={localappdata}\Programs\FreeMyID
 DefaultGroupName=Free My ID
 DisableProgramGroupPage=yes

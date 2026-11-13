@@ -225,12 +225,30 @@ jobs:
           cache: pip
       - name: Install (with packaging extras)
         run: pip install ".[package,dev]"
+      # WO-632: PyInstaller's prebuilt Windows bootloader is shared by thousands of programs,
+      # including malware, so antivirus engines treat the stock binary with suspicion. Build the
+      # bootloader from the PyInstaller source release instead (pinned version, MSVC on the
+      # runner). The program itself is unchanged; nothing is packed, hidden or obfuscated.
+      - name: PyInstaller from source (bootloader built here)
+        shell: pwsh
+        env:
+          PYINSTALLER_VERSION: "6.22.3"
+        run: |
+          python -m pip install --disable-pip-version-check --no-cache-dir --force-reinstall --no-deps `
+            --no-binary pyinstaller "pyinstaller==$env:PYINSTALLER_VERSION"
+          if ($LASTEXITCODE -ne 0) { throw "PyInstaller source build failed" }
+          python -c "import PyInstaller; print('PyInstaller', PyInstaller.__version__)"
+          $boot = python -c "import PyInstaller, pathlib; print(pathlib.Path(PyInstaller.__file__).parent / 'bootloader' / 'Windows-64bit-intel')"
+          Get-FileHash "$boot\run.exe","$boot\runw.exe" -Algorithm SHA256 | Format-Table Hash, Path -AutoSize -Wrap
       - name: Version
         id: ver
         shell: pwsh
         run: |
           $v = python -c "import freemyid; print(freemyid.__version__)"
           "version=$v" >> $env:GITHUB_OUTPUT
+          $n = ([regex]::Matches(($v -replace 'rc.*$','' -replace 'a.*$',''), '\d+') | ForEach-Object Value | Select-Object -First 4)
+          while ($n.Count -lt 4) { $n += "0" }
+          "numeric=$($n -join '.')" >> $env:GITHUB_OUTPUT
       # Broker registry: the public repo carries only brokers/registry.sample.yaml, which is always
       # bundled. The full maintained registry lives in a private data repo. When it is set up, a
       # step here will check it out with a read-only secret (for example FREEMYID_DATA_TOKEN) and
@@ -259,8 +277,27 @@ jobs:
             choco install innosetup -y --no-progress
             $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
           }
-          & $iscc "/DAppVersion=${{ steps.ver.outputs.version }}" packaging\windows\freemyid.iss
+          & $iscc "/DAppVersion=${{ steps.ver.outputs.version }}" "/DAppVersionNumeric=${{ steps.ver.outputs.numeric }}" packaging\windows\freemyid.iss
           if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed" }
+      - name: Check the Windows version resource and record build facts
+        shell: pwsh
+        run: |
+          # WO-632: every program we ship must carry company, product, description and version.
+          $files = @("dist\FreeMyID\FreeMyID.exe", "dist\FreeMyID\freemyid-cli.exe") +
+                   @((Get-ChildItem dist\FreeMyIDSetup-*.exe).FullName)
+          $lines = @("### Build facts (WO-632)", "", "| File | Company | Product | Version | SHA-256 |", "|---|---|---|---|---|")
+          foreach ($f in $files) {
+            $vi = (Get-Item $f).VersionInfo
+            if (-not $vi.CompanyName -or -not $vi.ProductName -or -not $vi.FileDescription -or -not $vi.FileVersion) {
+              throw "$f is missing its version resource (company, product, description, version)"
+            }
+            $h = (Get-FileHash $f -Algorithm SHA256).Hash.ToLower()
+            $lines += "| $(Split-Path $f -Leaf) | $($vi.CompanyName) | $($vi.ProductName) | $($vi.ProductVersion) | ``$h`` |"
+          }
+          $lines += ""
+          $lines += "PyInstaller $(python -c 'import PyInstaller; print(PyInstaller.__version__)'), bootloader built from source, UPX off, onedir."
+          $lines | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+          $lines | ForEach-Object { Write-Host $_ }
       - name: Install test (silent install, run, schedule task, silent uninstall)
         timeout-minutes: 10
         shell: pwsh
