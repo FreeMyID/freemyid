@@ -82,6 +82,10 @@ Codes are stable: a number never changes meaning.
 | `checklist list` | Identity-safety checklists and which are done. `-p/--profile` (needed only when more than one person is set up) | [`checklists/1`](#checklists1) |
 | `checklist show ID` | Steps for one checklist. `-p/--profile`. ID may be a prefix | [`checklist/1`](#checklist1) |
 | `checklist done ID` / `checklist undo ID` | Mark a checklist done, or not done again. `-p/--profile` | [`checklist/1`](#checklist1) |
+| `extension connect` | Let the Free My ID browser extension reach this app, per user, no admin rights (Firefox now; Chrome and Edge once the extension has a store id, or with `--chrome-id ID` for a developer's unpacked copy). `--browser chrome\|edge\|firefox` to pick ([EXTENSION.md](EXTENSION.md)) | none |
+| `extension pair CODE` | Confirm the six-digit code the extension shows after **Connect to the app**, so it can start removals and fill in forms with this app. The same as Settings > Browser helper > Yes, connect it | none |
+| `extension status` | Which browsers can reach the app, how many extensions are connected, and whether a code is waiting | none |
+| `extension disconnect` | Disconnect every browser extension. `--remove` also takes the app's helper out of the browsers | none |
 | `todo list` | Things that need a person. `-p` | `todos/1` |
 | `todo done ID` | Mark a to-do done | |
 | `outbox list` | Emails waiting for approval | `outbox/1` |
@@ -548,3 +552,16 @@ The encryption key lives in a secrets backend:
 
 `freemyid secrets status` shows which one is in use, `freemyid secrets migrate --to ...` moves
 the key safely, and `freemyid doctor` says whether it is usable here and how to fix it.
+
+## Browser extension
+
+Connect the browser extension once, then confirm the code it shows:
+
+```
+freemyid extension connect
+freemyid extension pair 482913
+freemyid extension status
+```
+
+The extension starts removals through an inbox the next run reads (or right away while the app
+window is open) and fills a broker's form only while the app is open. Details: [EXTENSION.md](EXTENSION.md).
