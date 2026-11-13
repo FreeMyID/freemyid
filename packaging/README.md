@@ -7,6 +7,15 @@ Built by `.github/workflows/build.yml` on `windows-latest`:
    (`FreeMyID.exe` windowed, `freemyid-cli.exe` console)
 3. `iscc /DAppVersion=<ver> packaging\windows\freemyid.iss` gives `dist/FreeMyIDSetup-<ver>.exe`
 
+Antivirus false positives (WO-632): the build uses PyInstaller built from the source release
+(pinned version, bootloader compiled in CI), onedir, UPX off, and a full Windows version
+resource (`packaging/windows/version_info.py`, `freemyid.iss`). No packing or obfuscation, ever.
+Reproducible build note: pin `PYINSTALLER_VERSION` in `build.yml`, build on `windows-latest`
+(MSVC), and compare the bootloader and file SHA-256 values in the job summary. Windows
+binaries are not byte-for-byte reproducible (PE timestamps, installer), so compare the logged
+versions and bootloader hashes, not the final installer. Report text for Microsoft and
+Malwarebytes: `docs/release/AV_FALSE_POSITIVE.md`.
+
 Per-user install (no admin), Start Menu + Desktop shortcut. The uninstaller removes the daily
 scheduled task and asks before deleting saved data. The build is unsigned for family testing
 (Windows SmartScreen shows "More info -> Run anyway"; see FAMILY_QUICK_START.md).
