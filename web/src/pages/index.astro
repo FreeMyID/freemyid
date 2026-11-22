@@ -22,6 +22,10 @@ import StatGroup from "@/components/ui/StatGroup.astro";
 import Stat from "@/components/ui/Stat.astro";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { faq, guides, pageProps, release, site, url } from "@/lib/site";
+import { DIRECTION } from "@/lib/arm";
+import HomeHeritage from "@/components/home/HomeHeritage.astro";
+import HomeFrontier from "@/components/home/HomeFrontier.astro";
+import HomeGlory from "@/components/home/HomeGlory.astro";
 // Real v0.2.0 screenshot (brand/screenshots/vm-v0.2.0/03-wizard-step1-welcome.png), cropped to the app window and
 // re-encoded as WebP only. It shows no personal details.
 import shot900 from "@/art/screenshots/wizard-welcome-v0.2.0-900.webp";
@@ -32,6 +36,9 @@ const homeFaq = faq.filter((q) => q.home);
 const btnGhost = buttonVariants({ variant: "ghost", size: "lg" });
 const cardIcon = "inline-flex size-12 items-center justify-center rounded-lg bg-brand-soft text-brand [&_svg]:size-7";
 ---
+{/* A/B/C test (docs/AB_TEST.md): an arm build with a design direction renders that direction's home instead.
+    The normal site and the control arm render the page below unchanged. */}
+{DIRECTION === "heritage" ? <HomeHeritage /> : DIRECTION === "frontier" ? <HomeFrontier /> : DIRECTION === "glory" ? <HomeGlory /> : (
 <Base {...pageProps("home")}>
 
 {/* 1. Hero: what it does, one Download (beam), and a real screenshot as proof */}
@@ -375,6 +382,7 @@ const cardIcon = "inline-flex size-12 items-center justify-center rounded-lg bg-
   </div>
 </section>
 </Base>
+)}
 
 <style>
   /* WR-53: this page alone owns the hero action layout. Keep the shared CTA and labels. */

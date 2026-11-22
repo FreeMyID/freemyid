@@ -1,0 +1,123 @@
+---
+// Home, direction 1 "Heritage" (A/B/C test arm, docs/AB_TEST.md). Layout and copy from
+// FreeMyID-Design-Directions/1-heritage/landing.html; styles in styles/directions/heritage.css.
+// Copy rules: docs/POSITIONING.md (verified claims table, lines 26-30), trust panel in the WO-162 short form (as Footer.astro).
+// Every Download button goes through CtaDownload (D5). Zero client JS.
+import Base from "@/layouts/Base.astro";
+import CtaDownload from "@/components/CtaDownload.astro";
+import HomeFinePrint from "./HomeFinePrint.astro";
+import { buttonVariants } from "@/components/ui/button-variants";
+import { pageProps, url } from "@/lib/site";
+const secondary = buttonVariants({ variant: "secondary", size: "lg" });
+const star = "M12 2l2.9 6.9L22 9.3l-5.4 4.8L18.2 21 12 17.3 5.8 21l1.6-6.9L2 9.3l7.1-.4z";
+---
+<Base {...pageProps("home")}>
+
+<div class="home-wrap">
+  <section class="home-hero" aria-labelledby="hero-title">
+    <div class="home-hero__text">
+      {/* source: docs/POSITIONING.md "Take yourself off the market" (approved line, design's kicker) */}
+      <p class="h-kicker">Your information. Off the market.</p>
+      <h1 id="hero-title" class="text-hero">Take your name off the websites that sell it.</h1>
+      {/* source: approved home lead (pages/index.astro); "runs on your own computer" = D8 / netpolicy.py */}
+      <p class="home-lead">Free My ID finds your listings on people-search sites, asks each one to delete your details, and keeps checking so it can ask again if they come back. It runs on your own computer.</p>
+      <div class="home-actions">
+        <CtaDownload sub="Free for Windows 10 and 11" />
+        <a class={secondary} href={url("how-it-works/")}>See how it works</a>
+      </div>
+      {/* Trust panel, current short form (WO-162, same as Footer.astro; docs/BRAND.md predates it) */}
+      <p class="h-rules">No account. No cloud. Never asks for your Social Security number or bank or card details, and never charges you. Free and open source. Uninstall anytime.</p>
+      <HomeFinePrint />
+    </div>
+    {/* Example card with made-up data (D7). Status words as in the app's report: confirmed / waiting / not listed now. */}
+    <figure class="home-demo h-record" aria-labelledby="record-caption">
+      <p class="h-record__label">Record of requests · example</p>
+      <p class="h-record__name">Jane Q Testperson</p>
+      <div class="home-demo__row"><span>Spokeo</span><span class="chip chip--ok">Site confirmed</span></div>
+      <div class="home-demo__row"><span>Whitepages</span><span class="chip chip--ok">Site confirmed</span></div>
+      <div class="home-demo__row"><span>BeenVerified</span><span class="chip chip--wait">Waiting</span></div>
+      <div class="home-demo__row"><span>TruePeopleSearch</span><span class="chip chip--none">Not listed now</span></div>
+      <div class="h-record__seal" aria-hidden="true">
+        <svg width="56" height="56" viewBox="0 0 64 64" fill="none" stroke="currentColor"><circle cx="32" cy="32" r="30" stroke-width="2" /><circle cx="32" cy="32" r="25" stroke-width="1" /><path fill="currentColor" stroke="none" d="M32 19 L35.2 27.8 L44.6 28.2 L37.2 34 L39.8 43 L32 37.8 L24.2 43 L26.8 34 L19.4 28.2 L28.8 27.8 Z" /></svg>
+      </div>
+      <figcaption id="record-caption" class="home-demo__caption">Example with made-up data.</figcaption>
+    </figure>
+  </section>
+</div>
+
+<section class="home-band home-band--alt border-y border-line" aria-labelledby="post-title">
+  <div class="home-wrap home-split">
+    <div class="home-stack">
+      <h2 id="post-title">That post went to the wrong place.</h2>
+      {/* source: approved "the post" copy (pages/index.astro, i-do-not-consent page); never mock people who shared it */}
+      <p class="text-muted">You may have shared the "I do not consent" post. The instinct was right. But the companies that sell your name, address and phone number never saw it.</p>
+      <p class="text-muted">Free My ID takes that same "I do not consent" to the people-search sites themselves, through each site's own removal process, and keeps checking that they did. Where your state's privacy law applies, it sends a formal request.</p>
+      <p><a href={url("i-do-not-consent/")}>What the post can and can't do</a></p>
+    </div>
+    {/* US Constitution, Amendment IV (public domain). A quotation, not a legal claim about data brokers. */}
+    <blockquote class="h-quote">
+      <p>“The right of the people to be secure in their persons, houses, papers, and effects…”</p>
+      <footer>From the Fourth Amendment</footer>
+    </blockquote>
+  </div>
+</section>
+
+<section class="home-band" aria-labelledby="steps-title">
+  <div class="home-wrap">
+    <div class="home-head home-head--center">
+      <p class="h-kicker">How it works</p>
+      <h2 id="steps-title">Three steps. You stay in charge.</h2>
+      <span class="h-ornament" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d={star} /></svg></span>
+    </div>
+    {/* source: approved 3 steps (pages/index.astro); "six short screens" = STEPS in src/freemyid/wizard/draft.py */}
+    <ol class="home-steps" role="list">
+      <li class="home-step h-card"><span class="home-step__num" aria-hidden="true">1</span><h3>Tell it who to look for</h3><p>A name, and the city and state you live in. Six short screens, with large buttons.</p></li>
+      <li class="home-step h-card"><span class="home-step__num" aria-hidden="true">2</span><h3>It asks the sites to take you down</h3><p>It uses each site's own removal process. If a site needs you to tick "I'm not a robot", it shows you a card and you do it.</p></li>
+      <li class="home-step h-card"><span class="home-step__num" aria-hidden="true">3</span><h3>It keeps checking</h3><p>You see what is confirmed, what is waiting and what needs you. Sites can list you again, so it asks again.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section class="home-band home-band--ink" aria-labelledby="who-title">
+  <div class="home-wrap home-split home-split--top">
+    <div class="home-stack">
+      <p class="h-kicker">Who buys your details?</p>
+      {/* source: docs/POSITIONING.md verified claims (lines 26, 29, 30), sources in docs/MARKETING_COPY.md */}
+      <h2 id="who-title">Your name, address and phone number are for sale. Anyone can buy them.</h2>
+      <p>A report to the Director of National Intelligence, made public in 2023, says US intelligence agencies buy commercially available data about Americans, and warns it can enable blackmail, stalking and harassment.</p>
+      <p>A 2024 federal law bars data brokers from selling Americans' sensitive data to foreign adversaries, and a DOJ rule has restricted bulk transfers to countries of concern since April 2025.</p>
+      <p class="home-sources">Sources: ODNI report (dated January 2022, released June 2023); Pub. L. 118-50 (2024); DOJ 28 CFR Part 202. Free My ID removes listings from people-search sites. It does not stop overseas access or government data purchases.</p>
+    </div>
+    {/* source: /safety/#never-asks master list (WO-162) */}
+    <div class="h-never">
+      <h3>What Free My ID will never ask for</h3>
+      <ul class="home-list" role="list">
+        <li><span aria-hidden="true">—</span>Your Social Security number</li>
+        <li><span aria-hidden="true">—</span>Your bank or card details</li>
+        <li><span aria-hidden="true">—</span>A payment of any kind</li>
+        <li><span aria-hidden="true">—</span>Your full birthday</li>
+        <li><span aria-hidden="true">—</span>The password to your everyday email</li>
+      </ul>
+      <p class="h-never__note">If something says it is us and asks, it isn't. Stop and ask someone you trust. <a href={url("safety/#never-asks")}>See the full list</a>.</p>
+    </div>
+  </div>
+</section>
+
+<section class="home-band" aria-labelledby="parent-title">
+  <div class="home-wrap">
+    <div class="h-card h-parent">
+      <div>
+        <h2 id="parent-title">Helping a parent or grandparent?</h2>
+        {/* source: approved helpers copy; "type their own name to agree" = consent step in the wizard */}
+        <p class="text-muted">Install it with them and sit beside them for the six setup screens. They type their own name to agree. Their details stay on their computer.</p>
+      </div>
+      <a class={secondary} href={url("families/")}>Read the family guide</a>
+    </div>
+    <div class="h-limits mt-xl">
+      <h2>Honest limits</h2>
+      <p>Free My ID works on people-search and data-broker sites. It does not change what Facebook does with your account. Sites can list you again, which is why it keeps checking. <a href={url("guides/")}>Prefer to do it by hand? Read the free opt-out guides</a>.</p>
+    </div>
+  </div>
+</section>
+
+</Base>
