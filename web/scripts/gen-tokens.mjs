@@ -25,11 +25,19 @@ export function contrast(a, b) {
 }
 
 const errors = [];
-for (const [fg, bg, min] of t.pairs) {
-  ["light", "dark"].forEach((theme, i) => {
-    const r = contrast(t.color[fg][i], t.color[bg][i]);
-    if (r < min) errors.push(`contrast ${theme}: ${fg} on ${bg} = ${r.toFixed(2)} < ${min}`);
-  });
+// Design directions (A/B/C test, docs/AB_TEST.md): colour overrides on top of `color`, checked against the same pairs.
+const directions = t.directions || {};
+const palettes = [["base", t.color], ...Object.entries(directions).map(([n, o]) => {
+  for (const k of Object.keys(o)) if (!(k in t.color)) errors.push(`direction ${n}: unknown colour token ${k}`);
+  return [n, { ...t.color, ...o }];
+})];
+for (const [name, pal] of palettes) {
+  for (const [fg, bg, min] of t.pairs) {
+    ["light", "dark"].forEach((theme, i) => {
+      const r = contrast(pal[fg][i], pal[bg][i]);
+      if (r < min) errors.push(`contrast ${name} ${theme}: ${fg} on ${bg} = ${r.toFixed(2)} < ${min}`);
+    });
+  }
 }
 if (errors.length) {
   for (const e of errors) console.error("ERROR:", e);
@@ -80,6 +88,20 @@ W.push("  --container-wrap: var(--fmi-wrap);", "  --container-measure: var(--fmi
   "  --spacing-tap: var(--fmi-tap);", "  --spacing-gutter: var(--fmi-gutter);", "}");
 
 const files = [[outTokens, T.join("\n") + "\n"], [outTheme, W.join("\n") + "\n"]];
+
+// ---------------------------------------------------------------- directions/<name>.tokens.css
+// Loaded only by that direction's build (src/styles/directions/<name>.css imports it), after tokens.css.
+for (const [name, o] of Object.entries(directions)) {
+  const ov = Object.entries(o);
+  const D = [HEAD, `/* Direction "${name}": colour overrides. Same contrast pairs as the base, checked at generation. */`, ":root {"];
+  for (const [n, [light, dark]] of ov) D.push(`  --fmi-color-${n}: light-dark(${light}, ${dark});`);
+  D.push("}");
+  const p = (i, pad) => ov.map(([n, v]) => `${pad}--fmi-color-${n}: ${v[i]};`).join("\n");
+  D.push("@supports not (color: light-dark(#000, #fff)) {", "  :root {\n" + p(0, "    ") + "\n  }",
+    "  @media (prefers-color-scheme: dark) {", '    :root:not([data-theme="light"]) {\n' + p(1, "      ") + "\n    }", "  }",
+    '  :root[data-theme="dark"] {\n' + p(1, "    ") + "\n  }", "}");
+  files.push([new URL(`../src/styles/directions/${name}.tokens.css`, import.meta.url), D.join("\n") + "\n"]);
+}
 if (process.argv.includes("--check")) {
   const stale = files.filter(([u, s]) => !existsSync(u) || readFileSync(u, "utf8") !== s);
   for (const [u] of stale) console.error("ERROR: stale", u.pathname, "(run pnpm tokens)");
