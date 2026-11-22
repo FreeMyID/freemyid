@@ -1,0 +1,145 @@
+---
+// Home, direction 2 "Frontier" (A/B/C test arm, docs/AB_TEST.md). Layout and copy from
+// FreeMyID-Design-Directions/2-frontier/landing.html; styles in styles/directions/frontier.css.
+// Copy rules: docs/POSITIONING.md, trust panel in the WO-162 short form (as Footer.astro). Two lines differ from the mockup:
+//  - "That post didn't stop anyone. This does." -> "...reach anyone. This does." (a removal request reaches the site;
+//    "stops" would promise an outcome, POSITIONING rule on absolute claims).
+//  - "Is it safe?" uses the /safety/#local wording: the mockup's "go only to the sites you ask to remove you" is banned
+//    (tests/test_web_absolute_claims.py: practice mode still looks people up).
+// Every Download button goes through CtaDownload (D5). Zero client JS.
+import Base from "@/layouts/Base.astro";
+import CtaDownload from "@/components/CtaDownload.astro";
+import HomeFinePrint from "./HomeFinePrint.astro";
+import { buttonVariants } from "@/components/ui/button-variants";
+import { pageProps, url } from "@/lib/site";
+const ghost = buttonVariants({ variant: "link", size: "lg" });
+const onInk = buttonVariants({ variant: "onBrand", size: "lg" });
+const onInkLine = buttonVariants({ variant: "onBrandOutline", size: "lg", class: "f-dashed-btn" });
+---
+<Base {...pageProps("home")}>
+
+<div class="home-wrap">
+  <section class="home-hero" aria-labelledby="hero-title">
+    <div class="home-hero__text">
+      {/* source: LICENSE (free, AGPL); runs on your computer = D8 / netpolicy.py */}
+      <p class="f-patch">Free · Open source · Runs on your computer</p>
+      {/* source: docs/POSITIONING.md verified lines "Your name ... are for sale" and "Take yourself off the market" */}
+      <h1 id="hero-title" class="text-hero">Your name is for sale. <span class="f-hero-accent">Take it off the market.</span></h1>
+      <p class="home-lead">People-search sites list your name, address and phone number, and anyone can buy them. Free My ID finds your listings, asks each site to delete your details, and keeps checking in case they come back.</p>
+      <div class="home-actions">
+        <CtaDownload sub="Free for Windows 10 and 11" />
+        <a class={ghost} href={url("how-it-works/")}>See how it works</a>
+      </div>
+      {/* Trust panel, current short form (WO-162, same as Footer.astro; docs/BRAND.md predates it) */}
+      <p class="f-trust">No account. No cloud. Never asks for your Social Security number or bank or card details, and never charges you. Free and open source. Uninstall anytime.</p>
+      <HomeFinePrint />
+    </div>
+    {/* Example "Today" card with made-up data (D7); same summary sentence as the app's Today screen. */}
+    <figure class="home-demo f-ledger" aria-labelledby="ledger-caption">
+      <div class="f-ledger__top"><p class="f-label">Today · example</p><span class="f-ledger__rivet" aria-hidden="true"></span></div>
+      <p class="f-ledger__summary">7 sites have confirmed or no longer list you. 3 are waiting. 2 need you.</p>
+      <div class="home-demo__row"><span>Whitepages</span><span class="chip chip--ok">Site confirmed</span></div>
+      <div class="home-demo__row"><span>Spokeo</span><span class="chip chip--wait">Waiting</span></div>
+      <div class="home-demo__row"><span>That's Them</span><span class="chip chip--you">Needs you</span></div>
+      <figcaption id="ledger-caption" class="home-demo__caption">Example with made-up data.</figcaption>
+    </figure>
+  </section>
+</div>
+
+<section class="home-band home-band--alt" aria-labelledby="post-title">
+  <div class="home-wrap home-split">
+    <div class="home-stack">
+      <p class="f-label">You were right to object</p>
+      <h2 id="post-title">That post went to the wrong place.</h2>
+      {/* source: approved "the post" copy (pages/index.astro, i-do-not-consent page) */}
+      <p class="text-muted">You may have seen the "I do not consent" post. The instinct was right. But the companies that sell your name, address and phone number never read it. Free My ID takes the same message to them, through each site's own removal process, and keeps checking that they acted.</p>
+      <p><a href={url("i-do-not-consent/")}>What the post can and can't do</a></p>
+    </div>
+    <div class="f-callout">
+      <p class="f-callout__big">That post didn't reach anyone. This does.</p>
+      {/* source: state-law qualifier (POSITIONING: legal claims carry it); brokers/state_laws.yaml */}
+      <p>Where your state has a privacy law, the request is a formal one. Elsewhere it is a polite request that many sites honor.</p>
+    </div>
+  </div>
+</section>
+
+<section class="home-band" aria-labelledby="steps-title">
+  <div class="home-wrap">
+    <div class="home-head">
+      <p class="f-label">How it works</p>
+      <h2 id="steps-title">Three steps. Plain English. No account.</h2>
+    </div>
+    <ol class="home-steps" role="list">
+      <li class="home-step f-step"><div class="f-step__head"><span class="home-step__num" aria-hidden="true">1</span><span class="f-label">Step one</span></div><h3>Tell it who to look for.</h3><p>A name, and the city and state you live in. That's all it needs to start.</p></li>
+      <li class="home-step f-step"><div class="f-step__head"><span class="home-step__num" aria-hidden="true">2</span><span class="f-label">Step two</span></div><h3>It asks the sites to take you down.</h3><p>It uses each site's own removal process. If a site needs you to tick "I'm not a robot", it shows you a card and you do it.</p></li>
+      <li class="home-step f-step"><div class="f-step__head"><span class="home-step__num" aria-hidden="true">3</span><span class="f-label">Step three</span></div><h3>It keeps checking.</h3><p>Sites sometimes list people again. You see what is confirmed, what is waiting and what needs you.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section class="home-band home-band--card" aria-labelledby="facts-title">
+  <div class="home-wrap">
+    <div class="home-head">
+      <p class="f-label">The plain facts</p>
+      <h2 id="facts-title">Who buys your details?</h2>
+      <p class="text-muted">Your name, address and phone number are for sale. Anyone can buy them. Here is what the public record says.</p>
+    </div>
+    {/* source: docs/POSITIONING.md verified claims (lines 29, 30), sources in docs/MARKETING_COPY.md */}
+    <div class="f-facts">
+      <div class="f-fact"><p class="f-fact__big">A report to the Director of National Intelligence, made public in 2023, says US intelligence agencies buy commercially available data about Americans.</p><p>It warns that this data can enable blackmail, stalking and harassment.</p></div>
+      <div class="f-fact"><p class="f-fact__big">A 2024 federal law bars data brokers from selling Americans' sensitive data to foreign adversaries.</p><p>A DOJ rule has restricted bulk transfers to countries of concern since April 2025.</p></div>
+    </div>
+    <p class="home-sources mt-m text-muted">Sources: ODNI Senior Advisory Group Panel report on Commercially Available Information (dated January 2022, released June 2023); Protecting Americans' Data from Foreign Adversaries Act of 2024; DOJ 28 CFR Part 202. Free My ID removes listings from people-search sites. It does not stop overseas access or government data purchases.</p>
+  </div>
+</section>
+
+<section class="home-band" aria-labelledby="safe-title">
+  <div class="home-wrap home-split home-split--top">
+    <div class="home-stack">
+      <p class="f-label">Is it safe?</p>
+      <h2 id="safe-title">Your details stay with you.</h2>
+      {/* source: /safety/#local approved lead (D8, netpolicy.py) */}
+      <p class="text-muted">No cloud. No account. Nothing sent to us. Your details are stored only on your computer. They go out only to the people-search sites themselves: your name and town to look you up, and removal requests you approve.</p>
+      <p class="text-muted">If something says it is Free My ID and asks for any of these, it isn't. Stop and ask someone you trust.</p>
+    </div>
+    {/* source: /safety/#never-asks master list (WO-162) */}
+    <div class="f-never">
+      <h3>What Free My ID will never ask for</h3>
+      <ul class="home-list" role="list">
+        <li><span aria-hidden="true">—</span>Your Social Security number</li>
+        <li><span aria-hidden="true">—</span>Your bank or card details</li>
+        <li><span aria-hidden="true">—</span>A payment of any kind</li>
+        <li><span aria-hidden="true">—</span>Your full birthday</li>
+        <li><span aria-hidden="true">—</span>The password to your everyday email</li>
+      </ul>
+      <p class="home-small"><a href={url("safety/#never-asks")}>See the full list</a></p>
+    </div>
+  </div>
+</section>
+
+<section class="home-band home-band--ink" aria-labelledby="family-title">
+  <div class="home-wrap home-split">
+    <div class="home-stack">
+      <p class="f-label">For families</p>
+      {/* source: docs/POSITIONING.md "Built so your grandparents can use it." */}
+      <h2 id="family-title">Set it up for your folks.</h2>
+      <p>Built so your grandparents can use it. Sit beside them for the six setup screens. They type their own name to agree, and their details stay on their computer.</p>
+    </div>
+    <div class="f-family-actions">
+      <a class={onInk} href={url("families/")}>Read the helper's guide</a>
+      {/* site_src/static/assets/free-my-id-fridge-card.pdf (families page) */}
+      <a class={onInkLine} href={url("assets/free-my-id-fridge-card.pdf")}>Print the fridge card (PDF)</a>
+    </div>
+  </div>
+</section>
+
+<div class="home-band">
+  <div class="home-wrap">
+    <section class="f-limits" aria-labelledby="limits-title">
+      <h2 id="limits-title">Honest limits</h2>
+      <p>Free My ID works on people-search and data-broker sites only. It does not change what Facebook or Google does with your account. A site's "removed" means removed from that one site, and sites can list you again. That is why it keeps checking. <a href={url("guides/")}>Prefer to do it by hand? Read the free opt-out guides</a>.</p>
+    </section>
+  </div>
+</div>
+
+</Base>

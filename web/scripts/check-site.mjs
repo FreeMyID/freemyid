@@ -147,7 +147,8 @@ for (const f of htmlFiles) {
       if (!csp.includes(d)) err(f, `CSP lacks ${d}`);
     const directives = csp.split(";").map((d) => d.trim().split(/\s+/)).filter((d) => d[0]);
     const scriptSrc = directives.filter((d) => d[0].toLowerCase() === "script-src");
-    const want = SCRIPT_PAGES.has(f) ? "'self'" : "'none'";
+    // A/B/C test arm copies (dist/x/<arm>/, docs/AB_TEST.md) follow the same rule as the page they copy.
+    const want = SCRIPT_PAGES.has(f.replace(/^x\/[a-z]+\//, "")) ? "'self'" : "'none'";
     if (scriptSrc.length !== 1) err(f, `CSP has ${scriptSrc.length} script-src directives (want exactly one)`);
     else if (scriptSrc[0].length !== 2 || scriptSrc[0][1].toLowerCase() !== want)
       err(f, `CSP script-src is "${scriptSrc[0].slice(1).join(" ")}", want exactly ${want}`);

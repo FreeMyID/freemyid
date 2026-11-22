@@ -1,0 +1,23 @@
+---
+// The same three small lines under the hero in every A/B/C test arm (docs/AB_TEST.md), copied from the current home
+// so the arms differ in design, not in what they promise. Sources as on pages/index.astro:
+// practice mode = src/freemyid/config.py real_submissions_enabled=False until the person approves (USER_GUIDE section 4),
+// not "nothing is sent" (tests/test_web_absolute_claims.py); version from data/release.yaml (WR-38 early-release copy,
+// feedback by email: ROADMAP principle 6); SmartScreen line = site_src/data/faq.yaml "Why does Windows warn me".
+import { release, site, url } from "@/lib/site";
+interface Props { class?: string }
+const v = release.version;
+---
+<div class:list={["home-fineprint grid gap-3xs", Astro.props.class]}>
+  <p class="home-small">Practice mode comes first, so no removal requests go out until you say so.</p>
+  {v ? (
+    String(v).startsWith("0.") ? (
+      <p class="home-small">Version {v} is an early release, so <a href={site.support_mailto}>tell us what confuses you</a>. No account needed: just send an email.</p>
+    ) : (
+      <p class="home-small">Version {v}{release.size_mb ? `, ${release.size_mb} MB` : ""}.</p>
+    )
+  ) : (
+    <p class="home-small">The first version is not published yet.</p>
+  )}
+  <p class="home-small">Windows may show a blue "protected your PC" box the first time. <a href={url("download/#smartscreen")}>That's expected. Here's what to click.</a></p>
+</div>

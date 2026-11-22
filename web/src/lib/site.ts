@@ -71,6 +71,10 @@ export function url(target: string): string {
 export function canonical(out: string): string {
   return site.base_url + out;
 }
+/** Where Download buttons point. Inside an A/B/C test arm, the arm's own get/windows/ (the edge worker counts it and
+ *  sends the file; without the worker that page forwards to site.download_url). Everywhere else, site.download_url. */
+export const downloadHref: string = __FMID_ARM__ ? url("get/windows/") : site.download_url;
+declare const __FMID_ARM__: string;
 
 // ------------------------------------------------------------------ broker guides (port of load_guides)
 const PEOPLE = new Set(["people_search", "background_check", "family_tree"]);

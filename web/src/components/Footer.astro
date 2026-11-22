@@ -6,15 +6,18 @@ import BrandMark from "./BrandMark.astro";
 import Stars from "./Stars.astro";
 import CtaDownload from "./CtaDownload.astro";
 import Icon from "./Icon.astro";
+import { DIRECTION } from "@/lib/arm";
 type L = [string, string, boolean?];
 const has = (id: string) => id in pages;
+// The design-direction homes (A/B/C test arms, docs/AB_TEST.md) have no #what-it-removes or #compare section.
+const fullHome = DIRECTION === "none";
 const cols: [string, L[]][] = [
   ["Product", [
     [url("download/"), "Download for Windows"],
     [url("how-it-works/"), "How it works", has("how-it-works")],
-    [url("#what-it-removes"), "What it removes"],
+    [url("#what-it-removes"), "What it removes", fullHome],
     [url("families/"), "For families", has("families")],
-    [url("#compare"), "Compare with paid services"],
+    [url("#compare"), "Compare with paid services", fullHome],
   ]],
   ["Learn", [
     [url("guides/"), "Free opt-out guides", has("guides")],

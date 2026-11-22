@@ -3,6 +3,9 @@
 // site_src/templates/base.html. The CSP <meta> is written by Astro (astro.config.mjs security.csp)
 // and tightened per page by scripts/tighten-csp.mjs after the build.
 import "@/styles/global.css";
+// A/B/C test arm look (astro.config.mjs alias): empty for the normal site and the control arm.
+import "@direction";
+import { DIRECTION, IN_TEST } from "@/lib/arm";
 import { canonical, jsonld, ldJson, url, type Crumb } from "@/lib/site";
 import { OG_DEFAULT, OG_DEFAULT_ALT } from "@/lib/og";
 import { renderPlain } from "@/lib/rich";
@@ -26,7 +29,7 @@ const blocks = [...jsonldKinds.map((k) => ldJson(jsonld(k, crumbs, renderPlain))
 const canon = canonical(out);
 ---
 <!doctype html>
-<html lang="en">
+<html lang="en" data-direction={DIRECTION === "none" ? undefined : DIRECTION}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -34,8 +37,9 @@ const canon = canonical(out);
 <meta name="description" content={description}>
 <meta name="referrer" content="no-referrer">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#1b2f5b">
-{noindex && <meta name="robots" content="noindex">}
+<meta name="theme-color" content={{ none: "#1b2f5b", heritage: "#14213d", frontier: "#1e2b3c", glory: "#0a3161" }[DIRECTION]}>
+{/* Arm copies (docs/AB_TEST.md) are noindex; their canonical stays on the normal URL. */}
+{(noindex || IN_TEST) && <meta name="robots" content="noindex">}
 <meta name="msvalidate.01" content="02805FD5E3059F5B11D2385E01832206">{/* Bing Webmaster ownership: keep */}
 <link rel="canonical" href={canon}>
 <link rel="icon" href={url("favicon.svg")} type="image/svg+xml">

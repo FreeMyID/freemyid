@@ -13,6 +13,7 @@
     "tokens": "node scripts/gen-tokens.mjs",
     "dev": "node scripts/gen-tokens.mjs && ASTRO_TELEMETRY_DISABLED=1 astro dev",
     "build": "node scripts/gen-tokens.mjs && ASTRO_TELEMETRY_DISABLED=1 astro build && node scripts/tighten-csp.mjs dist",
+    "build:ab": "node scripts/build-arms.mjs",
     "check": "node scripts/check-site.mjs dist",
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview"
   },
