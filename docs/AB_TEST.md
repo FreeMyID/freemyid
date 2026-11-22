@@ -1,8 +1,8 @@
 # Home-page A/B/C test: three design directions
 
-Status (2026-11-21): **built, not live.** The arms deploy with the site but nothing links to them, and the edge
-worker that sends visitors to them ships switched off. Turning it on needs the owner's OK on two things below
-(privacy wording, then the deploy). Branch `inhouse/design-directions`.
+Status (2026-11-22): **owner approved switching it on**, with the privacy wording below published on
+`/safety/#this-website` in the same release. `worker/ab-test/wrangler.jsonc` has `AB_ENABLED: "1"`;
+`tests/test_ab_test.py` fails if the test is on without that disclosure.
 
 ## What is being tested
 

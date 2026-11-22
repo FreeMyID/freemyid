@@ -132,7 +132,9 @@ const cardIcon = "inline-flex size-12 shrink-0 items-center justify-center round
 <Section id="this-website" tone="alt" narrow title="This website" titleId="this-website-title">
   {/* source: old privacy page "This website" (approved copy); true of v3: strict CSP, no third-party requests (scripts/check-site.mjs) */}
   <div class="prose-fmid">
-    <p>No cookies, no trackers, no analytics, no outside fonts or scripts. Every picture, icon and style on this site comes from this site itself, so visiting it doesn't tell any other company that you were here.</p>
+    <p>No cookies, no trackers, no outside fonts or scripts. Every picture, icon and style on this site comes from this site itself, so visiting it doesn't tell any other company that you were here.</p>
+    {/* Owner-approved 2026-11-22 for the home-page A/B/C test (docs/AB_TEST.md, worker/ab-test): aggregate counts only. */}
+    <p>We are trying out new designs for this site. When you open the home page, our server picks one of four designs at random. To learn which one helps people most, it counts how many times each design was shown and how many downloads started from it. Those are plain totals: no cookies, no IP address, nothing about your device and nothing that could tell us it was you. There are still no trackers, no analytics scripts and nothing from other companies on this site.</p>
     <p>That's also why you didn't see a cookie banner: there are no cookies to ask about. The site has no forms, so it can't collect anything you type.</p>
     <p>Links to other websites (such as a people-search site's removal page, or our code on GitHub) are ordinary links. Once you click one, that website's own privacy rules apply.</p>
   </div>

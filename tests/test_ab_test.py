@@ -153,9 +153,15 @@ def test_data_points_hold_no_identifiers() -> None:
     assert "cookie" not in src.lower().replace("cookie-free", "")
 
 
-def test_worker_ships_switched_off_with_logs_off() -> None:
+def test_worker_is_disclosed_whenever_it_is_on_and_logs_stay_off() -> None:
     text = WRANGLER.read_text(encoding="utf-8")
-    assert '"AB_ENABLED": "0"' in text
+    assert '"AB_ENABLED": "0"' in text or '"AB_ENABLED": "1"' in text
+    if '"AB_ENABLED": "1"' in text:
+        # owner-approved disclosure (docs/AB_TEST.md) must be on /safety/#this-website while the test counts
+        safety = (ROOT / "web/src/pages/safety/index.astro").read_text(encoding="utf-8")
+        assert "our server picks one of four designs at random" in safety
+        assert "no cookies, no IP address, nothing about your device" in safety
+        assert "no trackers, no analytics," not in safety  # the old blanket claim is gone
     assert '"observability": { "enabled": false }' in text
     assert '"pattern": "freemyid.org/"' in text and '"pattern": "freemyid.org/x/*"' in text
 
