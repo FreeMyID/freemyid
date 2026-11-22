@@ -1,0 +1,15 @@
+{
+  "name": "freemyid-ab-test",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Free My ID home-page A/B/C test edge worker (docs/AB_TEST.md)",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "whoami": "wrangler whoami"
+  },
+  "devDependencies": {
+    "wrangler": "^4.166.0"
+  }
+}

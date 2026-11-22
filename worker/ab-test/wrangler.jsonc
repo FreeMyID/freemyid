@@ -11,7 +11,8 @@
     { "pattern": "freemyid.org/", "zone_name": "freemyid.org" },
     { "pattern": "freemyid.org/x/*", "zone_name": "freemyid.org" }
   ],
-  "analytics_engine_datasets": [{ "binding": "AB", "dataset": "freemyid_ab" }],
+  // Daily totals (schema.sql). Create the table once: npx wrangler d1 execute freemyid-ab --remote --file=schema.sql
+  "d1_databases": [{ "binding": "DB", "database_name": "freemyid-ab", "database_id": "cc3e2956-3bc2-4801-bdc7-67420d00136b" }],
   "vars": {
     "AB_ENABLED": "1",
     "AB_WEIGHTS": "{\"control\":1,\"heritage\":1,\"frontier\":1,\"glory\":1}",

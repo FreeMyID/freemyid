@@ -53,14 +53,15 @@ visitor -> freemyid.org/ -> worker picks an arm at random -> serves the HTML of 
 
 ## What is counted (and what is not)
 
-Workers Analytics Engine dataset `freemyid_ab`, one data point per event: `arm`, `event` (`assign` = a visit to "/"
-drew this arm, `view` = an arm page was opened, `download` = a Download button was clicked) and the page path. That
-is all. No IP address, no user agent, no referrer, no location, no cookie, no identifier of any kind, and worker
-logs are off (`observability.enabled: false`). The test can't follow a person: a refresh draws again.
+Daily totals in the D1 database `freemyid-ab` (table `totals`, `worker/ab-test/schema.sql`): one row per day, `arm`,
+`event` (`assign` = a visit to "/" drew this arm, `view` = an arm page was opened, `download` = a Download button
+was clicked) and page path, whose count `n` goes up by one. That is all. No IP address, no user agent, no
+referrer, no location, no cookie, no identifier and no time finer than the day; worker logs are off
+(`observability.enabled: false`). The test can't follow a person: a refresh draws again.
 
-Free plan: 100,000 data points written and 10,000 queries a day; Cloudflare's pricing page says Analytics Engine is
-not billed at present (checked 2026-11-21). Workers Free allows 100,000 requests a day; the worker only runs on "/"
-and "/x/*".
+D1 instead of Workers Analytics Engine (2026-11-22): Analytics Engine needs a one-time dashboard switch the docs
+don't describe; D1 needs none and stores less (day totals, not per-event points). D1 Free allows 100,000 rows written
+a day (one per counted event) and Workers Free 100,000 requests a day; the worker only runs on "/" and "/x/*".
 
 ## Before switching it on (owner)
 
@@ -75,17 +76,21 @@ and "/x/*".
    > companies on this site.
 
    The footer line can stay ("No tracking, no cookies"): nothing about a person is recorded.
-2. **Deploy (Tier 2, rollback below).** The repo now has a Wrangler config, so use Wrangler (not `cf`):
-   `cd worker/ab-test && npx wrangler deploy` with an account that can edit Workers on freemyid.org, then set
-   `AB_ENABLED` to `"1"` in `wrangler.jsonc` and deploy again. Check: `curl -sI https://freemyid.org/` shows
-   `cache-control: no-store`; `/x/glory/` loads; a download from an arm reaches GitHub.
+2. **Deploy (Tier 2, rollback below). Done 2026-11-22, version 3c61b714.** Wrangler is pinned in
+   `worker/ab-test/package.json`: `cd worker/ab-test && npm ci && npx wrangler deploy` (log in once with
+   `npx wrangler login`; on a phone, approve and paste the `localhost:8976/oauth/callback?...` address into
+   `curl '...'` on this computer while the login waits). The D1 table was created once with
+   `npx wrangler d1 execute freemyid-ab --remote --file=schema.sql`. Checked live: `/` serves all four arms at
+   random with `cache-control: no-store`, Googlebot gets the normal home, `/x/<arm>/get/windows/` counts and
+   redirects to the release. Test visits were deleted from D1 afterwards.
 3. **Off / rollback:** `AB_ENABLED: "0"` and deploy (instant, everything passes through), or delete the two routes or
    the worker. The arm copies on Pages are harmless without the worker.
 
 ## Reading the results
 
-`CF_ACCOUNT_ID=<id> python3 tools/ab_report.py --days 30` (token in `~/.config/freemyid/cf_token` with Account >
-Account Analytics > Read; the current token may need that permission added). It prints visits, downloads, the
+`python3 tools/ab_report.py --days 30` (reads D1 through Wrangler with the same login as the deploy; no API
+token). Raw totals: `npx wrangler d1 execute freemyid-ab --remote --command "SELECT * FROM totals"`. It prints
+visits, downloads, the
 download rate with a 95% interval per arm, and each design against the control (two-proportion z-test). It names a
 winner only when every arm has at least 400 visits and the design beats the control at p < 0.05 / 3 (three designs
 compared with one control).
@@ -108,6 +113,6 @@ remove the arms from `pages.yml`.
 | `web/src/components/home/` | the three direction homes and the shared fine print |
 | `web/src/fonts/` | self-hosted OFL fonts (README lists them) |
 | `web/scripts/build-arms.mjs` | builds the arms into `dist/x/` |
-| `worker/ab-test/` | the edge worker and its Wrangler config |
+| `worker/ab-test/` | the edge worker, its Wrangler config (pinned in `package.json`) and the D1 schema |
 | `tools/ab_report.py` | results |
 | `tests/test_ab_test.py`, `tests/test_web_ab_arms.py` | worker, report and built-arm checks |

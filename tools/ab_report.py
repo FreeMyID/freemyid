@@ -1,14 +1,14 @@
 """Home-page A/B/C test report (docs/AB_TEST.md). Stdlib only.
 
-    CF_ACCOUNT_ID=<id> python3 tools/ab_report.py [--days 30]
-    python3 tools/ab_report.py --rows rows.json        # offline: [{"arm":..,"event":..,"n":..}, ...]
+    python3 tools/ab_report.py [--days 30]            # reads the live totals through Wrangler (your login)
+    python3 tools/ab_report.py --rows rows.json       # offline: [{"arm":..,"event":..,"n":..}, ...]
 
-Reads the aggregate counts the edge worker (worker/ab-test) writes to Workers Analytics Engine (dataset
-freemyid_ab) through the SQL API, with the Cloudflare token in ~/.config/freemyid/cf_token (chmod 600; needs
-Account > Account Analytics > Read). Prints, per arm: visits assigned at "/", downloads started, the download rate
+The edge worker (worker/ab-test) keeps daily totals in the D1 database freemyid-ab (worker/ab-test/schema.sql).
+This reads them with `npx wrangler d1 execute --remote` from worker/ab-test, so it uses the same Cloudflare login as
+the deploy and needs no API token. Prints, per arm: visits assigned at "/", downloads started, the download rate
 with a 95% interval, and a two-sided two-proportion z-test against the control arm.
 
-Visits are draws, not people: a refresh draws again, and the counts hold no identifiers to merge them. That inflates
+Visits are draws, not people: a refresh draws again, and the totals hold no identifiers to merge them. That inflates
 every arm's denominator the same way, so the comparison stays fair; the absolute rates read low.
 """
 from __future__ import annotations
@@ -16,14 +16,13 @@ from __future__ import annotations
 import argparse
 import json
 import math
-import os
+import subprocess
 import sys
-import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 
 ARMS = ("control", "heritage", "frontier", "glory")
-DATASET = "freemyid_ab"
+DATABASE = "freemyid-ab"
 MIN_VISITS = 400  # per arm before any verdict; below this the report says "keep running"
 
 
@@ -70,20 +69,16 @@ def arms_from_rows(rows: list[dict]) -> list[Arm]:
     return [Arm(a, t["assign"], t["download"]) for a, t in tally.items()]
 
 
-def fetch_rows(account: str, days: int) -> list[dict]:
-    token_file = Path.home() / ".config/freemyid/cf_token"
-    if token_file.stat().st_mode & 0o077:
-        sys.exit("cf_token must be chmod 600")
-    token = token_file.read_text(encoding="utf-8").strip()
-    # _sample_interval restores true counts if Analytics Engine sampled the writes.
-    sql = (f"SELECT blob1 AS arm, blob2 AS event, SUM(_sample_interval) AS n FROM {DATASET} "
-           f"WHERE timestamp > NOW() - INTERVAL '{int(days)}' DAY AND blob2 IN ('assign', 'download') "
-           "GROUP BY arm, event FORMAT JSON")
-    req = urllib.request.Request(
-        f"https://api.cloudflare.com/client/v4/accounts/{account}/analytics_engine/sql",
-        data=sql.encode(), method="POST", headers={"Authorization": f"Bearer {token}"})
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        return list(json.load(resp).get("data", []))
+def fetch_rows(days: int) -> list[dict]:
+    sql = (f"SELECT arm, event, SUM(n) AS n FROM totals WHERE day >= date('now', '-{int(days)} day') "
+           "AND event IN ('assign', 'download') GROUP BY arm, event")
+    worker = Path(__file__).resolve().parents[1] / "worker" / "ab-test"
+    out = subprocess.run(["npx", "wrangler", "d1", "execute", DATABASE, "--remote", "--json", "--command", sql],
+                         cwd=worker, capture_output=True, text=True, timeout=180, check=False)
+    if out.returncode != 0:
+        sys.exit(f"wrangler failed (logged in? `npx wrangler whoami` in worker/ab-test):\n{out.stderr[-2000:]}")
+    data = json.loads(out.stdout[out.stdout.index("["):])
+    return [row for block in data for row in block.get("results", [])]
 
 
 def report(arms: list[Arm]) -> str:
@@ -113,15 +108,9 @@ def report(arms: list[Arm]) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     ap.add_argument("--days", type=int, default=30)
-    ap.add_argument("--rows", type=Path, help="JSON rows instead of the SQL API (offline/testing)")
+    ap.add_argument("--rows", type=Path, help="JSON rows instead of D1 (offline/testing)")
     a = ap.parse_args()
-    if a.rows:
-        rows = json.loads(a.rows.read_text(encoding="utf-8"))
-    else:
-        account = os.environ.get("CF_ACCOUNT_ID")
-        if not account:
-            sys.exit("set CF_ACCOUNT_ID (Cloudflare dashboard > Workers > Account ID)")
-        rows = fetch_rows(account, a.days)
+    rows = json.loads(a.rows.read_text(encoding="utf-8")) if a.rows else fetch_rows(a.days)
     print(report(arms_from_rows(rows)))
     return 0
 
