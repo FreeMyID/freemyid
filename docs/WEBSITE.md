@@ -157,3 +157,10 @@ Copy rules (web-qa 785a7a4; visible text only, the noindex styleguide is skipped
 (`BANNED_PHRASES`: guarantee, 100%, erase, forever, star ratings and counters, fear words, missing state-law qualifier); every screenshot sits in a
 `<figure>` whose caption says "made-up data"; while `release.version` is null no link may point at
 `/releases/latest`, `/releases/download` or an `.exe` (D5).
+
+## Home-page A/B/C test (Nov 2026)
+
+Three design directions (Heritage, Frontier, Old Glory Modern) plus the current design as control are built as
+noindex copies under `/x/<arm>/` by `pnpm build:ab`. An edge worker (off until the owner approves) serves "/" from a
+random arm and counts views and downloads in aggregate, with no cookies or identifiers. Everything about it, including
+the privacy wording to approve before switching it on: `docs/AB_TEST.md`.
