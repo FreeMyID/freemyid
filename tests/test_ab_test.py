@@ -1,9 +1,10 @@
 """Home-page A/B/C test (docs/AB_TEST.md): the edge worker (worker/ab-test/src/index.js) and the report
-(tools/ab_report.py). The worker runs under Node with stubbed fetch and Analytics Engine, so no network is used."""
+(tools/ab_report.py). The worker runs under Node with stubbed fetch and D1, so no network is used."""
 from __future__ import annotations
 
 import importlib.util
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -23,7 +24,7 @@ spec.loader.exec_module(ab_report)
 
 HARNESS = r"""
 import * as w from %(worker)s;
-const points = [], fetched = [];
+const points = [], fetched = [], waits = [];
 globalThis.fetch = async (req) => {
   const u = new URL(req.url ?? req);
   fetched.push(u.pathname);
@@ -32,11 +33,14 @@ globalThis.fetch = async (req) => {
   return new Response("<html>" + u.pathname, { status: 200, headers: {
     "content-type": html ? "text/html; charset=utf-8" : "text/css", etag: "x", "cache-control": "max-age=600" } });
 };
-const env = (extra = {}) => ({ AB_ENABLED: "1", AB: { writeDataPoint: (p) => points.push(p) }, ...extra });
+const DB = { prepare: (sql) => ({ bind: (...args) => ({ run: async () => { points.push({ sql, args }); } }) }) };
+const ctx = { waitUntil: (p) => waits.push(p) };
+const env = (extra = {}) => ({ AB_ENABLED: "1", DB, ...extra });
 const ua = { "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130.0" };
 const go = async (path, e = env(), headers = ua, method = "GET") => {
-  points.length = 0; fetched.length = 0;
-  const r = await w.default.fetch(new Request("https://freemyid.org" + path, { headers, method }), e);
+  points.length = 0; fetched.length = 0; waits.length = 0;
+  const r = await w.default.fetch(new Request("https://freemyid.org" + path, { headers, method }), e, ctx);
+  await Promise.all(waits);
   return { status: r.status, location: r.headers.get("location"), cache: r.headers.get("cache-control"),
            etag: r.headers.get("etag"), body: method === "GET" ? await r.text() : "",
            points: JSON.parse(JSON.stringify(points)), fetched: [...fetched] };
@@ -67,6 +71,7 @@ out.asset = await go("/x/heritage/_assets/a.css");
 out.other = await go("/faq/");
 out.unknown_arm = await go("/x/evil/get/windows/");
 out.no_binding = await go("/", { AB_ENABLED: "1" });
+out.db_fails = await go("/", env({ DB: { prepare: () => { throw new Error("D1 down"); } } }));
 console.log(JSON.stringify(out));
 """
 
@@ -84,6 +89,19 @@ def run() -> dict:
 
 
 ARMS = ["control", "heritage", "frontier", "glory"]
+UPSERT = ("INSERT INTO totals (day, arm, event, page, n) VALUES (?1, ?2, ?3, ?4, 1) "
+          "ON CONFLICT (day, arm, event, page) DO UPDATE SET n = n + 1")
+
+
+def counted(result: dict) -> list[list[str]]:
+    """The (arm, event, page) of each total the request added to; checks the SQL and the day on the way."""
+    out = []
+    for p in result["points"]:
+        assert p["sql"] == UPSERT
+        day, *rest = p["args"]
+        assert re.fullmatch(r"\d{4}-\d{2}-\d{2}", day)  # a day, never a time
+        out.append(rest)
+    return out
 
 
 def test_weights_and_random_pick(run: dict) -> None:
@@ -110,7 +128,7 @@ def test_home_serves_one_arm_uncached_and_counts_the_assignment(run: dict) -> No
     assert home["fetched"] == [f"/x/{arm}/"] and arm in ARMS
     assert home["status"] == 200 and home["body"] == f"<html>/x/{arm}/"
     assert home["cache"] == "no-store" and home["etag"] is None
-    assert home["points"] == [{"indexes": [arm], "blobs": [arm, "assign", "/"], "doubles": [1]}]
+    assert counted(home) == [[arm, "assign", "/"]]
 
 
 def test_bots_and_head_get_the_normal_home_uncounted(run: dict) -> None:
@@ -128,13 +146,13 @@ def test_download_is_counted_and_redirected(run: dict) -> None:
     for key, arm in (("download", "glory"), ("download_noslash", "frontier")):
         d = run[key]
         assert d["status"] == 302 and d["location"] == "https://freemyid.org/get/windows"
-        assert d["points"] == [{"indexes": [arm], "blobs": [arm, "download", "/get/windows/"], "doubles": [1]}]
+        assert counted(d) == [[arm, "download", "/get/windows/"]]
         assert d["fetched"] == []  # the redirect never touches the origin
     assert run["download_bot"]["status"] == 302 and run["download_bot"]["points"] == []
 
 
 def test_pages_pass_through_and_only_html_views_count(run: dict) -> None:
-    assert run["page"]["points"] == [{"indexes": ["heritage"], "blobs": ["heritage", "view", "/how-it-works/"], "doubles": [1]}]
+    assert counted(run["page"]) == [["heritage", "view", "/how-it-works/"]]
     assert run["asset"]["points"] == [] and run["asset"]["fetched"] == ["/x/heritage/_assets/a.css"]
     assert run["other"]["points"] == [] and run["other"]["fetched"] == ["/faq/"]
     assert run["unknown_arm"]["fetched"] == ["/x/evil/get/windows/"] and run["unknown_arm"]["points"] == []
@@ -142,15 +160,19 @@ def test_pages_pass_through_and_only_html_views_count(run: dict) -> None:
 
 def test_counting_never_breaks_the_page(run: dict) -> None:
     assert run["no_binding"]["status"] == 200
+    assert run["db_fails"]["status"] == 200 and run["db_fails"]["points"] == []
 
 
 def test_data_points_hold_no_identifiers() -> None:
     src = WORKER.read_text(encoding="utf-8")
-    call = src[src.index("writeDataPoint("):]
+    call = src[src.index(".bind("):]
     call = call[: call.index(")")]
+    assert call == ".bind(day, arm, event, page"  # exactly these four values are stored
     for banned in ("CF-Connecting-IP", "user-agent", "referer", "cf.", "country", "headers"):
         assert banned.lower() not in call.lower(), banned
-    assert "cookie" not in src.lower().replace("cookie-free", "")
+    code = re.sub(r"//[^\n]*|/\*.*?\*/", "", src, flags=re.DOTALL).lower()  # code only, not comments
+    for banned in ("cookie", "cf-connecting-ip", "x-forwarded-for", "request.cf"):
+        assert banned not in code, banned
 
 
 def test_worker_is_disclosed_whenever_it_is_on_and_logs_stay_off() -> None:
