@@ -1,0 +1,20 @@
+// Free My ID home-page A/B/C test worker (docs/AB_TEST.md). Deploy only with the owner's OK:
+//   cd worker/ab-test && npx wrangler deploy      (needs a Cloudflare login with Workers + Analytics Engine access)
+// Off without removing it: set AB_ENABLED to "0" and deploy. Rollback: delete the two routes (or the worker).
+{
+  "name": "freemyid-ab-test",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": false,
+  "routes": [
+    { "pattern": "freemyid.org/", "zone_name": "freemyid.org" },
+    { "pattern": "freemyid.org/x/*", "zone_name": "freemyid.org" }
+  ],
+  "analytics_engine_datasets": [{ "binding": "AB", "dataset": "freemyid_ab" }],
+  "vars": {
+    "AB_ENABLED": "0",
+    "AB_WEIGHTS": "{\"control\":1,\"heritage\":1,\"frontier\":1,\"glory\":1}",
+    "DOWNLOAD_URL": "https://freemyid.org/get/windows"
+  },
+  "observability": { "enabled": false }
+}
