@@ -1,0 +1,67 @@
+/* Shared by the three design directions of the home-page A/B/C test (docs/AB_TEST.md). Plain CSS, unlayered, so it
+   wins over the Tailwind layers; loaded only by an arm's build (src/styles/directions/<name>.css imports it).
+   Layout vocabulary for components/home/Home*.astro. Colours come from the tokens, so light and dark both work. */
+
+/* ---------------------------------------------------------------- the two-line Download button */
+.cta-two-line { padding-block: 0.45rem; text-align: start; }
+.cta-two-line .cta-sub { font-size: 0.8rem; font-weight: 400; line-height: 1.3; }
+
+/* ---------------------------------------------------------------- layout */
+.home-wrap { max-width: 60rem; margin-inline: auto; padding-inline: var(--fmi-gutter); }
+.home-band { padding-block: clamp(3rem, 2rem + 4vw, 4.25rem); }
+.home-band--alt { background: var(--fmi-color-bg-alt); }
+.home-band--card { background: var(--fmi-color-card); }
+.home-band--ink { background: var(--fmi-color-band-brand); color: var(--fmi-color-band-brand-ink); }
+.home-band--ink :is(h2, h3) { color: var(--fmi-color-band-brand-ink); }
+.home-band--ink a:not(.no-underline) { color: var(--fmi-color-band-brand-ink); }
+
+.home-hero { display: grid; gap: clamp(2rem, 1rem + 3vw, 2.8rem); align-items: center; padding-block: clamp(2.5rem, 1.5rem + 4vw, 4rem); }
+@media (min-width: 56.25em) { .home-hero { grid-template-columns: 1.25fr 1fr; } }
+.home-hero__text { display: grid; gap: var(--fmi-space-m); align-content: start; min-width: 0; }
+.home-hero h1 { margin: 0; }
+.home-lead { margin: 0; font-size: var(--fmi-text-lead); line-height: 1.55; color: var(--fmi-color-muted); max-width: 32rem; }
+.home-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; align-items: center; }
+.home-actions > * { max-width: 100%; }
+.home-small { margin: 0; font-size: var(--fmi-text-small); color: var(--fmi-color-muted); max-width: 34rem; }
+.home-band--ink .home-small { color: var(--fmi-color-band-brand-ink); }
+
+.home-split { display: grid; gap: clamp(1.75rem, 1rem + 2.5vw, 2.4rem); align-items: center; }
+@media (min-width: 56.25em) { .home-split { grid-template-columns: 1.2fr 1fr; } }
+.home-split--top { align-items: start; }
+.home-split > * { min-width: 0; }
+.home-stack { display: grid; gap: var(--fmi-space-s); align-content: start; }
+.home-stack > :is(h2, p) { margin: 0; }
+.home-head { display: grid; gap: var(--fmi-space-2xs); max-width: 38rem; margin-block-end: var(--fmi-space-l); }
+.home-head > * { margin: 0; }
+.home-head--center { margin-inline: auto; justify-items: center; text-align: center; }
+
+.home-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.2rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }
+.home-step { display: grid; gap: 0.6rem; align-content: start; }
+.home-step > :is(h3, p) { margin: 0; }
+.home-step__num {
+  display: inline-flex; align-items: center; justify-content: center; inline-size: 2.6rem; block-size: 2.6rem;
+  border-radius: 50%; background: var(--fmi-color-brand); color: var(--fmi-color-brand-ink); font-weight: 700; font-size: 1.2rem;
+}
+
+.home-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+.home-list li { display: flex; gap: 0.6rem; align-items: baseline; }
+.home-list li > span[aria-hidden] { flex: none; }
+
+/* Example cards (made-up data). Status chips: never alarm colours. */
+.home-demo { position: relative; width: 100%; max-width: 22rem; margin-inline: auto; display: grid; gap: 0.7rem; }
+.home-demo__row { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
+.home-demo__caption { margin: 0.6rem 0 0; font-size: var(--fmi-text-small); color: var(--fmi-color-muted); text-align: center; }
+.chip { display: inline-flex; align-items: center; padding: 0.15rem 0.5rem; border-radius: 999px; font-weight: 700; font-size: 0.8rem; white-space: nowrap; }
+.chip--ok { background: var(--fmi-color-ok-soft); color: var(--fmi-color-ok); }
+.chip--wait { background: var(--fmi-color-warn-soft); color: var(--fmi-color-warn); }
+.chip--you { background: var(--fmi-color-brand-soft); color: var(--fmi-color-heading); }
+.chip--none { background: var(--fmi-color-surface); color: var(--fmi-color-muted); }
+
+.home-sources { margin: 0; font-size: var(--fmi-text-small); }
+
+@media (max-width: 30em) {
+  .home-actions > a { width: 100%; }
+}
+@media print {
+  .home-band--ink { background: #fff; color: #000; }
+}

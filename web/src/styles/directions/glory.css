@@ -1,0 +1,109 @@
+/* Direction 3, Old Glory Modern (A/B/C test arm, docs/AB_TEST.md). Clean civic modern: white, flag blue, shield
+   mark; red only in stripes and stars, never as an alarm. The most "official" of the three.
+   Source: FreeMyID-Design-Directions/3-old-glory-modern (landing, brand board, tokens.json). Fonts self-hosted
+   (SIL OFL, src/fonts/README.md): Public Sans for text and headings, Archivo condensed for the big headline. */
+@import "./glory.tokens.css";
+@import "./_shared.css";
+
+@font-face { font-family: "Public Sans"; font-style: normal; font-weight: 400 800; font-display: swap; src: url("../../fonts/public-sans-var.woff2") format("woff2"); }
+@font-face { font-family: "Archivo Condensed"; font-style: normal; font-weight: 800; font-display: swap; src: url("../../fonts/archivo-condensed-800.woff2") format("woff2"); }
+
+:root {
+  --fmi-font-sans: "Public Sans", "Segoe UI", Roboto, Arial, sans-serif;
+  --dir-headline: "Archivo Condensed", "Public Sans", "Arial Narrow", sans-serif;
+  --fmi-radius-sm: 8px;
+  --fmi-radius-md: 10px;
+  --fmi-radius-lg: 12px;
+  --fmi-radius-xl: 20px;
+  --fmi-radius-2xl: 24px;
+  --dir-red: light-dark(#b31942, #e0526f);          /* stripes and stars only */
+  --dir-white: var(--fmi-color-flag-white);
+  --fmi-shadow-1: 0 0 0 1px var(--fmi-color-line);
+  --fmi-shadow-2: 0 0 0 1px var(--fmi-color-line), 0 6px 24px light-dark(rgb(10 49 97 / 0.08), rgb(0 0 0 / 0.4));
+  --fmi-shadow-3: 0 0 0 1px var(--fmi-color-line), 0 12px 36px light-dark(rgb(10 49 97 / 0.12), rgb(0 0 0 / 0.5));
+}
+
+/* ---------------------------------------------------------------- base */
+body { line-height: 1.55; }
+:is(h1, h2, h3, h4) { font-weight: 800; letter-spacing: -0.005em; line-height: 1.1; }
+
+/* ---------------------------------------------------------------- chrome: three stripes on top and above the footer */
+.flagbar { display: block; height: 14px; background: linear-gradient(var(--dir-red) 0 5px, var(--dir-white) 5px 9px, var(--dir-red) 9px 14px); }
+.flagbar span { display: none !important; }
+.site-header { box-shadow: none; }
+.site-header .brand { color: var(--fmi-color-heading); font-weight: 800; letter-spacing: -0.01em; }
+@media (min-width: 34em) { .site-header .brand { font-size: 1.35rem; } .site-header .brand-mark { inline-size: 2.2rem; block-size: 2.2rem; } }
+.site-header nav > ul:not([popover]) a { color: var(--fmi-color-heading); }
+.site-footer { position: relative; }
+.site-footer::before { content: ""; position: absolute; inset: 0 0 auto; height: 14px; background: linear-gradient(var(--dir-red) 0 5px, var(--dir-white) 5px 9px, var(--dir-red) 9px 14px); }
+
+.bm-bg { fill: #0a3161; stroke: light-dark(transparent, #e6ecf5); stroke-width: 2; }
+.bm-bar { fill: #b31942; }
+.bm-white { fill: #ffffff; }
+.bm-star { fill: #ffffff; }
+.site-footer .bm-bg { fill: #ffffff; stroke: none; }
+.site-footer .bm-star { fill: #0a3161; }
+
+/* ---------------------------------------------------------------- home (components/home/HomeGlory.astro) */
+.g-hero { padding-block: 0 clamp(2.5rem, 1.5rem + 3vw, 3.5rem); }
+.g-panel {
+  position: relative; overflow: hidden; border-radius: var(--fmi-radius-2xl);
+  background: #0a3161 url("../../art/ab/star-field.svg") 0 0 / 48px 48px repeat; color: #ffffff;
+  padding: clamp(1.8rem, 1rem + 4vw, 3.6rem) clamp(1.2rem, 0.6rem + 3.5vw, 3.4rem);
+  display: grid; gap: clamp(1.6rem, 1rem + 2vw, 2.2rem); align-items: center;
+}
+.g-panel .home-lead { max-width: 34rem; }
+.g-promise { max-width: 44rem; }
+.g-panel > * { min-width: 0; }
+.g-panel h1, .g-panel h2 { color: #ffffff; }
+.g-panel .home-lead { color: #e4eaf4; }
+.g-panel .home-small { color: #e4eaf4; }
+.g-panel a:not(.no-underline) { color: #ffffff; }
+.g-headline { margin: 0; font-family: var(--dir-headline); font-weight: 800; font-size: clamp(2.6rem, 1.2rem + 5.6vw, 5.2rem); line-height: 0.95; letter-spacing: -0.005em; }
+.g-pill { justify-self: start; margin: 0; display: inline-flex; align-items: center; gap: 0.4rem; min-height: 2rem; padding: 0 0.8rem; border-radius: 999px; background: rgb(255 255 255 / 0.12); font-size: 0.85rem; font-weight: 600; }
+.g-pill svg { inline-size: 0.9em; block-size: 0.9em; fill: currentColor; }
+.g-panel .cta-two-line, .g-panel a.bg-band-brand-ink { box-shadow: none; }
+
+.g-promise { background: #ffffff; color: #1b2433; border-radius: 18px; padding: 1.4rem; display: grid; gap: 0.7rem; }
+.g-promise__label { margin: 0; color: #3d4a5c; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+.g-promise ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+.g-promise li { display: flex; gap: 0.6rem; align-items: center; font-weight: 800; color: #0a3161; }
+.g-promise li svg { flex: none; inline-size: 1.1rem; block-size: 1.1rem; color: #1c6639; }
+.g-promise__note { margin: 0; padding-top: 0.7rem; border-top: 2px solid #eef1f6; font-size: 0.85rem; line-height: 1.5; color: #1b2433; }
+
+.g-compare { background: var(--fmi-color-bg-alt); border-radius: var(--fmi-radius-xl); padding: 1.6rem; display: grid; gap: 1rem; }
+.g-compare__item { display: flex; gap: 0.8rem; align-items: flex-start; }
+.g-compare__item p { margin: 0; }
+.g-compare__icon { flex: none; display: inline-flex; align-items: center; justify-content: center; inline-size: 2.4rem; block-size: 2.4rem; border-radius: 12px; border: 2px solid var(--fmi-color-line); background: var(--fmi-color-card); color: var(--fmi-color-heading); }
+.g-compare__icon--brand { background: var(--fmi-color-brand); border-color: var(--fmi-color-brand); color: var(--fmi-color-brand-ink); }
+.g-compare__icon svg { inline-size: 1.2rem; block-size: 1.2rem; }
+.g-compare__title { font-weight: 800; color: var(--fmi-color-heading); }
+.g-compare__item p + p { font-size: 0.9rem; color: var(--fmi-color-muted); }
+
+.g-stripe { block-size: 12px; background: linear-gradient(var(--dir-red) 0 4px, var(--dir-white) 4px 8px, var(--fmi-color-heading) 8px 12px); }
+
+.g-step { background: var(--fmi-color-card); border: 2px solid var(--fmi-color-line); border-radius: var(--fmi-radius-xl); padding: 1.5rem; }
+.g-step .home-step__num { border-radius: 14px; inline-size: 3.2rem; block-size: 3.2rem; font-family: var(--dir-headline); font-size: 2rem; }
+
+.g-quotes { display: grid; gap: 1rem; }
+.g-quotes p { margin: 0; border-inline-start: 6px solid var(--fmi-color-heading); padding: 0.2rem 0 0.2rem 1rem; }
+
+.g-never { background: var(--fmi-color-band-brand); color: var(--fmi-color-band-brand-ink); border-radius: var(--fmi-radius-xl); padding: 1.8rem; display: grid; gap: 0.9rem; align-content: start; }
+.g-never h2 { margin: 0; color: var(--fmi-color-band-brand-ink); font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem); }
+.g-never ul { font-size: 1.05rem; font-weight: 600; }
+.g-never li { align-items: center !important; }
+.g-never li > span[aria-hidden] { inline-size: 0.9rem; block-size: 4px; background: currentColor; }
+.g-never p { margin: 0; font-size: 0.9rem; }
+.g-never a { color: var(--fmi-color-band-brand-ink); }
+
+.g-parent { background: var(--fmi-color-bg-alt); border-radius: var(--fmi-radius-xl); padding: clamp(1.4rem, 1rem + 2vw, 2rem); display: flex; flex-wrap: wrap; gap: 1.2rem; align-items: center; justify-content: space-between; }
+.g-parent > div { flex: 1 1 24rem; display: grid; gap: 0.4rem; }
+.g-parent h2, .g-parent p { margin: 0; }
+
+.g-limits { border: 2px solid var(--fmi-color-line); border-radius: var(--fmi-radius-xl); padding: 1.4rem 1.5rem; display: grid; gap: 0.5rem; }
+.g-limits h2 { margin: 0; font-size: var(--fmi-text-h3); }
+.g-limits p { margin: 0; }
+
+@media (forced-colors: active) {
+  .g-panel { background-image: none; }
+}
