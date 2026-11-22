@@ -15,7 +15,7 @@ import TimelineItem from "@/components/aceternity/TimelineItem.astro";
 import BorderBeam from "@/components/magicui/BorderBeam.astro";
 import CopyHash from "@/components/CopyHash.astro";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { pageProps, release, releaseDate, site, url } from "@/lib/site";
+import { downloadHref, pageProps, release, releaseDate, url } from "@/lib/site";
 const p = pageProps("download");
 const v = release.version;
 ---
@@ -31,7 +31,7 @@ const v = release.version;
       // source: .github/workflows/build.yml release job publishes FreeMyIDSetup.exe + SHA256SUMS.txt
       // Lead note (320px): the beam and button go full width on phones and the label may wrap, so nothing runs past the card.
       <BorderBeam class="w-full min-w-0 self-stretch min-[30em]:w-auto min-[30em]:self-start">
-        <a class={buttonVariants({ size: "lg", class: "w-full min-w-0 max-[30em]:px-s max-[30em]:text-body min-[30em]:w-auto" })} href={site.download_url}><Icon name="download" /><span class="min-w-0 [overflow-wrap:anywhere]">Download <span class="whitespace-nowrap max-[22em]:whitespace-normal">FreeMyIDSetup.exe</span></span></a>
+        <a class={buttonVariants({ size: "lg", class: "w-full min-w-0 max-[30em]:px-s max-[30em]:text-body min-[30em]:w-auto" })} href={downloadHref}><Icon name="download" /><span class="min-w-0 [overflow-wrap:anywhere]">Download <span class="whitespace-nowrap max-[22em]:whitespace-normal">FreeMyIDSetup.exe</span></span></a>
       </BorderBeam>
     ) : (
       // WR-9: no release yet, so no link (releases/latest would 404)

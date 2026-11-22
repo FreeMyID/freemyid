@@ -362,13 +362,15 @@ def content_rules(site: Path) -> list[str]:
     for f in sorted(site.rglob("*.html")):
         rel = f.relative_to(site).as_posix()
         raw = f.read_text(encoding="utf-8")
-        if rel.startswith("styleguide/"):
+        # A/B/C test arm copies (web/dist/x/<arm>/, docs/AB_TEST.md) follow the rules of the page they copy.
+        page = re.sub(r"^x/[a-z]+/", "", rel)
+        if page.startswith("styleguide/"):
             continue
         text = visible_text(raw)
         for pat, label in BANNED_PHRASES:
             # /protect/ pages quote third-party time estimates ("about 15 minutes online" at a credit
             # bureau). D8 forbids timing *our app's* setup, not quoting how long someone else's site takes.
-            if rel.startswith("protect/") and label.startswith("fifteen minutes"):
+            if page.startswith("protect/") and label.startswith("fifteen minutes"):
                 continue
             m = re.search(pat, text, re.IGNORECASE)
             if m:

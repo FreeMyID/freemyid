@@ -16,14 +16,22 @@ const yamlValue = (key) => {
 const BASE_URL = new URL(yamlValue("base_url")).origin;
 const BASE_PATH = yamlValue("base_path");
 
+// A/B/C test arms (docs/AB_TEST.md). FMID_ARM unset = the normal site. FMID_ARM=<arm> builds a full copy of the
+// site under <base>x/<arm>/ into dist-arms/<arm> (scripts/build-arms.mjs copies it into dist/x/<arm>/). Every arm
+// page keeps its canonical on the normal URL and is noindex. The arm's look comes from @direction (below).
+const ARMS = ["control", "heritage", "frontier", "glory"];
+const ARM = process.env.FMID_ARM || "";
+if (ARM && !ARMS.includes(ARM)) throw new Error(`FMID_ARM=${ARM}: expected one of ${ARMS.join(", ")}`);
+const DIRECTION = ARM && ARM !== "control" ? ARM : "none";
+
 export default defineConfig({
   site: BASE_URL,
-  base: BASE_PATH,
+  base: ARM ? `${BASE_PATH.replace(/\/?$/, "/")}x/${ARM}/` : BASE_PATH,
   output: "static",
   trailingSlash: "always",
   // favicons, og.png, screenshots and the fridge card are shared with the v2 build (no copies)
   publicDir: fileURLToPath(new URL("../site_src/static", import.meta.url)),
-  outDir: "./dist",
+  outDir: ARM ? `./dist-arms/${ARM}` : "./dist",
   build: {
     format: "directory",
     inlineStylesheets: "never", // style-src 'self': no inline <style>
@@ -50,6 +58,10 @@ export default defineConfig({
   },
   vite: {
     plugins: [tailwindcss()],
+    // The arm's direction stylesheet (fonts, motifs, colour overrides); "none" is empty, so the normal site and the
+    // control arm ship exactly the CSS they shipped before.
+    resolve: { alias: { "@direction": fileURLToPath(new URL(`./src/styles/directions/${DIRECTION}.css`, import.meta.url)) } },
+    define: { __FMID_ARM__: JSON.stringify(ARM), __FMID_DIRECTION__: JSON.stringify(DIRECTION) },
     build: { assetsInlineLimit: 0 }, // never inline scripts or assets as data: URIs
     server: { fs: { allow: [fileURLToPath(new URL("..", import.meta.url))] } },
   },

@@ -73,6 +73,10 @@ jobs:
         run: node scripts/gen-tokens.mjs --check
       - name: Build (astro build + per-page CSP tightening)
         run: pnpm build
+      # Home-page A/B/C test arms (docs/AB_TEST.md): full noindex copies of the site under dist/x/<arm>/.
+      # Nothing links to them; the edge worker (worker/ab-test) serves "/" from one of them when it is switched on.
+      - name: Build the A/B/C test arms
+        run: pnpm build:ab
       - name: Check (meta, CSP, links, anchors, images, sitemap, budgets)
         run: pnpm check
       - name: Copy rules and leak scan (tools/site_check.py)
